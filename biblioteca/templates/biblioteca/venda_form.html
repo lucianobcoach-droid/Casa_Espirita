@@ -1,0 +1,11 @@
+{% extends 'biblioteca/base.html' %}
+{% block title %}Registrar venda{% endblock %}
+{% block content %}
+<h1 class="title">Registrar venda</h1>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button class="button is-primary" type="submit">Salvar</button>
+    <a class="button" href="{% url 'biblioteca:venda-list' %}">Voltar</a>
+</form>
+{% endblock %}
