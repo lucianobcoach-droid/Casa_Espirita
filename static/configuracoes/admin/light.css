@@ -1,0 +1,261 @@
+/*
+ * Layout leve inspirado em Colorlib para o Django admin.
+ * Aplicado somente quando o corpo possui a classe ``layout-leve``.
+ */
+
+body.layout-leve {
+    font-family: "Inter", "Helvetica Neue", Arial, sans-serif;
+    background: #f5f7fb;
+    color: #1f2937;
+    transition: background 0.3s ease;
+}
+
+body.layout-leve #header {
+    background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+    box-shadow: 0 4px 16px rgba(30, 64, 175, 0.3);
+}
+
+body.layout-leve #header h1 a {
+    color: #fff;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+body.layout-leve #header #user-tools {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+body.layout-leve #user-tools a {
+    color: #bfdbfe;
+    font-weight: 500;
+}
+
+body.layout-leve #content {
+    padding: 32px 40px;
+    margin-left: 280px;
+    transition: margin-left 0.3s ease;
+}
+
+body.layout-leve #content h1 {
+    font-weight: 600;
+    color: #1e3a8a;
+}
+
+body.layout-leve #content-main > .module,
+body.layout-leve .module
+{
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+}
+
+body.layout-leve .module h2 {
+    background: transparent;
+    color: #1f2937;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 18px 24px 10px;
+    font-size: 1.05rem;
+    font-weight: 600;
+}
+
+body.layout-leve .module table {
+    border: none;
+    width: 100%;
+}
+
+body.layout-leve table thead th {
+    background: #eff6ff;
+    color: #1e3a8a;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 14px 16px;
+    border-bottom: 1px solid #dbeafe;
+}
+
+body.layout-leve table tbody tr {
+    border-bottom: 1px solid #f1f5f9;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+body.layout-leve table tbody tr:hover {
+    background: #f8fafc;
+    transform: translateY(-1px);
+}
+
+body.layout-leve table td,
+body.layout-leve table th {
+    padding: 14px 16px;
+}
+
+body.layout-leve .paginator,
+body.layout-leve .actions {
+    padding: 18px 24px;
+    background: transparent;
+    border-top: 1px solid #e2e8f0;
+}
+
+body.layout-leve a.button,
+body.layout-leve button,
+body.layout-leve input[type="submit"],
+body.layout-leve input[type="button"],
+body.layout-leve .submit-row input {
+    border-radius: 999px;
+    padding: 10px 18px;
+    border: none;
+    background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+    color: #fff;
+    font-weight: 600;
+    box-shadow: 0 10px 20px rgba(37, 99, 235, 0.25);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+body.layout-leve a.button:hover,
+body.layout-leve button:hover,
+body.layout-leve input[type="submit"]:hover,
+body.layout-leve input[type="button"]:hover,
+body.layout-leve .submit-row input:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 14px 28px rgba(37, 99, 235, 0.3);
+}
+
+body.layout-leve #nav-sidebar {
+    background: #111827;
+    width: 280px;
+    padding: 24px 0 40px;
+    box-shadow: 12px 0 40px rgba(15, 23, 42, 0.25);
+    transition: transform 0.3s ease;
+}
+
+body.layout-leve #nav-sidebar .module caption,
+body.layout-leve #nav-sidebar h2 {
+    color: #f9fafb;
+    font-size: 0.85rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0.7;
+    padding: 0 24px 12px;
+}
+
+body.layout-leve #nav-sidebar .module ul li a {
+    padding: 10px 24px;
+    border-radius: 8px;
+    color: #e5e7eb;
+    display: block;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+body.layout-leve #nav-sidebar .module ul li a:hover,
+body.layout-leve #nav-sidebar .module ul li a:focus,
+body.layout-leve #nav-sidebar .module ul li a.selected {
+    background: rgba(96, 165, 250, 0.18);
+    color: #fff;
+    transform: translateX(4px);
+}
+
+body.layout-leve .breadcrumbs {
+    background: transparent;
+    color: #64748b;
+    font-size: 0.95rem;
+    padding-left: 0;
+}
+
+body.layout-leve .breadcrumbs a {
+    color: #2563eb;
+    font-weight: 500;
+}
+
+body.layout-leve .layout-leve__sidebar-toggle {
+    position: fixed;
+    top: 18px;
+    left: 16px;
+    z-index: 1100;
+    border: none;
+    border-radius: 999px;
+    background: rgba(17, 24, 39, 0.85);
+    color: #f8fafc;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.35);
+}
+
+body.layout-leve .layout-leve__sidebar-toggle:hover {
+    background: rgba(30, 41, 59, 0.95);
+    transform: translateY(-1px);
+}
+
+body.layout-leve .layout-leve__sidebar-toggle .icon {
+    font-size: 1.2rem;
+    line-height: 1;
+}
+
+body.layout-leve.layout-leve--sidebar-collapsed #nav-sidebar {
+    transform: translateX(-320px);
+}
+
+body.layout-leve.layout-leve--sidebar-collapsed #content {
+    margin-left: 60px;
+}
+
+@media (max-width: 1200px) {
+    body.layout-leve #content {
+        margin-left: 60px;
+    }
+
+    body.layout-leve #nav-sidebar {
+        transform: translateX(-320px);
+    }
+
+    body.layout-leve.layout-leve--sidebar-collapsed #content {
+        margin-left: 20px;
+    }
+}
+
+body.layout-leve .submit-row {
+    background: transparent;
+    border-top: 1px solid #e2e8f0;
+}
+
+body.layout-leve .object-tools a {
+    background: rgba(37, 99, 235, 0.12);
+    color: #1e3a8a;
+    border-radius: 999px;
+    font-weight: 600;
+}
+
+body.layout-leve .object-tools a:hover {
+    background: rgba(59, 130, 246, 0.2);
+    color: #1e40af;
+}
+
+body.layout-leve .selector .selector-available h2,
+body.layout-leve .selector .selector-chosen h2 {
+    background: #1e3a8a;
+    color: #fff;
+}
+
+body.layout-leve .selector .selector-filter input {
+    border-radius: 999px;
+    border: 1px solid #cbd5f5;
+}
+
+body.layout-leve .calendarbox, body.layout-leve .clockbox {
+    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.18);
+    border-radius: 12px;
+}
+
+body.layout-leve .calendar caption, body.layout-leve .calendar th {
+    background: #1d4ed8;
+    color: #fff;
+}
+
+body.layout-leve .calendar td a:hover {
+    background: rgba(59, 130, 246, 0.2);
+}

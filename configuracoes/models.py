@@ -12,6 +12,11 @@ class SiteConfig(models.Model):
     slogan = models.CharField(_('Slogan'), max_length=255, blank=True)
     descricao = models.TextField(_('Descrição'), blank=True)
     logo = models.ImageField(_('Logo'), upload_to='configuracoes/logo/', blank=True, null=True)
+    usar_layout_leve = models.BooleanField(
+        _('Usar layout leve'),
+        default=False,
+        help_text=_('Ativa o novo layout leve do Django admin.'),
+    )
     atualizado_em = models.DateTimeField(_('Atualizado em'), auto_now=True)
 
     class Meta:

@@ -12,3 +12,7 @@ class SiteConfigModelTest(TestCase):
     def test_string_representation(self) -> None:
         config = SiteConfig.objects.create(site_name='Lar Espírita', slogan='Luz e Caridade')
         self.assertEqual(str(config), 'Lar Espírita')
+
+    def test_layout_leve_desativado_por_padrao(self) -> None:
+        config = SiteConfig.objects.create(site_name='Lar Espírita')
+        self.assertFalse(config.usar_layout_leve)

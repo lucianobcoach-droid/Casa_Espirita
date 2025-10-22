@@ -1,0 +1,25 @@
+{% extends "admin/base.html" %}
+{% load i18n %}
+{% load static %}
+{% load configuracoes_admin %}
+
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block extrahead %}
+    {{ block.super }}
+    {% get_site_config as site_config %}
+    {% if site_config and site_config.usar_layout_leve %}
+        <link rel="stylesheet" href="{% static 'configuracoes/admin/light.css' %}">
+        <script src="{% static 'configuracoes/admin/light.js' %}" defer></script>
+    {% endif %}
+{% endblock %}
+
+{% block bodyclass %}
+    {{ block.super }}{% get_site_config as site_config %}{% if site_config and site_config.usar_layout_leve %} layout-leve{% endif %}
+{% endblock %}
+
+{% block branding %}
+<h1 id="site-name"><a href="{% url 'admin:index' %}">{{ site_header|default:_('Django administration') }}</a></h1>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}
