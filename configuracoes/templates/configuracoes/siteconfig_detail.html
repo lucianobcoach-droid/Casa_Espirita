@@ -6,11 +6,16 @@
     <link rel="stylesheet" href="/static/configuracoes/site.css" />
   </head>
   <body>
+    {% load static %}
     <header>
-      <img src="{{ object.logo.url if object.logo else '/static/configuracoes/logo.svg' }}" alt="Logo" class="logo" />
+      <img
+        src="{% if object.logo %}{{ object.logo.url }}{% else %}{% static 'configuracoes/logo.svg' %}{% endif %}"
+        alt="Logo"
+        class="logo"
+      />
       <h1>{{ object.site_name }}</h1>
       {% if object.slogan %}
-      <p class="slogan">{{ object.slogan }}</p>
+        <p class="slogan">{{ object.slogan }}</p>
       {% endif %}
     </header>
     <main>
