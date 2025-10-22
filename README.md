@@ -1,2 +1,3 @@
-# Meu projeto inicial
-Repositório criado para integração com o Codex.
+# Casa Espírita
+
+Base inicial do projeto Django para gerenciar informações de uma casa espírita.

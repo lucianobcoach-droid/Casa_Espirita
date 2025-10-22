@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="utf-8" />
+    <title>{{ object.site_name|default:"Casa Espírita" }}</title>
+    <link rel="stylesheet" href="/static/configuracoes/site.css" />
+  </head>
+  <body>
+    <header>
+      <img src="{{ object.logo.url if object.logo else '/static/configuracoes/logo.svg' }}" alt="Logo" class="logo" />
+      <h1>{{ object.site_name }}</h1>
+      {% if object.slogan %}
+      <p class="slogan">{{ object.slogan }}</p>
+      {% endif %}
+    </header>
+    <main>
+      <section>
+        <h2>Sobre</h2>
+        <p>{{ object.descricao|default:"Configure a descrição do site pelo Django admin." }}</p>
+      </section>
+    </main>
+    <footer>
+      <small>Atualizado em: {{ object.atualizado_em|date:"d/m/Y H:i" }}</small>
+    </footer>
+  </body>
+</html>
