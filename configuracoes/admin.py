@@ -17,5 +17,12 @@ class SiteConfigAdmin(admin.ModelAdmin):
     fieldsets = (
         (None, {'fields': ('site_name', 'slogan', 'descricao')}),
         ('Identidade visual', {'fields': ('logo',)}),
+        (
+            'Interface do admin',
+            {
+                'fields': ('usar_layout_leve',),
+                'description': 'Ativa o layout leve inspirado em Colorlib (sidebar recolhível, tabelas leves).',
+            },
+        ),
         ('Auditoria', {'fields': ('atualizado_em',)}),
     )
