@@ -1,0 +1,34 @@
+{% extends 'biblioteca/base.html' %}
+{% block title %}Vendas{% endblock %}
+{% block content %}
+<div class="level">
+    <div class="level-left">
+        <h1 class="title">Vendas</h1>
+    </div>
+    <div class="level-right">
+        <a class="button is-primary" href="{% url 'biblioteca:venda-create' %}">Registrar venda</a>
+    </div>
+</div>
+<table class="table is-fullwidth">
+    <thead>
+    <tr>
+        <th>Livro</th>
+        <th>Quantidade</th>
+        <th>Valor unitário</th>
+        <th>Data</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for venda in vendas %}
+        <tr>
+            <td>{{ venda.livro }}</td>
+            <td>{{ venda.quantidade }}</td>
+            <td>R$ {{ venda.valor_unitario }}</td>
+            <td>{{ venda.criado_em }}</td>
+        </tr>
+    {% empty %}
+        <tr><td colspan="4">Nenhuma venda registrada.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

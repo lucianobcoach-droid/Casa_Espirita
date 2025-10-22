@@ -1,0 +1,38 @@
+{% extends 'biblioteca/base.html' %}
+{% block title %}Empréstimos{% endblock %}
+{% block content %}
+<div class="level">
+    <div class="level-left">
+        <h1 class="title">Empréstimos</h1>
+    </div>
+    <div class="level-right">
+        <a class="button is-primary" href="{% url 'biblioteca:emprestimo-create' %}">Registrar empréstimo</a>
+    </div>
+</div>
+<table class="table is-fullwidth">
+    <thead>
+    <tr>
+        <th>Livro</th>
+        <th>Leitor</th>
+        <th>Quantidade</th>
+        <th>Data empréstimo</th>
+        <th>Prevista devolução</th>
+        <th>Status</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for emprestimo in emprestimos %}
+        <tr>
+            <td>{{ emprestimo.livro }}</td>
+            <td>{{ emprestimo.leitor }}</td>
+            <td>{{ emprestimo.quantidade }}</td>
+            <td>{{ emprestimo.data_emprestimo }}</td>
+            <td>{{ emprestimo.data_prevista_devolucao }}</td>
+            <td>{{ emprestimo.get_status_display }}</td>
+        </tr>
+    {% empty %}
+        <tr><td colspan="6">Nenhum empréstimo registrado.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

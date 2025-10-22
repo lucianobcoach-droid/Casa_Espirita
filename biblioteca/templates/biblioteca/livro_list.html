@@ -1,0 +1,34 @@
+{% extends 'biblioteca/base.html' %}
+{% block title %}Livros{% endblock %}
+{% block content %}
+<div class="level">
+    <div class="level-left">
+        <h1 class="title">Livros</h1>
+    </div>
+    <div class="level-right">
+        <a class="button is-primary" href="{% url 'biblioteca:livro-create' %}">Novo livro</a>
+    </div>
+</div>
+<table class="table is-fullwidth">
+    <thead>
+    <tr>
+        <th>Título</th>
+        <th>Autores</th>
+        <th>Preço</th>
+        <th>Estoque</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for livro in livros %}
+        <tr>
+            <td>{{ livro.titulo }}</td>
+            <td>{{ livro.autores.all|join:', ' }}</td>
+            <td>R$ {{ livro.preco }}</td>
+            <td>{{ livro.estoque_disponivel }}/{{ livro.estoque_total }}</td>
+        </tr>
+    {% empty %}
+        <tr><td colspan="4">Nenhum livro cadastrado.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
