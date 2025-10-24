@@ -1,0 +1,119 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'configuracoes/admin/admin-index.css' %}">
+{% endblock %}
+
+{% block coltype %}colMS{% endblock %}
+
+{% block bodyclass %}{{ block.super }} dashboard{% endblock %}
+
+{% block nav-breadcrumbs %}{% endblock %}
+
+{% block nav-sidebar %}{% endblock %}
+
+{% block content %}
+    <div id="content-main" class="content">
+        {% if app_list %}
+            <div class="admin-dashboard" role="list">
+                {% for app in app_list %}
+                    <section class="app-card" role="listitem">
+                        <header class="app-card__header">
+                            <div class="app-card__heading">
+                                <h2 class="app-card__title">{{ app.name }}</h2>
+                                {% if app.models %}
+                                    <p class="app-card__meta">
+                                        {% blocktrans count counter=app.models|length %}
+                                            1 recurso
+                                        {% plural %}
+                                            {{ counter }} recursos
+                                        {% endblocktrans %}
+                                    </p>
+                                {% endif %}
+                            </div>
+                            {% if app.app_url %}
+                                <a class="app-card__view-all" href="{{ app.app_url }}">
+                                    <span class="app-card__view-all-text">{% trans "Ver todos" %}</span>
+                                    <span aria-hidden="true" class="app-card__view-all-icon">↗</span>
+                                </a>
+                            {% endif %}
+                        </header>
+                        <div class="app-card__body">
+                            {% if app.models %}
+                                <ul class="app-card__model-list">
+                                    {% for model in app.models %}
+                                        <li class="app-card__model{% if not model.perms.change and not model.perms.add %} app-card__model--inactive{% endif %}">
+                                            <div class="app-card__model-info">
+                                                {% if model.admin_url %}
+                                                    <a class="app-card__model-name" href="{{ model.admin_url }}">{{ model.name }}</a>
+                                                {% else %}
+                                                    <span class="app-card__model-name">{{ model.name }}</span>
+                                                {% endif %}
+                                                {% if model.perms.view and not model.perms.change %}
+                                                    <span class="app-card__model-pill">{% trans "Somente leitura" %}</span>
+                                                {% endif %}
+                                            </div>
+                                            <div class="app-card__model-actions">
+                                                {% if model.perms.add and model.add_url %}
+                                                    <a class="model-actions__btn model-actions__btn--primary" href="{{ model.add_url }}">
+                                                        {% trans "Adicionar" %}
+                                                    </a>
+                                                {% endif %}
+                                                {% if model.perms.change and model.admin_url %}
+                                                    <a class="model-actions__btn model-actions__btn--ghost" href="{{ model.admin_url }}">
+                                                        {% trans "Abrir" %}
+                                                    </a>
+                                                {% endif %}
+                                            </div>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <p class="app-card__empty">{% trans "Nenhum modelo disponível neste domínio." %}</p>
+                            {% endif %}
+                        </div>
+                    </section>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-apps">
+                <h2>{% trans "Sem módulos disponíveis" %}</h2>
+                <p>{% trans "Solicite ao administrador do sistema acesso a algum aplicativo." %}</p>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block sidebar %}
+    <div id="content-related">
+        <div class="module" id="recent-actions-module">
+            <h2>{% trans "Ações recentes" %}</h2>
+            <h3>{% trans "Minhas ações" %}</h3>
+            {% load log %}
+            {% get_admin_log 10 as admin_log for_user user %}
+            {% if not admin_log %}
+                <p>{% trans "Nenhuma ação disponível" %}</p>
+            {% else %}
+                <ul class="actionlist">
+                    {% for entry in admin_log %}
+                        <li class="{% if entry.is_addition %}addlink{% endif %}{% if entry.is_change %} changelink{% endif %}{% if entry.is_deletion %} deletelink{% endif %}">
+                            {% if entry.is_deletion or not entry.get_admin_url %}
+                                {{ entry.object_repr }}
+                            {% else %}
+                                <a href="{{ entry.get_admin_url }}">{{ entry.object_repr }}</a>
+                            {% endif %}
+                            <br>
+                            {% if entry.content_type %}
+                                <span class="mini quiet">{% filter capfirst %}{{ entry.content_type.name }}{% endfilter %}</span>
+                            {% else %}
+                                <span class="mini quiet">{% trans "Tipo removido" %}</span>
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
