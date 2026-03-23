@@ -4,61 +4,55 @@ Data: 2026-03-23
 
 ## Entrega realizada
 
-Foi executada a etapa incremental de consistência de contas: `data_saldo_inicial` tornou-se obrigatória e a listagem de contas passou a exibir `saldo_atual` calculado, sem persistir esse valor no banco.
+Foi executada a etapa incremental do extrato por conta com filtro por período e cálculo de saldo anterior, sem alterar o domínio além do necessário.
 
-## Verificação prévia obrigatória
+Complemento incremental posterior:
 
-Antes da implementação, foi conferido o banco local.
+- saldo real das contas passou a considerar apenas lançamentos quitados
+- o extrato por conta passou a listar apenas lançamentos quitados
+- o saldo anterior do extrato por período passou a considerar apenas lançamentos quitados anteriores ao período
 
-Resultado:
+## Filtro por período
 
-- não havia mais contas com `data_saldo_inicial` nula
+O extrato agora aceita por GET:
 
-## Migration criada
+- `data_inicial`
+- `data_final`
 
-- `financeiro/migrations/0003_contafinanceira_data_saldo_inicial_required.py`
+Sem filtro:
+
+- mantém o extrato completo
+- começa em `saldo_inicial`
+
+Com filtro:
+
+- lista apenas lançamentos do período
+- calcula `saldo_anterior` até o dia anterior ao início informado
+- inicia o saldo acumulado do período a partir desse valor
+
+## Regra do saldo anterior
+
+O `saldo_anterior` é calculado assim:
+
+- começa em `saldo_inicial`
+- soma receitas anteriores
+- subtrai despesas anteriores
+- subtrai transferências em que a conta é origem
+- soma transferências em que a conta é destino
 
 ## Arquivos alterados nesta etapa
 
-- `financeiro/models.py`
 - `financeiro/views.py`
-- `financeiro/templates/financeiro/conta_list.html`
 - `financeiro/templates/financeiro/conta_extrato.html`
-- `financeiro/migrations/0003_contafinanceira_data_saldo_inicial_required.py`
 - `docs/CEREBRO_PROJETO.md`
 - `docs/STATE.md`
 - `docs/CODEX_RESULTADO.md`
 
-## Regra do saldo_atual
-
-O `saldo_atual` é calculado em tempo de execução:
-
-- começa em `saldo_inicial`
-- soma receitas da conta
-- subtrai despesas da conta
-- subtrai transferências em que a conta é origem
-- soma transferências em que a conta é destino
-
-Não foi criado campo novo para `saldo_atual`.
-
-## Onde o saldo_atual aparece
-
-- na listagem de contas
-- no topo do extrato da conta, como referência visual do saldo final acumulado
-
-## Restrições respeitadas
-
-- sem alterações no app `biblioteca`
-- sem uso de `signals`
-- sem salvar `saldo_atual` no banco
-- sem criar campo novo para `saldo_atual`
-- sem criar relatórios gerais
-- sem alteração de migrations antigas
-- mudança mínima e incremental
-
 ## Resultado prático
 
-- `data_saldo_inicial` agora é obrigatória
-- a listagem de contas ficou mais útil com `saldo_atual` calculado
-- transferências entram corretamente no cálculo
-- o restante do domínio financeiro permaneceu intacto
+- o extrato continua funcionando sem filtro
+- o extrato aceita filtro por período
+- o saldo anterior aparece quando há `data_inicial`
+- o saldo acumulado do período parte corretamente do saldo anterior
+- transferências continuam coerentes na conta de origem e na conta de destino
+- lançamentos não quitados deixaram de afetar saldo real e extrato

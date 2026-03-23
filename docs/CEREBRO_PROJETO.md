@@ -74,6 +74,8 @@ Até o momento, está validado que:
 - `data_saldo_inicial` agora é obrigatória
 - o extrato por conta existe
 - a listagem de contas já mostra `saldo_atual` calculado
+- o extrato por conta já aceita filtro por período com saldo anterior
+- saldo real da conta considera apenas lançamentos `quitado`
 
 ---
 
@@ -104,6 +106,8 @@ Os tipos válidos de lançamento são:
 - o saldo inicial serve como base do extrato e do saldo acumulado
 - `saldo_atual` é calculado em tempo de execução
 - `saldo_atual` não é salvo no banco
+- quando houver filtro por período no extrato, deve existir `saldo_anterior`
+- apenas lançamentos com `status = quitado` afetam saldo real e extrato
 
 ---
 
@@ -191,9 +195,12 @@ Escopo implementado:
 - view de extrato por conta
 - template de extrato
 - cálculo de saldo acumulado a partir de `saldo_inicial`
+- filtro por período via GET
+- cálculo de `saldo_anterior` quando houver `data_inicial`
 
 Regras implementadas:
-- começa do `saldo_inicial` da conta
+- sem filtro: extrato completo desde o saldo inicial
+- com filtro: lançamentos do período e saldo acumulado iniciando do saldo anterior
 - `receita` = entrada
 - `despesa` = saída
 - `transferencia`:

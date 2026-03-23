@@ -11,15 +11,45 @@
                     em {{ data_saldo_inicial|date:'d/m/Y' }}
                 {% endif %}
             </p>
-            <p class="subtitle">Saldo atual: R$ {{ saldo_atual }}</p>
+            {% if data_inicial or data_final %}
+                <p class="subtitle">
+                    Periodo:
+                    {% if data_inicial %}{{ data_inicial }}{% else %}inicio em aberto{% endif %}
+                    ate
+                    {% if data_final %}{{ data_final }}{% else %}fim em aberto{% endif %}
+                </p>
+            {% endif %}
+            {% if saldo_anterior is not None %}
+                <p class="subtitle">Saldo anterior: R$ {{ saldo_anterior }}</p>
+            {% endif %}
+            <p class="subtitle">Saldo final exibido (quitado): R$ {{ saldo_final }}</p>
         </div>
     </div>
     <div class="level-right">
         <a class="button" href="{% url 'financeiro:conta-list' %}">Voltar para contas</a>
     </div>
 </div>
+<form method="get" class="filters-box">
+    <div class="columns is-multiline">
+        <div class="column is-4">
+            <label class="label">Data inicial</label>
+            <input class="input" type="date" name="data_inicial" value="{{ data_inicial }}">
+        </div>
+        <div class="column is-4">
+            <label class="label">Data final</label>
+            <input class="input" type="date" name="data_final" value="{{ data_final }}">
+        </div>
+        <div class="column is-4">
+            <label class="label">&nbsp;</label>
+            <div class="buttons">
+                <button class="button is-link" type="submit">Aplicar periodo</button>
+                <a class="button is-light" href="{% url 'financeiro:conta-extrato' conta.pk %}">Limpar</a>
+            </div>
+        </div>
+    </div>
+</form>
 <div class="notification is-light">
-    O saldo acumulado parte do saldo inicial. Receitas entram, despesas saem e transferencias saem da conta de origem e entram na conta de destino.
+    O saldo acumulado parte do saldo inicial e considera apenas lancamentos quitados. Quando houver data inicial, as linhas do periodo passam a partir do saldo anterior. Receitas quitadas entram, despesas quitadas saem e transferencias quitadas saem da conta de origem e entram na conta de destino.
 </div>
 <div class="table-wrapper">
     <table class="table is-fullwidth is-striped is-hoverable">
@@ -35,15 +65,17 @@
         </tr>
         </thead>
         <tbody>
-        <tr>
-            <td>{% if data_saldo_inicial %}{{ data_saldo_inicial|date:'d/m/Y' }}{% else %}-{% endif %}</td>
-            <td>Saldo inicial</td>
-            <td>Inicial</td>
-            <td>R$ {{ saldo_inicial }}</td>
-            <td>-</td>
-            <td>R$ {{ saldo_inicial }}</td>
-            <td>-</td>
-        </tr>
+        {% if exibe_linha_saldo_inicial %}
+            <tr>
+                <td>{% if data_saldo_inicial %}{{ data_saldo_inicial|date:'d/m/Y' }}{% else %}-{% endif %}</td>
+                <td>Saldo inicial</td>
+                <td>Inicial</td>
+                <td>R$ {{ saldo_inicial }}</td>
+                <td>-</td>
+                <td>R$ {{ saldo_inicial }}</td>
+                <td>-</td>
+            </tr>
+        {% endif %}
         {% for item in itens_extrato %}
             <tr>
                 <td>{{ item.lancamento.data_competencia|date:'d/m/Y' }}</td>
@@ -56,7 +88,7 @@
             </tr>
         {% empty %}
             <tr>
-                <td colspan="7">Nenhum lancamento encontrado para esta conta.</td>
+                <td colspan="7">Nenhum lancamento quitado encontrado para esta conta.</td>
             </tr>
         {% endfor %}
         </tbody>

@@ -133,7 +133,8 @@ class ContaFinanceiraListView(ListView):
 
         if contas_por_id:
             lancamentos = LancamentoFinanceiro.objects.filter(
-                Q(conta_id__in=contas_por_id.keys()) | Q(conta_destino_id__in=contas_por_id.keys())
+                Q(conta_id__in=contas_por_id.keys()) | Q(conta_destino_id__in=contas_por_id.keys()),
+                status=LancamentoFinanceiro.StatusLancamento.QUITADO,
             ).only('tipo', 'valor', 'conta_id', 'conta_destino_id')
 
             for lancamento in lancamentos:
@@ -189,31 +190,54 @@ class ContaFinanceiraExtratoView(DetailView):
     template_name = 'financeiro/conta_extrato.html'
     context_object_name = 'conta'
 
+    def _classificar_lancamento(self, conta: ContaFinanceira, lancamento: LancamentoFinanceiro) -> tuple[Decimal, Decimal]:
+        entrada = Decimal('0.00')
+        saida = Decimal('0.00')
+
+        if lancamento.tipo == LancamentoFinanceiro.TipoLancamento.RECEITA and lancamento.conta_id == conta.id:
+            entrada = lancamento.valor
+        elif lancamento.tipo == LancamentoFinanceiro.TipoLancamento.DESPESA and lancamento.conta_id == conta.id:
+            saida = lancamento.valor
+        elif lancamento.tipo == LancamentoFinanceiro.TipoLancamento.TRANSFERENCIA:
+            if lancamento.conta_id == conta.id:
+                saida = lancamento.valor
+            elif lancamento.conta_destino_id == conta.id:
+                entrada = lancamento.valor
+
+        return entrada, saida
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         conta = self.object
-        saldo_acumulado = conta.saldo_inicial or Decimal('0.00')
-        lancamentos = (
-            LancamentoFinanceiro.objects.filter(Q(conta=conta) | Q(conta_destino=conta))
+        data_inicial = self.request.GET.get('data_inicial', '').strip()
+        data_final = self.request.GET.get('data_final', '').strip()
+
+        queryset_base = (
+            LancamentoFinanceiro.objects.filter(
+                Q(conta=conta) | Q(conta_destino=conta),
+                status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+            )
             .select_related('conta', 'conta_destino', 'pessoa', 'categoria')
             .order_by('data_competencia', 'criado_em', 'pk')
         )
 
+        saldo_anterior = conta.saldo_inicial or Decimal('0.00')
+        if data_inicial:
+            lancamentos_anteriores = queryset_base.filter(data_competencia__lt=data_inicial)
+            for lancamento in lancamentos_anteriores:
+                entrada, saida = self._classificar_lancamento(conta, lancamento)
+                saldo_anterior += entrada - saida
+
+        lancamentos = queryset_base
+        if data_inicial:
+            lancamentos = lancamentos.filter(data_competencia__gte=data_inicial)
+        if data_final:
+            lancamentos = lancamentos.filter(data_competencia__lte=data_final)
+
+        saldo_acumulado = saldo_anterior if data_inicial else (conta.saldo_inicial or Decimal('0.00'))
         itens_extrato = []
         for lancamento in lancamentos:
-            entrada = Decimal('0.00')
-            saida = Decimal('0.00')
-
-            if lancamento.tipo == LancamentoFinanceiro.TipoLancamento.RECEITA and lancamento.conta_id == conta.id:
-                entrada = lancamento.valor
-            elif lancamento.tipo == LancamentoFinanceiro.TipoLancamento.DESPESA and lancamento.conta_id == conta.id:
-                saida = lancamento.valor
-            elif lancamento.tipo == LancamentoFinanceiro.TipoLancamento.TRANSFERENCIA:
-                if lancamento.conta_id == conta.id:
-                    saida = lancamento.valor
-                elif lancamento.conta_destino_id == conta.id:
-                    entrada = lancamento.valor
-
+            entrada, saida = self._classificar_lancamento(conta, lancamento)
             saldo_acumulado += entrada - saida
             itens_extrato.append(
                 {
@@ -227,6 +251,10 @@ class ContaFinanceiraExtratoView(DetailView):
         context['page_title'] = f'Extrato da Conta: {conta.nome}'
         context['saldo_inicial'] = conta.saldo_inicial or Decimal('0.00')
         context['data_saldo_inicial'] = conta.data_saldo_inicial
+        context['data_inicial'] = data_inicial
+        context['data_final'] = data_final
+        context['saldo_anterior'] = saldo_anterior if data_inicial else None
+        context['exibe_linha_saldo_inicial'] = not (data_inicial or data_final)
         context['itens_extrato'] = itens_extrato
         context['saldo_final'] = saldo_acumulado
         context['saldo_atual'] = saldo_acumulado
