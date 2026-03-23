@@ -10,7 +10,7 @@
 <form method="post">
     {% csrf_token %}
     {% for field in form %}
-        <div class="field">
+        <div class="field"{% if field.name == 'conta_destino' %} data-financeiro-conta-destino-wrapper="true"{% endif %}>
             <label class="label" for="{{ field.id_for_label }}">{{ field.label }}</label>
             <div class="control">
                 {{ field }}
@@ -28,4 +28,28 @@
         <a class="button" href="{% url 'financeiro:lancamento-list' %}">Voltar</a>
     </div>
 </form>
+<script>
+    (function () {
+        const tipoField = document.querySelector('[data-financeiro-tipo="true"]');
+        const contaDestinoField = document.querySelector('[data-financeiro-conta-destino="true"]');
+        const contaDestinoWrapper = document.querySelector('[data-financeiro-conta-destino-wrapper="true"]');
+
+        if (!tipoField || !contaDestinoField || !contaDestinoWrapper) {
+            return;
+        }
+
+        function syncContaDestino() {
+            const isTransferencia = tipoField.value === 'transferencia';
+            contaDestinoWrapper.style.display = isTransferencia ? '' : 'none';
+            contaDestinoField.disabled = !isTransferencia;
+
+            if (!isTransferencia) {
+                contaDestinoField.value = '';
+            }
+        }
+
+        tipoField.addEventListener('change', syncContaDestino);
+        syncContaDestino();
+    }());
+</script>
 {% endblock %}

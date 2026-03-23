@@ -72,6 +72,17 @@ Abordagem usada:
 - `ModelForm`
 - layout leve e institucional com tabelas e rolagem horizontal natural em telas menores
 
+## Ajuste de usabilidade no formulário de lançamento
+
+Foi implementado um ajuste apenas de interface no formulário de lançamento:
+
+- `conta_destino` só aparece quando o tipo selecionado é `transferencia`
+- em `receita` e `despesa`, o campo fica oculto e desabilitado
+- ao mudar de `transferencia` para outro tipo, o campo é limpo no cliente
+- o `ModelForm` também limpa `conta_destino` antes da persistência quando o tipo não é `transferencia`
+
+Esse ajuste não altera domínio, models, migrations nem as validações já existentes no model.
+
 ## Restrições respeitadas
 
 - sem regressão intencional do estado atual

@@ -64,6 +64,14 @@ Data de atualização: 2026-03-23
 - `CategoriaFinanceiraForm`
 - `LancamentoFinanceiroForm`
 
+## Ajuste de usabilidade em lançamento
+
+- O campo `conta_destino` agora aparece apenas quando `tipo = transferencia`.
+- Em `receita` e `despesa`, o campo fica oculto e desabilitado na interface.
+- Ao trocar de `transferencia` para outro tipo, o valor de `conta_destino` é limpo no navegador.
+- O `LancamentoFinanceiroForm` também limpa `conta_destino` no `clean()` quando o tipo não é `transferencia`.
+- As validações do model permanecem intactas e continuam sendo a fonte de verdade do domínio.
+
 ## Views atuais
 
 - `FinanceiroHomeView`

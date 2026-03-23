@@ -32,6 +32,17 @@ class CategoriaFinanceiraForm(forms.ModelForm):
 
 
 class LancamentoFinanceiroForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['tipo'].widget.attrs.update({'data-financeiro-tipo': 'true'})
+        self.fields['conta_destino'].widget.attrs.update({'data-financeiro-conta-destino': 'true'})
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if cleaned_data.get('tipo') != LancamentoFinanceiro.TipoLancamento.TRANSFERENCIA:
+            cleaned_data['conta_destino'] = None
+        return cleaned_data
+
     class Meta:
         model = LancamentoFinanceiro
         fields = [
