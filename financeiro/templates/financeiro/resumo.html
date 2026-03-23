@@ -1,4 +1,5 @@
 {% extends 'financeiro/base.html' %}
+{% load financeiro_format %}
 {% block title %}{{ page_title }}{% endblock %}
 {% block content %}
 <div class="level">
@@ -53,31 +54,31 @@
             <div class="column is-6-tablet is-4-desktop">
                 <div class="box">
                     <p class="heading">Saldo inicial consolidado</p>
-                    <p class="title is-4">R$ {{ saldo_inicial_consolidado }}</p>
+                    <p class="title is-4"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_inicial_consolidado|br_money }}</span></span></p>
                 </div>
             </div>
             <div class="column is-6-tablet is-4-desktop">
                 <div class="box">
                     <p class="heading">Receitas do periodo</p>
-                    <p class="title is-4 has-text-link">R$ {{ total_receitas_periodo }}</p>
+                    <p class="title is-4 has-text-link"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ total_receitas_periodo|br_money }}</span></span></p>
                 </div>
             </div>
             <div class="column is-6-tablet is-4-desktop">
                 <div class="box">
                     <p class="heading">Despesas do periodo</p>
-                    <p class="title is-4 has-text-danger">R$ {{ total_despesas_periodo }}</p>
+                    <p class="title is-4 has-text-danger"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ total_despesas_periodo|br_money }}</span></span></p>
                 </div>
             </div>
             <div class="column is-6-tablet is-4-desktop">
                 <div class="box">
                     <p class="heading">Saldo do periodo</p>
-                    <p class="title is-4">R$ {{ saldo_periodo }}</p>
+                    <p class="title is-4"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_periodo|br_money }}</span></span></p>
                 </div>
             </div>
             <div class="column is-6-tablet is-4-desktop">
                 <div class="box">
                     <p class="heading">Saldo final consolidado</p>
-                    <p class="title is-4">R$ {{ saldo_final_consolidado }}</p>
+                    <p class="title is-4"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_final_consolidado|br_money }}</span></span></p>
                 </div>
             </div>
         </div>
@@ -106,7 +107,7 @@
                             {% for item in receitas_por_categoria %}
                                 <tr>
                                     <td>{{ item.categoria }}</td>
-                                    <td class="has-text-link">R$ {{ item.valor }}</td>
+                                    <td class="has-text-link"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ item.valor|br_money }}</span></span></td>
                                 </tr>
                             {% empty %}
                                 <tr>
@@ -117,7 +118,7 @@
                             <tfoot>
                             <tr>
                                 <th>Total de receitas por categoria</th>
-                                <th>R$ {{ total_receitas_por_categoria }}</th>
+                                <th><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ total_receitas_por_categoria|br_money }}</span></span></th>
                             </tr>
                             </tfoot>
                         </table>
@@ -143,7 +144,7 @@
                             {% for item in despesas_por_categoria %}
                                 <tr>
                                     <td>{{ item.categoria }}</td>
-                                    <td class="has-text-danger">R$ {{ item.valor }}</td>
+                                    <td class="has-text-danger"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ item.valor|br_money }}</span></span></td>
                                 </tr>
                             {% empty %}
                                 <tr>
@@ -154,7 +155,7 @@
                             <tfoot>
                             <tr>
                                 <th>Total de despesas por categoria</th>
-                                <th>R$ {{ total_despesas_por_categoria }}</th>
+                                <th><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ total_despesas_por_categoria|br_money }}</span></span></th>
                             </tr>
                             </tfoot>
                         </table>

@@ -17,6 +17,8 @@ Data de atualização: 2026-03-23
 - O financeiro agora possui tela própria de `Prestacao de Contas` por período.
 - As telas de `Resumo` e `Prestacao de Contas` agora permitem selecionar quais contas entram no relatório.
 - As telas de `Resumo` e `Prestacao de Contas` agora mostram receitas e despesas agrupadas por categoria.
+- A tela de `Prestacao de Contas` recebeu refinamento visual específico para impressão em A4.
+- A `Prestacao de Contas` agora tem apresentação mais formal, com menos aparência de dashboard.
 - O app `biblioteca` não foi alterado.
 - Não foram usados `signals`.
 
@@ -84,13 +86,14 @@ Escopo funcional:
 - sem filtro informado, assume o mês atual
 - sem seleção explícita de contas, considera todas as contas
 - organiza a visualização em blocos formais
+- usa cabeçalho documental e estrutura contínua de relatório
 - mostra composição do saldo inicial
-- lista receitas e despesas do período
-- mostra receitas e despesas agrupadas por categoria
+- mostra receitas e despesas já consolidadas por categoria
 - mostra resumo do saldo disponível
 - mostra composição do saldo final por conta
 - mantém transferências internas neutras no consolidado geral
 - lançamentos sem categoria aparecem no agrupamento como `Sem categoria`
+- na impressão, oculta controles e mostra bloco simples de assinatura ao final
 
 ## Regra de saldo no extrato
 

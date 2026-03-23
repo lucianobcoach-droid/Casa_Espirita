@@ -246,6 +246,124 @@
             color: #1f2937;
         }
 
+        .prestacao-document {
+            max-width: 1080px;
+            margin: 0 auto;
+        }
+
+        .prestacao-signature {
+            display: none;
+        }
+
+        .prestacao-signature-line {
+            margin-top: 3rem;
+            border-top: 1px solid #6b7280;
+            width: 320px;
+            max-width: 100%;
+        }
+
+        .prestacao-filters {
+            margin-bottom: 1rem;
+            padding: 0.75rem 0.9rem;
+            border: 1px solid var(--financeiro-border);
+            border-radius: 0.6rem;
+            background: #fcfcfc;
+        }
+
+        .prestacao-report {
+            background: #fff;
+            border: 1px solid var(--financeiro-border);
+            padding: 1.5rem 1.6rem;
+        }
+
+        .prestacao-report-header {
+            margin-bottom: 1.4rem;
+            padding-bottom: 0.9rem;
+            border-bottom: 2px solid #d7dbe2;
+        }
+
+        .prestacao-report-title {
+            margin: 0 0 0.45rem;
+            font-size: 1.55rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: #17212d;
+        }
+
+        .prestacao-report-meta {
+            margin: 0.18rem 0;
+            color: #4b5563;
+            font-size: 0.92rem;
+        }
+
+        .prestacao-section {
+            margin-bottom: 1.2rem;
+            padding-top: 0.2rem;
+        }
+
+        .prestacao-section-title {
+            margin: 0 0 0.65rem;
+            padding-bottom: 0.4rem;
+            border-bottom: 1px solid #d7dbe2;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #223041;
+        }
+
+        .prestacao-summary-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .prestacao-summary-table td {
+            padding: 0.42rem 0;
+            border-bottom: 1px solid #eceff3;
+            font-size: 0.96rem;
+        }
+
+        .prestacao-summary-table td:last-child {
+            text-align: right;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .prestacao-summary-table tr.is-total td {
+            padding-top: 0.7rem;
+            border-top: 2px solid #cfd5dd;
+            border-bottom: 0;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .prestacao-table {
+            width: 100%;
+        }
+
+        .prestacao-table th:last-child,
+        .prestacao-table td:last-child {
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .money-cell {
+            display: inline-grid;
+            grid-template-columns: 2.1ch minmax(0, 1fr);
+            align-items: baseline;
+            gap: 0.35rem;
+            min-width: 12ch;
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+        }
+
+        .money-symbol {
+            text-align: left;
+        }
+
+        .money-number {
+            text-align: right;
+        }
+
         .extrato-text {
             background: transparent;
             border: 0;
@@ -359,11 +477,120 @@
                 box-shadow: none !important;
                 break-inside: avoid;
                 page-break-inside: avoid;
+                margin-bottom: 0.6rem !important;
             }
 
             .financeiro-report-header {
                 background: #fff !important;
                 border-bottom-color: #c7c7c7 !important;
+                padding: 0.45rem 0.6rem !important;
+            }
+
+            .financeiro-report-title {
+                font-size: 12px !important;
+                color: #111 !important;
+            }
+
+            .financeiro-report-body {
+                padding: 0.55rem 0.6rem !important;
+            }
+
+            .financeiro-kpi-grid {
+                gap: 0.45rem !important;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .financeiro-kpi {
+                padding: 0.55rem 0.6rem !important;
+            }
+
+            .financeiro-kpi-label {
+                font-size: 9px !important;
+                color: #444 !important;
+            }
+
+            .financeiro-kpi-value {
+                font-size: 13px !important;
+                color: #111 !important;
+            }
+
+            .financeiro-total-line {
+                padding-top: 0.4rem !important;
+                margin-top: 0.4rem !important;
+                border-top-color: #c7c7c7 !important;
+                color: #111 !important;
+            }
+
+            .prestacao-document {
+                max-width: none !important;
+            }
+
+            .prestacao-filters {
+                display: none !important;
+            }
+
+            .prestacao-report {
+                border-color: #c7c7c7 !important;
+                padding: 0 !important;
+                background: #fff !important;
+            }
+
+            .prestacao-report-header {
+                margin-bottom: 0.75rem !important;
+                padding-bottom: 0.45rem !important;
+                border-bottom-color: #c7c7c7 !important;
+            }
+
+            .prestacao-report-title {
+                font-size: 16px !important;
+                color: #111 !important;
+            }
+
+            .prestacao-report-meta {
+                font-size: 10px !important;
+                color: #111 !important;
+            }
+
+            .prestacao-section {
+                margin-bottom: 0.8rem !important;
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+
+            .prestacao-section-title {
+                font-size: 11px !important;
+                color: #111 !important;
+                border-bottom-color: #c7c7c7 !important;
+                margin-bottom: 0.45rem !important;
+            }
+
+            .prestacao-summary-table td {
+                font-size: 10px !important;
+                padding: 0.22rem 0 !important;
+                border-bottom-color: #d5d5d5 !important;
+            }
+
+            .money-cell {
+                min-width: 12ch !important;
+                gap: 0.25rem !important;
+            }
+
+            .prestacao-summary-table tr.is-total td {
+                border-top-color: #c7c7c7 !important;
+            }
+
+            .prestacao-signature {
+                display: block !important;
+                margin-top: 1rem;
+                padding-top: 0.3rem;
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+
+            .prestacao-signature p {
+                margin-bottom: 0.4rem !important;
+                font-size: 10px !important;
+                color: #111 !important;
             }
 
             .actions-cell {

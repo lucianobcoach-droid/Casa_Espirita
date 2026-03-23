@@ -82,6 +82,8 @@ Até o momento, está validado que:
 - o financeiro agora possui tela de `Prestacao de Contas` por período
 - `Resumo` e `Prestacao de Contas` agora permitem selecionar quais contas entram no relatório
 - `Resumo` e `Prestacao de Contas` agora exibem agrupamento por categoria para receitas e despesas
+- a `Prestacao de Contas` possui refinamento específico para impressão em A4 e bloco simples de assinatura
+- a `Prestacao de Contas` agora usa apresentação mais formal, contínua e documental
 
 ---
 

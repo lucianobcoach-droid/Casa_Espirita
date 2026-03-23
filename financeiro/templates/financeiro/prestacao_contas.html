@@ -1,321 +1,212 @@
 {% extends 'financeiro/base.html' %}
+{% load financeiro_format %}
 {% block title %}{{ page_title }}{% endblock %}
 {% block content %}
-<div class="level">
-    <div class="level-left">
-        <div>
-            <h1 class="title">{{ page_title }}</h1>
-            <p class="subtitle">Visao mensal estruturada em blocos, preparada para apresentacao e impressao.</p>
+<div class="prestacao-document">
+    <form method="get" class="prestacao-filters no-print">
+        <div class="columns is-multiline">
+            <div class="column is-4">
+                <label class="label">Contas incluidas</label>
+                <div class="select is-multiple is-fullwidth">
+                    <select name="contas" multiple size="6">
+                        {% for conta in contas_disponiveis %}
+                            <option value="{{ conta.pk }}" {% if conta.pk|stringformat:'s' in contas_selecionadas_ids %}selected{% endif %}>
+                                {{ conta.nome }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <p class="help">Sem selecao explicita, a prestacao considera todas as contas.</p>
+            </div>
+            <div class="column is-3">
+                <label class="label">Data inicial</label>
+                <input class="input" type="date" name="data_inicial" value="{{ data_inicial }}">
+            </div>
+            <div class="column is-3">
+                <label class="label">Data final</label>
+                <input class="input" type="date" name="data_final" value="{{ data_final }}">
+            </div>
+            <div class="column is-2">
+                <label class="label">&nbsp;</label>
+                <div class="buttons">
+                    <button class="button is-link" type="submit">Atualizar</button>
+                    <a class="button is-light" href="{% url 'financeiro:prestacao-contas' %}">Limpar</a>
+                </div>
+            </div>
         </div>
-    </div>
+    </form>
+
+    {% if periodo_error %}
+        <div class="notification is-warning">{{ periodo_error }}</div>
+    {% else %}
+        <div class="prestacao-report">
+            <header class="prestacao-report-header">
+                <h1 class="prestacao-report-title">Prestacao de Contas - {{ periodo_label }}</h1>
+                <p class="prestacao-report-meta"><strong>Periodo considerado:</strong> {{ periodo_label }}</p>
+                <p class="prestacao-report-meta"><strong>Contas incluidas no relatorio:</strong> {{ contas_incluidas_label }}</p>
+                {% if existe_lancamento_sem_categoria %}
+                    <p class="prestacao-report-meta">Lancamentos sem categoria aparecem no agrupamento como "Sem categoria".</p>
+                {% endif %}
+            </header>
+
+            <section class="prestacao-section">
+                <h2 class="prestacao-section-title">1. Saldo disponivel no inicio do periodo</h2>
+                <div class="table-wrapper">
+                    <table class="table is-fullwidth financeiro-table prestacao-table">
+                        <thead>
+                        <tr>
+                            <th>Conta</th>
+                            <th>Valor</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for item in composicao_inicial %}
+                            <tr>
+                                <td>{{ item.conta.nome }}</td>
+                                <td><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ item.saldo|br_money }}</span></span></td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="2">Nenhuma conta com saldo inicial para este periodo.</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                        <tfoot>
+                        <tr>
+                            <th>Total do saldo inicial</th>
+                            <th><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_inicial_consolidado|br_money }}</span></span></th>
+                        </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </section>
+
+            <section class="prestacao-section">
+                <h2 class="prestacao-section-title">2. Receitas do periodo</h2>
+                <div class="table-wrapper">
+                    <table class="table is-fullwidth financeiro-table prestacao-table">
+                        <thead>
+                        <tr>
+                            <th>Categoria</th>
+                            <th>Valor</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for item in receitas_por_categoria %}
+                            <tr>
+                                <td>{{ item.categoria }}</td>
+                                <td><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ item.valor|br_money }}</span></span></td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="2">Nao houve receitas no periodo.</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                        <tfoot>
+                        <tr>
+                            <th>Total de receitas do periodo</th>
+                            <th><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ total_receitas_por_categoria|br_money }}</span></span></th>
+                        </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </section>
+
+            <section class="prestacao-section">
+                <h2 class="prestacao-section-title">3. Despesas do periodo</h2>
+                <div class="table-wrapper">
+                    <table class="table is-fullwidth financeiro-table prestacao-table">
+                        <thead>
+                        <tr>
+                            <th>Categoria</th>
+                            <th>Valor</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for item in despesas_por_categoria %}
+                            <tr>
+                                <td>{{ item.categoria }}</td>
+                                <td><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ item.valor|br_money }}</span></span></td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="2">Nao houve despesas no periodo.</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                        <tfoot>
+                        <tr>
+                            <th>Total de despesas do periodo</th>
+                            <th><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ total_despesas_por_categoria|br_money }}</span></span></th>
+                        </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </section>
+
+            <section class="prestacao-section">
+                <h2 class="prestacao-section-title">4. Resumo do saldo disponivel</h2>
+                <table class="prestacao-summary-table">
+                    <tbody>
+                    <tr>
+                        <td>(+) Saldo inicial</td>
+                        <td><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_inicial_consolidado|br_money }}</span></span></td>
+                    </tr>
+                    <tr>
+                        <td>(+) Receitas do periodo</td>
+                        <td><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ total_receitas_periodo|br_money }}</span></span></td>
+                    </tr>
+                    <tr>
+                        <td>(-) Despesas do periodo</td>
+                        <td><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ total_despesas_periodo|br_money }}</span></span></td>
+                    </tr>
+                    <tr class="is-total">
+                        <td>(=) Saldo disponivel / saldo final</td>
+                        <td><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_final_consolidado|br_money }}</span></span></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section class="prestacao-section">
+                <h2 class="prestacao-section-title">5. Composicao do saldo final</h2>
+                <div class="table-wrapper">
+                    <table class="table is-fullwidth financeiro-table prestacao-table">
+                        <thead>
+                        <tr>
+                            <th>Conta</th>
+                            <th>Valor final</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for item in composicao_final %}
+                            <tr>
+                                <td>{{ item.conta.nome }}</td>
+                                <td><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ item.saldo|br_money }}</span></span></td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="2">Nenhuma conta disponivel para o fim do periodo.</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                        <tfoot>
+                        <tr>
+                            <th>Total disponivel final</th>
+                            <th><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_final_consolidado|br_money }}</span></span></th>
+                        </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </section>
+
+            <div class="prestacao-signature">
+                <p>Local e data: _________________________________________________</p>
+                <div class="prestacao-signature-line"></div>
+                <p>Assinatura e identificacao</p>
+            </div>
+        </div>
+    {% endif %}
 </div>
-
-<form method="get" class="filters-box no-print">
-    <div class="columns is-multiline">
-        <div class="column is-4">
-            <label class="label">Contas incluidas</label>
-            <div class="select is-multiple is-fullwidth">
-                <select name="contas" multiple size="6">
-                    {% for conta in contas_disponiveis %}
-                        <option value="{{ conta.pk }}" {% if conta.pk|stringformat:'s' in contas_selecionadas_ids %}selected{% endif %}>
-                            {{ conta.nome }}
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
-            <p class="help">Sem selecao explicita, a prestacao considera todas as contas.</p>
-        </div>
-        <div class="column is-3">
-            <label class="label">Data inicial</label>
-            <input class="input" type="date" name="data_inicial" value="{{ data_inicial }}">
-        </div>
-        <div class="column is-3">
-            <label class="label">Data final</label>
-            <input class="input" type="date" name="data_final" value="{{ data_final }}">
-        </div>
-        <div class="column is-2">
-            <label class="label">&nbsp;</label>
-            <div class="buttons">
-                <button class="button is-link" type="submit">Atualizar</button>
-                <a class="button is-light" href="{% url 'financeiro:prestacao-contas' %}">Limpar</a>
-            </div>
-        </div>
-    </div>
-</form>
-
-{% if periodo_error %}
-    <div class="notification is-warning">{{ periodo_error }}</div>
-{% else %}
-    <div class="financeiro-report-block">
-        <div class="financeiro-report-header">
-            <h2 class="financeiro-report-title">Periodo da prestacao de contas</h2>
-        </div>
-        <div class="financeiro-report-body">
-            <p class="subtitle"><strong>{{ periodo_label }}</strong></p>
-            <p class="subtitle"><strong>Contas incluidas:</strong> {{ contas_incluidas_label }}</p>
-        </div>
-    </div>
-
-    <div class="financeiro-report-block">
-        <div class="financeiro-report-header">
-            <h2 class="financeiro-report-title">1. Saldo disponivel no inicio do periodo</h2>
-        </div>
-        <div class="financeiro-report-body">
-            <div class="table-wrapper">
-                <table class="table is-fullwidth financeiro-table">
-                    <thead>
-                    <tr>
-                        <th>Conta</th>
-                        <th>Valor</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {% for item in composicao_inicial %}
-                        <tr>
-                            <td>{{ item.conta.nome }}</td>
-                            <td>R$ {{ item.saldo }}</td>
-                        </tr>
-                    {% empty %}
-                        <tr>
-                            <td colspan="2">Nenhuma conta com saldo inicial para este periodo.</td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                    <tfoot>
-                    <tr>
-                        <th>Total do saldo inicial</th>
-                        <th>R$ {{ saldo_inicial_consolidado }}</th>
-                    </tr>
-                    </tfoot>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <div class="financeiro-report-block">
-        <div class="financeiro-report-header">
-            <h2 class="financeiro-report-title">2. Receitas do periodo</h2>
-        </div>
-        <div class="financeiro-report-body">
-            <div class="table-wrapper">
-                <table class="table is-fullwidth financeiro-table">
-                    <thead>
-                    <tr>
-                        <th>Data</th>
-                        <th>Descricao</th>
-                        <th>Conta</th>
-                        <th>Referencia</th>
-                        <th>Valor</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {% for lancamento in receitas_periodo %}
-                        <tr>
-                            <td>{{ lancamento.data_competencia|date:'d/m/Y' }}</td>
-                            <td>{{ lancamento.descricao }}</td>
-                            <td>{{ lancamento.conta.nome }}</td>
-                            <td>{{ lancamento.categoria|default:lancamento.pessoa|default:'-' }}</td>
-                            <td class="has-text-link">R$ {{ lancamento.valor }}</td>
-                        </tr>
-                    {% empty %}
-                        <tr>
-                            <td colspan="5">Nao houve receitas no periodo.</td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                    <tfoot>
-                    <tr>
-                        <th colspan="4">Total de receitas do periodo</th>
-                        <th>R$ {{ total_receitas_periodo }}</th>
-                    </tr>
-                    </tfoot>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <div class="financeiro-report-block">
-        <div class="financeiro-report-header">
-            <h2 class="financeiro-report-title">3. Despesas do periodo</h2>
-        </div>
-        <div class="financeiro-report-body">
-            <div class="table-wrapper">
-                <table class="table is-fullwidth financeiro-table">
-                    <thead>
-                    <tr>
-                        <th>Data</th>
-                        <th>Descricao</th>
-                        <th>Conta</th>
-                        <th>Referencia</th>
-                        <th>Valor</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {% for lancamento in despesas_periodo %}
-                        <tr>
-                            <td>{{ lancamento.data_competencia|date:'d/m/Y' }}</td>
-                            <td>{{ lancamento.descricao }}</td>
-                            <td>{{ lancamento.conta.nome }}</td>
-                            <td>{{ lancamento.categoria|default:lancamento.pessoa|default:'-' }}</td>
-                            <td class="has-text-danger">R$ {{ lancamento.valor }}</td>
-                        </tr>
-                    {% empty %}
-                        <tr>
-                            <td colspan="5">Nao houve despesas no periodo.</td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                    <tfoot>
-                    <tr>
-                        <th colspan="4">Total de despesas do periodo</th>
-                        <th>R$ {{ total_despesas_periodo }}</th>
-                    </tr>
-                    </tfoot>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <div class="financeiro-report-block">
-        <div class="financeiro-report-header">
-            <h2 class="financeiro-report-title">4. Resumo do saldo disponivel</h2>
-        </div>
-        <div class="financeiro-report-body">
-            <div class="financeiro-kpi-grid">
-                <div class="financeiro-kpi">
-                    <span class="financeiro-kpi-label">Saldo inicial</span>
-                    <span class="financeiro-kpi-value">R$ {{ saldo_inicial_consolidado }}</span>
-                </div>
-                <div class="financeiro-kpi">
-                    <span class="financeiro-kpi-label">Receitas do periodo</span>
-                    <span class="financeiro-kpi-value has-text-link">R$ {{ total_receitas_periodo }}</span>
-                </div>
-                <div class="financeiro-kpi">
-                    <span class="financeiro-kpi-label">Despesas do periodo</span>
-                    <span class="financeiro-kpi-value has-text-danger">R$ {{ total_despesas_periodo }}</span>
-                </div>
-                <div class="financeiro-kpi">
-                    <span class="financeiro-kpi-label">Saldo disponivel</span>
-                    <span class="financeiro-kpi-value">R$ {{ saldo_final_consolidado }}</span>
-                </div>
-            </div>
-            <div class="financeiro-total-line">
-                <span>Saldo do periodo</span>
-                <span>R$ {{ saldo_periodo }}</span>
-            </div>
-        </div>
-    </div>
-
-    <div class="financeiro-report-block">
-        <div class="financeiro-report-header">
-            <h2 class="financeiro-report-title">5. Receitas por categoria</h2>
-        </div>
-        <div class="financeiro-report-body">
-            <div class="table-wrapper">
-                <table class="table is-fullwidth financeiro-table">
-                    <thead>
-                    <tr>
-                        <th>Categoria</th>
-                        <th>Valor</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {% for item in receitas_por_categoria %}
-                        <tr>
-                            <td>{{ item.categoria }}</td>
-                            <td class="has-text-link">R$ {{ item.valor }}</td>
-                        </tr>
-                    {% empty %}
-                        <tr>
-                            <td colspan="2">Nao houve receitas para agrupar no periodo.</td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                    <tfoot>
-                    <tr>
-                        <th>Total de receitas por categoria</th>
-                        <th>R$ {{ total_receitas_por_categoria }}</th>
-                    </tr>
-                    </tfoot>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <div class="financeiro-report-block">
-        <div class="financeiro-report-header">
-            <h2 class="financeiro-report-title">6. Despesas por categoria</h2>
-        </div>
-        <div class="financeiro-report-body">
-            <div class="table-wrapper">
-                <table class="table is-fullwidth financeiro-table">
-                    <thead>
-                    <tr>
-                        <th>Categoria</th>
-                        <th>Valor</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {% for item in despesas_por_categoria %}
-                        <tr>
-                            <td>{{ item.categoria }}</td>
-                            <td class="has-text-danger">R$ {{ item.valor }}</td>
-                        </tr>
-                    {% empty %}
-                        <tr>
-                            <td colspan="2">Nao houve despesas para agrupar no periodo.</td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                    <tfoot>
-                    <tr>
-                        <th>Total de despesas por categoria</th>
-                        <th>R$ {{ total_despesas_por_categoria }}</th>
-                    </tr>
-                    </tfoot>
-                </table>
-            </div>
-            {% if existe_lancamento_sem_categoria %}
-                <p class="table-caption">Lancamentos sem categoria aparecem agrupados como "Sem categoria".</p>
-            {% endif %}
-        </div>
-    </div>
-
-    <div class="financeiro-report-block">
-        <div class="financeiro-report-header">
-            <h2 class="financeiro-report-title">7. Composicao do saldo final</h2>
-        </div>
-        <div class="financeiro-report-body">
-            <div class="table-wrapper">
-                <table class="table is-fullwidth financeiro-table">
-                    <thead>
-                    <tr>
-                        <th>Conta</th>
-                        <th>Valor final</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {% for item in composicao_final %}
-                        <tr>
-                            <td>{{ item.conta.nome }}</td>
-                            <td>R$ {{ item.saldo }}</td>
-                        </tr>
-                    {% empty %}
-                        <tr>
-                            <td colspan="2">Nenhuma conta disponivel para o fim do periodo.</td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                    <tfoot>
-                    <tr>
-                        <th>Total disponivel final</th>
-                        <th>R$ {{ saldo_final_consolidado }}</th>
-                    </tr>
-                    </tfoot>
-                </table>
-            </div>
-            <p class="table-caption">Transferencias internas entre contas proprias nao entram como receita nem despesa neste consolidado. Elas apenas alteram a composicao entre contas.</p>
-        </div>
-    </div>
-{% endif %}
 {% endblock %}
