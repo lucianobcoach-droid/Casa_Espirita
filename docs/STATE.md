@@ -6,7 +6,9 @@ Data de atualização: 2026-03-23
 
 - O app `financeiro` foi criado e adicionado ao `INSTALLED_APPS`.
 - A primeira entrega contém apenas modelagem de domínio e registro no Django admin.
-- Não foram criadas telas operacionais, rotas próprias, views nem formulários do módulo financeiro.
+- Foi criada uma entrada mínima de interface para o módulo em `/financeiro/`.
+- Existem `financeiro/views.py`, `financeiro/urls.py` e `financeiro/templates/financeiro/home.html`.
+- Ainda não existem telas operacionais, formulários nem fluxos de uso do módulo financeiro.
 - O app `biblioteca` não foi alterado.
 - Não foram usados `signals`.
 
@@ -28,6 +30,12 @@ Data de atualização: 2026-03-23
 
 - Todos os models do app `financeiro` estão registrados no admin.
 
+## Interface mínima
+
+- A rota `/financeiro/` foi ligada ao projeto em `casa_espirita/urls.py`.
+- A view atual é `FinanceiroHomeView`.
+- O template atual é apenas institucional e de confirmação da ativação do módulo.
+
 ## Migrações
 
 - Foi criada a migration inicial `financeiro/migrations/0001_initial.py`.
@@ -37,5 +45,5 @@ Data de atualização: 2026-03-23
 
 - Não foi possível executar `py manage.py makemigrations financeiro` nem `py manage.py check` com sucesso no ambiente atual.
 - Motivo: o interpretador disponível não tem o pacote `django` instalado.
-- Assim, a estrutura foi deixada pronta, mas a validação automática do runtime depende de um ambiente com as dependências instaladas.
-
+- Foi possível validar a sintaxe dos arquivos Python via `py -m compileall financeiro casa_espirita`.
+- Assim, a estrutura foi deixada pronta, mas a validação automática do runtime ainda depende de um ambiente com as dependências instaladas.

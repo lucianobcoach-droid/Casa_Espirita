@@ -9,4 +9,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', SiteConfigDetailView.as_view(), name='site-config'),
     path('biblioteca/', include('biblioteca.urls')),
+    path('financeiro/', include('financeiro.urls')),
 ]

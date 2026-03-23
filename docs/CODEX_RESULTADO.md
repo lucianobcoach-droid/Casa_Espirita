@@ -4,7 +4,7 @@ Data: 2026-03-23
 
 ## Entrega realizada
 
-Foi criada a modelagem mínima real do domínio financeiro em um app dedicado chamado `financeiro`, de forma incremental e isolada do restante do projeto.
+Foi criada a modelagem mínima real do domínio financeiro em um app dedicado chamado `financeiro`, de forma incremental e isolada do restante do projeto. Nesta etapa, também foi adicionada a base mínima de interface para que `/financeiro/` tenha resposta própria.
 
 ## Arquivos criados
 
@@ -12,6 +12,9 @@ Foi criada a modelagem mínima real do domínio financeiro em um app dedicado ch
 - `financeiro/apps.py`
 - `financeiro/models.py`
 - `financeiro/admin.py`
+- `financeiro/views.py`
+- `financeiro/urls.py`
+- `financeiro/templates/financeiro/home.html`
 - `financeiro/migrations/__init__.py`
 - `financeiro/migrations/0001_initial.py`
 - `docs/STATE.md`
@@ -20,6 +23,7 @@ Foi criada a modelagem mínima real do domínio financeiro em um app dedicado ch
 ## Arquivo atualizado
 
 - `casa_espirita/settings.py`
+- `casa_espirita/urls.py`
 
 ## Modelos implementados
 
@@ -40,7 +44,7 @@ Foi criada a modelagem mínima real do domínio financeiro em um app dedicado ch
 - sem regressão intencional do estado atual
 - sem alterações no app `biblioteca`
 - sem uso de `signals`
-- sem criação de telas operacionais
+- sem criação de telas operacionais além da home mínima institucional do módulo
 - sem reescrita de migrations após criação
 - mudança incremental
 
@@ -55,4 +59,5 @@ O ambiente desta execução não possui Django instalado no interpretador acess�
 
 - o código do domínio financeiro e o admin foram adicionados ao projeto
 - a migration inicial já está presente no repositório
+- a rota `/financeiro/` agora possui URL, view e template dedicados
 - a validação final de runtime depende apenas de instalar as dependências do projeto no ambiente local
