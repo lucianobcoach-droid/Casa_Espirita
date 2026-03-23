@@ -2,17 +2,33 @@
 {% block title %}Financeiro{% endblock %}
 {% block content %}
 <div class="financeiro-hero">
-    <h1 class="title">Módulo Financeiro</h1>
-    <p class="subtitle">Base operacional do módulo usando a modelagem já existente.</p>
-    <div class="buttons">
-        <a class="button is-success" href="{% url 'financeiro:resumo' %}">Resumo</a>
-        <a class="button is-white" href="{% url 'financeiro:prestacao-contas' %}">Prestacao de Contas</a>
-        <a class="button is-light" href="{% url 'financeiro:extrato-list' %}">Extratos</a>
-        <a class="button is-dark" href="{% url 'financeiro:conta-list' %}">Contas</a>
-        <a class="button is-warning" href="{% url 'financeiro:centro-custo-list' %}">Centros de Custo</a>
-        <a class="button is-primary" href="{% url 'financeiro:pessoa-list' %}">Pessoas</a>
-        <a class="button is-link" href="{% url 'financeiro:categoria-list' %}">Categorias</a>
-        <a class="button is-info" href="{% url 'financeiro:lancamento-list' %}">Lançamentos</a>
+    <h1 class="title">Modulo Financeiro</h1>
+    <p class="subtitle">Base operacional do modulo com navegação institucional e atalhos principais do dia a dia.</p>
+    <div class="financeiro-shortcuts">
+        <a class="financeiro-shortcut is-primary-shortcut" href="{% url 'financeiro:lancamento-list' %}">
+            <span class="financeiro-shortcut-label">Lancamentos</span>
+        </a>
+        <a class="financeiro-shortcut" href="{% url 'financeiro:extrato-list' %}">
+            <span class="financeiro-shortcut-label">Extratos</span>
+        </a>
+        <a class="financeiro-shortcut" href="{% url 'financeiro:resumo' %}">
+            <span class="financeiro-shortcut-label">Resumo</span>
+        </a>
+        <a class="financeiro-shortcut" href="{% url 'financeiro:prestacao-contas' %}">
+            <span class="financeiro-shortcut-label">Prestacao de Contas</span>
+        </a>
+        <a class="financeiro-shortcut" href="{% url 'financeiro:conta-list' %}">
+            <span class="financeiro-shortcut-label">Contas</span>
+        </a>
+        <a class="financeiro-shortcut" href="{% url 'financeiro:centro-custo-list' %}">
+            <span class="financeiro-shortcut-label">Centros de Custo</span>
+        </a>
+        <a class="financeiro-shortcut" href="{% url 'financeiro:pessoa-list' %}">
+            <span class="financeiro-shortcut-label">Pessoas</span>
+        </a>
+        <a class="financeiro-shortcut" href="{% url 'financeiro:categoria-list' %}">
+            <span class="financeiro-shortcut-label">Categorias</span>
+        </a>
     </div>
 </div>
 {% endblock %}

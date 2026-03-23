@@ -18,9 +18,12 @@ Data de atualização: 2026-03-23
 - As telas de `Resumo` e `Prestacao de Contas` agora permitem selecionar quais contas entram no relatório.
 - As telas de `Resumo` e `Prestacao de Contas` agora mostram receitas e despesas agrupadas por categoria.
 - As telas de `Resumo` e `Prestacao de Contas` agora mostram despesas agrupadas por centro de custo.
+- A listagem de lançamentos agora possui filtros operacionais por data inicial, data final, conta, pessoa e categoria.
 - As telas de `Resumo` e `Prestacao de Contas` agora possuem controle de exibição apenas para o bloco de centro de custo, sem alterar os totais gerais do relatório.
 - A tela de `Prestacao de Contas` recebeu refinamento visual específico para impressão em A4.
 - A `Prestacao de Contas` agora tem apresentação mais formal, com menos aparência de dashboard.
+- O menu superior do financeiro foi reorganizado para separar `Financeiro`, `Lancamentos`, `Extratos`, `Relatorios` e `Cadastros`.
+- A home do módulo financeiro agora usa atalhos mais neutros e harmônicos, com destaque principal apenas para `Lancamentos`.
 - O app `biblioteca` não foi alterado.
 - Não foram usados `signals`.
 

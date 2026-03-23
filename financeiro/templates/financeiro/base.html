@@ -30,6 +30,55 @@
             background: var(--financeiro-soft);
         }
 
+        .financeiro-shortcuts {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 0.7rem;
+            margin-top: 1rem;
+        }
+
+        .financeiro-shortcut {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            min-height: 3.2rem;
+            padding: 0.8rem 0.95rem;
+            border: 1px solid var(--financeiro-border);
+            border-radius: 0.7rem;
+            background: #fff;
+            color: #243041;
+            font-weight: 600;
+            transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+        }
+
+        .financeiro-shortcut:hover,
+        .financeiro-shortcut:focus {
+            background: #f6f8fb;
+            border-color: #cfd6df;
+            color: #1b2735;
+            transform: translateY(-1px);
+        }
+
+        .financeiro-shortcut.is-primary-shortcut {
+            border-color: rgba(31, 95, 191, 0.25);
+            background: rgba(31, 95, 191, 0.08);
+            color: var(--financeiro-receita);
+        }
+
+        .financeiro-shortcut.is-primary-shortcut:hover,
+        .financeiro-shortcut.is-primary-shortcut:focus {
+            border-color: rgba(31, 95, 191, 0.35);
+            background: rgba(31, 95, 191, 0.12);
+            color: var(--financeiro-receita);
+        }
+
+        .financeiro-shortcut-label {
+            display: block;
+            font-size: 0.98rem;
+            line-height: 1.2;
+        }
+
         .help.is-danger {
             display: block;
             margin-top: 0.35rem;
@@ -817,14 +866,24 @@
         <div class="navbar-menu is-active">
             <div class="navbar-start">
                 <a class="navbar-item" href="{% url 'financeiro:home' %}">Financeiro</a>
-                <a class="navbar-item" href="{% url 'financeiro:resumo' %}">Resumo</a>
-                <a class="navbar-item" href="{% url 'financeiro:prestacao-contas' %}">Prestacao de Contas</a>
-                <a class="navbar-item" href="{% url 'financeiro:extrato-list' %}">Extratos</a>
-                <a class="navbar-item" href="{% url 'financeiro:conta-list' %}">Contas</a>
-                <a class="navbar-item" href="{% url 'financeiro:centro-custo-list' %}">Centros de Custo</a>
-                <a class="navbar-item" href="{% url 'financeiro:pessoa-list' %}">Pessoas</a>
-                <a class="navbar-item" href="{% url 'financeiro:categoria-list' %}">Categorias</a>
                 <a class="navbar-item" href="{% url 'financeiro:lancamento-list' %}">Lancamentos</a>
+                <a class="navbar-item" href="{% url 'financeiro:extrato-list' %}">Extratos</a>
+                <div class="navbar-item has-dropdown is-hoverable">
+                    <a class="navbar-link">Relatorios</a>
+                    <div class="navbar-dropdown">
+                        <a class="navbar-item" href="{% url 'financeiro:resumo' %}">Resumo</a>
+                        <a class="navbar-item" href="{% url 'financeiro:prestacao-contas' %}">Prestacao de Contas</a>
+                    </div>
+                </div>
+                <div class="navbar-item has-dropdown is-hoverable">
+                    <a class="navbar-link">Cadastros</a>
+                    <div class="navbar-dropdown">
+                        <a class="navbar-item" href="{% url 'financeiro:conta-list' %}">Contas</a>
+                        <a class="navbar-item" href="{% url 'financeiro:pessoa-list' %}">Pessoas</a>
+                        <a class="navbar-item" href="{% url 'financeiro:categoria-list' %}">Categorias</a>
+                        <a class="navbar-item" href="{% url 'financeiro:centro-custo-list' %}">Centros de Custo</a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

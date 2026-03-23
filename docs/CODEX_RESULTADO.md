@@ -85,6 +85,9 @@ O `saldo_anterior` é calculado assim:
 - `data_pagamento` passou a ser validada contra `data_competencia` antes de salvar
 - a listagem de lançamentos passou a mostrar `Transferência entre Contas` quando a transferência não tiver `pessoa`
 - a listagem de lançamentos deixou de mostrar textos auxiliares redundantes em valor, conta e conta destino
+- a listagem de lançamentos passou a aceitar filtros operacionais por data inicial, data final, conta, pessoa e categoria
+- o menu superior do financeiro foi reorganizado com agrupamento de relatórios e cadastros, mantendo todos os itens já existentes acessíveis
+- a home do módulo financeiro passou a usar atalhos com linguagem visual mais neutra e institucional
 - lançamentos sem categoria passaram a ser mostrados no agrupamento como `Sem categoria`
 - despesas sem centro de custo passaram a ser mostradas no agrupamento como `Sem centro de custo`
 - os filtros de exibição dos agrupamentos não alteram totais gerais de receitas, despesas, saldo inicial, saldo final ou resumo do período

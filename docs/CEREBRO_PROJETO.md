@@ -5,8 +5,11 @@ Este documento é a fonte principal de contexto funcional e operacional do proje
 Antes de qualquer implementação, leitura técnica ou alteração estrutural, ele deve ser lido junto com:
 - `docs/STATE.md`
 - `docs/CODEX_RESULTADO.md`
+- `docs/ROADMAP_FINANCEIRO.md`
 
 Se houver divergência entre pedido atual, conversa e estado real do repositório, a implementação deve parar e a divergência deve ser informada antes de codificar.
+
+O arquivo `docs/ROADMAP_FINANCEIRO.md` consolida o escopo financeiro já entregue, os refinamentos possíveis e as próximas etapas sugeridas, sem alterar o que já foi aprovado.
 
 ---
 
@@ -86,6 +89,8 @@ Até o momento, está validado que:
 - `Resumo` e `Prestacao de Contas` agora permitem controlar a exibição apenas do bloco de centro de custo
 - a `Prestacao de Contas` possui refinamento específico para impressão em A4 e bloco simples de assinatura
 - a `Prestacao de Contas` agora usa apresentação mais formal, contínua e documental
+- a listagem de lançamentos agora possui filtros operacionais por data, conta, pessoa e categoria, além dos filtros já existentes
+- o menu superior do financeiro agora separa entrada do módulo, movimentações, relatórios e cadastros sem remover itens já existentes
 
 ---
 
@@ -217,40 +222,35 @@ Depois disso:
 ---
 
 ## 13. Etapa atual concluída
-### ETAPA 2 — Extrato por conta com saldo acumulado
+### Estado consolidado atual do financeiro
 
-Escopo implementado:
-- rota de extrato por conta
-- view de extrato por conta
-- template de extrato
-- cálculo de saldo acumulado a partir de `saldo_inicial`
-- filtro por período via GET
-- cálculo de `saldo_anterior` quando houver `data_inicial`
+Escopo já consolidado no repositório:
+- base operacional própria fora do admin
+- cadastros de contas, pessoas, categorias e centros de custo
+- CRUD de lançamentos financeiros
+- regras condicionais de transferência
+- extrato por conta com saldo acumulado e filtro por período
+- resumo consolidado por período
+- prestação de contas por período
+- filtros operacionais na listagem de lançamentos
+- documentação de escopo consolidada em `docs/ROADMAP_FINANCEIRO.md`
 
-Regras implementadas:
-- sem filtro: extrato completo desde o saldo inicial
-- com filtro: lançamentos do período e saldo acumulado iniciando do saldo anterior
-- `receita` = entrada
-- `despesa` = saída
-- `transferencia`:
-  - conta de origem = saída
-  - conta de destino = entrada
-
-Complemento incremental já aplicado:
-- `data_saldo_inicial` tornou-se obrigatória
-- `saldo_atual` passou a ser calculado na listagem de contas
+Diretriz:
+- as próximas etapas devem partir desse estado consolidado, sem regressão e sem reabrir etapas já aprovadas
 
 ---
 
 ## 14. Etapas futuras já pensadas, mas não autorizadas agora
 As etapas abaixo podem existir no planejamento, mas não devem ser implementadas antes da hora:
 
-- relatórios gerais do financeiro
+- histórico por favorecido
+- relatório anual por favorecido
+- contratos a pagar e a receber
+- parcelas e recorrência
+- anexos de comprovantes
+- balancete padrão
 - importação de planilha histórica
-- fechamentos mensais
-- conciliação
-- dashboards
-- melhorias extras fora do escopo validado
+- recibos
 
 ---
 
