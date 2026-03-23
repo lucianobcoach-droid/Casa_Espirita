@@ -1,22 +1,22 @@
 {% extends 'financeiro/base.html' %}
-{% block title %}Lançamentos Financeiros{% endblock %}
+{% block title %}Lancamentos Financeiros{% endblock %}
 {% block content %}
 <div class="level">
     <div class="level-left">
-        <h1 class="title">Lançamentos Financeiros</h1>
+        <h1 class="title">Lancamentos Financeiros</h1>
     </div>
-    <div class="level-right">
-        <a class="button is-primary" href="{% url 'financeiro:lancamento-create' %}">Novo lançamento</a>
+    <div class="level-right no-print">
+        <a class="button is-primary" href="{% url 'financeiro:lancamento-create' %}">Novo lancamento</a>
     </div>
 </div>
-<form method="get" class="filters-box">
+<form method="get" class="filters-box no-print">
     <div class="columns is-multiline">
         <div class="column is-3">
-            <label class="label">Descrição</label>
-            <input class="input" type="text" name="descricao" value="{{ request.GET.descricao }}" placeholder="Buscar por descrição">
+            <label class="label">Descricao</label>
+            <input class="input" type="text" name="descricao" value="{{ request.GET.descricao }}" placeholder="Buscar por descricao">
         </div>
         <div class="column is-3">
-            <label class="label">Número do documento</label>
+            <label class="label">Numero do documento</label>
             <input class="input" type="text" name="numero_documento" value="{{ request.GET.numero_documento }}" placeholder="Buscar por documento">
         </div>
         <div class="column is-2">
@@ -26,7 +26,7 @@
                     <option value="">Todos</option>
                     <option value="receita" {% if request.GET.tipo == 'receita' %}selected{% endif %}>Receita</option>
                     <option value="despesa" {% if request.GET.tipo == 'despesa' %}selected{% endif %}>Despesa</option>
-                    <option value="transferencia" {% if request.GET.tipo == 'transferencia' %}selected{% endif %}>Transferência</option>
+                    <option value="transferencia" {% if request.GET.tipo == 'transferencia' %}selected{% endif %}>Transferencia</option>
                 </select>
             </div>
         </div>
@@ -50,60 +50,68 @@
         </div>
     </div>
 </form>
+<p class="table-caption">Os tipos usam destaque de cor. O negrito fica restrito aos lancamentos em aberto para facilitar a leitura operacional.</p>
 <div class="table-wrapper">
-    <table class="table is-fullwidth is-striped is-hoverable">
+    <table class="table is-fullwidth is-hoverable financeiro-table">
         <thead>
         <tr>
-            <th>Descrição</th>
+            <th>Descricao</th>
             <th>Tipo</th>
             <th>Status</th>
             <th>Valor</th>
             <th>Conta</th>
             <th>Conta destino</th>
             <th>Pessoa</th>
-            <th>Data competência</th>
-            <th>Número documento</th>
-            <th>Ações</th>
+            <th>Data</th>
+            <th>Documento</th>
+            <th class="no-print">Acoes</th>
         </tr>
         </thead>
         <tbody>
         {% for lancamento in lancamentos %}
-            <tr>
+            <tr{% if lancamento.status == 'aberto' %} class="is-unsettled"{% endif %}>
                 <td>{{ lancamento.descricao }}</td>
-                <td>{{ lancamento.get_tipo_display }}</td>
-                <td>{{ lancamento.get_status_display }}</td>
                 <td>
-                    R$ {{ lancamento.valor }}
+                    <span class="tipo-badge {% if lancamento.tipo == 'receita' %}is-receita{% elif lancamento.tipo == 'despesa' %}is-despesa{% else %}is-transferencia{% endif %}">
+                        {{ lancamento.get_tipo_display }}
+                    </span>
+                </td>
+                <td>
+                    <span class="status-badge {% if lancamento.status == 'quitado' %}is-quitado{% elif lancamento.status == 'aberto' %}is-aberto{% else %}is-cancelado{% endif %}">
+                        {{ lancamento.get_status_display }}
+                    </span>
+                </td>
+                <td>
+                    <span class="valor-chip {% if lancamento.tipo == 'receita' %}is-receita{% elif lancamento.tipo == 'despesa' %}is-despesa{% else %}is-transferencia{% endif %}">
+                        R$ {{ lancamento.valor }}
+                    </span>
                     {% if lancamento.tipo == 'transferencia' %}
-                        <br>
-                        <small>Saída na origem e entrada no destino</small>
+                        <small class="financeiro-meta">Saida na origem e entrada no destino</small>
                     {% endif %}
                 </td>
                 <td>
                     {{ lancamento.conta }}
                     {% if lancamento.tipo == 'transferencia' %}
-                        <br>
-                        <small>Conta de origem</small>
+                        <small class="financeiro-meta">Conta de origem</small>
                     {% endif %}
                 </td>
                 <td>
                     {{ lancamento.conta_destino|default:'-' }}
                     {% if lancamento.tipo == 'transferencia' and lancamento.conta_destino %}
-                        <br>
-                        <small>Conta de destino</small>
+                        <small class="financeiro-meta">Conta de destino</small>
                     {% endif %}
                 </td>
                 <td>{{ lancamento.pessoa|default:'-' }}</td>
                 <td>{{ lancamento.data_competencia|date:'d/m/Y' }}</td>
                 <td>{{ lancamento.numero_documento|default:'-' }}</td>
-                <td class="actions-cell">
+                <td class="actions-cell no-print">
                     <a class="button is-small is-link is-light" href="{% url 'financeiro:lancamento-update' lancamento.pk %}">Editar</a>
                     <a class="button is-small is-danger is-light" href="{% url 'financeiro:lancamento-delete' lancamento.pk %}">Excluir</a>
                 </td>
             </tr>
         {% empty %}
             <tr>
-                <td colspan="10">Nenhum lançamento financeiro cadastrado.</td>
+                <td colspan="10">Nenhum lancamento financeiro cadastrado.</td>
             </tr>
         {% endfor %}
         </tbody>

@@ -76,6 +76,8 @@ Até o momento, está validado que:
 - a listagem de contas já mostra `saldo_atual` calculado
 - o extrato por conta já aceita filtro por período com saldo anterior
 - saldo real da conta considera apenas lançamentos `quitado`
+- a interface do financeiro já possui refinamento visual discreto em tabelas, extrato e impressão
+- o financeiro agora possui menu próprio `Extratos` com filtro por conta e período
 
 ---
 
@@ -108,6 +110,7 @@ Os tipos válidos de lançamento são:
 - `saldo_atual` não é salvo no banco
 - quando houver filtro por período no extrato, deve existir `saldo_anterior`
 - apenas lançamentos com `status = quitado` afetam saldo real e extrato
+- a nova tela `Extratos` reutiliza a mesma regra do extrato por conta
 
 ---
 

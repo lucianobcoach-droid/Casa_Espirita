@@ -5,100 +5,144 @@
     <div class="level-left">
         <div>
             <h1 class="title">{{ page_title }}</h1>
-            <p class="subtitle">
-                Saldo inicial: R$ {{ saldo_inicial }}
-                {% if data_saldo_inicial %}
-                    em {{ data_saldo_inicial|date:'d/m/Y' }}
-                {% endif %}
-            </p>
-            {% if data_inicial or data_final %}
+            {% if conta %}
+                <p class="subtitle">Conta: {{ conta.nome }}</p>
                 <p class="subtitle">
-                    Periodo:
-                    {% if data_inicial %}{{ data_inicial }}{% else %}inicio em aberto{% endif %}
-                    ate
-                    {% if data_final %}{{ data_final }}{% else %}fim em aberto{% endif %}
+                    Saldo inicial: R$ {{ saldo_inicial }}
+                    {% if data_saldo_inicial %}
+                        em {{ data_saldo_inicial|date:'d/m/Y' }}
+                    {% endif %}
                 </p>
+                {% if data_inicial or data_final %}
+                    <p class="subtitle">
+                        Periodo:
+                        {% if data_inicial %}{{ data_inicial }}{% else %}inicio em aberto{% endif %}
+                        ate
+                        {% if data_final %}{{ data_final }}{% else %}fim em aberto{% endif %}
+                    </p>
+                {% endif %}
+                {% if saldo_anterior is not None %}
+                    <p class="subtitle">Saldo anterior: R$ {{ saldo_anterior }}</p>
+                {% endif %}
+                <p class="subtitle">Saldo final exibido (quitado): R$ {{ saldo_final }}</p>
             {% endif %}
-            {% if saldo_anterior is not None %}
-                <p class="subtitle">Saldo anterior: R$ {{ saldo_anterior }}</p>
-            {% endif %}
-            <p class="subtitle">Saldo final exibido (quitado): R$ {{ saldo_final }}</p>
         </div>
     </div>
-    <div class="level-right">
-        <a class="button" href="{% url 'financeiro:conta-list' %}">Voltar para contas</a>
-    </div>
+    {% if not show_conta_filter %}
+        <div class="level-right no-print">
+            <a class="button" href="{% url 'financeiro:conta-list' %}">Voltar para contas</a>
+        </div>
+    {% endif %}
 </div>
-<form method="get" class="filters-box">
+
+<form method="get" class="filters-box no-print">
     <div class="columns is-multiline">
-        <div class="column is-4">
+        {% if show_conta_filter %}
+            <div class="column is-4">
+                <label class="label">Conta</label>
+                <div class="select is-fullwidth">
+                    <select name="conta">
+                        <option value="">Selecione uma conta</option>
+                        {% for conta_item in contas %}
+                            <option value="{{ conta_item.pk }}" {% if conta_selecionada_id == conta_item.pk|stringformat:'s' %}selected{% endif %}>
+                                {{ conta_item.nome }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        {% endif %}
+        <div class="column {% if show_conta_filter %}is-3{% else %}is-4{% endif %}">
             <label class="label">Data inicial</label>
             <input class="input" type="date" name="data_inicial" value="{{ data_inicial }}">
         </div>
-        <div class="column is-4">
+        <div class="column {% if show_conta_filter %}is-3{% else %}is-4{% endif %}">
             <label class="label">Data final</label>
             <input class="input" type="date" name="data_final" value="{{ data_final }}">
         </div>
-        <div class="column is-4">
+        <div class="column {% if show_conta_filter %}is-2{% else %}is-4{% endif %}">
             <label class="label">&nbsp;</label>
             <div class="buttons">
-                <button class="button is-link" type="submit">Aplicar periodo</button>
-                <a class="button is-light" href="{% url 'financeiro:conta-extrato' conta.pk %}">Limpar</a>
+                <button class="button is-link is-fullwidth" type="submit">Aplicar</button>
+                <a class="button is-light is-fullwidth" href="{{ clear_extrato_url }}">Limpar</a>
             </div>
         </div>
     </div>
 </form>
-<div class="notification is-light">
-    O saldo acumulado parte do saldo inicial e considera apenas lancamentos quitados. Quando houver data inicial, as linhas do periodo passam a partir do saldo anterior. Receitas quitadas entram, despesas quitadas saem e transferencias quitadas saem da conta de origem e entram na conta de destino.
-</div>
-<div class="table-wrapper">
-    <table class="table is-fullwidth is-striped is-hoverable">
-        <thead>
-        <tr>
-            <th>Data</th>
-            <th>Descricao</th>
-            <th>Tipo</th>
-            <th>Entrada</th>
-            <th>Saida</th>
-            <th>Saldo acumulado</th>
-            <th>Observacoes</th>
-        </tr>
-        </thead>
-        <tbody>
-        {% if exibe_linha_saldo_inicial %}
+
+{% if extrato_error %}
+    <div class="notification is-warning">{{ extrato_error }}</div>
+{% elif not conta and show_conta_filter %}
+    <div class="notification is-light">Selecione uma conta para visualizar o extrato.</div>
+{% endif %}
+
+{% if conta %}
+    <p class="table-caption no-print">Extrato com texto colorido e sem badges. Receitas ficam em azul, transferencias em laranja e saidas em vermelho.</p>
+    <div class="table-wrapper">
+        <table class="table is-fullwidth is-hoverable financeiro-table">
+            <thead>
             <tr>
-                <td>{% if data_saldo_inicial %}{{ data_saldo_inicial|date:'d/m/Y' }}{% else %}-{% endif %}</td>
-                <td>Saldo inicial</td>
-                <td>Inicial</td>
-                <td>R$ {{ saldo_inicial }}</td>
-                <td>-</td>
-                <td>R$ {{ saldo_inicial }}</td>
-                <td>-</td>
+                <th>Data</th>
+                <th>Descricao</th>
+                <th>Tipo</th>
+                <th>Entrada</th>
+                <th>Saida</th>
+                <th>Saldo acumulado</th>
+                <th>Observacoes</th>
             </tr>
-        {% endif %}
-        {% for item in itens_extrato %}
+            </thead>
+            <tbody>
+            {% if exibe_linha_saldo_inicial %}
+                <tr class="is-opening-balance">
+                    <td>{% if data_saldo_inicial %}{{ data_saldo_inicial|date:'d/m/Y' }}{% else %}-{% endif %}</td>
+                    <td><strong>Saldo inicial</strong></td>
+                    <td><strong>Inicial</strong></td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td><strong>R$ {{ saldo_inicial }}</strong></td>
+                    <td>-</td>
+                </tr>
+            {% endif %}
+            {% for item in itens_extrato %}
+                <tr>
+                    <td>{{ item.lancamento.data_competencia|date:'d/m/Y' }}</td>
+                    <td>{{ item.lancamento.descricao }}</td>
+                    <td>
+                        <span class="extrato-text {% if item.lancamento.tipo == 'receita' %}is-receita{% elif item.lancamento.tipo == 'despesa' %}is-despesa{% else %}is-transferencia{% endif %}">
+                            {{ item.lancamento.get_tipo_display }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if item.entrada %}
+                            <span class="extrato-text is-receita">R$ {{ item.entrada }}</span>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if item.saida %}
+                            <span class="extrato-text {% if item.lancamento.tipo == 'transferencia' %}is-transferencia{% else %}is-despesa{% endif %}">R$ {{ item.saida }}</span>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>R$ {{ item.saldo_acumulado }}</td>
+                    <td>{{ item.lancamento.observacoes|default:'-' }}</td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="7">Nenhum lancamento quitado encontrado para esta conta.</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+            <tfoot>
             <tr>
-                <td>{{ item.lancamento.data_competencia|date:'d/m/Y' }}</td>
-                <td>{{ item.lancamento.descricao }}</td>
-                <td>{{ item.lancamento.get_tipo_display }}</td>
-                <td>{% if item.entrada %}R$ {{ item.entrada }}{% else %}-{% endif %}</td>
-                <td>{% if item.saida %}R$ {{ item.saida }}{% else %}-{% endif %}</td>
-                <td>R$ {{ item.saldo_acumulado }}</td>
-                <td>{{ item.lancamento.observacoes|default:'-' }}</td>
+                <th colspan="5"><strong>Saldo final</strong></th>
+                <th><strong>R$ {{ saldo_final }}</strong></th>
+                <th></th>
             </tr>
-        {% empty %}
-            <tr>
-                <td colspan="7">Nenhum lancamento quitado encontrado para esta conta.</td>
-            </tr>
-        {% endfor %}
-        </tbody>
-        <tfoot>
-        <tr>
-            <th colspan="5">Saldo final</th>
-            <th>R$ {{ saldo_final }}</th>
-            <th></th>
-        </tr>
-        </tfoot>
-    </table>
-</div>
+            </tfoot>
+        </table>
+    </div>
+{% endif %}
 {% endblock %}

@@ -11,6 +11,10 @@ Complemento incremental posterior:
 - saldo real das contas passou a considerar apenas lançamentos quitados
 - o extrato por conta passou a listar apenas lançamentos quitados
 - o saldo anterior do extrato por período passou a considerar apenas lançamentos quitados anteriores ao período
+- a camada visual do financeiro foi refinada sem alterar regra de negócio
+- tipos de lançamento passaram a ter destaque visual discreto
+- tabelas priorizadas ficaram mais compactas e preparadas para impressão
+- o financeiro passou a ter menu próprio `Extratos` com filtro por conta e período
 
 ## Filtro por período
 
@@ -56,3 +60,5 @@ O `saldo_anterior` é calculado assim:
 - o saldo acumulado do período parte corretamente do saldo anterior
 - transferências continuam coerentes na conta de origem e na conta de destino
 - lançamentos não quitados deixaram de afetar saldo real e extrato
+- o extrato, a listagem de lançamentos e a listagem de contas ficaram mais legíveis e mais compactos
+- o extrato passou a ter visual mais limpo, com texto colorido sem badge no template de extrato

@@ -5,11 +5,11 @@
     <div class="level-left">
         <h1 class="title">Contas Financeiras</h1>
     </div>
-    <div class="level-right">
+    <div class="level-right no-print">
         <a class="button is-primary" href="{% url 'financeiro:conta-create' %}">Nova conta</a>
     </div>
 </div>
-<form method="get" class="filters-box">
+<form method="get" class="filters-box no-print">
     <div class="columns is-multiline">
         <div class="column is-5">
             <label class="label">Nome</label>
@@ -35,7 +35,7 @@
     </div>
 </form>
 <div class="table-wrapper">
-    <table class="table is-fullwidth is-striped is-hoverable">
+    <table class="table is-fullwidth is-hoverable financeiro-table">
         <thead>
         <tr>
             <th>Nome</th>
@@ -43,7 +43,7 @@
             <th>Saldo inicial</th>
             <th>Saldo atual (quitado)</th>
             <th>Ativa</th>
-            <th>Acoes</th>
+            <th class="no-print">Acoes</th>
         </tr>
         </thead>
         <tbody>
@@ -54,13 +54,12 @@
                 <td>
                     R$ {{ conta.saldo_inicial }}
                     {% if conta.data_saldo_inicial %}
-                        <br>
-                        <small>{{ conta.data_saldo_inicial|date:'d/m/Y' }}</small>
+                        <small class="financeiro-meta">{{ conta.data_saldo_inicial|date:'d/m/Y' }}</small>
                     {% endif %}
                 </td>
-                <td>R$ {{ conta.saldo_atual }}</td>
+                <td><strong>R$ {{ conta.saldo_atual }}</strong></td>
                 <td>{% if conta.ativa %}Sim{% else %}Nao{% endif %}</td>
-                <td class="actions-cell">
+                <td class="actions-cell no-print">
                     <a class="button is-small is-info is-light" href="{% url 'financeiro:conta-extrato' conta.pk %}">Extrato</a>
                     <a class="button is-small is-link is-light" href="{% url 'financeiro:conta-update' conta.pk %}">Editar</a>
                     <a class="button is-small is-danger is-light" href="{% url 'financeiro:conta-delete' conta.pk %}">Excluir</a>

@@ -6,48 +6,69 @@
     <title>{% block title %}Financeiro{% endblock %}</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
     <style>
+        :root {
+            --financeiro-receita: #1f5fbf;
+            --financeiro-despesa: #b73a32;
+            --financeiro-transferencia: #b56a19;
+            --financeiro-quitado: #2f855a;
+            --financeiro-aberto: #8a5a10;
+            --financeiro-cancelado: #6b7280;
+            --financeiro-zebra: #fbfcfe;
+            --financeiro-border: #dbdbdb;
+            --financeiro-soft: #fafafa;
+            --financeiro-print-text: #111827;
+        }
+
         .table-wrapper {
             overflow-x: auto;
         }
+
         .financeiro-hero {
-            border: 1px solid #dbdbdb;
+            border: 1px solid var(--financeiro-border);
             border-radius: 0.75rem;
             padding: 1.5rem;
-            background: #fafafa;
+            background: var(--financeiro-soft);
         }
+
         .help.is-danger {
             display: block;
             margin-top: 0.35rem;
         }
+
         .actions-cell {
             white-space: nowrap;
         }
+
         .filters-box {
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.25rem;
             padding: 1rem;
-            border: 1px solid #dbdbdb;
+            border: 1px solid var(--financeiro-border);
             border-radius: 0.75rem;
-            background: #fafafa;
+            background: var(--financeiro-soft);
         }
+
         .financeiro-autocomplete {
             position: relative;
         }
+
         .financeiro-autocomplete-menu {
             position: absolute;
             top: calc(100% + 0.25rem);
             left: 0;
             right: 0;
             z-index: 30;
-            border: 1px solid #dbdbdb;
+            border: 1px solid var(--financeiro-border);
             border-radius: 0.5rem;
             background: #fff;
             box-shadow: 0 8px 20px rgba(10, 10, 10, 0.08);
             max-height: 16rem;
             overflow-y: auto;
         }
+
         .financeiro-autocomplete-menu[hidden] {
             display: none;
         }
+
         .financeiro-autocomplete-option {
             width: 100%;
             border: 0;
@@ -56,14 +77,221 @@
             padding: 0.75rem 0.9rem;
             cursor: pointer;
         }
+
         .financeiro-autocomplete-option:hover,
         .financeiro-autocomplete-option:focus {
             background: #f5f5f5;
             outline: none;
         }
+
         .financeiro-autocomplete-empty {
             padding: 0.75rem 0.9rem;
             color: #7a7a7a;
+        }
+
+        .financeiro-table {
+            font-size: 0.92rem;
+        }
+
+        .financeiro-table thead th {
+            font-size: 0.74rem;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: #5b6470;
+            padding: 0.7rem 0.7rem;
+            border-bottom-width: 1px;
+        }
+
+        .financeiro-table tbody td,
+        .financeiro-table tfoot th,
+        .financeiro-table tfoot td {
+            padding: 0.7rem 0.7rem;
+            vertical-align: top;
+        }
+
+        .financeiro-table tbody tr:nth-child(even) {
+            background: var(--financeiro-zebra);
+        }
+
+        .financeiro-meta {
+            display: block;
+            margin-top: 0.2rem;
+            font-size: 0.76rem;
+            color: #6b7280;
+            line-height: 1.35;
+        }
+
+        .tipo-badge,
+        .status-badge,
+        .valor-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            border-radius: 999px;
+            padding: 0.18rem 0.55rem;
+            font-size: 0.78rem;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .tipo-badge.is-receita,
+        .valor-chip.is-receita {
+            color: var(--financeiro-receita);
+            background: rgba(31, 95, 191, 0.09);
+        }
+
+        .tipo-badge.is-despesa,
+        .valor-chip.is-despesa {
+            color: var(--financeiro-despesa);
+            background: rgba(183, 58, 50, 0.1);
+        }
+
+        .tipo-badge.is-transferencia,
+        .valor-chip.is-transferencia {
+            color: var(--financeiro-transferencia);
+            background: rgba(181, 106, 25, 0.14);
+        }
+
+        .status-badge.is-quitado {
+            color: var(--financeiro-quitado);
+            background: rgba(47, 133, 90, 0.1);
+        }
+
+        .status-badge.is-aberto {
+            color: var(--financeiro-aberto);
+            background: rgba(138, 90, 16, 0.12);
+        }
+
+        .status-badge.is-cancelado {
+            color: var(--financeiro-cancelado);
+            background: rgba(107, 114, 128, 0.12);
+        }
+
+        .is-unsettled {
+            font-weight: 700;
+        }
+
+        .is-opening-balance td {
+            color: #4b5563;
+            background: #f5f7fa;
+        }
+
+        .table-caption {
+            margin-bottom: 0.75rem;
+            color: #6b7280;
+            font-size: 0.84rem;
+        }
+
+        .extrato-text {
+            background: transparent;
+            border: 0;
+            border-radius: 0;
+            box-shadow: none;
+            padding: 0;
+        }
+
+        .extrato-text.is-receita {
+            color: var(--financeiro-receita);
+        }
+
+        .extrato-text.is-despesa {
+            color: var(--financeiro-despesa);
+        }
+
+        .extrato-text.is-transferencia {
+            color: var(--financeiro-transferencia);
+        }
+
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 12mm;
+            }
+
+            html,
+            body {
+                background: #fff !important;
+                color: var(--financeiro-print-text);
+                font-size: 11px;
+            }
+
+            .navbar,
+            .no-print,
+            .filters-box,
+            .button,
+            .buttons,
+            .notification {
+                display: none !important;
+            }
+
+            .section {
+                padding: 0.5rem 0;
+            }
+
+            .container {
+                max-width: none !important;
+                width: 100%;
+                padding: 0 !important;
+            }
+
+            .level {
+                display: block;
+                margin-bottom: 0.75rem;
+            }
+
+            .title {
+                font-size: 18px !important;
+                margin-bottom: 0.35rem !important;
+            }
+
+            .subtitle,
+            .table-caption,
+            .financeiro-meta {
+                color: #374151 !important;
+                font-size: 10px !important;
+            }
+
+            .table-wrapper {
+                overflow: visible;
+            }
+
+            .financeiro-table {
+                width: 100%;
+                font-size: 10px;
+                table-layout: fixed;
+            }
+
+            .financeiro-table th,
+            .financeiro-table td {
+                padding: 0.3rem 0.35rem !important;
+                color: #111 !important;
+                background: #fff !important;
+                border-color: #c7c7c7 !important;
+            }
+
+            .tipo-badge,
+            .status-badge,
+            .valor-chip,
+            .extrato-text {
+                padding: 0;
+                background: transparent !important;
+                color: #111 !important;
+                box-shadow: none !important;
+                border-radius: 0;
+            }
+
+            .financeiro-table thead {
+                display: table-header-group;
+            }
+
+            .financeiro-table tr {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+
+            .actions-cell {
+                display: none !important;
+            }
         }
     </style>
 </head>
@@ -73,11 +301,12 @@
         <div class="navbar-menu is-active">
             <div class="navbar-start">
                 <a class="navbar-item" href="{% url 'financeiro:home' %}">Financeiro</a>
+                <a class="navbar-item" href="{% url 'financeiro:extrato-list' %}">Extratos</a>
                 <a class="navbar-item" href="{% url 'financeiro:conta-list' %}">Contas</a>
                 <a class="navbar-item" href="{% url 'financeiro:centro-custo-list' %}">Centros de Custo</a>
                 <a class="navbar-item" href="{% url 'financeiro:pessoa-list' %}">Pessoas</a>
                 <a class="navbar-item" href="{% url 'financeiro:categoria-list' %}">Categorias</a>
-                <a class="navbar-item" href="{% url 'financeiro:lancamento-list' %}">Lançamentos</a>
+                <a class="navbar-item" href="{% url 'financeiro:lancamento-list' %}">Lancamentos</a>
             </div>
         </div>
     </div>

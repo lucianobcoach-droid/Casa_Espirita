@@ -11,6 +11,8 @@ Data de atualização: 2026-03-23
 - O módulo possui cadastro, listagem, edição, exclusão com confirmação, filtros básicos, autocomplete real no formulário de lançamento e extrato por conta.
 - O extrato por conta já aceita filtro por período via GET e cálculo de saldo anterior.
 - O saldo real das contas e o extrato agora consideram apenas lançamentos quitados.
+- As tabelas principais do financeiro usam layout mais compacto, zebra striping e impressão mais limpa.
+- O financeiro agora possui menu próprio `Extratos` com filtro por conta e período.
 - O app `biblioteca` não foi alterado.
 - Não foram usados `signals`.
 
@@ -33,6 +35,7 @@ Leitura funcional:
 Existe visualização de extrato por conta em rota própria:
 
 - `/financeiro/contas/<id>/extrato/`
+- `/financeiro/extratos/`
 
 Escopo funcional:
 
@@ -42,6 +45,7 @@ Escopo funcional:
 - saldo acumulado do período começa a partir de `saldo_anterior`
 - somente lançamentos quitados aparecem no extrato
 - não existe relatório geral nesta etapa
+- a tela `Extratos` reutiliza a mesma lógica do extrato por conta
 
 ## Regra de saldo no extrato
 
@@ -67,8 +71,11 @@ Com filtro por período:
 - A rota `/financeiro/` foi ligada ao projeto em `casa_espirita/urls.py`.
 - O módulo possui listagem, cadastro, edição e exclusão de contas financeiras.
 - O módulo possui extrato individual por conta com saldo acumulado.
+- O módulo possui tela própria de extratos com filtro por conta e período.
 - O extrato mostra conta, período, saldo inicial, data do saldo inicial, saldo anterior quando aplicável e saldo final exibido.
 - O módulo possui listagem de contas com `saldo_atual` calculado.
+- A listagem de lançamentos destaca tipo por cor e status não quitado em negrito.
+- O extrato e as listagens priorizadas têm ajustes de impressão para esconder controles e manter a tabela legível.
 
 ## Migrações
 

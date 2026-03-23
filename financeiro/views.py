@@ -185,11 +185,7 @@ class ContaFinanceiraDeleteView(FinanceiroDeleteMixin):
     success_message = 'Conta financeira excluida com sucesso.'
 
 
-class ContaFinanceiraExtratoView(DetailView):
-    model = ContaFinanceira
-    template_name = 'financeiro/conta_extrato.html'
-    context_object_name = 'conta'
-
+class ExtratoContaMixin:
     def _classificar_lancamento(self, conta: ContaFinanceira, lancamento: LancamentoFinanceiro) -> tuple[Decimal, Decimal]:
         entrada = Decimal('0.00')
         saida = Decimal('0.00')
@@ -206,12 +202,12 @@ class ContaFinanceiraExtratoView(DetailView):
 
         return entrada, saida
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        conta = self.object
-        data_inicial = self.request.GET.get('data_inicial', '').strip()
-        data_final = self.request.GET.get('data_final', '').strip()
-
+    def _get_extrato_context(
+        self,
+        conta: ContaFinanceira,
+        data_inicial: str = '',
+        data_final: str = '',
+    ) -> dict[str, object]:
         queryset_base = (
             LancamentoFinanceiro.objects.filter(
                 Q(conta=conta) | Q(conta_destino=conta),
@@ -235,7 +231,7 @@ class ContaFinanceiraExtratoView(DetailView):
             lancamentos = lancamentos.filter(data_competencia__lte=data_final)
 
         saldo_acumulado = saldo_anterior if data_inicial else (conta.saldo_inicial or Decimal('0.00'))
-        itens_extrato = []
+        itens_extrato: list[dict[str, object]] = []
         for lancamento in lancamentos:
             entrada, saida = self._classificar_lancamento(conta, lancamento)
             saldo_acumulado += entrada - saida
@@ -248,16 +244,63 @@ class ContaFinanceiraExtratoView(DetailView):
                 }
             )
 
+        return {
+            'conta': conta,
+            'saldo_inicial': conta.saldo_inicial or Decimal('0.00'),
+            'data_saldo_inicial': conta.data_saldo_inicial,
+            'data_inicial': data_inicial,
+            'data_final': data_final,
+            'saldo_anterior': saldo_anterior if data_inicial else None,
+            'exibe_linha_saldo_inicial': not (data_inicial or data_final),
+            'itens_extrato': itens_extrato,
+            'saldo_final': saldo_acumulado,
+            'saldo_atual': saldo_acumulado,
+        }
+
+
+class ContaFinanceiraExtratoView(ExtratoContaMixin, DetailView):
+    model = ContaFinanceira
+    template_name = 'financeiro/conta_extrato.html'
+    context_object_name = 'conta'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        conta = self.object
+        data_inicial = self.request.GET.get('data_inicial', '').strip()
+        data_final = self.request.GET.get('data_final', '').strip()
+
+        context.update(self._get_extrato_context(conta, data_inicial, data_final))
         context['page_title'] = f'Extrato da Conta: {conta.nome}'
-        context['saldo_inicial'] = conta.saldo_inicial or Decimal('0.00')
-        context['data_saldo_inicial'] = conta.data_saldo_inicial
-        context['data_inicial'] = data_inicial
-        context['data_final'] = data_final
-        context['saldo_anterior'] = saldo_anterior if data_inicial else None
-        context['exibe_linha_saldo_inicial'] = not (data_inicial or data_final)
-        context['itens_extrato'] = itens_extrato
-        context['saldo_final'] = saldo_acumulado
-        context['saldo_atual'] = saldo_acumulado
+        context['show_conta_filter'] = False
+        context['clear_extrato_url'] = reverse_lazy('financeiro:conta-extrato', kwargs={'pk': conta.pk})
+        return context
+
+
+class ExtratoFinanceiroView(ExtratoContaMixin, TemplateView):
+    template_name = 'financeiro/conta_extrato.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        conta_id = self.request.GET.get('conta', '').strip()
+        data_inicial = self.request.GET.get('data_inicial', '').strip()
+        data_final = self.request.GET.get('data_final', '').strip()
+        contas = ContaFinanceira.objects.order_by('nome')
+
+        context['page_title'] = 'Extratos'
+        context['contas'] = contas
+        context['conta_selecionada_id'] = conta_id
+        context['show_conta_filter'] = True
+        context['clear_extrato_url'] = reverse_lazy('financeiro:extrato-list')
+
+        if conta_id:
+            try:
+                conta = contas.get(pk=conta_id)
+            except ContaFinanceira.DoesNotExist:
+                context['extrato_error'] = 'Conta financeira nao encontrada.'
+            else:
+                context.update(self._get_extrato_context(conta, data_inicial, data_final))
+                context['page_title'] = f'Extratos - {conta.nome}'
+
         return context
 
 
