@@ -1,0 +1,38 @@
+{% extends 'financeiro/base.html' %}
+{% block title %}Categorias Financeiras{% endblock %}
+{% block content %}
+<div class="level">
+    <div class="level-left">
+        <h1 class="title">Categorias Financeiras</h1>
+    </div>
+    <div class="level-right">
+        <a class="button is-primary" href="{% url 'financeiro:categoria-create' %}">Nova categoria</a>
+    </div>
+</div>
+<div class="table-wrapper">
+    <table class="table is-fullwidth is-striped is-hoverable">
+        <thead>
+        <tr>
+            <th>Nome</th>
+            <th>Tipo</th>
+            <th>Categoria pai</th>
+            <th>Ativo</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for categoria in categorias %}
+            <tr>
+                <td>{{ categoria.nome }}</td>
+                <td>{{ categoria.get_tipo_display }}</td>
+                <td>{{ categoria.categoria_pai|default:'-' }}</td>
+                <td>{% if categoria.ativo %}Sim{% else %}Não{% endif %}</td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="4">Nenhuma categoria financeira cadastrada.</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

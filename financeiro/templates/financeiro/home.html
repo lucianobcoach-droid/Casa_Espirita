@@ -1,15 +1,13 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Financeiro | Casa Espirita</title>
-</head>
-<body>
-    <main>
-        <h1>Modulo Financeiro</h1>
-        <p>Base minima do modulo financeiro disponivel.</p>
-        <p>Esta tela confirma que a rota <code>/financeiro/</code> esta ativa.</p>
-    </main>
-</body>
-</html>
+{% extends 'financeiro/base.html' %}
+{% block title %}Financeiro{% endblock %}
+{% block content %}
+<div class="financeiro-hero">
+    <h1 class="title">Módulo Financeiro</h1>
+    <p class="subtitle">Primeira interface operacional usando a modelagem já existente.</p>
+    <div class="buttons">
+        <a class="button is-primary" href="{% url 'financeiro:pessoa-list' %}">Pessoas</a>
+        <a class="button is-link" href="{% url 'financeiro:categoria-list' %}">Categorias</a>
+        <a class="button is-info" href="{% url 'financeiro:lancamento-list' %}">Lançamentos</a>
+    </div>
+</div>
+{% endblock %}

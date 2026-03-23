@@ -1,0 +1,31 @@
+{% extends 'financeiro/base.html' %}
+{% block title %}Nova Categoria Financeira{% endblock %}
+{% block content %}
+<h1 class="title">Nova Categoria Financeira</h1>
+{% if form.non_field_errors %}
+    <div class="notification is-danger">
+        {{ form.non_field_errors }}
+    </div>
+{% endif %}
+<form method="post">
+    {% csrf_token %}
+    {% for field in form %}
+        <div class="field">
+            <label class="label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+            <div class="control">
+                {{ field }}
+            </div>
+            {% if field.help_text %}
+                <p class="help">{{ field.help_text }}</p>
+            {% endif %}
+            {% for error in field.errors %}
+                <p class="help is-danger">{{ error }}</p>
+            {% endfor %}
+        </div>
+    {% endfor %}
+    <div class="buttons">
+        <button class="button is-primary" type="submit">Salvar</button>
+        <a class="button" href="{% url 'financeiro:categoria-list' %}">Voltar</a>
+    </div>
+</form>
+{% endblock %}

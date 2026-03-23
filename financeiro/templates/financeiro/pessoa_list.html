@@ -1,0 +1,44 @@
+{% extends 'financeiro/base.html' %}
+{% block title %}Pessoas Financeiras{% endblock %}
+{% block content %}
+<div class="level">
+    <div class="level-left">
+        <h1 class="title">Pessoas Financeiras</h1>
+    </div>
+    <div class="level-right">
+        <a class="button is-primary" href="{% url 'financeiro:pessoa-create' %}">Nova pessoa</a>
+    </div>
+</div>
+<div class="table-wrapper">
+    <table class="table is-fullwidth is-striped is-hoverable">
+        <thead>
+        <tr>
+            <th>Código</th>
+            <th>Nome</th>
+            <th>Tipo pessoa</th>
+            <th>Documento</th>
+            <th>Telefone</th>
+            <th>E-mail</th>
+            <th>Ativo</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for pessoa in pessoas %}
+            <tr>
+                <td>{{ pessoa.codigo }}</td>
+                <td>{{ pessoa.nome }}</td>
+                <td>{{ pessoa.get_tipo_pessoa_display|default:'-' }}</td>
+                <td>{{ pessoa.documento|default:'-' }}</td>
+                <td>{{ pessoa.telefone|default:'-' }}</td>
+                <td>{{ pessoa.email|default:'-' }}</td>
+                <td>{% if pessoa.ativo %}Sim{% else %}Não{% endif %}</td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="7">Nenhuma pessoa financeira cadastrada.</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

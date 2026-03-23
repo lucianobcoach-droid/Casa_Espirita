@@ -4,7 +4,7 @@ Data: 2026-03-23
 
 ## Entrega realizada
 
-Foi criada a modelagem mínima real do domínio financeiro em um app dedicado chamado `financeiro`, de forma incremental e isolada do restante do projeto. Nesta etapa, também foi adicionada a base mínima de interface para que `/financeiro/` tenha resposta própria.
+Foi criada a primeira interface operacional real do módulo `financeiro`, preservando integralmente a modelagem, os relacionamentos e as migrations já existentes.
 
 ## Revisão da modelagem
 
@@ -20,7 +20,7 @@ Resultado da revisão:
 
 - não foram encontradas diferenças funcionais relevantes entre o estado atual e os critérios informados
 - as validações obrigatórias de `LancamentoFinanceiro` já estavam implementadas
-- não houve necessidade de alterar models, admin ou migrations nesta etapa
+- não houve necessidade de alterar models, admin ou migrations
 
 ## Arquivos criados
 
@@ -28,53 +28,75 @@ Resultado da revisão:
 - `financeiro/apps.py`
 - `financeiro/models.py`
 - `financeiro/admin.py`
+- `financeiro/forms.py`
 - `financeiro/views.py`
 - `financeiro/urls.py`
+- `financeiro/templates/financeiro/base.html`
 - `financeiro/templates/financeiro/home.html`
+- `financeiro/templates/financeiro/pessoa_list.html`
+- `financeiro/templates/financeiro/pessoa_form.html`
+- `financeiro/templates/financeiro/categoria_list.html`
+- `financeiro/templates/financeiro/categoria_form.html`
+- `financeiro/templates/financeiro/lancamento_list.html`
+- `financeiro/templates/financeiro/lancamento_form.html`
 - `financeiro/migrations/__init__.py`
 - `financeiro/migrations/0001_initial.py`
 - `docs/STATE.md`
 - `docs/CODEX_RESULTADO.md`
 
-## Arquivo atualizado
+## Arquivos atualizados nesta etapa
 
-- `casa_espirita/settings.py`
-- `casa_espirita/urls.py`
+- `financeiro/views.py`
+- `financeiro/urls.py`
+- `financeiro/templates/financeiro/home.html`
+- `docs/STATE.md`
+- `docs/CODEX_RESULTADO.md`
 
-## Modelos implementados
+## Interface operacional implementada
 
-- `ContaFinanceira`
-- `CentroCusto`
-- `PessoaFinanceira`
-- `CategoriaFinanceira`
-- `LancamentoFinanceiro`
+Foram adicionados:
 
-## Validações implementadas em `LancamentoFinanceiro`
+- `PessoaFinanceiraForm`
+- `CategoriaFinanceiraForm`
+- `LancamentoFinanceiroForm`
+- listagem e cadastro de pessoas financeiras
+- listagem e cadastro de categorias financeiras
+- listagem e cadastro de lançamentos financeiros
+- home do financeiro com navegação entre esses fluxos
 
-- transferência exige `conta_destino`
-- `conta_destino` só pode ser usada em transferência
-- `conta` e `conta_destino` não podem ser iguais
+Abordagem usada:
+
+- Django Templates
+- `ListView`
+- `CreateView`
+- `ModelForm`
+- layout leve e institucional com tabelas e rolagem horizontal natural em telas menores
 
 ## Restrições respeitadas
 
 - sem regressão intencional do estado atual
 - sem alterações no app `biblioteca`
 - sem uso de `signals`
-- sem criação de telas operacionais além da home mínima institucional do módulo
-- sem reescrita de migrations após criação
+- sem alteração de `financeiro/models.py`
+- sem alteração das migrations já criadas
+- sem alteração de domínio ou relacionamentos
+- sem edição
+- sem exclusão
+- sem recorrência
+- sem recibos
+- sem anexos
+- sem cadastro rápido dentro da tela de lançamento
 - mudança incremental
 
 ## Limitação encontrada
 
-O ambiente desta execução não possui Django instalado no interpretador acessível por `py`, então não foi possível:
-
-- gerar migration automaticamente
-- executar `manage.py check`
+O ambiente desta execução não possui Django instalado no interpretador acessível por `py`, então não foi possível executar `manage.py check`.
 
 ## Resultado prático
 
-- o código do domínio financeiro e o admin foram adicionados ao projeto
-- a migration inicial já está presente no repositório
-- a rota `/financeiro/` agora possui URL, view e template dedicados
+- o código do domínio financeiro permaneceu intacto
+- a migration inicial foi preservada sem mudanças
+- a rota `/financeiro/` agora leva a uma navegação operacional mínima
+- o módulo possui listagens com dados reais do banco e telas de cadastro para pessoas, categorias e lançamentos
 - a modelagem financeira atual foi revisada e confirmada como aderente aos critérios informados
 - a validação final de runtime depende apenas de instalar as dependências do projeto no ambiente local

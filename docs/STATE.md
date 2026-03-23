@@ -5,10 +5,10 @@ Data de atualização: 2026-03-23
 ## Estado atual do módulo financeiro
 
 - O app `financeiro` foi criado e adicionado ao `INSTALLED_APPS`.
-- A primeira entrega contém apenas modelagem de domínio e registro no Django admin.
-- Foi criada uma entrada mínima de interface para o módulo em `/financeiro/`.
-- Existem `financeiro/views.py`, `financeiro/urls.py` e `financeiro/templates/financeiro/home.html`.
-- Ainda não existem telas operacionais, formulários nem fluxos de uso do módulo financeiro.
+- A modelagem de domínio e o registro no Django admin permanecem intactos.
+- Foi criada a primeira interface operacional real do módulo.
+- Existem formulários, views, rotas e templates próprios para pessoas, categorias e lançamentos.
+- Ainda não existem edição, exclusão, recorrência, recibos, anexos ou cadastro rápido dentro do lançamento.
 - O app `biblioteca` não foi alterado.
 - Não foram usados `signals`.
 
@@ -28,7 +28,7 @@ Data de atualização: 2026-03-23
 - `CategoriaFinanceira` está aderente aos campos esperados.
 - `LancamentoFinanceiro` está aderente aos campos esperados.
 - As três validações mínimas obrigatórias de `LancamentoFinanceiro` já estão implementadas no model.
-- Não foi identificada divergência funcional relevante que justificasse alteração de código nesta revisão.
+- Não foi identificada divergência funcional relevante que justificasse alteração de código no domínio.
 
 ## Regras mínimas já implementadas em `LancamentoFinanceiro`
 
@@ -40,11 +40,39 @@ Data de atualização: 2026-03-23
 
 - Todos os models do app `financeiro` estão registrados no admin.
 
-## Interface mínima
+## Interface atual
 
 - A rota `/financeiro/` foi ligada ao projeto em `casa_espirita/urls.py`.
-- A view atual é `FinanceiroHomeView`.
-- O template atual é apenas institucional e de confirmação da ativação do módulo.
+- A home atual é `FinanceiroHomeView`, com navegação para os fluxos operacionais iniciais.
+- O módulo agora possui listagem e cadastro de pessoas financeiras.
+- O módulo agora possui listagem e cadastro de categorias financeiras.
+- O módulo agora possui listagem e cadastro de lançamentos financeiros.
+
+## Rotas operacionais atuais
+
+- `/financeiro/`
+- `/financeiro/pessoas/`
+- `/financeiro/pessoas/nova/`
+- `/financeiro/categorias/`
+- `/financeiro/categorias/nova/`
+- `/financeiro/lancamentos/`
+- `/financeiro/lancamentos/novo/`
+
+## Formulários atuais
+
+- `PessoaFinanceiraForm`
+- `CategoriaFinanceiraForm`
+- `LancamentoFinanceiroForm`
+
+## Views atuais
+
+- `FinanceiroHomeView`
+- `PessoaFinanceiraListView`
+- `PessoaFinanceiraCreateView`
+- `CategoriaFinanceiraListView`
+- `CategoriaFinanceiraCreateView`
+- `LancamentoFinanceiroListView`
+- `LancamentoFinanceiroCreateView`
 
 ## Migrações
 
@@ -54,7 +82,7 @@ Data de atualização: 2026-03-23
 
 ## Validação local
 
-- Não foi possível executar `py manage.py makemigrations financeiro` nem `py manage.py check` com sucesso no ambiente atual.
+- Não foi possível executar `py manage.py check` com sucesso no ambiente atual.
 - Motivo: o interpretador disponível não tem o pacote `django` instalado.
 - Foi possível validar a sintaxe dos arquivos Python via `py -m compileall financeiro casa_espirita`.
 - Assim, a estrutura foi deixada pronta, mas a validação automática do runtime ainda depende de um ambiente com as dependências instaladas.
