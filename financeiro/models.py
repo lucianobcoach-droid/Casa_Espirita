@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 from decimal import Decimal
+from uuid import uuid4
 
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 
@@ -130,6 +132,8 @@ class LancamentoFinanceiro(models.Model):
         CategoriaFinanceira,
         on_delete=models.PROTECT,
         related_name='lancamentos',
+        blank=True,
+        null=True,
     )
     centro_custo = models.ForeignKey(
         CentroCusto,
@@ -165,6 +169,10 @@ class LancamentoFinanceiro(models.Model):
     def clean(self) -> None:
         errors: dict[str, list[str] | str] = {}
         transferencia = self.tipo == self.TipoLancamento.TRANSFERENCIA
+        lancamento_operacional = self.tipo in {
+            self.TipoLancamento.RECEITA,
+            self.TipoLancamento.DESPESA,
+        }
 
         if transferencia and not self.conta_destino_id:
             errors['conta_destino'] = 'Transferência exige conta_destino.'
@@ -175,9 +183,32 @@ class LancamentoFinanceiro(models.Model):
         if self.conta_id and self.conta_destino_id and self.conta_id == self.conta_destino_id:
             errors['conta_destino'] = 'conta e conta_destino não podem ser iguais.'
 
+        if lancamento_operacional and not self.pessoa_id:
+            errors['pessoa'] = 'Pessoa é obrigatória para receita e despesa.'
+
+        if lancamento_operacional and not self.categoria_id:
+            errors['categoria'] = 'Categoria é obrigatória para receita e despesa.'
+
         if errors:
             raise ValidationError(errors)
 
+    def _gerar_numero_documento(self) -> str:
+        referencia = self.data_competencia or timezone.localdate()
+        prefixo = referencia.strftime('%d%m%y')
+        queryset = type(self).objects.all()
+        if self.pk:
+            queryset = queryset.exclude(pk=self.pk)
+
+        for _ in range(20):
+            sufixo = f'{uuid4().int % 1000:03d}'
+            numero_documento = f'{prefixo}-{sufixo}'
+            if not queryset.filter(numero_documento=numero_documento).exists():
+                return numero_documento
+
+        return f'{prefixo}-{uuid4().int % 1000:03d}'
+
     def save(self, *args, **kwargs) -> None:
+        if not self.numero_documento:
+            self.numero_documento = self._gerar_numero_documento()
         self.full_clean()
         super().save(*args, **kwargs)
