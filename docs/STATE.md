@@ -18,7 +18,7 @@ Data de atualização: 2026-03-23
 - As telas de `Resumo` e `Prestacao de Contas` agora permitem selecionar quais contas entram no relatório.
 - As telas de `Resumo` e `Prestacao de Contas` agora mostram receitas e despesas agrupadas por categoria.
 - As telas de `Resumo` e `Prestacao de Contas` agora mostram despesas agrupadas por centro de custo.
-- As telas de `Resumo` e `Prestacao de Contas` agora possuem controle de exibição para agrupamentos por categoria e por centro de custo, sem alterar os totais gerais do relatório.
+- As telas de `Resumo` e `Prestacao de Contas` agora possuem controle de exibição apenas para o bloco de centro de custo, sem alterar os totais gerais do relatório.
 - A tela de `Prestacao de Contas` recebeu refinamento visual específico para impressão em A4.
 - A `Prestacao de Contas` agora tem apresentação mais formal, com menos aparência de dashboard.
 - O app `biblioteca` não foi alterado.
@@ -37,6 +37,18 @@ Leitura funcional:
 - `saldo_atual` é calculado em tempo de execução
 - `saldo_atual` não é salvo no banco
 - apenas lançamentos com status `quitado` afetam `saldo_atual`
+
+## LancamentoFinanceiro
+
+`LancamentoFinanceiro` agora exige:
+
+- `categoria` obrigatória no model
+- `categoria` obrigatória no formulário
+
+Leitura funcional:
+
+- o cadastro e a edição de lançamento não devem permitir salvar sem categoria
+- os relatórios mantêm tratamento defensivo para base antiga, exibindo `Sem categoria` se algum dado legado surgir
 
 ## Extrato por conta
 
@@ -72,7 +84,7 @@ Escopo funcional:
 - mostra saldo inicial consolidado, receitas do período, despesas do período, saldo do período e saldo final consolidado
 - mostra receitas por categoria e despesas por categoria
 - mostra despesas por centro de custo
-- permite escolher se os agrupamentos mostram todos os itens, apenas itens com vínculo ou apenas itens sem vínculo
+- permite controlar a exibição apenas do bloco de centro de custo
 - considera apenas lançamentos efetivos
 - transferências internas não entram como receita nem despesa no consolidado
 - lançamentos sem categoria aparecem no agrupamento como `Sem categoria`
@@ -95,7 +107,7 @@ Escopo funcional:
 - mostra composição do saldo inicial
 - mostra receitas e despesas já consolidadas por categoria
 - mostra despesas agrupadas por centro de custo
-- permite controlar a exibição dos agrupamentos por categoria e por centro de custo sem alterar os totais consolidados
+- permite controlar a exibição apenas do bloco de centro de custo sem alterar os totais consolidados
 - mostra resumo do saldo disponível
 - mostra composição do saldo final por conta
 - mantém transferências internas neutras no consolidado geral
@@ -140,6 +152,7 @@ Com filtro por período:
 - Existe a migration inicial `financeiro/migrations/0001_initial.py`.
 - Existe a migration incremental `financeiro/migrations/0002_contafinanceira_saldo_inicial.py`.
 - Existe a migration incremental `financeiro/migrations/0003_contafinanceira_data_saldo_inicial_required.py`.
+- Existe a migration incremental `financeiro/migrations/0004_lancamentofinanceiro_categoria_required.py`.
 - As migrations antigas não foram alteradas.
 
 ## Validação local

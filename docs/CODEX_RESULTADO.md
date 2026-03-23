@@ -20,7 +20,7 @@ Complemento incremental posterior:
 - `Resumo` e `Prestacao de Contas` passaram a aceitar seleção de contas para compor o relatório
 - `Resumo` e `Prestacao de Contas` passaram a mostrar agrupamento por categoria
 - `Resumo` e `Prestacao de Contas` passaram a mostrar agrupamento de despesas por centro de custo
-- `Resumo` e `Prestacao de Contas` passaram a aceitar filtro de exibição nos agrupamentos por categoria e por centro de custo
+- `Resumo` e `Prestacao de Contas` passaram a aceitar controle de exibição apenas para o bloco de centro de custo
 - a `Prestacao de Contas` passou a ter refinamento específico de impressão
 - a `Prestacao de Contas` passou a ter visual mais formal e menos aparência de dashboard
 
@@ -74,6 +74,7 @@ O `saldo_anterior` é calculado assim:
 - transferências internas ficaram neutras no resumo consolidado
 - a prestação de contas organiza o período em blocos formais e mostra a composição do saldo final por conta
 - os cálculos dessas duas telas passaram a respeitar apenas as contas selecionadas
+- `categoria` passou a ser obrigatória em `LancamentoFinanceiro` no model e no formulário
 - lançamentos sem categoria passaram a ser mostrados no agrupamento como `Sem categoria`
 - despesas sem centro de custo passaram a ser mostradas no agrupamento como `Sem centro de custo`
 - os filtros de exibição dos agrupamentos não alteram totais gerais de receitas, despesas, saldo inicial, saldo final ou resumo do período

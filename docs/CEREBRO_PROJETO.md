@@ -83,7 +83,7 @@ Até o momento, está validado que:
 - `Resumo` e `Prestacao de Contas` agora permitem selecionar quais contas entram no relatório
 - `Resumo` e `Prestacao de Contas` agora exibem agrupamento por categoria para receitas e despesas
 - `Resumo` e `Prestacao de Contas` agora exibem despesas agrupadas por centro de custo
-- `Resumo` e `Prestacao de Contas` agora permitem filtrar a exibição dos agrupamentos por categoria e por centro de custo
+- `Resumo` e `Prestacao de Contas` agora permitem controlar a exibição apenas do bloco de centro de custo
 - a `Prestacao de Contas` possui refinamento específico para impressão em A4 e bloco simples de assinatura
 - a `Prestacao de Contas` agora usa apresentação mais formal, contínua e documental
 
@@ -123,6 +123,7 @@ Os tipos válidos de lançamento são:
 - transferências internas não alteram receita, despesa nem saldo consolidado do resumo
 - a `Prestacao de Contas` reutiliza a base do resumo e acrescenta blocos formais de apresentação
 - quando nenhuma conta é selecionada explicitamente, `Resumo` e `Prestacao de Contas` consideram todas as contas por padrão
+- `categoria` é obrigatória em `LancamentoFinanceiro`
 - quando um lançamento não possui categoria, ele aparece no agrupamento como `Sem categoria`
 - quando uma despesa não possui centro de custo, ela aparece no agrupamento como `Sem centro de custo`
 - os filtros de exibição dos agrupamentos não alteram totais gerais, saldos nem resumo do período

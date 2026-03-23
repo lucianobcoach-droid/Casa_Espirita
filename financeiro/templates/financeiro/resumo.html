@@ -15,14 +15,40 @@
     <div class="columns is-multiline">
         <div class="column is-4">
             <label class="label">Contas incluidas</label>
-            <div class="select is-multiple is-fullwidth">
-                <select name="contas" multiple size="6">
-                    {% for conta in contas_disponiveis %}
-                        <option value="{{ conta.pk }}" {% if conta.pk|stringformat:'s' in contas_selecionadas_ids %}selected{% endif %}>
-                            {{ conta.nome }}
-                        </option>
-                    {% endfor %}
-                </select>
+            <div class="financeiro-contas-dropdown" data-contas-dropdown>
+                <button
+                    class="button is-light financeiro-contas-trigger"
+                    type="button"
+                    data-contas-dropdown-toggle
+                    aria-expanded="false"
+                >
+                    <span class="financeiro-contas-trigger-label" data-contas-dropdown-summary>
+                        {% if quantidade_contas_selecionadas == contas_disponiveis|length %}
+                            Contas: Todas
+                        {% elif quantidade_contas_selecionadas == 1 %}
+                            Contas: 1 selecionada
+                        {% else %}
+                            Contas: {{ quantidade_contas_selecionadas }} selecionadas
+                        {% endif %}
+                    </span>
+                    <span class="financeiro-contas-trigger-icon">▼</span>
+                </button>
+                <div class="financeiro-contas-panel" data-contas-dropdown-panel hidden>
+                    <div class="financeiro-contas-checklist">
+                        <div class="financeiro-contas-actions">
+                            <button class="button is-small is-light" type="button" data-contas-checklist-action="all">Marcar todas</button>
+                            <button class="button is-small is-light" type="button" data-contas-checklist-action="none">Limpar selecao</button>
+                        </div>
+                        <div class="financeiro-contas-grid">
+                            {% for conta in contas_disponiveis %}
+                                <label class="checkbox financeiro-conta-option">
+                                    <input type="checkbox" name="contas" value="{{ conta.pk }}" {% if conta.pk|stringformat:'s' in contas_selecionadas_ids %}checked{% endif %}>
+                                    <span>{{ conta.nome }}</span>
+                                </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
             </div>
             <p class="help">Sem selecao explicita, o resumo considera todas as contas.</p>
         </div>
@@ -216,4 +242,61 @@
         </div>
     {% endif %}
 {% endif %}
+<script>
+    document.querySelectorAll('[data-contas-dropdown]').forEach((dropdown) => {
+        const toggle = dropdown.querySelector('[data-contas-dropdown-toggle]');
+        const panel = dropdown.querySelector('[data-contas-dropdown-panel]');
+        const summary = dropdown.querySelector('[data-contas-dropdown-summary]');
+        const checkboxes = dropdown.querySelectorAll('input[type="checkbox"][name="contas"]');
+        const total = checkboxes.length;
+
+        const updateSummary = () => {
+            const checkedCount = Array.from(checkboxes).filter((checkbox) => checkbox.checked).length;
+            if (checkedCount === 0 || checkedCount === total) {
+                summary.textContent = 'Contas: Todas';
+            } else if (checkedCount === 1) {
+                summary.textContent = 'Contas: 1 selecionada';
+            } else {
+                summary.textContent = `Contas: ${checkedCount} selecionadas`;
+            }
+        };
+
+        toggle.addEventListener('click', () => {
+            const isOpen = !panel.hasAttribute('hidden');
+            document.querySelectorAll('[data-contas-dropdown-panel]').forEach((otherPanel) => {
+                otherPanel.setAttribute('hidden', '');
+            });
+            document.querySelectorAll('[data-contas-dropdown-toggle]').forEach((otherToggle) => {
+                otherToggle.setAttribute('aria-expanded', 'false');
+            });
+            if (!isOpen) {
+                panel.removeAttribute('hidden');
+                toggle.setAttribute('aria-expanded', 'true');
+            }
+        });
+
+        dropdown.querySelectorAll('[data-contas-checklist-action]').forEach((button) => {
+            button.addEventListener('click', () => {
+                const markAll = button.dataset.contasChecklistAction === 'all';
+                checkboxes.forEach((checkbox) => {
+                    checkbox.checked = markAll;
+                });
+                updateSummary();
+            });
+        });
+
+        checkboxes.forEach((checkbox) => {
+            checkbox.addEventListener('change', updateSummary);
+        });
+
+        document.addEventListener('click', (event) => {
+            if (!dropdown.contains(event.target)) {
+                panel.setAttribute('hidden', '');
+                toggle.setAttribute('aria-expanded', 'false');
+            }
+        });
+
+        updateSummary();
+    });
+</script>
 {% endblock %}

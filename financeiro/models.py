@@ -130,8 +130,6 @@ class LancamentoFinanceiro(models.Model):
         CategoriaFinanceira,
         on_delete=models.PROTECT,
         related_name='lancamentos',
-        blank=True,
-        null=True,
     )
     centro_custo = models.ForeignKey(
         CentroCusto,

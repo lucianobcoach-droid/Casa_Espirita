@@ -68,6 +68,7 @@ class LancamentoFinanceiroForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['tipo'].widget.attrs.update({'data-financeiro-tipo': 'true'})
         self.fields['conta_destino'].widget.attrs.update({'data-financeiro-conta-destino': 'true'})
+        self.fields['categoria'].required = True
         autocomplete_urls = {
             'pessoa': reverse_lazy('financeiro:autocomplete-pessoa'),
             'categoria': reverse_lazy('financeiro:autocomplete-categoria'),
@@ -82,6 +83,7 @@ class LancamentoFinanceiroForm(forms.ModelForm):
                     'data-autocomplete-url': str(url),
                 }
             )
+        self.fields['categoria'].widget.attrs.update({'required': 'required'})
 
     def clean(self):
         cleaned_data = super().clean()
