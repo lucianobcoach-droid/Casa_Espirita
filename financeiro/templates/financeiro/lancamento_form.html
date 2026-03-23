@@ -7,15 +7,21 @@
         {{ form.non_field_errors }}
     </div>
 {% endif %}
-<div class="notification is-light">
-    Em transferências, o valor continua positivo no formulário e representa saída na conta de origem e entrada na conta de destino.
-</div>
 <form method="post">
     {% csrf_token %}
     {% for field in form %}
-        <div class="field"{% if field.name == 'conta_destino' %} data-financeiro-conta-destino-wrapper="true"{% endif %}>
+        <div
+            class="field"
+            {% if field.name == 'conta_destino' %} data-financeiro-conta-destino-wrapper="true"{% endif %}
+            {% if field.name == 'pessoa' %} data-financeiro-pessoa-wrapper="true"{% endif %}
+            {% if field.name == 'categoria' %} data-financeiro-categoria-wrapper="true"{% endif %}
+            {% if field.name == 'centro_custo' %} data-financeiro-centro-custo-wrapper="true"{% endif %}
+        >
             <label class="label" for="{{ field.id_for_label }}">
                 {{ field.label }}{% if field.field.required %} *{% endif %}
+                {% if field.name == 'pessoa' or field.name == 'categoria' or field.name == 'conta_destino' %}
+                    <span data-financeiro-required-marker="true"> *</span>
+                {% endif %}
             </label>
             <div class="control">
                 {{ field }}
@@ -38,6 +44,12 @@
         const tipoField = document.querySelector('[data-financeiro-tipo="true"]');
         const contaDestinoField = document.querySelector('[data-financeiro-conta-destino="true"]');
         const contaDestinoWrapper = document.querySelector('[data-financeiro-conta-destino-wrapper="true"]');
+        const pessoaField = document.querySelector('[name="pessoa"]');
+        const pessoaWrapper = document.querySelector('[data-financeiro-pessoa-wrapper="true"]');
+        const categoriaField = document.querySelector('[name="categoria"]');
+        const categoriaWrapper = document.querySelector('[data-financeiro-categoria-wrapper="true"]');
+        const centroCustoField = document.querySelector('[name="centro_custo"]');
+        const centroCustoWrapper = document.querySelector('[data-financeiro-centro-custo-wrapper="true"]');
         const autocompleteFields = Array.from(document.querySelectorAll('[data-financeiro-autocomplete="true"]'));
 
         function createAutocomplete(select) {
@@ -54,6 +66,7 @@
             input.className = 'input';
             input.autocomplete = 'off';
             input.placeholder = 'Digite para buscar';
+            input.required = select.required;
 
             const menu = document.createElement('div');
             menu.className = 'financeiro-autocomplete-menu';
@@ -172,24 +185,66 @@
 
         autocompleteFields.forEach(createAutocomplete);
 
-        if (!tipoField || !contaDestinoField || !contaDestinoWrapper) {
+        if (
+            !tipoField ||
+            !contaDestinoField ||
+            !contaDestinoWrapper ||
+            !pessoaField ||
+            !pessoaWrapper ||
+            !categoriaField ||
+            !categoriaWrapper ||
+            !centroCustoField ||
+            !centroCustoWrapper
+        ) {
             return;
+        }
+
+        function syncConditionalField(field, wrapper, options) {
+            const {
+                visible,
+                required,
+                clearWhenHidden = false,
+            } = options;
+            wrapper.style.display = visible ? '' : 'none';
+            field.disabled = !visible;
+            field.required = !!required;
+            if (field._autocompleteInput) {
+                field._autocompleteInput.disabled = !visible;
+                field._autocompleteInput.required = !!required;
+            }
+            wrapper.querySelectorAll('[data-financeiro-required-marker="true"]').forEach((marker) => {
+                marker.style.display = required ? '' : 'none';
+            });
+            if (!visible && clearWhenHidden) {
+                field.value = '';
+                if (field._autocompleteInput) {
+                    field._autocompleteInput.value = '';
+                }
+            }
         }
 
         function syncContaDestino() {
             const isTransferencia = tipoField.value === 'transferencia';
-            contaDestinoWrapper.style.display = isTransferencia ? '' : 'none';
-            contaDestinoField.disabled = !isTransferencia;
-            if (contaDestinoField._autocompleteInput) {
-                contaDestinoField._autocompleteInput.disabled = !isTransferencia;
-            }
-
-            if (!isTransferencia) {
-                contaDestinoField.value = '';
-                if (contaDestinoField._autocompleteInput) {
-                    contaDestinoField._autocompleteInput.value = '';
-                }
-            }
+            syncConditionalField(contaDestinoField, contaDestinoWrapper, {
+                visible: isTransferencia,
+                required: isTransferencia,
+                clearWhenHidden: !isTransferencia,
+            });
+            syncConditionalField(pessoaField, pessoaWrapper, {
+                visible: !isTransferencia,
+                required: !isTransferencia,
+                clearWhenHidden: isTransferencia,
+            });
+            syncConditionalField(categoriaField, categoriaWrapper, {
+                visible: !isTransferencia,
+                required: !isTransferencia,
+                clearWhenHidden: isTransferencia,
+            });
+            syncConditionalField(centroCustoField, centroCustoWrapper, {
+                visible: !isTransferencia,
+                required: false,
+                clearWhenHidden: isTransferencia,
+            });
         }
 
         tipoField.addEventListener('change', syncContaDestino);
