@@ -6,8 +6,8 @@ Data de atualização: 2026-03-23
 
 - O app `financeiro` foi criado e adicionado ao `INSTALLED_APPS`.
 - A modelagem de domínio e o registro no Django admin permanecem intactos.
-- Foi criada a primeira interface operacional real do módulo.
-- Existem formulários, views, rotas e templates próprios para pessoas, categorias e lançamentos.
+- O módulo já possui base operacional própria fora do admin.
+- Existem formulários, views, rotas e templates próprios para contas, centros de custo, pessoas, categorias e lançamentos.
 - Ainda não existem edição, exclusão, recorrência, recibos, anexos ou cadastro rápido dentro do lançamento.
 - O app `biblioteca` não foi alterado.
 - Não foram usados `signals`.
@@ -44,13 +44,19 @@ Data de atualização: 2026-03-23
 
 - A rota `/financeiro/` foi ligada ao projeto em `casa_espirita/urls.py`.
 - A home atual é `FinanceiroHomeView`, com navegação para os fluxos operacionais iniciais.
-- O módulo agora possui listagem e cadastro de pessoas financeiras.
-- O módulo agora possui listagem e cadastro de categorias financeiras.
-- O módulo agora possui listagem e cadastro de lançamentos financeiros.
+- O módulo possui listagem e cadastro de contas financeiras.
+- O módulo possui listagem e cadastro de centros de custo.
+- O módulo possui listagem e cadastro de pessoas financeiras.
+- O módulo possui listagem e cadastro de categorias financeiras.
+- O módulo possui listagem e cadastro de lançamentos financeiros.
 
 ## Rotas operacionais atuais
 
 - `/financeiro/`
+- `/financeiro/contas/`
+- `/financeiro/contas/nova/`
+- `/financeiro/centros-custo/`
+- `/financeiro/centros-custo/novo/`
 - `/financeiro/pessoas/`
 - `/financeiro/pessoas/nova/`
 - `/financeiro/categorias/`
@@ -60,6 +66,8 @@ Data de atualização: 2026-03-23
 
 ## Formulários atuais
 
+- `ContaFinanceiraForm`
+- `CentroCustoForm`
 - `PessoaFinanceiraForm`
 - `CategoriaFinanceiraForm`
 - `LancamentoFinanceiroForm`
@@ -75,6 +83,10 @@ Data de atualização: 2026-03-23
 ## Views atuais
 
 - `FinanceiroHomeView`
+- `ContaFinanceiraListView`
+- `ContaFinanceiraCreateView`
+- `CentroCustoListView`
+- `CentroCustoCreateView`
 - `PessoaFinanceiraListView`
 - `PessoaFinanceiraCreateView`
 - `CategoriaFinanceiraListView`

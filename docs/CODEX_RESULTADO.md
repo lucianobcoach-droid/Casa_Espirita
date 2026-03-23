@@ -4,7 +4,7 @@ Data: 2026-03-23
 
 ## Entrega realizada
 
-Foi criada a primeira interface operacional real do módulo `financeiro`, preservando integralmente a modelagem, os relacionamentos e as migrations já existentes.
+Foi expandida a base operacional do módulo `financeiro`, preservando integralmente a modelagem, os relacionamentos e as migrations já existentes.
 
 ## Revisão da modelagem
 
@@ -33,6 +33,10 @@ Resultado da revisão:
 - `financeiro/urls.py`
 - `financeiro/templates/financeiro/base.html`
 - `financeiro/templates/financeiro/home.html`
+- `financeiro/templates/financeiro/conta_list.html`
+- `financeiro/templates/financeiro/conta_form.html`
+- `financeiro/templates/financeiro/centro_custo_list.html`
+- `financeiro/templates/financeiro/centro_custo_form.html`
 - `financeiro/templates/financeiro/pessoa_list.html`
 - `financeiro/templates/financeiro/pessoa_form.html`
 - `financeiro/templates/financeiro/categoria_list.html`
@@ -46,8 +50,10 @@ Resultado da revisão:
 
 ## Arquivos atualizados nesta etapa
 
+- `financeiro/forms.py`
 - `financeiro/views.py`
 - `financeiro/urls.py`
+- `financeiro/templates/financeiro/base.html`
 - `financeiro/templates/financeiro/home.html`
 - `docs/STATE.md`
 - `docs/CODEX_RESULTADO.md`
@@ -56,9 +62,13 @@ Resultado da revisão:
 
 Foram adicionados:
 
+- `ContaFinanceiraForm`
+- `CentroCustoForm`
 - `PessoaFinanceiraForm`
 - `CategoriaFinanceiraForm`
 - `LancamentoFinanceiroForm`
+- listagem e cadastro de contas financeiras
+- listagem e cadastro de centros de custo
 - listagem e cadastro de pessoas financeiras
 - listagem e cadastro de categorias financeiras
 - listagem e cadastro de lançamentos financeiros
@@ -107,7 +117,7 @@ O ambiente desta execução não possui Django instalado no interpretador acess�
 
 - o código do domínio financeiro permaneceu intacto
 - a migration inicial foi preservada sem mudanças
-- a rota `/financeiro/` agora leva a uma navegação operacional mínima
-- o módulo possui listagens com dados reais do banco e telas de cadastro para pessoas, categorias e lançamentos
+- a rota `/financeiro/` agora leva a uma navegação operacional mais completa
+- o módulo possui listagens com dados reais do banco e telas de cadastro para contas, centros de custo, pessoas, categorias e lançamentos
 - a modelagem financeira atual foi revisada e confirmada como aderente aos critérios informados
 - a validação final de runtime depende apenas de instalar as dependências do projeto no ambiente local

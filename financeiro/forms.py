@@ -2,7 +2,33 @@ from __future__ import annotations
 
 from django import forms
 
-from .models import CategoriaFinanceira, LancamentoFinanceiro, PessoaFinanceira
+from .models import (
+    CategoriaFinanceira,
+    CentroCusto,
+    ContaFinanceira,
+    LancamentoFinanceiro,
+    PessoaFinanceira,
+)
+
+
+class ContaFinanceiraForm(forms.ModelForm):
+    class Meta:
+        model = ContaFinanceira
+        fields = [
+            'nome',
+            'descricao',
+            'ativa',
+        ]
+
+
+class CentroCustoForm(forms.ModelForm):
+    class Meta:
+        model = CentroCusto
+        fields = [
+            'codigo',
+            'nome',
+            'ativo',
+        ]
 
 
 class PessoaFinanceiraForm(forms.ModelForm):
