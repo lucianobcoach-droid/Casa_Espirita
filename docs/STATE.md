@@ -14,6 +14,8 @@ Data de atualização: 2026-03-23
 - As tabelas principais do financeiro usam layout mais compacto, zebra striping e impressão mais limpa.
 - O financeiro agora possui menu próprio `Extratos` com filtro por conta e período.
 - O financeiro agora possui tela própria de `Resumo` consolidado por período.
+- O financeiro agora possui tela própria de `Prestacao de Contas` por período.
+- As telas de `Resumo` e `Prestacao de Contas` agora permitem selecionar quais contas entram no relatório.
 - O app `biblioteca` não foi alterado.
 - Não foram usados `signals`.
 
@@ -54,14 +56,36 @@ Escopo funcional:
 Existe visualização de resumo consolidado em rota própria:
 
 - `/financeiro/resumo/`
+- `/financeiro/prestacao-contas/`
 
 Escopo funcional:
 
 - filtro por `data_inicial` e `data_final`
+- filtro por contas selecionadas
 - sem filtro informado, assume o mês atual
+- sem seleção explícita de contas, considera todas as contas
 - mostra saldo inicial consolidado, receitas do período, despesas do período, saldo do período e saldo final consolidado
 - considera apenas lançamentos efetivos
 - transferências internas não entram como receita nem despesa no consolidado
+
+## Prestacao de contas do periodo
+
+Existe visualização de prestação de contas em rota própria:
+
+- `/financeiro/prestacao-contas/`
+
+Escopo funcional:
+
+- filtro por `data_inicial` e `data_final`
+- filtro por contas selecionadas
+- sem filtro informado, assume o mês atual
+- sem seleção explícita de contas, considera todas as contas
+- organiza a visualização em blocos formais
+- mostra composição do saldo inicial
+- lista receitas e despesas do período
+- mostra resumo do saldo disponível
+- mostra composição do saldo final por conta
+- mantém transferências internas neutras no consolidado geral
 
 ## Regra de saldo no extrato
 
@@ -89,6 +113,7 @@ Com filtro por período:
 - O módulo possui extrato individual por conta com saldo acumulado.
 - O módulo possui tela própria de extratos com filtro por conta e período.
 - O módulo possui tela de resumo consolidado por período.
+- O módulo possui tela de prestação de contas por período.
 - O extrato mostra conta, período, saldo inicial, data do saldo inicial, saldo anterior quando aplicável e saldo final exibido.
 - O módulo possui listagem de contas com `saldo_atual` calculado.
 - A listagem de lançamentos destaca tipo por cor e status não quitado em negrito.

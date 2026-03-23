@@ -66,43 +66,33 @@ class FinanceiroHomeView(TemplateView):
     template_name = 'financeiro/home.html'
 
 
-class ResumoFinanceiroView(TemplateView):
-    template_name = 'financeiro/resumo.html'
-
+class FinanceiroPeriodoMixin:
     def _periodo_padrao(self) -> tuple[date, date]:
         hoje = date.today()
         primeiro_dia = hoje.replace(day=1)
         ultimo_dia = hoje.replace(day=monthrange(hoje.year, hoje.month)[1])
         return primeiro_dia, ultimo_dia
 
-    def _saldo_consolidado_ate(self, data_referencia: date) -> Decimal:
-        saldo = Decimal('0.00')
-        contas = ContaFinanceira.objects.filter(data_saldo_inicial__lte=data_referencia).only(
-            'saldo_inicial',
-            'data_saldo_inicial',
-        )
-        for conta in contas:
-            saldo += conta.saldo_inicial or Decimal('0.00')
+    def _parse_contas(self) -> tuple[list[ContaFinanceira], list[str], list[int]]:
+        contas_disponiveis = list(ContaFinanceira.objects.order_by('nome'))
+        contas_por_id = {conta.id: conta for conta in contas_disponiveis}
+        selected_ids_raw = [valor.strip() for valor in self.request.GET.getlist('contas') if valor.strip()]
 
-        lancamentos = LancamentoFinanceiro.objects.filter(
-            status=LancamentoFinanceiro.StatusLancamento.QUITADO,
-            data_competencia__lte=data_referencia,
-            tipo__in=(
-                LancamentoFinanceiro.TipoLancamento.RECEITA,
-                LancamentoFinanceiro.TipoLancamento.DESPESA,
-            ),
-        ).only('tipo', 'valor')
+        selected_ids: list[int] = []
+        for valor in selected_ids_raw:
+            try:
+                conta_id = int(valor)
+            except ValueError:
+                continue
+            if conta_id in contas_por_id:
+                selected_ids.append(conta_id)
 
-        for lancamento in lancamentos:
-            if lancamento.tipo == LancamentoFinanceiro.TipoLancamento.RECEITA:
-                saldo += lancamento.valor
-            elif lancamento.tipo == LancamentoFinanceiro.TipoLancamento.DESPESA:
-                saldo -= lancamento.valor
+        if not selected_ids:
+            selected_ids = list(contas_por_id.keys())
 
-        return saldo
+        return contas_disponiveis, selected_ids_raw, selected_ids
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+    def _parse_periodo(self) -> tuple[str, str, date | None, date | None, str]:
         data_inicial_raw = self.request.GET.get('data_inicial', '').strip()
         data_final_raw = self.request.GET.get('data_final', '').strip()
         periodo_error = ''
@@ -129,42 +119,148 @@ class ResumoFinanceiroView(TemplateView):
             data_inicial = None
             data_final = None
 
-        context['page_title'] = 'Resumo do Periodo'
-        context['data_inicial'] = data_inicial_raw
-        context['data_final'] = data_final_raw
-        context['periodo_error'] = periodo_error
+        return data_inicial_raw, data_final_raw, data_inicial, data_final, periodo_error
+
+    def _calcular_saldos_por_conta(
+        self,
+        data_referencia: date,
+        selected_ids: list[int],
+    ) -> tuple[list[dict[str, object]], Decimal]:
+        contas = list(
+            ContaFinanceira.objects.filter(id__in=selected_ids, data_saldo_inicial__lte=data_referencia)
+            .only('id', 'nome', 'saldo_inicial', 'data_saldo_inicial')
+            .order_by('nome')
+        )
+        contas_por_id = {conta.id: conta for conta in contas}
+
+        for conta in contas:
+            conta.saldo_calculado = conta.saldo_inicial or Decimal('0.00')
+
+        if contas_por_id:
+            lancamentos = LancamentoFinanceiro.objects.filter(
+                Q(conta_id__in=contas_por_id.keys()) | Q(conta_destino_id__in=contas_por_id.keys()),
+                status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+                data_competencia__lte=data_referencia,
+            ).only('tipo', 'valor', 'conta_id', 'conta_destino_id')
+
+            for lancamento in lancamentos:
+                if (
+                    lancamento.tipo == LancamentoFinanceiro.TipoLancamento.RECEITA
+                    and lancamento.conta_id in contas_por_id
+                ):
+                    contas_por_id[lancamento.conta_id].saldo_calculado += lancamento.valor
+                elif (
+                    lancamento.tipo == LancamentoFinanceiro.TipoLancamento.DESPESA
+                    and lancamento.conta_id in contas_por_id
+                ):
+                    contas_por_id[lancamento.conta_id].saldo_calculado -= lancamento.valor
+                elif lancamento.tipo == LancamentoFinanceiro.TipoLancamento.TRANSFERENCIA:
+                    if lancamento.conta_id in contas_por_id:
+                        contas_por_id[lancamento.conta_id].saldo_calculado -= lancamento.valor
+                    if lancamento.conta_destino_id in contas_por_id:
+                        contas_por_id[lancamento.conta_destino_id].saldo_calculado += lancamento.valor
+
+        composicao = [{'conta': conta, 'saldo': conta.saldo_calculado} for conta in contas]
+        total = sum((item['saldo'] for item in composicao), Decimal('0.00'))
+        return composicao, total
+
+    def _lancamentos_receitas_despesas(
+        self,
+        data_inicial: date,
+        data_final: date,
+        selected_ids: list[int],
+    ) -> tuple[list[LancamentoFinanceiro], list[LancamentoFinanceiro], Decimal, Decimal]:
+        receitas = list(
+            LancamentoFinanceiro.objects.filter(
+                status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+                tipo=LancamentoFinanceiro.TipoLancamento.RECEITA,
+                conta_id__in=selected_ids,
+                data_competencia__gte=data_inicial,
+                data_competencia__lte=data_final,
+            )
+            .select_related('conta', 'pessoa', 'categoria')
+            .order_by('data_competencia', 'criado_em', 'pk')
+        )
+        despesas = list(
+            LancamentoFinanceiro.objects.filter(
+                status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+                tipo=LancamentoFinanceiro.TipoLancamento.DESPESA,
+                conta_id__in=selected_ids,
+                data_competencia__gte=data_inicial,
+                data_competencia__lte=data_final,
+            )
+            .select_related('conta', 'pessoa', 'categoria')
+            .order_by('data_competencia', 'criado_em', 'pk')
+        )
+        total_receitas = sum((lancamento.valor for lancamento in receitas), Decimal('0.00'))
+        total_despesas = sum((lancamento.valor for lancamento in despesas), Decimal('0.00'))
+        return receitas, despesas, total_receitas, total_despesas
+
+    def _build_periodo_context(self) -> dict[str, object]:
+        contas_disponiveis, selected_ids_raw, selected_ids = self._parse_contas()
+        data_inicial_raw, data_final_raw, data_inicial, data_final, periodo_error = self._parse_periodo()
+        contas_selecionadas = [conta for conta in contas_disponiveis if conta.id in selected_ids]
+        context: dict[str, object] = {
+            'data_inicial': data_inicial_raw,
+            'data_final': data_final_raw,
+            'periodo_error': periodo_error,
+            'contas_disponiveis': contas_disponiveis,
+            'contas_selecionadas_ids': [str(conta_id) for conta_id in selected_ids],
+            'contas_selecionadas': contas_selecionadas,
+            'contas_incluidas_label': (
+                'Todas as contas'
+                if len(selected_ids) == len(contas_disponiveis)
+                else ', '.join(conta.nome for conta in contas_selecionadas)
+            ),
+            'quantidade_contas_selecionadas': len(contas_selecionadas),
+        }
 
         if not data_inicial or not data_final:
             return context
 
         dia_anterior = data_inicial - timedelta(days=1)
-        saldo_inicial_consolidado = self._saldo_consolidado_ate(dia_anterior)
-        saldo_final_consolidado = self._saldo_consolidado_ate(data_final)
+        composicao_inicial, saldo_inicial_consolidado = self._calcular_saldos_por_conta(dia_anterior, selected_ids)
+        composicao_final, saldo_final_consolidado = self._calcular_saldos_por_conta(data_final, selected_ids)
+        receitas, despesas, total_receitas, total_despesas = self._lancamentos_receitas_despesas(
+            data_inicial,
+            data_final,
+            selected_ids,
+        )
 
-        lancamentos_periodo = LancamentoFinanceiro.objects.filter(
-            status=LancamentoFinanceiro.StatusLancamento.QUITADO,
-            data_competencia__gte=data_inicial,
-            data_competencia__lte=data_final,
-            tipo__in=(
-                LancamentoFinanceiro.TipoLancamento.RECEITA,
-                LancamentoFinanceiro.TipoLancamento.DESPESA,
-            ),
-        ).only('tipo', 'valor')
+        context.update(
+            {
+                'periodo_label': f'{data_inicial.strftime("%d/%m/%Y")} a {data_final.strftime("%d/%m/%Y")}',
+                'saldo_inicial_consolidado': saldo_inicial_consolidado,
+                'total_receitas_periodo': total_receitas,
+                'total_despesas_periodo': total_despesas,
+                'saldo_final_consolidado': saldo_final_consolidado,
+                'saldo_periodo': saldo_final_consolidado - saldo_inicial_consolidado,
+                'composicao_inicial': composicao_inicial,
+                'composicao_final': composicao_final,
+                'receitas_periodo': receitas,
+                'despesas_periodo': despesas,
+            }
+        )
+        return context
 
-        total_receitas = Decimal('0.00')
-        total_despesas = Decimal('0.00')
-        for lancamento in lancamentos_periodo:
-            if lancamento.tipo == LancamentoFinanceiro.TipoLancamento.RECEITA:
-                total_receitas += lancamento.valor
-            elif lancamento.tipo == LancamentoFinanceiro.TipoLancamento.DESPESA:
-                total_despesas += lancamento.valor
 
-        context['periodo_label'] = f'{data_inicial.strftime("%d/%m/%Y")} a {data_final.strftime("%d/%m/%Y")}'
-        context['saldo_inicial_consolidado'] = saldo_inicial_consolidado
-        context['total_receitas_periodo'] = total_receitas
-        context['total_despesas_periodo'] = total_despesas
-        context['saldo_final_consolidado'] = saldo_final_consolidado
-        context['saldo_periodo'] = saldo_final_consolidado - saldo_inicial_consolidado
+class ResumoFinanceiroView(FinanceiroPeriodoMixin, TemplateView):
+    template_name = 'financeiro/resumo.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['page_title'] = 'Resumo do Periodo'
+        context.update(self._build_periodo_context())
+        return context
+
+
+class PrestacaoContasFinanceiroView(FinanceiroPeriodoMixin, TemplateView):
+    template_name = 'financeiro/prestacao_contas.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['page_title'] = 'Prestacao de Contas'
+        context.update(self._build_periodo_context())
         return context
 
 

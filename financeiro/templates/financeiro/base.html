@@ -182,6 +182,70 @@
             font-size: 0.84rem;
         }
 
+        .financeiro-report-block {
+            margin-bottom: 1rem;
+            border: 1px solid var(--financeiro-border);
+            border-radius: 0.85rem;
+            background: #fff;
+            overflow: hidden;
+        }
+
+        .financeiro-report-header {
+            padding: 0.9rem 1rem;
+            background: var(--financeiro-soft);
+            border-bottom: 1px solid var(--financeiro-border);
+        }
+
+        .financeiro-report-title {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #243041;
+        }
+
+        .financeiro-report-body {
+            padding: 1rem;
+        }
+
+        .financeiro-total-line {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            padding-top: 0.75rem;
+            margin-top: 0.75rem;
+            border-top: 1px solid var(--financeiro-border);
+            font-weight: 700;
+        }
+
+        .financeiro-kpi-grid {
+            display: grid;
+            gap: 0.9rem;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        }
+
+        .financeiro-kpi {
+            border: 1px solid var(--financeiro-border);
+            border-radius: 0.75rem;
+            background: #fff;
+            padding: 1rem;
+        }
+
+        .financeiro-kpi-label {
+            display: block;
+            color: #6b7280;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 0.35rem;
+        }
+
+        .financeiro-kpi-value {
+            display: block;
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
         .extrato-text {
             background: transparent;
             border: 0;
@@ -289,6 +353,19 @@
                 page-break-inside: avoid;
             }
 
+            .financeiro-report-block,
+            .financeiro-kpi {
+                border-color: #c7c7c7 !important;
+                box-shadow: none !important;
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+
+            .financeiro-report-header {
+                background: #fff !important;
+                border-bottom-color: #c7c7c7 !important;
+            }
+
             .actions-cell {
                 display: none !important;
             }
@@ -302,6 +379,7 @@
             <div class="navbar-start">
                 <a class="navbar-item" href="{% url 'financeiro:home' %}">Financeiro</a>
                 <a class="navbar-item" href="{% url 'financeiro:resumo' %}">Resumo</a>
+                <a class="navbar-item" href="{% url 'financeiro:prestacao-contas' %}">Prestacao de Contas</a>
                 <a class="navbar-item" href="{% url 'financeiro:extrato-list' %}">Extratos</a>
                 <a class="navbar-item" href="{% url 'financeiro:conta-list' %}">Contas</a>
                 <a class="navbar-item" href="{% url 'financeiro:centro-custo-list' %}">Centros de Custo</a>

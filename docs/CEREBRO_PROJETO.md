@@ -79,6 +79,8 @@ Até o momento, está validado que:
 - a interface do financeiro já possui refinamento visual discreto em tabelas, extrato e impressão
 - o financeiro agora possui menu próprio `Extratos` com filtro por conta e período
 - o financeiro agora possui tela inicial de `Resumo` consolidado por período
+- o financeiro agora possui tela de `Prestacao de Contas` por período
+- `Resumo` e `Prestacao de Contas` agora permitem selecionar quais contas entram no relatório
 
 ---
 
@@ -114,6 +116,8 @@ Os tipos válidos de lançamento são:
 - a nova tela `Extratos` reutiliza a mesma regra do extrato por conta
 - o `Resumo` consolidado considera apenas receitas e despesas efetivas
 - transferências internas não alteram receita, despesa nem saldo consolidado do resumo
+- a `Prestacao de Contas` reutiliza a base do resumo e acrescenta blocos formais de apresentação
+- quando nenhuma conta é selecionada explicitamente, `Resumo` e `Prestacao de Contas` consideram todas as contas por padrão
 
 ---
 

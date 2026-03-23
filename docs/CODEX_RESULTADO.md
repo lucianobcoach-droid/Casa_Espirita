@@ -16,6 +16,8 @@ Complemento incremental posterior:
 - tabelas priorizadas ficaram mais compactas e preparadas para impressão
 - o financeiro passou a ter menu próprio `Extratos` com filtro por conta e período
 - o financeiro passou a ter tela própria de `Resumo` consolidado por período
+- o financeiro passou a ter tela própria de `Prestacao de Contas` por período
+- `Resumo` e `Prestacao de Contas` passaram a aceitar seleção de contas para compor o relatório
 
 ## Filtro por período
 
@@ -65,3 +67,5 @@ O `saldo_anterior` é calculado assim:
 - o extrato passou a ter visual mais limpo, com texto colorido sem badge no template de extrato
 - o resumo consolidado mostra saldo inicial, receitas, despesas, saldo do período e saldo final
 - transferências internas ficaram neutras no resumo consolidado
+- a prestação de contas organiza o período em blocos formais e mostra a composição do saldo final por conta
+- os cálculos dessas duas telas passaram a respeitar apenas as contas selecionadas
