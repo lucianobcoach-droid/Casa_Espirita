@@ -85,23 +85,20 @@
                     <span class="valor-chip {% if lancamento.tipo == 'receita' %}is-receita{% elif lancamento.tipo == 'despesa' %}is-despesa{% else %}is-transferencia{% endif %}">
                         R$ {{ lancamento.valor }}
                     </span>
-                    {% if lancamento.tipo == 'transferencia' %}
-                        <small class="financeiro-meta">Saida na origem e entrada no destino</small>
-                    {% endif %}
                 </td>
-                <td>
-                    {{ lancamento.conta }}
-                    {% if lancamento.tipo == 'transferencia' %}
-                        <small class="financeiro-meta">Conta de origem</small>
-                    {% endif %}
-                </td>
+                <td>{{ lancamento.conta }}</td>
                 <td>
                     {{ lancamento.conta_destino|default:'-' }}
-                    {% if lancamento.tipo == 'transferencia' and lancamento.conta_destino %}
-                        <small class="financeiro-meta">Conta de destino</small>
+                </td>
+                <td>
+                    {% if lancamento.pessoa %}
+                        {{ lancamento.pessoa }}
+                    {% elif lancamento.tipo == 'transferencia' %}
+                        Transferencia entre Contas
+                    {% else %}
+                        -
                     {% endif %}
                 </td>
-                <td>{{ lancamento.pessoa|default:'-' }}</td>
                 <td>{{ lancamento.data_competencia|date:'d/m/Y' }}</td>
                 <td>{{ lancamento.numero_documento|default:'-' }}</td>
                 <td class="actions-cell no-print">

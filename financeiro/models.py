@@ -174,6 +174,12 @@ class LancamentoFinanceiro(models.Model):
             self.TipoLancamento.DESPESA,
         }
 
+        if not self.data_competencia:
+            errors['data_competencia'] = 'Informe a data de competencia.'
+
+        if self.data_competencia and self.data_pagamento and self.data_pagamento < self.data_competencia:
+            errors['data_pagamento'] = 'A data de pagamento nao pode ser anterior a data de competencia.'
+
         if transferencia and not self.conta_destino_id:
             errors['conta_destino'] = 'Transferência exige conta_destino.'
 

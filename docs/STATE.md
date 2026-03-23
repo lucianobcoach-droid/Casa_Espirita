@@ -42,12 +42,25 @@ Leitura funcional:
 
 `LancamentoFinanceiro` agora exige:
 
-- `categoria` obrigatória no model
-- `categoria` obrigatória no formulário
+- `receita` e `despesa` exigem `pessoa`
+- `receita` e `despesa` exigem `categoria`
+- `transferencia` não exige `pessoa`
+- `transferencia` não exige `categoria`
+- `transferencia` não exige `centro_custo`
+- `transferencia` exige `conta_destino`
 
 Leitura funcional:
 
-- o cadastro e a edição de lançamento não devem permitir salvar sem categoria
+- o cadastro e a edição de lançamento devem exigir `pessoa` em receita e despesa
+- o cadastro e a edição de lançamento devem exigir `categoria` em receita e despesa
+- em transferência, o formulário limpa `pessoa`, `categoria` e `centro_custo`
+- em transferência, `conta_destino` deve aparecer com obrigatoriedade visual e funcional
+- a ausência de `pessoa`, `categoria`, `conta` ou `conta_destino` deve gerar erro no formulário, sem estourar `IntegrityError`
+- `numero_documento` pode continuar vazio no formulário, mas passa a ser gerado automaticamente antes de salvar
+- `data_competencia` deve ser validada antes da gravação
+- `data_pagamento` não pode ser anterior a `data_competencia`
+- o extrato por conta passa a exibir `numero_documento` de forma discreta junto da descrição, quando existir
+- a listagem de lançamentos pode exibir `Transferência entre Contas` quando uma transferência não tiver `pessoa`
 - os relatórios mantêm tratamento defensivo para base antiga, exibindo `Sem categoria` se algum dado legado surgir
 
 ## Extrato por conta
@@ -153,6 +166,9 @@ Com filtro por período:
 - Existe a migration incremental `financeiro/migrations/0002_contafinanceira_saldo_inicial.py`.
 - Existe a migration incremental `financeiro/migrations/0003_contafinanceira_data_saldo_inicial_required.py`.
 - Existe a migration incremental `financeiro/migrations/0004_lancamentofinanceiro_categoria_required.py`.
+- Existe a migration incremental `financeiro/migrations/0005_lancamentofinanceiro_pessoa_required.py`.
+- Existe a migration incremental `financeiro/migrations/0006_lancamentofinanceiro_conditional_required_fields.py`.
+- A correção de persistência condicional depende da aplicação da `0006`, que volta a permitir `pessoa` e `categoria` nulas no banco para `transferencia`.
 - As migrations antigas não foram alteradas.
 
 ## Validação local

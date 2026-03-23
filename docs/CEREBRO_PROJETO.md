@@ -107,6 +107,7 @@ Os tipos válidos de lançamento são:
 ### 7.3 Regras de transferência
 - `conta_destino` só aparece quando o tipo for `transferencia`
 - `transferencia` não deve exigir campos irrelevantes como pessoa
+- `transferencia` não deve exigir categoria nem centro de custo
 - `conta` e `conta_destino` não podem ser iguais
 - `conta_destino` só pode ser usada em `transferencia`
 
@@ -123,7 +124,16 @@ Os tipos válidos de lançamento são:
 - transferências internas não alteram receita, despesa nem saldo consolidado do resumo
 - a `Prestacao de Contas` reutiliza a base do resumo e acrescenta blocos formais de apresentação
 - quando nenhuma conta é selecionada explicitamente, `Resumo` e `Prestacao de Contas` consideram todas as contas por padrão
-- `categoria` é obrigatória em `LancamentoFinanceiro`
+- `receita` e `despesa` exigem `pessoa`
+- `receita` e `despesa` exigem `categoria`
+- `transferencia` não exige `pessoa`
+- `transferencia` não exige `categoria`
+- `transferencia` não exige `centro_custo`
+- em `transferencia`, `conta_destino` continua obrigatória
+- erros de obrigatoriedade do lançamento devem aparecer no formulário, sem estourar erro de banco
+- `numero_documento` continua opcional para o usuário, mas deve ser gerado automaticamente quando vier vazio
+- `data_pagamento` não pode ser anterior a `data_competencia`
+- na listagem de lançamentos, transferências sem `pessoa` podem aparecer como `Transferência entre Contas`
 - quando um lançamento não possui categoria, ele aparece no agrupamento como `Sem categoria`
 - quando uma despesa não possui centro de custo, ela aparece no agrupamento como `Sem centro de custo`
 - os filtros de exibição dos agrupamentos não alteram totais gerais, saldos nem resumo do período

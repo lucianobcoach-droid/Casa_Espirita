@@ -74,7 +74,17 @@ O `saldo_anterior` é calculado assim:
 - transferências internas ficaram neutras no resumo consolidado
 - a prestação de contas organiza o período em blocos formais e mostra a composição do saldo final por conta
 - os cálculos dessas duas telas passaram a respeitar apenas as contas selecionadas
-- `categoria` passou a ser obrigatória em `LancamentoFinanceiro` no model e no formulário
+- `LancamentoFinanceiro` passou a usar obrigatoriedade condicional por tipo
+- `receita` e `despesa` exigem `pessoa` e `categoria`
+- `transferencia` não exige `pessoa`, `categoria` nem `centro_custo`
+- em `transferencia`, o formulário limpa campos irrelevantes e mantém `conta_destino` como campo necessário
+- o formulário passou a mostrar melhor a obrigatoriedade dinâmica de `conta`, `pessoa`, `categoria` e `conta_destino`
+- a camada correta para erro de validação voltou a ser o formulário/model, desde que a migration `0006` esteja aplicada no banco
+- `numero_documento` passou a ser gerado automaticamente quando o usuário deixa o campo vazio
+- o extrato por conta passou a exibir `numero_documento` de forma discreta junto da descrição
+- `data_pagamento` passou a ser validada contra `data_competencia` antes de salvar
+- a listagem de lançamentos passou a mostrar `Transferência entre Contas` quando a transferência não tiver `pessoa`
+- a listagem de lançamentos deixou de mostrar textos auxiliares redundantes em valor, conta e conta destino
 - lançamentos sem categoria passaram a ser mostrados no agrupamento como `Sem categoria`
 - despesas sem centro de custo passaram a ser mostradas no agrupamento como `Sem centro de custo`
 - os filtros de exibição dos agrupamentos não alteram totais gerais de receitas, despesas, saldo inicial, saldo final ou resumo do período
