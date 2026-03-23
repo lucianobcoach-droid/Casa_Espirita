@@ -6,6 +6,22 @@ Data: 2026-03-23
 
 Foi criada a modelagem mínima real do domínio financeiro em um app dedicado chamado `financeiro`, de forma incremental e isolada do restante do projeto. Nesta etapa, também foi adicionada a base mínima de interface para que `/financeiro/` tenha resposta própria.
 
+## Revisão da modelagem
+
+Foi realizada uma revisão comparativa da modelagem existente do app `financeiro` contra os critérios esperados para:
+
+- `ContaFinanceira`
+- `CentroCusto`
+- `PessoaFinanceira`
+- `CategoriaFinanceira`
+- `LancamentoFinanceiro`
+
+Resultado da revisão:
+
+- não foram encontradas diferenças funcionais relevantes entre o estado atual e os critérios informados
+- as validações obrigatórias de `LancamentoFinanceiro` já estavam implementadas
+- não houve necessidade de alterar models, admin ou migrations nesta etapa
+
 ## Arquivos criados
 
 - `financeiro/__init__.py`
@@ -60,4 +76,5 @@ O ambiente desta execução não possui Django instalado no interpretador acess�
 - o código do domínio financeiro e o admin foram adicionados ao projeto
 - a migration inicial já está presente no repositório
 - a rota `/financeiro/` agora possui URL, view e template dedicados
+- a modelagem financeira atual foi revisada e confirmada como aderente aos critérios informados
 - a validação final de runtime depende apenas de instalar as dependências do projeto no ambiente local

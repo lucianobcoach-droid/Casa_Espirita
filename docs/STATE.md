@@ -20,6 +20,16 @@ Data de atualização: 2026-03-23
 - `CategoriaFinanceira`
 - `LancamentoFinanceiro`
 
+## Revisão contra critérios esperados
+
+- `ContaFinanceira` está aderente aos campos esperados.
+- `CentroCusto` está aderente aos campos esperados.
+- `PessoaFinanceira` está aderente aos campos esperados.
+- `CategoriaFinanceira` está aderente aos campos esperados.
+- `LancamentoFinanceiro` está aderente aos campos esperados.
+- As três validações mínimas obrigatórias de `LancamentoFinanceiro` já estão implementadas no model.
+- Não foi identificada divergência funcional relevante que justificasse alteração de código nesta revisão.
+
 ## Regras mínimas já implementadas em `LancamentoFinanceiro`
 
 - `transferencia` exige `conta_destino`
@@ -40,6 +50,7 @@ Data de atualização: 2026-03-23
 
 - Foi criada a migration inicial `financeiro/migrations/0001_initial.py`.
 - A migration foi escrita manualmente porque o ambiente local usado nesta execução não possui Django instalado.
+- A migration atual permanece compatível com a modelagem revisada nesta etapa.
 
 ## Validação local
 
