@@ -16,7 +16,7 @@
             <input class="input" type="text" name="nome" value="{{ request.GET.nome }}" placeholder="Buscar por nome">
         </div>
         <div class="column is-5">
-            <label class="label">Situação</label>
+            <label class="label">Situacao</label>
             <div class="select is-fullwidth">
                 <select name="ativa">
                     <option value="">Todas</option>
@@ -39,10 +39,10 @@
         <thead>
         <tr>
             <th>Nome</th>
-            <th>Descrição</th>
+            <th>Descricao</th>
             <th>Saldo inicial</th>
             <th>Ativa</th>
-            <th>Ações</th>
+            <th>Acoes</th>
         </tr>
         </thead>
         <tbody>
@@ -57,8 +57,9 @@
                         <small>{{ conta.data_saldo_inicial|date:'d/m/Y' }}</small>
                     {% endif %}
                 </td>
-                <td>{% if conta.ativa %}Sim{% else %}Não{% endif %}</td>
+                <td>{% if conta.ativa %}Sim{% else %}Nao{% endif %}</td>
                 <td class="actions-cell">
+                    <a class="button is-small is-info is-light" href="{% url 'financeiro:conta-extrato' conta.pk %}">Extrato</a>
                     <a class="button is-small is-link is-light" href="{% url 'financeiro:conta-update' conta.pk %}">Editar</a>
                     <a class="button is-small is-danger is-light" href="{% url 'financeiro:conta-delete' conta.pk %}">Excluir</a>
                 </td>

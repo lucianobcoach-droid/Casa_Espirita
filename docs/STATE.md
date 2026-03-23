@@ -8,8 +8,8 @@ Data de atualização: 2026-03-23
 - A modelagem de domínio, os relacionamentos e o registro no Django admin permanecem intactos, com exceção da ETAPA 1 aprovada em `ContaFinanceira`.
 - O módulo já possui base operacional própria fora do admin.
 - Existem formulários, views, rotas e templates próprios para contas, centros de custo, pessoas, categorias e lançamentos.
-- O módulo possui cadastro, listagem, edição, exclusão com confirmação, filtros básicos e autocomplete real no formulário de lançamento.
-- Ainda não existem recorrência, recibos, anexos, extrato ou cálculo de saldo por movimentação.
+- O módulo possui cadastro, listagem, edição, exclusão com confirmação, filtros básicos, autocomplete real no formulário de lançamento e extrato por conta.
+- Ainda não existem recorrência, recibos, anexos, relatórios gerais ou extrato consolidado.
 - O app `biblioteca` não foi alterado.
 - Não foram usados `signals`.
 
@@ -23,9 +23,22 @@ Data de atualização: 2026-03-23
 Leitura funcional desta etapa:
 
 - o saldo inicial é apenas um dado cadastral da conta
-- não existe extrato nesta etapa
-- não existe motor de apuração de saldo acumulado nesta etapa
 - nenhuma outra regra de domínio foi alterada
+
+## ETAPA 2 aprovada: extrato por conta
+
+Foi criada a visualização de extrato por conta em rota própria:
+
+- `/financeiro/contas/<id>/extrato/`
+
+Escopo funcional:
+
+- o extrato é individual por conta
+- não existe relatório geral nesta etapa
+- o saldo acumulado parte do `saldo_inicial`
+- receitas entram como entrada
+- despesas entram como saída
+- transferências saem da conta de origem e entram na conta de destino
 
 ## Modelos existentes no app `financeiro`
 
@@ -47,7 +60,7 @@ Leitura funcional desta etapa:
 - O valor continua positivo no formulário.
 - Na interpretação operacional do sistema, a transferência representa saída na conta de origem e entrada na conta de destino.
 - Não foi criado segundo model e não houve duplicação manual de lançamentos.
-- A interface de listagem e formulário deixa esse comportamento explícito para o usuário.
+- A interface de listagem, formulário e extrato deixa esse comportamento explícito para o usuário.
 
 ## Admin
 
@@ -58,16 +71,18 @@ Leitura funcional desta etapa:
 - A rota `/financeiro/` foi ligada ao projeto em `casa_espirita/urls.py`.
 - A home atual é `FinanceiroHomeView`, com navegação para os fluxos operacionais.
 - O módulo possui listagem, cadastro, edição e exclusão de contas financeiras.
+- O módulo possui extrato individual por conta com saldo acumulado.
 - O módulo possui listagem, cadastro, edição e exclusão de centros de custo.
 - O módulo possui listagem, cadastro, edição e exclusão de pessoas financeiras.
 - O módulo possui listagem, cadastro, edição e exclusão de categorias financeiras.
 - O módulo possui listagem, cadastro, edição e exclusão de lançamentos financeiros.
 
-## Ajustes de conta nesta etapa
+## Ajustes de conta nas etapas atuais
 
-- O formulário de conta agora aceita `saldo_inicial`.
-- O formulário de conta agora aceita `data_saldo_inicial`.
-- A listagem de contas passou a exibir o saldo inicial e, quando informada, a data de referência.
+- O formulário de conta aceita `saldo_inicial`.
+- O formulário de conta aceita `data_saldo_inicial`.
+- A listagem de contas exibe o saldo inicial e, quando informada, a data de referência.
+- A listagem de contas também exibe ação de acesso ao extrato.
 
 ## Rotas operacionais atuais
 
@@ -78,6 +93,7 @@ Leitura funcional desta etapa:
 - `/financeiro/autocomplete/centros-custo/`
 - `/financeiro/contas/`
 - `/financeiro/contas/nova/`
+- `/financeiro/contas/<id>/extrato/`
 - `/financeiro/contas/<id>/editar/`
 - `/financeiro/contas/<id>/excluir/`
 - `/financeiro/centros-custo/`
@@ -141,6 +157,7 @@ Leitura funcional desta etapa:
 - `ContaFinanceiraCreateView`
 - `ContaFinanceiraUpdateView`
 - `ContaFinanceiraDeleteView`
+- `ContaFinanceiraExtratoView`
 - `CentroCustoListView`
 - `CentroCustoCreateView`
 - `CentroCustoUpdateView`

@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+from decimal import Decimal
+
 from django.contrib import messages
 from django.db.models import Q
 from django.http import JsonResponse
 from django.urls import reverse_lazy
 from django.views import View
-from django.views.generic import CreateView, DeleteView, ListView, TemplateView, UpdateView
+from django.views.generic import CreateView, DeleteView, DetailView, ListView, TemplateView, UpdateView
 
 from .forms import (
     CategoriaFinanceiraForm,
@@ -42,8 +44,8 @@ class FinanceiroFormMixin:
 
 class FinanceiroDeleteMixin(DeleteView):
     template_name = 'financeiro/confirm_delete.html'
-    success_message = 'Registro excluído com sucesso.'
-    page_title = 'Confirmar exclusão'
+    success_message = 'Registro excluido com sucesso.'
+    page_title = 'Confirmar exclusao'
     cancel_url = reverse_lazy('financeiro:home')
 
     def get_context_data(self, **kwargs):
@@ -80,13 +82,7 @@ class FinanceiroAutocompleteView(View):
         return queryset[: self.limit]
 
     def get(self, request, *args, **kwargs):
-        results = [
-            {
-                'id': obj.pk,
-                'label': str(obj),
-            }
-            for obj in self.get_queryset()
-        ]
+        results = [{'id': obj.pk, 'label': str(obj)} for obj in self.get_queryset()]
         return JsonResponse({'results': results})
 
 
@@ -152,7 +148,55 @@ class ContaFinanceiraDeleteView(FinanceiroDeleteMixin):
     success_url = reverse_lazy('financeiro:conta-list')
     page_title = 'Excluir Conta Financeira'
     cancel_url = reverse_lazy('financeiro:conta-list')
-    success_message = 'Conta financeira excluída com sucesso.'
+    success_message = 'Conta financeira excluida com sucesso.'
+
+
+class ContaFinanceiraExtratoView(DetailView):
+    model = ContaFinanceira
+    template_name = 'financeiro/conta_extrato.html'
+    context_object_name = 'conta'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        conta = self.object
+        saldo_acumulado = conta.saldo_inicial or Decimal('0.00')
+        lancamentos = (
+            LancamentoFinanceiro.objects.filter(Q(conta=conta) | Q(conta_destino=conta))
+            .select_related('conta', 'conta_destino', 'pessoa', 'categoria')
+            .order_by('data_competencia', 'criado_em', 'pk')
+        )
+
+        itens_extrato = []
+        for lancamento in lancamentos:
+            entrada = Decimal('0.00')
+            saida = Decimal('0.00')
+
+            if lancamento.tipo == LancamentoFinanceiro.TipoLancamento.RECEITA and lancamento.conta_id == conta.id:
+                entrada = lancamento.valor
+            elif lancamento.tipo == LancamentoFinanceiro.TipoLancamento.DESPESA and lancamento.conta_id == conta.id:
+                saida = lancamento.valor
+            elif lancamento.tipo == LancamentoFinanceiro.TipoLancamento.TRANSFERENCIA:
+                if lancamento.conta_id == conta.id:
+                    saida = lancamento.valor
+                elif lancamento.conta_destino_id == conta.id:
+                    entrada = lancamento.valor
+
+            saldo_acumulado += entrada - saida
+            itens_extrato.append(
+                {
+                    'lancamento': lancamento,
+                    'entrada': entrada,
+                    'saida': saida,
+                    'saldo_acumulado': saldo_acumulado,
+                }
+            )
+
+        context['page_title'] = f'Extrato da Conta: {conta.nome}'
+        context['saldo_inicial'] = conta.saldo_inicial or Decimal('0.00')
+        context['data_saldo_inicial'] = conta.data_saldo_inicial
+        context['itens_extrato'] = itens_extrato
+        context['saldo_final'] = saldo_acumulado
+        return context
 
 
 class CentroCustoListView(ListView):
@@ -195,7 +239,7 @@ class CentroCustoDeleteView(FinanceiroDeleteMixin):
     success_url = reverse_lazy('financeiro:centro-custo-list')
     page_title = 'Excluir Centro de Custo'
     cancel_url = reverse_lazy('financeiro:centro-custo-list')
-    success_message = 'Centro de custo excluído com sucesso.'
+    success_message = 'Centro de custo excluido com sucesso.'
 
 
 class PessoaFinanceiraListView(ListView):
@@ -238,7 +282,7 @@ class PessoaFinanceiraDeleteView(FinanceiroDeleteMixin):
     success_url = reverse_lazy('financeiro:pessoa-list')
     page_title = 'Excluir Pessoa Financeira'
     cancel_url = reverse_lazy('financeiro:pessoa-list')
-    success_message = 'Pessoa financeira excluída com sucesso.'
+    success_message = 'Pessoa financeira excluida com sucesso.'
 
 
 class CategoriaFinanceiraListView(ListView):
@@ -281,7 +325,7 @@ class CategoriaFinanceiraDeleteView(FinanceiroDeleteMixin):
     success_url = reverse_lazy('financeiro:categoria-list')
     page_title = 'Excluir Categoria Financeira'
     cancel_url = reverse_lazy('financeiro:categoria-list')
-    success_message = 'Categoria financeira excluída com sucesso.'
+    success_message = 'Categoria financeira excluida com sucesso.'
 
 
 class LancamentoFinanceiroListView(ListView):
@@ -311,8 +355,8 @@ class LancamentoFinanceiroCreateView(FinanceiroFormMixin, CreateView):
     form_class = LancamentoFinanceiroForm
     template_name = 'financeiro/lancamento_form.html'
     success_url = reverse_lazy('financeiro:lancamento-list')
-    page_title = 'Novo Lançamento Financeiro'
-    success_message = 'Lançamento financeiro cadastrado com sucesso.'
+    page_title = 'Novo Lancamento Financeiro'
+    success_message = 'Lancamento financeiro cadastrado com sucesso.'
 
 
 class LancamentoFinanceiroUpdateView(FinanceiroFormMixin, UpdateView):
@@ -320,14 +364,14 @@ class LancamentoFinanceiroUpdateView(FinanceiroFormMixin, UpdateView):
     form_class = LancamentoFinanceiroForm
     template_name = 'financeiro/lancamento_form.html'
     success_url = reverse_lazy('financeiro:lancamento-list')
-    page_title = 'Editar Lançamento Financeiro'
+    page_title = 'Editar Lancamento Financeiro'
     submit_label = 'Atualizar'
-    success_message = 'Lançamento financeiro atualizado com sucesso.'
+    success_message = 'Lancamento financeiro atualizado com sucesso.'
 
 
 class LancamentoFinanceiroDeleteView(FinanceiroDeleteMixin):
     model = LancamentoFinanceiro
     success_url = reverse_lazy('financeiro:lancamento-list')
-    page_title = 'Excluir Lançamento Financeiro'
+    page_title = 'Excluir Lancamento Financeiro'
     cancel_url = reverse_lazy('financeiro:lancamento-list')
-    success_message = 'Lançamento financeiro excluído com sucesso.'
+    success_message = 'Lancamento financeiro excluido com sucesso.'

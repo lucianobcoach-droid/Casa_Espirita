@@ -1,0 +1,71 @@
+{% extends 'financeiro/base.html' %}
+{% block title %}{{ page_title }}{% endblock %}
+{% block content %}
+<div class="level">
+    <div class="level-left">
+        <div>
+            <h1 class="title">{{ page_title }}</h1>
+            <p class="subtitle">
+                Saldo inicial: R$ {{ saldo_inicial }}
+                {% if data_saldo_inicial %}
+                    em {{ data_saldo_inicial|date:'d/m/Y' }}
+                {% endif %}
+            </p>
+        </div>
+    </div>
+    <div class="level-right">
+        <a class="button" href="{% url 'financeiro:conta-list' %}">Voltar para contas</a>
+    </div>
+</div>
+<div class="notification is-light">
+    O saldo acumulado parte do saldo inicial. Receitas entram, despesas saem e transferencias saem da conta de origem e entram na conta de destino.
+</div>
+<div class="table-wrapper">
+    <table class="table is-fullwidth is-striped is-hoverable">
+        <thead>
+        <tr>
+            <th>Data</th>
+            <th>Descricao</th>
+            <th>Tipo</th>
+            <th>Entrada</th>
+            <th>Saida</th>
+            <th>Saldo acumulado</th>
+            <th>Observacoes</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td>{% if data_saldo_inicial %}{{ data_saldo_inicial|date:'d/m/Y' }}{% else %}-{% endif %}</td>
+            <td>Saldo inicial</td>
+            <td>Inicial</td>
+            <td>R$ {{ saldo_inicial }}</td>
+            <td>-</td>
+            <td>R$ {{ saldo_inicial }}</td>
+            <td>-</td>
+        </tr>
+        {% for item in itens_extrato %}
+            <tr>
+                <td>{{ item.lancamento.data_competencia|date:'d/m/Y' }}</td>
+                <td>{{ item.lancamento.descricao }}</td>
+                <td>{{ item.lancamento.get_tipo_display }}</td>
+                <td>{% if item.entrada %}R$ {{ item.entrada }}{% else %}-{% endif %}</td>
+                <td>{% if item.saida %}R$ {{ item.saida }}{% else %}-{% endif %}</td>
+                <td>R$ {{ item.saldo_acumulado }}</td>
+                <td>{{ item.lancamento.observacoes|default:'-' }}</td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="7">Nenhum lancamento encontrado para esta conta.</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+        <tfoot>
+        <tr>
+            <th colspan="5">Saldo final</th>
+            <th>R$ {{ saldo_final }}</th>
+            <th></th>
+        </tr>
+        </tfoot>
+    </table>
+</div>
+{% endblock %}
