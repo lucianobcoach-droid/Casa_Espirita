@@ -4,66 +4,54 @@ Data: 2026-03-23
 
 ## Entrega realizada
 
-Foram corrigidos o comportamento operacional da transferência na interface e o autocomplete do formulário de lançamento, preservando integralmente a modelagem, os relacionamentos e as migrations já existentes.
+Foi executada somente a ETAPA 1 aprovada do financeiro: inclusão de saldo inicial em `ContaFinanceira`, sem iniciar extrato, sem ampliar o domínio além do necessário e sem alterar outras regras aprovadas.
 
-## Transferência
+## Alteração de domínio desta etapa
 
-Comportamento final adotado:
+`ContaFinanceira` passou a ter:
 
-- a transferência continua sendo um único registro lógico
-- o valor continua positivo no formulário
-- o sistema passa a explicitar que a operação representa saída na conta de origem e entrada na conta de destino
-- não houve duplicação manual de lançamentos
-- não foi criado novo model
+- `saldo_inicial`
+- `data_saldo_inicial`
 
-## Autocomplete real
+Escopo funcional:
 
-Foi implementado autocomplete real com consulta ao banco para:
+- o saldo inicial é apenas dado cadastral
+- não existe extrato
+- não existe cálculo de saldo por movimentação nesta etapa
+- nenhum outro model foi alterado
 
-- `pessoa`
-- `categoria`
-- `conta`
-- `centro_custo`
-- `conta_destino`
+## Migration criada
 
-Características:
+- `financeiro/migrations/0002_contafinanceira_saldo_inicial.py`
 
-- consulta via endpoints JSON próprios do módulo
-- busca por contém (`icontains`)
-- funciona com partes do meio do texto
-- sem dependência externa pesada
-- compatível com a interface atual
+## Arquivos alterados nesta etapa
 
-## Filtros textuais
-
-- os filtros textuais já operavam com `icontains`
-- essa etapa preservou esse comportamento e documentou explicitamente a busca por contém
-
-## Arquivos atualizados nesta etapa
-
+- `financeiro/models.py`
 - `financeiro/forms.py`
-- `financeiro/views.py`
-- `financeiro/urls.py`
-- `financeiro/templates/financeiro/base.html`
-- `financeiro/templates/financeiro/lancamento_form.html`
-- `financeiro/templates/financeiro/lancamento_list.html`
+- `financeiro/templates/financeiro/conta_list.html`
+- `financeiro/migrations/0002_contafinanceira_saldo_inicial.py`
 - `docs/STATE.md`
 - `docs/CODEX_RESULTADO.md`
 
+## Ajustes de interface
+
+- o formulário de conta passou a aceitar `saldo_inicial`
+- o formulário de conta passou a aceitar `data_saldo_inicial`
+- a listagem de contas passou a mostrar saldo inicial e, quando existir, a data de referência
+
 ## Restrições respeitadas
 
-- sem regressão intencional do estado atual
 - sem alterações no app `biblioteca`
 - sem uso de `signals`
-- sem alteração de `financeiro/models.py`
-- sem alteração das migrations já criadas
-- sem alteração de domínio ou relacionamentos, além da interpretação operacional explicitada na interface
-- mudança incremental
+- sem alteração de outros models além de `ContaFinanceira`
+- sem alteração de migrations antigas
+- sem criação de extrato
+- sem mistura com etapa 2
+- mudança mínima e incremental
 
 ## Resultado prático
 
-- a transferência ficou mais coerente e explícita no sistema
-- o autocomplete agora consulta registros reais do banco
-- a busca funciona com trechos do meio do texto
-- o código do domínio financeiro permaneceu intacto
-- a validação final de runtime depende apenas de instalar as dependências do projeto no ambiente local
+- `ContaFinanceira` agora aceita saldo inicial e data de saldo inicial
+- a migration incremental nova foi adicionada
+- as telas de conta ficaram compatíveis com a nova informação
+- o restante do domínio financeiro permaneceu intacto

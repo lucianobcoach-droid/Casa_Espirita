@@ -5,13 +5,27 @@ Data de atualização: 2026-03-23
 ## Estado atual do módulo financeiro
 
 - O app `financeiro` foi criado e adicionado ao `INSTALLED_APPS`.
-- A modelagem de domínio, os relacionamentos e o registro no Django admin permanecem intactos.
+- A modelagem de domínio, os relacionamentos e o registro no Django admin permanecem intactos, com exceção da ETAPA 1 aprovada em `ContaFinanceira`.
 - O módulo já possui base operacional própria fora do admin.
 - Existem formulários, views, rotas e templates próprios para contas, centros de custo, pessoas, categorias e lançamentos.
 - O módulo possui cadastro, listagem, edição, exclusão com confirmação, filtros básicos e autocomplete real no formulário de lançamento.
-- Ainda não existem recorrência, recibos, anexos ou cadastro rápido dentro do lançamento.
+- Ainda não existem recorrência, recibos, anexos, extrato ou cálculo de saldo por movimentação.
 - O app `biblioteca` não foi alterado.
 - Não foram usados `signals`.
+
+## ETAPA 1 aprovada em ContaFinanceira
+
+`ContaFinanceira` agora possui:
+
+- `saldo_inicial`
+- `data_saldo_inicial`
+
+Leitura funcional desta etapa:
+
+- o saldo inicial é apenas um dado cadastral da conta
+- não existe extrato nesta etapa
+- não existe motor de apuração de saldo acumulado nesta etapa
+- nenhuma outra regra de domínio foi alterada
 
 ## Modelos existentes no app `financeiro`
 
@@ -48,6 +62,12 @@ Data de atualização: 2026-03-23
 - O módulo possui listagem, cadastro, edição e exclusão de pessoas financeiras.
 - O módulo possui listagem, cadastro, edição e exclusão de categorias financeiras.
 - O módulo possui listagem, cadastro, edição e exclusão de lançamentos financeiros.
+
+## Ajustes de conta nesta etapa
+
+- O formulário de conta agora aceita `saldo_inicial`.
+- O formulário de conta agora aceita `data_saldo_inicial`.
+- A listagem de contas passou a exibir o saldo inicial e, quando informada, a data de referência.
 
 ## Rotas operacionais atuais
 
@@ -140,9 +160,9 @@ Data de atualização: 2026-03-23
 
 ## Migrações
 
-- Foi criada a migration inicial `financeiro/migrations/0001_initial.py`.
-- A migration foi escrita manualmente porque o ambiente local usado nesta execução não possui Django instalado.
-- A migration atual permanece compatível com a modelagem revisada nesta etapa.
+- Existe a migration inicial `financeiro/migrations/0001_initial.py`.
+- Foi criada a migration incremental `financeiro/migrations/0002_contafinanceira_saldo_inicial.py`.
+- As migrations antigas não foram alteradas.
 
 ## Validação local
 

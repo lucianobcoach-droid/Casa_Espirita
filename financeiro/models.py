@@ -10,6 +10,8 @@ from django.utils.translation import gettext_lazy as _
 class ContaFinanceira(models.Model):
     nome = models.CharField(max_length=150)
     descricao = models.TextField(blank=True)
+    saldo_inicial = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
+    data_saldo_inicial = models.DateField(blank=True, null=True)
     ativa = models.BooleanField(default=True)
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
@@ -181,4 +183,3 @@ class LancamentoFinanceiro(models.Model):
     def save(self, *args, **kwargs) -> None:
         self.full_clean()
         super().save(*args, **kwargs)
-

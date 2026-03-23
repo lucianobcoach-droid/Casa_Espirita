@@ -18,8 +18,13 @@ class ContaFinanceiraForm(forms.ModelForm):
         fields = [
             'nome',
             'descricao',
+            'saldo_inicial',
+            'data_saldo_inicial',
             'ativa',
         ]
+        widgets = {
+            'data_saldo_inicial': forms.DateInput(attrs={'type': 'date'}),
+        }
 
 
 class CentroCustoForm(forms.ModelForm):
