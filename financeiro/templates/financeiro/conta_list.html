@@ -41,6 +41,7 @@
             <th>Nome</th>
             <th>Descricao</th>
             <th>Saldo inicial</th>
+            <th>Saldo atual</th>
             <th>Ativa</th>
             <th>Acoes</th>
         </tr>
@@ -57,6 +58,7 @@
                         <small>{{ conta.data_saldo_inicial|date:'d/m/Y' }}</small>
                     {% endif %}
                 </td>
+                <td>R$ {{ conta.saldo_atual }}</td>
                 <td>{% if conta.ativa %}Sim{% else %}Nao{% endif %}</td>
                 <td class="actions-cell">
                     <a class="button is-small is-info is-light" href="{% url 'financeiro:conta-extrato' conta.pk %}">Extrato</a>
@@ -66,7 +68,7 @@
             </tr>
         {% empty %}
             <tr>
-                <td colspan="5">Nenhuma conta financeira cadastrada.</td>
+                <td colspan="6">Nenhuma conta financeira cadastrada.</td>
             </tr>
         {% endfor %}
         </tbody>

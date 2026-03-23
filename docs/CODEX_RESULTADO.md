@@ -4,63 +4,61 @@ Data: 2026-03-23
 
 ## Entrega realizada
 
-Foi executada somente a ETAPA 2 aprovada do financeiro: criação do extrato por conta com saldo acumulado, sem criar relatórios gerais e sem ampliar o domínio além do necessário.
+Foi executada a etapa incremental de consistência de contas: `data_saldo_inicial` tornou-se obrigatória e a listagem de contas passou a exibir `saldo_atual` calculado, sem persistir esse valor no banco.
 
-## Rota criada
+## Verificação prévia obrigatória
 
-- `/financeiro/contas/<id>/extrato/`
+Antes da implementação, foi conferido o banco local.
 
-## View criada
+Resultado:
 
-- `ContaFinanceiraExtratoView`
+- não havia mais contas com `data_saldo_inicial` nula
 
-## Template criado
+## Migration criada
 
-- `financeiro/templates/financeiro/conta_extrato.html`
-
-## Regra de saldo acumulado
-
-O extrato segue esta lógica:
-
-- começa em `saldo_inicial` da conta
-- `receita` entra como entrada
-- `despesa` entra como saída
-- `transferencia` sai da conta de origem
-- `transferencia` entra na conta de destino
-
-O saldo acumulado é calculado em ordem cronológica por:
-
-- `data_competencia`
-- `criado_em`
-- `pk`
+- `financeiro/migrations/0003_contafinanceira_data_saldo_inicial_required.py`
 
 ## Arquivos alterados nesta etapa
 
+- `financeiro/models.py`
 - `financeiro/views.py`
-- `financeiro/urls.py`
 - `financeiro/templates/financeiro/conta_list.html`
 - `financeiro/templates/financeiro/conta_extrato.html`
+- `financeiro/migrations/0003_contafinanceira_data_saldo_inicial_required.py`
+- `docs/CEREBRO_PROJETO.md`
 - `docs/STATE.md`
 - `docs/CODEX_RESULTADO.md`
 
-## Ajustes de interface
+## Regra do saldo_atual
 
-- a listagem de contas passou a ter a ação `Extrato`
-- o extrato mostra data, descrição, tipo, entrada, saída, saldo acumulado e observações
-- a tela deixa explícita a regra das transferências
+O `saldo_atual` é calculado em tempo de execução:
+
+- começa em `saldo_inicial`
+- soma receitas da conta
+- subtrai despesas da conta
+- subtrai transferências em que a conta é origem
+- soma transferências em que a conta é destino
+
+Não foi criado campo novo para `saldo_atual`.
+
+## Onde o saldo_atual aparece
+
+- na listagem de contas
+- no topo do extrato da conta, como referência visual do saldo final acumulado
 
 ## Restrições respeitadas
 
 - sem alterações no app `biblioteca`
 - sem uso de `signals`
-- sem alteração do domínio além do necessário para leitura do extrato
-- sem criação de relatórios gerais
-- sem mistura com outras melhorias
+- sem salvar `saldo_atual` no banco
+- sem criar campo novo para `saldo_atual`
+- sem criar relatórios gerais
+- sem alteração de migrations antigas
 - mudança mínima e incremental
 
 ## Resultado prático
 
-- o extrato por conta abre em rota própria
-- o saldo acumulado parte do saldo inicial cadastrado
-- receitas, despesas e transferências passam a ser lidas de forma coerente na conta selecionada
+- `data_saldo_inicial` agora é obrigatória
+- a listagem de contas ficou mais útil com `saldo_atual` calculado
+- transferências entram corretamente no cálculo
 - o restante do domínio financeiro permaneceu intacto

@@ -71,6 +71,9 @@ Até o momento, está validado que:
 - `ContaFinanceira` já possui:
   - `saldo_inicial`
   - `data_saldo_inicial`
+- `data_saldo_inicial` agora é obrigatória
+- o extrato por conta existe
+- a listagem de contas já mostra `saldo_atual` calculado
 
 ---
 
@@ -95,10 +98,12 @@ Os tipos válidos de lançamento são:
 - `conta` e `conta_destino` não podem ser iguais
 - `conta_destino` só pode ser usada em `transferencia`
 
-### 7.4 Regras de saldo inicial de conta
+### 7.4 Regras de saldo de conta
 - `ContaFinanceira` possui `saldo_inicial`
-- `ContaFinanceira` possui `data_saldo_inicial` opcional
-- o saldo inicial deve servir como base para futuros cálculos de extrato e saldo acumulado
+- `ContaFinanceira` possui `data_saldo_inicial` obrigatória
+- o saldo inicial serve como base do extrato e do saldo acumulado
+- `saldo_atual` é calculado em tempo de execução
+- `saldo_atual` não é salvo no banco
 
 ---
 
@@ -144,6 +149,7 @@ As seguintes garantias já aprovadas não podem ser perdidas:
 - autocomplete real funcionando no lançamento
 - comportamento condicional de `conta_destino`
 - clareza da interface de transferência
+- extrato por conta funcionando
 
 ---
 
@@ -177,30 +183,26 @@ Depois disso:
 
 ---
 
-## 13. Próxima etapa autorizada
+## 13. Etapa atual concluída
 ### ETAPA 2 — Extrato por conta com saldo acumulado
 
-Escopo esperado:
-- criar rota de extrato por conta
-- criar view de extrato por conta
-- criar template de extrato
-- calcular saldo acumulado a partir de `saldo_inicial`
+Escopo implementado:
+- rota de extrato por conta
+- view de extrato por conta
+- template de extrato
+- cálculo de saldo acumulado a partir de `saldo_inicial`
 
-Regras esperadas:
-- começar do `saldo_inicial` da conta
+Regras implementadas:
+- começa do `saldo_inicial` da conta
 - `receita` = entrada
 - `despesa` = saída
 - `transferencia`:
   - conta de origem = saída
   - conta de destino = entrada
 
-Acesso esperado:
-- a partir da listagem de contas
-
-Sem misturar:
-- relatórios gerais
-- importação de planilha
-- novas regras fora do extrato
+Complemento incremental já aplicado:
+- `data_saldo_inicial` tornou-se obrigatória
+- `saldo_atual` passou a ser calculado na listagem de contas
 
 ---
 

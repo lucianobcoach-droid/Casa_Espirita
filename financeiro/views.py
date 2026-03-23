@@ -123,6 +123,39 @@ class ContaFinanceiraListView(ListView):
             queryset = queryset.filter(ativa=False)
         return queryset
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        contas = list(context['contas'])
+        contas_por_id = {conta.id: conta for conta in contas}
+
+        for conta in contas:
+            conta.saldo_atual = conta.saldo_inicial or Decimal('0.00')
+
+        if contas_por_id:
+            lancamentos = LancamentoFinanceiro.objects.filter(
+                Q(conta_id__in=contas_por_id.keys()) | Q(conta_destino_id__in=contas_por_id.keys())
+            ).only('tipo', 'valor', 'conta_id', 'conta_destino_id')
+
+            for lancamento in lancamentos:
+                if (
+                    lancamento.tipo == LancamentoFinanceiro.TipoLancamento.RECEITA
+                    and lancamento.conta_id in contas_por_id
+                ):
+                    contas_por_id[lancamento.conta_id].saldo_atual += lancamento.valor
+                elif (
+                    lancamento.tipo == LancamentoFinanceiro.TipoLancamento.DESPESA
+                    and lancamento.conta_id in contas_por_id
+                ):
+                    contas_por_id[lancamento.conta_id].saldo_atual -= lancamento.valor
+                elif lancamento.tipo == LancamentoFinanceiro.TipoLancamento.TRANSFERENCIA:
+                    if lancamento.conta_id in contas_por_id:
+                        contas_por_id[lancamento.conta_id].saldo_atual -= lancamento.valor
+                    if lancamento.conta_destino_id in contas_por_id:
+                        contas_por_id[lancamento.conta_destino_id].saldo_atual += lancamento.valor
+
+        context['contas'] = contas
+        return context
+
 
 class ContaFinanceiraCreateView(FinanceiroFormMixin, CreateView):
     model = ContaFinanceira
@@ -196,6 +229,7 @@ class ContaFinanceiraExtratoView(DetailView):
         context['data_saldo_inicial'] = conta.data_saldo_inicial
         context['itens_extrato'] = itens_extrato
         context['saldo_final'] = saldo_acumulado
+        context['saldo_atual'] = saldo_acumulado
         return context
 
 
