@@ -18,6 +18,7 @@ Complemento incremental posterior:
 - o financeiro passou a ter tela própria de `Resumo` consolidado por período
 - o financeiro passou a ter tela própria de `Prestacao de Contas` por período
 - `Resumo` e `Prestacao de Contas` passaram a aceitar seleção de contas para compor o relatório
+- `Resumo` e `Prestacao de Contas` passaram a mostrar agrupamento por categoria
 
 ## Filtro por período
 
@@ -69,3 +70,4 @@ O `saldo_anterior` é calculado assim:
 - transferências internas ficaram neutras no resumo consolidado
 - a prestação de contas organiza o período em blocos formais e mostra a composição do saldo final por conta
 - os cálculos dessas duas telas passaram a respeitar apenas as contas selecionadas
+- lançamentos sem categoria passaram a ser mostrados no agrupamento como `Sem categoria`

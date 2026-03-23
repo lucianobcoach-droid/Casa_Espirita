@@ -16,6 +16,7 @@ Data de atualização: 2026-03-23
 - O financeiro agora possui tela própria de `Resumo` consolidado por período.
 - O financeiro agora possui tela própria de `Prestacao de Contas` por período.
 - As telas de `Resumo` e `Prestacao de Contas` agora permitem selecionar quais contas entram no relatório.
+- As telas de `Resumo` e `Prestacao de Contas` agora mostram receitas e despesas agrupadas por categoria.
 - O app `biblioteca` não foi alterado.
 - Não foram usados `signals`.
 
@@ -65,8 +66,10 @@ Escopo funcional:
 - sem filtro informado, assume o mês atual
 - sem seleção explícita de contas, considera todas as contas
 - mostra saldo inicial consolidado, receitas do período, despesas do período, saldo do período e saldo final consolidado
+- mostra receitas por categoria e despesas por categoria
 - considera apenas lançamentos efetivos
 - transferências internas não entram como receita nem despesa no consolidado
+- lançamentos sem categoria aparecem no agrupamento como `Sem categoria`
 
 ## Prestacao de contas do periodo
 
@@ -83,9 +86,11 @@ Escopo funcional:
 - organiza a visualização em blocos formais
 - mostra composição do saldo inicial
 - lista receitas e despesas do período
+- mostra receitas e despesas agrupadas por categoria
 - mostra resumo do saldo disponível
 - mostra composição do saldo final por conta
 - mantém transferências internas neutras no consolidado geral
+- lançamentos sem categoria aparecem no agrupamento como `Sem categoria`
 
 ## Regra de saldo no extrato
 

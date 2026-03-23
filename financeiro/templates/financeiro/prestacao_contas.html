@@ -208,7 +208,82 @@
 
     <div class="financeiro-report-block">
         <div class="financeiro-report-header">
-            <h2 class="financeiro-report-title">5. Composicao do saldo final</h2>
+            <h2 class="financeiro-report-title">5. Receitas por categoria</h2>
+        </div>
+        <div class="financeiro-report-body">
+            <div class="table-wrapper">
+                <table class="table is-fullwidth financeiro-table">
+                    <thead>
+                    <tr>
+                        <th>Categoria</th>
+                        <th>Valor</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for item in receitas_por_categoria %}
+                        <tr>
+                            <td>{{ item.categoria }}</td>
+                            <td class="has-text-link">R$ {{ item.valor }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="2">Nao houve receitas para agrupar no periodo.</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                    <tfoot>
+                    <tr>
+                        <th>Total de receitas por categoria</th>
+                        <th>R$ {{ total_receitas_por_categoria }}</th>
+                    </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="financeiro-report-block">
+        <div class="financeiro-report-header">
+            <h2 class="financeiro-report-title">6. Despesas por categoria</h2>
+        </div>
+        <div class="financeiro-report-body">
+            <div class="table-wrapper">
+                <table class="table is-fullwidth financeiro-table">
+                    <thead>
+                    <tr>
+                        <th>Categoria</th>
+                        <th>Valor</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for item in despesas_por_categoria %}
+                        <tr>
+                            <td>{{ item.categoria }}</td>
+                            <td class="has-text-danger">R$ {{ item.valor }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="2">Nao houve despesas para agrupar no periodo.</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                    <tfoot>
+                    <tr>
+                        <th>Total de despesas por categoria</th>
+                        <th>R$ {{ total_despesas_por_categoria }}</th>
+                    </tr>
+                    </tfoot>
+                </table>
+            </div>
+            {% if existe_lancamento_sem_categoria %}
+                <p class="table-caption">Lancamentos sem categoria aparecem agrupados como "Sem categoria".</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="financeiro-report-block">
+        <div class="financeiro-report-header">
+            <h2 class="financeiro-report-title">7. Composicao do saldo final</h2>
         </div>
         <div class="financeiro-report-body">
             <div class="table-wrapper">

@@ -81,6 +81,7 @@ Até o momento, está validado que:
 - o financeiro agora possui tela inicial de `Resumo` consolidado por período
 - o financeiro agora possui tela de `Prestacao de Contas` por período
 - `Resumo` e `Prestacao de Contas` agora permitem selecionar quais contas entram no relatório
+- `Resumo` e `Prestacao de Contas` agora exibem agrupamento por categoria para receitas e despesas
 
 ---
 
@@ -118,6 +119,7 @@ Os tipos válidos de lançamento são:
 - transferências internas não alteram receita, despesa nem saldo consolidado do resumo
 - a `Prestacao de Contas` reutiliza a base do resumo e acrescenta blocos formais de apresentação
 - quando nenhuma conta é selecionada explicitamente, `Resumo` e `Prestacao de Contas` consideram todas as contas por padrão
+- quando um lançamento não possui categoria, ele aparece no agrupamento como `Sem categoria`
 
 ---
 

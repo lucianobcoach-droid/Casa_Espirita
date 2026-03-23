@@ -196,6 +196,19 @@ class FinanceiroPeriodoMixin:
         total_despesas = sum((lancamento.valor for lancamento in despesas), Decimal('0.00'))
         return receitas, despesas, total_receitas, total_despesas
 
+    def _agrupar_por_categoria(self, lancamentos: list[LancamentoFinanceiro]) -> tuple[list[dict[str, object]], Decimal]:
+        agrupado: dict[str, Decimal] = {}
+        for lancamento in lancamentos:
+            nome_categoria = lancamento.categoria.nome if lancamento.categoria else 'Sem categoria'
+            agrupado[nome_categoria] = agrupado.get(nome_categoria, Decimal('0.00')) + lancamento.valor
+
+        itens = [
+            {'categoria': categoria, 'valor': valor}
+            for categoria, valor in sorted(agrupado.items(), key=lambda item: item[0].lower())
+        ]
+        total = sum((item['valor'] for item in itens), Decimal('0.00'))
+        return itens, total
+
     def _build_periodo_context(self) -> dict[str, object]:
         contas_disponiveis, selected_ids_raw, selected_ids = self._parse_contas()
         data_inicial_raw, data_final_raw, data_inicial, data_final, periodo_error = self._parse_periodo()
@@ -239,6 +252,20 @@ class FinanceiroPeriodoMixin:
                 'composicao_final': composicao_final,
                 'receitas_periodo': receitas,
                 'despesas_periodo': despesas,
+            }
+        )
+
+        receitas_por_categoria, total_receitas_por_categoria = self._agrupar_por_categoria(receitas)
+        despesas_por_categoria, total_despesas_por_categoria = self._agrupar_por_categoria(despesas)
+        context.update(
+            {
+                'receitas_por_categoria': receitas_por_categoria,
+                'despesas_por_categoria': despesas_por_categoria,
+                'total_receitas_por_categoria': total_receitas_por_categoria,
+                'total_despesas_por_categoria': total_despesas_por_categoria,
+                'existe_lancamento_sem_categoria': any(
+                    lancamento.categoria_id is None for lancamento in [*receitas, *despesas]
+                ),
             }
         )
         return context
