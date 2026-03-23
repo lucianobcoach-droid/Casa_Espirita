@@ -22,16 +22,26 @@
                 <label class="label">Data inicial</label>
                 <input class="input" type="date" name="data_inicial" value="{{ data_inicial }}">
             </div>
+        <div class="column is-3">
+            <label class="label">Data final</label>
+            <input class="input" type="date" name="data_final" value="{{ data_final }}">
+        </div>
             <div class="column is-3">
-                <label class="label">Data final</label>
-                <input class="input" type="date" name="data_final" value="{{ data_final }}">
-            </div>
-            <div class="column is-2">
-                <label class="label">&nbsp;</label>
-                <div class="buttons">
-                    <button class="button is-link" type="submit">Atualizar</button>
-                    <a class="button is-light" href="{% url 'financeiro:prestacao-contas' %}">Limpar</a>
+                <label class="label">Centro de custo no relatorio</label>
+                <div class="field">
+                    <label class="checkbox">
+                        <input type="hidden" name="mostrar_centro_custo" value="0">
+                        <input type="checkbox" name="mostrar_centro_custo" value="1" {% if mostrar_centro_custo %}checked{% endif %}>
+                        Mostrar centro de custo
+                    </label>
                 </div>
+            </div>
+        <div class="column is-3">
+            <label class="label">&nbsp;</label>
+            <div class="buttons">
+                <button class="button is-link" type="submit">Atualizar</button>
+                <a class="button is-light" href="{% url 'financeiro:prestacao-contas' %}">Limpar</a>
+            </div>
             </div>
         </div>
     </form>
@@ -42,10 +52,14 @@
         <div class="prestacao-report">
             <header class="prestacao-report-header">
                 <h1 class="prestacao-report-title">Prestacao de Contas - {{ periodo_label }}</h1>
-                <p class="prestacao-report-meta"><strong>Periodo considerado:</strong> {{ periodo_label }}</p>
-                <p class="prestacao-report-meta"><strong>Contas incluidas no relatorio:</strong> {{ contas_incluidas_label }}</p>
+                {% if quantidade_contas_selecionadas != contas_disponiveis|length %}
+                    <p class="prestacao-report-meta"><strong>Contas incluidas no relatorio:</strong> {{ contas_incluidas_label }}</p>
+                {% endif %}
                 {% if existe_lancamento_sem_categoria %}
                     <p class="prestacao-report-meta">Lancamentos sem categoria aparecem no agrupamento como "Sem categoria".</p>
+                {% endif %}
+                {% if mostrar_centro_custo and existe_lancamento_sem_centro_custo %}
+                    <p class="prestacao-report-meta">Despesas sem centro de custo aparecem no agrupamento como "Sem centro de custo".</p>
                 {% endif %}
             </header>
 
@@ -200,6 +214,40 @@
                     </table>
                 </div>
             </section>
+
+            {% if mostrar_centro_custo %}
+                <section class="prestacao-section">
+                    <h2 class="prestacao-section-title">6. Despesas por centro de custo</h2>
+                    <div class="table-wrapper">
+                        <table class="table is-fullwidth financeiro-table prestacao-table">
+                            <thead>
+                            <tr>
+                                <th>Centro de custo</th>
+                                <th>Valor</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for item in despesas_por_centro_custo %}
+                                <tr>
+                                    <td>{{ item.label }}</td>
+                                    <td><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ item.valor|br_money }}</span></span></td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="2">Nao houve despesas para agrupar por centro de custo no periodo.</td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                            <tfoot>
+                            <tr>
+                                <th>Total de despesas por centro de custo</th>
+                                <th><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ total_despesas_por_centro_custo|br_money }}</span></span></th>
+                            </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </section>
+            {% endif %}
 
             <div class="prestacao-signature">
                 <p>Local e data: _________________________________________________</p>

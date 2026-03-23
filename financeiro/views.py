@@ -121,6 +121,18 @@ class FinanceiroPeriodoMixin:
 
         return data_inicial_raw, data_final_raw, data_inicial, data_final, periodo_error
 
+    def _parse_checkbox(self, param_name: str) -> bool:
+        valores = [valor.strip().lower() for valor in self.request.GET.getlist(param_name)]
+        if not valores:
+            return False
+
+        for valor in reversed(valores):
+            if valor in {'1', 'true', 'on', 'yes'}:
+                return True
+            if valor in {'0', 'false', 'off', 'no', ''}:
+                return False
+        return False
+
     def _calcular_saldos_por_conta(
         self,
         data_referencia: date,
@@ -178,7 +190,7 @@ class FinanceiroPeriodoMixin:
                 data_competencia__gte=data_inicial,
                 data_competencia__lte=data_final,
             )
-            .select_related('conta', 'pessoa', 'categoria')
+            .select_related('conta', 'pessoa', 'categoria', 'centro_custo')
             .order_by('data_competencia', 'criado_em', 'pk')
         )
         despesas = list(
@@ -189,22 +201,29 @@ class FinanceiroPeriodoMixin:
                 data_competencia__gte=data_inicial,
                 data_competencia__lte=data_final,
             )
-            .select_related('conta', 'pessoa', 'categoria')
+            .select_related('conta', 'pessoa', 'categoria', 'centro_custo')
             .order_by('data_competencia', 'criado_em', 'pk')
         )
         total_receitas = sum((lancamento.valor for lancamento in receitas), Decimal('0.00'))
         total_despesas = sum((lancamento.valor for lancamento in despesas), Decimal('0.00'))
         return receitas, despesas, total_receitas, total_despesas
 
-    def _agrupar_por_categoria(self, lancamentos: list[LancamentoFinanceiro]) -> tuple[list[dict[str, object]], Decimal]:
+    def _agrupar_por_campo(
+        self,
+        lancamentos: list[LancamentoFinanceiro],
+        attr_name: str,
+        fallback_label: str,
+        label_key: str = 'label',
+    ) -> tuple[list[dict[str, object]], Decimal]:
         agrupado: dict[str, Decimal] = {}
         for lancamento in lancamentos:
-            nome_categoria = lancamento.categoria.nome if lancamento.categoria else 'Sem categoria'
-            agrupado[nome_categoria] = agrupado.get(nome_categoria, Decimal('0.00')) + lancamento.valor
+            related_obj = getattr(lancamento, attr_name)
+            label = str(related_obj) if related_obj else fallback_label
+            agrupado[label] = agrupado.get(label, Decimal('0.00')) + lancamento.valor
 
         itens = [
-            {'categoria': categoria, 'valor': valor}
-            for categoria, valor in sorted(agrupado.items(), key=lambda item: item[0].lower())
+            {label_key: label, 'valor': valor}
+            for label, valor in sorted(agrupado.items(), key=lambda item: item[0].lower())
         ]
         total = sum((item['valor'] for item in itens), Decimal('0.00'))
         return itens, total
@@ -212,6 +231,7 @@ class FinanceiroPeriodoMixin:
     def _build_periodo_context(self) -> dict[str, object]:
         contas_disponiveis, selected_ids_raw, selected_ids = self._parse_contas()
         data_inicial_raw, data_final_raw, data_inicial, data_final, periodo_error = self._parse_periodo()
+        mostrar_centro_custo = self._parse_checkbox('mostrar_centro_custo')
         contas_selecionadas = [conta for conta in contas_disponiveis if conta.id in selected_ids]
         context: dict[str, object] = {
             'data_inicial': data_inicial_raw,
@@ -226,6 +246,7 @@ class FinanceiroPeriodoMixin:
                 else ', '.join(conta.nome for conta in contas_selecionadas)
             ),
             'quantidade_contas_selecionadas': len(contas_selecionadas),
+            'mostrar_centro_custo': mostrar_centro_custo,
         }
 
         if not data_inicial or not data_final:
@@ -239,7 +260,6 @@ class FinanceiroPeriodoMixin:
             data_final,
             selected_ids,
         )
-
         context.update(
             {
                 'periodo_label': f'{data_inicial.strftime("%d/%m/%Y")} a {data_final.strftime("%d/%m/%Y")}',
@@ -255,16 +275,36 @@ class FinanceiroPeriodoMixin:
             }
         )
 
-        receitas_por_categoria, total_receitas_por_categoria = self._agrupar_por_categoria(receitas)
-        despesas_por_categoria, total_despesas_por_categoria = self._agrupar_por_categoria(despesas)
+        receitas_por_categoria, total_receitas_por_categoria = self._agrupar_por_campo(
+            receitas,
+            'categoria',
+            'Sem categoria',
+            label_key='categoria',
+        )
+        despesas_por_categoria, total_despesas_por_categoria = self._agrupar_por_campo(
+            despesas,
+            'categoria',
+            'Sem categoria',
+            label_key='categoria',
+        )
+        despesas_por_centro_custo, total_despesas_por_centro_custo = self._agrupar_por_campo(
+            despesas,
+            'centro_custo',
+            'Sem centro de custo',
+        )
         context.update(
             {
                 'receitas_por_categoria': receitas_por_categoria,
                 'despesas_por_categoria': despesas_por_categoria,
                 'total_receitas_por_categoria': total_receitas_por_categoria,
                 'total_despesas_por_categoria': total_despesas_por_categoria,
+                'despesas_por_centro_custo': despesas_por_centro_custo,
+                'total_despesas_por_centro_custo': total_despesas_por_centro_custo,
                 'existe_lancamento_sem_categoria': any(
                     lancamento.categoria_id is None for lancamento in [*receitas, *despesas]
+                ),
+                'existe_lancamento_sem_centro_custo': any(
+                    lancamento.centro_custo_id is None for lancamento in despesas
                 ),
             }
         )

@@ -19,6 +19,8 @@ Complemento incremental posterior:
 - o financeiro passou a ter tela própria de `Prestacao de Contas` por período
 - `Resumo` e `Prestacao de Contas` passaram a aceitar seleção de contas para compor o relatório
 - `Resumo` e `Prestacao de Contas` passaram a mostrar agrupamento por categoria
+- `Resumo` e `Prestacao de Contas` passaram a mostrar agrupamento de despesas por centro de custo
+- `Resumo` e `Prestacao de Contas` passaram a aceitar filtro de exibição nos agrupamentos por categoria e por centro de custo
 - a `Prestacao de Contas` passou a ter refinamento específico de impressão
 - a `Prestacao de Contas` passou a ter visual mais formal e menos aparência de dashboard
 
@@ -73,5 +75,7 @@ O `saldo_anterior` é calculado assim:
 - a prestação de contas organiza o período em blocos formais e mostra a composição do saldo final por conta
 - os cálculos dessas duas telas passaram a respeitar apenas as contas selecionadas
 - lançamentos sem categoria passaram a ser mostrados no agrupamento como `Sem categoria`
+- despesas sem centro de custo passaram a ser mostradas no agrupamento como `Sem centro de custo`
+- os filtros de exibição dos agrupamentos não alteram totais gerais de receitas, despesas, saldo inicial, saldo final ou resumo do período
 - a visualização impressa da prestação de contas ficou mais próxima de um documento formal e ganhou bloco simples de assinatura
 - receitas e despesas da prestação passaram a aparecer apenas na forma consolidada por categoria

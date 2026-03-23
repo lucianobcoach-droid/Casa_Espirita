@@ -17,6 +17,8 @@ Data de atualização: 2026-03-23
 - O financeiro agora possui tela própria de `Prestacao de Contas` por período.
 - As telas de `Resumo` e `Prestacao de Contas` agora permitem selecionar quais contas entram no relatório.
 - As telas de `Resumo` e `Prestacao de Contas` agora mostram receitas e despesas agrupadas por categoria.
+- As telas de `Resumo` e `Prestacao de Contas` agora mostram despesas agrupadas por centro de custo.
+- As telas de `Resumo` e `Prestacao de Contas` agora possuem controle de exibição para agrupamentos por categoria e por centro de custo, sem alterar os totais gerais do relatório.
 - A tela de `Prestacao de Contas` recebeu refinamento visual específico para impressão em A4.
 - A `Prestacao de Contas` agora tem apresentação mais formal, com menos aparência de dashboard.
 - O app `biblioteca` não foi alterado.
@@ -69,9 +71,12 @@ Escopo funcional:
 - sem seleção explícita de contas, considera todas as contas
 - mostra saldo inicial consolidado, receitas do período, despesas do período, saldo do período e saldo final consolidado
 - mostra receitas por categoria e despesas por categoria
+- mostra despesas por centro de custo
+- permite escolher se os agrupamentos mostram todos os itens, apenas itens com vínculo ou apenas itens sem vínculo
 - considera apenas lançamentos efetivos
 - transferências internas não entram como receita nem despesa no consolidado
 - lançamentos sem categoria aparecem no agrupamento como `Sem categoria`
+- despesas sem centro de custo aparecem no agrupamento como `Sem centro de custo`
 
 ## Prestacao de contas do periodo
 
@@ -89,10 +94,13 @@ Escopo funcional:
 - usa cabeçalho documental e estrutura contínua de relatório
 - mostra composição do saldo inicial
 - mostra receitas e despesas já consolidadas por categoria
+- mostra despesas agrupadas por centro de custo
+- permite controlar a exibição dos agrupamentos por categoria e por centro de custo sem alterar os totais consolidados
 - mostra resumo do saldo disponível
 - mostra composição do saldo final por conta
 - mantém transferências internas neutras no consolidado geral
 - lançamentos sem categoria aparecem no agrupamento como `Sem categoria`
+- despesas sem centro de custo aparecem no agrupamento como `Sem centro de custo`
 - na impressão, oculta controles e mostra bloco simples de assinatura ao final
 
 ## Regra de saldo no extrato
