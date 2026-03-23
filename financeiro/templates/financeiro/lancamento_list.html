@@ -72,9 +72,27 @@
                 <td>{{ lancamento.descricao }}</td>
                 <td>{{ lancamento.get_tipo_display }}</td>
                 <td>{{ lancamento.get_status_display }}</td>
-                <td>R$ {{ lancamento.valor }}</td>
-                <td>{{ lancamento.conta }}</td>
-                <td>{{ lancamento.conta_destino|default:'-' }}</td>
+                <td>
+                    R$ {{ lancamento.valor }}
+                    {% if lancamento.tipo == 'transferencia' %}
+                        <br>
+                        <small>Saída na origem e entrada no destino</small>
+                    {% endif %}
+                </td>
+                <td>
+                    {{ lancamento.conta }}
+                    {% if lancamento.tipo == 'transferencia' %}
+                        <br>
+                        <small>Conta de origem</small>
+                    {% endif %}
+                </td>
+                <td>
+                    {{ lancamento.conta_destino|default:'-' }}
+                    {% if lancamento.tipo == 'transferencia' and lancamento.conta_destino %}
+                        <br>
+                        <small>Conta de destino</small>
+                    {% endif %}
+                </td>
                 <td>{{ lancamento.pessoa|default:'-' }}</td>
                 <td>{{ lancamento.data_competencia|date:'d/m/Y' }}</td>
                 <td>{{ lancamento.numero_documento|default:'-' }}</td>

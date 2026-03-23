@@ -3,14 +3,17 @@ from __future__ import annotations
 from django.urls import path
 
 from .views import (
+    CategoriaFinanceiraAutocompleteView,
     CategoriaFinanceiraCreateView,
     CategoriaFinanceiraDeleteView,
     CategoriaFinanceiraListView,
     CategoriaFinanceiraUpdateView,
+    CentroCustoAutocompleteView,
     CentroCustoCreateView,
     CentroCustoDeleteView,
     CentroCustoListView,
     CentroCustoUpdateView,
+    ContaFinanceiraAutocompleteView,
     ContaFinanceiraCreateView,
     ContaFinanceiraDeleteView,
     ContaFinanceiraListView,
@@ -20,6 +23,7 @@ from .views import (
     LancamentoFinanceiroDeleteView,
     LancamentoFinanceiroListView,
     LancamentoFinanceiroUpdateView,
+    PessoaFinanceiraAutocompleteView,
     PessoaFinanceiraCreateView,
     PessoaFinanceiraDeleteView,
     PessoaFinanceiraListView,
@@ -30,6 +34,10 @@ app_name = 'financeiro'
 
 urlpatterns = [
     path('', FinanceiroHomeView.as_view(), name='home'),
+    path('autocomplete/pessoas/', PessoaFinanceiraAutocompleteView.as_view(), name='autocomplete-pessoa'),
+    path('autocomplete/categorias/', CategoriaFinanceiraAutocompleteView.as_view(), name='autocomplete-categoria'),
+    path('autocomplete/contas/', ContaFinanceiraAutocompleteView.as_view(), name='autocomplete-conta'),
+    path('autocomplete/centros-custo/', CentroCustoAutocompleteView.as_view(), name='autocomplete-centro-custo'),
     path('contas/', ContaFinanceiraListView.as_view(), name='conta-list'),
     path('contas/nova/', ContaFinanceiraCreateView.as_view(), name='conta-create'),
     path('contas/<int:pk>/editar/', ContaFinanceiraUpdateView.as_view(), name='conta-update'),

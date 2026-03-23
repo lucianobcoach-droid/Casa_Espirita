@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 from django.contrib import messages
+from django.db.models import Q
+from django.http import JsonResponse
 from django.urls import reverse_lazy
+from django.views import View
 from django.views.generic import CreateView, DeleteView, ListView, TemplateView, UpdateView
 
 from .forms import (
@@ -57,6 +60,54 @@ class FinanceiroDeleteMixin(DeleteView):
 
 class FinanceiroHomeView(TemplateView):
     template_name = 'financeiro/home.html'
+
+
+class FinanceiroAutocompleteView(View):
+    model = None
+    search_fields: tuple[str, ...] = ()
+    limit = 10
+
+    def get_queryset(self):
+        if self.model is None:
+            raise ValueError('model precisa ser definida')
+        queryset = self.model.objects.all()
+        query = self.request.GET.get('q', '').strip()
+        if query:
+            filters = Q()
+            for field in self.search_fields:
+                filters |= Q(**{f'{field}__icontains': query})
+            queryset = queryset.filter(filters)
+        return queryset[: self.limit]
+
+    def get(self, request, *args, **kwargs):
+        results = [
+            {
+                'id': obj.pk,
+                'label': str(obj),
+            }
+            for obj in self.get_queryset()
+        ]
+        return JsonResponse({'results': results})
+
+
+class PessoaFinanceiraAutocompleteView(FinanceiroAutocompleteView):
+    model = PessoaFinanceira
+    search_fields = ('codigo', 'nome', 'documento', 'email')
+
+
+class CategoriaFinanceiraAutocompleteView(FinanceiroAutocompleteView):
+    model = CategoriaFinanceira
+    search_fields = ('nome',)
+
+
+class ContaFinanceiraAutocompleteView(FinanceiroAutocompleteView):
+    model = ContaFinanceira
+    search_fields = ('nome', 'descricao')
+
+
+class CentroCustoAutocompleteView(FinanceiroAutocompleteView):
+    model = CentroCusto
+    search_fields = ('codigo', 'nome')
 
 
 class ContaFinanceiraListView(ListView):

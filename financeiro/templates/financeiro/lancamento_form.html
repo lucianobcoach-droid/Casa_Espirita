@@ -7,6 +7,9 @@
         {{ form.non_field_errors }}
     </div>
 {% endif %}
+<div class="notification is-light">
+    Em transferências, o valor continua positivo no formulário e representa saída na conta de origem e entrada na conta de destino.
+</div>
 <form method="post">
     {% csrf_token %}
     {% for field in form %}
@@ -53,12 +56,12 @@
             const menu = document.createElement('div');
             menu.className = 'financeiro-autocomplete-menu';
             menu.hidden = true;
-
-            const options = Array.from(select.options).filter((option) => option.value);
+            const endpointUrl = select.dataset.autocompleteUrl;
+            let activeRequestId = 0;
 
             function selectedOptionText() {
-                const selected = options.find((option) => option.value === select.value);
-                return selected ? selected.text : '';
+                const selected = select.options[select.selectedIndex];
+                return selected && selected.value ? selected.text : '';
             }
 
             function closeMenu() {
@@ -66,42 +69,74 @@
                 menu.innerHTML = '';
             }
 
-            function selectOption(option) {
+            function ensureOption(item) {
+                let option = Array.from(select.options).find((current) => current.value === String(item.id));
+                if (!option) {
+                    option = document.createElement('option');
+                    option.value = item.id;
+                    select.appendChild(option);
+                }
+                option.text = item.label;
+                return option;
+            }
+
+            function selectOption(item) {
+                const option = ensureOption(item);
                 select.value = option.value;
                 input.value = option.text;
                 closeMenu();
             }
 
-            function renderOptions(query) {
-                const normalizedQuery = query.trim().toLowerCase();
-                const filtered = options
-                    .filter((option) => option.text.toLowerCase().includes(normalizedQuery))
-                    .slice(0, 8);
-
+            function renderOptions(items, query) {
                 menu.innerHTML = '';
-
-                if (!filtered.length) {
+                if (!items.length) {
                     const empty = document.createElement('div');
                     empty.className = 'financeiro-autocomplete-empty';
-                    empty.textContent = normalizedQuery ? 'Nenhum resultado encontrado.' : 'Digite para buscar.';
+                    empty.textContent = query ? 'Nenhum resultado encontrado.' : 'Digite para buscar.';
                     menu.appendChild(empty);
                     menu.hidden = false;
                     return;
                 }
 
-                filtered.forEach((option) => {
+                items.forEach((item) => {
                     const button = document.createElement('button');
                     button.type = 'button';
                     button.className = 'financeiro-autocomplete-option';
-                    button.textContent = option.text;
+                    button.textContent = item.label;
                     button.addEventListener('mousedown', function (event) {
                         event.preventDefault();
-                        selectOption(option);
+                        selectOption(item);
                     });
                     menu.appendChild(button);
                 });
 
                 menu.hidden = false;
+            }
+
+            function fetchOptions(query) {
+                activeRequestId += 1;
+                const requestId = activeRequestId;
+                const url = new URL(endpointUrl, window.location.origin);
+                url.searchParams.set('q', query);
+
+                fetch(url, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                    .then((response) => response.json())
+                    .then((data) => {
+                        if (requestId !== activeRequestId) {
+                            return;
+                        }
+                        renderOptions(data.results || [], query);
+                    })
+                    .catch(() => {
+                        if (requestId !== activeRequestId) {
+                            return;
+                        }
+                        renderOptions([], query);
+                    });
             }
 
             input.value = selectedOptionText();
@@ -112,11 +147,11 @@
                 if (input.value !== selectedOptionText()) {
                     select.value = '';
                 }
-                renderOptions(input.value);
+                fetchOptions(input.value.trim());
             });
 
             input.addEventListener('focus', function () {
-                renderOptions(input.value);
+                fetchOptions(input.value.trim());
             });
 
             input.addEventListener('blur', function () {

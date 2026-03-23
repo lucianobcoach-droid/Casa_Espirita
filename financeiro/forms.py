@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from django import forms
+from django.urls import reverse_lazy
 
 from .models import (
     CategoriaFinanceira,
@@ -62,8 +63,20 @@ class LancamentoFinanceiroForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['tipo'].widget.attrs.update({'data-financeiro-tipo': 'true'})
         self.fields['conta_destino'].widget.attrs.update({'data-financeiro-conta-destino': 'true'})
-        for field_name in ['pessoa', 'categoria', 'centro_custo', 'conta', 'conta_destino']:
-            self.fields[field_name].widget.attrs.update({'data-financeiro-autocomplete': 'true'})
+        autocomplete_urls = {
+            'pessoa': reverse_lazy('financeiro:autocomplete-pessoa'),
+            'categoria': reverse_lazy('financeiro:autocomplete-categoria'),
+            'centro_custo': reverse_lazy('financeiro:autocomplete-centro-custo'),
+            'conta': reverse_lazy('financeiro:autocomplete-conta'),
+            'conta_destino': reverse_lazy('financeiro:autocomplete-conta'),
+        }
+        for field_name, url in autocomplete_urls.items():
+            self.fields[field_name].widget.attrs.update(
+                {
+                    'data-financeiro-autocomplete': 'true',
+                    'data-autocomplete-url': str(url),
+                }
+            )
 
     def clean(self):
         cleaned_data = super().clean()

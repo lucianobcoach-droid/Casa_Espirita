@@ -8,7 +8,7 @@ Data de atualização: 2026-03-23
 - A modelagem de domínio, os relacionamentos e o registro no Django admin permanecem intactos.
 - O módulo já possui base operacional própria fora do admin.
 - Existem formulários, views, rotas e templates próprios para contas, centros de custo, pessoas, categorias e lançamentos.
-- O módulo possui cadastro, listagem, edição, exclusão com confirmação, filtros básicos e autocomplete leve no formulário de lançamento.
+- O módulo possui cadastro, listagem, edição, exclusão com confirmação, filtros básicos e autocomplete real no formulário de lançamento.
 - Ainda não existem recorrência, recibos, anexos ou cadastro rápido dentro do lançamento.
 - O app `biblioteca` não foi alterado.
 - Não foram usados `signals`.
@@ -27,6 +27,14 @@ Data de atualização: 2026-03-23
 - `conta_destino` só pode ser usada em `transferencia`
 - `conta` e `conta_destino` não podem ser iguais
 
+## Comportamento de transferência
+
+- A transferência continua sendo um único registro lógico em `LancamentoFinanceiro`.
+- O valor continua positivo no formulário.
+- Na interpretação operacional do sistema, a transferência representa saída na conta de origem e entrada na conta de destino.
+- Não foi criado segundo model e não houve duplicação manual de lançamentos.
+- A interface de listagem e formulário deixa esse comportamento explícito para o usuário.
+
 ## Admin
 
 - Todos os models do app `financeiro` estão registrados no admin.
@@ -44,6 +52,10 @@ Data de atualização: 2026-03-23
 ## Rotas operacionais atuais
 
 - `/financeiro/`
+- `/financeiro/autocomplete/pessoas/`
+- `/financeiro/autocomplete/categorias/`
+- `/financeiro/autocomplete/contas/`
+- `/financeiro/autocomplete/centros-custo/`
 - `/financeiro/contas/`
 - `/financeiro/contas/nova/`
 - `/financeiro/contas/<id>/editar/`
@@ -83,10 +95,11 @@ Data de atualização: 2026-03-23
 
 ## Autocomplete em lançamento
 
-- Os campos relacionais `pessoa`, `categoria`, `conta` e `centro_custo` possuem autocomplete leve no formulário de lançamento.
+- Os campos relacionais `pessoa`, `categoria`, `conta` e `centro_custo` possuem autocomplete real no formulário de lançamento.
 - O campo `conta_destino` também usa o mesmo mecanismo quando exibido em transferências.
+- As sugestões são consultadas no banco por endpoints próprios do módulo.
 - A busca de sugestões funciona por qualquer parte do texto, incluindo trechos do meio.
-- A solução usa JavaScript simples sobre os selects existentes, sem alterar o domínio nem adicionar dependência pesada.
+- A solução usa JavaScript simples e endpoints JSON leves, sem alterar o domínio nem adicionar dependência pesada.
 
 ## Ajuste de usabilidade em lançamento
 
@@ -99,6 +112,11 @@ Data de atualização: 2026-03-23
 ## Views atuais
 
 - `FinanceiroHomeView`
+- `FinanceiroAutocompleteView`
+- `PessoaFinanceiraAutocompleteView`
+- `CategoriaFinanceiraAutocompleteView`
+- `ContaFinanceiraAutocompleteView`
+- `CentroCustoAutocompleteView`
 - `ContaFinanceiraListView`
 - `ContaFinanceiraCreateView`
 - `ContaFinanceiraUpdateView`
