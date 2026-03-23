@@ -1,0 +1,16 @@
+{% extends 'financeiro/base.html' %}
+{% block title %}{{ page_title }}{% endblock %}
+{% block content %}
+<div class="box">
+    <h1 class="title">{{ page_title }}</h1>
+    <p>Você está prestes a excluir o registro <strong>{{ object_label }}</strong>.</p>
+    <p>Essa ação não poderá ser desfeita pela interface.</p>
+</div>
+<form method="post">
+    {% csrf_token %}
+    <div class="buttons">
+        <button class="button is-danger" type="submit">Confirmar exclusão</button>
+        <a class="button" href="{{ cancel_url }}">Cancelar</a>
+    </div>
+</form>
+{% endblock %}

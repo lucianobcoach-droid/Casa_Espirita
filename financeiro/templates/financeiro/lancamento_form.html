@@ -1,7 +1,7 @@
 {% extends 'financeiro/base.html' %}
-{% block title %}Novo Lançamento Financeiro{% endblock %}
+{% block title %}{{ page_title }}{% endblock %}
 {% block content %}
-<h1 class="title">Novo Lançamento Financeiro</h1>
+<h1 class="title">{{ page_title }}</h1>
 {% if form.non_field_errors %}
     <div class="notification is-danger">
         {{ form.non_field_errors }}
@@ -24,7 +24,7 @@
         </div>
     {% endfor %}
     <div class="buttons">
-        <button class="button is-primary" type="submit">Salvar</button>
+        <button class="button is-primary" type="submit">{{ submit_label }}</button>
         <a class="button" href="{% url 'financeiro:lancamento-list' %}">Voltar</a>
     </div>
 </form>
@@ -33,6 +33,107 @@
         const tipoField = document.querySelector('[data-financeiro-tipo="true"]');
         const contaDestinoField = document.querySelector('[data-financeiro-conta-destino="true"]');
         const contaDestinoWrapper = document.querySelector('[data-financeiro-conta-destino-wrapper="true"]');
+        const autocompleteFields = Array.from(document.querySelectorAll('[data-financeiro-autocomplete="true"]'));
+
+        function createAutocomplete(select) {
+            const control = select.parentElement;
+            if (!control) {
+                return;
+            }
+
+            const container = document.createElement('div');
+            container.className = 'financeiro-autocomplete';
+
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'input';
+            input.autocomplete = 'off';
+            input.placeholder = 'Digite para buscar';
+
+            const menu = document.createElement('div');
+            menu.className = 'financeiro-autocomplete-menu';
+            menu.hidden = true;
+
+            const options = Array.from(select.options).filter((option) => option.value);
+
+            function selectedOptionText() {
+                const selected = options.find((option) => option.value === select.value);
+                return selected ? selected.text : '';
+            }
+
+            function closeMenu() {
+                menu.hidden = true;
+                menu.innerHTML = '';
+            }
+
+            function selectOption(option) {
+                select.value = option.value;
+                input.value = option.text;
+                closeMenu();
+            }
+
+            function renderOptions(query) {
+                const normalizedQuery = query.trim().toLowerCase();
+                const filtered = options
+                    .filter((option) => option.text.toLowerCase().includes(normalizedQuery))
+                    .slice(0, 8);
+
+                menu.innerHTML = '';
+
+                if (!filtered.length) {
+                    const empty = document.createElement('div');
+                    empty.className = 'financeiro-autocomplete-empty';
+                    empty.textContent = normalizedQuery ? 'Nenhum resultado encontrado.' : 'Digite para buscar.';
+                    menu.appendChild(empty);
+                    menu.hidden = false;
+                    return;
+                }
+
+                filtered.forEach((option) => {
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.className = 'financeiro-autocomplete-option';
+                    button.textContent = option.text;
+                    button.addEventListener('mousedown', function (event) {
+                        event.preventDefault();
+                        selectOption(option);
+                    });
+                    menu.appendChild(button);
+                });
+
+                menu.hidden = false;
+            }
+
+            input.value = selectedOptionText();
+            select.style.display = 'none';
+            select._autocompleteInput = input;
+
+            input.addEventListener('input', function () {
+                if (input.value !== selectedOptionText()) {
+                    select.value = '';
+                }
+                renderOptions(input.value);
+            });
+
+            input.addEventListener('focus', function () {
+                renderOptions(input.value);
+            });
+
+            input.addEventListener('blur', function () {
+                window.setTimeout(function () {
+                    if (input.value.trim() !== selectedOptionText()) {
+                        input.value = selectedOptionText();
+                    }
+                    closeMenu();
+                }, 120);
+            });
+
+            container.appendChild(input);
+            container.appendChild(menu);
+            control.insertBefore(container, select);
+        }
+
+        autocompleteFields.forEach(createAutocomplete);
 
         if (!tipoField || !contaDestinoField || !contaDestinoWrapper) {
             return;
@@ -42,9 +143,15 @@
             const isTransferencia = tipoField.value === 'transferencia';
             contaDestinoWrapper.style.display = isTransferencia ? '' : 'none';
             contaDestinoField.disabled = !isTransferencia;
+            if (contaDestinoField._autocompleteInput) {
+                contaDestinoField._autocompleteInput.disabled = !isTransferencia;
+            }
 
             if (!isTransferencia) {
                 contaDestinoField.value = '';
+                if (contaDestinoField._autocompleteInput) {
+                    contaDestinoField._autocompleteInput.value = '';
+                }
             }
         }
 

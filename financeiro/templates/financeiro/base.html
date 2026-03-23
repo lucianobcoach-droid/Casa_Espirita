@@ -19,6 +19,52 @@
             display: block;
             margin-top: 0.35rem;
         }
+        .actions-cell {
+            white-space: nowrap;
+        }
+        .filters-box {
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            border: 1px solid #dbdbdb;
+            border-radius: 0.75rem;
+            background: #fafafa;
+        }
+        .financeiro-autocomplete {
+            position: relative;
+        }
+        .financeiro-autocomplete-menu {
+            position: absolute;
+            top: calc(100% + 0.25rem);
+            left: 0;
+            right: 0;
+            z-index: 30;
+            border: 1px solid #dbdbdb;
+            border-radius: 0.5rem;
+            background: #fff;
+            box-shadow: 0 8px 20px rgba(10, 10, 10, 0.08);
+            max-height: 16rem;
+            overflow-y: auto;
+        }
+        .financeiro-autocomplete-menu[hidden] {
+            display: none;
+        }
+        .financeiro-autocomplete-option {
+            width: 100%;
+            border: 0;
+            background: transparent;
+            text-align: left;
+            padding: 0.75rem 0.9rem;
+            cursor: pointer;
+        }
+        .financeiro-autocomplete-option:hover,
+        .financeiro-autocomplete-option:focus {
+            background: #f5f5f5;
+            outline: none;
+        }
+        .financeiro-autocomplete-empty {
+            padding: 0.75rem 0.9rem;
+            color: #7a7a7a;
+        }
     </style>
 </head>
 <body>
@@ -38,6 +84,13 @@
 </nav>
 <section class="section">
     <div class="container">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="notification {% if message.tags == 'error' %}is-danger{% elif message.tags == 'warning' %}is-warning{% else %}is-success{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
         {% block content %}{% endblock %}
     </div>
 </section>

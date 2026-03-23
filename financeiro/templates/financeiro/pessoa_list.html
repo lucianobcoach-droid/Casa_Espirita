@@ -9,6 +9,25 @@
         <a class="button is-primary" href="{% url 'financeiro:pessoa-create' %}">Nova pessoa</a>
     </div>
 </div>
+<form method="get" class="filters-box">
+    <div class="columns is-multiline">
+        <div class="column is-5">
+            <label class="label">Nome</label>
+            <input class="input" type="text" name="nome" value="{{ request.GET.nome }}" placeholder="Buscar por nome">
+        </div>
+        <div class="column is-5">
+            <label class="label">Código</label>
+            <input class="input" type="text" name="codigo" value="{{ request.GET.codigo }}" placeholder="Buscar por código">
+        </div>
+        <div class="column is-2">
+            <label class="label">&nbsp;</label>
+            <div class="buttons">
+                <button class="button is-link is-fullwidth" type="submit">Filtrar</button>
+                <a class="button is-light is-fullwidth" href="{% url 'financeiro:pessoa-list' %}">Limpar</a>
+            </div>
+        </div>
+    </div>
+</form>
 <div class="table-wrapper">
     <table class="table is-fullwidth is-striped is-hoverable">
         <thead>
@@ -20,6 +39,7 @@
             <th>Telefone</th>
             <th>E-mail</th>
             <th>Ativo</th>
+            <th>Ações</th>
         </tr>
         </thead>
         <tbody>
@@ -32,10 +52,14 @@
                 <td>{{ pessoa.telefone|default:'-' }}</td>
                 <td>{{ pessoa.email|default:'-' }}</td>
                 <td>{% if pessoa.ativo %}Sim{% else %}Não{% endif %}</td>
+                <td class="actions-cell">
+                    <a class="button is-small is-link is-light" href="{% url 'financeiro:pessoa-update' pessoa.pk %}">Editar</a>
+                    <a class="button is-small is-danger is-light" href="{% url 'financeiro:pessoa-delete' pessoa.pk %}">Excluir</a>
+                </td>
             </tr>
         {% empty %}
             <tr>
-                <td colspan="7">Nenhuma pessoa financeira cadastrada.</td>
+                <td colspan="8">Nenhuma pessoa financeira cadastrada.</td>
             </tr>
         {% endfor %}
         </tbody>

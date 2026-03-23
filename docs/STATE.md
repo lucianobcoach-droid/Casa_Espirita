@@ -5,10 +5,11 @@ Data de atualização: 2026-03-23
 ## Estado atual do módulo financeiro
 
 - O app `financeiro` foi criado e adicionado ao `INSTALLED_APPS`.
-- A modelagem de domínio e o registro no Django admin permanecem intactos.
+- A modelagem de domínio, os relacionamentos e o registro no Django admin permanecem intactos.
 - O módulo já possui base operacional própria fora do admin.
 - Existem formulários, views, rotas e templates próprios para contas, centros de custo, pessoas, categorias e lançamentos.
-- Ainda não existem edição, exclusão, recorrência, recibos, anexos ou cadastro rápido dentro do lançamento.
+- O módulo possui cadastro, listagem, edição, exclusão com confirmação, filtros básicos e autocomplete leve no formulário de lançamento.
+- Ainda não existem recorrência, recibos, anexos ou cadastro rápido dentro do lançamento.
 - O app `biblioteca` não foi alterado.
 - Não foram usados `signals`.
 
@@ -19,16 +20,6 @@ Data de atualização: 2026-03-23
 - `PessoaFinanceira`
 - `CategoriaFinanceira`
 - `LancamentoFinanceiro`
-
-## Revisão contra critérios esperados
-
-- `ContaFinanceira` está aderente aos campos esperados.
-- `CentroCusto` está aderente aos campos esperados.
-- `PessoaFinanceira` está aderente aos campos esperados.
-- `CategoriaFinanceira` está aderente aos campos esperados.
-- `LancamentoFinanceiro` está aderente aos campos esperados.
-- As três validações mínimas obrigatórias de `LancamentoFinanceiro` já estão implementadas no model.
-- Não foi identificada divergência funcional relevante que justificasse alteração de código no domínio.
 
 ## Regras mínimas já implementadas em `LancamentoFinanceiro`
 
@@ -43,26 +34,36 @@ Data de atualização: 2026-03-23
 ## Interface atual
 
 - A rota `/financeiro/` foi ligada ao projeto em `casa_espirita/urls.py`.
-- A home atual é `FinanceiroHomeView`, com navegação para os fluxos operacionais iniciais.
-- O módulo possui listagem e cadastro de contas financeiras.
-- O módulo possui listagem e cadastro de centros de custo.
-- O módulo possui listagem e cadastro de pessoas financeiras.
-- O módulo possui listagem e cadastro de categorias financeiras.
-- O módulo possui listagem e cadastro de lançamentos financeiros.
+- A home atual é `FinanceiroHomeView`, com navegação para os fluxos operacionais.
+- O módulo possui listagem, cadastro, edição e exclusão de contas financeiras.
+- O módulo possui listagem, cadastro, edição e exclusão de centros de custo.
+- O módulo possui listagem, cadastro, edição e exclusão de pessoas financeiras.
+- O módulo possui listagem, cadastro, edição e exclusão de categorias financeiras.
+- O módulo possui listagem, cadastro, edição e exclusão de lançamentos financeiros.
 
 ## Rotas operacionais atuais
 
 - `/financeiro/`
 - `/financeiro/contas/`
 - `/financeiro/contas/nova/`
+- `/financeiro/contas/<id>/editar/`
+- `/financeiro/contas/<id>/excluir/`
 - `/financeiro/centros-custo/`
 - `/financeiro/centros-custo/novo/`
+- `/financeiro/centros-custo/<id>/editar/`
+- `/financeiro/centros-custo/<id>/excluir/`
 - `/financeiro/pessoas/`
 - `/financeiro/pessoas/nova/`
+- `/financeiro/pessoas/<id>/editar/`
+- `/financeiro/pessoas/<id>/excluir/`
 - `/financeiro/categorias/`
 - `/financeiro/categorias/nova/`
+- `/financeiro/categorias/<id>/editar/`
+- `/financeiro/categorias/<id>/excluir/`
 - `/financeiro/lancamentos/`
 - `/financeiro/lancamentos/novo/`
+- `/financeiro/lancamentos/<id>/editar/`
+- `/financeiro/lancamentos/<id>/excluir/`
 
 ## Formulários atuais
 
@@ -72,9 +73,24 @@ Data de atualização: 2026-03-23
 - `CategoriaFinanceiraForm`
 - `LancamentoFinanceiroForm`
 
+## Filtros básicos disponíveis
+
+- Pessoas: por nome e código com busca por contém.
+- Categorias: por nome com busca por contém e por tipo.
+- Contas: por nome com busca por contém e por situação ativa/inativa.
+- Centros de custo: por código e nome com busca por contém.
+- Lançamentos: por tipo, status, descrição e número do documento, com busca por contém nos campos textuais.
+
+## Autocomplete em lançamento
+
+- Os campos relacionais `pessoa`, `categoria`, `conta` e `centro_custo` possuem autocomplete leve no formulário de lançamento.
+- O campo `conta_destino` também usa o mesmo mecanismo quando exibido em transferências.
+- A busca de sugestões funciona por qualquer parte do texto, incluindo trechos do meio.
+- A solução usa JavaScript simples sobre os selects existentes, sem alterar o domínio nem adicionar dependência pesada.
+
 ## Ajuste de usabilidade em lançamento
 
-- O campo `conta_destino` agora aparece apenas quando `tipo = transferencia`.
+- O campo `conta_destino` aparece apenas quando `tipo = transferencia`.
 - Em `receita` e `despesa`, o campo fica oculto e desabilitado na interface.
 - Ao trocar de `transferencia` para outro tipo, o valor de `conta_destino` é limpo no navegador.
 - O `LancamentoFinanceiroForm` também limpa `conta_destino` no `clean()` quando o tipo não é `transferencia`.
@@ -85,14 +101,24 @@ Data de atualização: 2026-03-23
 - `FinanceiroHomeView`
 - `ContaFinanceiraListView`
 - `ContaFinanceiraCreateView`
+- `ContaFinanceiraUpdateView`
+- `ContaFinanceiraDeleteView`
 - `CentroCustoListView`
 - `CentroCustoCreateView`
+- `CentroCustoUpdateView`
+- `CentroCustoDeleteView`
 - `PessoaFinanceiraListView`
 - `PessoaFinanceiraCreateView`
+- `PessoaFinanceiraUpdateView`
+- `PessoaFinanceiraDeleteView`
 - `CategoriaFinanceiraListView`
 - `CategoriaFinanceiraCreateView`
+- `CategoriaFinanceiraUpdateView`
+- `CategoriaFinanceiraDeleteView`
 - `LancamentoFinanceiroListView`
 - `LancamentoFinanceiroCreateView`
+- `LancamentoFinanceiroUpdateView`
+- `LancamentoFinanceiroDeleteView`
 
 ## Migrações
 
@@ -104,5 +130,5 @@ Data de atualização: 2026-03-23
 
 - Não foi possível executar `py manage.py check` com sucesso no ambiente atual.
 - Motivo: o interpretador disponível não tem o pacote `django` instalado.
-- Foi possível validar a sintaxe dos arquivos Python via `py -m compileall financeiro casa_espirita`.
+- Foi possível validar a sintaxe dos arquivos Python via `py -m compileall financeiro`.
 - Assim, a estrutura foi deixada pronta, mas a validação automática do runtime ainda depende de um ambiente com as dependências instaladas.

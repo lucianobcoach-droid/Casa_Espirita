@@ -9,6 +9,47 @@
         <a class="button is-primary" href="{% url 'financeiro:lancamento-create' %}">Novo lançamento</a>
     </div>
 </div>
+<form method="get" class="filters-box">
+    <div class="columns is-multiline">
+        <div class="column is-3">
+            <label class="label">Descrição</label>
+            <input class="input" type="text" name="descricao" value="{{ request.GET.descricao }}" placeholder="Buscar por descrição">
+        </div>
+        <div class="column is-3">
+            <label class="label">Número do documento</label>
+            <input class="input" type="text" name="numero_documento" value="{{ request.GET.numero_documento }}" placeholder="Buscar por documento">
+        </div>
+        <div class="column is-2">
+            <label class="label">Tipo</label>
+            <div class="select is-fullwidth">
+                <select name="tipo">
+                    <option value="">Todos</option>
+                    <option value="receita" {% if request.GET.tipo == 'receita' %}selected{% endif %}>Receita</option>
+                    <option value="despesa" {% if request.GET.tipo == 'despesa' %}selected{% endif %}>Despesa</option>
+                    <option value="transferencia" {% if request.GET.tipo == 'transferencia' %}selected{% endif %}>Transferência</option>
+                </select>
+            </div>
+        </div>
+        <div class="column is-2">
+            <label class="label">Status</label>
+            <div class="select is-fullwidth">
+                <select name="status">
+                    <option value="">Todos</option>
+                    <option value="aberto" {% if request.GET.status == 'aberto' %}selected{% endif %}>Aberto</option>
+                    <option value="quitado" {% if request.GET.status == 'quitado' %}selected{% endif %}>Quitado</option>
+                    <option value="cancelado" {% if request.GET.status == 'cancelado' %}selected{% endif %}>Cancelado</option>
+                </select>
+            </div>
+        </div>
+        <div class="column is-2">
+            <label class="label">&nbsp;</label>
+            <div class="buttons">
+                <button class="button is-link is-fullwidth" type="submit">Filtrar</button>
+                <a class="button is-light is-fullwidth" href="{% url 'financeiro:lancamento-list' %}">Limpar</a>
+            </div>
+        </div>
+    </div>
+</form>
 <div class="table-wrapper">
     <table class="table is-fullwidth is-striped is-hoverable">
         <thead>
@@ -22,6 +63,7 @@
             <th>Pessoa</th>
             <th>Data competência</th>
             <th>Número documento</th>
+            <th>Ações</th>
         </tr>
         </thead>
         <tbody>
@@ -36,10 +78,14 @@
                 <td>{{ lancamento.pessoa|default:'-' }}</td>
                 <td>{{ lancamento.data_competencia|date:'d/m/Y' }}</td>
                 <td>{{ lancamento.numero_documento|default:'-' }}</td>
+                <td class="actions-cell">
+                    <a class="button is-small is-link is-light" href="{% url 'financeiro:lancamento-update' lancamento.pk %}">Editar</a>
+                    <a class="button is-small is-danger is-light" href="{% url 'financeiro:lancamento-delete' lancamento.pk %}">Excluir</a>
+                </td>
             </tr>
         {% empty %}
             <tr>
-                <td colspan="9">Nenhum lançamento financeiro cadastrado.</td>
+                <td colspan="10">Nenhum lançamento financeiro cadastrado.</td>
             </tr>
         {% endfor %}
         </tbody>

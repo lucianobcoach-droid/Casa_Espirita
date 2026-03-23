@@ -1,7 +1,7 @@
 {% extends 'financeiro/base.html' %}
-{% block title %}Nova Categoria Financeira{% endblock %}
+{% block title %}{{ page_title }}{% endblock %}
 {% block content %}
-<h1 class="title">Nova Categoria Financeira</h1>
+<h1 class="title">{{ page_title }}</h1>
 {% if form.non_field_errors %}
     <div class="notification is-danger">
         {{ form.non_field_errors }}
@@ -24,7 +24,7 @@
         </div>
     {% endfor %}
     <div class="buttons">
-        <button class="button is-primary" type="submit">Salvar</button>
+        <button class="button is-primary" type="submit">{{ submit_label }}</button>
         <a class="button" href="{% url 'financeiro:categoria-list' %}">Voltar</a>
     </div>
 </form>
