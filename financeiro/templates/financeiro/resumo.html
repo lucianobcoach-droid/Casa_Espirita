@@ -1,0 +1,73 @@
+{% extends 'financeiro/base.html' %}
+{% block title %}{{ page_title }}{% endblock %}
+{% block content %}
+<div class="level">
+    <div class="level-left">
+        <div>
+            <h1 class="title">{{ page_title }}</h1>
+            <p class="subtitle">Visao consolidada do periodo, preparando o caminho para a futura prestacao de contas.</p>
+        </div>
+    </div>
+</div>
+
+<form method="get" class="filters-box">
+    <div class="columns is-multiline">
+        <div class="column is-4">
+            <label class="label">Data inicial</label>
+            <input class="input" type="date" name="data_inicial" value="{{ data_inicial }}">
+        </div>
+        <div class="column is-4">
+            <label class="label">Data final</label>
+            <input class="input" type="date" name="data_final" value="{{ data_final }}">
+        </div>
+        <div class="column is-4">
+            <label class="label">&nbsp;</label>
+            <div class="buttons">
+                <button class="button is-link" type="submit">Atualizar resumo</button>
+                <a class="button is-light" href="{% url 'financeiro:resumo' %}">Limpar</a>
+            </div>
+        </div>
+    </div>
+</form>
+
+{% if periodo_error %}
+    <div class="notification is-warning">{{ periodo_error }}</div>
+{% else %}
+    <div class="financeiro-hero">
+        <p class="subtitle"><strong>Periodo selecionado:</strong> {{ periodo_label }}</p>
+        <div class="columns is-multiline">
+            <div class="column is-6-tablet is-4-desktop">
+                <div class="box">
+                    <p class="heading">Saldo inicial consolidado</p>
+                    <p class="title is-4">R$ {{ saldo_inicial_consolidado }}</p>
+                </div>
+            </div>
+            <div class="column is-6-tablet is-4-desktop">
+                <div class="box">
+                    <p class="heading">Receitas do periodo</p>
+                    <p class="title is-4 has-text-link">R$ {{ total_receitas_periodo }}</p>
+                </div>
+            </div>
+            <div class="column is-6-tablet is-4-desktop">
+                <div class="box">
+                    <p class="heading">Despesas do periodo</p>
+                    <p class="title is-4 has-text-danger">R$ {{ total_despesas_periodo }}</p>
+                </div>
+            </div>
+            <div class="column is-6-tablet is-4-desktop">
+                <div class="box">
+                    <p class="heading">Saldo do periodo</p>
+                    <p class="title is-4">R$ {{ saldo_periodo }}</p>
+                </div>
+            </div>
+            <div class="column is-6-tablet is-4-desktop">
+                <div class="box">
+                    <p class="heading">Saldo final consolidado</p>
+                    <p class="title is-4">R$ {{ saldo_final_consolidado }}</p>
+                </div>
+            </div>
+        </div>
+        <p class="table-caption">Transferencias internas entre contas proprias nao entram como receita nem despesa neste resumo consolidado.</p>
+    </div>
+{% endif %}
+{% endblock %}

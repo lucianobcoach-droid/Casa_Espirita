@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from calendar import monthrange
+from datetime import date, timedelta
 from decimal import Decimal
 
 from django.contrib import messages
@@ -62,6 +64,108 @@ class FinanceiroDeleteMixin(DeleteView):
 
 class FinanceiroHomeView(TemplateView):
     template_name = 'financeiro/home.html'
+
+
+class ResumoFinanceiroView(TemplateView):
+    template_name = 'financeiro/resumo.html'
+
+    def _periodo_padrao(self) -> tuple[date, date]:
+        hoje = date.today()
+        primeiro_dia = hoje.replace(day=1)
+        ultimo_dia = hoje.replace(day=monthrange(hoje.year, hoje.month)[1])
+        return primeiro_dia, ultimo_dia
+
+    def _saldo_consolidado_ate(self, data_referencia: date) -> Decimal:
+        saldo = Decimal('0.00')
+        contas = ContaFinanceira.objects.filter(data_saldo_inicial__lte=data_referencia).only(
+            'saldo_inicial',
+            'data_saldo_inicial',
+        )
+        for conta in contas:
+            saldo += conta.saldo_inicial or Decimal('0.00')
+
+        lancamentos = LancamentoFinanceiro.objects.filter(
+            status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+            data_competencia__lte=data_referencia,
+            tipo__in=(
+                LancamentoFinanceiro.TipoLancamento.RECEITA,
+                LancamentoFinanceiro.TipoLancamento.DESPESA,
+            ),
+        ).only('tipo', 'valor')
+
+        for lancamento in lancamentos:
+            if lancamento.tipo == LancamentoFinanceiro.TipoLancamento.RECEITA:
+                saldo += lancamento.valor
+            elif lancamento.tipo == LancamentoFinanceiro.TipoLancamento.DESPESA:
+                saldo -= lancamento.valor
+
+        return saldo
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        data_inicial_raw = self.request.GET.get('data_inicial', '').strip()
+        data_final_raw = self.request.GET.get('data_final', '').strip()
+        periodo_error = ''
+
+        if not data_inicial_raw and not data_final_raw:
+            data_inicial, data_final = self._periodo_padrao()
+            data_inicial_raw = data_inicial.isoformat()
+            data_final_raw = data_final.isoformat()
+        elif not data_inicial_raw or not data_final_raw:
+            data_inicial = None
+            data_final = None
+            periodo_error = 'Informe data inicial e data final para gerar o resumo.'
+        else:
+            try:
+                data_inicial = date.fromisoformat(data_inicial_raw)
+                data_final = date.fromisoformat(data_final_raw)
+            except ValueError:
+                data_inicial = None
+                data_final = None
+                periodo_error = 'Periodo invalido. Revise as datas informadas.'
+
+        if data_inicial and data_final and data_inicial > data_final:
+            periodo_error = 'A data inicial nao pode ser maior que a data final.'
+            data_inicial = None
+            data_final = None
+
+        context['page_title'] = 'Resumo do Periodo'
+        context['data_inicial'] = data_inicial_raw
+        context['data_final'] = data_final_raw
+        context['periodo_error'] = periodo_error
+
+        if not data_inicial or not data_final:
+            return context
+
+        dia_anterior = data_inicial - timedelta(days=1)
+        saldo_inicial_consolidado = self._saldo_consolidado_ate(dia_anterior)
+        saldo_final_consolidado = self._saldo_consolidado_ate(data_final)
+
+        lancamentos_periodo = LancamentoFinanceiro.objects.filter(
+            status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+            data_competencia__gte=data_inicial,
+            data_competencia__lte=data_final,
+            tipo__in=(
+                LancamentoFinanceiro.TipoLancamento.RECEITA,
+                LancamentoFinanceiro.TipoLancamento.DESPESA,
+            ),
+        ).only('tipo', 'valor')
+
+        total_receitas = Decimal('0.00')
+        total_despesas = Decimal('0.00')
+        for lancamento in lancamentos_periodo:
+            if lancamento.tipo == LancamentoFinanceiro.TipoLancamento.RECEITA:
+                total_receitas += lancamento.valor
+            elif lancamento.tipo == LancamentoFinanceiro.TipoLancamento.DESPESA:
+                total_despesas += lancamento.valor
+
+        context['periodo_label'] = f'{data_inicial.strftime("%d/%m/%Y")} a {data_final.strftime("%d/%m/%Y")}'
+        context['saldo_inicial_consolidado'] = saldo_inicial_consolidado
+        context['total_receitas_periodo'] = total_receitas
+        context['total_despesas_periodo'] = total_despesas
+        context['saldo_final_consolidado'] = saldo_final_consolidado
+        context['saldo_periodo'] = saldo_final_consolidado - saldo_inicial_consolidado
+        return context
 
 
 class FinanceiroAutocompleteView(View):

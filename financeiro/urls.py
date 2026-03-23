@@ -30,6 +30,7 @@ from .views import (
     PessoaFinanceiraDeleteView,
     PessoaFinanceiraListView,
     PessoaFinanceiraUpdateView,
+    ResumoFinanceiroView,
 )
 
 app_name = 'financeiro'
@@ -37,6 +38,7 @@ app_name = 'financeiro'
 urlpatterns = [
     path('', FinanceiroHomeView.as_view(), name='home'),
     path('extratos/', ExtratoFinanceiroView.as_view(), name='extrato-list'),
+    path('resumo/', ResumoFinanceiroView.as_view(), name='resumo'),
     path('autocomplete/pessoas/', PessoaFinanceiraAutocompleteView.as_view(), name='autocomplete-pessoa'),
     path('autocomplete/categorias/', CategoriaFinanceiraAutocompleteView.as_view(), name='autocomplete-categoria'),
     path('autocomplete/contas/', ContaFinanceiraAutocompleteView.as_view(), name='autocomplete-conta'),

@@ -78,6 +78,7 @@ Até o momento, está validado que:
 - saldo real da conta considera apenas lançamentos `quitado`
 - a interface do financeiro já possui refinamento visual discreto em tabelas, extrato e impressão
 - o financeiro agora possui menu próprio `Extratos` com filtro por conta e período
+- o financeiro agora possui tela inicial de `Resumo` consolidado por período
 
 ---
 
@@ -111,6 +112,8 @@ Os tipos válidos de lançamento são:
 - quando houver filtro por período no extrato, deve existir `saldo_anterior`
 - apenas lançamentos com `status = quitado` afetam saldo real e extrato
 - a nova tela `Extratos` reutiliza a mesma regra do extrato por conta
+- o `Resumo` consolidado considera apenas receitas e despesas efetivas
+- transferências internas não alteram receita, despesa nem saldo consolidado do resumo
 
 ---
 

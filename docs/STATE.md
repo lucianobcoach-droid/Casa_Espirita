@@ -13,6 +13,7 @@ Data de atualização: 2026-03-23
 - O saldo real das contas e o extrato agora consideram apenas lançamentos quitados.
 - As tabelas principais do financeiro usam layout mais compacto, zebra striping e impressão mais limpa.
 - O financeiro agora possui menu próprio `Extratos` com filtro por conta e período.
+- O financeiro agora possui tela própria de `Resumo` consolidado por período.
 - O app `biblioteca` não foi alterado.
 - Não foram usados `signals`.
 
@@ -36,6 +37,7 @@ Existe visualização de extrato por conta em rota própria:
 
 - `/financeiro/contas/<id>/extrato/`
 - `/financeiro/extratos/`
+- `/financeiro/resumo/`
 
 Escopo funcional:
 
@@ -46,6 +48,20 @@ Escopo funcional:
 - somente lançamentos quitados aparecem no extrato
 - não existe relatório geral nesta etapa
 - a tela `Extratos` reutiliza a mesma lógica do extrato por conta
+
+## Resumo consolidado do período
+
+Existe visualização de resumo consolidado em rota própria:
+
+- `/financeiro/resumo/`
+
+Escopo funcional:
+
+- filtro por `data_inicial` e `data_final`
+- sem filtro informado, assume o mês atual
+- mostra saldo inicial consolidado, receitas do período, despesas do período, saldo do período e saldo final consolidado
+- considera apenas lançamentos efetivos
+- transferências internas não entram como receita nem despesa no consolidado
 
 ## Regra de saldo no extrato
 
@@ -72,6 +88,7 @@ Com filtro por período:
 - O módulo possui listagem, cadastro, edição e exclusão de contas financeiras.
 - O módulo possui extrato individual por conta com saldo acumulado.
 - O módulo possui tela própria de extratos com filtro por conta e período.
+- O módulo possui tela de resumo consolidado por período.
 - O extrato mostra conta, período, saldo inicial, data do saldo inicial, saldo anterior quando aplicável e saldo final exibido.
 - O módulo possui listagem de contas com `saldo_atual` calculado.
 - A listagem de lançamentos destaca tipo por cor e status não quitado em negrito.

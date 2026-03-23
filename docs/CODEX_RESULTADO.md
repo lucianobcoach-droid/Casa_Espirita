@@ -15,6 +15,7 @@ Complemento incremental posterior:
 - tipos de lançamento passaram a ter destaque visual discreto
 - tabelas priorizadas ficaram mais compactas e preparadas para impressão
 - o financeiro passou a ter menu próprio `Extratos` com filtro por conta e período
+- o financeiro passou a ter tela própria de `Resumo` consolidado por período
 
 ## Filtro por período
 
@@ -62,3 +63,5 @@ O `saldo_anterior` é calculado assim:
 - lançamentos não quitados deixaram de afetar saldo real e extrato
 - o extrato, a listagem de lançamentos e a listagem de contas ficaram mais legíveis e mais compactos
 - o extrato passou a ter visual mais limpo, com texto colorido sem badge no template de extrato
+- o resumo consolidado mostra saldo inicial, receitas, despesas, saldo do período e saldo final
+- transferências internas ficaram neutras no resumo consolidado
