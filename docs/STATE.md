@@ -1,45 +1,46 @@
 # STATE
 
-Data de atualização: 2026-03-23
+Data de atualizacao: 2026-03-26
 
-## Estado atual do módulo financeiro
+## Estado atual do modulo financeiro
 
 - O app `financeiro` foi criado e adicionado ao `INSTALLED_APPS`.
-- A modelagem de domínio, os relacionamentos e o registro no Django admin permanecem intactos, com exceção da evolução incremental já aprovada em `ContaFinanceira`.
-- O módulo já possui base operacional própria fora do admin.
-- Existem formulários, views, rotas e templates próprios para contas, centros de custo, pessoas, categorias e lançamentos.
-- O módulo possui cadastro, listagem, edição, exclusão com confirmação, filtros básicos, autocomplete real no formulário de lançamento e extrato por conta.
-- O extrato por conta já aceita filtro por período via GET e cálculo de saldo anterior.
-- O saldo real das contas e o extrato agora consideram apenas lançamentos quitados.
-- As tabelas principais do financeiro usam layout mais compacto, zebra striping e impressão mais limpa.
-- O financeiro agora possui menu próprio `Extratos` com filtro por conta e período.
-- O financeiro agora possui tela própria de `Resumo` consolidado por período.
-- O financeiro agora possui tela própria de `Prestacao de Contas` por período.
-- As telas de `Resumo` e `Prestacao de Contas` agora permitem selecionar quais contas entram no relatório.
+- A modelagem de dominio, os relacionamentos e o registro no Django admin permanecem intactos, com excecao da evolucao incremental ja aprovada em `ContaFinanceira` e nas validacoes de `LancamentoFinanceiro`.
+- O modulo ja possui base operacional propria fora do admin.
+- Existem formularios, views, rotas e templates proprios para contas, centros de custo, pessoas, categorias e lancamentos.
+- O modulo possui cadastro, listagem, edicao, exclusao com confirmacao, filtros basicos, autocomplete real no formulario de lancamento e extrato por conta.
+- O extrato por conta ja aceita filtro por periodo via GET e calculo de saldo anterior.
+- O saldo real das contas e o extrato agora consideram apenas lancamentos quitados.
+- As tabelas principais do financeiro usam layout mais compacto, zebra striping e impressao mais limpa.
+- O financeiro agora possui menu proprio `Extratos` com filtro por conta e periodo.
+- O financeiro agora possui tela propria de `Resumo` consolidado por periodo.
+- O financeiro agora possui tela propria de `Prestacao de Contas` por periodo.
+- As telas de `Resumo` e `Prestacao de Contas` agora permitem selecionar quais contas entram no relatorio.
 - As telas de `Resumo` e `Prestacao de Contas` agora mostram receitas e despesas agrupadas por categoria.
 - As telas de `Resumo` e `Prestacao de Contas` agora mostram despesas agrupadas por centro de custo.
-- A listagem de lançamentos agora possui filtros operacionais por data inicial, data final, conta, pessoa e categoria.
-- As telas de `Resumo` e `Prestacao de Contas` agora possuem controle de exibição apenas para o bloco de centro de custo, sem alterar os totais gerais do relatório.
-- A tela de `Prestacao de Contas` recebeu refinamento visual específico para impressão em A4.
-- A `Prestacao de Contas` agora tem apresentação mais formal, com menos aparência de dashboard.
+- A listagem de lancamentos agora possui filtros operacionais por data inicial, data final, conta, pessoa e categoria.
+- As telas de `Resumo` e `Prestacao de Contas` agora possuem controle de exibicao apenas para o bloco de centro de custo, sem alterar os totais gerais do relatorio.
+- A tela de `Prestacao de Contas` recebeu refinamento visual especifico para impressao em A4.
+- A `Prestacao de Contas` agora tem apresentacao mais formal, com menos aparencia de dashboard.
+- As telas de `Extratos` e `Resumo` agora tem impressao mais limpa, com melhor alinhamento de valores e identificacao do relatorio.
 - O menu superior do financeiro foi reorganizado para separar `Financeiro`, `Lancamentos`, `Extratos`, `Relatorios` e `Cadastros`.
-- A home do módulo financeiro agora usa atalhos mais neutros e harmônicos, com destaque principal apenas para `Lancamentos`.
-- O app `biblioteca` não foi alterado.
-- Não foram usados `signals`.
+- A home do modulo financeiro agora usa atalhos mais neutros e harmonicos, com destaque principal apenas para `Lancamentos`.
+- O app `biblioteca` nao foi alterado.
+- Nao foram usados `signals`.
 
 ## ContaFinanceira
 
 `ContaFinanceira` possui:
 
 - `saldo_inicial`
-- `data_saldo_inicial` obrigatória
+- `data_saldo_inicial` obrigatoria
 
 Leitura funcional:
 
-- o saldo inicial é dado cadastral
-- `saldo_atual` é calculado em tempo de execução
-- `saldo_atual` não é salvo no banco
-- apenas lançamentos com status `quitado` afetam `saldo_atual`
+- o saldo inicial e dado cadastral
+- `saldo_atual` e calculado em tempo de execucao
+- `saldo_atual` nao e salvo no banco
+- apenas lancamentos com status `quitado` afetam `saldo_atual`
 
 ## LancamentoFinanceiro
 
@@ -47,28 +48,32 @@ Leitura funcional:
 
 - `receita` e `despesa` exigem `pessoa`
 - `receita` e `despesa` exigem `categoria`
-- `transferencia` não exige `pessoa`
-- `transferencia` não exige `categoria`
-- `transferencia` não exige `centro_custo`
+- `transferencia` nao exige `pessoa`
+- `transferencia` nao exige `categoria`
+- `transferencia` nao exige `centro_custo`
 - `transferencia` exige `conta_destino`
 
 Leitura funcional:
 
-- o cadastro e a edição de lançamento devem exigir `pessoa` em receita e despesa
-- o cadastro e a edição de lançamento devem exigir `categoria` em receita e despesa
-- em transferência, o formulário limpa `pessoa`, `categoria` e `centro_custo`
-- em transferência, `conta_destino` deve aparecer com obrigatoriedade visual e funcional
-- a ausência de `pessoa`, `categoria`, `conta` ou `conta_destino` deve gerar erro no formulário, sem estourar `IntegrityError`
-- `numero_documento` pode continuar vazio no formulário, mas passa a ser gerado automaticamente antes de salvar
-- `data_competencia` deve ser validada antes da gravação
-- `data_pagamento` não pode ser anterior a `data_competencia`
-- o extrato por conta passa a exibir `numero_documento` de forma discreta junto da descrição, quando existir
-- a listagem de lançamentos pode exibir `Transferência entre Contas` quando uma transferência não tiver `pessoa`
-- os relatórios mantêm tratamento defensivo para base antiga, exibindo `Sem categoria` se algum dado legado surgir
+- o cadastro e a edicao de lancamento devem exigir `pessoa` em receita e despesa
+- o cadastro e a edicao de lancamento devem exigir `categoria` em receita e despesa
+- em transferencia, o formulario limpa `pessoa`, `categoria` e `centro_custo`
+- em transferencia, `conta_destino` deve aparecer com obrigatoriedade visual e funcional
+- a ausencia de `pessoa`, `categoria`, `conta` ou `conta_destino` deve gerar erro no formulario, sem estourar `IntegrityError`
+- `numero_documento` pode continuar vazio no formulario, mas e gerado automaticamente antes de salvar
+- `numero_documento` informado manualmente deve ser unico entre os lancamentos
+- `numero_documento` gerado automaticamente tambem deve sair unico
+- a validacao de duplicidade funciona no cadastro e na edicao
+- na edicao, o proprio registro e ignorado na checagem de duplicidade
+- `data_competencia` deve ser validada antes da gravacao
+- `data_pagamento` nao pode ser anterior a `data_competencia`
+- o extrato por conta passa a exibir `numero_documento` de forma discreta junto da descricao, quando existir
+- a listagem de lancamentos pode exibir `Transferencia entre Contas` quando uma transferencia nao tiver `pessoa`
+- os relatorios mantem tratamento defensivo para base antiga, exibindo `Sem categoria` se algum dado legado surgir
 
 ## Extrato por conta
 
-Existe visualização de extrato por conta em rota própria:
+Existe visualizacao de extrato por conta em rota propria:
 
 - `/financeiro/contas/<id>/extrato/`
 - `/financeiro/extratos/`
@@ -77,16 +82,16 @@ Existe visualização de extrato por conta em rota própria:
 Escopo funcional:
 
 - sem filtro: extrato completo desde o saldo inicial
-- com filtro: lançamentos apenas do período
-- com `data_inicial`: cálculo de `saldo_anterior`
-- saldo acumulado do período começa a partir de `saldo_anterior`
-- somente lançamentos quitados aparecem no extrato
-- não existe relatório geral nesta etapa
-- a tela `Extratos` reutiliza a mesma lógica do extrato por conta
+- com filtro: lancamentos apenas do periodo
+- com `data_inicial`: calculo de `saldo_anterior`
+- saldo acumulado do periodo comeca a partir de `saldo_anterior`
+- somente lancamentos quitados aparecem no extrato
+- nao existe relatorio geral nesta etapa
+- a tela `Extratos` reutiliza a mesma logica do extrato por conta
 
-## Resumo consolidado do período
+## Resumo consolidado do periodo
 
-Existe visualização de resumo consolidado em rota própria:
+Existe visualizacao de resumo consolidado em rota propria:
 
 - `/financeiro/resumo/`
 - `/financeiro/prestacao-contas/`
@@ -95,20 +100,20 @@ Escopo funcional:
 
 - filtro por `data_inicial` e `data_final`
 - filtro por contas selecionadas
-- sem filtro informado, assume o mês atual
-- sem seleção explícita de contas, considera todas as contas
-- mostra saldo inicial consolidado, receitas do período, despesas do período, saldo do período e saldo final consolidado
+- sem filtro informado, assume o mes atual
+- sem selecao explicita de contas, considera todas as contas
+- mostra saldo inicial consolidado, receitas do periodo, despesas do periodo, saldo do periodo e saldo final consolidado
 - mostra receitas por categoria e despesas por categoria
 - mostra despesas por centro de custo
-- permite controlar a exibição apenas do bloco de centro de custo
-- considera apenas lançamentos efetivos
-- transferências internas não entram como receita nem despesa no consolidado
-- lançamentos sem categoria aparecem no agrupamento como `Sem categoria`
+- permite controlar a exibicao apenas do bloco de centro de custo
+- considera apenas lancamentos efetivos
+- transferencias internas nao entram como receita nem despesa no consolidado
+- lancamentos sem categoria aparecem no agrupamento como `Sem categoria`
 - despesas sem centro de custo aparecem no agrupamento como `Sem centro de custo`
 
 ## Prestacao de contas do periodo
 
-Existe visualização de prestação de contas em rota própria:
+Existe visualizacao de prestacao de contas em rota propria:
 
 - `/financeiro/prestacao-contas/`
 
@@ -116,54 +121,54 @@ Escopo funcional:
 
 - filtro por `data_inicial` e `data_final`
 - filtro por contas selecionadas
-- sem filtro informado, assume o mês atual
-- sem seleção explícita de contas, considera todas as contas
-- organiza a visualização em blocos formais
-- usa cabeçalho documental e estrutura contínua de relatório
-- mostra composição do saldo inicial
-- mostra receitas e despesas já consolidadas por categoria
+- sem filtro informado, assume o mes atual
+- sem selecao explicita de contas, considera todas as contas
+- organiza a visualizacao em blocos formais
+- usa cabecalho documental e estrutura continua de relatorio
+- mostra composicao do saldo inicial
+- mostra receitas e despesas ja consolidadas por categoria
 - mostra despesas agrupadas por centro de custo
-- permite controlar a exibição apenas do bloco de centro de custo sem alterar os totais consolidados
-- mostra resumo do saldo disponível
-- mostra composição do saldo final por conta
-- mantém transferências internas neutras no consolidado geral
-- lançamentos sem categoria aparecem no agrupamento como `Sem categoria`
+- permite controlar a exibicao apenas do bloco de centro de custo sem alterar os totais consolidados
+- mostra resumo do saldo disponivel
+- mostra composicao do saldo final por conta
+- mantem transferencias internas neutras no consolidado geral
+- lancamentos sem categoria aparecem no agrupamento como `Sem categoria`
 - despesas sem centro de custo aparecem no agrupamento como `Sem centro de custo`
-- na impressão, oculta controles e mostra bloco simples de assinatura ao final
+- na impressao, oculta controles e mostra bloco simples de assinatura ao final
 
 ## Regra de saldo no extrato
 
 Sem filtro:
 
-- começa do `saldo_inicial`
+- comeca do `saldo_inicial`
 - soma receitas
 - subtrai despesas
-- subtrai transferências da conta de origem
-- soma transferências da conta de destino
-- considera apenas lançamentos quitados
+- subtrai transferencias da conta de origem
+- soma transferencias da conta de destino
+- considera apenas lancamentos quitados
 
-Com filtro por período:
+Com filtro por periodo:
 
-- `saldo_anterior` começa em `saldo_inicial`
-- soma e subtrai movimentações anteriores à `data_inicial`
-- o período listado usa apenas lançamentos entre `data_inicial` e `data_final`
-- o saldo acumulado das linhas do período começa de `saldo_anterior`
-- o saldo anterior também considera apenas lançamentos quitados
+- `saldo_anterior` comeca em `saldo_inicial`
+- soma e subtrai movimentacoes anteriores a `data_inicial`
+- o periodo listado usa apenas lancamentos entre `data_inicial` e `data_final`
+- o saldo acumulado das linhas do periodo comeca de `saldo_anterior`
+- o saldo anterior tambem considera apenas lancamentos quitados
 
 ## Interface atual
 
 - A rota `/financeiro/` foi ligada ao projeto em `casa_espirita/urls.py`.
-- O módulo possui listagem, cadastro, edição e exclusão de contas financeiras.
-- O módulo possui extrato individual por conta com saldo acumulado.
-- O módulo possui tela própria de extratos com filtro por conta e período.
-- O módulo possui tela de resumo consolidado por período.
-- O módulo possui tela de prestação de contas por período.
-- O extrato mostra conta, período, saldo inicial, data do saldo inicial, saldo anterior quando aplicável e saldo final exibido.
-- O módulo possui listagem de contas com `saldo_atual` calculado.
-- A listagem de lançamentos destaca tipo por cor e status não quitado em negrito.
-- O extrato e as listagens priorizadas têm ajustes de impressão para esconder controles e manter a tabela legível.
+- O modulo possui listagem, cadastro, edicao e exclusao de contas financeiras.
+- O modulo possui extrato individual por conta com saldo acumulado.
+- O modulo possui tela propria de extratos com filtro por conta e periodo.
+- O modulo possui tela de resumo consolidado por periodo.
+- O modulo possui tela de prestacao de contas por periodo.
+- O extrato mostra conta, periodo, saldo inicial, data do saldo inicial, saldo anterior quando aplicavel e saldo final exibido.
+- O modulo possui listagem de contas com `saldo_atual` calculado.
+- A listagem de lancamentos destaca tipo por cor e status nao quitado em negrito.
+- O extrato e as listagens priorizadas tem ajustes de impressao para esconder controles e manter a tabela legivel.
 
-## Migrações
+## Migracoes
 
 - Existe a migration inicial `financeiro/migrations/0001_initial.py`.
 - Existe a migration incremental `financeiro/migrations/0002_contafinanceira_saldo_inicial.py`.
@@ -171,12 +176,13 @@ Com filtro por período:
 - Existe a migration incremental `financeiro/migrations/0004_lancamentofinanceiro_categoria_required.py`.
 - Existe a migration incremental `financeiro/migrations/0005_lancamentofinanceiro_pessoa_required.py`.
 - Existe a migration incremental `financeiro/migrations/0006_lancamentofinanceiro_conditional_required_fields.py`.
-- A correção de persistência condicional depende da aplicação da `0006`, que volta a permitir `pessoa` e `categoria` nulas no banco para `transferencia`.
-- As migrations antigas não foram alteradas.
+- Nao foi criada migration nova para unicidade de `numero_documento` nesta etapa.
+- A validacao de nao repeticao de `numero_documento` ficou na camada de aplicacao por seguranca incremental.
+- As migrations antigas nao foram alteradas.
 
-## Validação local
+## Validacao local
 
-- Não foi possível executar `py manage.py check` com sucesso no ambiente atual.
-- Motivo: o interpretador disponível não tem o pacote `django` instalado.
-- Foi possível validar a sintaxe dos arquivos Python via `py -m compileall financeiro`.
-- Assim, a estrutura foi deixada pronta, mas a validação automática do runtime ainda depende de um ambiente com as dependências instaladas.
+- Nao foi possivel executar `py manage.py check` com sucesso no ambiente atual.
+- Motivo: o interpretador disponivel nao tem o pacote `django` instalado.
+- Foi possivel validar a sintaxe dos arquivos Python via `py -m compileall financeiro`.
+- Assim, a estrutura foi deixada pronta, mas a validacao automatica do runtime ainda depende de um ambiente com as dependencias instaladas.

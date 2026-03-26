@@ -1,95 +1,45 @@
 # CODEX_RESULTADO
 
-Data: 2026-03-23
+Data: 2026-03-26
 
 ## Entrega realizada
 
-Foi executada a etapa incremental do extrato por conta com filtro por período e cálculo de saldo anterior, sem alterar o domínio além do necessário.
+Foi executada a etapa incremental para impedir repeticao de `numero_documento` em lancamentos financeiros, sem alterar as regras ja aprovadas de transferencia, extrato, resumo ou prestacao de contas.
 
-Complemento incremental posterior:
+## Regras aplicadas nesta etapa
 
-- saldo real das contas passou a considerar apenas lançamentos quitados
-- o extrato por conta passou a listar apenas lançamentos quitados
-- o saldo anterior do extrato por período passou a considerar apenas lançamentos quitados anteriores ao período
-- a camada visual do financeiro foi refinada sem alterar regra de negócio
-- tipos de lançamento passaram a ter destaque visual discreto
-- tabelas priorizadas ficaram mais compactas e preparadas para impressão
-- o financeiro passou a ter menu próprio `Extratos` com filtro por conta e período
-- o financeiro passou a ter tela própria de `Resumo` consolidado por período
-- o financeiro passou a ter tela própria de `Prestacao de Contas` por período
-- `Resumo` e `Prestacao de Contas` passaram a aceitar seleção de contas para compor o relatório
-- `Resumo` e `Prestacao de Contas` passaram a mostrar agrupamento por categoria
-- `Resumo` e `Prestacao de Contas` passaram a mostrar agrupamento de despesas por centro de custo
-- `Resumo` e `Prestacao de Contas` passaram a aceitar controle de exibição apenas para o bloco de centro de custo
-- a `Prestacao de Contas` passou a ter refinamento específico de impressão
-- a `Prestacao de Contas` passou a ter visual mais formal e menos aparência de dashboard
+- `numero_documento` continua opcional para o usuario
+- quando `numero_documento` vier vazio, o sistema continua gerando automaticamente antes de salvar
+- quando o usuario informar `numero_documento` manualmente, o sistema valida se ja existe em outro lancamento
+- se ja existir, o erro volta ao formulario no campo `numero_documento`
+- a validacao funciona no cadastro e na edicao
+- na edicao, o proprio registro nao e tratado como duplicado dele mesmo
+- a geracao automatica tambem consulta a base para evitar repetir um numero ja existente
 
-## Filtro por período
+## Camada tecnica adotada
 
-O extrato agora aceita por GET:
-
-- `data_inicial`
-- `data_final`
-
-Sem filtro:
-
-- mantém o extrato completo
-- começa em `saldo_inicial`
-
-Com filtro:
-
-- lista apenas lançamentos do período
-- calcula `saldo_anterior` até o dia anterior ao início informado
-- inicia o saldo acumulado do período a partir desse valor
-
-## Regra do saldo anterior
-
-O `saldo_anterior` é calculado assim:
-
-- começa em `saldo_inicial`
-- soma receitas anteriores
-- subtrai despesas anteriores
-- subtrai transferências em que a conta é origem
-- soma transferências em que a conta é destino
+- a validacao principal ficou em `financeiro/models.py`
+- nao foi criada constraint de banco nem migration nova nesta etapa
+- a decisao foi manter a mudanca na camada da aplicacao por menor risco de regressao no estado atual do projeto
 
 ## Arquivos alterados nesta etapa
 
-- `financeiro/views.py`
-- `financeiro/templates/financeiro/conta_extrato.html`
+- `financeiro/models.py`
 - `docs/CEREBRO_PROJETO.md`
 - `docs/STATE.md`
 - `docs/CODEX_RESULTADO.md`
+- `docs/ROADMAP_FINANCEIRO.md`
 
-## Resultado prático
+## Resultado pratico
 
-- o extrato continua funcionando sem filtro
-- o extrato aceita filtro por período
-- o saldo anterior aparece quando há `data_inicial`
-- o saldo acumulado do período parte corretamente do saldo anterior
-- transferências continuam coerentes na conta de origem e na conta de destino
-- lançamentos não quitados deixaram de afetar saldo real e extrato
-- o extrato, a listagem de lançamentos e a listagem de contas ficaram mais legíveis e mais compactos
-- o extrato passou a ter visual mais limpo, com texto colorido sem badge no template de extrato
-- o resumo consolidado mostra saldo inicial, receitas, despesas, saldo do período e saldo final
-- transferências internas ficaram neutras no resumo consolidado
-- a prestação de contas organiza o período em blocos formais e mostra a composição do saldo final por conta
-- os cálculos dessas duas telas passaram a respeitar apenas as contas selecionadas
-- `LancamentoFinanceiro` passou a usar obrigatoriedade condicional por tipo
-- `receita` e `despesa` exigem `pessoa` e `categoria`
-- `transferencia` não exige `pessoa`, `categoria` nem `centro_custo`
-- em `transferencia`, o formulário limpa campos irrelevantes e mantém `conta_destino` como campo necessário
-- o formulário passou a mostrar melhor a obrigatoriedade dinâmica de `conta`, `pessoa`, `categoria` e `conta_destino`
-- a camada correta para erro de validação voltou a ser o formulário/model, desde que a migration `0006` esteja aplicada no banco
-- `numero_documento` passou a ser gerado automaticamente quando o usuário deixa o campo vazio
-- o extrato por conta passou a exibir `numero_documento` de forma discreta junto da descrição
-- `data_pagamento` passou a ser validada contra `data_competencia` antes de salvar
-- a listagem de lançamentos passou a mostrar `Transferência entre Contas` quando a transferência não tiver `pessoa`
-- a listagem de lançamentos deixou de mostrar textos auxiliares redundantes em valor, conta e conta destino
-- a listagem de lançamentos passou a aceitar filtros operacionais por data inicial, data final, conta, pessoa e categoria
-- o menu superior do financeiro foi reorganizado com agrupamento de relatórios e cadastros, mantendo todos os itens já existentes acessíveis
-- a home do módulo financeiro passou a usar atalhos com linguagem visual mais neutra e institucional
-- lançamentos sem categoria passaram a ser mostrados no agrupamento como `Sem categoria`
-- despesas sem centro de custo passaram a ser mostradas no agrupamento como `Sem centro de custo`
-- os filtros de exibição dos agrupamentos não alteram totais gerais de receitas, despesas, saldo inicial, saldo final ou resumo do período
-- a visualização impressa da prestação de contas ficou mais próxima de um documento formal e ganhou bloco simples de assinatura
-- receitas e despesas da prestação passaram a aparecer apenas na forma consolidada por categoria
+- o formulario de cadastro passa a bloquear `numero_documento` duplicado
+- o formulario de edicao passa a bloquear duplicidade real sem acusar o proprio registro
+- o comportamento atual de transferencia permanece intacto
+- o comportamento atual de extrato, resumo e prestacao de contas permanece intacto
+- a geracao automatica de `numero_documento` ficou mais defensiva e nao devolve fallback repetido silencioso
+
+## Validacao local
+
+- Nao foi possivel executar `py manage.py check` com sucesso no ambiente atual.
+- Motivo: o interpretador disponivel nao tem o pacote `django` instalado.
+- Foi possivel validar a sintaxe dos arquivos Python via `py -m compileall financeiro`.

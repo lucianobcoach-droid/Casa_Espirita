@@ -160,8 +160,8 @@ class LancamentoFinanceiro(models.Model):
 
     class Meta:
         ordering = ['-data_competencia', '-criado_em']
-        verbose_name = 'Lançamento financeiro'
-        verbose_name_plural = 'Lançamentos financeiros'
+        verbose_name = 'Lancamento financeiro'
+        verbose_name_plural = 'Lancamentos financeiros'
 
     def __str__(self) -> str:
         return self.descricao
@@ -181,19 +181,28 @@ class LancamentoFinanceiro(models.Model):
             errors['data_pagamento'] = 'A data de pagamento nao pode ser anterior a data de competencia.'
 
         if transferencia and not self.conta_destino_id:
-            errors['conta_destino'] = 'Transferência exige conta_destino.'
+            errors['conta_destino'] = 'Transferencia exige conta_destino.'
 
         if not transferencia and self.conta_destino_id:
-            errors['conta_destino'] = 'conta_destino só pode ser usada em transferência.'
+            errors['conta_destino'] = 'conta_destino so pode ser usada em transferencia.'
 
         if self.conta_id and self.conta_destino_id and self.conta_id == self.conta_destino_id:
-            errors['conta_destino'] = 'conta e conta_destino não podem ser iguais.'
+            errors['conta_destino'] = 'conta e conta_destino nao podem ser iguais.'
 
         if lancamento_operacional and not self.pessoa_id:
-            errors['pessoa'] = 'Pessoa é obrigatória para receita e despesa.'
+            errors['pessoa'] = 'Pessoa e obrigatoria para receita e despesa.'
 
         if lancamento_operacional and not self.categoria_id:
-            errors['categoria'] = 'Categoria é obrigatória para receita e despesa.'
+            errors['categoria'] = 'Categoria e obrigatoria para receita e despesa.'
+
+        numero_documento = (self.numero_documento or '').strip()
+        if numero_documento:
+            self.numero_documento = numero_documento
+            queryset = type(self).objects.filter(numero_documento=numero_documento)
+            if self.pk:
+                queryset = queryset.exclude(pk=self.pk)
+            if queryset.exists():
+                errors['numero_documento'] = 'Ja existe outro lancamento com este numero de documento.'
 
         if errors:
             raise ValidationError(errors)
@@ -205,13 +214,15 @@ class LancamentoFinanceiro(models.Model):
         if self.pk:
             queryset = queryset.exclude(pk=self.pk)
 
-        for _ in range(20):
+        for _ in range(50):
             sufixo = f'{uuid4().int % 1000:03d}'
             numero_documento = f'{prefixo}-{sufixo}'
             if not queryset.filter(numero_documento=numero_documento).exists():
                 return numero_documento
 
-        return f'{prefixo}-{uuid4().int % 1000:03d}'
+        raise ValidationError(
+            {'numero_documento': 'Nao foi possivel gerar um numero de documento unico automaticamente.'}
+        )
 
     def save(self, *args, **kwargs) -> None:
         if not self.numero_documento:
