@@ -83,6 +83,9 @@ Ate o momento, esta validado que:
 - no acabamento final do recibo, `Recebi(emos) de` deve mostrar apenas o nome da pessoa
 - no acabamento final do recibo, `A importancia de` deve usar valor por extenso
 - no acabamento final do recibo, a data deve aparecer apenas em formato humano e documental, sem expor `data_competencia`
+- o sistema agora pode ter assinaturas institucionais cadastradas para uso em recibo
+- o recibo deve usar a assinatura institucional ativa marcada como padrao, quando existir
+- se nao existir assinatura padrao, o recibo deve continuar funcionando com fallback simples
 
 ## 7. Regras de negocio atuais do financeiro
 
@@ -136,6 +139,9 @@ Os tipos validos de lancamento sao:
 - quando `CategoriaFinanceira.mensagem_recibo` estiver vazia, o recibo deve manter mensagem padrao simples
 - o refinamento visual do recibo deve ficar isolado no proprio template, sem depender ainda de configuracao institucional
 - o acabamento fino do recibo pode usar apoio minimo da view apenas para nome limpo da pessoa, valor por extenso e data documental
+- `AssinaturaInstitucional` pode definir `assinatura_texto`, `nome_exibicao`, `cargo`, `ativo` e `padrao`
+- so pode haver uma assinatura marcada como `padrao`
+- a assinatura marcada como `padrao` precisa estar ativa
 - na listagem de lancamentos, transferencias sem `pessoa` podem aparecer como `Transferencia entre Contas`
 - quando um lancamento nao possui categoria, ele aparece no agrupamento como `Sem categoria`
 - quando uma despesa nao possui centro de custo, ela aparece no agrupamento como `Sem centro de custo`

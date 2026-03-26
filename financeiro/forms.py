@@ -4,6 +4,7 @@ from django import forms
 from django.urls import reverse_lazy
 
 from .models import (
+    AssinaturaInstitucional,
     CategoriaFinanceira,
     CentroCusto,
     ContaFinanceira,
@@ -74,6 +75,25 @@ class CategoriaFinanceiraForm(forms.ModelForm):
             'mensagem_recibo': (
                 'Opcional. Quando preenchida, substitui a mensagem padrao simples do recibo para esta categoria.'
             ),
+        }
+
+
+class AssinaturaInstitucionalForm(forms.ModelForm):
+    class Meta:
+        model = AssinaturaInstitucional
+        fields = [
+            'nome',
+            'assinatura_texto',
+            'nome_exibicao',
+            'cargo',
+            'ativo',
+            'padrao',
+        ]
+        help_texts = {
+            'assinatura_texto': 'Texto manuscrito que sera exibido no recibo.',
+            'nome_exibicao': 'Opcional. Nome abaixo da assinatura no recibo.',
+            'cargo': 'Opcional. Cargo exibido abaixo do nome, quando informado.',
+            'padrao': 'Quando marcada, esta assinatura passa a ser a usada por padrao nos recibos.',
         }
 
 

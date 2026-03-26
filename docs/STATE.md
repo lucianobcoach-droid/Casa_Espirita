@@ -175,6 +175,8 @@ Com filtro por periodo:
 - Quando a categoria nao tiver mensagem de recibo, o rodape do recibo usa mensagem padrao simples e segura.
 - O recibo agora usa apresentacao mais documental, com cabecalho simples, destaque de numero e valor, corpo textual e impressao A4 mais limpa.
 - No acabamento fino do recibo, `Recebi(emos) de` passou a mostrar apenas o nome da pessoa, `A importancia de` passou a usar valor por extenso e a data passou a aparecer apenas em formato documental humano.
+- O recibo agora pode usar assinatura institucional configuravel quando existir assinatura ativa marcada como padrao.
+- Quando nao existir assinatura institucional padrao, o recibo continua com fallback simples no bloco final.
 - O extrato mostra conta, periodo, saldo inicial, data do saldo inicial, saldo anterior quando aplicavel e saldo final exibido.
 - O modulo possui listagem de contas com `saldo_atual` calculado.
 - A listagem de lancamentos destaca tipo por cor e status nao quitado em negrito.
@@ -190,8 +192,10 @@ Com filtro por periodo:
 - Existe a migration incremental `financeiro/migrations/0005_lancamentofinanceiro_pessoa_required.py`.
 - Existe a migration incremental `financeiro/migrations/0006_lancamentofinanceiro_conditional_required_fields.py`.
 - Existe a migration incremental `financeiro/migrations/0007_categoriafinanceira_mensagem_recibo.py`.
+- Existe a migration incremental `financeiro/migrations/0008_assinaturainstitucional.py`.
 - A cadeia `0005` -> `0006` representa a consolidacao incremental da obrigatoriedade condicional de `pessoa` e `categoria`.
 - A `0007` adiciona `mensagem_recibo` opcional em `CategoriaFinanceira` para personalizacao controlada do recibo com fallback padrao.
+- A `0008` adiciona `AssinaturaInstitucional` para uso controlado no recibo com selecao por assinatura padrao ativa.
 - Nao foi criada migration nova para unicidade de `numero_documento` nesta etapa.
 - A validacao de nao repeticao de `numero_documento` ficou na camada de aplicacao por seguranca incremental.
 - As migrations antigas nao foram alteradas.

@@ -95,3 +95,12 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - `A importancia de` passou a usar valor por extenso, mantendo o valor numerico em destaque no topo
 - o recibo deixou de expor `data_competencia` e passou a mostrar apenas a data final em formato humano e documental
 - a proporcao entre topo, corpo, assinatura e rodape foi ajustada para reduzir espacos vazios e melhorar a impressao
+
+## Assinatura configuravel no recibo
+
+- foi criado o cadastro simples de `AssinaturaInstitucional`
+- a estrutura minima inclui `nome`, `assinatura_texto`, `nome_exibicao`, `cargo`, `ativo` e `padrao`
+- o recibo passou a buscar a assinatura ativa marcada como padrao
+- quando a assinatura padrao existe, o recibo mostra o texto manuscrito configurado e, quando informados, nome de exibicao e cargo
+- quando nao existe assinatura padrao, o recibo continua funcionando com fallback simples
+- a etapa nao implementa ainda assinatura por imagem nem configuracao institucional completa

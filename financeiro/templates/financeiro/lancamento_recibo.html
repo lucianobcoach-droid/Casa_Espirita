@@ -131,6 +131,25 @@
         text-align: center;
     }
 
+    .recibo-assinatura-texto {
+        font-size: 1.5rem;
+        line-height: 1.1;
+        margin-bottom: 0.2rem;
+        color: #2f2a24;
+    }
+
+    .recibo-assinatura-nome {
+        margin: 0;
+        font-weight: 600;
+        color: #2f2a24;
+    }
+
+    .recibo-assinatura-cargo {
+        margin: 0.15rem 0 0;
+        font-size: 0.95rem;
+        color: #60584e;
+    }
+
     .recibo-assinatura-linha {
         width: min(320px, 100%);
         margin: 0 auto 0.55rem;
@@ -240,8 +259,18 @@
             <p{% if recibo_mensagem_personalizada %} class="has-text-weight-semibold"{% endif %}>{{ recibo_mensagem_final }}</p>
         </div>
         <div class="recibo-assinatura">
+            {% if recibo_assinatura_padrao %}
+                <p class="recibo-assinatura-texto">{{ recibo_assinatura_padrao.assinatura_texto }}</p>
+            {% endif %}
             <div class="recibo-assinatura-linha"></div>
-            <p>Assinatura</p>
+            {% if recibo_assinatura_padrao and recibo_assinatura_padrao.nome_exibicao %}
+                <p class="recibo-assinatura-nome">{{ recibo_assinatura_padrao.nome_exibicao }}</p>
+            {% else %}
+                <p class="recibo-assinatura-nome">Assinatura</p>
+            {% endif %}
+            {% if recibo_assinatura_padrao and recibo_assinatura_padrao.cargo %}
+                <p class="recibo-assinatura-cargo">{{ recibo_assinatura_padrao.cargo }}</p>
+            {% endif %}
         </div>
     </footer>
 </section>

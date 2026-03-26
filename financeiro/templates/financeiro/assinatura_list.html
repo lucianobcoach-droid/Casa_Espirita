@@ -1,0 +1,62 @@
+{% extends 'financeiro/base.html' %}
+{% block title %}Assinaturas Institucionais{% endblock %}
+{% block content %}
+<div class="level">
+    <div class="level-left">
+        <h1 class="title">Assinaturas Institucionais</h1>
+    </div>
+    <div class="level-right">
+        <a class="button is-primary" href="{% url 'financeiro:assinatura-create' %}">Nova assinatura</a>
+    </div>
+</div>
+<form method="get" class="filters-box">
+    <div class="columns is-vcentered">
+        <div class="column is-10">
+            <label class="label">Nome</label>
+            <input class="input" type="text" name="nome" value="{{ request.GET.nome }}" placeholder="Buscar por nome">
+        </div>
+        <div class="column is-2">
+            <label class="label">&nbsp;</label>
+            <div class="buttons">
+                <button class="button is-link is-fullwidth" type="submit">Filtrar</button>
+                <a class="button is-light is-fullwidth" href="{% url 'financeiro:assinatura-list' %}">Limpar</a>
+            </div>
+        </div>
+    </div>
+</form>
+<div class="table-wrapper">
+    <table class="table is-fullwidth is-striped is-hoverable">
+        <thead>
+        <tr>
+            <th>Nome</th>
+            <th>Assinatura</th>
+            <th>Nome exibicao</th>
+            <th>Cargo</th>
+            <th>Ativa</th>
+            <th>Padrao</th>
+            <th>Acoes</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for assinatura in assinaturas %}
+            <tr>
+                <td>{{ assinatura.nome }}</td>
+                <td>{{ assinatura.assinatura_texto }}</td>
+                <td>{{ assinatura.nome_exibicao|default:'-' }}</td>
+                <td>{{ assinatura.cargo|default:'-' }}</td>
+                <td>{% if assinatura.ativo %}Sim{% else %}Nao{% endif %}</td>
+                <td>{% if assinatura.padrao %}Sim{% else %}Nao{% endif %}</td>
+                <td class="actions-cell">
+                    <a class="button is-small is-link is-light" href="{% url 'financeiro:assinatura-update' assinatura.pk %}">Editar</a>
+                    <a class="button is-small is-danger is-light" href="{% url 'financeiro:assinatura-delete' assinatura.pk %}">Excluir</a>
+                </td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="7">Nenhuma assinatura institucional cadastrada.</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

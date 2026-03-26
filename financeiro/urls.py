@@ -3,6 +3,10 @@ from __future__ import annotations
 from django.urls import path
 
 from .views import (
+    AssinaturaInstitucionalCreateView,
+    AssinaturaInstitucionalDeleteView,
+    AssinaturaInstitucionalListView,
+    AssinaturaInstitucionalUpdateView,
     CategoriaFinanceiraAutocompleteView,
     CategoriaFinanceiraCreateView,
     CategoriaFinanceiraDeleteView,
@@ -69,6 +73,10 @@ urlpatterns = [
     path('categorias/nova/', CategoriaFinanceiraCreateView.as_view(), name='categoria-create'),
     path('categorias/<int:pk>/editar/', CategoriaFinanceiraUpdateView.as_view(), name='categoria-update'),
     path('categorias/<int:pk>/excluir/', CategoriaFinanceiraDeleteView.as_view(), name='categoria-delete'),
+    path('assinaturas/', AssinaturaInstitucionalListView.as_view(), name='assinatura-list'),
+    path('assinaturas/nova/', AssinaturaInstitucionalCreateView.as_view(), name='assinatura-create'),
+    path('assinaturas/<int:pk>/editar/', AssinaturaInstitucionalUpdateView.as_view(), name='assinatura-update'),
+    path('assinaturas/<int:pk>/excluir/', AssinaturaInstitucionalDeleteView.as_view(), name='assinatura-delete'),
     path('lancamentos/', LancamentoFinanceiroListView.as_view(), name='lancamento-list'),
     path('lancamentos/novo/', LancamentoFinanceiroCreateView.as_view(), name='lancamento-create'),
     path('lancamentos/<int:pk>/editar/', LancamentoFinanceiroUpdateView.as_view(), name='lancamento-update'),

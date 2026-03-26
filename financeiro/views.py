@@ -12,6 +12,7 @@ from django.views import View
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, TemplateView, UpdateView
 
 from .forms import (
+    AssinaturaInstitucionalForm,
     CategoriaFinanceiraForm,
     CentroCustoForm,
     ContaFinanceiraForm,
@@ -19,6 +20,7 @@ from .forms import (
     PessoaFinanceiraForm,
 )
 from .models import (
+    AssinaturaInstitucional,
     CategoriaFinanceira,
     CentroCusto,
     ContaFinanceira,
@@ -866,6 +868,46 @@ class CategoriaFinanceiraDeleteView(FinanceiroDeleteMixin):
     success_message = 'Categoria financeira excluida com sucesso.'
 
 
+class AssinaturaInstitucionalListView(ListView):
+    model = AssinaturaInstitucional
+    template_name = 'financeiro/assinatura_list.html'
+    context_object_name = 'assinaturas'
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        nome = self.request.GET.get('nome', '').strip()
+        if nome:
+            queryset = queryset.filter(nome__icontains=nome)
+        return queryset
+
+
+class AssinaturaInstitucionalCreateView(FinanceiroFormMixin, CreateView):
+    model = AssinaturaInstitucional
+    form_class = AssinaturaInstitucionalForm
+    template_name = 'financeiro/assinatura_form.html'
+    success_url = reverse_lazy('financeiro:assinatura-list')
+    page_title = 'Nova Assinatura Institucional'
+    success_message = 'Assinatura institucional cadastrada com sucesso.'
+
+
+class AssinaturaInstitucionalUpdateView(FinanceiroFormMixin, UpdateView):
+    model = AssinaturaInstitucional
+    form_class = AssinaturaInstitucionalForm
+    template_name = 'financeiro/assinatura_form.html'
+    success_url = reverse_lazy('financeiro:assinatura-list')
+    page_title = 'Editar Assinatura Institucional'
+    submit_label = 'Atualizar'
+    success_message = 'Assinatura institucional atualizada com sucesso.'
+
+
+class AssinaturaInstitucionalDeleteView(FinanceiroDeleteMixin):
+    model = AssinaturaInstitucional
+    success_url = reverse_lazy('financeiro:assinatura-list')
+    page_title = 'Excluir Assinatura Institucional'
+    cancel_url = reverse_lazy('financeiro:assinatura-list')
+    success_message = 'Assinatura institucional excluida com sucesso.'
+
+
 class LancamentoFinanceiroListView(ListView):
     model = LancamentoFinanceiro
     template_name = 'financeiro/lancamento_list.html'
@@ -952,6 +994,7 @@ class LancamentoFinanceiroReciboView(DetailView):
         context = super().get_context_data(**kwargs)
         data_recibo = self.object.data_pagamento or self.object.data_competencia
         mensagem_categoria = ''
+        assinatura_padrao = AssinaturaInstitucional.objects.filter(ativo=True, padrao=True).first()
         if self.object.categoria:
             mensagem_categoria = (self.object.categoria.mensagem_recibo or '').strip()
         context['page_title'] = f'Recibo do Lancamento {self.object.pk}'
@@ -965,6 +1008,7 @@ class LancamentoFinanceiroReciboView(DetailView):
             mensagem_categoria or 'Recibo emitido com base no lancamento registrado no sistema.'
         )
         context['recibo_mensagem_personalizada'] = bool(mensagem_categoria)
+        context['recibo_assinatura_padrao'] = assinatura_padrao
         return context
 
 

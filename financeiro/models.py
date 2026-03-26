@@ -100,6 +100,45 @@ class CategoriaFinanceira(models.Model):
         return f'{self.get_tipo_display()} - {self.nome}'
 
 
+class AssinaturaInstitucional(models.Model):
+    nome = models.CharField(max_length=150)
+    assinatura_texto = models.CharField(max_length=150)
+    nome_exibicao = models.CharField(max_length=150, blank=True)
+    cargo = models.CharField(max_length=150, blank=True)
+    ativo = models.BooleanField(default=True)
+    padrao = models.BooleanField(default=False)
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-padrao', 'nome']
+        verbose_name = 'Assinatura institucional'
+        verbose_name_plural = 'Assinaturas institucionais'
+
+    def __str__(self) -> str:
+        return self.nome
+
+    def clean(self) -> None:
+        errors: dict[str, str] = {}
+
+        if self.padrao and not self.ativo:
+            errors['ativo'] = 'A assinatura padrao precisa estar ativa.'
+
+        if self.padrao:
+            queryset = type(self).objects.filter(padrao=True)
+            if self.pk:
+                queryset = queryset.exclude(pk=self.pk)
+            if queryset.exists():
+                errors['padrao'] = 'Ja existe outra assinatura marcada como padrao.'
+
+        if errors:
+            raise ValidationError(errors)
+
+    def save(self, *args, **kwargs) -> None:
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+
 class LancamentoFinanceiro(models.Model):
     class TipoLancamento(models.TextChoices):
         RECEITA = 'receita', 'Receita'
