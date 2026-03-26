@@ -66,6 +66,9 @@ Leitura funcional:
 - a validacao de duplicidade funciona no cadastro e na edicao
 - na edicao, o proprio registro e ignorado na checagem de duplicidade
 - a obrigatoriedade final de `pessoa` e `categoria` permanece condicional na camada da aplicacao
+- o formulario de lancamento agora pode consultar e exibir os ultimos 5 lancamentos da `pessoa` selecionada
+- o bloco de historico do favorecido mostra data, tipo, descricao, valor, categoria e `numero_documento` quando existir
+- o historico do favorecido acompanha a selecao da pessoa no autocomplete sem alterar a logica atual do campo
 - `data_competencia` deve ser validada antes da gravacao
 - `data_pagamento` nao pode ser anterior a `data_competencia`
 - o extrato por conta passa a exibir `numero_documento` de forma discreta junto da descricao, quando existir

@@ -39,6 +39,30 @@
         <a class="button" href="{% url 'financeiro:lancamento-list' %}">Voltar</a>
     </div>
 </form>
+<section
+    class="box mt-5"
+    data-financeiro-pessoa-historico="true"
+    data-history-url-template="{% url 'financeiro:pessoa-ultimos-lancamentos' 0 %}"
+    hidden
+>
+    <h2 class="title is-6 mb-3">Ultimos lancamentos do favorecido</h2>
+    <p class="help mb-3" data-historico-vazio="true">Selecione uma pessoa para ver os ultimos 5 lancamentos.</p>
+    <div class="table-container" data-historico-tabela-wrapper="true" hidden>
+        <table class="table is-fullwidth is-striped is-narrow">
+            <thead>
+            <tr>
+                <th>Data</th>
+                <th>Tipo</th>
+                <th>Descricao</th>
+                <th>Valor</th>
+                <th>Categoria</th>
+                <th>Documento</th>
+            </tr>
+            </thead>
+            <tbody data-historico-body="true"></tbody>
+        </table>
+    </div>
+</section>
 <script>
     (function () {
         const tipoField = document.querySelector('[data-financeiro-tipo="true"]');
@@ -51,6 +75,10 @@
         const centroCustoField = document.querySelector('[name="centro_custo"]');
         const centroCustoWrapper = document.querySelector('[data-financeiro-centro-custo-wrapper="true"]');
         const autocompleteFields = Array.from(document.querySelectorAll('[data-financeiro-autocomplete="true"]'));
+        const pessoaHistoricoBox = document.querySelector('[data-financeiro-pessoa-historico="true"]');
+        const pessoaHistoricoEmpty = document.querySelector('[data-historico-vazio="true"]');
+        const pessoaHistoricoTableWrapper = document.querySelector('[data-historico-tabela-wrapper="true"]');
+        const pessoaHistoricoBody = document.querySelector('[data-historico-body="true"]');
 
         function createAutocomplete(select) {
             const control = select.parentElement;
@@ -99,6 +127,7 @@
                 const option = ensureOption(item);
                 select.value = option.value;
                 input.value = option.text;
+                select.dispatchEvent(new Event('change', { bubbles: true }));
                 closeMenu();
             }
 
@@ -160,7 +189,10 @@
 
             input.addEventListener('input', function () {
                 if (input.value !== selectedOptionText()) {
-                    select.value = '';
+                    if (select.value) {
+                        select.value = '';
+                        select.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
                 }
                 fetchOptions(input.value.trim());
             });
@@ -216,11 +248,89 @@
                 marker.style.display = required ? '' : 'none';
             });
             if (!visible && clearWhenHidden) {
+                const hadValue = !!field.value;
                 field.value = '';
                 if (field._autocompleteInput) {
                     field._autocompleteInput.value = '';
                 }
+                if (hadValue) {
+                    field.dispatchEvent(new Event('change', { bubbles: true }));
+                }
             }
+        }
+
+        function renderHistoricoState(message, items) {
+            if (!pessoaHistoricoBox || !pessoaHistoricoEmpty || !pessoaHistoricoTableWrapper || !pessoaHistoricoBody) {
+                return;
+            }
+
+            pessoaHistoricoBody.innerHTML = '';
+            pessoaHistoricoBox.hidden = false;
+
+            if (!items.length) {
+                pessoaHistoricoEmpty.textContent = message;
+                pessoaHistoricoEmpty.hidden = false;
+                pessoaHistoricoTableWrapper.hidden = true;
+                return;
+            }
+
+            pessoaHistoricoEmpty.hidden = true;
+            pessoaHistoricoTableWrapper.hidden = false;
+
+            items.forEach(function (item) {
+                const row = document.createElement('tr');
+                [item.data, item.tipo, item.descricao, item.valor, item.categoria, item.numero_documento || '-'].forEach(
+                    function (value) {
+                        const cell = document.createElement('td');
+                        cell.textContent = value;
+                        row.appendChild(cell);
+                    }
+                );
+                pessoaHistoricoBody.appendChild(row);
+            });
+        }
+
+        function clearHistorico(message) {
+            renderHistoricoState(message, []);
+        }
+
+        function loadPessoaHistorico() {
+            if (!pessoaField || !pessoaHistoricoBox) {
+                return;
+            }
+
+            if (pessoaField.disabled) {
+                pessoaHistoricoBox.hidden = true;
+                return;
+            }
+
+            if (!pessoaField.value) {
+                clearHistorico('Selecione uma pessoa para ver os ultimos 5 lancamentos.');
+                return;
+            }
+
+            const urlTemplate = pessoaHistoricoBox.dataset.historyUrlTemplate;
+            if (!urlTemplate) {
+                return;
+            }
+
+            fetch(urlTemplate.replace('/0/', `/${pessoaField.value}/`), {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    const items = data.results || [];
+                    if (!items.length) {
+                        clearHistorico('Nenhum lancamento encontrado para este favorecido.');
+                        return;
+                    }
+                    renderHistoricoState('', items);
+                })
+                .catch(() => {
+                    clearHistorico('Nao foi possivel carregar o historico deste favorecido agora.');
+                });
         }
 
         function syncContaDestino() {
@@ -245,9 +355,12 @@
                 required: false,
                 clearWhenHidden: isTransferencia,
             });
+            loadPessoaHistorico();
         }
 
+        pessoaField.addEventListener('change', loadPessoaHistorico);
         tipoField.addEventListener('change', syncContaDestino);
+        loadPessoaHistorico();
         syncContaDestino();
     }());
 </script>

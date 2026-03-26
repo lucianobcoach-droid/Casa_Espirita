@@ -115,6 +115,7 @@ Data: 2026-03-26
 ### Melhorias de UX ja feitas
 - autocomplete real com busca por contem
 - comportamento condicional do formulario de lancamento
+- historico simples com os ultimos 5 lancamentos do favorecido no formulario de lancamento
 - mensagens de erro mais claras em campos obrigatorios
 - layout mais compacto nas tabelas
 - impressao refinada para extrato e prestacao de contas

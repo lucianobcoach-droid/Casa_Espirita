@@ -358,6 +358,29 @@ class PessoaFinanceiraAutocompleteView(FinanceiroAutocompleteView):
     search_fields = ('codigo', 'nome', 'documento', 'email')
 
 
+class PessoaFinanceiraUltimosLancamentosView(View):
+    limit = 5
+
+    def get(self, request, pessoa_id: int, *args, **kwargs):
+        lancamentos = list(
+            LancamentoFinanceiro.objects.filter(pessoa_id=pessoa_id)
+            .select_related('categoria')
+            .order_by('-data_competencia', '-criado_em', '-pk')[: self.limit]
+        )
+        results = [
+            {
+                'data': lancamento.data_competencia.strftime('%d/%m/%Y'),
+                'tipo': lancamento.get_tipo_display(),
+                'descricao': lancamento.descricao,
+                'valor': f'R$ {lancamento.valor:.2f}',
+                'categoria': str(lancamento.categoria) if lancamento.categoria else 'Sem categoria',
+                'numero_documento': lancamento.numero_documento or '',
+            }
+            for lancamento in lancamentos
+        ]
+        return JsonResponse({'results': results})
+
+
 class CategoriaFinanceiraAutocompleteView(FinanceiroAutocompleteView):
     model = CategoriaFinanceira
     search_fields = ('nome',)

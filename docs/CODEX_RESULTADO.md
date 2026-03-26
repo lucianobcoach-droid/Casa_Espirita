@@ -50,3 +50,10 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - `transferencia` continua limpando campos irrelevantes e exigindo apenas `conta_destino`
 - a cadeia de migrations `0005` e `0006` foi mantida como parte coerente da evolucao incremental ja existente
 - o texto com encoding quebrado no erro de `conta_destino` foi corrigido sem alterar regra de negocio
+
+## Nova etapa incremental
+
+- o formulario de lancamento passou a exibir os ultimos 5 lancamentos do favorecido selecionado
+- o historico mostra data, tipo, descricao, valor, categoria e `numero_documento` quando existir
+- a atualizacao do bloco ocorre junto da selecao da pessoa no autocomplete
+- a implementacao foi mantida simples, sem alterar regra de negocio do lancamento

@@ -71,6 +71,7 @@ Ate o momento, esta validado que:
 - `Extratos` e `Resumo` possuem impressao mais limpa para uso operacional real
 - a listagem de lancamentos possui filtros operacionais por data, conta, pessoa e categoria, alem dos filtros ja existentes
 - o menu superior do financeiro separa entrada do modulo, movimentacoes, relatorios e cadastros sem remover itens ja existentes
+- o formulario de lancamento agora pode exibir os ultimos 5 lancamentos do favorecido selecionado, sem quebrar o autocomplete atual
 
 ## 7. Regras de negocio atuais do financeiro
 
