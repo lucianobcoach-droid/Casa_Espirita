@@ -68,7 +68,9 @@ class LancamentoFinanceiroForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['tipo'].widget.attrs.update({'data-financeiro-tipo': 'true'})
         self.fields['conta_destino'].widget.attrs.update({'data-financeiro-conta-destino': 'true'})
-        self.fields['categoria'].required = True
+        self.fields['conta'].error_messages['required'] = 'Informe a conta de origem.'
+        self.fields['pessoa'].required = False
+        self.fields['categoria'].required = False
         autocomplete_urls = {
             'pessoa': reverse_lazy('financeiro:autocomplete-pessoa'),
             'categoria': reverse_lazy('financeiro:autocomplete-categoria'),
@@ -83,12 +85,34 @@ class LancamentoFinanceiroForm(forms.ModelForm):
                     'data-autocomplete-url': str(url),
                 }
             )
-        self.fields['categoria'].widget.attrs.update({'required': 'required'})
+        self.fields['categoria'].widget.attrs.pop('required', None)
+        self.fields['pessoa'].widget.attrs.pop('required', None)
 
     def clean(self):
         cleaned_data = super().clean()
-        if cleaned_data.get('tipo') != LancamentoFinanceiro.TipoLancamento.TRANSFERENCIA:
+        tipo = cleaned_data.get('tipo')
+        transferencia = tipo == LancamentoFinanceiro.TipoLancamento.TRANSFERENCIA
+
+        if not cleaned_data.get('conta'):
+            self.add_error('conta', 'Informe a conta de origem.')
+
+        if transferencia:
+            cleaned_data['pessoa'] = None
+            cleaned_data['categoria'] = None
+            cleaned_data['centro_custo'] = None
+            if not cleaned_data.get('conta_destino'):
+                self.add_error('conta_destino', 'Informe a conta de destino para a transferencia.')
+        else:
             cleaned_data['conta_destino'] = None
+
+        if tipo in {
+            LancamentoFinanceiro.TipoLancamento.RECEITA,
+            LancamentoFinanceiro.TipoLancamento.DESPESA,
+        }:
+            if not cleaned_data.get('pessoa'):
+                self.add_error('pessoa', 'Informe a pessoa para receita e despesa.')
+            if not cleaned_data.get('categoria'):
+                self.add_error('categoria', 'Informe a categoria para receita e despesa.')
         return cleaned_data
 
     class Meta:

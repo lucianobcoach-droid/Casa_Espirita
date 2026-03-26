@@ -43,3 +43,10 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - Nao foi possivel executar `py manage.py check` com sucesso no ambiente atual.
 - Motivo: o interpretador disponivel nao tem o pacote `django` instalado.
 - Foi possivel validar a sintaxe dos arquivos Python via `py -m compileall financeiro`.
+
+## Complemento de consolidacao controlada
+
+- `financeiro/forms.py` foi alinhado ao model atual para manter a obrigatoriedade condicional de `pessoa` e `categoria`
+- `transferencia` continua limpando campos irrelevantes e exigindo apenas `conta_destino`
+- a cadeia de migrations `0005` e `0006` foi mantida como parte coerente da evolucao incremental ja existente
+- o texto com encoding quebrado no erro de `conta_destino` foi corrigido sem alterar regra de negocio

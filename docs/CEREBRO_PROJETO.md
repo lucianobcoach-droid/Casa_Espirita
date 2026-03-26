@@ -200,6 +200,7 @@ Escopo ja consolidado no repositorio:
 - CRUD de lancamentos financeiros
 - regras condicionais de transferencia
 - validacao de nao repeticao de `numero_documento` na camada da aplicacao
+- obrigatoriedade condicional de `pessoa` e `categoria` consolidada em formulario/model, preservando `transferencia` sem esses campos
 - extrato por conta com saldo acumulado e filtro por periodo
 - resumo consolidado por periodo
 - prestacao de contas por periodo

@@ -65,6 +65,7 @@ Leitura funcional:
 - `numero_documento` gerado automaticamente tambem deve sair unico
 - a validacao de duplicidade funciona no cadastro e na edicao
 - na edicao, o proprio registro e ignorado na checagem de duplicidade
+- a obrigatoriedade final de `pessoa` e `categoria` permanece condicional na camada da aplicacao
 - `data_competencia` deve ser validada antes da gravacao
 - `data_pagamento` nao pode ser anterior a `data_competencia`
 - o extrato por conta passa a exibir `numero_documento` de forma discreta junto da descricao, quando existir
@@ -176,6 +177,7 @@ Com filtro por periodo:
 - Existe a migration incremental `financeiro/migrations/0004_lancamentofinanceiro_categoria_required.py`.
 - Existe a migration incremental `financeiro/migrations/0005_lancamentofinanceiro_pessoa_required.py`.
 - Existe a migration incremental `financeiro/migrations/0006_lancamentofinanceiro_conditional_required_fields.py`.
+- A cadeia `0005` -> `0006` representa a consolidacao incremental da obrigatoriedade condicional de `pessoa` e `categoria`.
 - Nao foi criada migration nova para unicidade de `numero_documento` nesta etapa.
 - A validacao de nao repeticao de `numero_documento` ficou na camada de aplicacao por seguranca incremental.
 - As migrations antigas nao foram alteradas.
