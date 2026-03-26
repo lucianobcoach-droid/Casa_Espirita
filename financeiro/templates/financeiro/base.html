@@ -79,6 +79,16 @@
             line-height: 1.2;
         }
 
+        .only-print {
+            display: none;
+        }
+
+        .report-print-meta {
+            margin: 0.15rem 0;
+            color: #4b5563;
+            font-size: 0.84rem;
+        }
+
         .help.is-danger {
             display: block;
             margin-top: 0.35rem;
@@ -667,6 +677,10 @@
                 display: none !important;
             }
 
+            .only-print {
+                display: block !important;
+            }
+
             .section {
                 padding: 0.5rem 0;
             }
@@ -689,9 +703,17 @@
 
             .subtitle,
             .table-caption,
-            .financeiro-meta {
+            .financeiro-meta,
+            .report-print-meta {
                 color: #374151 !important;
                 font-size: 10px !important;
+            }
+
+            .financeiro-hero {
+                border-color: #c7c7c7 !important;
+                background: #fff !important;
+                padding: 0.7rem 0.8rem !important;
+                margin-bottom: 0.7rem !important;
             }
 
             .table-wrapper {
@@ -710,6 +732,7 @@
                 color: #111 !important;
                 background: #fff !important;
                 border-color: #c7c7c7 !important;
+                word-break: break-word;
             }
 
             .tipo-badge,

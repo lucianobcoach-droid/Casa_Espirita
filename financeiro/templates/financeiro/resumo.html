@@ -6,12 +6,15 @@
     <div class="level-left">
         <div>
             <h1 class="title">{{ page_title }}</h1>
-            <p class="subtitle">Visao consolidada do periodo, preparando o caminho para a futura prestacao de contas.</p>
+            <p class="subtitle no-print">Visao consolidada do periodo, preparando o caminho para a futura prestacao de contas.</p>
+            <p class="report-print-meta only-print">Periodo: {{ periodo_label|default:'Nao informado' }}</p>
+            <p class="report-print-meta only-print">Contas incluidas: {{ contas_incluidas_label|default:'Todas as contas' }}</p>
+            <p class="report-print-meta only-print">Emitido em {% now "d/m/Y H:i" %}</p>
         </div>
     </div>
 </div>
 
-<form method="get" class="filters-box">
+<form method="get" class="filters-box no-print">
     <div class="columns is-multiline">
         <div class="column is-4">
             <label class="label">Contas incluidas</label>

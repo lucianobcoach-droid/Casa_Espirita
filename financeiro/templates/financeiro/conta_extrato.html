@@ -1,4 +1,5 @@
 {% extends 'financeiro/base.html' %}
+{% load financeiro_format %}
 {% block title %}{{ page_title }}{% endblock %}
 {% block content %}
 <div class="level">
@@ -8,7 +9,7 @@
             {% if conta %}
                 <p class="subtitle">Conta: {{ conta.nome }}</p>
                 <p class="subtitle">
-                    Saldo inicial: R$ {{ saldo_inicial }}
+                    Saldo inicial: <span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_inicial|br_money }}</span></span>
                     {% if data_saldo_inicial %}
                         em {{ data_saldo_inicial|date:'d/m/Y' }}
                     {% endif %}
@@ -22,9 +23,10 @@
                     </p>
                 {% endif %}
                 {% if saldo_anterior is not None %}
-                    <p class="subtitle">Saldo anterior: R$ {{ saldo_anterior }}</p>
+                    <p class="subtitle">Saldo anterior: <span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_anterior|br_money }}</span></span></p>
                 {% endif %}
-                <p class="subtitle">Saldo final exibido (quitado): R$ {{ saldo_final }}</p>
+                <p class="subtitle">Saldo final exibido (quitado): <span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_final|br_money }}</span></span></p>
+                <p class="report-print-meta only-print">Emitido em {% now "d/m/Y H:i" %}</p>
             {% endif %}
         </div>
     </div>
@@ -99,14 +101,19 @@
                     <td><strong>Inicial</strong></td>
                     <td>-</td>
                     <td>-</td>
-                    <td><strong>R$ {{ saldo_inicial }}</strong></td>
+                    <td><strong><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_inicial|br_money }}</span></span></strong></td>
                     <td>-</td>
                 </tr>
             {% endif %}
             {% for item in itens_extrato %}
                 <tr>
                     <td>{{ item.lancamento.data_competencia|date:'d/m/Y' }}</td>
-                    <td>{{ item.lancamento.descricao }}</td>
+                    <td>
+                        {{ item.lancamento.descricao }}
+                        {% if item.lancamento.numero_documento %}
+                            <div class="is-size-7 has-text-grey">Doc.: {{ item.lancamento.numero_documento }}</div>
+                        {% endif %}
+                    </td>
                     <td>
                         <span class="extrato-text {% if item.lancamento.tipo == 'receita' %}is-receita{% elif item.lancamento.tipo == 'despesa' %}is-despesa{% else %}is-transferencia{% endif %}">
                             {{ item.lancamento.get_tipo_display }}
@@ -114,19 +121,19 @@
                     </td>
                     <td>
                         {% if item.entrada %}
-                            <span class="extrato-text is-receita">R$ {{ item.entrada }}</span>
+                            <span class="extrato-text is-receita"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ item.entrada|br_money }}</span></span></span>
                         {% else %}
                             -
                         {% endif %}
                     </td>
                     <td>
                         {% if item.saida %}
-                            <span class="extrato-text {% if item.lancamento.tipo == 'transferencia' %}is-transferencia{% else %}is-despesa{% endif %}">R$ {{ item.saida }}</span>
+                            <span class="extrato-text {% if item.lancamento.tipo == 'transferencia' %}is-transferencia{% else %}is-despesa{% endif %}"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ item.saida|br_money }}</span></span></span>
                         {% else %}
                             -
                         {% endif %}
                     </td>
-                    <td>R$ {{ item.saldo_acumulado }}</td>
+                    <td><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ item.saldo_acumulado|br_money }}</span></span></td>
                     <td>{{ item.lancamento.observacoes|default:'-' }}</td>
                 </tr>
             {% empty %}
@@ -138,7 +145,7 @@
             <tfoot>
             <tr>
                 <th colspan="5"><strong>Saldo final</strong></th>
-                <th><strong>R$ {{ saldo_final }}</strong></th>
+                <th><strong><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_final|br_money }}</span></span></strong></th>
                 <th></th>
             </tr>
             </tfoot>
