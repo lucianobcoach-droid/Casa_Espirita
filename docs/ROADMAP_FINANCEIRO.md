@@ -116,6 +116,7 @@ Data: 2026-03-26
 - autocomplete real com busca por contem
 - comportamento condicional do formulario de lancamento
 - historico simples com os ultimos 5 lancamentos do favorecido no formulario de lancamento
+- recibo simples em HTML imprimivel a partir do lancamento
 - mensagens de erro mais claras em campos obrigatorios
 - layout mais compacto nas tabelas
 - impressao refinada para extrato e prestacao de contas

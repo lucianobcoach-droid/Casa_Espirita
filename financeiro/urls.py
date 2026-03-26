@@ -24,6 +24,7 @@ from .views import (
     LancamentoFinanceiroCreateView,
     LancamentoFinanceiroDeleteView,
     LancamentoFinanceiroListView,
+    LancamentoFinanceiroReciboView,
     LancamentoFinanceiroUpdateView,
     PessoaFinanceiraAutocompleteView,
     PessoaFinanceiraCreateView,
@@ -71,5 +72,6 @@ urlpatterns = [
     path('lancamentos/', LancamentoFinanceiroListView.as_view(), name='lancamento-list'),
     path('lancamentos/novo/', LancamentoFinanceiroCreateView.as_view(), name='lancamento-create'),
     path('lancamentos/<int:pk>/editar/', LancamentoFinanceiroUpdateView.as_view(), name='lancamento-update'),
+    path('lancamentos/<int:pk>/recibo/', LancamentoFinanceiroReciboView.as_view(), name='lancamento-recibo'),
     path('lancamentos/<int:pk>/excluir/', LancamentoFinanceiroDeleteView.as_view(), name='lancamento-delete'),
 ]

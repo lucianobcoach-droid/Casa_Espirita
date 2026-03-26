@@ -1,0 +1,80 @@
+{% extends 'financeiro/base.html' %}
+{% block title %}{{ page_title }}{% endblock %}
+{% block content %}
+<section class="financeiro-hero">
+    <div class="level">
+        <div class="level-left">
+            <div>
+                <h1 class="title">Recibo</h1>
+                <p class="subtitle">Lancamento financeiro #{{ lancamento.pk }}</p>
+                <p class="report-print-meta">Emitido em {% now "d/m/Y H:i" %}</p>
+            </div>
+        </div>
+        <div class="level-right no-print">
+            <div class="buttons">
+                <button class="button is-light" type="button" onclick="window.print()">Imprimir</button>
+                <a class="button" href="{% url 'financeiro:lancamento-list' %}">Voltar</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="box">
+    <div class="content">
+        <p>
+            Recebemos o valor referente ao lancamento abaixo identificado.
+        </p>
+    </div>
+
+    <div class="table-container">
+        <table class="table is-fullwidth is-striped">
+            <tbody>
+            <tr>
+                <th>Descricao</th>
+                <td>{{ lancamento.descricao }}</td>
+            </tr>
+            <tr>
+                <th>Valor</th>
+                <td>R$ {{ lancamento.valor }}</td>
+            </tr>
+            <tr>
+                <th>Data de competencia</th>
+                <td>{{ lancamento.data_competencia|date:'d/m/Y' }}</td>
+            </tr>
+            <tr>
+                <th>Data de pagamento</th>
+                <td>{{ lancamento.data_pagamento|date:'d/m/Y'|default:'-' }}</td>
+            </tr>
+            <tr>
+                <th>Pessoa</th>
+                <td>{{ lancamento.pessoa|default:'-' }}</td>
+            </tr>
+            <tr>
+                <th>Categoria</th>
+                <td>{{ lancamento.categoria|default:'-' }}</td>
+            </tr>
+            <tr>
+                <th>Conta</th>
+                <td>{{ lancamento.conta }}</td>
+            </tr>
+            <tr>
+                <th>Numero do documento</th>
+                <td>{{ lancamento.numero_documento|default:'-' }}</td>
+            </tr>
+            <tr>
+                <th>Observacoes</th>
+                <td>{{ lancamento.observacoes|default:'-' }}</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="box">
+    <p class="mb-6">Para fins de conferencia, firmamos o presente recibo.</p>
+    <div class="prestacao-signature">
+        <p>Assinatura</p>
+        <div class="prestacao-signature-line"></div>
+    </div>
+</section>
+{% endblock %}

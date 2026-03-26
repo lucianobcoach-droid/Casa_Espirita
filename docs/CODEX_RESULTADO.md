@@ -57,3 +57,10 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - o historico mostra data, tipo, descricao, valor, categoria e `numero_documento` quando existir
 - a atualizacao do bloco ocorre junto da selecao da pessoa no autocomplete
 - a implementacao foi mantida simples, sem alterar regra de negocio do lancamento
+
+## Etapa de recibo
+
+- cada lancamento financeiro passou a ter visualizacao propria de recibo em HTML imprimivel
+- o recibo exibe descricao, valor, datas, pessoa, categoria, conta, `numero_documento` e observacoes quando disponiveis
+- a listagem de lancamentos passou a oferecer acesso direto ao recibo
+- a etapa foi mantida simples, sem PDF externo e sem alterar a logica do lancamento

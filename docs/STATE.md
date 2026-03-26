@@ -167,9 +167,11 @@ Com filtro por periodo:
 - O modulo possui tela propria de extratos com filtro por conta e periodo.
 - O modulo possui tela de resumo consolidado por periodo.
 - O modulo possui tela de prestacao de contas por periodo.
+- O modulo possui tela propria de recibo por lancamento em HTML imprimivel.
 - O extrato mostra conta, periodo, saldo inicial, data do saldo inicial, saldo anterior quando aplicavel e saldo final exibido.
 - O modulo possui listagem de contas com `saldo_atual` calculado.
 - A listagem de lancamentos destaca tipo por cor e status nao quitado em negrito.
+- A listagem de lancamentos agora oferece acesso direto ao recibo de cada lancamento.
 - O extrato e as listagens priorizadas tem ajustes de impressao para esconder controles e manter a tabela legivel.
 
 ## Migracoes

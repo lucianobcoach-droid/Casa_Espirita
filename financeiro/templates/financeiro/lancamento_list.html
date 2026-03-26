@@ -149,6 +149,7 @@
                 <td>{{ lancamento.data_competencia|date:'d/m/Y' }}</td>
                 <td>{{ lancamento.numero_documento|default:'-' }}</td>
                 <td class="actions-cell no-print">
+                    <a class="button is-small is-info is-light" href="{% url 'financeiro:lancamento-recibo' lancamento.pk %}">Recibo</a>
                     <a class="button is-small is-link is-light" href="{% url 'financeiro:lancamento-update' lancamento.pk %}">Editar</a>
                     <a class="button is-small is-danger is-light" href="{% url 'financeiro:lancamento-delete' lancamento.pk %}">Excluir</a>
                 </td>

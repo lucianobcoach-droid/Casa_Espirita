@@ -72,6 +72,7 @@ Ate o momento, esta validado que:
 - a listagem de lancamentos possui filtros operacionais por data, conta, pessoa e categoria, alem dos filtros ja existentes
 - o menu superior do financeiro separa entrada do modulo, movimentacoes, relatorios e cadastros sem remover itens ja existentes
 - o formulario de lancamento agora pode exibir os ultimos 5 lancamentos do favorecido selecionado, sem quebrar o autocomplete atual
+- cada lancamento agora pode gerar recibo proprio em HTML imprimivel, com bloco simples de assinatura
 
 ## 7. Regras de negocio atuais do financeiro
 

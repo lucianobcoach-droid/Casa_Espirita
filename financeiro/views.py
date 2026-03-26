@@ -791,6 +791,26 @@ class LancamentoFinanceiroUpdateView(FinanceiroFormMixin, UpdateView):
     success_message = 'Lancamento financeiro atualizado com sucesso.'
 
 
+class LancamentoFinanceiroReciboView(DetailView):
+    model = LancamentoFinanceiro
+    template_name = 'financeiro/lancamento_recibo.html'
+    context_object_name = 'lancamento'
+
+    def get_queryset(self):
+        return super().get_queryset().select_related(
+            'conta',
+            'conta_destino',
+            'pessoa',
+            'categoria',
+            'centro_custo',
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['page_title'] = f'Recibo do Lancamento {self.object.pk}'
+        return context
+
+
 class LancamentoFinanceiroDeleteView(FinanceiroDeleteMixin):
     model = LancamentoFinanceiro
     success_url = reverse_lazy('financeiro:lancamento-list')
