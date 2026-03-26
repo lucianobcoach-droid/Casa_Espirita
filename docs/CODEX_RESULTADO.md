@@ -127,3 +127,14 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - o bloco do recibo passou a respeitar melhor a altura do proprio conteudo na impressao
 - os espacos verticais entre corpo, mensagem final, assinatura e fim do documento foram reduzidos
 - o PDF do recibo deixa de aparentar preenchimento artificial da pagina inteira quando o conteudo e curto
+
+## Centralizacao e largura util do recibo
+
+- o bloco do recibo na impressao voltou a usar `display: block` com centralizacao horizontal
+- a largura util do documento foi ampliada para melhor aproveitamento da folha A4
+- o PDF deixa de ficar deslocado para a esquerda e com excesso de espaco vazio a direita
+
+## Respiro superior do recibo
+
+- a margem superior da versao impressa do recibo foi levemente ampliada
+- o documento ganhou respiro inicial sem perder a compactacao final do PDF

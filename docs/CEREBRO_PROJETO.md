@@ -92,6 +92,8 @@ Ate o momento, esta validado que:
 - a logo do recibo deve ser tratada como URL acessivel pelo navegador e, se falhar, deve ser ocultada sem quebrar o cabecalho
 - a assinatura configuravel do recibo deve usar `assinatura_texto` com apresentacao manuscrita no proprio template
 - na impressao do recibo, o bloco documental deve ter altura guiada pelo conteudo, sem se esticar ate o fim da folha
+- na impressao do recibo, o bloco deve permanecer centralizado horizontalmente e usar largura util maior na folha A4
+- na impressao do recibo, o topo do documento deve manter um pequeno respiro superior sem perder compactacao
 
 ## 7. Regras de negocio atuais do financeiro
 
