@@ -3,7 +3,7 @@
 {% block content %}
 <div class="financeiro-hero">
     <h1 class="title">Modulo Financeiro</h1>
-    <p class="subtitle">Base operacional do modulo com navegação institucional e atalhos principais do dia a dia.</p>
+    <p class="subtitle">Base operacional do modulo com navegacao institucional e atalhos principais do dia a dia.</p>
     <div class="financeiro-shortcuts">
         <a class="financeiro-shortcut is-primary-shortcut" href="{% url 'financeiro:lancamento-list' %}">
             <span class="financeiro-shortcut-label">Lancamentos</span>
@@ -28,6 +28,12 @@
         </a>
         <a class="financeiro-shortcut" href="{% url 'financeiro:categoria-list' %}">
             <span class="financeiro-shortcut-label">Categorias</span>
+        </a>
+        <a class="financeiro-shortcut" href="{% url 'financeiro:assinatura-list' %}">
+            <span class="financeiro-shortcut-label">Assinaturas</span>
+        </a>
+        <a class="financeiro-shortcut" href="{% url 'financeiro:configuracao-institucional-list' %}">
+            <span class="financeiro-shortcut-label">Configuracao Institucional</span>
         </a>
     </div>
 </div>

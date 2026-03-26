@@ -138,3 +138,11 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 
 - a margem superior da versao impressa do recibo foi levemente ampliada
 - o documento ganhou respiro inicial sem perder a compactacao final do PDF
+
+## Microetapa de navegacao minima
+
+- o texto com encoding quebrado na home do modulo financeiro foi corrigido
+- o menu superior do financeiro ganhou dropdown `Configuracoes`
+- o novo dropdown passou a expor `Assinaturas` e `Configuracao Institucional`
+- a home do modulo financeiro passou a exibir atalhos visiveis para `Assinaturas` e `Configuracao Institucional`
+- a navegacao ja validada de `Financeiro`, `Lancamentos`, `Extratos`, `Relatorios` e `Cadastros` foi preservada sem reorganizacao ampla

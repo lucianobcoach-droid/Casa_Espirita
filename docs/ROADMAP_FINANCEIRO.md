@@ -28,6 +28,7 @@ Data: 2026-03-26
 - emissao simples
 - vinculo com lancamentos
 - historico de recibos
+- bloco historico inicial do tema; a base do recibo ja foi entregue e refinada no repositorio atual
 
 ### Relatorios e consultas
 - resumo por periodo
@@ -116,7 +117,7 @@ Data: 2026-03-26
 - autocomplete real com busca por contem
 - comportamento condicional do formulario de lancamento
 - historico simples com os ultimos 5 lancamentos do favorecido no formulario de lancamento
-- recibo simples em HTML imprimivel a partir do lancamento
+- recibo em HTML imprimivel a partir do lancamento, com refinamentos posteriores de conteudo, assinatura, configuracao institucional e impressao
 - mensagens de erro mais claras em campos obrigatorios
 - layout mais compacto nas tabelas
 - impressao refinada para extrato e prestacao de contas
@@ -148,7 +149,7 @@ Data: 2026-03-26
 - importacao de planilha historica
 - cadastro rapido de pessoa dentro do lancamento
 - cadastro rapido de categoria dentro do lancamento
-- recibos
+- evolucoes futuras especificas do bloco de recibos ja entregue
 
 ## 5. Proximas etapas sugeridas
 
@@ -159,7 +160,7 @@ Data: 2026-03-26
 5. anexos de comprovantes
 6. balancete padrao
 7. importacao historica
-8. recibos
+8. evolucoes futuras especificas do bloco de recibos ja entregue
 
 ## 6. Diretriz importante
 

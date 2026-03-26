@@ -71,6 +71,8 @@ Ate o momento, esta validado que:
 - `Extratos` e `Resumo` possuem impressao mais limpa para uso operacional real
 - a listagem de lancamentos possui filtros operacionais por data, conta, pessoa e categoria, alem dos filtros ja existentes
 - o menu superior do financeiro separa entrada do modulo, movimentacoes, relatorios e cadastros sem remover itens ja existentes
+- o menu superior do financeiro agora tambem possui dropdown `Configuracoes` com acesso a `Assinaturas` e `Configuracao Institucional`
+- a home do modulo financeiro agora tambem oferece atalhos visiveis para `Assinaturas` e `Configuracao Institucional`
 - o formulario de lancamento agora pode exibir os ultimos 5 lancamentos do favorecido selecionado, sem quebrar o autocomplete atual
 - cada lancamento agora pode gerar recibo proprio em HTML imprimivel, com bloco simples de assinatura
 - no recibo, o campo `Referente a` deve usar a descricao do lancamento
@@ -255,7 +257,7 @@ As etapas abaixo podem existir no planejamento, mas nao devem ser implementadas 
 - anexos de comprovantes
 - balancete padrao
 - importacao de planilha historica
-- recibos
+- recibos (o bloco base ja foi entregue no repositorio; apenas evolucoes futuras especificas podem existir)
 
 ## 15. Como este arquivo deve ser mantido
 Este arquivo deve ser atualizado sempre que houver:
