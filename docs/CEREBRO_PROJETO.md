@@ -73,6 +73,9 @@ Ate o momento, esta validado que:
 - o menu superior do financeiro separa entrada do modulo, movimentacoes, relatorios e cadastros sem remover itens ja existentes
 - o formulario de lancamento agora pode exibir os ultimos 5 lancamentos do favorecido selecionado, sem quebrar o autocomplete atual
 - cada lancamento agora pode gerar recibo proprio em HTML imprimivel, com bloco simples de assinatura
+- no recibo, o campo `Referente a` deve usar a descricao do lancamento
+- no recibo, a data principal deve priorizar `data_pagamento`, com fallback explicito para `data_competencia` quando necessario
+- no recibo, nao devem aparecer conta financeira, observacoes, categoria tecnica nem centro de custo nesta etapa
 
 ## 7. Regras de negocio atuais do financeiro
 

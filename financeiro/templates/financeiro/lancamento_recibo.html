@@ -7,6 +7,11 @@
             <div>
                 <h1 class="title">Recibo</h1>
                 <p class="subtitle">Lancamento financeiro #{{ lancamento.pk }}</p>
+                <p class="subtitle"><strong>Referente a:</strong> {{ recibo_referente }}</p>
+                <p class="subtitle"><strong>{{ recibo_data_label }}:</strong> {{ recibo_data_principal|date:'d/m/Y' }}</p>
+                {% if recibo_data_fallback %}
+                    <p class="report-print-meta">Data do recebimento nao informada. Foi usada a data de competencia como fallback.</p>
+                {% endif %}
                 <p class="report-print-meta">Emitido em {% now "d/m/Y H:i" %}</p>
             </div>
         </div>
@@ -22,7 +27,7 @@
 <section class="box">
     <div class="content">
         <p>
-            Recebemos o valor referente ao lancamento abaixo identificado.
+            Recibo referente ao lancamento abaixo identificado.
         </p>
     </div>
 
@@ -30,40 +35,28 @@
         <table class="table is-fullwidth is-striped">
             <tbody>
             <tr>
-                <th>Descricao</th>
-                <td>{{ lancamento.descricao }}</td>
-            </tr>
-            <tr>
                 <th>Valor</th>
                 <td>R$ {{ lancamento.valor }}</td>
+            </tr>
+            <tr>
+                <th>{{ recibo_data_label }}</th>
+                <td>{{ recibo_data_principal|date:'d/m/Y' }}</td>
             </tr>
             <tr>
                 <th>Data de competencia</th>
                 <td>{{ lancamento.data_competencia|date:'d/m/Y' }}</td>
             </tr>
             <tr>
+                <th>Favorecido</th>
+                <td>{{ lancamento.pessoa|default:'-' }}</td>
+            </tr>
+            <tr>
                 <th>Data de pagamento</th>
                 <td>{{ lancamento.data_pagamento|date:'d/m/Y'|default:'-' }}</td>
             </tr>
             <tr>
-                <th>Pessoa</th>
-                <td>{{ lancamento.pessoa|default:'-' }}</td>
-            </tr>
-            <tr>
-                <th>Categoria</th>
-                <td>{{ lancamento.categoria|default:'-' }}</td>
-            </tr>
-            <tr>
-                <th>Conta</th>
-                <td>{{ lancamento.conta }}</td>
-            </tr>
-            <tr>
                 <th>Numero do documento</th>
                 <td>{{ lancamento.numero_documento|default:'-' }}</td>
-            </tr>
-            <tr>
-                <th>Observacoes</th>
-                <td>{{ lancamento.observacoes|default:'-' }}</td>
             </tr>
             </tbody>
         </table>
@@ -71,7 +64,7 @@
 </section>
 
 <section class="box">
-    <p class="mb-6">Para fins de conferencia, firmamos o presente recibo.</p>
+    <p class="mb-6">{{ recibo_mensagem_final }}</p>
     <div class="prestacao-signature">
         <p>Assinatura</p>
         <div class="prestacao-signature-line"></div>

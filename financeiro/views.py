@@ -807,7 +807,17 @@ class LancamentoFinanceiroReciboView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        data_recibo = self.object.data_pagamento or self.object.data_competencia
         context['page_title'] = f'Recibo do Lancamento {self.object.pk}'
+        context['recibo_referente'] = self.object.descricao
+        context['recibo_data_principal'] = data_recibo
+        context['recibo_data_label'] = (
+            'Data do recebimento'
+            if self.object.data_pagamento
+            else 'Data do recibo (fallback da data de competencia)'
+        )
+        context['recibo_data_fallback'] = self.object.data_pagamento is None
+        context['recibo_mensagem_final'] = 'Recibo emitido com base no lancamento registrado no sistema.'
         return context
 
 

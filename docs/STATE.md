@@ -168,6 +168,9 @@ Com filtro por periodo:
 - O modulo possui tela de resumo consolidado por periodo.
 - O modulo possui tela de prestacao de contas por periodo.
 - O modulo possui tela propria de recibo por lancamento em HTML imprimivel.
+- O recibo usa a descricao do lancamento como campo `Referente a`.
+- O recibo prioriza `data_pagamento` como data principal e usa `data_competencia` como fallback explicito quando `data_pagamento` estiver vazia.
+- O recibo nao exibe conta financeira, observacoes, categoria tecnica nem centro de custo nesta etapa.
 - O extrato mostra conta, periodo, saldo inicial, data do saldo inicial, saldo anterior quando aplicavel e saldo final exibido.
 - O modulo possui listagem de contas com `saldo_atual` calculado.
 - A listagem de lancamentos destaca tipo por cor e status nao quitado em negrito.

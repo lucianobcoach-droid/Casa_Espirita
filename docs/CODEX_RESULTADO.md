@@ -64,3 +64,11 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - o recibo exibe descricao, valor, datas, pessoa, categoria, conta, `numero_documento` e observacoes quando disponiveis
 - a listagem de lancamentos passou a oferecer acesso direto ao recibo
 - a etapa foi mantida simples, sem PDF externo e sem alterar a logica do lancamento
+
+## Refinamento do recibo
+
+- o campo `Referente a` passou a usar a descricao do lancamento
+- a data principal do recibo passou a priorizar `data_pagamento`
+- quando `data_pagamento` estiver vazia, o recibo usa `data_competencia` com fallback explicito
+- o recibo deixou de exibir conta financeira, observacoes, categoria tecnica e centro de custo
+- a mensagem final continua com fallback simples no template, preparando etapa futura de mensagem por categoria

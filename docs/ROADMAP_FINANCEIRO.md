@@ -131,6 +131,9 @@ Data: 2026-03-26
 - extrato com mais contexto operacional sem poluir a tela
 - filtros da listagem de lancamentos com melhorias de usabilidade
 - impressao da prestacao de contas com acabamento mais formal
+- mensagem opcional por categoria no recibo
+- assinatura configuravel no recibo
+- configuracao institucional dinamica para cidade, logo e dados do recibo
 
 ## 4. O que ainda falta implementar
 
