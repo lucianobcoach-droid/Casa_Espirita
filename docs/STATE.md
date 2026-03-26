@@ -173,6 +173,7 @@ Com filtro por periodo:
 - O recibo nao exibe conta financeira, observacoes, categoria tecnica nem centro de custo nesta etapa.
 - O recibo agora pode usar mensagem opcional cadastrada na categoria financeira do lancamento.
 - Quando a categoria nao tiver mensagem de recibo, o rodape do recibo usa mensagem padrao simples e segura.
+- O recibo agora usa apresentacao mais documental, com cabecalho simples, destaque de numero e valor, corpo textual e impressao A4 mais limpa.
 - O extrato mostra conta, periodo, saldo inicial, data do saldo inicial, saldo anterior quando aplicavel e saldo final exibido.
 - O modulo possui listagem de contas com `saldo_atual` calculado.
 - A listagem de lancamentos destaca tipo por cor e status nao quitado em negrito.

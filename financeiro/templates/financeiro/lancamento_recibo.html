@@ -1,75 +1,259 @@
 {% extends 'financeiro/base.html' %}
 {% block title %}{{ page_title }}{% endblock %}
 {% block content %}
-<section class="financeiro-hero">
-    <div class="level">
-        <div class="level-left">
-            <div>
-                <h1 class="title">Recibo</h1>
-                <p class="subtitle">Lancamento financeiro #{{ lancamento.pk }}</p>
-                <p class="subtitle"><strong>Referente a:</strong> {{ recibo_referente }}</p>
-                <p class="subtitle"><strong>{{ recibo_data_label }}:</strong> {{ recibo_data_principal|date:'d/m/Y' }}</p>
-                {% if recibo_data_fallback %}
-                    <p class="report-print-meta">Data do recebimento nao informada. Foi usada a data de competencia como fallback.</p>
-                {% endif %}
-                <p class="report-print-meta">Emitido em {% now "d/m/Y H:i" %}</p>
+<style>
+    .recibo-documento {
+        max-width: 880px;
+        margin: 0 auto;
+        background: #fff;
+        border: 1px solid #d8d1c4;
+        box-shadow: 0 18px 40px rgba(52, 46, 36, 0.08);
+    }
+
+    .recibo-header {
+        padding: 2.25rem 2.5rem 1.5rem;
+        border-bottom: 2px solid #d8d1c4;
+        display: grid;
+        gap: 1.25rem;
+    }
+
+    .recibo-identidade {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .recibo-identidade-placeholder {
+        min-height: 68px;
+        border: 1px dashed #b9b09f;
+        padding: 0.9rem 1rem;
+        color: #6b6458;
+        font-size: 0.95rem;
+        width: 100%;
+    }
+
+    .recibo-topo {
+        display: grid;
+        grid-template-columns: 1.4fr 1fr;
+        gap: 1rem;
+        align-items: stretch;
+    }
+
+    .recibo-titulo-box,
+    .recibo-valor-box {
+        border: 1px solid #d8d1c4;
+        padding: 1rem 1.1rem;
+        background: #fcfaf6;
+    }
+
+    .recibo-label {
+        display: block;
+        font-size: 0.78rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #736a5a;
+        margin-bottom: 0.45rem;
+    }
+
+    .recibo-titulo {
+        font-size: 2rem;
+        letter-spacing: 0.18em;
+        margin: 0;
+        font-weight: 700;
+        color: #2d2a24;
+    }
+
+    .recibo-meta {
+        margin: 0.35rem 0 0;
+        color: #5f584d;
+        font-size: 0.95rem;
+    }
+
+    .recibo-valor {
+        margin: 0;
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1f5134;
+        line-height: 1.1;
+    }
+
+    .recibo-corpo {
+        padding: 2rem 2.5rem;
+    }
+
+    .recibo-texto {
+        font-size: 1.04rem;
+        line-height: 1.85;
+        color: #2e2a24;
+    }
+
+    .recibo-linha {
+        margin: 0 0 1rem;
+    }
+
+    .recibo-campo {
+        display: inline;
+        font-weight: 600;
+    }
+
+    .recibo-valor-texto {
+        display: inline;
+        border-bottom: 1px solid #bfb5a3;
+        padding-bottom: 0.08rem;
+    }
+
+    .recibo-observacao {
+        margin-top: 1rem;
+        color: #6a6258;
+        font-size: 0.95rem;
+    }
+
+    .recibo-data-local {
+        margin-top: 2rem;
+        text-align: right;
+        color: #4f493f;
+        font-size: 0.98rem;
+    }
+
+    .recibo-rodape {
+        padding: 0 2.5rem 2.2rem;
+    }
+
+    .recibo-mensagem {
+        border-top: 1px solid #ddd4c5;
+        border-bottom: 1px solid #ddd4c5;
+        padding: 1rem 0;
+        margin-bottom: 2rem;
+        color: #322d27;
+    }
+
+    .recibo-assinatura {
+        margin-top: 2.75rem;
+        text-align: center;
+    }
+
+    .recibo-assinatura-linha {
+        width: min(320px, 100%);
+        margin: 0 auto 0.55rem;
+        border-bottom: 1px solid #433d34;
+        height: 2rem;
+    }
+
+    @media (max-width: 768px) {
+        .recibo-header,
+        .recibo-corpo,
+        .recibo-rodape {
+            padding-left: 1.25rem;
+            padding-right: 1.25rem;
+        }
+
+        .recibo-topo {
+            grid-template-columns: 1fr;
+        }
+
+        .recibo-identidade {
+            flex-direction: column;
+        }
+
+        .recibo-titulo,
+        .recibo-valor {
+            font-size: 1.6rem;
+        }
+    }
+
+    @media print {
+        .recibo-documento {
+            max-width: none;
+            border: none;
+            box-shadow: none;
+        }
+
+        .recibo-header,
+        .recibo-corpo,
+        .recibo-rodape {
+            padding-left: 0;
+            padding-right: 0;
+        }
+
+        .recibo-topo,
+        .recibo-identidade {
+            gap: 0.75rem;
+        }
+
+        .recibo-texto {
+            font-size: 12pt;
+            line-height: 1.7;
+        }
+    }
+</style>
+
+<section class="recibo-documento">
+    <header class="recibo-header">
+        <div class="recibo-identidade">
+            <div class="recibo-identidade-placeholder">
+                Espaco reservado para identificacao institucional
             </div>
-        </div>
-        <div class="level-right no-print">
-            <div class="buttons">
+            <div class="buttons no-print">
                 <button class="button is-light" type="button" onclick="window.print()">Imprimir</button>
                 <a class="button" href="{% url 'financeiro:lancamento-list' %}">Voltar</a>
             </div>
         </div>
-    </div>
-</section>
 
-<section class="box">
-    <div class="content">
-        <p>
-            Recibo referente ao lancamento abaixo identificado.
-        </p>
-    </div>
+        <div class="recibo-topo">
+            <div class="recibo-titulo-box">
+                <span class="recibo-label">Documento</span>
+                <h1 class="recibo-titulo">RECIBO</h1>
+                <p class="recibo-meta">Numero: {{ lancamento.numero_documento|default:'-' }}</p>
+            </div>
+            <div class="recibo-valor-box">
+                <span class="recibo-label">Valor</span>
+                <p class="recibo-valor">R$ {{ lancamento.valor }}</p>
+                <p class="recibo-meta">{{ recibo_data_label }}: {{ recibo_data_principal|date:'d/m/Y' }}</p>
+            </div>
+        </div>
+    </header>
 
-    <div class="table-container">
-        <table class="table is-fullwidth is-striped">
-            <tbody>
-            <tr>
-                <th>Valor</th>
-                <td>R$ {{ lancamento.valor }}</td>
-            </tr>
-            <tr>
-                <th>{{ recibo_data_label }}</th>
-                <td>{{ recibo_data_principal|date:'d/m/Y' }}</td>
-            </tr>
-            <tr>
-                <th>Data de competencia</th>
-                <td>{{ lancamento.data_competencia|date:'d/m/Y' }}</td>
-            </tr>
-            <tr>
-                <th>Favorecido</th>
-                <td>{{ lancamento.pessoa|default:'-' }}</td>
-            </tr>
-            <tr>
-                <th>Data de pagamento</th>
-                <td>{{ lancamento.data_pagamento|date:'d/m/Y'|default:'-' }}</td>
-            </tr>
-            <tr>
-                <th>Numero do documento</th>
-                <td>{{ lancamento.numero_documento|default:'-' }}</td>
-            </tr>
-            </tbody>
-        </table>
-    </div>
-</section>
+    <section class="recibo-corpo">
+        <div class="recibo-texto">
+            <p class="recibo-linha">
+                <span class="recibo-campo">Recebi(emos) de</span>
+                <span class="recibo-valor-texto">{{ lancamento.pessoa|default:'-' }}</span>.
+            </p>
+            <p class="recibo-linha">
+                <span class="recibo-campo">A importancia de</span>
+                <span class="recibo-valor-texto">R$ {{ lancamento.valor }}</span>.
+            </p>
+            <p class="recibo-linha">
+                <span class="recibo-campo">Referente a</span>
+                <span class="recibo-valor-texto">{{ recibo_referente }}</span>.
+            </p>
+            <p class="recibo-observacao">
+                Data de competencia: {{ lancamento.data_competencia|date:'d/m/Y' }}.
+                {% if lancamento.data_pagamento %}
+                    Data de pagamento informada: {{ lancamento.data_pagamento|date:'d/m/Y' }}.
+                {% endif %}
+            </p>
+            {% if recibo_data_fallback %}
+                <p class="recibo-observacao">
+                    Data do recebimento nao informada. Foi usada a data de competencia como fallback seguro neste recibo.
+                </p>
+            {% endif %}
+            <p class="recibo-data-local">
+                Cidade: ________________________________<br>
+                Data: {{ recibo_data_principal|date:'d/m/Y' }}
+            </p>
+        </div>
+    </section>
 
-<section class="box">
-    <div class="content mb-6">
-        <p{% if recibo_mensagem_personalizada %} class="has-text-weight-semibold"{% endif %}>{{ recibo_mensagem_final }}</p>
-    </div>
-    <div class="prestacao-signature">
-        <p>Assinatura</p>
-        <div class="prestacao-signature-line"></div>
-    </div>
+    <footer class="recibo-rodape">
+        <div class="recibo-mensagem">
+            <p{% if recibo_mensagem_personalizada %} class="has-text-weight-semibold"{% endif %}>{{ recibo_mensagem_final }}</p>
+        </div>
+        <div class="recibo-assinatura">
+            <div class="recibo-assinatura-linha"></div>
+            <p>Assinatura</p>
+        </div>
+    </footer>
 </section>
 {% endblock %}

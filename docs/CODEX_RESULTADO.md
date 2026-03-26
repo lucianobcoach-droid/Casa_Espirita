@@ -80,3 +80,10 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - quando o lancamento tiver categoria com `mensagem_recibo`, o recibo exibe esse texto em destaque no rodape
 - quando a categoria nao tiver mensagem cadastrada, o recibo continua usando a mensagem padrao simples e segura
 - a etapa nao implementa ainda assinatura configuravel nem configuracao institucional dinamica
+
+## Refinamento visual do recibo
+
+- o recibo deixou de ter aparencia principal de tabela administrativa
+- o layout passou a priorizar formato de documento simples, com cabecalho, destaque de numero e valor e corpo textual
+- foram adicionados placeholders visuais discretos para identidade institucional e cidade, sem criar configuracao nova nesta etapa
+- o refinamento ficou isolado no template do recibo, sem alterar regra de negocio
