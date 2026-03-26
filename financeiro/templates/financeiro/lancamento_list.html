@@ -42,6 +42,53 @@
             </div>
         </div>
         <div class="column is-2">
+            <label class="label">Data inicial</label>
+            <input class="input" type="date" name="data_inicial" value="{{ request.GET.data_inicial }}">
+        </div>
+        <div class="column is-2">
+            <label class="label">Data final</label>
+            <input class="input" type="date" name="data_final" value="{{ request.GET.data_final }}">
+        </div>
+        <div class="column is-4">
+            <label class="label">Conta</label>
+            <div class="select is-fullwidth">
+                <select name="conta">
+                    <option value="">Todas</option>
+                    {% for conta in contas_disponiveis %}
+                        <option value="{{ conta.pk }}" {% if request.GET.conta == conta.pk|stringformat:'s' %}selected{% endif %}>
+                            {{ conta.nome }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="column is-4">
+            <label class="label">Pessoa</label>
+            <div class="select is-fullwidth">
+                <select name="pessoa">
+                    <option value="">Todas</option>
+                    {% for pessoa in pessoas_disponiveis %}
+                        <option value="{{ pessoa.pk }}" {% if request.GET.pessoa == pessoa.pk|stringformat:'s' %}selected{% endif %}>
+                            {{ pessoa.nome }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="column is-4">
+            <label class="label">Categoria</label>
+            <div class="select is-fullwidth">
+                <select name="categoria">
+                    <option value="">Todas</option>
+                    {% for categoria in categorias_disponiveis %}
+                        <option value="{{ categoria.pk }}" {% if request.GET.categoria == categoria.pk|stringformat:'s' %}selected{% endif %}>
+                            {{ categoria.nome }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="column is-2">
             <label class="label">&nbsp;</label>
             <div class="buttons">
                 <button class="button is-link is-fullwidth" type="submit">Filtrar</button>

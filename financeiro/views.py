@@ -706,11 +706,21 @@ class LancamentoFinanceiroListView(ListView):
     context_object_name = 'lancamentos'
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        queryset = super().get_queryset().select_related(
+            'conta',
+            'conta_destino',
+            'pessoa',
+            'categoria',
+        )
         descricao = self.request.GET.get('descricao', '').strip()
         numero_documento = self.request.GET.get('numero_documento', '').strip()
         tipo = self.request.GET.get('tipo', '').strip()
         status = self.request.GET.get('status', '').strip()
+        data_inicial = self.request.GET.get('data_inicial', '').strip()
+        data_final = self.request.GET.get('data_final', '').strip()
+        conta = self.request.GET.get('conta', '').strip()
+        pessoa = self.request.GET.get('pessoa', '').strip()
+        categoria = self.request.GET.get('categoria', '').strip()
         if descricao:
             queryset = queryset.filter(descricao__icontains=descricao)
         if numero_documento:
@@ -719,7 +729,24 @@ class LancamentoFinanceiroListView(ListView):
             queryset = queryset.filter(tipo=tipo)
         if status:
             queryset = queryset.filter(status=status)
+        if data_inicial:
+            queryset = queryset.filter(data_competencia__gte=data_inicial)
+        if data_final:
+            queryset = queryset.filter(data_competencia__lte=data_final)
+        if conta:
+            queryset = queryset.filter(Q(conta_id=conta) | Q(conta_destino_id=conta))
+        if pessoa:
+            queryset = queryset.filter(pessoa_id=pessoa)
+        if categoria:
+            queryset = queryset.filter(categoria_id=categoria)
         return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['contas_disponiveis'] = ContaFinanceira.objects.order_by('nome')
+        context['pessoas_disponiveis'] = PessoaFinanceira.objects.order_by('nome')
+        context['categorias_disponiveis'] = CategoriaFinanceira.objects.order_by('tipo', 'nome')
+        return context
 
 
 class LancamentoFinanceiroCreateView(FinanceiroFormMixin, CreateView):
