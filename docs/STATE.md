@@ -177,6 +177,8 @@ Com filtro por periodo:
 - No acabamento fino do recibo, `Recebi(emos) de` passou a mostrar apenas o nome da pessoa, `A importancia de` passou a usar valor por extenso e a data passou a aparecer apenas em formato documental humano.
 - O recibo agora pode usar assinatura institucional configuravel quando existir assinatura ativa marcada como padrao.
 - Quando nao existir assinatura institucional padrao, o recibo continua com fallback simples no bloco final.
+- O recibo agora pode usar configuracao institucional dinamica com nome, cidade, logo e mensagem padrao quando existir configuracao ativa marcada como padrao.
+- Quando algum dado institucional nao estiver configurado, o recibo preserva fallback seguro sem quebrar o layout.
 - O extrato mostra conta, periodo, saldo inicial, data do saldo inicial, saldo anterior quando aplicavel e saldo final exibido.
 - O modulo possui listagem de contas com `saldo_atual` calculado.
 - A listagem de lancamentos destaca tipo por cor e status nao quitado em negrito.
@@ -193,9 +195,11 @@ Com filtro por periodo:
 - Existe a migration incremental `financeiro/migrations/0006_lancamentofinanceiro_conditional_required_fields.py`.
 - Existe a migration incremental `financeiro/migrations/0007_categoriafinanceira_mensagem_recibo.py`.
 - Existe a migration incremental `financeiro/migrations/0008_assinaturainstitucional.py`.
+- Existe a migration incremental `financeiro/migrations/0009_configuracaoinstitucional.py`.
 - A cadeia `0005` -> `0006` representa a consolidacao incremental da obrigatoriedade condicional de `pessoa` e `categoria`.
 - A `0007` adiciona `mensagem_recibo` opcional em `CategoriaFinanceira` para personalizacao controlada do recibo com fallback padrao.
 - A `0008` adiciona `AssinaturaInstitucional` para uso controlado no recibo com selecao por assinatura padrao ativa.
+- A `0009` adiciona `ConfiguracaoInstitucional` para uso dinamico no recibo com selecao por configuracao padrao ativa.
 - Nao foi criada migration nova para unicidade de `numero_documento` nesta etapa.
 - A validacao de nao repeticao de `numero_documento` ficou na camada de aplicacao por seguranca incremental.
 - As migrations antigas nao foram alteradas.

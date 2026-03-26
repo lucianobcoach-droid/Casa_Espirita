@@ -104,3 +104,12 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - quando a assinatura padrao existe, o recibo mostra o texto manuscrito configurado e, quando informados, nome de exibicao e cargo
 - quando nao existe assinatura padrao, o recibo continua funcionando com fallback simples
 - a etapa nao implementa ainda assinatura por imagem nem configuracao institucional completa
+
+## Configuracao institucional no recibo
+
+- foi criado o cadastro simples de `ConfiguracaoInstitucional`
+- a estrutura minima inclui `nome_instituicao`, `cidade`, `logo_url`, `mensagem_padrao_recibo`, `ativo` e `padrao`
+- o recibo passou a buscar a configuracao institucional ativa marcada como padrao
+- quando a configuracao existir, o recibo pode usar nome da instituicao, cidade, logo e mensagem padrao
+- quando algum dado institucional nao estiver preenchido, o recibo continua usando fallback seguro e nao quebra o layout
+- a etapa nao implementa ainda configuracao institucional complexa para multiplas instituicoes nem revisao global de layout

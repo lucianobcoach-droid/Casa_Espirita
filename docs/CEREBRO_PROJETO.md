@@ -86,6 +86,9 @@ Ate o momento, esta validado que:
 - o sistema agora pode ter assinaturas institucionais cadastradas para uso em recibo
 - o recibo deve usar a assinatura institucional ativa marcada como padrao, quando existir
 - se nao existir assinatura padrao, o recibo deve continuar funcionando com fallback simples
+- o sistema agora pode ter configuracao institucional propria para uso no recibo
+- o recibo deve usar nome da instituicao, cidade, logo e mensagem padrao da configuracao institucional ativa marcada como padrao, quando existirem
+- se algum dado institucional nao estiver preenchido, o recibo deve usar fallback seguro sem quebrar o layout
 
 ## 7. Regras de negocio atuais do financeiro
 
@@ -142,6 +145,9 @@ Os tipos validos de lancamento sao:
 - `AssinaturaInstitucional` pode definir `assinatura_texto`, `nome_exibicao`, `cargo`, `ativo` e `padrao`
 - so pode haver uma assinatura marcada como `padrao`
 - a assinatura marcada como `padrao` precisa estar ativa
+- `ConfiguracaoInstitucional` pode definir `nome_instituicao`, `cidade`, `logo_url`, `mensagem_padrao_recibo`, `ativo` e `padrao`
+- so pode haver uma configuracao institucional marcada como `padrao`
+- a configuracao institucional marcada como `padrao` precisa estar ativa
 - na listagem de lancamentos, transferencias sem `pessoa` podem aparecer como `Transferencia entre Contas`
 - quando um lancamento nao possui categoria, ele aparece no agrupamento como `Sem categoria`
 - quando uma despesa nao possui centro de custo, ela aparece no agrupamento como `Sem centro de custo`

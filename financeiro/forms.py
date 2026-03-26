@@ -6,6 +6,7 @@ from django.urls import reverse_lazy
 from .models import (
     AssinaturaInstitucional,
     CategoriaFinanceira,
+    ConfiguracaoInstitucional,
     CentroCusto,
     ContaFinanceira,
     LancamentoFinanceiro,
@@ -94,6 +95,32 @@ class AssinaturaInstitucionalForm(forms.ModelForm):
             'nome_exibicao': 'Opcional. Nome abaixo da assinatura no recibo.',
             'cargo': 'Opcional. Cargo exibido abaixo do nome, quando informado.',
             'padrao': 'Quando marcada, esta assinatura passa a ser a usada por padrao nos recibos.',
+        }
+
+
+class ConfiguracaoInstitucionalForm(forms.ModelForm):
+    class Meta:
+        model = ConfiguracaoInstitucional
+        fields = [
+            'nome_instituicao',
+            'cidade',
+            'logo_url',
+            'mensagem_padrao_recibo',
+            'ativo',
+            'padrao',
+        ]
+        widgets = {
+            'mensagem_padrao_recibo': forms.Textarea(
+                attrs={
+                    'rows': 4,
+                    'placeholder': 'Mensagem padrao usada no recibo quando a categoria nao tiver mensagem propria.',
+                }
+            ),
+        }
+        help_texts = {
+            'logo_url': 'Opcional. Informe uma URL de logo para o cabecalho do recibo.',
+            'mensagem_padrao_recibo': 'Opcional. Se vazia, o recibo continua usando o fallback simples ja existente.',
+            'padrao': 'Quando marcada, esta configuracao passa a ser a usada por padrao no recibo.',
         }
 
 

@@ -1,0 +1,62 @@
+{% extends 'financeiro/base.html' %}
+{% block title %}Configuracoes Institucionais{% endblock %}
+{% block content %}
+<div class="level">
+    <div class="level-left">
+        <h1 class="title">Configuracoes Institucionais</h1>
+    </div>
+    <div class="level-right">
+        <a class="button is-primary" href="{% url 'financeiro:configuracao-institucional-create' %}">Nova configuracao</a>
+    </div>
+</div>
+<form method="get" class="filters-box">
+    <div class="columns is-vcentered">
+        <div class="column is-10">
+            <label class="label">Nome da instituicao</label>
+            <input class="input" type="text" name="nome_instituicao" value="{{ request.GET.nome_instituicao }}" placeholder="Buscar por nome da instituicao">
+        </div>
+        <div class="column is-2">
+            <label class="label">&nbsp;</label>
+            <div class="buttons">
+                <button class="button is-link is-fullwidth" type="submit">Filtrar</button>
+                <a class="button is-light is-fullwidth" href="{% url 'financeiro:configuracao-institucional-list' %}">Limpar</a>
+            </div>
+        </div>
+    </div>
+</form>
+<div class="table-wrapper">
+    <table class="table is-fullwidth is-striped is-hoverable">
+        <thead>
+        <tr>
+            <th>Instituicao</th>
+            <th>Cidade</th>
+            <th>Logo</th>
+            <th>Mensagem padrao</th>
+            <th>Ativa</th>
+            <th>Padrao</th>
+            <th>Acoes</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for configuracao in configuracoes %}
+            <tr>
+                <td>{{ configuracao.nome_instituicao|default:'-' }}</td>
+                <td>{{ configuracao.cidade|default:'-' }}</td>
+                <td>{% if configuracao.logo_url %}Sim{% else %}Nao{% endif %}</td>
+                <td>{{ configuracao.mensagem_padrao_recibo|default:'-'|truncatechars:60 }}</td>
+                <td>{% if configuracao.ativo %}Sim{% else %}Nao{% endif %}</td>
+                <td>{% if configuracao.padrao %}Sim{% else %}Nao{% endif %}</td>
+                <td class="actions-cell">
+                    <a class="button is-small is-link is-light" href="{% url 'financeiro:configuracao-institucional-update' configuracao.pk %}">Editar</a>
+                    <a class="button is-small is-danger is-light" href="{% url 'financeiro:configuracao-institucional-delete' configuracao.pk %}">Excluir</a>
+                </td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="7">Nenhuma configuracao institucional cadastrada.</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

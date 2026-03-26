@@ -139,6 +139,45 @@ class AssinaturaInstitucional(models.Model):
         super().save(*args, **kwargs)
 
 
+class ConfiguracaoInstitucional(models.Model):
+    nome_instituicao = models.CharField(max_length=200, blank=True)
+    cidade = models.CharField(max_length=120, blank=True)
+    logo_url = models.URLField(blank=True)
+    mensagem_padrao_recibo = models.TextField(blank=True)
+    ativo = models.BooleanField(default=True)
+    padrao = models.BooleanField(default=False)
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-padrao', '-ativo', 'nome_instituicao']
+        verbose_name = 'Configuracao institucional'
+        verbose_name_plural = 'Configuracoes institucionais'
+
+    def __str__(self) -> str:
+        return self.nome_instituicao or 'Configuracao institucional'
+
+    def clean(self) -> None:
+        errors: dict[str, str] = {}
+
+        if self.padrao and not self.ativo:
+            errors['ativo'] = 'A configuracao padrao precisa estar ativa.'
+
+        if self.padrao:
+            queryset = type(self).objects.filter(padrao=True)
+            if self.pk:
+                queryset = queryset.exclude(pk=self.pk)
+            if queryset.exists():
+                errors['padrao'] = 'Ja existe outra configuracao institucional marcada como padrao.'
+
+        if errors:
+            raise ValidationError(errors)
+
+    def save(self, *args, **kwargs) -> None:
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+
 class LancamentoFinanceiro(models.Model):
     class TipoLancamento(models.TextChoices):
         RECEITA = 'receita', 'Receita'

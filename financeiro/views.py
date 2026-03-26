@@ -14,6 +14,7 @@ from django.views.generic import CreateView, DeleteView, DetailView, ListView, T
 from .forms import (
     AssinaturaInstitucionalForm,
     CategoriaFinanceiraForm,
+    ConfiguracaoInstitucionalForm,
     CentroCustoForm,
     ContaFinanceiraForm,
     LancamentoFinanceiroForm,
@@ -22,6 +23,7 @@ from .forms import (
 from .models import (
     AssinaturaInstitucional,
     CategoriaFinanceira,
+    ConfiguracaoInstitucional,
     CentroCusto,
     ContaFinanceira,
     LancamentoFinanceiro,
@@ -908,6 +910,46 @@ class AssinaturaInstitucionalDeleteView(FinanceiroDeleteMixin):
     success_message = 'Assinatura institucional excluida com sucesso.'
 
 
+class ConfiguracaoInstitucionalListView(ListView):
+    model = ConfiguracaoInstitucional
+    template_name = 'financeiro/configuracao_institucional_list.html'
+    context_object_name = 'configuracoes'
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        nome = self.request.GET.get('nome_instituicao', '').strip()
+        if nome:
+            queryset = queryset.filter(nome_instituicao__icontains=nome)
+        return queryset
+
+
+class ConfiguracaoInstitucionalCreateView(FinanceiroFormMixin, CreateView):
+    model = ConfiguracaoInstitucional
+    form_class = ConfiguracaoInstitucionalForm
+    template_name = 'financeiro/configuracao_institucional_form.html'
+    success_url = reverse_lazy('financeiro:configuracao-institucional-list')
+    page_title = 'Nova Configuracao Institucional'
+    success_message = 'Configuracao institucional cadastrada com sucesso.'
+
+
+class ConfiguracaoInstitucionalUpdateView(FinanceiroFormMixin, UpdateView):
+    model = ConfiguracaoInstitucional
+    form_class = ConfiguracaoInstitucionalForm
+    template_name = 'financeiro/configuracao_institucional_form.html'
+    success_url = reverse_lazy('financeiro:configuracao-institucional-list')
+    page_title = 'Editar Configuracao Institucional'
+    submit_label = 'Atualizar'
+    success_message = 'Configuracao institucional atualizada com sucesso.'
+
+
+class ConfiguracaoInstitucionalDeleteView(FinanceiroDeleteMixin):
+    model = ConfiguracaoInstitucional
+    success_url = reverse_lazy('financeiro:configuracao-institucional-list')
+    page_title = 'Excluir Configuracao Institucional'
+    cancel_url = reverse_lazy('financeiro:configuracao-institucional-list')
+    success_message = 'Configuracao institucional excluida com sucesso.'
+
+
 class LancamentoFinanceiroListView(ListView):
     model = LancamentoFinanceiro
     template_name = 'financeiro/lancamento_list.html'
@@ -995,6 +1037,7 @@ class LancamentoFinanceiroReciboView(DetailView):
         data_recibo = self.object.data_pagamento or self.object.data_competencia
         mensagem_categoria = ''
         assinatura_padrao = AssinaturaInstitucional.objects.filter(ativo=True, padrao=True).first()
+        configuracao_padrao = ConfiguracaoInstitucional.objects.filter(ativo=True, padrao=True).first()
         if self.object.categoria:
             mensagem_categoria = (self.object.categoria.mensagem_recibo or '').strip()
         context['page_title'] = f'Recibo do Lancamento {self.object.pk}'
@@ -1005,10 +1048,22 @@ class LancamentoFinanceiroReciboView(DetailView):
         context['recibo_valor_extenso'] = _valor_por_extenso(self.object.valor)
         context['recibo_data_fallback'] = self.object.data_pagamento is None
         context['recibo_mensagem_final'] = (
-            mensagem_categoria or 'Recibo emitido com base no lancamento registrado no sistema.'
+            mensagem_categoria
+            or (
+                (configuracao_padrao.mensagem_padrao_recibo or '').strip()
+                if configuracao_padrao
+                else ''
+            )
+            or 'Recibo emitido com base no lancamento registrado no sistema.'
         )
         context['recibo_mensagem_personalizada'] = bool(mensagem_categoria)
         context['recibo_assinatura_padrao'] = assinatura_padrao
+        context['recibo_configuracao_institucional'] = configuracao_padrao
+        context['recibo_nome_instituicao'] = (
+            (configuracao_padrao.nome_instituicao or '').strip() if configuracao_padrao else ''
+        )
+        context['recibo_logo_url'] = (configuracao_padrao.logo_url or '').strip() if configuracao_padrao else ''
+        context['recibo_cidade'] = (configuracao_padrao.cidade or '').strip() if configuracao_padrao else ''
         return context
 
 

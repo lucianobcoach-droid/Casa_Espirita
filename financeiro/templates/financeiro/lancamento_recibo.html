@@ -25,6 +25,32 @@
         gap: 1rem;
     }
 
+    .recibo-identidade-bloco {
+        display: flex;
+        align-items: center;
+        gap: 0.9rem;
+        min-height: 32px;
+        width: 100%;
+    }
+
+    .recibo-logo {
+        max-height: 54px;
+        max-width: 150px;
+        object-fit: contain;
+    }
+
+    .recibo-identidade-texto {
+        display: flex;
+        flex-direction: column;
+        gap: 0.1rem;
+    }
+
+    .recibo-instituicao {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #2d2a24;
+    }
+
     .recibo-identidade-faixa {
         width: 100%;
         height: 20px;
@@ -171,6 +197,7 @@
 
         .recibo-identidade {
             flex-direction: column;
+            align-items: stretch;
         }
 
         .recibo-titulo,
@@ -208,7 +235,18 @@
 <section class="recibo-documento">
     <header class="recibo-header">
         <div class="recibo-identidade">
-            <div class="recibo-identidade-faixa"></div>
+            <div class="recibo-identidade-bloco">
+                {% if recibo_logo_url %}
+                    <img class="recibo-logo" src="{{ recibo_logo_url }}" alt="Logo institucional">
+                {% endif %}
+                {% if recibo_nome_instituicao %}
+                    <div class="recibo-identidade-texto">
+                        <span class="recibo-instituicao">{{ recibo_nome_instituicao }}</span>
+                    </div>
+                {% elif not recibo_logo_url %}
+                    <div class="recibo-identidade-faixa"></div>
+                {% endif %}
+            </div>
             <div class="buttons no-print">
                 <button class="button is-light" type="button" onclick="window.print()">Imprimir</button>
                 <a class="button" href="{% url 'financeiro:lancamento-list' %}">Voltar</a>
@@ -249,7 +287,7 @@
                 </p>
             {% endif %}
             <p class="recibo-data-local">
-                ________________________________, {{ recibo_data_humana }}
+                {% if recibo_cidade %}{{ recibo_cidade }}, {% else %}______________________, {% endif %}{{ recibo_data_humana }}
             </p>
         </div>
     </section>
