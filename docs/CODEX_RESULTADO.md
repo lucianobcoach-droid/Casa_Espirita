@@ -121,3 +121,9 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - `assinatura_texto` passou a ser exibido com estilo manuscrito no bloco de assinatura
 - `nome_exibicao` e `cargo` continuam aparecendo abaixo da assinatura quando preenchidos
 - a linha de cidade/data foi mantida limpa, com fallback seguro quando a cidade nao estiver configurada
+
+## Compactacao final da impressao do recibo
+
+- o bloco do recibo passou a respeitar melhor a altura do proprio conteudo na impressao
+- os espacos verticais entre corpo, mensagem final, assinatura e fim do documento foram reduzidos
+- o PDF do recibo deixa de aparentar preenchimento artificial da pagina inteira quando o conteudo e curto

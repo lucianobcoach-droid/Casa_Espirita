@@ -91,6 +91,7 @@ Ate o momento, esta validado que:
 - se algum dado institucional nao estiver preenchido, o recibo deve usar fallback seguro sem quebrar o layout
 - a logo do recibo deve ser tratada como URL acessivel pelo navegador e, se falhar, deve ser ocultada sem quebrar o cabecalho
 - a assinatura configuravel do recibo deve usar `assinatura_texto` com apresentacao manuscrita no proprio template
+- na impressao do recibo, o bloco documental deve ter altura guiada pelo conteudo, sem se esticar ate o fim da folha
 
 ## 7. Regras de negocio atuais do financeiro
 
@@ -151,6 +152,7 @@ Os tipos validos de lancamento sao:
 - so pode haver uma configuracao institucional marcada como `padrao`
 - a configuracao institucional marcada como `padrao` precisa estar ativa
 - no recibo, `nome_exibicao` e `cargo` da assinatura devem aparecer abaixo da assinatura manuscrita quando preenchidos
+- o PDF do recibo deve terminar pouco abaixo da assinatura, sem espaco vertical excessivo
 - na listagem de lancamentos, transferencias sem `pessoa` podem aparecer como `Transferencia entre Contas`
 - quando um lancamento nao possui categoria, ele aparece no agrupamento como `Sem categoria`
 - quando uma despesa nao possui centro de custo, ela aparece no agrupamento como `Sem centro de custo`
