@@ -179,6 +179,7 @@ Com filtro por periodo:
 - Quando nao existir assinatura institucional padrao, o recibo continua com fallback simples no bloco final.
 - O recibo agora pode usar configuracao institucional dinamica com nome, cidade, logo e mensagem padrao quando existir configuracao ativa marcada como padrao.
 - Quando algum dado institucional nao estiver configurado, o recibo preserva fallback seguro sem quebrar o layout.
+- A integracao visual final do recibo agora tenta carregar a logo por URL acessivel ao navegador, oculta a imagem com elegancia quando a URL falha e usa `assinatura_texto` com estilo manuscrito no bloco de assinatura.
 - O extrato mostra conta, periodo, saldo inicial, data do saldo inicial, saldo anterior quando aplicavel e saldo final exibido.
 - O modulo possui listagem de contas com `saldo_atual` calculado.
 - A listagem de lancamentos destaca tipo por cor e status nao quitado em negrito.

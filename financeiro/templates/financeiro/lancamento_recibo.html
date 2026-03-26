@@ -33,10 +33,16 @@
         width: 100%;
     }
 
+    .recibo-identidade-bloco.sem-logo {
+        gap: 0.55rem;
+    }
+
     .recibo-logo {
         max-height: 54px;
         max-width: 150px;
         object-fit: contain;
+        display: block;
+        flex-shrink: 0;
     }
 
     .recibo-identidade-texto {
@@ -158,9 +164,12 @@
     }
 
     .recibo-assinatura-texto {
-        font-size: 1.5rem;
+        font-family: "Segoe Script", "Brush Script MT", "Lucida Handwriting", cursive;
+        font-size: 1.8rem;
+        font-weight: 500;
         line-height: 1.1;
-        margin-bottom: 0.2rem;
+        margin-bottom: 0.25rem;
+        letter-spacing: 0.03em;
         color: #2f2a24;
     }
 
@@ -204,6 +213,10 @@
         .recibo-valor {
             font-size: 1.45rem;
         }
+
+        .recibo-assinatura-texto {
+            font-size: 1.5rem;
+        }
     }
 
     @media print {
@@ -229,6 +242,10 @@
             font-size: 11.5pt;
             line-height: 1.55;
         }
+
+        .recibo-assinatura-texto {
+            font-size: 19pt;
+        }
     }
 </style>
 
@@ -237,7 +254,15 @@
         <div class="recibo-identidade">
             <div class="recibo-identidade-bloco">
                 {% if recibo_logo_url %}
-                    <img class="recibo-logo" src="{{ recibo_logo_url }}" alt="Logo institucional">
+                    <img
+                        class="recibo-logo"
+                        src="{{ recibo_logo_url }}"
+                        alt="Logo institucional"
+                        loading="eager"
+                        decoding="async"
+                        referrerpolicy="no-referrer"
+                        onerror="this.style.display='none'; this.closest('.recibo-identidade-bloco').classList.add('sem-logo');"
+                    >
                 {% endif %}
                 {% if recibo_nome_instituicao %}
                     <div class="recibo-identidade-texto">
@@ -287,7 +312,11 @@
                 </p>
             {% endif %}
             <p class="recibo-data-local">
-                {% if recibo_cidade %}{{ recibo_cidade }}, {% else %}______________________, {% endif %}{{ recibo_data_humana }}
+                {% if recibo_cidade %}
+                    {{ recibo_cidade }}, {{ recibo_data_humana }}
+                {% else %}
+                    {{ recibo_data_humana }}
+                {% endif %}
             </p>
         </div>
     </section>

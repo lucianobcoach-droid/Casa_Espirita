@@ -89,6 +89,8 @@ Ate o momento, esta validado que:
 - o sistema agora pode ter configuracao institucional propria para uso no recibo
 - o recibo deve usar nome da instituicao, cidade, logo e mensagem padrao da configuracao institucional ativa marcada como padrao, quando existirem
 - se algum dado institucional nao estiver preenchido, o recibo deve usar fallback seguro sem quebrar o layout
+- a logo do recibo deve ser tratada como URL acessivel pelo navegador e, se falhar, deve ser ocultada sem quebrar o cabecalho
+- a assinatura configuravel do recibo deve usar `assinatura_texto` com apresentacao manuscrita no proprio template
 
 ## 7. Regras de negocio atuais do financeiro
 
@@ -148,6 +150,7 @@ Os tipos validos de lancamento sao:
 - `ConfiguracaoInstitucional` pode definir `nome_instituicao`, `cidade`, `logo_url`, `mensagem_padrao_recibo`, `ativo` e `padrao`
 - so pode haver uma configuracao institucional marcada como `padrao`
 - a configuracao institucional marcada como `padrao` precisa estar ativa
+- no recibo, `nome_exibicao` e `cargo` da assinatura devem aparecer abaixo da assinatura manuscrita quando preenchidos
 - na listagem de lancamentos, transferencias sem `pessoa` podem aparecer como `Transferencia entre Contas`
 - quando um lancamento nao possui categoria, ele aparece no agrupamento como `Sem categoria`
 - quando uma despesa nao possui centro de custo, ela aparece no agrupamento como `Sem centro de custo`

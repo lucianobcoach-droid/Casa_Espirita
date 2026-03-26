@@ -113,3 +113,11 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - quando a configuracao existir, o recibo pode usar nome da instituicao, cidade, logo e mensagem padrao
 - quando algum dado institucional nao estiver preenchido, o recibo continua usando fallback seguro e nao quebra o layout
 - a etapa nao implementa ainda configuracao institucional complexa para multiplas instituicoes nem revisao global de layout
+
+## Integracao visual final de logo e assinatura
+
+- a logo configurada passou a ser tratada como URL acessivel pelo navegador no template do recibo
+- quando a URL da logo falha, a imagem e ocultada sem quebrar o cabecalho
+- `assinatura_texto` passou a ser exibido com estilo manuscrito no bloco de assinatura
+- `nome_exibicao` e `cargo` continuam aparecendo abaixo da assinatura quando preenchidos
+- a linha de cidade/data foi mantida limpa, com fallback seguro quando a cidade nao estiver configurada
