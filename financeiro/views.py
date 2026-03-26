@@ -27,6 +27,149 @@ from .models import (
 )
 
 
+UNIDADES_EXTENSO = (
+    'zero',
+    'um',
+    'dois',
+    'tres',
+    'quatro',
+    'cinco',
+    'seis',
+    'sete',
+    'oito',
+    'nove',
+    'dez',
+    'onze',
+    'doze',
+    'treze',
+    'quatorze',
+    'quinze',
+    'dezesseis',
+    'dezessete',
+    'dezoito',
+    'dezenove',
+)
+DEZENAS_EXTENSO = (
+    '',
+    '',
+    'vinte',
+    'trinta',
+    'quarenta',
+    'cinquenta',
+    'sessenta',
+    'setenta',
+    'oitenta',
+    'noventa',
+)
+CENTENAS_EXTENSO = (
+    '',
+    'cento',
+    'duzentos',
+    'trezentos',
+    'quatrocentos',
+    'quinhentos',
+    'seiscentos',
+    'setecentos',
+    'oitocentos',
+    'novecentos',
+)
+MESES_EXTENSO = (
+    'janeiro',
+    'fevereiro',
+    'marco',
+    'abril',
+    'maio',
+    'junho',
+    'julho',
+    'agosto',
+    'setembro',
+    'outubro',
+    'novembro',
+    'dezembro',
+)
+
+
+def _centena_por_extenso(numero: int) -> str:
+    if numero == 0:
+        return ''
+    if numero < 20:
+        return UNIDADES_EXTENSO[numero]
+    if numero < 100:
+        dezena, resto = divmod(numero, 10)
+        texto = DEZENAS_EXTENSO[dezena]
+        if resto:
+            texto = f'{texto} e {UNIDADES_EXTENSO[resto]}'
+        return texto
+    if numero == 100:
+        return 'cem'
+    centena, resto = divmod(numero, 100)
+    texto = CENTENAS_EXTENSO[centena]
+    if resto:
+        texto = f'{texto} e {_centena_por_extenso(resto)}'
+    return texto
+
+
+def _juntar_partes_extenso(partes: list[str]) -> str:
+    if not partes:
+        return ''
+    if len(partes) == 1:
+        return partes[0]
+    if len(partes) == 2:
+        return f'{partes[0]} e {partes[1]}'
+    return ', '.join(partes[:-1]) + f' e {partes[-1]}'
+
+
+def _numero_por_extenso(numero: int) -> str:
+    if numero == 0:
+        return UNIDADES_EXTENSO[0]
+
+    grupos = [
+        ('', ''),
+        ('mil', 'mil'),
+        ('milhao', 'milhoes'),
+        ('bilhao', 'bilhoes'),
+    ]
+    partes: list[str] = []
+    indice_grupo = 0
+
+    while numero > 0:
+        numero, grupo_valor = divmod(numero, 1000)
+        if grupo_valor:
+            grupo_singular, grupo_plural = grupos[indice_grupo]
+            if indice_grupo == 1 and grupo_valor == 1:
+                partes.append('mil')
+            else:
+                texto_grupo = _centena_por_extenso(grupo_valor)
+                if indice_grupo > 0:
+                    sufixo = grupo_singular if grupo_valor == 1 else grupo_plural
+                    texto_grupo = f'{texto_grupo} {sufixo}'
+                partes.append(texto_grupo)
+        indice_grupo += 1
+
+    partes.reverse()
+    return _juntar_partes_extenso(partes)
+
+
+def _valor_por_extenso(valor: Decimal) -> str:
+    valor_normalizado = valor.quantize(Decimal('0.01'))
+    reais = int(valor_normalizado)
+    centavos = int((valor_normalizado - Decimal(reais)) * 100)
+
+    partes: list[str] = []
+    if reais or not centavos:
+        unidade_real = 'real' if reais == 1 else 'reais'
+        partes.append(f'{_numero_por_extenso(reais)} {unidade_real}')
+    if centavos:
+        unidade_centavo = 'centavo' if centavos == 1 else 'centavos'
+        partes.append(f'{_numero_por_extenso(centavos)} {unidade_centavo}')
+
+    return _juntar_partes_extenso(partes)
+
+
+def _data_documental_por_extenso(data_referencia: date) -> str:
+    return f'{data_referencia.day} de {MESES_EXTENSO[data_referencia.month - 1]} de {data_referencia.year}'
+
+
 class FinanceiroFormMixin:
     page_title = ''
     submit_label = 'Salvar'
@@ -812,13 +955,11 @@ class LancamentoFinanceiroReciboView(DetailView):
         if self.object.categoria:
             mensagem_categoria = (self.object.categoria.mensagem_recibo or '').strip()
         context['page_title'] = f'Recibo do Lancamento {self.object.pk}'
+        context['recibo_pessoa_nome'] = self.object.pessoa.nome if self.object.pessoa else '-'
         context['recibo_referente'] = self.object.descricao
         context['recibo_data_principal'] = data_recibo
-        context['recibo_data_label'] = (
-            'Data do recebimento'
-            if self.object.data_pagamento
-            else 'Data do recibo (fallback da data de competencia)'
-        )
+        context['recibo_data_humana'] = _data_documental_por_extenso(data_recibo)
+        context['recibo_valor_extenso'] = _valor_por_extenso(self.object.valor)
         context['recibo_data_fallback'] = self.object.data_pagamento is None
         context['recibo_mensagem_final'] = (
             mensagem_categoria or 'Recibo emitido com base no lancamento registrado no sistema.'

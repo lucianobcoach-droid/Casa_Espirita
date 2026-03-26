@@ -80,6 +80,9 @@ Ate o momento, esta validado que:
 - quando a categoria tiver mensagem de recibo preenchida, ela deve aparecer em destaque no rodape do recibo
 - quando a categoria nao tiver mensagem de recibo, o sistema deve usar uma mensagem padrao simples e segura
 - o recibo deve manter apresentacao simples de documento institucional, com foco em impressao e sem aparencia de tela administrativa
+- no acabamento final do recibo, `Recebi(emos) de` deve mostrar apenas o nome da pessoa
+- no acabamento final do recibo, `A importancia de` deve usar valor por extenso
+- no acabamento final do recibo, a data deve aparecer apenas em formato humano e documental, sem expor `data_competencia`
 
 ## 7. Regras de negocio atuais do financeiro
 
@@ -132,6 +135,7 @@ Os tipos validos de lancamento sao:
 - `CategoriaFinanceira` pode ter `mensagem_recibo` opcional para personalizar o rodape do recibo
 - quando `CategoriaFinanceira.mensagem_recibo` estiver vazia, o recibo deve manter mensagem padrao simples
 - o refinamento visual do recibo deve ficar isolado no proprio template, sem depender ainda de configuracao institucional
+- o acabamento fino do recibo pode usar apoio minimo da view apenas para nome limpo da pessoa, valor por extenso e data documental
 - na listagem de lancamentos, transferencias sem `pessoa` podem aparecer como `Transferencia entre Contas`
 - quando um lancamento nao possui categoria, ele aparece no agrupamento como `Sem categoria`
 - quando uma despesa nao possui centro de custo, ela aparece no agrupamento como `Sem centro de custo`

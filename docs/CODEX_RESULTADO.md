@@ -87,3 +87,11 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - o layout passou a priorizar formato de documento simples, com cabecalho, destaque de numero e valor e corpo textual
 - foram adicionados placeholders visuais discretos para identidade institucional e cidade, sem criar configuracao nova nesta etapa
 - o refinamento ficou isolado no template do recibo, sem alterar regra de negocio
+
+## Acabamento fino do recibo
+
+- o placeholder tecnico visivel do cabecalho foi removido
+- `Recebi(emos) de` passou a mostrar apenas o nome da pessoa
+- `A importancia de` passou a usar valor por extenso, mantendo o valor numerico em destaque no topo
+- o recibo deixou de expor `data_competencia` e passou a mostrar apenas a data final em formato humano e documental
+- a proporcao entre topo, corpo, assinatura e rodape foi ajustada para reduzir espacos vazios e melhorar a impressao
