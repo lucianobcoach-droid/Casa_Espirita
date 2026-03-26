@@ -59,8 +59,22 @@ class CategoriaFinanceiraForm(forms.ModelForm):
             'nome',
             'tipo',
             'categoria_pai',
+            'mensagem_recibo',
             'ativo',
         ]
+        widgets = {
+            'mensagem_recibo': forms.Textarea(
+                attrs={
+                    'rows': 4,
+                    'placeholder': 'Mensagem opcional exibida no rodape do recibo desta categoria.',
+                }
+            ),
+        }
+        help_texts = {
+            'mensagem_recibo': (
+                'Opcional. Quando preenchida, substitui a mensagem padrao simples do recibo para esta categoria.'
+            ),
+        }
 
 
 class LancamentoFinanceiroForm(forms.ModelForm):

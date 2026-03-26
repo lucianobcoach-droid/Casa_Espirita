@@ -76,6 +76,9 @@ Ate o momento, esta validado que:
 - no recibo, o campo `Referente a` deve usar a descricao do lancamento
 - no recibo, a data principal deve priorizar `data_pagamento`, com fallback explicito para `data_competencia` quando necessario
 - no recibo, nao devem aparecer conta financeira, observacoes, categoria tecnica nem centro de custo nesta etapa
+- a categoria financeira agora pode ter uma mensagem opcional propria para o recibo
+- quando a categoria tiver mensagem de recibo preenchida, ela deve aparecer em destaque no rodape do recibo
+- quando a categoria nao tiver mensagem de recibo, o sistema deve usar uma mensagem padrao simples e segura
 
 ## 7. Regras de negocio atuais do financeiro
 
@@ -125,6 +128,8 @@ Os tipos validos de lancamento sao:
 - a validacao de duplicidade deve funcionar no cadastro e na edicao
 - na edicao, o proprio registro nao deve ser tratado como duplicado dele mesmo
 - `data_pagamento` nao pode ser anterior a `data_competencia`
+- `CategoriaFinanceira` pode ter `mensagem_recibo` opcional para personalizar o rodape do recibo
+- quando `CategoriaFinanceira.mensagem_recibo` estiver vazia, o recibo deve manter mensagem padrao simples
 - na listagem de lancamentos, transferencias sem `pessoa` podem aparecer como `Transferencia entre Contas`
 - quando um lancamento nao possui categoria, ele aparece no agrupamento como `Sem categoria`
 - quando uma despesa nao possui centro de custo, ela aparece no agrupamento como `Sem centro de custo`

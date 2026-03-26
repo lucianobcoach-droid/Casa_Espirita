@@ -171,6 +171,8 @@ Com filtro por periodo:
 - O recibo usa a descricao do lancamento como campo `Referente a`.
 - O recibo prioriza `data_pagamento` como data principal e usa `data_competencia` como fallback explicito quando `data_pagamento` estiver vazia.
 - O recibo nao exibe conta financeira, observacoes, categoria tecnica nem centro de custo nesta etapa.
+- O recibo agora pode usar mensagem opcional cadastrada na categoria financeira do lancamento.
+- Quando a categoria nao tiver mensagem de recibo, o rodape do recibo usa mensagem padrao simples e segura.
 - O extrato mostra conta, periodo, saldo inicial, data do saldo inicial, saldo anterior quando aplicavel e saldo final exibido.
 - O modulo possui listagem de contas com `saldo_atual` calculado.
 - A listagem de lancamentos destaca tipo por cor e status nao quitado em negrito.
@@ -185,7 +187,9 @@ Com filtro por periodo:
 - Existe a migration incremental `financeiro/migrations/0004_lancamentofinanceiro_categoria_required.py`.
 - Existe a migration incremental `financeiro/migrations/0005_lancamentofinanceiro_pessoa_required.py`.
 - Existe a migration incremental `financeiro/migrations/0006_lancamentofinanceiro_conditional_required_fields.py`.
+- Existe a migration incremental `financeiro/migrations/0007_categoriafinanceira_mensagem_recibo.py`.
 - A cadeia `0005` -> `0006` representa a consolidacao incremental da obrigatoriedade condicional de `pessoa` e `categoria`.
+- A `0007` adiciona `mensagem_recibo` opcional em `CategoriaFinanceira` para personalizacao controlada do recibo com fallback padrao.
 - Nao foi criada migration nova para unicidade de `numero_documento` nesta etapa.
 - A validacao de nao repeticao de `numero_documento` ficou na camada de aplicacao por seguranca incremental.
 - As migrations antigas nao foram alteradas.

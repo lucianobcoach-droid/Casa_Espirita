@@ -64,7 +64,9 @@
 </section>
 
 <section class="box">
-    <p class="mb-6">{{ recibo_mensagem_final }}</p>
+    <div class="content mb-6">
+        <p{% if recibo_mensagem_personalizada %} class="has-text-weight-semibold"{% endif %}>{{ recibo_mensagem_final }}</p>
+    </div>
     <div class="prestacao-signature">
         <p>Assinatura</p>
         <div class="prestacao-signature-line"></div>

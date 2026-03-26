@@ -72,3 +72,11 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - quando `data_pagamento` estiver vazia, o recibo usa `data_competencia` com fallback explicito
 - o recibo deixou de exibir conta financeira, observacoes, categoria tecnica e centro de custo
 - a mensagem final continua com fallback simples no template, preparando etapa futura de mensagem por categoria
+
+## Mensagem opcional por categoria no recibo
+
+- `CategoriaFinanceira` passou a ter o campo opcional `mensagem_recibo`
+- o cadastro e a edicao de categoria agora permitem preencher essa mensagem
+- quando o lancamento tiver categoria com `mensagem_recibo`, o recibo exibe esse texto em destaque no rodape
+- quando a categoria nao tiver mensagem cadastrada, o recibo continua usando a mensagem padrao simples e segura
+- a etapa nao implementa ainda assinatura configuravel nem configuracao institucional dinamica

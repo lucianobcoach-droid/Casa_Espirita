@@ -86,6 +86,7 @@ class CategoriaFinanceira(models.Model):
         blank=True,
         null=True,
     )
+    mensagem_recibo = models.TextField(blank=True)
     ativo = models.BooleanField(default=True)
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
