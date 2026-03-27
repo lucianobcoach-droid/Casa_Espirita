@@ -293,6 +293,27 @@ class LancamentoFinanceiro(models.Model):
                         'Ja existe outro lancamento com este numero de documento fora do mesmo grupo de rateio.'
                     )
 
+        if self.com_rateio and self.grupo_rateio:
+            grupo_queryset = type(self).objects.filter(grupo_rateio=self.grupo_rateio)
+            if self.pk:
+                grupo_queryset = grupo_queryset.exclude(pk=self.pk)
+
+            if grupo_queryset.exists():
+                numeros_grupo = {
+                    (lancamento.numero_documento or '').strip()
+                    for lancamento in grupo_queryset.only('numero_documento')
+                }
+                numeros_grupo.discard('')
+                if numeros_grupo:
+                    if len(numeros_grupo) > 1:
+                        errors['numero_documento'] = (
+                            'O grupo de rateio possui linhas com numeros de documento divergentes e precisa ser regularizado.'
+                        )
+                    elif numero_documento and numero_documento not in numeros_grupo:
+                        errors['numero_documento'] = (
+                            'Lancamentos do mesmo grupo de rateio precisam compartilhar o mesmo numero de documento.'
+                        )
+
         if errors:
             raise ValidationError(errors)
 
