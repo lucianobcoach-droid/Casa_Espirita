@@ -40,6 +40,7 @@ Data de atualizacao: 2026-03-27
 - O extrato por conta agora tambem recebeu a aplicacao inicial dessa frente visual, com filtros mais compactos, cabecalho resumido em meta-informacoes mais densas e melhor distribuicao horizontal da tabela sem alterar a leitura funcional do extrato.
 - O resumo por periodo agora tambem recebeu essa frente visual, com cabecalho mais compacto, filtros mais densos e blocos de totais reorganizados em hierarquia visual mais enxuta e consistente com a base compartilhada do modulo.
 - A prestacao de contas agora tambem recebeu essa frente visual, com cabecalho, filtros e blocos de totais mais compactos e consistentes com o resumo por periodo, sem alterar calculos ou agrupamentos.
+- A tela de auditoria do financeiro agora tambem recebeu refinamento visual incremental, com cabecalho alinhado ao padrao compartilhado, filtros mais compactos e tabela mais densa para leitura em desktop 100%, sem alterar a leitura simples da auditoria.
 - Nos relatorios e extratos do financeiro, as datas visiveis ao usuario agora devem seguir apresentacao em `dd/mm/aaaa`, incluindo rotulos de periodo e metadados principais de emissao.
 - O app `biblioteca` nao foi alterado.
 - Nao foram usados `signals`.

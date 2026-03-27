@@ -435,3 +435,10 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - a tela `prestacao_contas.html` passou a reaproveitar a base visual compartilhada do financeiro em cabecalho, filtros e blocos de totais
 - a prestacao de contas ganhou hierarquia visual mais compacta e consistente com o resumo por periodo, sem alterar calculos, agrupamentos ou consolidacoes funcionais
 - a microetapa tambem consolidou na apresentacao dessa tela o padrao de datas visiveis ao usuario em `dd/mm/aaaa`, incluindo o periodo do relatorio e os metadados principais de emissao
+
+## Refinamento visual da tela de auditoria do financeiro
+
+- a tela `auditoria_lancamento_list.html` passou a usar cabecalho no padrao visual compartilhado do modulo financeiro
+- os filtros existentes foram compactados para melhor aproveitamento horizontal da tela em 100% de zoom, sem abrir novos filtros ou paginacao
+- a listagem da auditoria passou a ficar dentro de bloco visual mais consistente com as demais telas do modulo, mantendo leitura simples das entidades ja auditadas: `LancamentoFinanceiro` e `ContaFinanceira`
+- a apresentacao de `data_hora` foi mantida em formato `dd/mm/aaaa` com horario, sem alterar captura, ordenacao ou comportamento funcional da auditoria

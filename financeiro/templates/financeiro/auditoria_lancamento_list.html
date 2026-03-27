@@ -1,11 +1,11 @@
 {% extends 'financeiro/base.html' %}
 {% block title %}{{ page_title }}{% endblock %}
 {% block content %}
-<div class="level">
+<div class="level financeiro-page-head">
     <div class="level-left">
         <div>
             <h1 class="title">{{ page_title }}</h1>
-            <p class="subtitle">Leitura minima da trilha de create, update e delete das entidades auditadas do modulo financeiro.</p>
+            <p class="subtitle">Leitura simples da trilha de create, update e delete das entidades auditadas do modulo financeiro.</p>
         </div>
     </div>
     <div class="level-right">
@@ -15,7 +15,7 @@
 
 <form method="get" class="filters-box no-print">
     <div class="columns is-multiline">
-        <div class="column is-3">
+        <div class="column is-12-mobile is-6-tablet is-3-desktop">
             <label class="label">Acao</label>
             <div class="select is-fullwidth">
                 <select name="acao">
@@ -26,19 +26,20 @@
                 </select>
             </div>
         </div>
-        <div class="column is-3">
+        <div class="column is-6-mobile is-3-tablet is-2-desktop">
             <label class="label">Data inicial</label>
             <input class="input" type="date" name="data_inicial" value="{{ filtro_data_inicial }}">
         </div>
-        <div class="column is-3">
+        <div class="column is-6-mobile is-3-tablet is-2-desktop">
             <label class="label">Data final</label>
             <input class="input" type="date" name="data_final" value="{{ filtro_data_final }}">
         </div>
-        <div class="column is-3">
+        <div class="column is-12-mobile is-6-tablet is-2-desktop">
             <label class="label">Id do registro</label>
             <input class="input" type="number" min="1" step="1" name="registro_id" value="{{ filtro_registro_id }}">
         </div>
-        <div class="column is-12">
+        <div class="column is-12-mobile is-6-tablet is-3-desktop">
+            <label class="label">&nbsp;</label>
             <div class="buttons">
                 <button class="button is-link" type="submit">Aplicar filtros</button>
                 <a class="button is-light" href="{% url 'financeiro:auditoria-lancamento-list' %}">Limpar</a>
@@ -47,60 +48,68 @@
     </div>
 </form>
 
-<div class="table-wrapper">
-    <table class="table is-fullwidth is-hoverable financeiro-table">
-        <thead>
-        <tr>
-            <th>Data/Hora</th>
-            <th>Acao</th>
-            <th>Modelo</th>
-            <th>Registro</th>
-            <th>Usuario</th>
-            <th>Campos alterados</th>
-        </tr>
-        </thead>
-        <tbody>
-        {% for auditoria in auditorias %}
-            <tr>
-                <td>{{ auditoria.data_hora|date:'d/m/Y H:i:s' }}</td>
-                <td>{{ auditoria.get_acao_display }}</td>
-                <td>{{ auditoria.modelo }}</td>
-                <td>#{{ auditoria.registro_id }}</td>
-                <td>
-                    {% if auditoria.usuario %}
-                        {{ auditoria.usuario }}
-                    {% else %}
-                        -
-                    {% endif %}
-                </td>
-                <td>
-                    {% if auditoria.campos_alterados %}
-                        <details>
-                            <summary>{{ auditoria.campos_alterados|length }} campo(s)</summary>
-                            <div class="content mt-2">
-                                <ul>
-                                    {% for campo, mudanca in auditoria.campos_alterados.items %}
-                                        <li>
-                                            <strong>{{ campo }}</strong>:
-                                            {{ mudanca.before|default_if_none:'-'|default:'-' }}
-                                            &rarr;
-                                            {{ mudanca.after|default_if_none:'-'|default:'-' }}
-                                        </li>
-                                    {% endfor %}
-                                </ul>
-                            </div>
-                        </details>
-                    {% else %}
-                        -
-                    {% endif %}
-                </td>
-            </tr>
-        {% empty %}
-            <tr>
-                <td colspan="6">Nenhum evento de auditoria encontrado para as entidades auditadas do financeiro.</td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+<div class="financeiro-report-block">
+    <div class="financeiro-report-header">
+        <h2 class="financeiro-report-title">Eventos de auditoria</h2>
+    </div>
+    <div class="financeiro-report-body">
+        <p class="table-caption">A listagem abaixo permanece simples e ordenada do evento mais recente para o mais antigo.</p>
+        <div class="table-wrapper">
+            <table class="table is-fullwidth is-hoverable financeiro-table">
+                <thead>
+                <tr>
+                    <th>Data/Hora</th>
+                    <th>Acao</th>
+                    <th>Modelo</th>
+                    <th>Registro</th>
+                    <th>Usuario</th>
+                    <th>Campos alterados</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for auditoria in auditorias %}
+                    <tr>
+                        <td>{{ auditoria.data_hora|date:'d/m/Y H:i:s' }}</td>
+                        <td>{{ auditoria.get_acao_display }}</td>
+                        <td>{{ auditoria.modelo }}</td>
+                        <td>#{{ auditoria.registro_id }}</td>
+                        <td>
+                            {% if auditoria.usuario %}
+                                {{ auditoria.usuario }}
+                            {% else %}
+                                <span class="has-text-grey">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if auditoria.campos_alterados %}
+                                <details>
+                                    <summary>{{ auditoria.campos_alterados|length }} campo(s)</summary>
+                                    <div class="content mt-2">
+                                        <ul>
+                                            {% for campo, mudanca in auditoria.campos_alterados.items %}
+                                                <li>
+                                                    <strong>{{ campo }}</strong>:
+                                                    {{ mudanca.before|default_if_none:'-'|default:'-' }}
+                                                    &rarr;
+                                                    {{ mudanca.after|default_if_none:'-'|default:'-' }}
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                </details>
+                            {% else %}
+                                <span class="has-text-grey">-</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6">Nenhum evento de auditoria encontrado para as entidades auditadas do financeiro.</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 {% endblock %}
