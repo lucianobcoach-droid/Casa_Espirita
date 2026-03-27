@@ -262,3 +262,11 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - o create comum, o create com rateio, a edicao individual de linha rateada e o delete agora geram eventos explicitos de auditoria
 - cada evento de auditoria guarda acao, modelo afetado, id do registro, data/hora, usuario quando disponivel e campos alterados em JSON simples
 - nesta primeira versao, a auditoria continua restrita a `LancamentoFinanceiro` e ainda nao possui interface propria de consulta
+
+## Leitura minima da auditoria de LancamentoFinanceiro
+
+- foi criada uma tela simples para leitura da auditoria ja gravada de `LancamentoFinanceiro`
+- a listagem mostra data/hora, acao, modelo, id do registro, usuario e campos alterados em resumo estruturado
+- a ordenacao da leitura ficou explicita por `data_hora` decrescente, com desempate por `pk`
+- a leitura da auditoria foi integrada ao modulo por rota propria e acesso discreto no dropdown `Configuracoes` e na home
+- nesta primeira leitura operacional, a tela ainda nao possui filtros complexos nem paginacao avancada

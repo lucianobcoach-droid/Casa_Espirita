@@ -7,6 +7,7 @@ from .views import (
     AssinaturaInstitucionalDeleteView,
     AssinaturaInstitucionalListView,
     AssinaturaInstitucionalUpdateView,
+    AuditoriaLancamentoFinanceiroListView,
     CategoriaFinanceiraAutocompleteView,
     CategoriaFinanceiraCreateView,
     CategoriaFinanceiraDeleteView,
@@ -49,6 +50,7 @@ app_name = 'financeiro'
 urlpatterns = [
     path('', FinanceiroHomeView.as_view(), name='home'),
     path('extratos/', ExtratoFinanceiroView.as_view(), name='extrato-list'),
+    path('auditoria/lancamentos/', AuditoriaLancamentoFinanceiroListView.as_view(), name='auditoria-lancamento-list'),
     path('prestacao-contas/', PrestacaoContasFinanceiroView.as_view(), name='prestacao-contas'),
     path('resumo/', ResumoFinanceiroView.as_view(), name='resumo'),
     path('autocomplete/pessoas/', PessoaFinanceiraAutocompleteView.as_view(), name='autocomplete-pessoa'),

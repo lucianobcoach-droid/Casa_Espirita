@@ -28,6 +28,8 @@ Data de atualizacao: 2026-03-27
 - A home do modulo financeiro agora usa atalhos mais neutros e harmonicos, com destaque principal apenas para `Lancamentos`.
 - O menu superior do financeiro agora tambem possui dropdown `Configuracoes`, com acesso a `Assinaturas` e `Configuracao Institucional`.
 - A home do modulo financeiro agora tambem oferece atalhos visiveis para `Assinaturas` e `Configuracao Institucional`.
+- O menu superior do financeiro agora tambem oferece acesso a `Auditoria de Lancamentos` no dropdown `Configuracoes`.
+- A home do modulo financeiro agora tambem oferece atalho visivel para `Auditoria de Lancamentos`.
 - A home do modulo financeiro recebeu revisao leve de textos para melhorar clareza operacional dos atalhos, sem alterar a estrutura da pagina.
 - Menu, home e titulos principais do modulo financeiro receberam padronizacao textual leve para reduzir inconsistencias de rotulagem entre telas ja existentes.
 - Paginas internas do financeiro receberam padronizacao textual leve em botoes operacionais, com acoes de criacao e atualizacao mais consistentes para usuario leigo.
@@ -99,6 +101,9 @@ Leitura funcional:
 - o log da primeira versao armazena acao, modelo afetado, id do registro, data/hora, usuario quando disponivel e campos alterados em JSON simples
 - o create comum, o create com rateio, a edicao individual de linha rateada e o delete agora geram eventos explicitos de auditoria
 - nesta primeira versao, a auditoria ainda nao tem interface propria de consulta e nao foi expandida para contas, pessoas, categorias, centros de custo, assinaturas ou configuracao institucional
+- a leitura minima da auditoria agora existe em tela propria, ordenada por `data_hora` decrescente e restrita aos eventos de `LancamentoFinanceiro`
+- a leitura inicial da auditoria mostra data/hora, acao, modelo, id do registro, usuario e campos alterados em resumo estruturado simples
+- nesta primeira leitura operacional da auditoria, ainda nao existem filtros complexos nem paginacao avancada
 - o extrato por conta passa a exibir `numero_documento` de forma discreta junto da descricao, quando existir
 - a listagem de lancamentos pode exibir `Transferencia entre Contas` quando uma transferencia nao tiver `pessoa`
 - os relatorios mantem tratamento defensivo para base antiga, exibindo `Sem categoria` se algum dado legado surgir
@@ -199,6 +204,7 @@ Com filtro por periodo:
 - O modulo possui tela propria de extratos com filtro por conta e periodo.
 - O modulo possui tela de resumo consolidado por periodo.
 - O modulo possui tela de prestacao de contas por periodo.
+- O modulo agora possui tela simples de leitura da `Auditoria de Lancamentos`.
 - O modulo possui tela propria de recibo por lancamento em HTML imprimivel.
 - O recibo usa a descricao do lancamento como campo `Referente a`.
 - O recibo prioriza `data_pagamento` como data principal e usa `data_competencia` como fallback explicito quando `data_pagamento` estiver vazia.
@@ -217,6 +223,7 @@ Com filtro por periodo:
 - A margem superior do recibo na impressao agora foi levemente ampliada para dar respiro inicial sem reintroduzir excesso de altura.
 - O extrato mostra conta, periodo, saldo inicial, data do saldo inicial, saldo anterior quando aplicavel e saldo final exibido.
 - O extrato agora consolida lancamentos rateados por `grupo_rateio`, exibindo na linha mostrada ao usuario o valor total do documento e mantendo a leitura cronologica crescente do saldo.
+- A auditoria de lancamentos agora pode ser consultada em tela propria simples, com ordenacao decrescente por data/hora e detalhamento basico dos campos alterados.
 - O modulo possui listagem de contas com `saldo_atual` calculado.
 - A listagem de lancamentos destaca tipo por cor e status nao quitado em negrito.
 - A listagem de lancamentos agora oferece acesso direto ao recibo de cada lancamento.

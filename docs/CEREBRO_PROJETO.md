@@ -170,6 +170,8 @@ Os tipos validos de lancamento sao:
 - a estrategia incremental de auditoria deve comecar por `LancamentoFinanceiro`, com model proprio e registro explicito nas views de create, update e delete
 - a trilha de auditoria deve guardar acao, modelo, id do registro, data/hora, usuario quando disponivel e campos alterados em formato estruturado
 - a primeira versao da auditoria ja implementada permanece restrita a `LancamentoFinanceiro` e nao cria interface propria de consulta nesta etapa
+- a primeira leitura operacional da auditoria deve permanecer simples, ordenada por `data_hora` decrescente e sem filtros complexos nesta etapa
+- a tela minima de leitura da auditoria pode ser integrada ao modulo por rota propria e acesso discreto na navegacao
 - `data_pagamento` nao pode ser anterior a `data_competencia`
 - `CategoriaFinanceira` pode ter `mensagem_recibo` opcional para personalizar o rodape do recibo
 - quando `CategoriaFinanceira.mensagem_recibo` estiver vazia, o recibo deve manter mensagem padrao simples

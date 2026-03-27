@@ -853,6 +853,26 @@ class ExtratoFinanceiroView(ExtratoContaMixin, TemplateView):
         return context
 
 
+class AuditoriaLancamentoFinanceiroListView(ListView):
+    model = AuditoriaFinanceiro
+    template_name = 'financeiro/auditoria_lancamento_list.html'
+    context_object_name = 'auditorias'
+
+    def get_queryset(self):
+        return (
+            super()
+            .get_queryset()
+            .filter(modelo='LancamentoFinanceiro')
+            .select_related('usuario')
+            .order_by('-data_hora', '-pk')
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['page_title'] = 'Auditoria de Lancamentos'
+        return context
+
+
 class CentroCustoListView(ListView):
     model = CentroCusto
     template_name = 'financeiro/centro_custo_list.html'
