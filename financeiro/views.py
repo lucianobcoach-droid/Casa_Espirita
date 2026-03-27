@@ -870,7 +870,7 @@ class ExtratoContaMixin:
             'data_inicial': data_inicial,
             'data_final': data_final,
             'saldo_anterior': saldo_anterior if data_inicial else None,
-            'exibe_linha_saldo_inicial': not (data_inicial or data_final),
+            'exibe_linha_saldo_inicial': True,
             'itens_extrato': itens_extrato,
             'saldo_final': saldo_acumulado,
             'saldo_atual': saldo_acumulado,
