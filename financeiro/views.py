@@ -76,6 +76,10 @@ def _snapshot_pessoa(pessoa: PessoaFinanceira) -> dict[str, object]:
     return _snapshot_model(pessoa, ignore_fields={'criado_em', 'atualizado_em'})
 
 
+def _snapshot_categoria(categoria: CategoriaFinanceira) -> dict[str, object]:
+    return _snapshot_model(categoria, ignore_fields={'criado_em', 'atualizado_em'})
+
+
 def _build_auditoria_payload(
     antes: dict[str, object] | None,
     depois: dict[str, object] | None,
@@ -141,6 +145,23 @@ def _registrar_auditoria_pessoa(
         acao=acao,
         modelo='PessoaFinanceira',
         registro_id=pessoa.pk,
+        usuario=_auditoria_usuario(request),
+        campos_alterados=_build_auditoria_payload(antes, depois),
+    )
+
+
+def _registrar_auditoria_categoria(
+    *,
+    request,
+    acao: str,
+    categoria: CategoriaFinanceira,
+    antes: dict[str, object] | None = None,
+    depois: dict[str, object] | None = None,
+) -> AuditoriaFinanceiro:
+    return AuditoriaFinanceiro.objects.create(
+        acao=acao,
+        modelo='CategoriaFinanceira',
+        registro_id=categoria.pk,
         usuario=_auditoria_usuario(request),
         campos_alterados=_build_auditoria_payload(antes, depois),
     )
@@ -1153,6 +1174,16 @@ class CategoriaFinanceiraCreateView(FinanceiroFormMixin, CreateView):
     page_title = 'Nova Categoria Financeira'
     success_message = 'Categoria financeira cadastrada com sucesso.'
 
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        _registrar_auditoria_categoria(
+            request=self.request,
+            acao=AuditoriaFinanceiro.AcaoAuditoria.CREATE,
+            categoria=self.object,
+            depois=_snapshot_categoria(self.object),
+        )
+        return response
+
 
 class CategoriaFinanceiraUpdateView(FinanceiroFormMixin, UpdateView):
     model = CategoriaFinanceira
@@ -1163,6 +1194,21 @@ class CategoriaFinanceiraUpdateView(FinanceiroFormMixin, UpdateView):
     submit_label = 'Atualizar'
     success_message = 'Categoria financeira atualizada com sucesso.'
 
+    def form_valid(self, form):
+        antes = _snapshot_categoria(
+            CategoriaFinanceira.objects.get(pk=self.object.pk)
+        )
+        response = super().form_valid(form)
+        depois = _snapshot_categoria(self.object)
+        _registrar_auditoria_categoria(
+            request=self.request,
+            acao=AuditoriaFinanceiro.AcaoAuditoria.UPDATE,
+            categoria=self.object,
+            antes=antes,
+            depois=depois,
+        )
+        return response
+
 
 class CategoriaFinanceiraDeleteView(FinanceiroDeleteMixin):
     model = CategoriaFinanceira
@@ -1170,6 +1216,23 @@ class CategoriaFinanceiraDeleteView(FinanceiroDeleteMixin):
     page_title = 'Excluir Categoria Financeira'
     cancel_url = reverse_lazy('financeiro:categoria-list')
     success_message = 'Categoria financeira excluida com sucesso.'
+
+    def form_valid(self, form):
+        categoria = self.object
+        antes = _snapshot_categoria(categoria)
+        registro_id = categoria.pk
+
+        with transaction.atomic():
+            response = super().form_valid(form)
+            AuditoriaFinanceiro.objects.create(
+                acao=AuditoriaFinanceiro.AcaoAuditoria.DELETE,
+                modelo='CategoriaFinanceira',
+                registro_id=registro_id,
+                usuario=_auditoria_usuario(self.request),
+                campos_alterados=_build_auditoria_payload(antes, None),
+            )
+
+        return response
 
 
 class AssinaturaInstitucionalListView(ListView):

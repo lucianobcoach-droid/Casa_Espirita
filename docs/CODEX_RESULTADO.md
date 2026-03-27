@@ -449,3 +449,10 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - a expansao reaproveitou o model proprio de auditoria, sem `signals` e sem reestruturacao ampla do dominio
 - a leitura atual da auditoria foi mantida simples e passou a abranger tambem os eventos de `PessoaFinanceira`
 - nesta microetapa, a auditoria ainda nao foi expandida para categorias, centros de custo, assinaturas ou configuracao institucional
+
+## Expansao incremental da auditoria para CategoriaFinanceira
+
+- a auditoria do modulo financeiro passou a registrar create, update e delete de `CategoriaFinanceira` com o mesmo padrao incremental ja usado nas demais entidades ja auditadas
+- a expansao reaproveitou o model proprio de auditoria, sem `signals` e sem reestruturacao ampla do dominio
+- a leitura atual da auditoria foi mantida simples e passou a abranger tambem os eventos de `CategoriaFinanceira`
+- nesta microetapa, a auditoria ainda nao foi expandida para centros de custo, assinaturas ou configuracao institucional
