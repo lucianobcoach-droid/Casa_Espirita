@@ -384,3 +384,10 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - os filtros do extrato foram reorganizados para aproveitar melhor a largura util da tela em 100% de zoom
 - a tabela do extrato recebeu distribuicao horizontal mais previsivel entre data, descricao, tipo, valores, saldo acumulado e observacoes
 - a microetapa preservou integralmente calculo, saldo, ordenacao e consolidacao funcional do extrato
+
+## Microcorrecao da apresentacao operacional do extrato
+
+- o texto fixo explicando as cores no topo do extrato foi removido
+- o `numero_documento` deixou de aparecer dentro da descricao e passou a usar coluna propria ao lado da data
+- a data principal exibida na linha do extrato passou a priorizar `data_pagamento`, com fallback para `data_competencia`
+- a descricao da linha foi limpa para nao repetir metadados do documento nem a frase de rateio consolidado

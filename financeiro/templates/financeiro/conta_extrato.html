@@ -36,17 +36,21 @@
 
     .financeiro-extrato-table th:nth-child(2),
     .financeiro-extrato-table td:nth-child(2) {
-        min-width: 19rem;
+        width: 8.5rem;
+        white-space: nowrap;
     }
 
     .financeiro-extrato-table th:nth-child(3),
     .financeiro-extrato-table td:nth-child(3) {
+        min-width: 19rem;
+    }
+
+    .financeiro-extrato-table th:nth-child(4),
+    .financeiro-extrato-table td:nth-child(4) {
         width: 7rem;
         white-space: nowrap;
     }
 
-    .financeiro-extrato-table th:nth-child(4),
-    .financeiro-extrato-table td:nth-child(4),
     .financeiro-extrato-table th:nth-child(5),
     .financeiro-extrato-table td:nth-child(5),
     .financeiro-extrato-table th:nth-child(6),
@@ -56,7 +60,15 @@
     }
 
     .financeiro-extrato-table th:nth-child(7),
-    .financeiro-extrato-table td:nth-child(7) {
+    .financeiro-extrato-table td:nth-child(7),
+    .financeiro-extrato-table th:nth-child(8),
+    .financeiro-extrato-table td:nth-child(8) {
+        width: 11rem;
+        white-space: nowrap;
+    }
+
+    .financeiro-extrato-table th:nth-child(9),
+    .financeiro-extrato-table td:nth-child(9) {
         min-width: 12rem;
     }
 </style>
@@ -149,12 +161,12 @@
 {% endif %}
 
 {% if conta %}
-    <p class="table-caption no-print">Extrato com texto colorido e sem badges. Receitas ficam em azul, transferencias em laranja e saidas em vermelho.</p>
     <div class="table-wrapper">
         <table class="table is-fullwidth is-hoverable financeiro-table financeiro-extrato-table">
             <thead>
             <tr>
                 <th>Data</th>
+                <th>Documento</th>
                 <th>Descricao</th>
                 <th>Tipo</th>
                 <th>Entrada</th>
@@ -167,6 +179,7 @@
             {% if exibe_linha_saldo_inicial %}
                 <tr class="is-opening-balance">
                     <td>{% if data_saldo_inicial %}{{ data_saldo_inicial|date:'d/m/Y' }}{% else %}-{% endif %}</td>
+                    <td>-</td>
                     <td><strong>Saldo inicial</strong></td>
                     <td><strong>Inicial</strong></td>
                     <td>-</td>
@@ -177,16 +190,9 @@
             {% endif %}
             {% for item in itens_extrato %}
                 <tr>
-                    <td>{{ item.lancamento.data_competencia|date:'d/m/Y' }}</td>
-                    <td>
-                        {{ item.lancamento.descricao }}
-                        {% if item.lancamento.numero_documento %}
-                            <div class="is-size-7 has-text-grey">Doc.: {{ item.lancamento.numero_documento }}</div>
-                        {% endif %}
-                        {% if item.rateio_consolidado %}
-                            <div class="is-size-7 has-text-grey">Rateio consolidado ({{ item.quantidade_linhas_rateio }} linhas)</div>
-                        {% endif %}
-                    </td>
+                    <td>{{ item.lancamento.data_pagamento|default:item.lancamento.data_competencia|date:'d/m/Y' }}</td>
+                    <td>{{ item.lancamento.numero_documento|default:'-' }}</td>
+                    <td>{{ item.lancamento.descricao }}</td>
                     <td>
                         <span class="extrato-text {% if item.lancamento.tipo == 'receita' %}is-receita{% elif item.lancamento.tipo == 'despesa' %}is-despesa{% else %}is-transferencia{% endif %}">
                             {{ item.lancamento.get_tipo_display }}
@@ -211,13 +217,13 @@
                 </tr>
             {% empty %}
                 <tr>
-                    <td colspan="7">Nenhum lancamento quitado encontrado para esta conta.</td>
+                    <td colspan="8">Nenhum lancamento quitado encontrado para esta conta.</td>
                 </tr>
             {% endfor %}
             </tbody>
             <tfoot>
             <tr>
-                <th colspan="5"><strong>Saldo final</strong></th>
+                <th colspan="6"><strong>Saldo final</strong></th>
                 <th><strong><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_final|br_money }}</span></span></strong></th>
                 <th></th>
             </tr>
