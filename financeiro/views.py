@@ -80,6 +80,10 @@ def _snapshot_categoria(categoria: CategoriaFinanceira) -> dict[str, object]:
     return _snapshot_model(categoria, ignore_fields={'criado_em', 'atualizado_em'})
 
 
+def _snapshot_centro_custo(centro_custo: CentroCusto) -> dict[str, object]:
+    return _snapshot_model(centro_custo, ignore_fields={'criado_em', 'atualizado_em'})
+
+
 def _build_auditoria_payload(
     antes: dict[str, object] | None,
     depois: dict[str, object] | None,
@@ -162,6 +166,23 @@ def _registrar_auditoria_categoria(
         acao=acao,
         modelo='CategoriaFinanceira',
         registro_id=categoria.pk,
+        usuario=_auditoria_usuario(request),
+        campos_alterados=_build_auditoria_payload(antes, depois),
+    )
+
+
+def _registrar_auditoria_centro_custo(
+    *,
+    request,
+    acao: str,
+    centro_custo: CentroCusto,
+    antes: dict[str, object] | None = None,
+    depois: dict[str, object] | None = None,
+) -> AuditoriaFinanceiro:
+    return AuditoriaFinanceiro.objects.create(
+        acao=acao,
+        modelo='CentroCusto',
+        registro_id=centro_custo.pk,
         usuario=_auditoria_usuario(request),
         campos_alterados=_build_auditoria_payload(antes, depois),
     )
@@ -1046,6 +1067,16 @@ class CentroCustoCreateView(FinanceiroFormMixin, CreateView):
     page_title = 'Novo Centro de Custo'
     success_message = 'Centro de custo cadastrado com sucesso.'
 
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        _registrar_auditoria_centro_custo(
+            request=self.request,
+            acao=AuditoriaFinanceiro.AcaoAuditoria.CREATE,
+            centro_custo=self.object,
+            depois=_snapshot_centro_custo(self.object),
+        )
+        return response
+
 
 class CentroCustoUpdateView(FinanceiroFormMixin, UpdateView):
     model = CentroCusto
@@ -1056,6 +1087,21 @@ class CentroCustoUpdateView(FinanceiroFormMixin, UpdateView):
     submit_label = 'Atualizar'
     success_message = 'Centro de custo atualizado com sucesso.'
 
+    def form_valid(self, form):
+        antes = _snapshot_centro_custo(
+            CentroCusto.objects.get(pk=self.object.pk)
+        )
+        response = super().form_valid(form)
+        depois = _snapshot_centro_custo(self.object)
+        _registrar_auditoria_centro_custo(
+            request=self.request,
+            acao=AuditoriaFinanceiro.AcaoAuditoria.UPDATE,
+            centro_custo=self.object,
+            antes=antes,
+            depois=depois,
+        )
+        return response
+
 
 class CentroCustoDeleteView(FinanceiroDeleteMixin):
     model = CentroCusto
@@ -1063,6 +1109,23 @@ class CentroCustoDeleteView(FinanceiroDeleteMixin):
     page_title = 'Excluir Centro de Custo'
     cancel_url = reverse_lazy('financeiro:centro-custo-list')
     success_message = 'Centro de custo excluido com sucesso.'
+
+    def form_valid(self, form):
+        centro_custo = self.object
+        antes = _snapshot_centro_custo(centro_custo)
+        registro_id = centro_custo.pk
+
+        with transaction.atomic():
+            response = super().form_valid(form)
+            AuditoriaFinanceiro.objects.create(
+                acao=AuditoriaFinanceiro.AcaoAuditoria.DELETE,
+                modelo='CentroCusto',
+                registro_id=registro_id,
+                usuario=_auditoria_usuario(self.request),
+                campos_alterados=_build_auditoria_payload(antes, None),
+            )
+
+        return response
 
 
 class PessoaFinanceiraListView(ListView):
