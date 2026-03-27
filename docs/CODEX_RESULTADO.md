@@ -319,3 +319,10 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - os textos orientativos da tela foram reforcados para deixar explicito que o salvamento altera o grupo inteiro e nao apenas uma linha isolada
 - o bloco das linhas do rateio passou a exibir feedback visual mais claro quando houver inconsistencias de validacao no payload
 - a etapa preservou a base tecnica ja aberta: salvamento transacional, validacoes consolidadas, auditoria sem `signals` e edicao individual intacta
+
+## Refinamento de mensagens e estados operacionais da tela coordenada
+
+- a tela da edicao coordenada passou a explicar com mais clareza o que acontece ao salvar o grupo e para onde o usuario retorna depois da gravacao
+- erros de validacao geral e inconsistencias do rateio passaram a aparecer com estado visual mais explicito de bloqueio antes do salvamento
+- a navegacao de apoio da tela agora tambem oferece retorno direto para a edicao individual da linha representativa do grupo, sem substituir o fluxo coordenado
+- o fallback seguro para grupos invalidos tambem passou a usar mensagem operacional mais clara ao redirecionar para a edicao individual

@@ -1337,7 +1337,7 @@ class LancamentoFinanceiroGrupoRateioUpdateView(FinanceiroFormMixin, UpdateView)
         if grupo_info['erro']:
             messages.warning(
                 request,
-                f"{grupo_info['erro']} Use a edicao individual das linhas para revisar este caso.",
+                f"{grupo_info['erro']} O fluxo coordenado nao foi aberto. Use a edicao individual das linhas para revisar este caso.",
             )
             representante = grupo_info['representante']
             if representante:
@@ -1366,6 +1366,7 @@ class LancamentoFinanceiroGrupoRateioUpdateView(FinanceiroFormMixin, UpdateView)
             (lancamento.valor for lancamento in grupo_lancamentos),
             Decimal('0.00'),
         )
+        context['grupo_rateio_linha_representativa'] = grupo_lancamentos[0]
         return context
 
     def form_valid(self, form):
@@ -1451,7 +1452,7 @@ class LancamentoFinanceiroGrupoRateioUpdateView(FinanceiroFormMixin, UpdateView)
         self.object = lancamentos_finais[0]
         messages.success(
             self.request,
-            f'Grupo de rateio atualizado com sucesso em {len(lancamentos_finais)} linhas.',
+            f'Grupo de rateio atualizado com sucesso em {len(lancamentos_finais)} linhas. Voce voltou para a listagem principal de lancamentos.',
         )
         return redirect(self.success_url)
 

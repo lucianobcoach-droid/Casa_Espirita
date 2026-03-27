@@ -13,6 +13,7 @@
     .financeiro-form-callout.is-group { background: #eff6ff; border: 1px solid #bfdbfe; color: #1d4ed8; }
     .financeiro-form-callout.is-warning-soft { background: #fff7ed; border: 1px solid #fdba74; color: #9a3412; }
     .financeiro-form-callout.is-danger-soft { background: #fef2f2; border: 1px solid #fca5a5; color: #b91c1c; }
+    .financeiro-form-callout.is-success-soft { background: #ecfdf5; border: 1px solid #86efac; color: #166534; }
     .financeiro-rateio-summary { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.85rem; }
     .financeiro-rateio-summary-item { padding: 0.55rem 0.8rem; border-radius: 0.75rem; background: #eff6ff; color: #1e3a8a; font-size: 0.84rem; font-weight: 600; }
     .financeiro-rateio-panel { padding: 0.85rem; border: 1px dashed rgba(59, 130, 246, 0.35); border-radius: 0.8rem; background: rgba(255,255,255,.8); }
@@ -27,7 +28,10 @@
 
 <h1 class="title">{{ page_title }}</h1>
 {% if form.non_field_errors %}
-    <div class="notification is-danger">{{ form.non_field_errors }}</div>
+    <div class="financeiro-form-callout is-danger-soft">
+        <strong>O grupo nao foi salvo.</strong>
+        {% for error in form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
+    </div>
 {% endif %}
 
 <form method="post">
@@ -62,6 +66,9 @@
                 <div class="financeiro-form-section-text">Campos compartilhados por todas as linhas do mesmo documento rateado.</div>
                 <div class="financeiro-form-callout is-group">
                     Os campos abaixo sao reaplicados ao grupo inteiro no momento do salvamento. Use esta area para ajustar o documento comum antes de revisar as categorias e valores das linhas.
+                </div>
+                <div class="financeiro-form-callout is-success-soft">
+                    Ao salvar, a pagina reaplica estes dados ao grupo atual e retorna para a listagem principal de lancamentos com mensagem de confirmacao.
                 </div>
 
                 <div class="field">
@@ -186,6 +193,9 @@
                             {% for error in form.rateio_payload.errors %}<div>{{ error }}</div>{% endfor %}
                         </div>
                     {% endif %}
+                    <div class="financeiro-form-callout is-warning-soft">
+                        Se houver erro de validacao, a tela permanece aberta para revisao do grupo. Nenhuma alteracao parcial e aplicada enquanto o conjunto do rateio nao estiver coerente.
+                    </div>
                     <div class="financeiro-form-section-divider"></div>
                     <div class="table-container">
                         <table class="table is-fullwidth is-narrow is-striped financeiro-rateio-table">
@@ -201,8 +211,14 @@
 
         <section class="financeiro-form-section">
             <div class="financeiro-form-section-body">
+                <div class="financeiro-form-section-title">Salvar e retornar</div>
+                <div class="financeiro-form-section-text">Use os atalhos abaixo para concluir esta revisao ou voltar com seguranca ao fluxo anterior.</div>
+                <div class="financeiro-form-callout is-group">
+                    <strong>Salvar grupo</strong> atualiza o documento rateado inteiro e leva voce de volta para a listagem principal. <strong>Voltar para a linha representativa</strong> reabre a edicao individual sem substituir este fluxo coordenado.
+                </div>
                 <div class="financeiro-form-actions">
                     <a class="button" href="{% url 'financeiro:lancamento-list' %}">Voltar</a>
+                    <a class="button is-light" href="{% url 'financeiro:lancamento-update' grupo_rateio_linha_representativa.pk %}">Voltar para a linha representativa</a>
                     <button class="button is-primary" type="submit">{{ submit_label }}</button>
                 </div>
             </div>
