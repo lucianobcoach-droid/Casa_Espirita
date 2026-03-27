@@ -34,6 +34,7 @@ Data de atualizacao: 2026-03-27
 - Menu, home e titulos principais do modulo financeiro receberam padronizacao textual leve para reduzir inconsistencias de rotulagem entre telas ja existentes.
 - Paginas internas do financeiro receberam padronizacao textual leve em botoes operacionais, com acoes de criacao e atualizacao mais consistentes para usuario leigo.
 - As listagens principais do financeiro agora usam botoes de criacao mais especificos e coerentes com os nomes completos das entidades exibidas nas telas.
+- Foi identificada como limitacao atual uma densidade visual ainda aquem do ideal em telas do financeiro, especialmente em filtros, formularios e listagens, com espaco horizontal ainda melhor aproveitavel quando o navegador esta em 100% de zoom.
 - O app `biblioteca` nao foi alterado.
 - Nao foram usados `signals`.
 

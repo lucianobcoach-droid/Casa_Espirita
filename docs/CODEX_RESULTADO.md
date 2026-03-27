@@ -364,3 +364,9 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - a listagem principal deixou de exibir o botao separado `Editar grupo`
 - para lancamentos rateados, a acao principal `Editar` da listagem agora abre diretamente a edicao coordenada do `grupo_rateio`
 - para lancamentos comuns, a acao principal `Editar` continua abrindo a edicao individual do lancamento
+
+## Consolidacao documental de melhoria futura de densidade visual
+
+- nesta microetapa nao houve patch de codigo
+- foi registrada a partir de teste real de uso a limitacao atual de densidade visual e aproveitamento horizontal em telas do financeiro, especialmente com o navegador em 100% de zoom
+- a melhoria foi consolidada documentalmente como frente futura oficial de refinamento visual transversal do modulo
