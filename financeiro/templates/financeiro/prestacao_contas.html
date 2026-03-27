@@ -3,7 +3,16 @@
 {% block title %}{{ page_title }}{% endblock %}
 {% block content %}
 <div class="prestacao-document">
-    <form method="get" class="prestacao-filters no-print">
+    <div class="level financeiro-page-head no-print">
+        <div class="level-left">
+            <div>
+                <h1 class="title">{{ page_title }}</h1>
+                <p class="subtitle">Relatorio consolidado do periodo com foco em leitura formal e operacional.</p>
+            </div>
+        </div>
+    </div>
+
+    <form method="get" class="filters-box prestacao-filters no-print">
         <div class="columns is-multiline prestacao-filters-grid">
             <div class="column is-12-mobile is-5-tablet is-4-desktop prestacao-filter-field">
                 <label class="label">Contas incluidas</label>
@@ -76,10 +85,10 @@
     {% else %}
         <div class="prestacao-report">
             <header class="prestacao-report-header">
-                <h1 class="prestacao-report-title">Prestacao de Contas - {{ periodo_label }}</h1>
-                {% if quantidade_contas_selecionadas != contas_disponiveis|length %}
-                    <p class="prestacao-report-meta"><strong>Contas incluidas no relatorio:</strong> {{ contas_incluidas_label }}</p>
-                {% endif %}
+                <h1 class="prestacao-report-title">{{ page_title }}</h1>
+                <p class="prestacao-report-meta"><strong>Periodo:</strong> {{ periodo_label }}</p>
+                <p class="prestacao-report-meta"><strong>Contas incluidas:</strong> {{ contas_incluidas_label }}</p>
+                <p class="report-print-meta only-print">Emitido em {% now "d/m/Y H:i" %}</p>
                 {% if existe_lancamento_sem_categoria %}
                     <p class="prestacao-report-meta">Lancamentos sem categoria aparecem no agrupamento como "Sem categoria".</p>
                 {% endif %}
@@ -87,6 +96,25 @@
                     <p class="prestacao-report-meta">Despesas sem centro de custo aparecem no agrupamento como "Sem centro de custo".</p>
                 {% endif %}
             </header>
+
+            <div class="financeiro-kpi-grid">
+                <div class="financeiro-kpi">
+                    <span class="financeiro-kpi-label">Saldo inicial consolidado</span>
+                    <span class="financeiro-kpi-value"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_inicial_consolidado|br_money }}</span></span></span>
+                </div>
+                <div class="financeiro-kpi">
+                    <span class="financeiro-kpi-label">Receitas do periodo</span>
+                    <span class="financeiro-kpi-value has-text-link"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ total_receitas_periodo|br_money }}</span></span></span>
+                </div>
+                <div class="financeiro-kpi">
+                    <span class="financeiro-kpi-label">Despesas do periodo</span>
+                    <span class="financeiro-kpi-value has-text-danger"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ total_despesas_periodo|br_money }}</span></span></span>
+                </div>
+                <div class="financeiro-kpi">
+                    <span class="financeiro-kpi-label">Saldo final consolidado</span>
+                    <span class="financeiro-kpi-value"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_final_consolidado|br_money }}</span></span></span>
+                </div>
+            </div>
 
             <section class="prestacao-section">
                 <h2 class="prestacao-section-title">1. Saldo disponivel no inicio do periodo</h2>

@@ -106,6 +106,7 @@ Ate o momento, esta validado que:
 - cada lancamento agora pode gerar recibo proprio em HTML imprimivel, com bloco simples de assinatura
 - no recibo, o campo `Referente a` deve usar a descricao do lancamento
 - no recibo, a data principal deve priorizar `data_pagamento`, com fallback explicito para `data_competencia` quando necessario
+- em relatorios e extratos do financeiro, as datas visiveis ao usuario devem seguir o padrao de apresentacao `dd/mm/aaaa`
 - no recibo, nao devem aparecer conta financeira, observacoes, categoria tecnica nem centro de custo nesta etapa
 - a categoria financeira agora pode ter uma mensagem opcional propria para o recibo
 - quando a categoria tiver mensagem de recibo preenchida, ela deve aparecer em destaque no rodape do recibo

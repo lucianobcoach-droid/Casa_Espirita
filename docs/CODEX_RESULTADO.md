@@ -422,3 +422,16 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - no modo de impressao do extrato, o cabecalho visual da tela passou a ficar oculto
 - o PDF passou a manter apenas o cabecalho proprio de impressao com identificacao do extrato e a tabela
 - o ajuste reduziu a redundancia visual sem alterar linhas de saldo, calculo ou consolidacao funcional
+
+## Aplicacao do refinamento de densidade visual ao resumo por periodo
+
+- o resumo por periodo passou a usar cabecalho mais compacto e alinhado com a base visual compartilhada do financeiro
+- os filtros do resumo foram reorganizados para aproveitar melhor a largura horizontal da tela em 100% de zoom, mantendo leitura aceitavel em mobile
+- os blocos de totais e indicadores deixaram de usar caixas mais soltas e passaram a seguir a hierarquia visual mais enxuta dos KPIs compartilhados do modulo
+- a microetapa preservou integralmente calculos, agrupamentos e consolidacoes funcionais do resumo
+
+## Aplicacao do refinamento visual a prestacao de contas
+
+- a tela `prestacao_contas.html` passou a reaproveitar a base visual compartilhada do financeiro em cabecalho, filtros e blocos de totais
+- a prestacao de contas ganhou hierarquia visual mais compacta e consistente com o resumo por periodo, sem alterar calculos, agrupamentos ou consolidacoes funcionais
+- a microetapa tambem consolidou na apresentacao dessa tela o padrao de datas visiveis ao usuario em `dd/mm/aaaa`, incluindo o periodo do relatorio e os metadados principais de emissao

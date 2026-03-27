@@ -38,6 +38,9 @@ Data de atualizacao: 2026-03-27
 - A frente transversal de densidade visual e aproveitamento horizontal do financeiro foi iniciada de forma incremental pela base compartilhada do modulo.
 - Nesta primeira microetapa, a listagem de lancamentos e o formulario padrao de lancamento/edicao passaram a usar espacamentos mais compactos, melhor distribuicao de colunas e aproveitamento horizontal mais eficiente em 100% de zoom, sem redesign amplo.
 - O extrato por conta agora tambem recebeu a aplicacao inicial dessa frente visual, com filtros mais compactos, cabecalho resumido em meta-informacoes mais densas e melhor distribuicao horizontal da tabela sem alterar a leitura funcional do extrato.
+- O resumo por periodo agora tambem recebeu essa frente visual, com cabecalho mais compacto, filtros mais densos e blocos de totais reorganizados em hierarquia visual mais enxuta e consistente com a base compartilhada do modulo.
+- A prestacao de contas agora tambem recebeu essa frente visual, com cabecalho, filtros e blocos de totais mais compactos e consistentes com o resumo por periodo, sem alterar calculos ou agrupamentos.
+- Nos relatorios e extratos do financeiro, as datas visiveis ao usuario agora devem seguir apresentacao em `dd/mm/aaaa`, incluindo rotulos de periodo e metadados principais de emissao.
 - O app `biblioteca` nao foi alterado.
 - Nao foram usados `signals`.
 
