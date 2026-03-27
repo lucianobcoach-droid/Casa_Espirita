@@ -214,11 +214,11 @@
                 <div class="financeiro-form-section-title">Salvar e retornar</div>
                 <div class="financeiro-form-section-text">Use os atalhos abaixo para concluir esta revisao ou voltar com seguranca ao fluxo anterior.</div>
                 <div class="financeiro-form-callout is-group">
-                    <strong>Salvar grupo</strong> atualiza o documento rateado inteiro e leva voce de volta para a listagem principal. <strong>Voltar para a linha representativa</strong> reabre a edicao individual sem substituir este fluxo coordenado.
+                    <strong>Salvar grupo</strong> atualiza o documento rateado inteiro e leva voce de volta para a listagem principal. <strong>Cancelar e voltar para a listagem</strong> sai desta tela sem gravar alteracoes. <strong>Voltar para a linha representativa</strong> reabre a edicao individual sem substituir este fluxo coordenado.
                 </div>
                 <div class="financeiro-form-actions">
-                    <a class="button" href="{% url 'financeiro:lancamento-list' %}">Voltar</a>
-                    <a class="button is-light" href="{% url 'financeiro:lancamento-update' grupo_rateio_linha_representativa.pk %}">Voltar para a linha representativa</a>
+                    <a class="button" href="{% url 'financeiro:lancamento-list' %}?origem_fluxo=rateio_coordenado_cancelado&grupo_rateio={{ grupo_rateio }}">Cancelar e voltar para a listagem</a>
+                    <a class="button is-light" href="{% url 'financeiro:lancamento-update' grupo_rateio_linha_representativa.pk %}?origem_fluxo=rateio_coordenado_retorno&grupo_rateio={{ grupo_rateio }}">Voltar para a linha representativa</a>
                     <button class="button is-primary" type="submit">{{ submit_label }}</button>
                 </div>
             </div>

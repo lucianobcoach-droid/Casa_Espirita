@@ -332,3 +332,9 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - o fallback do fluxo coordenado agora diferencia melhor os motivos operacionais de bloqueio para grupos invalidos, nao encontrados, insuficientes ou com `numero_documento` divergente
 - quando o fluxo coordenado nao e aberto, a edicao individual passa a receber contexto explicito de que foi usada como caminho seguro alternativo para aquele grupo
 - a etapa manteve o comportamento defensivo: grupos problematicos continuam fora da edicao coordenada e nao sao absorvidos automaticamente
+
+## Acabamento de outros estados operacionais da edicao coordenada
+
+- o retorno apos salvar o grupo ficou mais previsivel, com volta sinalizada para a listagem principal de lancamentos
+- o cancelamento da tela coordenada agora retorna para a listagem com contexto operacional explicito de que nao houve gravacao
+- a navegacao de apoio entre a tela coordenada, a tela individual e a listagem principal ficou mais coerente sem substituir nenhum dos fluxos

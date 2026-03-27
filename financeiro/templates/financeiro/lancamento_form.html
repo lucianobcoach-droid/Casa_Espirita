@@ -105,6 +105,10 @@
                             <div class="mt-2">
                                 Este e o caminho seguro alternativo para revisar a linha representativa sem absorver automaticamente um grupo legado ou inconsistente.
                             </div>
+                        {% elif request.GET.origem_fluxo == 'rateio_coordenado_retorno' %}
+                            <div class="mt-3">
+                                <strong>Retorno ao fluxo individual:</strong> voce saiu da edicao coordenada do grupo{% if request.GET.grupo_rateio %} `{{ request.GET.grupo_rateio }}`{% endif %} sem salvar por ali. Esta tela continua disponivel para revisar apenas esta linha.
+                            </div>
                         {% endif %}
                         {% if form.instance.grupo_rateio %}
                             <div class="mt-3">

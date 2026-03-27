@@ -1,6 +1,15 @@
 {% extends 'financeiro/base.html' %}
 {% block title %}Lancamentos Financeiros{% endblock %}
 {% block content %}
+{% if request.GET.origem_fluxo == 'rateio_coordenado_salvo' %}
+    <div class="notification is-success is-light">
+        O grupo rateado{% if request.GET.grupo_rateio %} `{{ request.GET.grupo_rateio }}`{% endif %} foi atualizado e voce voltou para a listagem principal de lancamentos.
+    </div>
+{% elif request.GET.origem_fluxo == 'rateio_coordenado_cancelado' %}
+    <div class="notification is-warning is-light">
+        A edicao coordenada do grupo{% if request.GET.grupo_rateio %} `{{ request.GET.grupo_rateio }}`{% endif %} foi cancelada sem gravacao. A listagem principal continua disponivel para seguir com a revisao operacional.
+    </div>
+{% endif %}
 <div class="level">
     <div class="level-left">
         <h1 class="title">Lancamentos Financeiros</h1>

@@ -1472,7 +1472,13 @@ class LancamentoFinanceiroGrupoRateioUpdateView(FinanceiroFormMixin, UpdateView)
             self.request,
             f'Grupo de rateio atualizado com sucesso em {len(lancamentos_finais)} linhas. Voce voltou para a listagem principal de lancamentos.',
         )
-        return redirect(self.success_url)
+        query_string = urlencode(
+            {
+                'origem_fluxo': 'rateio_coordenado_salvo',
+                'grupo_rateio': grupo_lancamentos[0].grupo_rateio,
+            }
+        )
+        return redirect(f"{reverse('financeiro:lancamento-list')}?{query_string}")
 
 
 class LancamentoFinanceiroReciboView(DetailView):
