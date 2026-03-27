@@ -1,6 +1,6 @@
 # STATE
 
-Data de atualizacao: 2026-03-26
+Data de atualizacao: 2026-03-27
 
 ## Estado atual do modulo financeiro
 
@@ -19,6 +19,7 @@ Data de atualizacao: 2026-03-26
 - As telas de `Resumo` e `Prestacao de Contas` agora mostram receitas e despesas agrupadas por categoria.
 - As telas de `Resumo` e `Prestacao de Contas` agora mostram despesas agrupadas por centro de custo.
 - A listagem de lancamentos agora possui filtros operacionais por data inicial, data final, conta, pessoa e categoria.
+- A ordem atual da listagem de lancamentos segue a ordenacao herdada do model por `-data_competencia` e `-criado_em`; a definicao da ordem oficial de leitura operacional ficou aberta como frente futura.
 - As telas de `Resumo` e `Prestacao de Contas` agora possuem controle de exibicao apenas para o bloco de centro de custo, sem alterar os totais gerais do relatorio.
 - A tela de `Prestacao de Contas` recebeu refinamento visual especifico para impressao em A4.
 - A `Prestacao de Contas` agora tem apresentacao mais formal, com menos aparencia de dashboard.
@@ -30,6 +31,7 @@ Data de atualizacao: 2026-03-26
 - A home do modulo financeiro recebeu revisao leve de textos para melhorar clareza operacional dos atalhos, sem alterar a estrutura da pagina.
 - Menu, home e titulos principais do modulo financeiro receberam padronizacao textual leve para reduzir inconsistencias de rotulagem entre telas ja existentes.
 - Paginas internas do financeiro receberam padronizacao textual leve em botoes operacionais, com acoes de criacao e atualizacao mais consistentes para usuario leigo.
+- As listagens principais do financeiro agora usam botoes de criacao mais especificos e coerentes com os nomes completos das entidades exibidas nas telas.
 - O app `biblioteca` nao foi alterado.
 - Nao foram usados `signals`.
 
@@ -66,10 +68,24 @@ Leitura funcional:
 - em transferencia, `conta_destino` deve aparecer com obrigatoriedade visual e funcional
 - a ausencia de `pessoa`, `categoria`, `conta` ou `conta_destino` deve gerar erro no formulario, sem estourar `IntegrityError`
 - `numero_documento` pode continuar vazio no formulario, mas e gerado automaticamente antes de salvar
-- `numero_documento` informado manualmente deve ser unico entre os lancamentos
+- `numero_documento` informado manualmente deve continuar unico nos lancamentos comuns
 - `numero_documento` gerado automaticamente tambem deve sair unico
 - a validacao de duplicidade funciona no cadastro e na edicao
 - na edicao, o proprio registro e ignorado na checagem de duplicidade
+- o formulario de lancamento agora pode criar rateio simples quando `Lancamento com rateio` estiver marcado
+- no rateio inicial, o usuario informa um `valor total do documento` apenas para validar o fechamento do grupo
+- no rateio inicial, o sistema exige no minimo 2 linhas validas com categoria obrigatoria e valor positivo
+- no rateio inicial, a soma das linhas precisa ser igual ao `valor total do documento`
+- no rateio inicial, o mesmo `numero_documento` pode se repetir apenas entre linhas do mesmo `grupo_rateio`
+- na segunda versao do rateio, categorias repetidas no payload passam a ser consolidadas por soma antes da gravacao das linhas finais
+- na segunda versao do rateio, o create volta corretamente para a listagem apos criar multiplas linhas do grupo
+- nesta primeira versao, `valor_total_documento` nao e persistido no model; ele existe apenas no formulario para validacao
+- nesta primeira versao, a edicao de lancamentos rateados continua individual por linha e nao existe edicao coordenada do grupo
+- o campo `tipo` do formulario de lancamento agora abre preenchido com `receita` e sem opcao vazia inicial
+- no formulario de lancamento, `data_pagamento` passou a aparecer antes de `data_competencia`
+- `data_pagamento` agora passou a ser obrigatoria no formulario operacional do modulo, com indicativo visual claro de obrigatoriedade
+- no formulario de lancamento, preencher `data_pagamento` agora preenche automaticamente `data_competencia` quando ela estiver vazia ou ainda estiver sob valor autoatribuido, preservando edicao manual posterior
+- a revisao atual ficou concentrada no formulario e no template; nesta etapa nao houve mudanca de modelagem para tornar `data_pagamento` obrigatoria fora do fluxo operacional atual
 - a obrigatoriedade final de `pessoa` e `categoria` permanece condicional na camada da aplicacao
 - o formulario de lancamento agora pode consultar e exibir os ultimos 5 lancamentos da `pessoa` selecionada
 - o bloco de historico do favorecido mostra data, tipo, descricao, valor, categoria e `numero_documento` quando existir
@@ -189,6 +205,7 @@ Com filtro por periodo:
 - A largura util e a centralizacao horizontal do recibo na impressao foram ajustadas para melhor aproveitamento da folha A4.
 - A margem superior do recibo na impressao agora foi levemente ampliada para dar respiro inicial sem reintroduzir excesso de altura.
 - O extrato mostra conta, periodo, saldo inicial, data do saldo inicial, saldo anterior quando aplicavel e saldo final exibido.
+- O extrato ainda mostra lancamentos rateados linha a linha, sem consolidacao por `grupo_rateio` ou `numero_documento`; a frente de leitura consolidada do rateio no extrato ficou oficialmente aberta.
 - O modulo possui listagem de contas com `saldo_atual` calculado.
 - A listagem de lancamentos destaca tipo por cor e status nao quitado em negrito.
 - A listagem de lancamentos agora oferece acesso direto ao recibo de cada lancamento.
@@ -205,13 +222,23 @@ Com filtro por periodo:
 - Existe a migration incremental `financeiro/migrations/0007_categoriafinanceira_mensagem_recibo.py`.
 - Existe a migration incremental `financeiro/migrations/0008_assinaturainstitucional.py`.
 - Existe a migration incremental `financeiro/migrations/0009_configuracaoinstitucional.py`.
+- Existe a migration incremental `financeiro/migrations/0010_lancamentofinanceiro_rateio_campos.py`.
 - A cadeia `0005` -> `0006` representa a consolidacao incremental da obrigatoriedade condicional de `pessoa` e `categoria`.
 - A `0007` adiciona `mensagem_recibo` opcional em `CategoriaFinanceira` para personalizacao controlada do recibo com fallback padrao.
 - A `0008` adiciona `AssinaturaInstitucional` para uso controlado no recibo com selecao por assinatura padrao ativa.
 - A `0009` adiciona `ConfiguracaoInstitucional` para uso dinamico no recibo com selecao por configuracao padrao ativa.
+- A `0010` adiciona suporte incremental a `com_rateio` e `grupo_rateio` em `LancamentoFinanceiro`.
 - Nao foi criada migration nova para unicidade de `numero_documento` nesta etapa.
 - A validacao de nao repeticao de `numero_documento` ficou na camada de aplicacao por seguranca incremental.
 - As migrations antigas nao foram alteradas.
+
+## Frentes abertas por auditoria funcional
+
+- Ficou aberta a frente de revisao operacional do formulario de lancamento para tratar obrigatoriedade de `data_pagamento` e maior previsibilidade no preenchimento de `data_competencia`.
+- Ficou aberta a frente de definicao da ordem oficial da listagem de lancamentos para consolidar a leitura operacional do modulo.
+- Ficou aberta a frente de consolidacao de rateios no extrato, com objetivo de exibir leitura documental menos fragmentada por `grupo_rateio` ou `numero_documento`.
+- Ficou aberta a frente de auditoria de alteracoes no financeiro, com trilha de data, hora e mudancas por registro, a ser implementada de forma incremental e sem `signals`.
+- Nesta etapa de auditoria funcional e documental, nenhum patch de codigo foi executado.
 
 ## Validacao local
 

@@ -1,6 +1,12 @@
 from __future__ import annotations
 
+import json
+from decimal import Decimal, InvalidOperation
+from uuid import uuid4
+
 from django import forms
+from django.core.exceptions import ValidationError
+from django.forms.models import construct_instance
 from django.urls import reverse_lazy
 
 from .models import (
@@ -125,13 +131,45 @@ class ConfiguracaoInstitucionalForm(forms.ModelForm):
 
 
 class LancamentoFinanceiroForm(forms.ModelForm):
+    lancamento_com_rateio = forms.BooleanField(required=False, label='Lancamento com rateio')
+    valor_total_documento = forms.DecimalField(
+        required=False,
+        max_digits=12,
+        decimal_places=2,
+        min_value=Decimal('0.01'),
+        label='Valor total do documento',
+        help_text='Usado apenas para validar o fechamento do rateio nesta etapa.',
+    )
+    rateio_payload = forms.CharField(required=False, widget=forms.HiddenInput())
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self._rateio_group_token = self.instance.grupo_rateio or uuid4().hex
+        self.rateio_linhas_iniciais = []
         self.fields['tipo'].widget.attrs.update({'data-financeiro-tipo': 'true'})
         self.fields['conta_destino'].widget.attrs.update({'data-financeiro-conta-destino': 'true'})
         self.fields['conta'].error_messages['required'] = 'Informe a conta de origem.'
         self.fields['pessoa'].required = False
         self.fields['categoria'].required = False
+        self.fields['valor'].required = False
+        self.fields['data_pagamento'].required = True
+        self.fields['data_pagamento'].error_messages['required'] = 'Informe a data de pagamento.'
+        self.fields['tipo'].choices = [choice for choice in self.fields['tipo'].choices if choice[0] != '']
+        if not self.instance.pk and not self.is_bound and not self.initial.get('tipo'):
+            self.initial['tipo'] = LancamentoFinanceiro.TipoLancamento.RECEITA
+            self.fields['tipo'].initial = LancamentoFinanceiro.TipoLancamento.RECEITA
+        self.fields['lancamento_com_rateio'].initial = bool(self.instance.pk and self.instance.com_rateio)
+        if self.instance.pk:
+            self.fields['lancamento_com_rateio'].widget = forms.HiddenInput()
+            self.fields['valor_total_documento'].widget = forms.HiddenInput()
+            self.fields['rateio_payload'].widget = forms.HiddenInput()
+        elif self.is_bound:
+            self.rateio_linhas_iniciais = self._parse_rateio_payload(self.data.get('rateio_payload', ''))
+        else:
+            self.rateio_linhas_iniciais = [
+                {'categoria': '', 'valor': ''},
+                {'categoria': '', 'valor': ''},
+            ]
         autocomplete_urls = {
             'pessoa': reverse_lazy('financeiro:autocomplete-pessoa'),
             'categoria': reverse_lazy('financeiro:autocomplete-categoria'),
@@ -149,10 +187,106 @@ class LancamentoFinanceiroForm(forms.ModelForm):
         self.fields['categoria'].widget.attrs.pop('required', None)
         self.fields['pessoa'].widget.attrs.pop('required', None)
 
+    def _parse_rateio_payload(self, payload: str) -> list[dict[str, str]]:
+        if not payload:
+            return []
+        try:
+            data = json.loads(payload)
+        except json.JSONDecodeError:
+            return []
+        if not isinstance(data, list):
+            return []
+        linhas: list[dict[str, str]] = []
+        for item in data:
+            if not isinstance(item, dict):
+                continue
+            linhas.append(
+                {
+                    'categoria': str(item.get('categoria', '') or '').strip(),
+                    'valor': str(item.get('valor', '') or '').strip(),
+                }
+            )
+        return linhas
+
+    def _limpar_rateio(self, cleaned_data: dict) -> None:
+        cleaned_data['lancamento_com_rateio'] = False
+        cleaned_data['valor_total_documento'] = None
+        cleaned_data['rateio_linhas'] = []
+
+    def _validar_rateio(self, cleaned_data: dict) -> None:
+        tipo = cleaned_data.get('tipo')
+        if tipo == LancamentoFinanceiro.TipoLancamento.TRANSFERENCIA:
+            self.add_error('lancamento_com_rateio', 'Transferencia nao pode usar rateio nesta primeira versao.')
+            return
+
+        valor_total = cleaned_data.get('valor_total_documento')
+        if valor_total is None:
+            self.add_error('valor_total_documento', 'Informe o valor total do documento para validar o rateio.')
+
+        linhas_brutas = self._parse_rateio_payload(cleaned_data.get('rateio_payload', ''))
+        self.rateio_linhas_iniciais = linhas_brutas or [
+            {'categoria': '', 'valor': ''},
+            {'categoria': '', 'valor': ''},
+        ]
+        if not linhas_brutas:
+            self.add_error('rateio_payload', 'Informe ao menos 2 linhas de rateio validas.')
+            return
+
+        linhas_validas = 0
+        soma_rateio = Decimal('0.00')
+        rateio_por_categoria: dict[int, dict[str, object]] = {}
+        categorias_disponiveis = {
+            str(categoria.pk): categoria for categoria in CategoriaFinanceira.objects.all()
+        }
+
+        for indice, linha in enumerate(linhas_brutas, start=1):
+            categoria_id = linha.get('categoria', '')
+            valor_raw = linha.get('valor', '')
+            if not categoria_id and not valor_raw:
+                continue
+
+            linhas_validas += 1
+            categoria = categorias_disponiveis.get(categoria_id)
+            if categoria is None:
+                self.add_error('rateio_payload', f'Linha {indice}: informe uma categoria valida.')
+                continue
+
+            try:
+                valor = Decimal(valor_raw)
+            except (InvalidOperation, TypeError):
+                self.add_error('rateio_payload', f'Linha {indice}: informe um valor valido.')
+                continue
+
+            if valor <= Decimal('0.00'):
+                self.add_error('rateio_payload', f'Linha {indice}: o valor precisa ser positivo.')
+                continue
+
+            soma_rateio += valor
+            if categoria.pk not in rateio_por_categoria:
+                rateio_por_categoria[categoria.pk] = {'categoria': categoria, 'valor': Decimal('0.00')}
+            rateio_por_categoria[categoria.pk]['valor'] += valor
+
+        if linhas_validas < 2:
+            self.add_error('rateio_payload', 'Informe no minimo 2 linhas de rateio validas.')
+
+        rateio_linhas = list(rateio_por_categoria.values())
+
+        if valor_total is not None and linhas_validas and soma_rateio != valor_total:
+            self.add_error(
+                'rateio_payload',
+                'A soma das linhas de rateio precisa ser igual ao valor total do documento.',
+            )
+
+        cleaned_data['rateio_linhas'] = rateio_linhas
+        cleaned_data['valor'] = valor_total or Decimal('0.00')
+        cleaned_data['categoria'] = rateio_linhas[0]['categoria'] if rateio_linhas else None
+        cleaned_data['grupo_rateio'] = self._rateio_group_token
+
     def clean(self):
         cleaned_data = super().clean()
         tipo = cleaned_data.get('tipo')
         transferencia = tipo == LancamentoFinanceiro.TipoLancamento.TRANSFERENCIA
+        lancamento_com_rateio = bool(cleaned_data.get('lancamento_com_rateio')) and not self.instance.pk
 
         if not cleaned_data.get('conta'):
             self.add_error('conta', 'Informe a conta de origem.')
@@ -172,9 +306,44 @@ class LancamentoFinanceiroForm(forms.ModelForm):
         }:
             if not cleaned_data.get('pessoa'):
                 self.add_error('pessoa', 'Informe a pessoa para receita e despesa.')
-            if not cleaned_data.get('categoria'):
+            if not cleaned_data.get('categoria') and not lancamento_com_rateio:
                 self.add_error('categoria', 'Informe a categoria para receita e despesa.')
+
+        if lancamento_com_rateio:
+            self._validar_rateio(cleaned_data)
+        else:
+            if not cleaned_data.get('valor'):
+                self.add_error('valor', 'Informe o valor do lancamento.')
+            self._limpar_rateio(cleaned_data)
         return cleaned_data
+
+    def _post_clean(self):
+        super_form = super()
+        if not bool(self.cleaned_data.get('lancamento_com_rateio')) or self.instance.pk:
+            super_form._post_clean()
+            return
+
+        opts = self._meta
+        self.instance = construct_instance(self, self.instance, opts.fields, opts.exclude)
+        self.instance.com_rateio = True
+        self.instance.grupo_rateio = self.cleaned_data.get('grupo_rateio', self._rateio_group_token)
+        self.instance.categoria = self.cleaned_data.get('categoria')
+        self.instance.valor = self.cleaned_data.get('valor') or Decimal('0.00')
+
+        if self.errors:
+            return
+
+        exclude = self._get_validation_exclusions()
+
+        try:
+            self.instance.full_clean(exclude=exclude, validate_unique=False)
+        except ValidationError as error:
+            self._update_errors(error)
+
+        try:
+            self.validate_unique()
+        except ValidationError as error:
+            self._update_errors(error)
 
     class Meta:
         model = LancamentoFinanceiro

@@ -76,6 +76,8 @@ Data: 2026-03-26
 - `numero_documento` manual quando informado pelo usuario
 - `numero_documento` automatico quando vier vazio
 - validacao para impedir repeticao de `numero_documento` em cadastro e edicao
+- primeira versao de `Lancamento com rateio` sem documento pai, com `grupo_rateio` e validacao por `valor total do documento`
+- segunda versao do rateio com redirecionamento estavel no create, `tipo` padrao em `receita`, sugestao automatica de `data_competencia` a partir de `data_pagamento` e consolidacao de categorias repetidas antes da gravacao
 
 ### Regras condicionais de transferencia
 - transferencia nao exige pessoa
@@ -127,6 +129,12 @@ Data: 2026-03-26
 
 - comportamento de transferencia em todas as telas e relatorios
 - UX do formulario de lancamento em casos limite
+- evolucao futura do rateio para edicao coordenada em bloco e modelagem documental mais rica, se necessario
+- acabamento operacional do rateio em edicao individual e leitura do grupo nas telas ja existentes
+- revisao operacional futura da obrigatoriedade estrutural de `data_pagamento`, caso o comportamento hoje consolidado no formulario precise subir para nivel de modelagem
+- definicao da ordem oficial da listagem de lancamentos
+- consolidacao de rateios no extrato por `grupo_rateio` ou `numero_documento`
+- auditoria de alteracoes no financeiro com trilha de data, hora e mudancas por registro
 - consistencia visual do tratamento de transferencia
 - validacoes defensivas adicionais em fluxos operacionais
 - extrato com mais contexto operacional sem poluir a tela

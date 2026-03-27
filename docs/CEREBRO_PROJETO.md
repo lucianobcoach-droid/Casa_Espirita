@@ -74,6 +74,8 @@ Ate o momento, esta validado que:
 - o menu superior do financeiro agora tambem possui dropdown `Configuracoes` com acesso a `Assinaturas` e `Configuracao Institucional`
 - a home do modulo financeiro agora tambem oferece atalhos visiveis para `Assinaturas` e `Configuracao Institucional`
 - o formulario de lancamento agora pode exibir os ultimos 5 lancamentos do favorecido selecionado, sem quebrar o autocomplete atual
+- o formulario de lancamento agora possui modo simples de `Lancamento com rateio` para criar multiplas linhas do mesmo documento sem documento pai
+- a segunda versao do formulario de rateio agora preserva o lancamento comum, inicia `tipo` em `receita`, melhora a ordem das datas e volta corretamente para a listagem apos criar multiplas linhas
 - cada lancamento agora pode gerar recibo proprio em HTML imprimivel, com bloco simples de assinatura
 - no recibo, o campo `Referente a` deve usar a descricao do lancamento
 - no recibo, a data principal deve priorizar `data_pagamento`, com fallback explicito para `data_competencia` quando necessario
@@ -140,10 +142,25 @@ Os tipos validos de lancamento sao:
 - em `transferencia`, `conta_destino` continua obrigatoria
 - erros de obrigatoriedade do lancamento devem aparecer no formulario, sem estourar erro de banco
 - `numero_documento` continua opcional para o usuario, mas deve ser gerado automaticamente quando vier vazio
-- `numero_documento` nao pode se repetir em outro lancamento
-- se o usuario informar manualmente um `numero_documento` ja existente, o erro deve aparecer no formulario
-- a validacao de duplicidade deve funcionar no cadastro e na edicao
+- quando `Lancamento com rateio` nao estiver marcado, `numero_documento` continua unico entre os lancamentos
+- quando `Lancamento com rateio` estiver marcado, o mesmo `numero_documento` pode se repetir apenas entre linhas do mesmo grupo de rateio
+- se o usuario informar manualmente um `numero_documento` ja existente fora do mesmo grupo de rateio, o erro deve aparecer no formulario
+- a validacao de duplicidade deve funcionar no cadastro e na edicao, respeitando a excecao controlada de rateio
 - na edicao, o proprio registro nao deve ser tratado como duplicado dele mesmo
+- o rateio inicial deve exigir no minimo 2 linhas validas
+- no rateio, cada linha deve ter categoria obrigatoria e valor positivo
+- no rateio, a soma das linhas deve ser igual ao `valor total do documento`
+- no rateio, categorias repetidas no payload devem ser consolidadas por soma antes de salvar as linhas finais
+- nesta primeira versao, `valor total do documento` e usado apenas para validacao do formulario e nao e persistido no model
+- nesta primeira versao, a edicao das linhas rateadas continua individual e nao existe edicao coordenada em bloco do grupo
+- no create com rateio, o redirecionamento final deve ocorrer sem depender de um `self.object` unico
+- quando `data_pagamento` for preenchida e `data_competencia` ainda estiver vazia no formulario, a competencia deve ser sugerida automaticamente sem bloquear edicao manual posterior
+- a revisao operacional de `data_pagamento` foi consolidada no formulario do modulo, tornando o campo obrigatorio no fluxo atual e com indicativo visual claro
+- o preenchimento de `data_competencia` a partir de `data_pagamento` foi reforcado no template para comportamento mais previsivel, sem sobrescrever indevidamente valores manuais ja existentes
+- nesta etapa, a obrigatoriedade de `data_pagamento` ficou concentrada no formulario operacional e nao abriu mudanca estrutural de modelagem
+- a ordem oficial da listagem de lancamentos ainda nao foi consolidada como regra operacional propria
+- a leitura de rateios no extrato ainda precisa de consolidacao futura por `grupo_rateio` ou `numero_documento`
+- ficou aberta a frente de auditoria de alteracoes no financeiro, com implementacao incremental preferencial sem `signals`
 - `data_pagamento` nao pode ser anterior a `data_competencia`
 - `CategoriaFinanceira` pode ter `mensagem_recibo` opcional para personalizar o rodape do recibo
 - quando `CategoriaFinanceira.mensagem_recibo` estiver vazia, o recibo deve manter mensagem padrao simples

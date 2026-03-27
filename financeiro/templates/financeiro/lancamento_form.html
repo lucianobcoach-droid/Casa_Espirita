@@ -1,68 +1,241 @@
 {% extends 'financeiro/base.html' %}
 {% block title %}{{ page_title }}{% endblock %}
 {% block content %}
+<style>
+    .financeiro-form-grid { display: flex; flex-direction: column; gap: 1rem; }
+    .financeiro-form-section { border: 1px solid #e5e7eb; border-radius: 0.85rem; background: #fff; box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04); }
+    .financeiro-form-section.is-rateio { border-color: #bfdbfe; background: linear-gradient(180deg, #f8fbff, #ffffff); }
+    .financeiro-form-section-body { padding: 1rem 1.1rem; }
+    .financeiro-form-section-title { font-size: 0.95rem; font-weight: 700; color: #1f2937; margin-bottom: 0.2rem; }
+    .financeiro-form-section-text { font-size: 0.86rem; color: #6b7280; margin-bottom: 0.85rem; }
+    .financeiro-form-toggle { display: flex; gap: 1rem; justify-content: space-between; align-items: flex-start; padding: 0.9rem 1rem; border: 1px solid #dbeafe; border-radius: 0.8rem; background: #f8fbff; }
+    .financeiro-form-toggle .checkbox { font-weight: 600; color: #1f2937; }
+    .financeiro-form-toggle-help { font-size: 0.84rem; color: #64748b; max-width: 32rem; }
+    .financeiro-rateio-panel { padding: 0.85rem; border: 1px dashed rgba(59, 130, 246, 0.35); border-radius: 0.8rem; background: rgba(255,255,255,.8); }
+    .financeiro-form-actions { display: flex; gap: 0.75rem; justify-content: flex-end; flex-wrap: wrap; }
+    @media screen and (max-width: 768px) { .financeiro-form-toggle { flex-direction: column; } .financeiro-form-actions .button { width: 100%; } }
+</style>
+
 <h1 class="title">{{ page_title }}</h1>
 {% if form.non_field_errors %}
-    <div class="notification is-danger">
-        {{ form.non_field_errors }}
-    </div>
+    <div class="notification is-danger">{{ form.non_field_errors }}</div>
 {% endif %}
+
 <form method="post">
     {% csrf_token %}
-    {% for field in form %}
-        <div
-            class="field"
-            {% if field.name == 'conta_destino' %} data-financeiro-conta-destino-wrapper="true"{% endif %}
-            {% if field.name == 'pessoa' %} data-financeiro-pessoa-wrapper="true"{% endif %}
-            {% if field.name == 'categoria' %} data-financeiro-categoria-wrapper="true"{% endif %}
-            {% if field.name == 'centro_custo' %} data-financeiro-centro-custo-wrapper="true"{% endif %}
-        >
-            <label class="label" for="{{ field.id_for_label }}">
-                {{ field.label }}{% if field.field.required %} *{% endif %}
-                {% if field.name == 'pessoa' or field.name == 'categoria' or field.name == 'conta_destino' %}
-                    <span data-financeiro-required-marker="true"> *</span>
-                {% endif %}
-            </label>
-            <div class="control">
-                {{ field }}
-            </div>
-            {% if field.help_text %}
-                <p class="help">{{ field.help_text }}</p>
-            {% endif %}
-            {% for error in field.errors %}
-                <p class="help is-danger">{{ error }}</p>
-            {% endfor %}
-        </div>
+    {% for hidden_field in form.hidden_fields %}{{ hidden_field }}{% endfor %}
+    {% for hidden_field in form.hidden_fields %}
+        {% for error in hidden_field.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
     {% endfor %}
-    <div class="buttons">
-        <button class="button is-primary" type="submit">{{ submit_label }}</button>
-        <a class="button" href="{% url 'financeiro:lancamento-list' %}">Voltar</a>
+
+    <div class="financeiro-form-grid">
+        <section class="financeiro-form-section">
+            <div class="financeiro-form-section-body">
+                <div class="financeiro-form-section-title">Dados principais</div>
+                <div class="financeiro-form-section-text">Identificacao do lancamento e dados base do registro.</div>
+
+                <div class="field">
+                    <label class="label" for="{{ form.descricao.id_for_label }}">{{ form.descricao.label }} *</label>
+                    <div class="control">{{ form.descricao }}</div>
+                    {% for error in form.descricao.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+                </div>
+
+                <div class="columns is-variable is-4">
+                    <div class="column is-4">
+                        <div class="field">
+                            <label class="label" for="{{ form.tipo.id_for_label }}">{{ form.tipo.label }} *</label>
+                            <div class="control">{{ form.tipo }}</div>
+                            {% for error in form.tipo.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+                        </div>
+                    </div>
+                    <div class="column is-4">
+                        <div class="field">
+                            <label class="label" for="{{ form.status.id_for_label }}">{{ form.status.label }} *</label>
+                            <div class="control">{{ form.status }}</div>
+                            {% for error in form.status.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+                        </div>
+                    </div>
+                    <div class="column is-4">
+                        <div class="field">
+                            <label class="label" for="{{ form.numero_documento.id_for_label }}">{{ form.numero_documento.label }}</label>
+                            <div class="control">{{ form.numero_documento }}</div>
+                            {% for error in form.numero_documento.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="financeiro-form-section">
+            <div class="financeiro-form-section-body">
+                <div class="financeiro-form-section-title">Modo do lancamento</div>
+                <div class="financeiro-form-section-text">Escolha entre lancamento comum e rateio simples do mesmo documento.</div>
+
+                {% if not form.instance.pk %}
+                    <div class="financeiro-form-toggle">
+                        <div>
+                            <label class="checkbox" for="{{ form.lancamento_com_rateio.id_for_label }}">
+                                {{ form.lancamento_com_rateio }}
+                                {{ form.lancamento_com_rateio.label }}
+                            </label>
+                            {% for error in form.lancamento_com_rateio.errors %}<p class="help is-danger mt-2">{{ error }}</p>{% endfor %}
+                        </div>
+                        <div class="financeiro-form-toggle-help">
+                            Use esta opcao quando o mesmo documento precisar ser dividido em mais de uma linha de categoria e valor.
+                        </div>
+                    </div>
+                {% elif form.instance.com_rateio %}
+                    <div class="notification is-warning is-light mb-0">
+                        Este lancamento pertence a um grupo de rateio. Nesta primeira versao, a edicao continua individual por linha.
+                    </div>
+                {% endif %}
+            </div>
+        </section>
+
+        <section class="financeiro-form-section">
+            <div class="financeiro-form-section-body">
+                <div class="financeiro-form-section-title">Valores e datas</div>
+                <div class="financeiro-form-section-text">Campos principais para valor, competencia e pagamento.</div>
+
+                <div class="columns is-variable is-4">
+                    <div class="column is-4">
+                        <div class="field" data-financeiro-valor-wrapper="true">
+                            <label class="label" for="{{ form.valor.id_for_label }}">{{ form.valor.label }} *</label>
+                            <div class="control">{{ form.valor }}</div>
+                            {% for error in form.valor.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+                        </div>
+                        {% if not form.instance.pk %}
+                            <div class="field" data-financeiro-rateio-total-wrapper="true" hidden>
+                                <label class="label" for="{{ form.valor_total_documento.id_for_label }}">{{ form.valor_total_documento.label }} *</label>
+                                <div class="control">{{ form.valor_total_documento }}</div>
+                                {% if form.valor_total_documento.help_text %}<p class="help">{{ form.valor_total_documento.help_text }}</p>{% endif %}
+                                {% for error in form.valor_total_documento.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="column is-4">
+                        <div class="field">
+                            <label class="label" for="{{ form.data_pagamento.id_for_label }}">{{ form.data_pagamento.label }} *</label>
+                            <div class="control">{{ form.data_pagamento }}</div>
+                            {% for error in form.data_pagamento.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+                        </div>
+                    </div>
+                    <div class="column is-4">
+                        <div class="field">
+                            <label class="label" for="{{ form.data_competencia.id_for_label }}">{{ form.data_competencia.label }} *</label>
+                            <div class="control">{{ form.data_competencia }}</div>
+                            {% for error in form.data_competencia.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        {% if not form.instance.pk %}
+            <section class="financeiro-form-section is-rateio" data-financeiro-rateio-box="true" hidden>
+                <div class="financeiro-form-section-body">
+                    <div class="financeiro-form-section-title">Rateio</div>
+                    <div class="financeiro-form-section-text">Linhas do mesmo documento com categoria e valor por item.</div>
+
+                    <div class="financeiro-rateio-panel">
+                        <div class="level mb-3">
+                            <div class="level-left">
+                                <div class="financeiro-form-section-text mb-0">Informe no minimo 2 linhas validas e confira o fechamento com o valor total do documento.</div>
+                            </div>
+                            <div class="level-right">
+                                <button class="button is-small is-link is-light" type="button" data-financeiro-rateio-add="true">Adicionar linha</button>
+                            </div>
+                        </div>
+                        {% for error in form.rateio_payload.errors %}<p class="help is-danger mb-2">{{ error }}</p>{% endfor %}
+                        <div class="table-container">
+                            <table class="table is-fullwidth is-narrow is-striped financeiro-rateio-table">
+                                <thead>
+                                <tr><th>Categoria</th><th>Valor</th><th class="has-text-right">Acao</th></tr>
+                                </thead>
+                                <tbody data-financeiro-rateio-body="true"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        {% endif %}
+
+        <section class="financeiro-form-section">
+            <div class="financeiro-form-section-body">
+                <div class="financeiro-form-section-title">Informacoes complementares</div>
+                <div class="financeiro-form-section-text">Pessoa, categoria, centro de custo, contas e observacoes.</div>
+                <div class="columns is-variable is-4">
+                    <div class="column is-6">
+                        <div class="field" data-financeiro-pessoa-wrapper="true">
+                            <label class="label" for="{{ form.pessoa.id_for_label }}">{{ form.pessoa.label }}<span data-financeiro-required-marker="true"> *</span></label>
+                            <div class="control">{{ form.pessoa }}</div>
+                            {% for error in form.pessoa.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+                        </div>
+                    </div>
+                    <div class="column is-6">
+                        <div class="field" data-financeiro-categoria-wrapper="true">
+                            <label class="label" for="{{ form.categoria.id_for_label }}">{{ form.categoria.label }}<span data-financeiro-required-marker="true"> *</span></label>
+                            <div class="control">{{ form.categoria }}</div>
+                            {% for error in form.categoria.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="columns is-variable is-4">
+                    <div class="column is-4">
+                        <div class="field" data-financeiro-centro-custo-wrapper="true">
+                            <label class="label" for="{{ form.centro_custo.id_for_label }}">{{ form.centro_custo.label }}</label>
+                            <div class="control">{{ form.centro_custo }}</div>
+                            {% for error in form.centro_custo.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+                        </div>
+                    </div>
+                    <div class="column is-4">
+                        <div class="field">
+                            <label class="label" for="{{ form.conta.id_for_label }}">{{ form.conta.label }} *</label>
+                            <div class="control">{{ form.conta }}</div>
+                            {% for error in form.conta.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+                        </div>
+                    </div>
+                    <div class="column is-4">
+                        <div class="field" data-financeiro-conta-destino-wrapper="true">
+                            <label class="label" for="{{ form.conta_destino.id_for_label }}">{{ form.conta_destino.label }}<span data-financeiro-required-marker="true"> *</span></label>
+                            <div class="control">{{ form.conta_destino }}</div>
+                            {% for error in form.conta_destino.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label class="label" for="{{ form.observacoes.id_for_label }}">{{ form.observacoes.label }}</label>
+                    <div class="control">{{ form.observacoes }}</div>
+                    {% for error in form.observacoes.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+                </div>
+            </div>
+        </section>
+
+        <section class="financeiro-form-section">
+            <div class="financeiro-form-section-body">
+                <div class="financeiro-form-actions">
+                    <a class="button" href="{% url 'financeiro:lancamento-list' %}">Voltar</a>
+                    <button class="button is-primary" type="submit">{{ submit_label }}</button>
+                </div>
+            </div>
+        </section>
     </div>
 </form>
-<section
-    class="box mt-5"
-    data-financeiro-pessoa-historico="true"
-    data-history-url-template="{% url 'financeiro:pessoa-ultimos-lancamentos' 0 %}"
-    hidden
->
+
+<section class="box mt-5" data-financeiro-pessoa-historico="true" data-history-url-template="{% url 'financeiro:pessoa-ultimos-lancamentos' 0 %}" hidden>
     <h2 class="title is-6 mb-3">Ultimos lancamentos do favorecido</h2>
     <p class="help mb-3" data-historico-vazio="true">Selecione uma pessoa para ver os ultimos 5 lancamentos.</p>
     <div class="table-container" data-historico-tabela-wrapper="true" hidden>
         <table class="table is-fullwidth is-striped is-narrow">
-            <thead>
-            <tr>
-                <th>Data</th>
-                <th>Tipo</th>
-                <th>Descricao</th>
-                <th>Valor</th>
-                <th>Categoria</th>
-                <th>Documento</th>
-            </tr>
-            </thead>
+            <thead><tr><th>Data</th><th>Tipo</th><th>Descricao</th><th>Valor</th><th>Categoria</th><th>Documento</th></tr></thead>
             <tbody data-historico-body="true"></tbody>
         </table>
     </div>
 </section>
+{{ rateio_categoria_opcoes|json_script:'financeiro-rateio-categorias' }}
+{{ form.rateio_linhas_iniciais|json_script:'financeiro-rateio-inicial' }}
 <script>
     (function () {
         const tipoField = document.querySelector('[data-financeiro-tipo="true"]');
@@ -74,28 +247,39 @@
         const categoriaWrapper = document.querySelector('[data-financeiro-categoria-wrapper="true"]');
         const centroCustoField = document.querySelector('[name="centro_custo"]');
         const centroCustoWrapper = document.querySelector('[data-financeiro-centro-custo-wrapper="true"]');
+        const valorField = document.querySelector('[name="valor"]');
+        const valorWrapper = document.querySelector('[data-financeiro-valor-wrapper="true"]');
+        const dataCompetenciaField = document.querySelector('[name="data_competencia"]');
+        const dataPagamentoField = document.querySelector('[name="data_pagamento"]');
+        const rateioToggle = document.querySelector('[name="lancamento_com_rateio"]');
+        const valorTotalField = document.querySelector('[name="valor_total_documento"]');
+        const valorTotalWrapper = document.querySelector('[data-financeiro-rateio-total-wrapper="true"]');
+        const rateioBox = document.querySelector('[data-financeiro-rateio-box="true"]');
+        const rateioBody = document.querySelector('[data-financeiro-rateio-body="true"]');
+        const rateioAddButton = document.querySelector('[data-financeiro-rateio-add="true"]');
+        const rateioPayloadField = document.querySelector('[name="rateio_payload"]');
         const autocompleteFields = Array.from(document.querySelectorAll('[data-financeiro-autocomplete="true"]'));
         const pessoaHistoricoBox = document.querySelector('[data-financeiro-pessoa-historico="true"]');
         const pessoaHistoricoEmpty = document.querySelector('[data-historico-vazio="true"]');
         const pessoaHistoricoTableWrapper = document.querySelector('[data-historico-tabela-wrapper="true"]');
         const pessoaHistoricoBody = document.querySelector('[data-historico-body="true"]');
+        const rateioCategoriasNode = document.getElementById('financeiro-rateio-categorias');
+        const rateioInicialNode = document.getElementById('financeiro-rateio-inicial');
+        const rateioCategorias = rateioCategoriasNode ? JSON.parse(rateioCategoriasNode.textContent) : [];
+        const rateioInicial = rateioInicialNode ? JSON.parse(rateioInicialNode.textContent) : [];
+        let rateioRows = Array.isArray(rateioInicial) ? rateioInicial.slice() : [];
 
         function createAutocomplete(select) {
             const control = select.parentElement;
-            if (!control) {
-                return;
-            }
-
+            if (!control) return;
             const container = document.createElement('div');
             container.className = 'financeiro-autocomplete';
-
             const input = document.createElement('input');
             input.type = 'text';
             input.className = 'input';
             input.autocomplete = 'off';
             input.placeholder = 'Digite para buscar';
             input.required = select.required;
-
             const menu = document.createElement('div');
             menu.className = 'financeiro-autocomplete-menu';
             menu.hidden = true;
@@ -106,12 +290,7 @@
                 const selected = select.options[select.selectedIndex];
                 return selected && selected.value ? selected.text : '';
             }
-
-            function closeMenu() {
-                menu.hidden = true;
-                menu.innerHTML = '';
-            }
-
+            function closeMenu() { menu.hidden = true; menu.innerHTML = ''; }
             function ensureOption(item) {
                 let option = Array.from(select.options).find((current) => current.value === String(item.id));
                 if (!option) {
@@ -122,7 +301,6 @@
                 option.text = item.label;
                 return option;
             }
-
             function selectOption(item) {
                 const option = ensureOption(item);
                 select.value = option.value;
@@ -130,7 +308,6 @@
                 select.dispatchEvent(new Event('change', { bubbles: true }));
                 closeMenu();
             }
-
             function renderOptions(items, query) {
                 menu.innerHTML = '';
                 if (!items.length) {
@@ -141,7 +318,6 @@
                     menu.hidden = false;
                     return;
                 }
-
                 items.forEach((item) => {
                     const button = document.createElement('button');
                     button.type = 'button';
@@ -153,40 +329,27 @@
                     });
                     menu.appendChild(button);
                 });
-
                 menu.hidden = false;
             }
-
             function fetchOptions(query) {
                 activeRequestId += 1;
                 const requestId = activeRequestId;
                 const url = new URL(endpointUrl, window.location.origin);
                 url.searchParams.set('q', query);
-
-                fetch(url, {
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                })
+                fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
                     .then((response) => response.json())
                     .then((data) => {
-                        if (requestId !== activeRequestId) {
-                            return;
-                        }
+                        if (requestId !== activeRequestId) return;
                         renderOptions(data.results || [], query);
                     })
                     .catch(() => {
-                        if (requestId !== activeRequestId) {
-                            return;
-                        }
+                        if (requestId !== activeRequestId) return;
                         renderOptions([], query);
                     });
             }
-
             input.value = selectedOptionText();
             select.style.display = 'none';
             select._autocompleteInput = input;
-
             input.addEventListener('input', function () {
                 if (input.value !== selectedOptionText()) {
                     if (select.value) {
@@ -196,53 +359,30 @@
                 }
                 fetchOptions(input.value.trim());
             });
-
-            input.addEventListener('focus', function () {
-                fetchOptions(input.value.trim());
-            });
-
+            input.addEventListener('focus', function () { fetchOptions(input.value.trim()); });
             input.addEventListener('blur', function () {
                 window.setTimeout(function () {
-                    if (input.value.trim() !== selectedOptionText()) {
-                        input.value = selectedOptionText();
-                    }
+                    if (input.value.trim() !== selectedOptionText()) input.value = selectedOptionText();
                     closeMenu();
                 }, 120);
             });
-
             container.appendChild(input);
             container.appendChild(menu);
             control.insertBefore(container, select);
         }
 
-        autocompleteFields.forEach(createAutocomplete);
-
-        if (
-            !tipoField ||
-            !contaDestinoField ||
-            !contaDestinoWrapper ||
-            !pessoaField ||
-            !pessoaWrapper ||
-            !categoriaField ||
-            !categoriaWrapper ||
-            !centroCustoField ||
-            !centroCustoWrapper
-        ) {
-            return;
-        }
-
         function syncConditionalField(field, wrapper, options) {
-            const {
-                visible,
-                required,
-                clearWhenHidden = false,
-            } = options;
+            if (!field || !wrapper) return;
+            const visible = !!options.visible;
+            const required = !!options.required;
+            const clearWhenHidden = !!options.clearWhenHidden;
+            wrapper.hidden = !visible;
             wrapper.style.display = visible ? '' : 'none';
             field.disabled = !visible;
-            field.required = !!required;
+            field.required = required;
             if (field._autocompleteInput) {
                 field._autocompleteInput.disabled = !visible;
-                field._autocompleteInput.required = !!required;
+                field._autocompleteInput.required = required;
             }
             wrapper.querySelectorAll('[data-financeiro-required-marker="true"]').forEach((marker) => {
                 marker.style.display = required ? '' : 'none';
@@ -250,75 +390,57 @@
             if (!visible && clearWhenHidden) {
                 const hadValue = !!field.value;
                 field.value = '';
-                if (field._autocompleteInput) {
-                    field._autocompleteInput.value = '';
-                }
-                if (hadValue) {
-                    field.dispatchEvent(new Event('change', { bubbles: true }));
-                }
+                if (field._autocompleteInput) field._autocompleteInput.value = '';
+                if (hadValue) field.dispatchEvent(new Event('change', { bubbles: true }));
             }
         }
 
         function renderHistoricoState(message, items) {
-            if (!pessoaHistoricoBox || !pessoaHistoricoEmpty || !pessoaHistoricoTableWrapper || !pessoaHistoricoBody) {
-                return;
-            }
-
+            if (!pessoaHistoricoBox || !pessoaHistoricoEmpty || !pessoaHistoricoTableWrapper || !pessoaHistoricoBody) return;
             pessoaHistoricoBody.innerHTML = '';
             pessoaHistoricoBox.hidden = false;
-
             if (!items.length) {
                 pessoaHistoricoEmpty.textContent = message;
                 pessoaHistoricoEmpty.hidden = false;
                 pessoaHistoricoTableWrapper.hidden = true;
                 return;
             }
-
             pessoaHistoricoEmpty.hidden = true;
             pessoaHistoricoTableWrapper.hidden = false;
-
             items.forEach(function (item) {
                 const row = document.createElement('tr');
-                [item.data, item.tipo, item.descricao, item.valor, item.categoria, item.numero_documento || '-'].forEach(
-                    function (value) {
-                        const cell = document.createElement('td');
-                        cell.textContent = value;
-                        row.appendChild(cell);
-                    }
-                );
+                [item.data, item.tipo, item.descricao, item.valor, item.categoria, item.numero_documento || '-'].forEach(function (value) {
+                    const cell = document.createElement('td');
+                    cell.textContent = value;
+                    row.appendChild(cell);
+                });
                 pessoaHistoricoBody.appendChild(row);
             });
         }
 
-        function clearHistorico(message) {
-            renderHistoricoState(message, []);
+        function clearHistorico(message) { renderHistoricoState(message, []); }
+
+        function syncDataCompetenciaFromPagamento() {
+            if (!dataCompetenciaField || !dataPagamentoField) return;
+            if (!dataPagamentoField.value) return;
+            if (dataCompetenciaField.value && dataCompetenciaField.dataset.autoFilledCompetencia !== 'true') return;
+            dataCompetenciaField.value = dataPagamentoField.value;
+            dataCompetenciaField.dataset.autoFilledCompetencia = 'true';
         }
 
         function loadPessoaHistorico() {
-            if (!pessoaField || !pessoaHistoricoBox) {
-                return;
-            }
-
+            if (!pessoaField || !pessoaHistoricoBox) return;
             if (pessoaField.disabled) {
                 pessoaHistoricoBox.hidden = true;
                 return;
             }
-
             if (!pessoaField.value) {
                 clearHistorico('Selecione uma pessoa para ver os ultimos 5 lancamentos.');
                 return;
             }
-
             const urlTemplate = pessoaHistoricoBox.dataset.historyUrlTemplate;
-            if (!urlTemplate) {
-                return;
-            }
-
-            fetch(urlTemplate.replace('/0/', `/${pessoaField.value}/`), {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
+            if (!urlTemplate) return;
+            fetch(urlTemplate.replace('/0/', `/${pessoaField.value}/`), { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
                 .then((response) => response.json())
                 .then((data) => {
                     const items = data.results || [];
@@ -328,40 +450,140 @@
                     }
                     renderHistoricoState('', items);
                 })
-                .catch(() => {
-                    clearHistorico('Nao foi possivel carregar o historico deste favorecido agora.');
-                });
+                .catch(() => { clearHistorico('Nao foi possivel carregar o historico deste favorecido agora.'); });
         }
 
-        function syncContaDestino() {
-            const isTransferencia = tipoField.value === 'transferencia';
-            syncConditionalField(contaDestinoField, contaDestinoWrapper, {
-                visible: isTransferencia,
-                required: isTransferencia,
-                clearWhenHidden: !isTransferencia,
+        function serializeRateioRows() {
+            if (!rateioPayloadField) return;
+            rateioPayloadField.value = JSON.stringify(rateioRows.map(function (row) {
+                return { categoria: row.categoria || '', valor: row.valor || '' };
+            }));
+        }
+
+        function createRateioCategoriaSelect(selectedValue, rowIndex) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'select is-fullwidth';
+            const select = document.createElement('select');
+            select.dataset.rateioCategoria = String(rowIndex);
+            const emptyOption = document.createElement('option');
+            emptyOption.value = '';
+            emptyOption.textContent = 'Selecione';
+            select.appendChild(emptyOption);
+            rateioCategorias.forEach(function (categoria) {
+                const option = document.createElement('option');
+                option.value = String(categoria.id);
+                option.textContent = categoria.label;
+                if (String(selectedValue || '') === String(categoria.id)) option.selected = true;
+                select.appendChild(option);
             });
-            syncConditionalField(pessoaField, pessoaWrapper, {
-                visible: !isTransferencia,
-                required: !isTransferencia,
-                clearWhenHidden: isTransferencia,
+            select.addEventListener('change', function () {
+                rateioRows[rowIndex].categoria = select.value;
+                serializeRateioRows();
             });
-            syncConditionalField(categoriaField, categoriaWrapper, {
-                visible: !isTransferencia,
-                required: !isTransferencia,
-                clearWhenHidden: isTransferencia,
+            wrapper.appendChild(select);
+            return wrapper;
+        }
+
+        function createRateioValorInput(selectedValue, rowIndex) {
+            const input = document.createElement('input');
+            input.type = 'number';
+            input.step = '0.01';
+            input.min = '0.01';
+            input.className = 'input';
+            input.value = selectedValue || '';
+            input.dataset.rateioValor = String(rowIndex);
+            input.addEventListener('input', function () {
+                rateioRows[rowIndex].valor = input.value;
+                serializeRateioRows();
             });
-            syncConditionalField(centroCustoField, centroCustoWrapper, {
-                visible: !isTransferencia,
-                required: false,
-                clearWhenHidden: isTransferencia,
+            return input;
+        }
+
+        function renderRateioRows() {
+            if (!rateioBody) return;
+            rateioBody.innerHTML = '';
+            if (!rateioRows.length) rateioRows = [{ categoria: '', valor: '' }, { categoria: '', valor: '' }];
+            rateioRows.forEach(function (row, index) {
+                const tr = document.createElement('tr');
+                const categoriaCell = document.createElement('td');
+                categoriaCell.appendChild(createRateioCategoriaSelect(row.categoria, index));
+                tr.appendChild(categoriaCell);
+                const valorCell = document.createElement('td');
+                valorCell.appendChild(createRateioValorInput(row.valor, index));
+                tr.appendChild(valorCell);
+                const acaoCell = document.createElement('td');
+                acaoCell.className = 'has-text-right';
+                const removeButton = document.createElement('button');
+                removeButton.type = 'button';
+                removeButton.className = 'button is-small is-light';
+                removeButton.textContent = 'Remover';
+                removeButton.addEventListener('click', function () {
+                    rateioRows.splice(index, 1);
+                    renderRateioRows();
+                    serializeRateioRows();
+                });
+                acaoCell.appendChild(removeButton);
+                tr.appendChild(acaoCell);
+                rateioBody.appendChild(tr);
             });
+        }
+
+        function syncRateioState() {
+            const isTransferencia = !!tipoField && tipoField.value === 'transferencia';
+            let isRateio = !!rateioToggle && rateioToggle.checked && !isTransferencia;
+            if (rateioToggle) {
+                rateioToggle.disabled = isTransferencia;
+                if (isTransferencia && rateioToggle.checked) {
+                    rateioToggle.checked = false;
+                    isRateio = false;
+                }
+            }
+            syncConditionalField(contaDestinoField, contaDestinoWrapper, { visible: isTransferencia, required: isTransferencia, clearWhenHidden: !isTransferencia });
+            syncConditionalField(pessoaField, pessoaWrapper, { visible: !isTransferencia, required: !isTransferencia, clearWhenHidden: isTransferencia });
+            syncConditionalField(categoriaField, categoriaWrapper, { visible: !isTransferencia && !isRateio, required: !isTransferencia && !isRateio, clearWhenHidden: isTransferencia || isRateio });
+            syncConditionalField(centroCustoField, centroCustoWrapper, { visible: !isTransferencia, required: false, clearWhenHidden: isTransferencia });
+            syncConditionalField(valorField, valorWrapper, { visible: !isRateio, required: !isRateio, clearWhenHidden: false });
+            syncConditionalField(valorTotalField, valorTotalWrapper, { visible: isRateio, required: isRateio, clearWhenHidden: false });
+            if (rateioBox) {
+                rateioBox.style.display = isRateio ? '' : 'none';
+                rateioBox.hidden = !isRateio;
+            }
             loadPessoaHistorico();
         }
 
-        pessoaField.addEventListener('change', loadPessoaHistorico);
-        tipoField.addEventListener('change', syncContaDestino);
+        autocompleteFields.forEach(createAutocomplete);
+        if (rateioBox) {
+            renderRateioRows();
+            serializeRateioRows();
+            if (rateioAddButton) {
+                rateioAddButton.addEventListener('click', function () {
+                    rateioRows.push({ categoria: '', valor: '' });
+                    renderRateioRows();
+                    serializeRateioRows();
+                });
+            }
+        }
+        if (pessoaField) pessoaField.addEventListener('change', loadPessoaHistorico);
+        if (tipoField) tipoField.addEventListener('change', syncRateioState);
+        if (rateioToggle) rateioToggle.addEventListener('change', syncRateioState);
+        if (dataCompetenciaField) {
+            dataCompetenciaField.dataset.autoFilledCompetencia = dataCompetenciaField.value ? 'false' : 'true';
+            dataCompetenciaField.addEventListener('input', function () {
+                dataCompetenciaField.dataset.autoFilledCompetencia = 'false';
+            });
+            dataCompetenciaField.addEventListener('change', function () {
+                dataCompetenciaField.dataset.autoFilledCompetencia = dataCompetenciaField.value ? 'false' : 'true';
+            });
+        }
+        if (dataPagamentoField) {
+            dataPagamentoField.addEventListener('input', syncDataCompetenciaFromPagamento);
+            dataPagamentoField.addEventListener('change', syncDataCompetenciaFromPagamento);
+        }
+        const formElement = document.querySelector('form');
+        if (formElement) formElement.addEventListener('submit', serializeRateioRows);
+        syncDataCompetenciaFromPagamento();
         loadPessoaHistorico();
-        syncContaDestino();
+        syncRateioState();
     }());
 </script>
 {% endblock %}

@@ -197,6 +197,8 @@ class LancamentoFinanceiro(models.Model):
         default=StatusLancamento.ABERTO,
     )
     valor = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
+    com_rateio = models.BooleanField(default=False)
+    grupo_rateio = models.CharField(max_length=36, blank=True, db_index=True)
     data_competencia = models.DateField()
     data_pagamento = models.DateField(blank=True, null=True)
     numero_documento = models.CharField(max_length=50, blank=True)
@@ -253,6 +255,9 @@ class LancamentoFinanceiro(models.Model):
             self.TipoLancamento.DESPESA,
         }
 
+        if self.com_rateio and not self.grupo_rateio:
+            errors['grupo_rateio'] = 'Lancamentos com rateio precisam estar vinculados a um grupo de rateio.'
+
         if not self.data_competencia:
             errors['data_competencia'] = 'Informe a data de competencia.'
 
@@ -281,7 +286,12 @@ class LancamentoFinanceiro(models.Model):
             if self.pk:
                 queryset = queryset.exclude(pk=self.pk)
             if queryset.exists():
-                errors['numero_documento'] = 'Ja existe outro lancamento com este numero de documento.'
+                if not self.com_rateio:
+                    errors['numero_documento'] = 'Ja existe outro lancamento com este numero de documento.'
+                elif not self.grupo_rateio or queryset.exclude(grupo_rateio=self.grupo_rateio).exists():
+                    errors['numero_documento'] = (
+                        'Ja existe outro lancamento com este numero de documento fora do mesmo grupo de rateio.'
+                    )
 
         if errors:
             raise ValidationError(errors)

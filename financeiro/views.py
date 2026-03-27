@@ -3,10 +3,13 @@ from __future__ import annotations
 from calendar import monthrange
 from datetime import date, timedelta
 from decimal import Decimal
+from uuid import uuid4
 
 from django.contrib import messages
+from django.db import transaction
 from django.db.models import Q
 from django.http import JsonResponse
+from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views import View
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, TemplateView, UpdateView
@@ -1007,6 +1010,63 @@ class LancamentoFinanceiroCreateView(FinanceiroFormMixin, CreateView):
     page_title = 'Novo Lancamento Financeiro'
     success_message = 'Lancamento financeiro cadastrado com sucesso.'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['rateio_categoria_opcoes'] = [
+            {'id': categoria.pk, 'label': str(categoria)}
+            for categoria in CategoriaFinanceira.objects.order_by('tipo', 'nome')
+        ]
+        return context
+
+    def form_valid(self, form):
+        if not form.cleaned_data.get('lancamento_com_rateio'):
+            return super().form_valid(form)
+
+        rateio_linhas = form.cleaned_data.get('rateio_linhas') or []
+        grupo_rateio = form.cleaned_data.get('grupo_rateio') or uuid4().hex
+        numero_documento = (form.cleaned_data.get('numero_documento') or '').strip()
+
+        if not numero_documento:
+            numero_documento = LancamentoFinanceiro(
+                data_competencia=form.cleaned_data['data_competencia']
+            )._gerar_numero_documento()
+
+        dados_comuns = {
+            'descricao': form.cleaned_data['descricao'],
+            'tipo': form.cleaned_data['tipo'],
+            'status': form.cleaned_data['status'],
+            'data_competencia': form.cleaned_data['data_competencia'],
+            'data_pagamento': form.cleaned_data.get('data_pagamento'),
+            'numero_documento': numero_documento,
+            'pessoa': form.cleaned_data.get('pessoa'),
+            'centro_custo': form.cleaned_data.get('centro_custo'),
+            'conta': form.cleaned_data['conta'],
+            'conta_destino': form.cleaned_data.get('conta_destino'),
+            'observacoes': form.cleaned_data.get('observacoes', ''),
+            'com_rateio': True,
+            'grupo_rateio': grupo_rateio,
+        }
+
+        lancamentos_criados: list[LancamentoFinanceiro] = []
+        with transaction.atomic():
+            for linha in rateio_linhas:
+                lancamentos_criados.append(
+                    LancamentoFinanceiro.objects.create(
+                        **dados_comuns,
+                        categoria=linha['categoria'],
+                        valor=linha['valor'],
+                    )
+                )
+
+        if lancamentos_criados:
+            self.object = lancamentos_criados[0]
+
+        messages.success(
+            self.request,
+            f'Lancamento com rateio cadastrado com sucesso em {len(lancamentos_criados)} linhas.',
+        )
+        return redirect(self.success_url)
+
 
 class LancamentoFinanceiroUpdateView(FinanceiroFormMixin, UpdateView):
     model = LancamentoFinanceiro
@@ -1016,6 +1076,14 @@ class LancamentoFinanceiroUpdateView(FinanceiroFormMixin, UpdateView):
     page_title = 'Editar Lancamento Financeiro'
     submit_label = 'Atualizar'
     success_message = 'Lancamento financeiro atualizado com sucesso.'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['rateio_categoria_opcoes'] = [
+            {'id': categoria.pk, 'label': str(categoria)}
+            for categoria in CategoriaFinanceira.objects.order_by('tipo', 'nome')
+        ]
+        return context
 
 
 class LancamentoFinanceiroReciboView(DetailView):

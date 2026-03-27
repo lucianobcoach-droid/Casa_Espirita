@@ -1,6 +1,6 @@
 # CODEX_RESULTADO
 
-Data: 2026-03-26
+Data: 2026-03-27
 
 ## Entrega realizada
 
@@ -166,3 +166,51 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - botoes de criacao de `Assinaturas Institucionais` e `Configuracoes Institucionais` ficaram mais especificos e coerentes com os titulos das telas
 - os botoes principais de `Resumo` e `Prestacao de Contas` foram alinhados para `Atualizar relatorio`
 - a etapa permaneceu restrita a consistencia textual leve, sem alterar estrutura, rotas ou regra de negocio
+
+## Fechamento leve de padronizacao nas listagens do financeiro
+
+- os botoes principais de criacao em `Contas`, `Pessoas`, `Categorias` e `Lancamentos` foram alinhados aos nomes completos das entidades exibidas nas telas
+- os rotulos ficaram mais explicitos para usuario leigo sem alterar fluxo, rotas ou estrutura
+
+## Primeira versao do lancamento com rateio
+
+- o formulario de lancamento passou a oferecer o checkbox `Lancamento com rateio`
+- quando o checkbox nao estiver marcado, o comportamento atual do lancamento comum permanece inalterado
+- quando o checkbox estiver marcado, o formulario passa a exigir `valor total do documento` e no minimo 2 linhas validas de rateio
+- cada linha de rateio exige categoria e valor positivo
+- a soma das linhas precisa ser igual ao `valor total do documento`
+- ao salvar um rateio valido, o sistema cria multiplos `LancamentoFinanceiro` com os mesmos dados comuns, variando categoria e valor por linha
+- os lancamentos criados no rateio recebem `com_rateio = True` e compartilham o mesmo `grupo_rateio`
+- o mesmo `numero_documento` passou a ser aceito apenas entre linhas do mesmo grupo de rateio, preservando o bloqueio de duplicidade acidental fora desse contexto
+- nesta primeira versao, `valor_total_documento` existe apenas no formulario para validacao e nao e persistido no model
+- nesta primeira versao, a edicao do grupo rateado nao e coordenada em bloco; a edicao continua individual por linha e isso foi registrado como limitacao conhecida
+
+## Segunda versao do lancamento com rateio
+
+- o fluxo de create com rateio deixou de quebrar no redirecionamento final e volta corretamente para a listagem apos criar o grupo
+- a causa raiz era o fluxo de rateio criar varias linhas sem um `self.object` unico para o comportamento esperado da `CreateView`; a resolucao foi tratar explicitamente o redirecionamento e definir um objeto de referencia do grupo criado
+- o campo `tipo` do formulario passou a abrir preenchido com `receita` e sem opcao vazia inicial
+- `data_pagamento` passou a aparecer antes de `data_competencia` no formulario
+- ao preencher `data_pagamento`, o formulario sugere automaticamente `data_competencia` quando ela ainda estiver vazia, sem bloquear edicao manual posterior
+- o lancamento comum foi preservado sem mudanca de regra
+- o rateio continua aceitando mais de 2 linhas e agora consolida categorias repetidas por soma antes de salvar as linhas finais
+- a validacao do total do documento continua obrigatoria
+- a busca por categoria no lancamento comum continua por digitacao com busca por contem no autocomplete ja existente
+- a edicao do grupo rateado continua individual por linha e ainda nao existe edicao coordenada em bloco nesta etapa
+
+## Consolidacao documental da auditoria funcional
+
+- foi registrada sem patch de codigo a abertura da frente de revisao operacional do formulario de lancamento para tratar obrigatoriedade de `data_pagamento` e maior previsibilidade no preenchimento de `data_competencia`
+- foi registrada sem patch de codigo a abertura da frente de definicao da ordem oficial da listagem de lancamentos
+- foi registrada sem patch de codigo a abertura da frente de consolidacao de rateios no extrato por `grupo_rateio` ou `numero_documento`
+- foi registrada sem patch de codigo a abertura da frente de auditoria de alteracoes no financeiro, com implementacao incremental preferencial sem `signals`
+- a auditoria tambem consolidou que o extrato atual ainda exibe rateios linha a linha e que o autopreenchimento de `data_competencia` segue fragil por depender apenas de comportamento visual no template
+
+## Revisao operacional de data_pagamento e data_competencia
+
+- `data_pagamento` passou a ser obrigatoria no formulario operacional do modulo, com indicativo visual claro de obrigatoriedade
+- `data_pagamento` continua aparecendo antes de `data_competencia`
+- ao preencher `data_pagamento`, o formulario agora preenche automaticamente `data_competencia` quando ela estiver vazia ou ainda mantiver valor autoatribuido
+- a pessoa usuaria continua podendo editar manualmente `data_competencia` sem sobrescrita indevida quando ja houver valor proprio no campo
+- o comportamento foi ajustado para funcionar melhor tanto na abertura inicial do formulario quanto na interacao posterior do usuario
+- a revisao desta etapa ficou concentrada em `financeiro/forms.py` e `financeiro/templates/financeiro/lancamento_form.html`, sem alterar modelagem nem criar migration nova
