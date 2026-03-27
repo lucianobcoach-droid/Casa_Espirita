@@ -113,8 +113,9 @@ Leitura funcional:
 - a auditoria agora tambem registra create, update e delete de `CategoriaFinanceira`, mantendo o mesmo padrao incremental ja usado nas demais entidades ja auditadas
 - a auditoria agora tambem registra create, update e delete de `CentroCusto`, mantendo o mesmo padrao incremental ja usado nas demais entidades ja auditadas
 - a auditoria agora tambem registra create, update e delete de `AssinaturaInstitucional`, mantendo o mesmo padrao incremental ja usado nas demais entidades ja auditadas
-- a auditoria ja possui captura inicial em `LancamentoFinanceiro`, `ContaFinanceira`, `PessoaFinanceira`, `CategoriaFinanceira`, `CentroCusto` e `AssinaturaInstitucional`, tela propria de leitura minima e filtros simples
-- nesta primeira expansao, a auditoria ainda nao foi estendida para configuracao institucional
+- a auditoria agora tambem registra create, update e delete de `ConfiguracaoInstitucional`, mantendo o mesmo padrao incremental ja usado nas demais entidades ja auditadas
+- a auditoria ja possui captura inicial em `LancamentoFinanceiro`, `ContaFinanceira`, `PessoaFinanceira`, `CategoriaFinanceira`, `CentroCusto`, `AssinaturaInstitucional` e `ConfiguracaoInstitucional`, tela propria de leitura minima e filtros simples
+- nesta primeira expansao, a trilha inicial de auditoria ja cobre as entidades operacionais e institucionais hoje existentes no modulo financeiro
 - a leitura minima da auditoria agora existe em tela propria, ordenada por `data_hora` decrescente e abrangendo as entidades ja auditadas do modulo financeiro
 - a leitura inicial da auditoria mostra data/hora, acao, modelo, id do registro, usuario e campos alterados em resumo estruturado simples
 - a leitura da auditoria agora possui filtros simples por acao, periodo inicial/final e id do registro, mantendo ordenacao por `data_hora` decrescente

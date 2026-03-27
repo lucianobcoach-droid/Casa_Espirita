@@ -88,6 +88,10 @@ def _snapshot_assinatura(assinatura: AssinaturaInstitucional) -> dict[str, objec
     return _snapshot_model(assinatura, ignore_fields={'criado_em', 'atualizado_em'})
 
 
+def _snapshot_configuracao(configuracao: ConfiguracaoInstitucional) -> dict[str, object]:
+    return _snapshot_model(configuracao, ignore_fields={'criado_em', 'atualizado_em'})
+
+
 def _build_auditoria_payload(
     antes: dict[str, object] | None,
     depois: dict[str, object] | None,
@@ -204,6 +208,23 @@ def _registrar_auditoria_assinatura(
         acao=acao,
         modelo='AssinaturaInstitucional',
         registro_id=assinatura.pk,
+        usuario=_auditoria_usuario(request),
+        campos_alterados=_build_auditoria_payload(antes, depois),
+    )
+
+
+def _registrar_auditoria_configuracao(
+    *,
+    request,
+    acao: str,
+    configuracao: ConfiguracaoInstitucional,
+    antes: dict[str, object] | None = None,
+    depois: dict[str, object] | None = None,
+) -> AuditoriaFinanceiro:
+    return AuditoriaFinanceiro.objects.create(
+        acao=acao,
+        modelo='ConfiguracaoInstitucional',
+        registro_id=configuracao.pk,
         usuario=_auditoria_usuario(request),
         campos_alterados=_build_auditoria_payload(antes, depois),
     )
@@ -1422,6 +1443,16 @@ class ConfiguracaoInstitucionalCreateView(FinanceiroFormMixin, CreateView):
     page_title = 'Nova Configuracao Institucional'
     success_message = 'Configuracao institucional cadastrada com sucesso.'
 
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        _registrar_auditoria_configuracao(
+            request=self.request,
+            acao=AuditoriaFinanceiro.AcaoAuditoria.CREATE,
+            configuracao=self.object,
+            depois=_snapshot_configuracao(self.object),
+        )
+        return response
+
 
 class ConfiguracaoInstitucionalUpdateView(FinanceiroFormMixin, UpdateView):
     model = ConfiguracaoInstitucional
@@ -1432,6 +1463,21 @@ class ConfiguracaoInstitucionalUpdateView(FinanceiroFormMixin, UpdateView):
     submit_label = 'Atualizar'
     success_message = 'Configuracao institucional atualizada com sucesso.'
 
+    def form_valid(self, form):
+        antes = _snapshot_configuracao(
+            ConfiguracaoInstitucional.objects.get(pk=self.object.pk)
+        )
+        response = super().form_valid(form)
+        depois = _snapshot_configuracao(self.object)
+        _registrar_auditoria_configuracao(
+            request=self.request,
+            acao=AuditoriaFinanceiro.AcaoAuditoria.UPDATE,
+            configuracao=self.object,
+            antes=antes,
+            depois=depois,
+        )
+        return response
+
 
 class ConfiguracaoInstitucionalDeleteView(FinanceiroDeleteMixin):
     model = ConfiguracaoInstitucional
@@ -1439,6 +1485,23 @@ class ConfiguracaoInstitucionalDeleteView(FinanceiroDeleteMixin):
     page_title = 'Excluir Configuracao Institucional'
     cancel_url = reverse_lazy('financeiro:configuracao-institucional-list')
     success_message = 'Configuracao institucional excluida com sucesso.'
+
+    def form_valid(self, form):
+        configuracao = self.object
+        antes = _snapshot_configuracao(configuracao)
+        registro_id = configuracao.pk
+
+        with transaction.atomic():
+            response = super().form_valid(form)
+            AuditoriaFinanceiro.objects.create(
+                acao=AuditoriaFinanceiro.AcaoAuditoria.DELETE,
+                modelo='ConfiguracaoInstitucional',
+                registro_id=registro_id,
+                usuario=_auditoria_usuario(self.request),
+                campos_alterados=_build_auditoria_payload(antes, None),
+            )
+
+        return response
 
 
 class LancamentoFinanceiroListView(ListView):
