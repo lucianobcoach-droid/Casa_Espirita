@@ -398,3 +398,15 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - o `Saldo final` foi mantido como ultima linha destacada no corpo da tabela, sem migrar para o cabecalho de impressao
 - a tela do extrato passou a oferecer botao de impressao
 - a impressao do extrato ganhou cabecalho proprio com identificacao clara do relatorio, mantendo `Saldo inicial` e `Saldo final` dentro da tabela
+
+## Limpeza final das linhas de saldo no extrato
+
+- o extrato deixou de repetir `Saldo final` no bloco resumido superior e manteve no topo apenas informacoes operacionais mais uteis
+- a linha de `Saldo inicial` passou a aparecer sempre como primeira linha destacada do corpo da tabela, inclusive com periodo filtrado
+- as linhas de `Saldo inicial` e `Saldo final` deixaram de usar data, tipo e hifens artificiais, ficando com apresentacao mais limpa e menos parecida com movimentacao comum
+
+## Ajuste da nomenclatura e da impressao do extrato
+
+- a primeira linha destacada do corpo do extrato passou a usar o rotulo `Saldo anterior`
+- a impressao do extrato foi refinada para reduzir quebra desnecessaria de texto, dar mais prioridade horizontal para `Descricao` e deixar as linhas com altura mais uniforme
+- as colunas curtas do extrato impresso passaram a evitar quebra sempre que possivel, sem alterar calculo, ordenacao ou consolidacao funcional

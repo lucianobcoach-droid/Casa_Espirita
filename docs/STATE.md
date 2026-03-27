@@ -155,9 +155,10 @@ Escopo funcional:
 - a consolidacao do rateio no extrato ficou restrita a apresentacao da tela, sem alterar a modelagem do rateio nem a base de calculo do saldo
 - na apresentacao do extrato, a data principal exibida na linha passou a priorizar `data_pagamento`, com fallback para `data_competencia`
 - o `numero_documento` do extrato agora aparece em coluna propria, ao lado da data, sem repetir prefixos ou textos auxiliares dentro da descricao
-- o `Saldo inicial` do extrato agora fica como primeira linha destacada no corpo da tabela, e nao no bloco resumido superior
-- o `Saldo final` do extrato permanece como ultima linha destacada no corpo da tabela
-- a tela do extrato agora possui botao de impressao e cabecalho proprio para impressao, sem mover `Saldo inicial` nem `Saldo final` para fora da tabela
+- o topo do extrato agora preserva apenas resumo realmente operacional, como conta, periodo e saldo anterior quando aplicavel, sem repetir `Saldo inicial` nem `Saldo final`
+- a primeira linha destacada do corpo do extrato agora usa o rotulo `Saldo anterior`
+- o `Saldo final` do extrato permanece como ultima linha destacada no corpo da tabela, com apresentacao limpa e sem parecer uma movimentacao artificial
+- a tela do extrato agora possui botao de impressao e cabecalho proprio para impressao, mantendo as linhas de saldo dentro do corpo da tabela e com tabela impressa menos rigida, com menos quebra desnecessaria nas colunas curtas
 - bases antigas ou inconsistentes sem `grupo_rateio` valido continuam como limitacao conhecida e aparecem individualmente no extrato ate regularizacao da base
 
 ## Resumo consolidado do periodo

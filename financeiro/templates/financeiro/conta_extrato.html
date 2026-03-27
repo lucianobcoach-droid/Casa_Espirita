@@ -82,6 +82,10 @@
         font-weight: 700;
     }
 
+    .financeiro-balance-line-label {
+        font-weight: 700;
+    }
+
     @media print {
         .financeiro-extrato-print-header {
             display: block;
@@ -103,6 +107,38 @@
             margin: 0.08rem 0;
             font-size: 10px;
             color: #111;
+        }
+
+        .financeiro-extrato-table {
+            table-layout: auto !important;
+        }
+
+        .financeiro-extrato-table th,
+        .financeiro-extrato-table td {
+            word-break: normal !important;
+            overflow-wrap: normal !important;
+            line-height: 1.25 !important;
+            vertical-align: middle !important;
+        }
+
+        .financeiro-extrato-table th:nth-child(1),
+        .financeiro-extrato-table td:nth-child(1),
+        .financeiro-extrato-table th:nth-child(2),
+        .financeiro-extrato-table td:nth-child(2),
+        .financeiro-extrato-table th:nth-child(4),
+        .financeiro-extrato-table td:nth-child(4),
+        .financeiro-extrato-table th:nth-child(5),
+        .financeiro-extrato-table td:nth-child(5),
+        .financeiro-extrato-table th:nth-child(6),
+        .financeiro-extrato-table td:nth-child(6),
+        .financeiro-extrato-table th:nth-child(7),
+        .financeiro-extrato-table td:nth-child(7) {
+            white-space: nowrap !important;
+        }
+
+        .financeiro-extrato-table th:nth-child(3),
+        .financeiro-extrato-table td:nth-child(3) {
+            width: 100% !important;
         }
     }
 </style>
@@ -130,12 +166,7 @@
                             <span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_anterior|br_money }}</span></span>
                         </div>
                     {% endif %}
-                    <div class="financeiro-extrato-meta-item">
-                        <strong>Saldo final exibido</strong>
-                        <span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_final|br_money }}</span></span>
-                    </div>
                 </div>
-                <p class="report-print-meta only-print">Emitido em {% now "d/m/Y H:i" %}</p>
             {% endif %}
         </div>
     </div>
@@ -221,14 +252,14 @@
             <tbody>
             {% if exibe_linha_saldo_inicial %}
                 <tr class="is-opening-balance">
-                    <td>{% if data_saldo_inicial %}{{ data_saldo_inicial|date:'d/m/Y' }}{% else %}-{% endif %}</td>
-                    <td>-</td>
-                    <td><strong>Saldo inicial</strong></td>
-                    <td><strong>Inicial</strong></td>
-                    <td>-</td>
-                    <td>-</td>
+                    <td></td>
+                    <td></td>
+                    <td><span class="financeiro-balance-line-label">Saldo anterior</span></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
                     <td><strong><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_inicial|br_money }}</span></span></strong></td>
-                    <td>-</td>
+                    <td></td>
                 </tr>
             {% endif %}
             {% for item in itens_extrato %}
@@ -264,14 +295,14 @@
                 </tr>
             {% endfor %}
                 <tr class="is-closing-balance">
-                    <td>{% if data_final %}{{ data_final }}{% else %}-{% endif %}</td>
-                    <td>-</td>
-                    <td><strong>Saldo final</strong></td>
-                    <td><strong>Final</strong></td>
-                    <td>-</td>
-                    <td>-</td>
+                    <td></td>
+                    <td></td>
+                    <td><span class="financeiro-balance-line-label">Saldo final</span></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
                     <td><strong><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_final|br_money }}</span></span></strong></td>
-                    <td>-</td>
+                    <td></td>
                 </tr>
             </tbody>
         </table>
