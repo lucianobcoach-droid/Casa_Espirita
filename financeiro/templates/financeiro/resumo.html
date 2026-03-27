@@ -2,11 +2,11 @@
 {% load financeiro_format %}
 {% block title %}{{ page_title }}{% endblock %}
 {% block content %}
-<div class="level">
+<div class="level financeiro-page-head">
     <div class="level-left">
         <div>
             <h1 class="title">{{ page_title }}</h1>
-            <p class="subtitle no-print">Visao consolidada do periodo, preparando o caminho para a futura prestacao de contas.</p>
+            <p class="subtitle no-print">Visao consolidada do periodo com totais e agrupamentos operacionais.</p>
             <p class="report-print-meta only-print">Periodo: {{ periodo_label|default:'Nao informado' }}</p>
             <p class="report-print-meta only-print">Contas incluidas: {{ contas_incluidas_label|default:'Todas as contas' }}</p>
             <p class="report-print-meta only-print">Emitido em {% now "d/m/Y H:i" %}</p>
@@ -16,7 +16,7 @@
 
 <form method="get" class="filters-box no-print">
     <div class="columns is-multiline">
-        <div class="column is-4">
+        <div class="column is-12-mobile is-6-tablet is-4-desktop">
             <label class="label">Contas incluidas</label>
             <div class="financeiro-contas-dropdown" data-contas-dropdown>
                 <button
@@ -55,15 +55,15 @@
             </div>
             <p class="help">Sem selecao explicita, o resumo considera todas as contas.</p>
         </div>
-        <div class="column is-3">
+        <div class="column is-6-mobile is-3-tablet is-2-desktop">
             <label class="label">Data inicial</label>
             <input class="input" type="date" name="data_inicial" value="{{ data_inicial }}">
         </div>
-        <div class="column is-3">
+        <div class="column is-6-mobile is-3-tablet is-2-desktop">
             <label class="label">Data final</label>
             <input class="input" type="date" name="data_final" value="{{ data_final }}">
         </div>
-        <div class="column is-3">
+        <div class="column is-12-mobile is-6-tablet is-2-desktop">
             <label class="label">Centro de custo no relatorio</label>
             <div class="field">
                 <label class="checkbox">
@@ -73,7 +73,7 @@
                 </label>
             </div>
         </div>
-        <div class="column is-3">
+        <div class="column is-12-mobile is-6-tablet is-2-desktop">
             <label class="label">&nbsp;</label>
             <div class="buttons">
                 <button class="button is-link" type="submit">Atualizar resumo</button>
@@ -87,38 +87,30 @@
     <div class="notification is-warning">{{ periodo_error }}</div>
 {% else %}
     <div class="financeiro-hero">
-        <p class="subtitle"><strong>Periodo selecionado:</strong> {{ periodo_label }}</p>
-        <p class="subtitle"><strong>Contas incluidas:</strong> {{ contas_incluidas_label }}</p>
-        <div class="columns is-multiline">
-            <div class="column is-6-tablet is-4-desktop">
-                <div class="box">
-                    <p class="heading">Saldo inicial consolidado</p>
-                    <p class="title is-4"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_inicial_consolidado|br_money }}</span></span></p>
-                </div>
+        <div class="tags no-print">
+            <span class="tag is-light"><strong>Periodo:</strong>&nbsp;{{ periodo_label }}</span>
+            <span class="tag is-light"><strong>Contas:</strong>&nbsp;{{ contas_incluidas_label }}</span>
+        </div>
+        <div class="financeiro-kpi-grid">
+            <div class="financeiro-kpi">
+                <span class="financeiro-kpi-label">Saldo inicial consolidado</span>
+                <span class="financeiro-kpi-value"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_inicial_consolidado|br_money }}</span></span></span>
             </div>
-            <div class="column is-6-tablet is-4-desktop">
-                <div class="box">
-                    <p class="heading">Receitas do periodo</p>
-                    <p class="title is-4 has-text-link"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ total_receitas_periodo|br_money }}</span></span></p>
-                </div>
+            <div class="financeiro-kpi">
+                <span class="financeiro-kpi-label">Receitas do periodo</span>
+                <span class="financeiro-kpi-value has-text-link"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ total_receitas_periodo|br_money }}</span></span></span>
             </div>
-            <div class="column is-6-tablet is-4-desktop">
-                <div class="box">
-                    <p class="heading">Despesas do periodo</p>
-                    <p class="title is-4 has-text-danger"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ total_despesas_periodo|br_money }}</span></span></p>
-                </div>
+            <div class="financeiro-kpi">
+                <span class="financeiro-kpi-label">Despesas do periodo</span>
+                <span class="financeiro-kpi-value has-text-danger"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ total_despesas_periodo|br_money }}</span></span></span>
             </div>
-            <div class="column is-6-tablet is-4-desktop">
-                <div class="box">
-                    <p class="heading">Saldo do periodo</p>
-                    <p class="title is-4"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_periodo|br_money }}</span></span></p>
-                </div>
+            <div class="financeiro-kpi">
+                <span class="financeiro-kpi-label">Saldo do periodo</span>
+                <span class="financeiro-kpi-value"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_periodo|br_money }}</span></span></span>
             </div>
-            <div class="column is-6-tablet is-4-desktop">
-                <div class="box">
-                    <p class="heading">Saldo final consolidado</p>
-                    <p class="title is-4"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_final_consolidado|br_money }}</span></span></p>
-                </div>
+            <div class="financeiro-kpi">
+                <span class="financeiro-kpi-label">Saldo final consolidado</span>
+                <span class="financeiro-kpi-value"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_final_consolidado|br_money }}</span></span></span>
             </div>
         </div>
         <p class="table-caption">Transferencias internas entre contas proprias nao entram como receita nem despesa neste resumo consolidado.</p>
