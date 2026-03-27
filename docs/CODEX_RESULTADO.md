@@ -344,3 +344,9 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - a tela propria de edicao coordenada recebeu acabamento visual leve para melhorar hierarquia entre resumo do grupo, dados comuns, linhas do rateio e bloco final de acoes
 - os blocos de aviso, orientacao e feedback passaram a seguir apresentacao mais consistente ao longo da tela
 - as acoes principais e secundarias ficaram visualmente mais legiveis e previsiveis, sem redesign amplo nem mudanca de regra de negocio
+
+## Simplificacao da tela de edicao do grupo rateado
+
+- a tela coordenada foi aproximada do formulario comum de lancamento em titulo, hierarquia visual e distribuicao dos blocos
+- os textos fixos longos foram reduzidos para avisos curtos e contextuais, mantendo apenas o necessario para indicar que a alteracao afeta o rateio inteiro
+- o bloco de rateio foi preservado como diferenca funcional principal da tela, sem alterar validacoes, auditoria ou o fluxo individual ja existente

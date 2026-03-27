@@ -1286,8 +1286,8 @@ class LancamentoFinanceiroGrupoRateioUpdateView(FinanceiroFormMixin, UpdateView)
     form_class = LancamentoFinanceiroGrupoRateioForm
     template_name = 'financeiro/lancamento_rateio_grupo_form.html'
     success_url = reverse_lazy('financeiro:lancamento-list')
-    page_title = 'Editar Grupo de Rateio'
-    submit_label = 'Atualizar grupo'
+    page_title = 'Editar Lancamento Financeiro'
+    submit_label = 'Atualizar'
 
     def _get_grupo_info(self) -> dict[str, object]:
         if hasattr(self, '_grupo_info_cache'):
