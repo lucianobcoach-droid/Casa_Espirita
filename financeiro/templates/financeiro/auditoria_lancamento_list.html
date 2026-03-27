@@ -13,6 +13,40 @@
     </div>
 </div>
 
+<form method="get" class="filters-box no-print">
+    <div class="columns is-multiline">
+        <div class="column is-3">
+            <label class="label">Acao</label>
+            <div class="select is-fullwidth">
+                <select name="acao">
+                    <option value="">Todas</option>
+                    {% for valor, rotulo in acoes_auditoria %}
+                        <option value="{{ valor }}" {% if filtro_acao == valor %}selected{% endif %}>{{ rotulo }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="column is-3">
+            <label class="label">Data inicial</label>
+            <input class="input" type="date" name="data_inicial" value="{{ filtro_data_inicial }}">
+        </div>
+        <div class="column is-3">
+            <label class="label">Data final</label>
+            <input class="input" type="date" name="data_final" value="{{ filtro_data_final }}">
+        </div>
+        <div class="column is-3">
+            <label class="label">Id do registro</label>
+            <input class="input" type="number" min="1" step="1" name="registro_id" value="{{ filtro_registro_id }}">
+        </div>
+        <div class="column is-12">
+            <div class="buttons">
+                <button class="button is-link" type="submit">Aplicar filtros</button>
+                <a class="button is-light" href="{% url 'financeiro:auditoria-lancamento-list' %}">Limpar</a>
+            </div>
+        </div>
+    </div>
+</form>
+
 <div class="table-wrapper">
     <table class="table is-fullwidth is-hoverable financeiro-table">
         <thead>

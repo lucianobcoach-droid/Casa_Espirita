@@ -100,10 +100,15 @@ Leitura funcional:
 - a primeira versao da auditoria do financeiro agora registra create, update e delete de `LancamentoFinanceiro` em model proprio
 - o log da primeira versao armazena acao, modelo afetado, id do registro, data/hora, usuario quando disponivel e campos alterados em JSON simples
 - o create comum, o create com rateio, a edicao individual de linha rateada e o delete agora geram eventos explicitos de auditoria
-- nesta primeira versao, a auditoria ainda nao tem interface propria de consulta e nao foi expandida para contas, pessoas, categorias, centros de custo, assinaturas ou configuracao institucional
+- a auditoria ja possui captura inicial em `LancamentoFinanceiro`, tela propria de leitura minima e filtros simples, mas continua restrita a `LancamentoFinanceiro`
+- nesta primeira versao, a auditoria ainda nao foi expandida para contas, pessoas, categorias, centros de custo, assinaturas ou configuracao institucional
 - a leitura minima da auditoria agora existe em tela propria, ordenada por `data_hora` decrescente e restrita aos eventos de `LancamentoFinanceiro`
 - a leitura inicial da auditoria mostra data/hora, acao, modelo, id do registro, usuario e campos alterados em resumo estruturado simples
+- a leitura da auditoria agora possui filtros simples por acao, periodo inicial/final e id do registro, mantendo ordenacao por `data_hora` decrescente
+- nesta leitura operacional, o filtro por usuario ainda nao foi adicionado porque o proprio usuario da auditoria continua opcional na primeira versao
 - nesta primeira leitura operacional da auditoria, ainda nao existem filtros complexos nem paginacao avancada
+- a edicao coordenada do grupo rateado ainda nao existe; a edicao atual continua individual por linha
+- a estrategia da futura edicao coordenada do grupo ja esta definida, mas ainda nao foi implementada
 - o extrato por conta passa a exibir `numero_documento` de forma discreta junto da descricao, quando existir
 - a listagem de lancamentos pode exibir `Transferencia entre Contas` quando uma transferencia nao tiver `pessoa`
 - os relatorios mantem tratamento defensivo para base antiga, exibindo `Sem categoria` se algum dado legado surgir
@@ -128,7 +133,7 @@ Escopo funcional:
 - a ordem oficial desejada do extrato ficou consolidada como leitura crescente por `data_competencia`, com desempate por `criado_em` e `pk`
 - lancamentos rateados agora aparecem consolidados por `grupo_rateio` no extrato, com leitura documental do valor total do documento na linha exibida
 - a consolidacao do rateio no extrato ficou restrita a apresentacao da tela, sem alterar a modelagem do rateio nem a base de calculo do saldo
-- linhas antigas ou inconsistentes sem `grupo_rateio` valido continuam aparecendo individualmente no extrato ate regularizacao da base
+- bases antigas ou inconsistentes sem `grupo_rateio` valido continuam como limitacao conhecida e aparecem individualmente no extrato ate regularizacao da base
 
 ## Resumo consolidado do periodo
 
@@ -254,8 +259,8 @@ Com filtro por periodo:
 
 ## Frentes abertas por auditoria funcional
 
-- Ficou aberta a frente de revisao operacional do formulario de lancamento para tratar obrigatoriedade de `data_pagamento` e maior previsibilidade no preenchimento de `data_competencia`.
-- Ficou aberta a frente de auditoria de alteracoes no financeiro, com trilha de data, hora e mudancas por registro, a ser implementada de forma incremental e sem `signals`.
+- Ficou registrada nesta auditoria funcional a frente residual de revisao estrutural da obrigatoriedade de `data_pagamento`, caso a regra hoje concentrada no formulario precise subir para nivel de modelagem.
+- Ficou registrada nesta auditoria funcional a frente de expansao da auditoria de alteracoes no financeiro para alem de `LancamentoFinanceiro`, preservando a abordagem incremental e sem `signals`.
 - Nesta etapa de auditoria funcional e documental, nenhum patch de codigo foi executado.
 
 ## Diretriz incremental para auditoria de alteracoes
@@ -265,6 +270,11 @@ Com filtro por periodo:
 - o log agora armazena acao executada, modelo afetado, id do registro, data/hora, usuario responsavel quando disponivel e campos alterados em formato estruturado
 - no estado atual do projeto, `request.user` nao esta integrado como regra operacional propria do modulo, entao o usuario da auditoria deve ser tratado como opcional na primeira versao
 - a comparacao de mudancas deve priorizar diff simples de campos relevantes no backend, evitando reestruturacao ampla do dominio
+
+## Governanca permanente entre chats
+
+- a continuidade entre chats agora esta formalmente consolidada no projeto com base nos quatro documentos-base permanentes: `docs/CEREBRO_PROJETO.md`, `docs/STATE.md`, `docs/CODEX_RESULTADO.md` e `docs/ROADMAP_FINANCEIRO.md`
+- essa continuidade deve preservar historico documental, usar o repositorio como fonte final de verdade e manter atualizacoes por acrescimo, consolidacao ou ajuste cirurgico
 
 ## Validacao local
 

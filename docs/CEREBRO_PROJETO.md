@@ -11,6 +11,31 @@ Se houver divergencia entre pedido atual, conversa e estado real do repositorio,
 
 O arquivo `docs/ROADMAP_FINANCEIRO.md` consolida o escopo financeiro ja entregue, os refinamentos possiveis e as proximas etapas sugeridas, sem alterar o que ja foi aprovado.
 
+### 1.1. Governanca permanente dos documentos-base
+Os documentos-base permanentes do projeto sao:
+- `docs/CEREBRO_PROJETO.md`
+- `docs/STATE.md`
+- `docs/CODEX_RESULTADO.md`
+- `docs/ROADMAP_FINANCEIRO.md`
+
+Esses documentos nao devem ser retroagidos como se o historico anterior nao existisse.
+Esses documentos nao devem ser reescritos amplamente sem necessidade real.
+Esses documentos nao devem ser sobrescritos como se um ciclo anterior do projeto tivesse deixado de existir.
+Esses documentos devem ser atualizados por acrescimo, consolidacao ou ajuste cirurgico, preservando a cronologia util.
+
+Papel de cada documento:
+- `docs/CEREBRO_PROJETO.md` = diretrizes, definicoes estruturais e regras duradouras
+- `docs/STATE.md` = estado atual consolidado
+- `docs/CODEX_RESULTADO.md` = registro do que foi executado ou consolidado por etapa
+- `docs/ROADMAP_FINANCEIRO.md` = frentes futuras, evolucao e planejamento
+
+Protocolo permanente de continuidade entre chats:
+- todo novo chat deste projeto deve comecar lendo os quatro documentos-base
+- todo novo chat deve usar o repositorio como fonte final de verdade
+- todo novo chat deve preservar o historico documental do projeto
+- todo novo chat deve conduzir o trabalho em ordem exata de execucao
+- todo novo chat pode usar mensagens orientadoras proprias para preparar a continuidade, desde que preserve estas diretrizes estruturais do projeto
+
 ## 2. Objetivo do sistema
 O projeto **Casa Espirita** e um sistema em Django para apoiar a gestao da instituicao.
 
@@ -38,6 +63,8 @@ Estas regras devem ser respeitadas em qualquer etapa:
 - nao usar `signals` no modulo financeiro
 - nao misturar etapas diferentes na mesma implementacao
 - fazer alteracoes minimas, incrementais e rastreaveis
+- preservar os documentos-base do projeto sem destruir historico util
+- atualizar os documentos-base por acrescimo, consolidacao ou ajuste cirurgico, sem reescrita ampla desnecessaria
 
 ## 6. Estado funcional ja validado
 Ate o momento, esta validado que:
@@ -172,6 +199,7 @@ Os tipos validos de lancamento sao:
 - a primeira versao da auditoria ja implementada permanece restrita a `LancamentoFinanceiro` e nao cria interface propria de consulta nesta etapa
 - a primeira leitura operacional da auditoria deve permanecer simples, ordenada por `data_hora` decrescente e sem filtros complexos nesta etapa
 - a tela minima de leitura da auditoria pode ser integrada ao modulo por rota propria e acesso discreto na navegacao
+- a leitura operacional inicial da auditoria pode usar filtros simples por acao, periodo e id do registro, sem obrigar filtro por usuario nesta primeira versao
 - `data_pagamento` nao pode ser anterior a `data_competencia`
 - `CategoriaFinanceira` pode ter `mensagem_recibo` opcional para personalizar o rodape do recibo
 - quando `CategoriaFinanceira.mensagem_recibo` estiver vazia, o recibo deve manter mensagem padrao simples
@@ -212,6 +240,11 @@ A ordem de prioridade para tomada de decisao deve ser:
 6. historico do chat
 
 Se houver conflito entre chat e repositorio, prevalece o repositorio.
+
+Regra permanente de transicao entre chats:
+- todo novo chat deve comecar lendo `docs/CEREBRO_PROJETO.md`, `docs/STATE.md`, `docs/CODEX_RESULTADO.md` e `docs/ROADMAP_FINANCEIRO.md`
+- o repositorio continua sendo a fonte final de verdade
+- a documentacao deve ser preservada e atualizada sem destruir historico anterior
 
 ## 10. O que nao pode ser quebrado
 As seguintes garantias ja aprovadas nao podem ser perdidas:
@@ -296,6 +329,12 @@ Este arquivo deve ser atualizado sempre que houver:
 - nova restricao tecnica confirmada
 
 Ele deve continuar curto, objetivo e confiavel.
+
+Padrao de conducao do assistente:
+- orientar sempre na ordem exata de execucao
+- nao mandar fazer "antes" algo que ja passou
+- separar claramente onde estamos, o que ja passou, o proximo passo exato e o passo seguinte
+- manter obrigatoria a atualizacao documental entre etapas, conforme a regra permanente ja consolidada do projeto
 
 ## 16. Instrucao operacional padrao para novos chats
 Ao iniciar um novo chat ou nova execucao, usar algo como:

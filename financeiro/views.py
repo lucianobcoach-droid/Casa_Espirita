@@ -859,17 +859,54 @@ class AuditoriaLancamentoFinanceiroListView(ListView):
     context_object_name = 'auditorias'
 
     def get_queryset(self):
-        return (
+        queryset = (
             super()
             .get_queryset()
             .filter(modelo='LancamentoFinanceiro')
             .select_related('usuario')
-            .order_by('-data_hora', '-pk')
         )
+        acao = self.request.GET.get('acao', '').strip()
+        data_inicial = self.request.GET.get('data_inicial', '').strip()
+        data_final = self.request.GET.get('data_final', '').strip()
+        registro_id = self.request.GET.get('registro_id', '').strip()
+
+        if acao:
+            queryset = queryset.filter(acao=acao)
+
+        if data_inicial:
+            try:
+                data_inicial_valor = date.fromisoformat(data_inicial)
+            except ValueError:
+                data_inicial_valor = None
+            if data_inicial_valor:
+                queryset = queryset.filter(data_hora__date__gte=data_inicial_valor)
+
+        if data_final:
+            try:
+                data_final_valor = date.fromisoformat(data_final)
+            except ValueError:
+                data_final_valor = None
+            if data_final_valor:
+                queryset = queryset.filter(data_hora__date__lte=data_final_valor)
+
+        if registro_id:
+            try:
+                registro_id_valor = int(registro_id)
+            except ValueError:
+                registro_id_valor = None
+            if registro_id_valor is not None:
+                queryset = queryset.filter(registro_id=registro_id_valor)
+
+        return queryset.order_by('-data_hora', '-pk')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['page_title'] = 'Auditoria de Lancamentos'
+        context['filtro_acao'] = self.request.GET.get('acao', '').strip()
+        context['filtro_data_inicial'] = self.request.GET.get('data_inicial', '').strip()
+        context['filtro_data_final'] = self.request.GET.get('data_final', '').strip()
+        context['filtro_registro_id'] = self.request.GET.get('registro_id', '').strip()
+        context['acoes_auditoria'] = AuditoriaFinanceiro.AcaoAuditoria.choices
         return context
 
 

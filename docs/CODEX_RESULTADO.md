@@ -270,3 +270,23 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - a ordenacao da leitura ficou explicita por `data_hora` decrescente, com desempate por `pk`
 - a leitura da auditoria foi integrada ao modulo por rota propria e acesso discreto no dropdown `Configuracoes` e na home
 - nesta primeira leitura operacional, a tela ainda nao possui filtros complexos nem paginacao avancada
+
+## Filtros simples na leitura da auditoria
+
+- a tela da auditoria passou a aceitar filtros simples por `acao`, `data_inicial`, `data_final` e `registro_id`
+- a ordenacao foi preservada por `-data_hora` e `-pk`
+- o filtro por usuario nao entrou nesta etapa porque o proprio usuario da auditoria continua opcional na primeira versao
+- a etapa manteve a leitura da auditoria simples, sem busca avancada nem paginacao complexa
+
+## Consolidacao documental da estrategia de edicao coordenada do grupo rateado
+
+- foi registrada sem patch de codigo a estrategia mais segura para futura edicao coordenada do grupo rateado por meio de view e formulario proprios do grupo
+- ficou registrado que esse fluxo futuro nao deve se misturar com a edicao individual de uma linha rateada
+- ficou registrado apenas de forma documental que a estrategia futura foi consolidada, sem implementacao nesta microetapa
+
+## Ajuste documental de governanca entre chats
+
+- foi registrada sem patch de codigo a consolidacao dos quatro documentos-base permanentes do projeto
+- ficou registrado que esses documentos devem ser preservados sem retroagir historico e atualizados por acrescimo, consolidacao ou ajuste cirurgico
+- ficou registrado que todo novo chat deve comecar lendo os quatro documentos-base, mantendo o repositorio como fonte final de verdade
+- ficou registrado que a continuidade entre chats deve seguir protocolo permanente de preparacao e encerramento, sem destruir historico documental

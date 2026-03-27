@@ -132,12 +132,14 @@ Data: 2026-03-26
 
 - comportamento de transferencia em todas as telas e relatorios
 - UX do formulario de lancamento em casos limite
-- evolucao futura do rateio para edicao coordenada em bloco e modelagem documental mais rica, se necessario
+- evolucao futura do rateio para edicao coordenada em bloco, ainda nao implementada, mas ja com estrategia aprovada de view e formulario proprios do grupo
+- modelagem documental mais rica do rateio, se necessario em etapa posterior
 - acabamento operacional do rateio em edicao individual e leitura do grupo nas telas ja existentes
+- estrategia aprovada para futura edicao coordenada do grupo rateado com view e formulario proprios, dados comuns em bloco e salvamento transacional
 - regularizacao eventual de bases antigas de rateio sem `grupo_rateio` valido, caso precisem entrar na leitura consolidada do extrato
 - revisao operacional futura da obrigatoriedade estrutural de `data_pagamento`, caso o comportamento hoje consolidado no formulario precise subir para nivel de modelagem
-- expansao futura da auditoria de alteracoes no financeiro para alem de `LancamentoFinanceiro`, mantendo model proprio e sem `signals`
-- filtros simples e refinamentos de leitura para a tela de auditoria de `LancamentoFinanceiro`, se houver necessidade operacional
+- expansao futura da auditoria de alteracoes no financeiro para alem de `LancamentoFinanceiro`, ampliando o que ja existe para outras entidades do modulo e mantendo model proprio sem `signals`
+- refinamentos futuros de leitura para a tela de auditoria de `LancamentoFinanceiro`, alem dos filtros simples ja implementados
 - consistencia visual do tratamento de transferencia
 - validacoes defensivas adicionais em fluxos operacionais
 - extrato com mais contexto operacional sem poluir a tela
@@ -172,6 +174,11 @@ Data: 2026-03-26
 6. balancete padrao
 7. importacao historica
 8. evolucoes futuras especificas do bloco de recibos ja entregue
+
+Observacao semantica do backlog:
+- os itens da secao `3. O que ja existe, mas ainda pode ser refinado` representam base ja entregue com espaco para refinamento futuro
+- os itens da secao `4. O que ainda falta implementar` representam frentes ainda nao entregues como bloco consolidado
+- os itens da secao `5. Proximas etapas sugeridas` indicam apenas ordem sugerida de trabalho e nao reclassificam entregas ja concluidas
 
 ## 6. Diretriz importante
 
