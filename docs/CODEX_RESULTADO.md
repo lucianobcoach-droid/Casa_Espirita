@@ -477,3 +477,9 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - a expansao reaproveitou o model proprio de auditoria, sem `signals` e sem reestruturacao ampla do dominio
 - a leitura atual da auditoria foi mantida simples e passou a abranger tambem os eventos de `ConfiguracaoInstitucional`
 - com esta microetapa, a trilha inicial de auditoria passou a cobrir as entidades operacionais e institucionais hoje existentes no modulo financeiro
+
+## Filtro por usuario na leitura da auditoria
+
+- a tela de auditoria do financeiro passou a oferecer filtro simples por usuario, em conjunto com os filtros ja existentes por acao, periodo e id do registro
+- o filtro por usuario usa a lista de usuarios ja presentes nos eventos atualmente exibidos pela auditoria
+- a leitura da auditoria foi mantida simples, sem paginacao nova, sem filtros complexos adicionais e sem alterar a captura dos eventos

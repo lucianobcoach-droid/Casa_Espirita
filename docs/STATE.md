@@ -118,8 +118,8 @@ Leitura funcional:
 - nesta primeira expansao, a trilha inicial de auditoria ja cobre as entidades operacionais e institucionais hoje existentes no modulo financeiro
 - a leitura minima da auditoria agora existe em tela propria, ordenada por `data_hora` decrescente e abrangendo as entidades ja auditadas do modulo financeiro
 - a leitura inicial da auditoria mostra data/hora, acao, modelo, id do registro, usuario e campos alterados em resumo estruturado simples
-- a leitura da auditoria agora possui filtros simples por acao, periodo inicial/final e id do registro, mantendo ordenacao por `data_hora` decrescente
-- nesta leitura operacional, o filtro por usuario ainda nao foi adicionado porque o proprio usuario da auditoria continua opcional na primeira versao
+- a leitura da auditoria agora possui filtros simples por acao, periodo inicial/final, id do registro e usuario, mantendo ordenacao por `data_hora` decrescente
+- o filtro por usuario usa os usuarios ja presentes na trilha atual de auditoria e continua opcional, preservando leitura simples da tela
 - nesta primeira leitura operacional da auditoria, ainda nao existem filtros complexos nem paginacao avancada
 - a edicao coordenada do grupo rateado agora possui fluxo proprio inicial, com view, rota e template proprios, sem substituir a edicao individual da linha
 - a base atual da edicao coordenada carrega o grupo por `grupo_rateio`, trabalha apenas com grupos validos e prepara os dados comuns e as linhas de rateio no mesmo fluxo

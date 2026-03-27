@@ -39,6 +39,17 @@
             <input class="input" type="number" min="1" step="1" name="registro_id" value="{{ filtro_registro_id }}">
         </div>
         <div class="column is-12-mobile is-6-tablet is-3-desktop">
+            <label class="label">Usuario</label>
+            <div class="select is-fullwidth">
+                <select name="usuario">
+                    <option value="">Todos</option>
+                    {% for usuario in usuarios_auditoria %}
+                        <option value="{{ usuario.pk }}" {% if filtro_usuario == usuario.pk|stringformat:'s' %}selected{% endif %}>{{ usuario }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="column is-12-mobile is-6-tablet is-2-desktop">
             <label class="label">&nbsp;</label>
             <div class="buttons">
                 <button class="button is-link" type="submit">Aplicar filtros</button>
@@ -53,7 +64,7 @@
         <h2 class="financeiro-report-title">Eventos de auditoria</h2>
     </div>
     <div class="financeiro-report-body">
-        <p class="table-caption">A listagem abaixo permanece simples e ordenada do evento mais recente para o mais antigo.</p>
+        <p class="table-caption">A listagem abaixo permanece simples, ordenada do evento mais recente para o mais antigo e agora tambem pode ser filtrada por usuario.</p>
         <div class="table-wrapper">
             <table class="table is-fullwidth is-hoverable financeiro-table">
                 <thead>

@@ -1033,17 +1033,31 @@ class AuditoriaLancamentoFinanceiroListView(ListView):
     template_name = 'financeiro/auditoria_lancamento_list.html'
     context_object_name = 'auditorias'
 
-    def get_queryset(self):
-        queryset = (
+    modelos_auditados = [
+        'LancamentoFinanceiro',
+        'ContaFinanceira',
+        'PessoaFinanceira',
+        'CategoriaFinanceira',
+        'CentroCusto',
+        'AssinaturaInstitucional',
+        'ConfiguracaoInstitucional',
+    ]
+
+    def _get_base_queryset(self):
+        return (
             super()
             .get_queryset()
-            .filter(modelo__in=['LancamentoFinanceiro', 'ContaFinanceira'])
+            .filter(modelo__in=self.modelos_auditados)
             .select_related('usuario')
         )
+
+    def get_queryset(self):
+        queryset = self._get_base_queryset()
         acao = self.request.GET.get('acao', '').strip()
         data_inicial = self.request.GET.get('data_inicial', '').strip()
         data_final = self.request.GET.get('data_final', '').strip()
         registro_id = self.request.GET.get('registro_id', '').strip()
+        usuario_id = self.request.GET.get('usuario', '').strip()
 
         if acao:
             queryset = queryset.filter(acao=acao)
@@ -1072,16 +1086,38 @@ class AuditoriaLancamentoFinanceiroListView(ListView):
             if registro_id_valor is not None:
                 queryset = queryset.filter(registro_id=registro_id_valor)
 
+        if usuario_id:
+            try:
+                usuario_id_valor = int(usuario_id)
+            except ValueError:
+                usuario_id_valor = None
+            if usuario_id_valor is not None:
+                queryset = queryset.filter(usuario_id=usuario_id_valor)
+
         return queryset.order_by('-data_hora', '-pk')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        usuarios_auditoria = []
+        usuarios_vistos: set[int] = set()
+        for auditoria in (
+            self._get_base_queryset()
+            .exclude(usuario__isnull=True)
+            .order_by('usuario_id', 'data_hora')
+        ):
+            usuario = auditoria.usuario
+            if usuario and usuario.pk not in usuarios_vistos:
+                usuarios_vistos.add(usuario.pk)
+                usuarios_auditoria.append(usuario)
+
         context['page_title'] = 'Auditoria do Financeiro'
         context['filtro_acao'] = self.request.GET.get('acao', '').strip()
         context['filtro_data_inicial'] = self.request.GET.get('data_inicial', '').strip()
         context['filtro_data_final'] = self.request.GET.get('data_final', '').strip()
         context['filtro_registro_id'] = self.request.GET.get('registro_id', '').strip()
+        context['filtro_usuario'] = self.request.GET.get('usuario', '').strip()
         context['acoes_auditoria'] = AuditoriaFinanceiro.AcaoAuditoria.choices
+        context['usuarios_auditoria'] = usuarios_auditoria
         return context
 
 
