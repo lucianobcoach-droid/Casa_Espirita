@@ -10,7 +10,7 @@
         A edicao coordenada do grupo{% if request.GET.grupo_rateio %} `{{ request.GET.grupo_rateio }}`{% endif %} foi cancelada sem gravacao. A listagem principal continua disponivel para seguir com a revisao operacional.
     </div>
 {% endif %}
-<div class="level">
+<div class="level financeiro-page-head">
     <div class="level-left">
         <h1 class="title">Lancamentos Financeiros</h1>
     </div>
@@ -20,15 +20,15 @@
 </div>
 <form method="get" class="filters-box no-print">
     <div class="columns is-multiline">
-        <div class="column is-3">
+        <div class="column is-12-mobile is-6-tablet is-3-desktop">
             <label class="label">Descricao</label>
             <input class="input" type="text" name="descricao" value="{{ request.GET.descricao }}" placeholder="Buscar por descricao">
         </div>
-        <div class="column is-3">
+        <div class="column is-12-mobile is-6-tablet is-3-desktop">
             <label class="label">Numero do documento</label>
             <input class="input" type="text" name="numero_documento" value="{{ request.GET.numero_documento }}" placeholder="Buscar por documento">
         </div>
-        <div class="column is-2">
+        <div class="column is-6-mobile is-3-tablet is-2-desktop">
             <label class="label">Tipo</label>
             <div class="select is-fullwidth">
                 <select name="tipo">
@@ -39,7 +39,7 @@
                 </select>
             </div>
         </div>
-        <div class="column is-2">
+        <div class="column is-6-mobile is-3-tablet is-2-desktop">
             <label class="label">Status</label>
             <div class="select is-fullwidth">
                 <select name="status">
@@ -50,15 +50,15 @@
                 </select>
             </div>
         </div>
-        <div class="column is-2">
+        <div class="column is-6-mobile is-3-tablet is-2-desktop">
             <label class="label">Data inicial</label>
             <input class="input" type="date" name="data_inicial" value="{{ request.GET.data_inicial }}">
         </div>
-        <div class="column is-2">
+        <div class="column is-6-mobile is-3-tablet is-2-desktop">
             <label class="label">Data final</label>
             <input class="input" type="date" name="data_final" value="{{ request.GET.data_final }}">
         </div>
-        <div class="column is-4">
+        <div class="column is-12-mobile is-6-tablet is-4-desktop">
             <label class="label">Conta</label>
             <div class="select is-fullwidth">
                 <select name="conta">
@@ -71,7 +71,7 @@
                 </select>
             </div>
         </div>
-        <div class="column is-4">
+        <div class="column is-12-mobile is-6-tablet is-4-desktop">
             <label class="label">Pessoa</label>
             <div class="select is-fullwidth">
                 <select name="pessoa">
@@ -84,7 +84,7 @@
                 </select>
             </div>
         </div>
-        <div class="column is-4">
+        <div class="column is-12-mobile is-6-tablet is-4-desktop">
             <label class="label">Categoria</label>
             <div class="select is-fullwidth">
                 <select name="categoria">
@@ -97,7 +97,7 @@
                 </select>
             </div>
         </div>
-        <div class="column is-2">
+        <div class="column is-12-mobile is-6-tablet is-3-desktop">
             <label class="label">&nbsp;</label>
             <div class="buttons">
                 <button class="button is-link is-fullwidth" type="submit">Filtrar</button>

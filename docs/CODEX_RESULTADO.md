@@ -370,3 +370,10 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - nesta microetapa nao houve patch de codigo
 - foi registrada a partir de teste real de uso a limitacao atual de densidade visual e aproveitamento horizontal em telas do financeiro, especialmente com o navegador em 100% de zoom
 - a melhoria foi consolidada documentalmente como frente futura oficial de refinamento visual transversal do modulo
+
+## Primeira microetapa do refinamento transversal de densidade visual
+
+- a frente transversal de densidade visual e aproveitamento horizontal do financeiro foi iniciada no repositorio
+- a base visual compartilhada do modulo foi ajustada para reduzir espacamentos, compactar filtros, inputs, labels, tabelas e acoes sem redesign amplo
+- nesta primeira aplicacao, a listagem de lancamentos e o formulario padrao de lancamento/edicao passaram a aproveitar melhor a largura horizontal da tela em 100% de zoom
+- a etapa preservou a identidade atual do sistema e deixou a expansao para as demais telas como passo posterior da mesma frente

@@ -1,22 +1,11 @@
 {% extends 'financeiro/base.html' %}
 {% block title %}{{ page_title }}{% endblock %}
 {% block content %}
-<style>
-    .financeiro-form-grid { display: flex; flex-direction: column; gap: 1rem; }
-    .financeiro-form-section { border: 1px solid #e5e7eb; border-radius: 0.85rem; background: #fff; box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04); }
-    .financeiro-form-section.is-rateio { border-color: #bfdbfe; background: linear-gradient(180deg, #f8fbff, #ffffff); }
-    .financeiro-form-section-body { padding: 1rem 1.1rem; }
-    .financeiro-form-section-title { font-size: 0.95rem; font-weight: 700; color: #1f2937; margin-bottom: 0.2rem; }
-    .financeiro-form-section-text { font-size: 0.86rem; color: #6b7280; margin-bottom: 0.85rem; }
-    .financeiro-form-toggle { display: flex; gap: 1rem; justify-content: space-between; align-items: flex-start; padding: 0.9rem 1rem; border: 1px solid #dbeafe; border-radius: 0.8rem; background: #f8fbff; }
-    .financeiro-form-toggle .checkbox { font-weight: 600; color: #1f2937; }
-    .financeiro-form-toggle-help { font-size: 0.84rem; color: #64748b; max-width: 32rem; }
-    .financeiro-rateio-panel { padding: 0.85rem; border: 1px dashed rgba(59, 130, 246, 0.35); border-radius: 0.8rem; background: rgba(255,255,255,.8); }
-    .financeiro-form-actions { display: flex; gap: 0.75rem; justify-content: flex-end; flex-wrap: wrap; }
-    @media screen and (max-width: 768px) { .financeiro-form-toggle { flex-direction: column; } .financeiro-form-actions .button { width: 100%; } }
-</style>
-
-<h1 class="title">{{ page_title }}</h1>
+<div class="level financeiro-page-head">
+    <div class="level-left">
+        <h1 class="title">{{ page_title }}</h1>
+    </div>
+</div>
 {% if form.non_field_errors %}
     <div class="notification is-danger">{{ form.non_field_errors }}</div>
 {% endif %}
@@ -40,22 +29,22 @@
                     {% for error in form.descricao.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
                 </div>
 
-                <div class="columns is-variable is-4">
-                    <div class="column is-4">
+                <div class="columns is-multiline is-variable is-3">
+                    <div class="column is-12-mobile is-6-tablet is-4-desktop">
                         <div class="field">
                             <label class="label" for="{{ form.tipo.id_for_label }}">{{ form.tipo.label }} *</label>
                             <div class="control">{{ form.tipo }}</div>
                             {% for error in form.tipo.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
                         </div>
                     </div>
-                    <div class="column is-4">
+                    <div class="column is-12-mobile is-6-tablet is-4-desktop">
                         <div class="field">
                             <label class="label" for="{{ form.status.id_for_label }}">{{ form.status.label }} *</label>
                             <div class="control">{{ form.status }}</div>
                             {% for error in form.status.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
                         </div>
                     </div>
-                    <div class="column is-4">
+                    <div class="column is-12-mobile is-12-tablet is-4-desktop">
                         <div class="field">
                             <label class="label" for="{{ form.numero_documento.id_for_label }}">{{ form.numero_documento.label }}</label>
                             <div class="control">{{ form.numero_documento }}</div>
@@ -127,8 +116,8 @@
                 <div class="financeiro-form-section-title">Valores e datas</div>
                 <div class="financeiro-form-section-text">Campos principais para valor, competencia e pagamento.</div>
 
-                <div class="columns is-variable is-4">
-                    <div class="column is-4">
+                <div class="columns is-multiline is-variable is-3">
+                    <div class="column is-12-mobile is-6-tablet is-4-desktop">
                         <div class="field" data-financeiro-valor-wrapper="true">
                             <label class="label" for="{{ form.valor.id_for_label }}">{{ form.valor.label }} *</label>
                             <div class="control">{{ form.valor }}</div>
@@ -143,14 +132,14 @@
                             </div>
                         {% endif %}
                     </div>
-                    <div class="column is-4">
+                    <div class="column is-12-mobile is-6-tablet is-4-desktop">
                         <div class="field">
                             <label class="label" for="{{ form.data_pagamento.id_for_label }}">{{ form.data_pagamento.label }} *</label>
                             <div class="control">{{ form.data_pagamento }}</div>
                             {% for error in form.data_pagamento.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
                         </div>
                     </div>
-                    <div class="column is-4">
+                    <div class="column is-12-mobile is-6-tablet is-4-desktop">
                         <div class="field">
                             <label class="label" for="{{ form.data_competencia.id_for_label }}">{{ form.data_competencia.label }} *</label>
                             <div class="control">{{ form.data_competencia }}</div>
@@ -194,15 +183,15 @@
             <div class="financeiro-form-section-body">
                 <div class="financeiro-form-section-title">Informacoes complementares</div>
                 <div class="financeiro-form-section-text">Pessoa, categoria, centro de custo, contas e observacoes.</div>
-                <div class="columns is-variable is-4">
-                    <div class="column is-6">
+                <div class="columns is-multiline is-variable is-3">
+                    <div class="column is-12-mobile is-6-tablet is-6-desktop">
                         <div class="field" data-financeiro-pessoa-wrapper="true">
                             <label class="label" for="{{ form.pessoa.id_for_label }}">{{ form.pessoa.label }}<span data-financeiro-required-marker="true"> *</span></label>
                             <div class="control">{{ form.pessoa }}</div>
                             {% for error in form.pessoa.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
                         </div>
                     </div>
-                    <div class="column is-6">
+                    <div class="column is-12-mobile is-6-tablet is-6-desktop">
                         <div class="field" data-financeiro-categoria-wrapper="true">
                             <label class="label" for="{{ form.categoria.id_for_label }}">{{ form.categoria.label }}<span data-financeiro-required-marker="true"> *</span></label>
                             <div class="control">{{ form.categoria }}</div>
@@ -211,22 +200,22 @@
                     </div>
                 </div>
 
-                <div class="columns is-variable is-4">
-                    <div class="column is-4">
+                <div class="columns is-multiline is-variable is-3">
+                    <div class="column is-12-mobile is-6-tablet is-4-desktop">
                         <div class="field" data-financeiro-centro-custo-wrapper="true">
                             <label class="label" for="{{ form.centro_custo.id_for_label }}">{{ form.centro_custo.label }}</label>
                             <div class="control">{{ form.centro_custo }}</div>
                             {% for error in form.centro_custo.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
                         </div>
                     </div>
-                    <div class="column is-4">
+                    <div class="column is-12-mobile is-6-tablet is-4-desktop">
                         <div class="field">
                             <label class="label" for="{{ form.conta.id_for_label }}">{{ form.conta.label }} *</label>
                             <div class="control">{{ form.conta }}</div>
                             {% for error in form.conta.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
                         </div>
                     </div>
-                    <div class="column is-4">
+                    <div class="column is-12-mobile is-6-tablet is-4-desktop">
                         <div class="field" data-financeiro-conta-destino-wrapper="true">
                             <label class="label" for="{{ form.conta_destino.id_for_label }}">{{ form.conta_destino.label }}<span data-financeiro-required-marker="true"> *</span></label>
                             <div class="control">{{ form.conta_destino }}</div>

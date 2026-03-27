@@ -17,6 +17,12 @@
             --financeiro-border: #dbdbdb;
             --financeiro-soft: #fafafa;
             --financeiro-print-text: #111827;
+            --financeiro-container-max: 1380px;
+        }
+
+        .section > .container {
+            width: min(var(--financeiro-container-max), calc(100vw - 2rem));
+            max-width: var(--financeiro-container-max) !important;
         }
 
         .table-wrapper {
@@ -98,9 +104,16 @@
             white-space: nowrap;
         }
 
+        .actions-cell .button {
+            height: 1.95rem;
+            padding-left: 0.58rem;
+            padding-right: 0.58rem;
+            font-size: 0.78rem;
+        }
+
         .filters-box {
-            margin-bottom: 0.8rem;
-            padding: 0.75rem 0.85rem;
+            margin-bottom: 0.7rem;
+            padding: 0.65rem 0.75rem;
             border: 1px solid var(--financeiro-border);
             border-radius: 0.65rem;
             background: var(--financeiro-soft);
@@ -113,14 +126,14 @@
 
         .filters-box .column,
         .prestacao-filters-grid .column {
-            padding-top: 0.35rem;
-            padding-bottom: 0.35rem;
+            padding-top: 0.25rem;
+            padding-bottom: 0.25rem;
         }
 
         .filters-box .label,
         .prestacao-filter-field .label {
-            margin-bottom: 0.25rem;
-            font-size: 0.72rem;
+            margin-bottom: 0.18rem;
+            font-size: 0.69rem;
             letter-spacing: 0.02em;
             text-transform: uppercase;
         }
@@ -136,21 +149,21 @@
         .prestacao-filter-field .input,
         .filters-box .select select,
         .prestacao-filter-field .select select {
-            height: 2.2rem;
-            font-size: 0.9rem;
+            height: 2.05rem;
+            font-size: 0.88rem;
         }
 
         .filters-box .buttons,
         .prestacao-filter-actions .buttons {
-            gap: 0.35rem;
+            gap: 0.3rem;
             margin-bottom: 0;
         }
 
         .filters-box .button,
         .prestacao-filter-actions .button {
-            height: 2.2rem;
-            padding-left: 0.75rem;
-            padding-right: 0.75rem;
+            height: 2.05rem;
+            padding-left: 0.65rem;
+            padding-right: 0.65rem;
         }
 
         .financeiro-autocomplete {
@@ -196,22 +209,22 @@
         }
 
         .financeiro-table {
-            font-size: 0.92rem;
+            font-size: 0.88rem;
         }
 
         .financeiro-table thead th {
-            font-size: 0.74rem;
+            font-size: 0.7rem;
             letter-spacing: 0.04em;
             text-transform: uppercase;
             color: #5b6470;
-            padding: 0.7rem 0.7rem;
+            padding: 0.55rem 0.55rem;
             border-bottom-width: 1px;
         }
 
         .financeiro-table tbody td,
         .financeiro-table tfoot th,
         .financeiro-table tfoot td {
-            padding: 0.7rem 0.7rem;
+            padding: 0.55rem 0.55rem;
             vertical-align: top;
         }
 
@@ -283,9 +296,122 @@
         }
 
         .table-caption {
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.4rem;
             color: #6b7280;
+            font-size: 0.76rem;
+        }
+
+        .financeiro-page-head {
+            margin-bottom: 0.7rem !important;
+            align-items: center;
+        }
+
+        .financeiro-page-head .title {
+            margin-bottom: 0 !important;
+            line-height: 1.15;
+        }
+
+        .financeiro-form-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .financeiro-form-section {
+            border: 1px solid #e5e7eb;
+            border-radius: 0.75rem;
+            background: #fff;
+            box-shadow: 0 6px 18px rgba(15, 23, 42, 0.03);
+        }
+
+        .financeiro-form-section.is-rateio {
+            border-color: #dbeafe;
+            background: linear-gradient(180deg, #fbfdff, #ffffff);
+        }
+
+        .financeiro-form-section-body {
+            padding: 0.8rem 0.9rem;
+        }
+
+        .financeiro-form-section-title {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 0.12rem;
+        }
+
+        .financeiro-form-section-text {
             font-size: 0.8rem;
+            color: #6b7280;
+            margin-bottom: 0.65rem;
+        }
+
+        .financeiro-form-grid .label {
+            margin-bottom: 0.2rem;
+            font-size: 0.72rem;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+        }
+
+        .financeiro-form-grid .input,
+        .financeiro-form-grid .select select,
+        .financeiro-form-grid textarea {
+            font-size: 0.9rem;
+        }
+
+        .financeiro-form-grid .input,
+        .financeiro-form-grid .select select {
+            height: 2.15rem;
+        }
+
+        .financeiro-form-grid textarea {
+            min-height: 6.5rem;
+        }
+
+        .financeiro-form-grid .field:not(:last-child) {
+            margin-bottom: 0.75rem;
+        }
+
+        .financeiro-form-toggle {
+            display: flex;
+            gap: 0.85rem;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 0.75rem 0.85rem;
+            border: 1px solid #dbeafe;
+            border-radius: 0.75rem;
+            background: #f8fbff;
+        }
+
+        .financeiro-form-toggle .checkbox {
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .financeiro-form-toggle-help {
+            font-size: 0.8rem;
+            color: #64748b;
+            max-width: 28rem;
+        }
+
+        .financeiro-rateio-panel {
+            padding: 0.75rem;
+            border: 1px dashed rgba(59, 130, 246, 0.35);
+            border-radius: 0.75rem;
+            background: rgba(255, 255, 255, 0.82);
+        }
+
+        .financeiro-form-actions {
+            display: flex;
+            gap: 0.55rem;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .financeiro-form-actions .button {
+            min-height: 2.15rem;
+            padding-left: 0.8rem;
+            padding-right: 0.8rem;
         }
 
         .financeiro-report-block {
@@ -879,6 +1005,20 @@
 
             .actions-cell {
                 display: none !important;
+            }
+        }
+
+        @media screen and (max-width: 768px) {
+            .section > .container {
+                width: calc(100vw - 1rem);
+            }
+
+            .financeiro-form-toggle {
+                flex-direction: column;
+            }
+
+            .financeiro-form-actions .button {
+                width: 100%;
             }
         }
     </style>
