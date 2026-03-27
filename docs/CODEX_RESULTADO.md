@@ -153,3 +153,10 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - o subtitulo ficou mais direto e operacional
 - atalhos como `Extratos`, `Resumo` e `Assinaturas` ficaram com rotulos mais explicitos
 - a etapa permaneceu limitada a clareza textual, sem redesign global nem mudanca de regra de negocio
+
+## Padronizacao leve de rotulos do financeiro
+
+- menu superior, home e titulos ja existentes foram confrontados para reduzir inconsistencias visiveis
+- `Resumo` foi alinhado com `Resumo do Periodo` onde havia ganho claro de consistencia
+- `Assinaturas` e `Configuracao Institucional` foram alinhadas aos titulos institucionais ja usados nas telas correspondentes
+- a estrutura de navegacao, as rotas e as regras de negocio permaneceram intactas
