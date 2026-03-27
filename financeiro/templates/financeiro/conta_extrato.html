@@ -46,25 +46,28 @@
 
     .financeiro-extrato-table th:nth-child(3),
     .financeiro-extrato-table td:nth-child(3) {
-        min-width: 19rem;
+        min-width: 15rem;
     }
 
     .financeiro-extrato-table th:nth-child(4),
     .financeiro-extrato-table td:nth-child(4) {
+        min-width: 12rem;
+    }
+
+    .financeiro-extrato-table th:nth-child(5),
+    .financeiro-extrato-table td:nth-child(5) {
         width: 7rem;
         white-space: nowrap;
     }
 
-    .financeiro-extrato-table th:nth-child(5),
-    .financeiro-extrato-table td:nth-child(5),
     .financeiro-extrato-table th:nth-child(6),
-    .financeiro-extrato-table td:nth-child(6) {
+    .financeiro-extrato-table td:nth-child(6),
+    .financeiro-extrato-table th:nth-child(7),
+    .financeiro-extrato-table td:nth-child(7) {
         width: 11rem;
         white-space: nowrap;
     }
 
-    .financeiro-extrato-table th:nth-child(7),
-    .financeiro-extrato-table td:nth-child(7),
     .financeiro-extrato-table th:nth-child(8),
     .financeiro-extrato-table td:nth-child(8) {
         width: 11rem;
@@ -136,7 +139,9 @@
         .financeiro-extrato-table th:nth-child(6),
         .financeiro-extrato-table td:nth-child(6),
         .financeiro-extrato-table th:nth-child(7),
-        .financeiro-extrato-table td:nth-child(7) {
+        .financeiro-extrato-table td:nth-child(7),
+        .financeiro-extrato-table th:nth-child(8),
+        .financeiro-extrato-table td:nth-child(8) {
             white-space: nowrap !important;
         }
 
@@ -246,6 +251,7 @@
                 <th>Data</th>
                 <th>Documento</th>
                 <th>Descricao</th>
+                <th>Favorecido</th>
                 <th>Tipo</th>
                 <th>Entrada</th>
                 <th>Saida</th>
@@ -262,6 +268,7 @@
                     <td></td>
                     <td></td>
                     <td></td>
+                    <td></td>
                     <td><strong><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_anterior|default:saldo_inicial|br_money }}</span></span></strong></td>
                     <td></td>
                 </tr>
@@ -270,12 +277,8 @@
                 <tr>
                     <td>{{ item.lancamento.data_pagamento|default:item.lancamento.data_competencia|date:'d/m/Y' }}</td>
                     <td>{{ item.lancamento.numero_documento|default:'-' }}</td>
-                    <td>
-                        {{ item.lancamento.descricao }}
-                        {% if item.contexto_exibicao %}
-                            <span class="financeiro-meta">{{ item.contexto_exibicao }}</span>
-                        {% endif %}
-                    </td>
+                    <td>{{ item.lancamento.descricao }}</td>
+                    <td>{{ item.favorecido_exibicao }}</td>
                     <td>
                         <span class="extrato-text {% if item.lancamento.tipo == 'receita' %}is-receita{% elif item.lancamento.tipo == 'despesa' %}is-despesa{% else %}is-transferencia{% endif %}">
                             {{ item.lancamento.get_tipo_display }}
@@ -306,13 +309,14 @@
                 </tr>
             {% empty %}
                 <tr>
-                    <td colspan="8">Nenhum lancamento quitado encontrado para esta conta.</td>
+                    <td colspan="9">Nenhum lancamento quitado encontrado para esta conta.</td>
                 </tr>
             {% endfor %}
                 <tr class="is-closing-balance">
                     <td></td>
                     <td></td>
                     <td><span class="financeiro-balance-line-label">Saldo final</span></td>
+                    <td></td>
                     <td></td>
                     <td></td>
                     <td></td>

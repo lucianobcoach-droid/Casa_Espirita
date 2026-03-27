@@ -490,9 +490,9 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - o ajuste preservou os fluxos atuais de lancamento comum e rateado, sem abrir refatoracao ampla do modulo
 - nesta microetapa, a validacao estrutural subiu para o nivel da aplicacao, mas o campo permaneceu com `null/blank` na modelagem de banco por compatibilidade com bases legadas
 
-## Mais contexto operacional no extrato sem poluir a tela
+## Correcao da apresentacao do extrato e do cabecalho da auditoria
 
-- o extrato por conta passou a exibir uma linha secundaria discreta na descricao quando houver contexto operacional util
-- em transferencias, essa linha pode indicar origem ou destino da movimentacao
-- em lancamentos comuns, essa linha pode indicar favorecido e categoria quando isso ajuda a leitura rapida
-- a microetapa preservou calculo, ordenacao, consolidacao funcional do rateio e o formato visual mais limpo ja consolidado
+- a coluna `Descricao` do extrato voltou a ficar limpa, sem linha secundaria de `Favorecido` ou `Categoria`
+- o extrato passou a usar coluna propria de `Favorecido`, sem reintroduzir `Categoria` na tabela nesta microcorrecao
+- a microetapa preservou calculo, ordenacao, consolidacao funcional do rateio e o padrao visual limpo ja consolidado no extrato
+- o cabecalho visual da tela de auditoria foi reestruturado para eliminar a sobreposicao entre titulo, subtitulo e acao lateral

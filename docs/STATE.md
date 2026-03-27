@@ -122,6 +122,7 @@ Leitura funcional:
 - a leitura da auditoria agora possui filtros simples por acao, periodo inicial/final, id do registro e usuario, mantendo ordenacao por `data_hora` decrescente
 - o filtro por usuario usa os usuarios ja presentes na trilha atual de auditoria e continua opcional, preservando leitura simples da tela
 - nesta primeira leitura operacional da auditoria, ainda nao existem filtros complexos nem paginacao avancada
+- o cabecalho visual da tela de auditoria agora usa estrutura mais estavel para evitar sobreposicao entre titulo, subtitulo e acoes laterais
 - a edicao coordenada do grupo rateado agora possui fluxo proprio inicial, com view, rota e template proprios, sem substituir a edicao individual da linha
 - a base atual da edicao coordenada carrega o grupo por `grupo_rateio`, trabalha apenas com grupos validos e prepara os dados comuns e as linhas de rateio no mesmo fluxo
 - na persistencia da edicao coordenada, linhas com `id` no payload agora sao casadas exatamente com a linha correspondente do mesmo `grupo_rateio`
@@ -165,7 +166,8 @@ Escopo funcional:
 - a consolidacao do rateio no extrato ficou restrita a apresentacao da tela, sem alterar a modelagem do rateio nem a base de calculo do saldo
 - na apresentacao do extrato, a data principal exibida na linha passou a priorizar `data_pagamento`, com fallback para `data_competencia`
 - o `numero_documento` do extrato agora aparece em coluna propria, ao lado da data, sem repetir prefixos ou textos auxiliares dentro da descricao
-- a descricao do extrato agora pode trazer uma linha secundaria discreta de contexto operacional, com origem/destino em transferencias ou favorecido/categoria quando isso ajuda a leitura sem poluir a tabela
+- a coluna `Descricao` do extrato voltou a ficar limpa, sem linha secundaria de `Favorecido` ou `Categoria`
+- o extrato agora usa coluna propria de `Favorecido`, sem reintroduzir `Categoria` na tabela nesta etapa
 - o topo do extrato agora preserva apenas resumo realmente operacional, como conta, periodo e saldo anterior quando aplicavel, sem repetir `Saldo inicial` nem `Saldo final`
 - a primeira linha destacada do corpo do extrato agora usa o rotulo `Saldo anterior`
 - a linha `Saldo anterior` do corpo do extrato agora reutiliza o mesmo valor de `saldo_anterior` ja calculado para o periodo, sem manter um valor paralelo zerado

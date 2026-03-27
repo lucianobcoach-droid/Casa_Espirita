@@ -1,14 +1,12 @@
 {% extends 'financeiro/base.html' %}
 {% block title %}{{ page_title }}{% endblock %}
 {% block content %}
-<div class="level financeiro-page-head">
-    <div class="level-left">
-        <div>
-            <h1 class="title">{{ page_title }}</h1>
-            <p class="subtitle">Leitura simples da trilha de create, update e delete das entidades auditadas do modulo financeiro.</p>
-        </div>
+<div class="columns is-vcentered financeiro-page-head">
+    <div class="column is-12-tablet is-8-desktop">
+        <h1 class="title">{{ page_title }}</h1>
+        <p class="subtitle">Leitura simples da trilha de create, update e delete das entidades auditadas do modulo financeiro.</p>
     </div>
-    <div class="level-right">
+    <div class="column is-12-tablet is-4-desktop has-text-right-tablet">
         <a class="button" href="{% url 'financeiro:home' %}">Voltar ao financeiro</a>
     </div>
 </div>
