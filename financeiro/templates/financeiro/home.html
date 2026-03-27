@@ -3,16 +3,16 @@
 {% block content %}
 <div class="financeiro-hero">
     <h1 class="title">Modulo Financeiro</h1>
-    <p class="subtitle">Base operacional do modulo com navegacao institucional e atalhos principais do dia a dia.</p>
+    <p class="subtitle">Acesso rapido as rotinas operacionais, relatorios, cadastros e configuracoes do modulo.</p>
     <div class="financeiro-shortcuts">
         <a class="financeiro-shortcut is-primary-shortcut" href="{% url 'financeiro:lancamento-list' %}">
             <span class="financeiro-shortcut-label">Lancamentos</span>
         </a>
         <a class="financeiro-shortcut" href="{% url 'financeiro:extrato-list' %}">
-            <span class="financeiro-shortcut-label">Extratos</span>
+            <span class="financeiro-shortcut-label">Extratos por Conta</span>
         </a>
         <a class="financeiro-shortcut" href="{% url 'financeiro:resumo' %}">
-            <span class="financeiro-shortcut-label">Resumo</span>
+            <span class="financeiro-shortcut-label">Resumo por Periodo</span>
         </a>
         <a class="financeiro-shortcut" href="{% url 'financeiro:prestacao-contas' %}">
             <span class="financeiro-shortcut-label">Prestacao de Contas</span>
@@ -30,7 +30,7 @@
             <span class="financeiro-shortcut-label">Categorias</span>
         </a>
         <a class="financeiro-shortcut" href="{% url 'financeiro:assinatura-list' %}">
-            <span class="financeiro-shortcut-label">Assinaturas</span>
+            <span class="financeiro-shortcut-label">Assinaturas do Recibo</span>
         </a>
         <a class="financeiro-shortcut" href="{% url 'financeiro:configuracao-institucional-list' %}">
             <span class="financeiro-shortcut-label">Configuracao Institucional</span>

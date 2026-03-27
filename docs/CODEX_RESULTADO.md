@@ -146,3 +146,10 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - o novo dropdown passou a expor `Assinaturas` e `Configuracao Institucional`
 - a home do modulo financeiro passou a exibir atalhos visiveis para `Assinaturas` e `Configuracao Institucional`
 - a navegacao ja validada de `Financeiro`, `Lancamentos`, `Extratos`, `Relatorios` e `Cadastros` foi preservada sem reorganizacao ampla
+
+## Revisao leve da home do financeiro
+
+- os textos visiveis da home foram revisados sem alterar rotas nem a estrutura geral da pagina
+- o subtitulo ficou mais direto e operacional
+- atalhos como `Extratos`, `Resumo` e `Assinaturas` ficaram com rotulos mais explicitos
+- a etapa permaneceu limitada a clareza textual, sem redesign global nem mudanca de regra de negocio
