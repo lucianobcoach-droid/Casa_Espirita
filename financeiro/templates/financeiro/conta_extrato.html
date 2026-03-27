@@ -87,10 +87,14 @@
     }
 
     @media print {
+        .financeiro-extrato-screen-header {
+            display: none !important;
+        }
+
         .financeiro-extrato-print-header {
             display: block;
-            margin-bottom: 0.65rem;
-            padding-bottom: 0.45rem;
+            margin-bottom: 0.4rem;
+            padding-bottom: 0.3rem;
             border-bottom: 1px solid #c7c7c7;
         }
 
@@ -142,7 +146,7 @@
         }
     }
 </style>
-<div class="level financeiro-page-head">
+<div class="level financeiro-page-head financeiro-extrato-screen-header">
     <div class="level-left">
         <div>
             <h1 class="title">{{ page_title }}</h1>

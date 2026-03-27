@@ -416,3 +416,9 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - a linha `Saldo anterior` do corpo do extrato passou a usar diretamente o valor de `saldo_anterior` ja calculado no contexto
 - quando nao houver periodo filtrado, a linha continua usando `saldo_inicial` como fallback
 - a microcorrecao nao duplicou logica de calculo e nao alterou saldo, ordenacao ou consolidacao funcional
+
+## Limpeza do topo na versao impressa do extrato
+
+- no modo de impressao do extrato, o cabecalho visual da tela passou a ficar oculto
+- o PDF passou a manter apenas o cabecalho proprio de impressao com identificacao do extrato e a tabela
+- o ajuste reduziu a redundancia visual sem alterar linhas de saldo, calculo ou consolidacao funcional

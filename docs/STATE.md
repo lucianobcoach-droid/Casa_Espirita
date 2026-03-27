@@ -160,6 +160,7 @@ Escopo funcional:
 - a linha `Saldo anterior` do corpo do extrato agora reutiliza o mesmo valor de `saldo_anterior` ja calculado para o periodo, sem manter um valor paralelo zerado
 - o `Saldo final` do extrato permanece como ultima linha destacada no corpo da tabela, com apresentacao limpa e sem parecer uma movimentacao artificial
 - a tela do extrato agora possui botao de impressao e cabecalho proprio para impressao, mantendo as linhas de saldo dentro do corpo da tabela e com tabela impressa menos rigida, com menos quebra desnecessaria nas colunas curtas
+- no modo de impressao do extrato, o cabecalho visual da tela fica oculto e o PDF passa a mostrar apenas o cabecalho proprio de impressao com a tabela do extrato
 - bases antigas ou inconsistentes sem `grupo_rateio` valido continuam como limitacao conhecida e aparecem individualmente no extrato ate regularizacao da base
 
 ## Resumo consolidado do periodo
