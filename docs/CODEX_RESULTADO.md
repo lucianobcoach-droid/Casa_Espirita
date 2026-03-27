@@ -489,3 +489,10 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - a obrigatoriedade de `data_pagamento` deixou de ficar apenas no formulario e passou a ser validada tambem no `clean()` de `LancamentoFinanceiro`
 - o ajuste preservou os fluxos atuais de lancamento comum e rateado, sem abrir refatoracao ampla do modulo
 - nesta microetapa, a validacao estrutural subiu para o nivel da aplicacao, mas o campo permaneceu com `null/blank` na modelagem de banco por compatibilidade com bases legadas
+
+## Mais contexto operacional no extrato sem poluir a tela
+
+- o extrato por conta passou a exibir uma linha secundaria discreta na descricao quando houver contexto operacional util
+- em transferencias, essa linha pode indicar origem ou destino da movimentacao
+- em lancamentos comuns, essa linha pode indicar favorecido e categoria quando isso ajuda a leitura rapida
+- a microetapa preservou calculo, ordenacao, consolidacao funcional do rateio e o formato visual mais limpo ja consolidado

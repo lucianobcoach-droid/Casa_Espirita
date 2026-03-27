@@ -165,6 +165,7 @@ Escopo funcional:
 - a consolidacao do rateio no extrato ficou restrita a apresentacao da tela, sem alterar a modelagem do rateio nem a base de calculo do saldo
 - na apresentacao do extrato, a data principal exibida na linha passou a priorizar `data_pagamento`, com fallback para `data_competencia`
 - o `numero_documento` do extrato agora aparece em coluna propria, ao lado da data, sem repetir prefixos ou textos auxiliares dentro da descricao
+- a descricao do extrato agora pode trazer uma linha secundaria discreta de contexto operacional, com origem/destino em transferencias ou favorecido/categoria quando isso ajuda a leitura sem poluir a tabela
 - o topo do extrato agora preserva apenas resumo realmente operacional, como conta, periodo e saldo anterior quando aplicavel, sem repetir `Saldo inicial` nem `Saldo final`
 - a primeira linha destacada do corpo do extrato agora usa o rotulo `Saldo anterior`
 - a linha `Saldo anterior` do corpo do extrato agora reutiliza o mesmo valor de `saldo_anterior` ja calculado para o periodo, sem manter um valor paralelo zerado

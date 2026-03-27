@@ -922,6 +922,18 @@ class ExtratoContaMixin:
                 ((lancamento.observacoes or '').strip() for lancamento in bloco if (lancamento.observacoes or '').strip()),
                 '',
             )
+            contexto_partes: list[str] = []
+
+            if lancamento_representante.tipo == LancamentoFinanceiro.TipoLancamento.TRANSFERENCIA:
+                if lancamento_representante.conta_id == conta.id and lancamento_representante.conta_destino:
+                    contexto_partes.append(f'Destino: {lancamento_representante.conta_destino.nome}')
+                elif lancamento_representante.conta_destino_id == conta.id and lancamento_representante.conta:
+                    contexto_partes.append(f'Origem: {lancamento_representante.conta.nome}')
+            else:
+                if lancamento_representante.pessoa:
+                    contexto_partes.append(f'Favorecido: {lancamento_representante.pessoa.nome}')
+                if len(bloco) == 1 and lancamento_representante.categoria:
+                    contexto_partes.append(f'Categoria: {lancamento_representante.categoria.nome}')
 
             itens_extrato.append(
                 {
@@ -931,6 +943,7 @@ class ExtratoContaMixin:
                     'saldo_acumulado': saldo_acumulado,
                     'rateio_consolidado': len(bloco) > 1 and bool((lancamento_representante.grupo_rateio or '').strip()),
                     'quantidade_linhas_rateio': len(bloco),
+                    'contexto_exibicao': ' | '.join(contexto_partes),
                     'observacoes_exibicao': observacoes or '-',
                 }
             )
