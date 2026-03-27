@@ -306,3 +306,9 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - quando o payload traz `id`, a linha agora e atualizada exatamente pelo mesmo registro do `grupo_rateio` atual
 - ids invalidos ou externos ao grupo agora geram erro de validacao no formulario
 - linhas sem `id` continuam sendo criadas e linhas antigas ausentes no payload final continuam sendo removidas, com salvamento transacional e auditoria preservados
+
+## Refinamento operacional da edicao coordenada do grupo rateado
+
+- grupos invalidos, legados ou com consistencia insuficiente para a edicao coordenada passaram a retornar com mensagem operacional e redirecionamento seguro para a edicao individual
+- a listagem principal de lancamentos passou a oferecer acesso discreto adicional a `Editar grupo` para linhas vinculadas a `grupo_rateio`
+- a etapa manteve a separacao entre edicao individual de linha e edicao coordenada do grupo, sem redesign amplo do fluxo

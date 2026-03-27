@@ -8,7 +8,6 @@ from uuid import uuid4
 from django.contrib import messages
 from django.db import transaction
 from django.db.models import Q
-from django.http import Http404
 from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
@@ -1289,12 +1288,12 @@ class LancamentoFinanceiroGrupoRateioUpdateView(FinanceiroFormMixin, UpdateView)
     page_title = 'Editar Grupo de Rateio'
     submit_label = 'Atualizar grupo'
 
-    def _get_grupo_lancamentos(self) -> list[LancamentoFinanceiro]:
-        if hasattr(self, '_grupo_lancamentos_cache'):
-            return self._grupo_lancamentos_cache
+    def _get_grupo_info(self) -> dict[str, object]:
+        if hasattr(self, '_grupo_info_cache'):
+            return self._grupo_info_cache
 
         grupo_rateio = (self.kwargs.get('grupo_rateio') or '').strip()
-        queryset = list(
+        lancamentos = list(
             LancamentoFinanceiro.objects.filter(
                 com_rateio=True,
                 grupo_rateio=grupo_rateio,
@@ -1308,11 +1307,43 @@ class LancamentoFinanceiroGrupoRateioUpdateView(FinanceiroFormMixin, UpdateView)
             )
             .order_by('pk')
         )
-        if not grupo_rateio or len(queryset) < 2:
-            raise Http404('Grupo de rateio invalido para edicao coordenada.')
 
-        self._grupo_lancamentos_cache = queryset
-        return self._grupo_lancamentos_cache
+        erro = ''
+        if not grupo_rateio:
+            erro = 'Grupo de rateio invalido para edicao coordenada.'
+        elif not lancamentos:
+            erro = 'Nenhum lancamento rateado foi encontrado para este grupo.'
+        elif len(lancamentos) < 2:
+            erro = 'Este grupo nao possui linhas suficientes para edicao coordenada.'
+        else:
+            numeros_documento = {(lancamento.numero_documento or '').strip() for lancamento in lancamentos}
+            numeros_documento.discard('')
+            if len(numeros_documento) > 1:
+                erro = 'Este grupo possui numeros de documento divergentes e precisa de regularizacao antes da edicao coordenada.'
+
+        self._grupo_info_cache = {
+            'grupo_rateio': grupo_rateio,
+            'lancamentos': lancamentos,
+            'erro': erro,
+            'representante': lancamentos[0] if lancamentos else None,
+        }
+        return self._grupo_info_cache
+
+    def _get_grupo_lancamentos(self) -> list[LancamentoFinanceiro]:
+        return self._get_grupo_info()['lancamentos']
+
+    def dispatch(self, request, *args, **kwargs):
+        grupo_info = self._get_grupo_info()
+        if grupo_info['erro']:
+            messages.warning(
+                request,
+                f"{grupo_info['erro']} Use a edicao individual das linhas para revisar este caso.",
+            )
+            representante = grupo_info['representante']
+            if representante:
+                return redirect('financeiro:lancamento-update', pk=representante.pk)
+            return redirect(self.success_url)
+        return super().dispatch(request, *args, **kwargs)
 
     def get_object(self, queryset=None):
         return self._get_grupo_lancamentos()[0]

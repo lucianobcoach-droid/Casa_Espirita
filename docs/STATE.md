@@ -112,6 +112,8 @@ Leitura funcional:
 - na persistencia da edicao coordenada, linhas com `id` no payload agora sao casadas exatamente com a linha correspondente do mesmo `grupo_rateio`
 - ids de linhas que nao pertencem ao grupo atual agora geram erro de validacao no formulario e nao sao reaproveitados por posicao
 - o salvamento da edicao coordenada do grupo agora ocorre em transacao, preservando o mesmo `grupo_rateio` e mantendo a auditoria de create, update e delete das linhas afetadas
+- grupos invalidos, legados ou com consistencia insuficiente para a edicao coordenada agora retornam com mensagem operacional e redirecionamento seguro para a edicao individual da linha representativa
+- a listagem principal de lancamentos agora tambem oferece acesso discreto a `Editar grupo` quando a linha pertence a um `grupo_rateio`
 - a experiencia final da edicao coordenada do grupo ainda nao foi concluida; a base inicial foi aberta sem encerrar os refinamentos futuros dessa frente
 - o extrato por conta passa a exibir `numero_documento` de forma discreta junto da descricao, quando existir
 - a listagem de lancamentos pode exibir `Transferencia entre Contas` quando uma transferencia nao tiver `pessoa`
