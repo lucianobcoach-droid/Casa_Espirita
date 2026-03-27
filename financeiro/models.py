@@ -3,6 +3,7 @@ from __future__ import annotations
 from decimal import Decimal
 from uuid import uuid4
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
@@ -176,6 +177,34 @@ class ConfiguracaoInstitucional(models.Model):
     def save(self, *args, **kwargs) -> None:
         self.full_clean()
         super().save(*args, **kwargs)
+
+
+class AuditoriaFinanceiro(models.Model):
+    class AcaoAuditoria(models.TextChoices):
+        CREATE = 'create', 'Criacao'
+        UPDATE = 'update', 'Atualizacao'
+        DELETE = 'delete', 'Exclusao'
+
+    acao = models.CharField(max_length=20, choices=AcaoAuditoria.choices)
+    modelo = models.CharField(max_length=100)
+    registro_id = models.PositiveBigIntegerField()
+    data_hora = models.DateTimeField(auto_now_add=True)
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='auditorias_financeiro',
+    )
+    campos_alterados = models.JSONField(default=dict, blank=True)
+
+    class Meta:
+        ordering = ['-data_hora', '-pk']
+        verbose_name = 'Auditoria do financeiro'
+        verbose_name_plural = 'Auditorias do financeiro'
+
+    def __str__(self) -> str:
+        return f'{self.modelo} #{self.registro_id} - {self.acao}'
 
 
 class LancamentoFinanceiro(models.Model):

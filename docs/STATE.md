@@ -95,6 +95,10 @@ Leitura funcional:
 - o historico do favorecido acompanha a selecao da pessoa no autocomplete sem alterar a logica atual do campo
 - `data_competencia` deve ser validada antes da gravacao
 - `data_pagamento` nao pode ser anterior a `data_competencia`
+- a primeira versao da auditoria do financeiro agora registra create, update e delete de `LancamentoFinanceiro` em model proprio
+- o log da primeira versao armazena acao, modelo afetado, id do registro, data/hora, usuario quando disponivel e campos alterados em JSON simples
+- o create comum, o create com rateio, a edicao individual de linha rateada e o delete agora geram eventos explicitos de auditoria
+- nesta primeira versao, a auditoria ainda nao tem interface propria de consulta e nao foi expandida para contas, pessoas, categorias, centros de custo, assinaturas ou configuracao institucional
 - o extrato por conta passa a exibir `numero_documento` de forma discreta junto da descricao, quando existir
 - a listagem de lancamentos pode exibir `Transferencia entre Contas` quando uma transferencia nao tiver `pessoa`
 - os relatorios mantem tratamento defensivo para base antiga, exibindo `Sem categoria` se algum dado legado surgir
@@ -230,11 +234,13 @@ Com filtro por periodo:
 - Existe a migration incremental `financeiro/migrations/0008_assinaturainstitucional.py`.
 - Existe a migration incremental `financeiro/migrations/0009_configuracaoinstitucional.py`.
 - Existe a migration incremental `financeiro/migrations/0010_lancamentofinanceiro_rateio_campos.py`.
+- Existe a migration incremental `financeiro/migrations/0011_auditoriafinanceiro.py`.
 - A cadeia `0005` -> `0006` representa a consolidacao incremental da obrigatoriedade condicional de `pessoa` e `categoria`.
 - A `0007` adiciona `mensagem_recibo` opcional em `CategoriaFinanceira` para personalizacao controlada do recibo com fallback padrao.
 - A `0008` adiciona `AssinaturaInstitucional` para uso controlado no recibo com selecao por assinatura padrao ativa.
 - A `0009` adiciona `ConfiguracaoInstitucional` para uso dinamico no recibo com selecao por configuracao padrao ativa.
 - A `0010` adiciona suporte incremental a `com_rateio` e `grupo_rateio` em `LancamentoFinanceiro`.
+- A `0011` adiciona `AuditoriaFinanceiro` para registrar create, update e delete de `LancamentoFinanceiro` sem uso de `signals`.
 - Nao foi criada migration nova para unicidade de `numero_documento` nesta etapa.
 - A validacao de nao repeticao de `numero_documento` ficou na camada de aplicacao por seguranca incremental.
 - As migrations antigas nao foram alteradas.
@@ -244,6 +250,14 @@ Com filtro por periodo:
 - Ficou aberta a frente de revisao operacional do formulario de lancamento para tratar obrigatoriedade de `data_pagamento` e maior previsibilidade no preenchimento de `data_competencia`.
 - Ficou aberta a frente de auditoria de alteracoes no financeiro, com trilha de data, hora e mudancas por registro, a ser implementada de forma incremental e sem `signals`.
 - Nesta etapa de auditoria funcional e documental, nenhum patch de codigo foi executado.
+
+## Diretriz incremental para auditoria de alteracoes
+
+- a trilha de auditoria do financeiro comecou por `LancamentoFinanceiro` e deve se expandir depois para contas, pessoas, categorias, centros de custo, assinaturas e configuracao institucional
+- a estrategia incremental adotada usa model proprio de auditoria, com registro explicito nas views de create, update e delete, sem `signals`
+- o log agora armazena acao executada, modelo afetado, id do registro, data/hora, usuario responsavel quando disponivel e campos alterados em formato estruturado
+- no estado atual do projeto, `request.user` nao esta integrado como regra operacional propria do modulo, entao o usuario da auditoria deve ser tratado como opcional na primeira versao
+- a comparacao de mudancas deve priorizar diff simples de campos relevantes no backend, evitando reestruturacao ampla do dominio
 
 ## Validacao local
 

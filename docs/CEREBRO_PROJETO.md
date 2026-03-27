@@ -167,6 +167,9 @@ Os tipos validos de lancamento sao:
 - a consolidacao do rateio no extrato deve ficar restrita a apresentacao da tela, preservando a modelagem atual do rateio e a base de calculo do saldo
 - linhas antigas ou inconsistentes sem `grupo_rateio` valido podem continuar aparecendo de forma individual no extrato ate regularizacao manual
 - ficou aberta a frente de auditoria de alteracoes no financeiro, com implementacao incremental preferencial sem `signals`
+- a estrategia incremental de auditoria deve comecar por `LancamentoFinanceiro`, com model proprio e registro explicito nas views de create, update e delete
+- a trilha de auditoria deve guardar acao, modelo, id do registro, data/hora, usuario quando disponivel e campos alterados em formato estruturado
+- a primeira versao da auditoria ja implementada permanece restrita a `LancamentoFinanceiro` e nao cria interface propria de consulta nesta etapa
 - `data_pagamento` nao pode ser anterior a `data_competencia`
 - `CategoriaFinanceira` pode ter `mensagem_recibo` opcional para personalizar o rodape do recibo
 - quando `CategoriaFinanceira.mensagem_recibo` estiver vazia, o recibo deve manter mensagem padrao simples

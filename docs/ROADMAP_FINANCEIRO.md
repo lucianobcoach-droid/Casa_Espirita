@@ -136,7 +136,7 @@ Data: 2026-03-26
 - acabamento operacional do rateio em edicao individual e leitura do grupo nas telas ja existentes
 - regularizacao eventual de bases antigas de rateio sem `grupo_rateio` valido, caso precisem entrar na leitura consolidada do extrato
 - revisao operacional futura da obrigatoriedade estrutural de `data_pagamento`, caso o comportamento hoje consolidado no formulario precise subir para nivel de modelagem
-- auditoria de alteracoes no financeiro com trilha de data, hora e mudancas por registro
+- expansao futura da auditoria de alteracoes no financeiro para alem de `LancamentoFinanceiro`, mantendo model proprio e sem `signals`
 - consistencia visual do tratamento de transferencia
 - validacoes defensivas adicionais em fluxos operacionais
 - extrato com mais contexto operacional sem poluir a tela

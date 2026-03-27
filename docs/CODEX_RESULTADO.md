@@ -245,3 +245,20 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - a consolidacao ficou restrita a apresentacao do extrato, preservando a modelagem atual do rateio e a coerencia do saldo acumulado
 - lancamentos comuns permanecem com leitura individual sem alteracao
 - linhas antigas ou inconsistentes sem `grupo_rateio` valido continuam aparecendo individualmente ate regularizacao manual da base
+
+## Definicao incremental da estrategia de auditoria
+
+- foi auditado sem patch de codigo que o modulo `financeiro` ainda nao possui trilha propria de criacao, edicao e exclusao por registro
+- ficou definida como estrategia incremental mais segura a abertura da auditoria por model proprio, sem `signals` e com registro explicito nas views
+- a primeira entidade recomendada para entrar na trilha e `LancamentoFinanceiro`
+- a auditoria deve registrar acao, modelo, id do registro, data/hora, usuario quando disponivel e campos alterados
+- a expansao posterior deve seguir para contas, pessoas, categorias, centros de custo, assinaturas e configuracao institucional
+
+## Primeira versao da auditoria de LancamentoFinanceiro
+
+- foi criado o model `AuditoriaFinanceiro`
+- a migration `0011_auditoriafinanceiro.py` foi adicionada para persistir a trilha inicial de auditoria
+- o sistema passou a registrar create, update e delete de `LancamentoFinanceiro` sem uso de `signals`
+- o create comum, o create com rateio, a edicao individual de linha rateada e o delete agora geram eventos explicitos de auditoria
+- cada evento de auditoria guarda acao, modelo afetado, id do registro, data/hora, usuario quando disponivel e campos alterados em JSON simples
+- nesta primeira versao, a auditoria continua restrita a `LancamentoFinanceiro` e ainda nao possui interface propria de consulta

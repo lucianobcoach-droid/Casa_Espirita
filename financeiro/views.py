@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from calendar import monthrange
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from uuid import uuid4
 
@@ -25,6 +25,7 @@ from .forms import (
 )
 from .models import (
     AssinaturaInstitucional,
+    AuditoriaFinanceiro,
     CategoriaFinanceira,
     ConfiguracaoInstitucional,
     CentroCusto,
@@ -32,6 +33,68 @@ from .models import (
     LancamentoFinanceiro,
     PessoaFinanceira,
 )
+
+
+def _auditoria_usuario(request):
+    usuario = getattr(request, 'user', None)
+    if usuario and getattr(usuario, 'is_authenticated', False):
+        return usuario
+    return None
+
+
+def _auditoria_normalizar_valor(valor):
+    if isinstance(valor, Decimal):
+        return str(valor)
+    if isinstance(valor, (date, datetime)):
+        return valor.isoformat()
+    if hasattr(valor, 'pk'):
+        return valor.pk
+    return valor
+
+
+def _snapshot_lancamento(lancamento: LancamentoFinanceiro) -> dict[str, object]:
+    snapshot: dict[str, object] = {}
+    for field in lancamento._meta.concrete_fields:
+        if field.name in {'criado_em', 'atualizado_em'}:
+            continue
+        snapshot[field.name] = _auditoria_normalizar_valor(getattr(lancamento, field.attname))
+    return snapshot
+
+
+def _build_auditoria_payload(
+    antes: dict[str, object] | None,
+    depois: dict[str, object] | None,
+) -> dict[str, dict[str, object]]:
+    chaves = set((antes or {}).keys()) | set((depois or {}).keys())
+    alteracoes: dict[str, dict[str, object]] = {}
+
+    for chave in sorted(chaves):
+        valor_antes = (antes or {}).get(chave)
+        valor_depois = (depois or {}).get(chave)
+        if valor_antes != valor_depois:
+            alteracoes[chave] = {
+                'before': valor_antes,
+                'after': valor_depois,
+            }
+
+    return alteracoes
+
+
+def _registrar_auditoria_lancamento(
+    *,
+    request,
+    acao: str,
+    lancamento: LancamentoFinanceiro,
+    antes: dict[str, object] | None = None,
+    depois: dict[str, object] | None = None,
+) -> AuditoriaFinanceiro:
+    return AuditoriaFinanceiro.objects.create(
+        acao=acao,
+        modelo='LancamentoFinanceiro',
+        registro_id=lancamento.pk,
+        usuario=_auditoria_usuario(request),
+        campos_alterados=_build_auditoria_payload(antes, depois),
+    )
 
 
 UNIDADES_EXTENSO = (
@@ -1066,7 +1129,14 @@ class LancamentoFinanceiroCreateView(FinanceiroFormMixin, CreateView):
 
     def form_valid(self, form):
         if not form.cleaned_data.get('lancamento_com_rateio'):
-            return super().form_valid(form)
+            response = super().form_valid(form)
+            _registrar_auditoria_lancamento(
+                request=self.request,
+                acao=AuditoriaFinanceiro.AcaoAuditoria.CREATE,
+                lancamento=self.object,
+                depois=_snapshot_lancamento(self.object),
+            )
+            return response
 
         rateio_linhas = form.cleaned_data.get('rateio_linhas') or []
         grupo_rateio = form.cleaned_data.get('grupo_rateio') or uuid4().hex
@@ -1096,12 +1166,17 @@ class LancamentoFinanceiroCreateView(FinanceiroFormMixin, CreateView):
         lancamentos_criados: list[LancamentoFinanceiro] = []
         with transaction.atomic():
             for linha in rateio_linhas:
-                lancamentos_criados.append(
-                    LancamentoFinanceiro.objects.create(
-                        **dados_comuns,
-                        categoria=linha['categoria'],
-                        valor=linha['valor'],
-                    )
+                lancamento = LancamentoFinanceiro.objects.create(
+                    **dados_comuns,
+                    categoria=linha['categoria'],
+                    valor=linha['valor'],
+                )
+                lancamentos_criados.append(lancamento)
+                _registrar_auditoria_lancamento(
+                    request=self.request,
+                    acao=AuditoriaFinanceiro.AcaoAuditoria.CREATE,
+                    lancamento=lancamento,
+                    depois=_snapshot_lancamento(lancamento),
                 )
 
         if lancamentos_criados:
@@ -1130,6 +1205,21 @@ class LancamentoFinanceiroUpdateView(FinanceiroFormMixin, UpdateView):
             for categoria in CategoriaFinanceira.objects.order_by('tipo', 'nome')
         ]
         return context
+
+    def form_valid(self, form):
+        antes = _snapshot_lancamento(
+            LancamentoFinanceiro.objects.get(pk=self.object.pk)
+        )
+        response = super().form_valid(form)
+        depois = _snapshot_lancamento(self.object)
+        _registrar_auditoria_lancamento(
+            request=self.request,
+            acao=AuditoriaFinanceiro.AcaoAuditoria.UPDATE,
+            lancamento=self.object,
+            antes=antes,
+            depois=depois,
+        )
+        return response
 
 
 class LancamentoFinanceiroReciboView(DetailView):
@@ -1187,3 +1277,20 @@ class LancamentoFinanceiroDeleteView(FinanceiroDeleteMixin):
     page_title = 'Excluir Lancamento Financeiro'
     cancel_url = reverse_lazy('financeiro:lancamento-list')
     success_message = 'Lancamento financeiro excluido com sucesso.'
+
+    def form_valid(self, form):
+        lancamento = self.object
+        antes = _snapshot_lancamento(lancamento)
+        registro_id = lancamento.pk
+
+        with transaction.atomic():
+            response = super().form_valid(form)
+            AuditoriaFinanceiro.objects.create(
+                acao=AuditoriaFinanceiro.AcaoAuditoria.DELETE,
+                modelo='LancamentoFinanceiro',
+                registro_id=registro_id,
+                usuario=_auditoria_usuario(self.request),
+                campos_alterados=_build_auditoria_payload(antes, None),
+            )
+
+        return response
