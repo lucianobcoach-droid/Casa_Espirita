@@ -117,6 +117,7 @@ Leitura funcional:
 - a tela propria da edicao coordenada do grupo agora separa com mais clareza os dados comuns do documento e as linhas do rateio, reforcando visualmente que o salvamento afeta o grupo inteiro
 - a experiencia inicial da tela coordenada agora tambem traz textos orientativos mais explicitos e feedback visual mais claro quando houver inconsistencias no payload do rateio
 - a tela coordenada agora deixa mais claro o comportamento operacional de salvar, erro e retorno, incluindo mensagem de que o grupo inteiro sera atualizado e atalho direto para voltar a edicao individual da linha representativa
+- quando um grupo legado, inconsistente ou insuficiente nao pode abrir a edicao coordenada, o sistema agora identifica melhor o motivo operacional do bloqueio e leva a edicao individual com contexto explicito do fallback seguro
 - a experiencia final da edicao coordenada do grupo ainda nao foi concluida; a base inicial foi aberta sem encerrar os refinamentos futuros dessa frente
 - o extrato por conta passa a exibir `numero_documento` de forma discreta junto da descricao, quando existir
 - a listagem de lancamentos pode exibir `Transferencia entre Contas` quando uma transferencia nao tiver `pessoa`

@@ -3,6 +3,7 @@ from __future__ import annotations
 from calendar import monthrange
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+from urllib.parse import urlencode
 from uuid import uuid4
 
 from django.contrib import messages
@@ -10,7 +11,7 @@ from django.db import transaction
 from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import redirect
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.views import View
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, TemplateView, UpdateView
 
@@ -1309,22 +1310,28 @@ class LancamentoFinanceiroGrupoRateioUpdateView(FinanceiroFormMixin, UpdateView)
         )
 
         erro = ''
+        erro_codigo = ''
         if not grupo_rateio:
             erro = 'Grupo de rateio invalido para edicao coordenada.'
+            erro_codigo = 'grupo_invalido'
         elif not lancamentos:
             erro = 'Nenhum lancamento rateado foi encontrado para este grupo.'
+            erro_codigo = 'grupo_nao_encontrado'
         elif len(lancamentos) < 2:
             erro = 'Este grupo nao possui linhas suficientes para edicao coordenada.'
+            erro_codigo = 'grupo_insuficiente'
         else:
             numeros_documento = {(lancamento.numero_documento or '').strip() for lancamento in lancamentos}
             numeros_documento.discard('')
             if len(numeros_documento) > 1:
                 erro = 'Este grupo possui numeros de documento divergentes e precisa de regularizacao antes da edicao coordenada.'
+                erro_codigo = 'documento_divergente'
 
         self._grupo_info_cache = {
             'grupo_rateio': grupo_rateio,
             'lancamentos': lancamentos,
             'erro': erro,
+            'erro_codigo': erro_codigo,
             'representante': lancamentos[0] if lancamentos else None,
         }
         return self._grupo_info_cache
@@ -1335,13 +1342,24 @@ class LancamentoFinanceiroGrupoRateioUpdateView(FinanceiroFormMixin, UpdateView)
     def dispatch(self, request, *args, **kwargs):
         grupo_info = self._get_grupo_info()
         if grupo_info['erro']:
+            erro_codigo = grupo_info.get('erro_codigo') or 'grupo_invalido'
             messages.warning(
                 request,
-                f"{grupo_info['erro']} O fluxo coordenado nao foi aberto. Use a edicao individual das linhas para revisar este caso.",
+                f"{grupo_info['erro']} O fluxo coordenado nao foi aberto para evitar alteracao insegura do grupo. Revise este caso pela edicao individual da linha representativa.",
             )
             representante = grupo_info['representante']
             if representante:
-                return redirect('financeiro:lancamento-update', pk=representante.pk)
+                query_string = urlencode(
+                    {
+                        'origem_fluxo': 'rateio_coordenado',
+                        'motivo_fluxo': erro_codigo,
+                    }
+                )
+                return redirect(f"{reverse('financeiro:lancamento-update', kwargs={'pk': representante.pk})}?{query_string}")
+            messages.warning(
+                request,
+                'Nao foi possivel abrir uma linha representativa para este grupo. Voce foi redirecionado para a listagem principal de lancamentos.',
+            )
             return redirect(self.success_url)
         return super().dispatch(request, *args, **kwargs)
 

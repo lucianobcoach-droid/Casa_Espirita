@@ -87,6 +87,25 @@
                 {% elif form.instance.com_rateio %}
                     <div class="notification is-warning is-light mb-0">
                         <div>Este lancamento pertence a um grupo de rateio. A edicao individual continua disponivel nesta tela.</div>
+                        {% if request.GET.origem_fluxo == 'rateio_coordenado' %}
+                            <div class="mt-3">
+                                <strong>Fluxo coordenado nao aberto:</strong>
+                                {% if request.GET.motivo_fluxo == 'grupo_invalido' %}
+                                    o grupo informado nao estava valido para esse tipo de edicao.
+                                {% elif request.GET.motivo_fluxo == 'grupo_nao_encontrado' %}
+                                    nao foi encontrado um grupo rateado consistente para abrir a edicao em bloco.
+                                {% elif request.GET.motivo_fluxo == 'grupo_insuficiente' %}
+                                    o grupo nao possui linhas suficientes para a edicao coordenada.
+                                {% elif request.GET.motivo_fluxo == 'documento_divergente' %}
+                                    o grupo possui `numero_documento` divergente e precisa de regularizacao antes da edicao em bloco.
+                                {% else %}
+                                    este grupo precisa ser revisado primeiro pela edicao individual.
+                                {% endif %}
+                            </div>
+                            <div class="mt-2">
+                                Este e o caminho seguro alternativo para revisar a linha representativa sem absorver automaticamente um grupo legado ou inconsistente.
+                            </div>
+                        {% endif %}
                         {% if form.instance.grupo_rateio %}
                             <div class="mt-3">
                                 <a class="button is-small is-link is-light" href="{% url 'financeiro:lancamento-rateio-update' form.instance.grupo_rateio %}">

@@ -326,3 +326,9 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - erros de validacao geral e inconsistencias do rateio passaram a aparecer com estado visual mais explicito de bloqueio antes do salvamento
 - a navegacao de apoio da tela agora tambem oferece retorno direto para a edicao individual da linha representativa do grupo, sem substituir o fluxo coordenado
 - o fallback seguro para grupos invalidos tambem passou a usar mensagem operacional mais clara ao redirecionar para a edicao individual
+
+## Acabamento de estados para grupos legados ou inconsistentes
+
+- o fallback do fluxo coordenado agora diferencia melhor os motivos operacionais de bloqueio para grupos invalidos, nao encontrados, insuficientes ou com `numero_documento` divergente
+- quando o fluxo coordenado nao e aberto, a edicao individual passa a receber contexto explicito de que foi usada como caminho seguro alternativo para aquele grupo
+- a etapa manteve o comportamento defensivo: grupos problematicos continuam fora da edicao coordenada e nao sao absorvidos automaticamente
