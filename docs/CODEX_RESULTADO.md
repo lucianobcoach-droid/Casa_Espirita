@@ -442,3 +442,10 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - os filtros existentes foram compactados para melhor aproveitamento horizontal da tela em 100% de zoom, sem abrir novos filtros ou paginacao
 - a listagem da auditoria passou a ficar dentro de bloco visual mais consistente com as demais telas do modulo, mantendo leitura simples das entidades ja auditadas: `LancamentoFinanceiro` e `ContaFinanceira`
 - a apresentacao de `data_hora` foi mantida em formato `dd/mm/aaaa` com horario, sem alterar captura, ordenacao ou comportamento funcional da auditoria
+
+## Expansao incremental da auditoria para PessoaFinanceira
+
+- a auditoria do modulo financeiro passou a registrar create, update e delete de `PessoaFinanceira` com o mesmo padrao incremental ja usado em `LancamentoFinanceiro` e `ContaFinanceira`
+- a expansao reaproveitou o model proprio de auditoria, sem `signals` e sem reestruturacao ampla do dominio
+- a leitura atual da auditoria foi mantida simples e passou a abranger tambem os eventos de `PessoaFinanceira`
+- nesta microetapa, a auditoria ainda nao foi expandida para categorias, centros de custo, assinaturas ou configuracao institucional

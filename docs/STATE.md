@@ -109,8 +109,9 @@ Leitura funcional:
 - o log da primeira versao armazena acao, modelo afetado, id do registro, data/hora, usuario quando disponivel e campos alterados em JSON simples
 - o create comum, o create com rateio, a edicao individual de linha rateada e o delete agora geram eventos explicitos de auditoria
 - a auditoria agora tambem registra create, update e delete de `ContaFinanceira`, mantendo o mesmo padrao incremental ja usado em `LancamentoFinanceiro`
-- a auditoria ja possui captura inicial em `LancamentoFinanceiro` e `ContaFinanceira`, tela propria de leitura minima e filtros simples
-- nesta primeira expansao, a auditoria ainda nao foi estendida para pessoas, categorias, centros de custo, assinaturas ou configuracao institucional
+- a auditoria agora tambem registra create, update e delete de `PessoaFinanceira`, mantendo o mesmo padrao incremental ja usado nas demais entidades ja auditadas
+- a auditoria ja possui captura inicial em `LancamentoFinanceiro`, `ContaFinanceira` e `PessoaFinanceira`, tela propria de leitura minima e filtros simples
+- nesta primeira expansao, a auditoria ainda nao foi estendida para categorias, centros de custo, assinaturas ou configuracao institucional
 - a leitura minima da auditoria agora existe em tela propria, ordenada por `data_hora` decrescente e abrangendo as entidades ja auditadas do modulo financeiro
 - a leitura inicial da auditoria mostra data/hora, acao, modelo, id do registro, usuario e campos alterados em resumo estruturado simples
 - a leitura da auditoria agora possui filtros simples por acao, periodo inicial/final e id do registro, mantendo ordenacao por `data_hora` decrescente

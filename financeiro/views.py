@@ -72,6 +72,10 @@ def _snapshot_conta(conta: ContaFinanceira) -> dict[str, object]:
     return _snapshot_model(conta, ignore_fields={'criado_em', 'atualizado_em'})
 
 
+def _snapshot_pessoa(pessoa: PessoaFinanceira) -> dict[str, object]:
+    return _snapshot_model(pessoa, ignore_fields={'criado_em', 'atualizado_em'})
+
+
 def _build_auditoria_payload(
     antes: dict[str, object] | None,
     depois: dict[str, object] | None,
@@ -120,6 +124,23 @@ def _registrar_auditoria_conta(
         acao=acao,
         modelo='ContaFinanceira',
         registro_id=conta.pk,
+        usuario=_auditoria_usuario(request),
+        campos_alterados=_build_auditoria_payload(antes, depois),
+    )
+
+
+def _registrar_auditoria_pessoa(
+    *,
+    request,
+    acao: str,
+    pessoa: PessoaFinanceira,
+    antes: dict[str, object] | None = None,
+    depois: dict[str, object] | None = None,
+) -> AuditoriaFinanceiro:
+    return AuditoriaFinanceiro.objects.create(
+        acao=acao,
+        modelo='PessoaFinanceira',
+        registro_id=pessoa.pk,
         usuario=_auditoria_usuario(request),
         campos_alterados=_build_auditoria_payload(antes, depois),
     )
@@ -1047,6 +1068,16 @@ class PessoaFinanceiraCreateView(FinanceiroFormMixin, CreateView):
     page_title = 'Nova Pessoa Financeira'
     success_message = 'Pessoa financeira cadastrada com sucesso.'
 
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        _registrar_auditoria_pessoa(
+            request=self.request,
+            acao=AuditoriaFinanceiro.AcaoAuditoria.CREATE,
+            pessoa=self.object,
+            depois=_snapshot_pessoa(self.object),
+        )
+        return response
+
 
 class PessoaFinanceiraUpdateView(FinanceiroFormMixin, UpdateView):
     model = PessoaFinanceira
@@ -1057,6 +1088,21 @@ class PessoaFinanceiraUpdateView(FinanceiroFormMixin, UpdateView):
     submit_label = 'Atualizar'
     success_message = 'Pessoa financeira atualizada com sucesso.'
 
+    def form_valid(self, form):
+        antes = _snapshot_pessoa(
+            PessoaFinanceira.objects.get(pk=self.object.pk)
+        )
+        response = super().form_valid(form)
+        depois = _snapshot_pessoa(self.object)
+        _registrar_auditoria_pessoa(
+            request=self.request,
+            acao=AuditoriaFinanceiro.AcaoAuditoria.UPDATE,
+            pessoa=self.object,
+            antes=antes,
+            depois=depois,
+        )
+        return response
+
 
 class PessoaFinanceiraDeleteView(FinanceiroDeleteMixin):
     model = PessoaFinanceira
@@ -1064,6 +1110,23 @@ class PessoaFinanceiraDeleteView(FinanceiroDeleteMixin):
     page_title = 'Excluir Pessoa Financeira'
     cancel_url = reverse_lazy('financeiro:pessoa-list')
     success_message = 'Pessoa financeira excluida com sucesso.'
+
+    def form_valid(self, form):
+        pessoa = self.object
+        antes = _snapshot_pessoa(pessoa)
+        registro_id = pessoa.pk
+
+        with transaction.atomic():
+            response = super().form_valid(form)
+            AuditoriaFinanceiro.objects.create(
+                acao=AuditoriaFinanceiro.AcaoAuditoria.DELETE,
+                modelo='PessoaFinanceira',
+                registro_id=registro_id,
+                usuario=_auditoria_usuario(self.request),
+                campos_alterados=_build_auditoria_payload(antes, None),
+            )
+
+        return response
 
 
 class CategoriaFinanceiraListView(ListView):
