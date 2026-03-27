@@ -312,3 +312,10 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - grupos invalidos, legados ou com consistencia insuficiente para a edicao coordenada passaram a retornar com mensagem operacional e redirecionamento seguro para a edicao individual
 - a listagem principal de lancamentos passou a oferecer acesso discreto adicional a `Editar grupo` para linhas vinculadas a `grupo_rateio`
 - a etapa manteve a separacao entre edicao individual de linha e edicao coordenada do grupo, sem redesign amplo do fluxo
+
+## Refinamento de UX da tela de edicao coordenada do grupo rateado
+
+- a tela propria do grupo rateado passou a separar visualmente com mais clareza os dados comuns do documento e as linhas do rateio
+- os textos orientativos da tela foram reforcados para deixar explicito que o salvamento altera o grupo inteiro e nao apenas uma linha isolada
+- o bloco das linhas do rateio passou a exibir feedback visual mais claro quando houver inconsistencias de validacao no payload
+- a etapa preservou a base tecnica ja aberta: salvamento transacional, validacoes consolidadas, auditoria sem `signals` e edicao individual intacta

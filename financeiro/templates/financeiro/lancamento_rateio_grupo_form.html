@@ -8,10 +8,20 @@
     .financeiro-form-section-body { padding: 1rem 1.1rem; }
     .financeiro-form-section-title { font-size: 0.95rem; font-weight: 700; color: #1f2937; margin-bottom: 0.2rem; }
     .financeiro-form-section-text { font-size: 0.86rem; color: #6b7280; margin-bottom: 0.85rem; }
+    .financeiro-form-callout { border-radius: 0.8rem; padding: 0.85rem 1rem; margin-bottom: 0.95rem; }
+    .financeiro-form-callout strong { color: inherit; }
+    .financeiro-form-callout.is-group { background: #eff6ff; border: 1px solid #bfdbfe; color: #1d4ed8; }
+    .financeiro-form-callout.is-warning-soft { background: #fff7ed; border: 1px solid #fdba74; color: #9a3412; }
+    .financeiro-form-callout.is-danger-soft { background: #fef2f2; border: 1px solid #fca5a5; color: #b91c1c; }
     .financeiro-rateio-summary { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.85rem; }
     .financeiro-rateio-summary-item { padding: 0.55rem 0.8rem; border-radius: 0.75rem; background: #eff6ff; color: #1e3a8a; font-size: 0.84rem; font-weight: 600; }
     .financeiro-rateio-panel { padding: 0.85rem; border: 1px dashed rgba(59, 130, 246, 0.35); border-radius: 0.8rem; background: rgba(255,255,255,.8); }
+    .financeiro-rateio-panel-header { display: flex; gap: 0.85rem; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; margin-bottom: 0.9rem; }
+    .financeiro-rateio-panel-notes { display: flex; flex-direction: column; gap: 0.55rem; }
+    .financeiro-rateio-note { font-size: 0.84rem; color: #475569; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 0.7rem 0.8rem; }
+    .financeiro-rateio-note strong { color: #0f172a; }
     .financeiro-form-actions { display: flex; gap: 0.75rem; justify-content: flex-end; flex-wrap: wrap; }
+    .financeiro-form-section-divider { height: 1px; background: #e5e7eb; margin: 0.9rem 0 1rem; }
     @media screen and (max-width: 768px) { .financeiro-form-actions .button { width: 100%; } }
 </style>
 
@@ -37,8 +47,11 @@
                     <div class="financeiro-rateio-summary-item">Linhas atuais: {{ grupo_rateio_quantidade_linhas }}</div>
                     <div class="financeiro-rateio-summary-item">Total atual: R$ {{ grupo_rateio_valor_total }}</div>
                 </div>
-                <div class="notification is-info is-light mb-0">
-                    Esta tela atualiza em bloco os dados comuns do grupo e as linhas de categoria/valor. A edicao individual continua disponivel nas linhas existentes.
+                <div class="financeiro-form-callout is-group mb-3">
+                    <strong>Edicao coordenada do grupo inteiro.</strong> Esta tela salva em bloco os dados comuns do documento e as linhas de categoria/valor. A edicao individual continua disponivel, mas as alteracoes feitas aqui afetam o grupo rateado inteiro.
+                </div>
+                <div class="financeiro-form-callout is-warning-soft mb-0">
+                    Revise com atencao o <strong>valor total do documento</strong>, as <strong>datas</strong> e as <strong>linhas do rateio</strong> antes de salvar. Linhas removidas deixam de fazer parte deste grupo depois da gravacao.
                 </div>
             </div>
         </section>
@@ -47,6 +60,9 @@
             <div class="financeiro-form-section-body">
                 <div class="financeiro-form-section-title">Dados comuns do grupo</div>
                 <div class="financeiro-form-section-text">Campos compartilhados por todas as linhas do mesmo documento rateado.</div>
+                <div class="financeiro-form-callout is-group">
+                    Os campos abaixo sao reaplicados ao grupo inteiro no momento do salvamento. Use esta area para ajustar o documento comum antes de revisar as categorias e valores das linhas.
+                </div>
 
                 <div class="field">
                     <label class="label" for="{{ form.descricao.id_for_label }}">{{ form.descricao.label }} *</label>
@@ -151,15 +167,26 @@
                 <div class="financeiro-form-section-text">Categorias e valores das linhas do grupo. O fechamento continua validado contra o valor total do documento.</div>
 
                 <div class="financeiro-rateio-panel">
-                    <div class="level mb-3">
-                        <div class="level-left">
-                            <div class="financeiro-form-section-text mb-0">Adicione, ajuste ou remova linhas. A validacao continua exigindo fechamento coerente do rateio.</div>
+                    <div class="financeiro-rateio-panel-header">
+                        <div class="financeiro-rateio-panel-notes">
+                            <div class="financeiro-rateio-note">
+                                <strong>O que pode ser alterado aqui:</strong> categorias, valores, adicao de novas linhas e remocao de linhas que deixaram de compor o documento rateado.
+                            </div>
+                            <div class="financeiro-rateio-note">
+                                <strong>Validacao mantida:</strong> o total das linhas precisa continuar fechando com o valor total do documento, sem reaproveitar linhas de outro grupo.
+                            </div>
                         </div>
-                        <div class="level-right">
+                        <div>
                             <button class="button is-small is-link is-light" type="button" data-financeiro-rateio-add="true">Adicionar linha</button>
                         </div>
                     </div>
-                    {% for error in form.rateio_payload.errors %}<p class="help is-danger mb-2">{{ error }}</p>{% endfor %}
+                    {% if form.rateio_payload.errors %}
+                        <div class="financeiro-form-callout is-danger-soft">
+                            <strong>O rateio precisa de ajuste antes de salvar.</strong>
+                            {% for error in form.rateio_payload.errors %}<div>{{ error }}</div>{% endfor %}
+                        </div>
+                    {% endif %}
+                    <div class="financeiro-form-section-divider"></div>
                     <div class="table-container">
                         <table class="table is-fullwidth is-narrow is-striped financeiro-rateio-table">
                             <thead>
