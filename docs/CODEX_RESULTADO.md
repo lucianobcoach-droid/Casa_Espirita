@@ -410,3 +410,9 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - a primeira linha destacada do corpo do extrato passou a usar o rotulo `Saldo anterior`
 - a impressao do extrato foi refinada para reduzir quebra desnecessaria de texto, dar mais prioridade horizontal para `Descricao` e deixar as linhas com altura mais uniforme
 - as colunas curtas do extrato impresso passaram a evitar quebra sempre que possivel, sem alterar calculo, ordenacao ou consolidacao funcional
+
+## Correcao do valor exibido na linha Saldo anterior
+
+- a linha `Saldo anterior` do corpo do extrato passou a usar diretamente o valor de `saldo_anterior` ja calculado no contexto
+- quando nao houver periodo filtrado, a linha continua usando `saldo_inicial` como fallback
+- a microcorrecao nao duplicou logica de calculo e nao alterou saldo, ordenacao ou consolidacao funcional

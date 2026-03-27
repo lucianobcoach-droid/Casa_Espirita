@@ -258,7 +258,7 @@
                     <td></td>
                     <td></td>
                     <td></td>
-                    <td><strong><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_inicial|br_money }}</span></span></strong></td>
+                    <td><strong><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_anterior|default:saldo_inicial|br_money }}</span></span></strong></td>
                     <td></td>
                 </tr>
             {% endif %}
