@@ -2,30 +2,100 @@
 {% load financeiro_format %}
 {% block title %}{{ page_title }}{% endblock %}
 {% block content %}
-<div class="level">
+<style>
+    .financeiro-extrato-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem 0.55rem;
+        margin-top: 0.35rem;
+    }
+
+    .financeiro-extrato-meta-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.3rem 0.5rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 999px;
+        background: #fafafa;
+        font-size: 0.8rem;
+        color: #4b5563;
+        line-height: 1.2;
+    }
+
+    .financeiro-extrato-meta-item strong {
+        color: #1f2937;
+        font-weight: 700;
+    }
+
+    .financeiro-extrato-table th:nth-child(1),
+    .financeiro-extrato-table td:nth-child(1) {
+        width: 7.5rem;
+        white-space: nowrap;
+    }
+
+    .financeiro-extrato-table th:nth-child(2),
+    .financeiro-extrato-table td:nth-child(2) {
+        min-width: 19rem;
+    }
+
+    .financeiro-extrato-table th:nth-child(3),
+    .financeiro-extrato-table td:nth-child(3) {
+        width: 7rem;
+        white-space: nowrap;
+    }
+
+    .financeiro-extrato-table th:nth-child(4),
+    .financeiro-extrato-table td:nth-child(4),
+    .financeiro-extrato-table th:nth-child(5),
+    .financeiro-extrato-table td:nth-child(5),
+    .financeiro-extrato-table th:nth-child(6),
+    .financeiro-extrato-table td:nth-child(6) {
+        width: 11rem;
+        white-space: nowrap;
+    }
+
+    .financeiro-extrato-table th:nth-child(7),
+    .financeiro-extrato-table td:nth-child(7) {
+        min-width: 12rem;
+    }
+</style>
+<div class="level financeiro-page-head">
     <div class="level-left">
         <div>
             <h1 class="title">{{ page_title }}</h1>
             {% if conta %}
-                <p class="subtitle">Conta: {{ conta.nome }}</p>
-                <p class="subtitle">
-                    Saldo inicial: <span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_inicial|br_money }}</span></span>
-                    {% if data_saldo_inicial %}
-                        em {{ data_saldo_inicial|date:'d/m/Y' }}
+                <div class="financeiro-extrato-meta">
+                    <div class="financeiro-extrato-meta-item">
+                        <strong>Conta</strong>
+                        <span>{{ conta.nome }}</span>
+                    </div>
+                    <div class="financeiro-extrato-meta-item">
+                        <strong>Saldo inicial</strong>
+                        <span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_inicial|br_money }}</span></span>
+                        {% if data_saldo_inicial %}
+                            <span>em {{ data_saldo_inicial|date:'d/m/Y' }}</span>
+                        {% endif %}
+                    </div>
+                    {% if data_inicial or data_final %}
+                        <div class="financeiro-extrato-meta-item">
+                            <strong>Periodo</strong>
+                            <span>{% if data_inicial %}{{ data_inicial }}{% else %}inicio em aberto{% endif %}</span>
+                            <span>ate</span>
+                            <span>{% if data_final %}{{ data_final }}{% else %}fim em aberto{% endif %}</span>
+                        </div>
                     {% endif %}
-                </p>
-                {% if data_inicial or data_final %}
-                    <p class="subtitle">
-                        Periodo:
-                        {% if data_inicial %}{{ data_inicial }}{% else %}inicio em aberto{% endif %}
-                        ate
-                        {% if data_final %}{{ data_final }}{% else %}fim em aberto{% endif %}
-                    </p>
-                {% endif %}
-                {% if saldo_anterior is not None %}
-                    <p class="subtitle">Saldo anterior: <span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_anterior|br_money }}</span></span></p>
-                {% endif %}
-                <p class="subtitle">Saldo final exibido (quitado): <span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_final|br_money }}</span></span></p>
+                    {% if saldo_anterior is not None %}
+                        <div class="financeiro-extrato-meta-item">
+                            <strong>Saldo anterior</strong>
+                            <span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_anterior|br_money }}</span></span>
+                        </div>
+                    {% endif %}
+                    <div class="financeiro-extrato-meta-item">
+                        <strong>Saldo final exibido</strong>
+                        <span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_final|br_money }}</span></span>
+                    </div>
+                </div>
                 <p class="report-print-meta only-print">Emitido em {% now "d/m/Y H:i" %}</p>
             {% endif %}
         </div>
@@ -40,7 +110,7 @@
 <form method="get" class="filters-box no-print">
     <div class="columns is-multiline">
         {% if show_conta_filter %}
-            <div class="column is-4">
+            <div class="column is-12-mobile is-6-tablet is-4-desktop">
                 <label class="label">Conta</label>
                 <div class="select is-fullwidth">
                     <select name="conta">
@@ -54,15 +124,15 @@
                 </div>
             </div>
         {% endif %}
-        <div class="column {% if show_conta_filter %}is-3{% else %}is-4{% endif %}">
+        <div class="column is-6-mobile is-3-tablet {% if show_conta_filter %}is-3-desktop{% else %}is-4-desktop{% endif %}">
             <label class="label">Data inicial</label>
             <input class="input" type="date" name="data_inicial" value="{{ data_inicial }}">
         </div>
-        <div class="column {% if show_conta_filter %}is-3{% else %}is-4{% endif %}">
+        <div class="column is-6-mobile is-3-tablet {% if show_conta_filter %}is-3-desktop{% else %}is-4-desktop{% endif %}">
             <label class="label">Data final</label>
             <input class="input" type="date" name="data_final" value="{{ data_final }}">
         </div>
-        <div class="column {% if show_conta_filter %}is-2{% else %}is-4{% endif %}">
+        <div class="column is-12-mobile is-6-tablet {% if show_conta_filter %}is-2-desktop{% else %}is-4-desktop{% endif %}">
             <label class="label">&nbsp;</label>
             <div class="buttons">
                 <button class="button is-link is-fullwidth" type="submit">Aplicar</button>
@@ -81,7 +151,7 @@
 {% if conta %}
     <p class="table-caption no-print">Extrato com texto colorido e sem badges. Receitas ficam em azul, transferencias em laranja e saidas em vermelho.</p>
     <div class="table-wrapper">
-        <table class="table is-fullwidth is-hoverable financeiro-table">
+        <table class="table is-fullwidth is-hoverable financeiro-table financeiro-extrato-table">
             <thead>
             <tr>
                 <th>Data</th>

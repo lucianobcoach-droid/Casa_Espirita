@@ -377,3 +377,10 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - a base visual compartilhada do modulo foi ajustada para reduzir espacamentos, compactar filtros, inputs, labels, tabelas e acoes sem redesign amplo
 - nesta primeira aplicacao, a listagem de lancamentos e o formulario padrao de lancamento/edicao passaram a aproveitar melhor a largura horizontal da tela em 100% de zoom
 - a etapa preservou a identidade atual do sistema e deixou a expansao para as demais telas como passo posterior da mesma frente
+
+## Aplicacao do refinamento de densidade visual ao extrato
+
+- o extrato por conta passou a usar cabecalho mais compacto e horizontal, com meta-informacoes resumidas em blocos mais densos
+- os filtros do extrato foram reorganizados para aproveitar melhor a largura util da tela em 100% de zoom
+- a tabela do extrato recebeu distribuicao horizontal mais previsivel entre data, descricao, tipo, valores, saldo acumulado e observacoes
+- a microetapa preservou integralmente calculo, saldo, ordenacao e consolidacao funcional do extrato
