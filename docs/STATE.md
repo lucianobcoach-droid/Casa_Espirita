@@ -19,7 +19,7 @@ Data de atualizacao: 2026-03-27
 - As telas de `Resumo` e `Prestacao de Contas` agora mostram receitas e despesas agrupadas por categoria.
 - As telas de `Resumo` e `Prestacao de Contas` agora mostram despesas agrupadas por centro de custo.
 - A listagem de lancamentos agora possui filtros operacionais por data inicial, data final, conta, pessoa e categoria.
-- A ordem atual da listagem de lancamentos segue a ordenacao herdada do model por `-data_competencia` e `-criado_em`; a definicao da ordem oficial de leitura operacional ficou aberta como frente futura.
+- A listagem principal de lancamentos agora usa ordem oficial explicita por `-data_competencia`, `-data_pagamento`, `-criado_em` e `-pk`, aplicada diretamente na view para evitar impacto nas demais consultas do modulo.
 - As telas de `Resumo` e `Prestacao de Contas` agora possuem controle de exibicao apenas para o bloco de centro de custo, sem alterar os totais gerais do relatorio.
 - A tela de `Prestacao de Contas` recebeu refinamento visual especifico para impressao em A4.
 - A `Prestacao de Contas` agora tem apresentacao mais formal, com menos aparencia de dashboard.
@@ -76,11 +76,14 @@ Leitura funcional:
 - no rateio inicial, o usuario informa um `valor total do documento` apenas para validar o fechamento do grupo
 - no rateio inicial, o sistema exige no minimo 2 linhas validas com categoria obrigatoria e valor positivo
 - no rateio inicial, a soma das linhas precisa ser igual ao `valor total do documento`
-- no rateio inicial, o mesmo `numero_documento` pode se repetir apenas entre linhas do mesmo `grupo_rateio`
+- no rateio inicial, o mesmo `numero_documento` pode se repetir apenas como replicacao interna entre linhas do mesmo `grupo_rateio`
+- esse `numero_documento` nao pode coincidir com outro documento independente ja lancado no sistema, mesmo que o outro caso tambem seja rateado
+- na edicao individual de linhas rateadas, o sistema agora tambem impede que uma linha do grupo passe a divergir do `numero_documento` compartilhado pelas demais linhas do mesmo `grupo_rateio`
 - na segunda versao do rateio, categorias repetidas no payload passam a ser consolidadas por soma antes da gravacao das linhas finais
 - na segunda versao do rateio, o create volta corretamente para a listagem apos criar multiplas linhas do grupo
 - nesta primeira versao, `valor_total_documento` nao e persistido no model; ele existe apenas no formulario para validacao
 - nesta primeira versao, a edicao de lancamentos rateados continua individual por linha e nao existe edicao coordenada do grupo
+- se um grupo rateado antigo estiver internamente inconsistente em `numero_documento`, a validacao agora bloqueia novas gravacoes ate que o grupo seja regularizado
 - o campo `tipo` do formulario de lancamento agora abre preenchido com `receita` e sem opcao vazia inicial
 - no formulario de lancamento, `data_pagamento` passou a aparecer antes de `data_competencia`
 - `data_pagamento` agora passou a ser obrigatoria no formulario operacional do modulo, com indicativo visual claro de obrigatoriedade
@@ -113,6 +116,10 @@ Escopo funcional:
 - somente lancamentos quitados aparecem no extrato
 - nao existe relatorio geral nesta etapa
 - a tela `Extratos` reutiliza a mesma logica do extrato por conta
+- a ordem oficial desejada do extrato ficou consolidada como leitura crescente por `data_competencia`, com desempate por `criado_em` e `pk`
+- lancamentos rateados agora aparecem consolidados por `grupo_rateio` no extrato, com leitura documental do valor total do documento na linha exibida
+- a consolidacao do rateio no extrato ficou restrita a apresentacao da tela, sem alterar a modelagem do rateio nem a base de calculo do saldo
+- linhas antigas ou inconsistentes sem `grupo_rateio` valido continuam aparecendo individualmente no extrato ate regularizacao da base
 
 ## Resumo consolidado do periodo
 
@@ -205,7 +212,7 @@ Com filtro por periodo:
 - A largura util e a centralizacao horizontal do recibo na impressao foram ajustadas para melhor aproveitamento da folha A4.
 - A margem superior do recibo na impressao agora foi levemente ampliada para dar respiro inicial sem reintroduzir excesso de altura.
 - O extrato mostra conta, periodo, saldo inicial, data do saldo inicial, saldo anterior quando aplicavel e saldo final exibido.
-- O extrato ainda mostra lancamentos rateados linha a linha, sem consolidacao por `grupo_rateio` ou `numero_documento`; a frente de leitura consolidada do rateio no extrato ficou oficialmente aberta.
+- O extrato agora consolida lancamentos rateados por `grupo_rateio`, exibindo na linha mostrada ao usuario o valor total do documento e mantendo a leitura cronologica crescente do saldo.
 - O modulo possui listagem de contas com `saldo_atual` calculado.
 - A listagem de lancamentos destaca tipo por cor e status nao quitado em negrito.
 - A listagem de lancamentos agora oferece acesso direto ao recibo de cada lancamento.
@@ -235,8 +242,6 @@ Com filtro por periodo:
 ## Frentes abertas por auditoria funcional
 
 - Ficou aberta a frente de revisao operacional do formulario de lancamento para tratar obrigatoriedade de `data_pagamento` e maior previsibilidade no preenchimento de `data_competencia`.
-- Ficou aberta a frente de definicao da ordem oficial da listagem de lancamentos para consolidar a leitura operacional do modulo.
-- Ficou aberta a frente de consolidacao de rateios no extrato, com objetivo de exibir leitura documental menos fragmentada por `grupo_rateio` ou `numero_documento`.
 - Ficou aberta a frente de auditoria de alteracoes no financeiro, com trilha de data, hora e mudancas por registro, a ser implementada de forma incremental e sem `signals`.
 - Nesta etapa de auditoria funcional e documental, nenhum patch de codigo foi executado.
 

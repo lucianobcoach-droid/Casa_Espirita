@@ -78,6 +78,8 @@ Data: 2026-03-26
 - validacao para impedir repeticao de `numero_documento` em cadastro e edicao
 - primeira versao de `Lancamento com rateio` sem documento pai, com `grupo_rateio` e validacao por `valor total do documento`
 - segunda versao do rateio com redirecionamento estavel no create, `tipo` padrao em `receita`, sugestao automatica de `data_competencia` a partir de `data_pagamento` e consolidacao de categorias repetidas antes da gravacao
+- a repeticao legitima de `numero_documento` no rateio ficou restrita a replicacao interna entre linhas do mesmo `grupo_rateio`, sem liberar coincidencia com documento independente
+- a validacao do rateio agora tambem precisa preservar, na edicao individual, o mesmo `numero_documento` compartilhado pelas linhas do grupo
 
 ### Regras condicionais de transferencia
 - transferencia nao exige pessoa
@@ -105,6 +107,7 @@ Data: 2026-03-26
 - extrato com filtro por periodo
 - calculo de saldo anterior
 - extrato e saldo real considerando apenas lancamentos efetivos
+- consolidacao visual de rateios no extrato por `grupo_rateio`, com leitura do valor total do documento
 
 ### Resumo e prestacao de contas
 - resumo consolidado por periodo
@@ -131,9 +134,8 @@ Data: 2026-03-26
 - UX do formulario de lancamento em casos limite
 - evolucao futura do rateio para edicao coordenada em bloco e modelagem documental mais rica, se necessario
 - acabamento operacional do rateio em edicao individual e leitura do grupo nas telas ja existentes
+- regularizacao eventual de bases antigas de rateio sem `grupo_rateio` valido, caso precisem entrar na leitura consolidada do extrato
 - revisao operacional futura da obrigatoriedade estrutural de `data_pagamento`, caso o comportamento hoje consolidado no formulario precise subir para nivel de modelagem
-- definicao da ordem oficial da listagem de lancamentos
-- consolidacao de rateios no extrato por `grupo_rateio` ou `numero_documento`
 - auditoria de alteracoes no financeiro com trilha de data, hora e mudancas por registro
 - consistencia visual do tratamento de transferencia
 - validacoes defensivas adicionais em fluxos operacionais

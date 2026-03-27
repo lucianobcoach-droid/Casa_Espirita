@@ -642,6 +642,63 @@ class ExtratoContaMixin:
 
         return entrada, saida
 
+    def _chave_bloco_extrato(self, lancamento: LancamentoFinanceiro) -> str:
+        grupo_rateio = (lancamento.grupo_rateio or '').strip()
+        if lancamento.com_rateio and grupo_rateio:
+            return f'rateio:{grupo_rateio}'
+        return f'lancamento:{lancamento.pk}'
+
+    def _montar_itens_extrato(
+        self,
+        conta: ContaFinanceira,
+        lancamentos: list[LancamentoFinanceiro],
+        saldo_inicial: Decimal,
+    ) -> tuple[list[dict[str, object]], Decimal]:
+        blocos: list[list[LancamentoFinanceiro]] = []
+        blocos_por_chave: dict[str, list[LancamentoFinanceiro]] = {}
+
+        for lancamento in lancamentos:
+            chave_bloco = self._chave_bloco_extrato(lancamento)
+            bloco = blocos_por_chave.get(chave_bloco)
+            if bloco is None:
+                bloco = []
+                blocos_por_chave[chave_bloco] = bloco
+                blocos.append(bloco)
+            bloco.append(lancamento)
+
+        saldo_acumulado = saldo_inicial
+        itens_extrato: list[dict[str, object]] = []
+
+        for bloco in blocos:
+            lancamento_representante = bloco[0]
+            entrada_total = Decimal('0.00')
+            saida_total = Decimal('0.00')
+
+            for lancamento in bloco:
+                entrada, saida = self._classificar_lancamento(conta, lancamento)
+                entrada_total += entrada
+                saida_total += saida
+
+            saldo_acumulado += entrada_total - saida_total
+            observacoes = next(
+                ((lancamento.observacoes or '').strip() for lancamento in bloco if (lancamento.observacoes or '').strip()),
+                '',
+            )
+
+            itens_extrato.append(
+                {
+                    'lancamento': lancamento_representante,
+                    'entrada': entrada_total,
+                    'saida': saida_total,
+                    'saldo_acumulado': saldo_acumulado,
+                    'rateio_consolidado': len(bloco) > 1 and bool((lancamento_representante.grupo_rateio or '').strip()),
+                    'quantidade_linhas_rateio': len(bloco),
+                    'observacoes_exibicao': observacoes or '-',
+                }
+            )
+
+        return itens_extrato, saldo_acumulado
+
     def _get_extrato_context(
         self,
         conta: ContaFinanceira,
@@ -670,19 +727,8 @@ class ExtratoContaMixin:
         if data_final:
             lancamentos = lancamentos.filter(data_competencia__lte=data_final)
 
-        saldo_acumulado = saldo_anterior if data_inicial else (conta.saldo_inicial or Decimal('0.00'))
-        itens_extrato: list[dict[str, object]] = []
-        for lancamento in lancamentos:
-            entrada, saida = self._classificar_lancamento(conta, lancamento)
-            saldo_acumulado += entrada - saida
-            itens_extrato.append(
-                {
-                    'lancamento': lancamento,
-                    'entrada': entrada,
-                    'saida': saida,
-                    'saldo_acumulado': saldo_acumulado,
-                }
-            )
+        saldo_base = saldo_anterior if data_inicial else (conta.saldo_inicial or Decimal('0.00'))
+        itens_extrato, saldo_acumulado = self._montar_itens_extrato(conta, list(lancamentos), saldo_base)
 
         return {
             'conta': conta,
@@ -992,7 +1038,7 @@ class LancamentoFinanceiroListView(ListView):
             queryset = queryset.filter(pessoa_id=pessoa)
         if categoria:
             queryset = queryset.filter(categoria_id=categoria)
-        return queryset
+        return queryset.order_by('-data_competencia', '-data_pagamento', '-criado_em', '-pk')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

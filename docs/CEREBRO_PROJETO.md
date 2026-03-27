@@ -143,10 +143,13 @@ Os tipos validos de lancamento sao:
 - erros de obrigatoriedade do lancamento devem aparecer no formulario, sem estourar erro de banco
 - `numero_documento` continua opcional para o usuario, mas deve ser gerado automaticamente quando vier vazio
 - quando `Lancamento com rateio` nao estiver marcado, `numero_documento` continua unico entre os lancamentos
-- quando `Lancamento com rateio` estiver marcado, o mesmo `numero_documento` pode se repetir apenas entre linhas do mesmo grupo de rateio
+- quando `Lancamento com rateio` estiver marcado, o mesmo `numero_documento` pode se repetir apenas como replicacao interna entre linhas do mesmo grupo de rateio
+- esse `numero_documento` nao pode coincidir com outro documento independente ja lancado no sistema, mesmo que o outro caso tambem seja rateado
 - se o usuario informar manualmente um `numero_documento` ja existente fora do mesmo grupo de rateio, o erro deve aparecer no formulario
 - a validacao de duplicidade deve funcionar no cadastro e na edicao, respeitando a excecao controlada de rateio
 - na edicao, o proprio registro nao deve ser tratado como duplicado dele mesmo
+- na edicao individual de linhas rateadas, uma linha nao pode divergir do `numero_documento` compartilhado pelas demais linhas do mesmo `grupo_rateio`
+- se um grupo rateado existente estiver internamente inconsistente em `numero_documento`, o sistema deve bloquear novas gravacoes ate regularizacao manual
 - o rateio inicial deve exigir no minimo 2 linhas validas
 - no rateio, cada linha deve ter categoria obrigatoria e valor positivo
 - no rateio, a soma das linhas deve ser igual ao `valor total do documento`
@@ -158,8 +161,11 @@ Os tipos validos de lancamento sao:
 - a revisao operacional de `data_pagamento` foi consolidada no formulario do modulo, tornando o campo obrigatorio no fluxo atual e com indicativo visual claro
 - o preenchimento de `data_competencia` a partir de `data_pagamento` foi reforcado no template para comportamento mais previsivel, sem sobrescrever indevidamente valores manuais ja existentes
 - nesta etapa, a obrigatoriedade de `data_pagamento` ficou concentrada no formulario operacional e nao abriu mudanca estrutural de modelagem
-- a ordem oficial da listagem de lancamentos ainda nao foi consolidada como regra operacional propria
-- a leitura de rateios no extrato ainda precisa de consolidacao futura por `grupo_rateio` ou `numero_documento`
+- a listagem principal de lancamentos deve usar ordem oficial por `-data_competencia`, `-data_pagamento`, `-criado_em` e `-pk`, aplicada na view e sem alterar o `Meta.ordering` do model
+- no extrato, a ordem oficial deve ser crescente por `data_competencia`, com desempate por `criado_em` e `pk`
+- no extrato, lancamentos rateados devem ser lidos como documento consolidado por `grupo_rateio`, com exibicao do valor total do documento na linha exibida
+- a consolidacao do rateio no extrato deve ficar restrita a apresentacao da tela, preservando a modelagem atual do rateio e a base de calculo do saldo
+- linhas antigas ou inconsistentes sem `grupo_rateio` valido podem continuar aparecendo de forma individual no extrato ate regularizacao manual
 - ficou aberta a frente de auditoria de alteracoes no financeiro, com implementacao incremental preferencial sem `signals`
 - `data_pagamento` nao pode ser anterior a `data_competencia`
 - `CategoriaFinanceira` pode ter `mensagem_recibo` opcional para personalizar o rodape do recibo

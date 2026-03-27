@@ -206,6 +206,13 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - foi registrada sem patch de codigo a abertura da frente de auditoria de alteracoes no financeiro, com implementacao incremental preferencial sem `signals`
 - a auditoria tambem consolidou que o extrato atual ainda exibe rateios linha a linha e que o autopreenchimento de `data_competencia` segue fragil por depender apenas de comportamento visual no template
 
+## Consolidacao documental da regra precisa de rateio e extrato
+
+- foi registrada sem patch de codigo a correção da regra documental do rateio para deixar explicito que `numero_documento` continua unico no sistema, com excecao restrita a replicacao interna entre linhas do mesmo `grupo_rateio`
+- foi registrada sem patch de codigo a vedacao explicita de coincidencia entre o `numero_documento` de um grupo rateado e outro documento independente ja lancado no sistema
+- foi registrada sem patch de codigo a diretriz oficial do extrato com ordem crescente por `data_competencia`, desempate por `criado_em` e `pk`
+- foi registrada sem patch de codigo a diretriz futura de leitura documental consolidada do rateio no extrato por `grupo_rateio`, com exibicao do valor total do documento
+
 ## Revisao operacional de data_pagamento e data_competencia
 
 - `data_pagamento` passou a ser obrigatoria no formulario operacional do modulo, com indicativo visual claro de obrigatoriedade
@@ -214,3 +221,27 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - a pessoa usuaria continua podendo editar manualmente `data_competencia` sem sobrescrita indevida quando ja houver valor proprio no campo
 - o comportamento foi ajustado para funcionar melhor tanto na abertura inicial do formulario quanto na interacao posterior do usuario
 - a revisao desta etapa ficou concentrada em `financeiro/forms.py` e `financeiro/templates/financeiro/lancamento_form.html`, sem alterar modelagem nem criar migration nova
+
+## Ordem oficial da listagem principal de lancamentos
+
+- a listagem principal de lancamentos passou a usar ordem explicita por `-data_competencia`, `-data_pagamento`, `-criado_em` e `-pk`
+- a decisao foi aplicada diretamente na `LancamentoFinanceiroListView`
+- o `Meta.ordering` do model foi preservado para evitar impacto colateral em extrato, relatorios, historico do favorecido e outras consultas
+- os filtros atuais da listagem foram preservados sem alteracao de regra de negocio
+
+## Validacao precisa de numero_documento no rateio
+
+- a validacao de `numero_documento` foi reforcada para manter a unicidade global do documento, com excecao restrita as linhas do mesmo `grupo_rateio`
+- o sistema continua aceitando repeticao de `numero_documento` apenas como replicacao interna do mesmo grupo rateado
+- o sistema passou a impedir explicitamente que uma linha editada de grupo rateado fique com `numero_documento` diferente das demais linhas do mesmo grupo
+- o sistema tambem passa a sinalizar erro quando encontrar grupo rateado antigo internamente inconsistente em `numero_documento`
+- a etapa preservou o lancamento comum, o create do rateio e a premissa atual de edicao individual das linhas
+
+## Consolidacao do rateio no extrato
+
+- o extrato por conta passou a manter ordem crescente por `data_competencia`, com desempate por `criado_em` e `pk`
+- lancamentos rateados passaram a aparecer consolidados por `grupo_rateio` na leitura da tela
+- a linha consolidada do extrato agora exibe o valor total do documento rateado em vez de fragmentar o mesmo documento em varias linhas
+- a consolidacao ficou restrita a apresentacao do extrato, preservando a modelagem atual do rateio e a coerencia do saldo acumulado
+- lancamentos comuns permanecem com leitura individual sem alteracao
+- linhas antigas ou inconsistentes sem `grupo_rateio` valido continuam aparecendo individualmente ate regularizacao manual da base

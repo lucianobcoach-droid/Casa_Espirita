@@ -113,6 +113,9 @@
                         {% if item.lancamento.numero_documento %}
                             <div class="is-size-7 has-text-grey">Doc.: {{ item.lancamento.numero_documento }}</div>
                         {% endif %}
+                        {% if item.rateio_consolidado %}
+                            <div class="is-size-7 has-text-grey">Rateio consolidado ({{ item.quantidade_linhas_rateio }} linhas)</div>
+                        {% endif %}
                     </td>
                     <td>
                         <span class="extrato-text {% if item.lancamento.tipo == 'receita' %}is-receita{% elif item.lancamento.tipo == 'despesa' %}is-despesa{% else %}is-transferencia{% endif %}">
@@ -134,7 +137,7 @@
                         {% endif %}
                     </td>
                     <td><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ item.saldo_acumulado|br_money }}</span></span></td>
-                    <td>{{ item.lancamento.observacoes|default:'-' }}</td>
+                    <td>{{ item.observacoes_exibicao }}</td>
                 </tr>
             {% empty %}
                 <tr>
