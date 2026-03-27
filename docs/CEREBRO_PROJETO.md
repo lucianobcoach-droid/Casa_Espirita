@@ -190,7 +190,7 @@ Os tipos validos de lancamento sao:
 - quando `data_pagamento` for preenchida e `data_competencia` ainda estiver vazia no formulario, a competencia deve ser sugerida automaticamente sem bloquear edicao manual posterior
 - a revisao operacional de `data_pagamento` foi consolidada no formulario do modulo, tornando o campo obrigatorio no fluxo atual e com indicativo visual claro
 - o preenchimento de `data_competencia` a partir de `data_pagamento` foi reforcado no template para comportamento mais previsivel, sem sobrescrever indevidamente valores manuais ja existentes
-- nesta etapa, a obrigatoriedade de `data_pagamento` ficou concentrada no formulario operacional e nao abriu mudanca estrutural de modelagem
+- a obrigatoriedade de `data_pagamento` agora tambem deve ser validada estruturalmente no `clean()` de `LancamentoFinanceiro`, mesmo sem migracao imediata do campo para `null=False` no banco
 - a listagem principal de lancamentos deve usar ordem oficial por `-data_competencia`, `-data_pagamento`, `-criado_em` e `-pk`, aplicada na view e sem alterar o `Meta.ordering` do model
 - no extrato, a ordem oficial deve ser crescente por `data_competencia`, com desempate por `criado_em` e `pk`
 - no extrato, lancamentos rateados devem ser lidos como documento consolidado por `grupo_rateio`, com exibicao do valor total do documento na linha exibida

@@ -290,6 +290,9 @@ class LancamentoFinanceiro(models.Model):
         if not self.data_competencia:
             errors['data_competencia'] = 'Informe a data de competencia.'
 
+        if not self.data_pagamento:
+            errors['data_pagamento'] = 'Informe a data de pagamento.'
+
         if self.data_competencia and self.data_pagamento and self.data_pagamento < self.data_competencia:
             errors['data_pagamento'] = 'A data de pagamento nao pode ser anterior a data de competencia.'
 

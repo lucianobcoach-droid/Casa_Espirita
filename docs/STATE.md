@@ -98,7 +98,8 @@ Leitura funcional:
 - no formulario de lancamento, `data_pagamento` passou a aparecer antes de `data_competencia`
 - `data_pagamento` agora passou a ser obrigatoria no formulario operacional do modulo, com indicativo visual claro de obrigatoriedade
 - no formulario de lancamento, preencher `data_pagamento` agora preenche automaticamente `data_competencia` quando ela estiver vazia ou ainda estiver sob valor autoatribuido, preservando edicao manual posterior
-- a revisao atual ficou concentrada no formulario e no template; nesta etapa nao houve mudanca de modelagem para tornar `data_pagamento` obrigatoria fora do fluxo operacional atual
+- a obrigatoriedade de `data_pagamento` agora tambem foi consolidada no `clean()` de `LancamentoFinanceiro`, subindo de regra apenas operacional do formulario para regra estrutural de validacao da aplicacao
+- nesta etapa, o campo continua aceitando `null/blank` na modelagem de banco por compatibilidade com bases legadas, mas novas gravacoes e atualizacoes passam a exigir `data_pagamento` no nivel da aplicacao
 - a obrigatoriedade final de `pessoa` e `categoria` permanece condicional na camada da aplicacao
 - o formulario de lancamento agora pode consultar e exibir os ultimos 5 lancamentos da `pessoa` selecionada
 - o bloco de historico do favorecido mostra data, tipo, descricao, valor, categoria e `numero_documento` quando existir

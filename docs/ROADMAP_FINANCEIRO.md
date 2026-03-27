@@ -137,7 +137,7 @@ Data: 2026-03-26
 - acabamento operacional do rateio em edicao individual e leitura do grupo nas telas ja existentes
 - estrategia aprovada para futura edicao coordenada do grupo rateado com view e formulario proprios, dados comuns em bloco e salvamento transacional
 - regularizacao eventual de bases antigas de rateio sem `grupo_rateio` valido, caso precisem entrar na leitura consolidada do extrato
-- revisao operacional futura da obrigatoriedade estrutural de `data_pagamento`, caso o comportamento hoje consolidado no formulario precise subir para nivel de modelagem
+- a obrigatoriedade de `data_pagamento` ja foi consolidada no nivel de validacao da aplicacao; eventual endurecimento futuro do campo no banco depende apenas de estrategia segura para bases legadas
 - expansao futura da auditoria de alteracoes no financeiro para alem de `LancamentoFinanceiro` e `ContaFinanceira`, ampliando o que ja existe para outras entidades do modulo e mantendo model proprio sem `signals`
 - refinamentos futuros de leitura para a tela de auditoria de `LancamentoFinanceiro`, alem dos filtros simples ja implementados
 - consistencia visual do tratamento de transferencia

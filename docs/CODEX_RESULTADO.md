@@ -483,3 +483,9 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - a tela de auditoria do financeiro passou a oferecer filtro simples por usuario, em conjunto com os filtros ja existentes por acao, periodo e id do registro
 - o filtro por usuario usa a lista de usuarios ja presentes nos eventos atualmente exibidos pela auditoria
 - a leitura da auditoria foi mantida simples, sem paginacao nova, sem filtros complexos adicionais e sem alterar a captura dos eventos
+
+## Consolidacao estrutural da obrigatoriedade de data_pagamento
+
+- a obrigatoriedade de `data_pagamento` deixou de ficar apenas no formulario e passou a ser validada tambem no `clean()` de `LancamentoFinanceiro`
+- o ajuste preservou os fluxos atuais de lancamento comum e rateado, sem abrir refatoracao ampla do modulo
+- nesta microetapa, a validacao estrutural subiu para o nivel da aplicacao, mas o campo permaneceu com `null/blank` na modelagem de banco por compatibilidade com bases legadas
