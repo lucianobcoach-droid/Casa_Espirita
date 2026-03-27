@@ -84,6 +84,10 @@ def _snapshot_centro_custo(centro_custo: CentroCusto) -> dict[str, object]:
     return _snapshot_model(centro_custo, ignore_fields={'criado_em', 'atualizado_em'})
 
 
+def _snapshot_assinatura(assinatura: AssinaturaInstitucional) -> dict[str, object]:
+    return _snapshot_model(assinatura, ignore_fields={'criado_em', 'atualizado_em'})
+
+
 def _build_auditoria_payload(
     antes: dict[str, object] | None,
     depois: dict[str, object] | None,
@@ -183,6 +187,23 @@ def _registrar_auditoria_centro_custo(
         acao=acao,
         modelo='CentroCusto',
         registro_id=centro_custo.pk,
+        usuario=_auditoria_usuario(request),
+        campos_alterados=_build_auditoria_payload(antes, depois),
+    )
+
+
+def _registrar_auditoria_assinatura(
+    *,
+    request,
+    acao: str,
+    assinatura: AssinaturaInstitucional,
+    antes: dict[str, object] | None = None,
+    depois: dict[str, object] | None = None,
+) -> AuditoriaFinanceiro:
+    return AuditoriaFinanceiro.objects.create(
+        acao=acao,
+        modelo='AssinaturaInstitucional',
+        registro_id=assinatura.pk,
         usuario=_auditoria_usuario(request),
         campos_alterados=_build_auditoria_payload(antes, depois),
     )
@@ -1319,6 +1340,16 @@ class AssinaturaInstitucionalCreateView(FinanceiroFormMixin, CreateView):
     page_title = 'Nova Assinatura Institucional'
     success_message = 'Assinatura institucional cadastrada com sucesso.'
 
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        _registrar_auditoria_assinatura(
+            request=self.request,
+            acao=AuditoriaFinanceiro.AcaoAuditoria.CREATE,
+            assinatura=self.object,
+            depois=_snapshot_assinatura(self.object),
+        )
+        return response
+
 
 class AssinaturaInstitucionalUpdateView(FinanceiroFormMixin, UpdateView):
     model = AssinaturaInstitucional
@@ -1329,6 +1360,21 @@ class AssinaturaInstitucionalUpdateView(FinanceiroFormMixin, UpdateView):
     submit_label = 'Atualizar'
     success_message = 'Assinatura institucional atualizada com sucesso.'
 
+    def form_valid(self, form):
+        antes = _snapshot_assinatura(
+            AssinaturaInstitucional.objects.get(pk=self.object.pk)
+        )
+        response = super().form_valid(form)
+        depois = _snapshot_assinatura(self.object)
+        _registrar_auditoria_assinatura(
+            request=self.request,
+            acao=AuditoriaFinanceiro.AcaoAuditoria.UPDATE,
+            assinatura=self.object,
+            antes=antes,
+            depois=depois,
+        )
+        return response
+
 
 class AssinaturaInstitucionalDeleteView(FinanceiroDeleteMixin):
     model = AssinaturaInstitucional
@@ -1336,6 +1382,23 @@ class AssinaturaInstitucionalDeleteView(FinanceiroDeleteMixin):
     page_title = 'Excluir Assinatura Institucional'
     cancel_url = reverse_lazy('financeiro:assinatura-list')
     success_message = 'Assinatura institucional excluida com sucesso.'
+
+    def form_valid(self, form):
+        assinatura = self.object
+        antes = _snapshot_assinatura(assinatura)
+        registro_id = assinatura.pk
+
+        with transaction.atomic():
+            response = super().form_valid(form)
+            AuditoriaFinanceiro.objects.create(
+                acao=AuditoriaFinanceiro.AcaoAuditoria.DELETE,
+                modelo='AssinaturaInstitucional',
+                registro_id=registro_id,
+                usuario=_auditoria_usuario(self.request),
+                campos_alterados=_build_auditoria_payload(antes, None),
+            )
+
+        return response
 
 
 class ConfiguracaoInstitucionalListView(ListView):

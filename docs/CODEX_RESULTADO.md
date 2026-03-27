@@ -463,3 +463,10 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - a expansao reaproveitou o model proprio de auditoria, sem `signals` e sem reestruturacao ampla do dominio
 - a leitura atual da auditoria foi mantida simples e passou a abranger tambem os eventos de `CentroCusto`
 - nesta microetapa, a auditoria ainda nao foi expandida para assinaturas ou configuracao institucional
+
+## Expansao incremental da auditoria para AssinaturaInstitucional
+
+- a auditoria do modulo financeiro passou a registrar create, update e delete de `AssinaturaInstitucional` com o mesmo padrao incremental ja usado nas demais entidades ja auditadas
+- a expansao reaproveitou o model proprio de auditoria, sem `signals` e sem reestruturacao ampla do dominio
+- a leitura atual da auditoria foi mantida simples e passou a abranger tambem os eventos de `AssinaturaInstitucional`
+- nesta microetapa, a auditoria ainda nao foi expandida para configuracao institucional
