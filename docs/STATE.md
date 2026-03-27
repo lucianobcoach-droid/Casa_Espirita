@@ -122,6 +122,8 @@ Leitura funcional:
 - o fluxo coordenado agora tambem deixa mais previsivel o retorno sem erro tecnico: ao salvar ou cancelar, a listagem principal recebe contexto explicito da origem do retorno, e a volta para a edicao individual sinaliza que o fluxo em bloco foi deixado sem gravacao
 - a tela coordenada do grupo rateado agora tambem tem acabamento visual mais consistente, com hierarquia mais clara entre resumo do grupo, dados comuns, linhas do rateio, alertas e acoes finais
 - a tela de edicao coordenada do rateio agora foi simplificada para espelhar melhor o formulario padrao de lancamento, mantendo apenas os avisos curtos e os elementos extras estritamente necessarios para o rateio
+- na tela de edicao coordenada do grupo rateado, `data_pagamento` e `data_competencia` agora chegam preenchidas no formato aceito pelos inputs HTML de data
+- na listagem principal, lancamentos rateados agora usam apenas a acao principal `Editar`, apontando para a edicao coordenada do grupo sem competir com um botao separado de `Editar grupo`
 - a experiencia final da edicao coordenada do grupo ainda nao foi concluida; a base inicial foi aberta sem encerrar os refinamentos futuros dessa frente
 - o extrato por conta passa a exibir `numero_documento` de forma discreta junto da descricao, quando existir
 - a listagem de lancamentos pode exibir `Transferencia entre Contas` quando uma transferencia nao tiver `pessoa`

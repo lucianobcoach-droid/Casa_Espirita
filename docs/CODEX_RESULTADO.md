@@ -357,3 +357,10 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - a expansao reaproveitou model proprio de auditoria, sem `signals` e sem reestruturacao ampla do dominio
 - a leitura atual da auditoria foi mantida simples, mas passou a abranger as entidades ja auditadas do financeiro, incluindo `ContaFinanceira`
 - nesta microetapa, a auditoria ainda nao foi expandida para pessoas, categorias, centros de custo, assinaturas ou configuracao institucional
+
+## Microcorrecao da edicao rateada na listagem e nas datas do grupo
+
+- a tela de edicao coordenada do grupo rateado passou a preencher `data_pagamento` e `data_competencia` no formato aceito pelos inputs HTML de data
+- a listagem principal deixou de exibir o botao separado `Editar grupo`
+- para lancamentos rateados, a acao principal `Editar` da listagem agora abre diretamente a edicao coordenada do `grupo_rateio`
+- para lancamentos comuns, a acao principal `Editar` continua abrindo a edicao individual do lancamento

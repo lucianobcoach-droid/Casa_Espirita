@@ -160,9 +160,10 @@
                 <td class="actions-cell no-print">
                     <a class="button is-small is-info is-light" href="{% url 'financeiro:lancamento-recibo' lancamento.pk %}">Recibo</a>
                     {% if lancamento.com_rateio and lancamento.grupo_rateio %}
-                        <a class="button is-small is-warning is-light" href="{% url 'financeiro:lancamento-rateio-update' lancamento.grupo_rateio %}">Editar grupo</a>
+                        <a class="button is-small is-link is-light" href="{% url 'financeiro:lancamento-rateio-update' lancamento.grupo_rateio %}">Editar</a>
+                    {% else %}
+                        <a class="button is-small is-link is-light" href="{% url 'financeiro:lancamento-update' lancamento.pk %}">Editar</a>
                     {% endif %}
-                    <a class="button is-small is-link is-light" href="{% url 'financeiro:lancamento-update' lancamento.pk %}">Editar</a>
                     <a class="button is-small is-danger is-light" href="{% url 'financeiro:lancamento-delete' lancamento.pk %}">Excluir</a>
                 </td>
             </tr>

@@ -384,6 +384,12 @@ class LancamentoFinanceiroGrupoRateioForm(forms.ModelForm):
         self.grupo_lancamentos = list(grupo_lancamentos or [])
         self.rateio_linhas_iniciais: list[dict[str, str]] = []
         super().__init__(*args, **kwargs)
+        for field_name in ('data_competencia', 'data_pagamento'):
+            self.fields[field_name].widget.format = '%Y-%m-%d'
+            if not self.is_bound:
+                valor_inicial = getattr(self.instance, field_name, None)
+                if valor_inicial:
+                    self.initial[field_name] = valor_inicial.strftime('%Y-%m-%d')
         self.fields['tipo'].widget.attrs.update({'data-financeiro-tipo': 'true'})
         self.fields['conta_destino'].widget.attrs.update({'data-financeiro-conta-destino': 'true'})
         self.fields['pessoa'].required = False
@@ -585,7 +591,7 @@ class LancamentoFinanceiroGrupoRateioForm(forms.ModelForm):
             'observacoes',
         ]
         widgets = {
-            'data_competencia': forms.DateInput(attrs={'type': 'date'}),
-            'data_pagamento': forms.DateInput(attrs={'type': 'date'}),
+            'data_competencia': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date'}),
+            'data_pagamento': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date'}),
             'observacoes': forms.Textarea(attrs={'rows': 4}),
         }
