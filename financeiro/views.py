@@ -54,13 +54,22 @@ def _auditoria_normalizar_valor(valor):
     return valor
 
 
-def _snapshot_lancamento(lancamento: LancamentoFinanceiro) -> dict[str, object]:
+def _snapshot_model(instance, *, ignore_fields: set[str] | None = None) -> dict[str, object]:
     snapshot: dict[str, object] = {}
-    for field in lancamento._meta.concrete_fields:
-        if field.name in {'criado_em', 'atualizado_em'}:
+    ignore_fields = ignore_fields or set()
+    for field in instance._meta.concrete_fields:
+        if field.name in ignore_fields:
             continue
-        snapshot[field.name] = _auditoria_normalizar_valor(getattr(lancamento, field.attname))
+        snapshot[field.name] = _auditoria_normalizar_valor(getattr(instance, field.attname))
     return snapshot
+
+
+def _snapshot_lancamento(lancamento: LancamentoFinanceiro) -> dict[str, object]:
+    return _snapshot_model(lancamento, ignore_fields={'criado_em', 'atualizado_em'})
+
+
+def _snapshot_conta(conta: ContaFinanceira) -> dict[str, object]:
+    return _snapshot_model(conta, ignore_fields={'criado_em', 'atualizado_em'})
 
 
 def _build_auditoria_payload(
@@ -94,6 +103,23 @@ def _registrar_auditoria_lancamento(
         acao=acao,
         modelo='LancamentoFinanceiro',
         registro_id=lancamento.pk,
+        usuario=_auditoria_usuario(request),
+        campos_alterados=_build_auditoria_payload(antes, depois),
+    )
+
+
+def _registrar_auditoria_conta(
+    *,
+    request,
+    acao: str,
+    conta: ContaFinanceira,
+    antes: dict[str, object] | None = None,
+    depois: dict[str, object] | None = None,
+) -> AuditoriaFinanceiro:
+    return AuditoriaFinanceiro.objects.create(
+        acao=acao,
+        modelo='ContaFinanceira',
+        registro_id=conta.pk,
         usuario=_auditoria_usuario(request),
         campos_alterados=_build_auditoria_payload(antes, depois),
     )
@@ -671,6 +697,16 @@ class ContaFinanceiraCreateView(FinanceiroFormMixin, CreateView):
     page_title = 'Nova Conta Financeira'
     success_message = 'Conta financeira cadastrada com sucesso.'
 
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        _registrar_auditoria_conta(
+            request=self.request,
+            acao=AuditoriaFinanceiro.AcaoAuditoria.CREATE,
+            conta=self.object,
+            depois=_snapshot_conta(self.object),
+        )
+        return response
+
 
 class ContaFinanceiraUpdateView(FinanceiroFormMixin, UpdateView):
     model = ContaFinanceira
@@ -681,6 +717,21 @@ class ContaFinanceiraUpdateView(FinanceiroFormMixin, UpdateView):
     submit_label = 'Atualizar'
     success_message = 'Conta financeira atualizada com sucesso.'
 
+    def form_valid(self, form):
+        antes = _snapshot_conta(
+            ContaFinanceira.objects.get(pk=self.object.pk)
+        )
+        response = super().form_valid(form)
+        depois = _snapshot_conta(self.object)
+        _registrar_auditoria_conta(
+            request=self.request,
+            acao=AuditoriaFinanceiro.AcaoAuditoria.UPDATE,
+            conta=self.object,
+            antes=antes,
+            depois=depois,
+        )
+        return response
+
 
 class ContaFinanceiraDeleteView(FinanceiroDeleteMixin):
     model = ContaFinanceira
@@ -688,6 +739,23 @@ class ContaFinanceiraDeleteView(FinanceiroDeleteMixin):
     page_title = 'Excluir Conta Financeira'
     cancel_url = reverse_lazy('financeiro:conta-list')
     success_message = 'Conta financeira excluida com sucesso.'
+
+    def form_valid(self, form):
+        conta = self.object
+        antes = _snapshot_conta(conta)
+        registro_id = conta.pk
+
+        with transaction.atomic():
+            response = super().form_valid(form)
+            AuditoriaFinanceiro.objects.create(
+                acao=AuditoriaFinanceiro.AcaoAuditoria.DELETE,
+                modelo='ContaFinanceira',
+                registro_id=registro_id,
+                usuario=_auditoria_usuario(self.request),
+                campos_alterados=_build_auditoria_payload(antes, None),
+            )
+
+        return response
 
 
 class ExtratoContaMixin:
@@ -864,7 +932,7 @@ class AuditoriaLancamentoFinanceiroListView(ListView):
         queryset = (
             super()
             .get_queryset()
-            .filter(modelo='LancamentoFinanceiro')
+            .filter(modelo__in=['LancamentoFinanceiro', 'ContaFinanceira'])
             .select_related('usuario')
         )
         acao = self.request.GET.get('acao', '').strip()
@@ -903,7 +971,7 @@ class AuditoriaLancamentoFinanceiroListView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['page_title'] = 'Auditoria de Lancamentos'
+        context['page_title'] = 'Auditoria do Financeiro'
         context['filtro_acao'] = self.request.GET.get('acao', '').strip()
         context['filtro_data_inicial'] = self.request.GET.get('data_inicial', '').strip()
         context['filtro_data_final'] = self.request.GET.get('data_final', '').strip()

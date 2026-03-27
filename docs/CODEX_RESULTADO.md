@@ -350,3 +350,10 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - a tela coordenada foi aproximada do formulario comum de lancamento em titulo, hierarquia visual e distribuicao dos blocos
 - os textos fixos longos foram reduzidos para avisos curtos e contextuais, mantendo apenas o necessario para indicar que a alteracao afeta o rateio inteiro
 - o bloco de rateio foi preservado como diferenca funcional principal da tela, sem alterar validacoes, auditoria ou o fluxo individual ja existente
+
+## Expansao incremental da auditoria para ContaFinanceira
+
+- a auditoria do modulo financeiro passou a registrar create, update e delete de `ContaFinanceira` com o mesmo padrao incremental ja usado em `LancamentoFinanceiro`
+- a expansao reaproveitou model proprio de auditoria, sem `signals` e sem reestruturacao ampla do dominio
+- a leitura atual da auditoria foi mantida simples, mas passou a abranger as entidades ja auditadas do financeiro, incluindo `ContaFinanceira`
+- nesta microetapa, a auditoria ainda nao foi expandida para pessoas, categorias, centros de custo, assinaturas ou configuracao institucional
