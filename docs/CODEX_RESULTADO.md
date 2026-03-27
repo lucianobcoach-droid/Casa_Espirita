@@ -160,3 +160,9 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - `Resumo` foi alinhado com `Resumo do Periodo` onde havia ganho claro de consistencia
 - `Assinaturas` e `Configuracao Institucional` foram alinhadas aos titulos institucionais ja usados nas telas correspondentes
 - a estrutura de navegacao, as rotas e as regras de negocio permaneceram intactas
+
+## Padronizacao leve das paginas internas do financeiro
+
+- botoes de criacao de `Assinaturas Institucionais` e `Configuracoes Institucionais` ficaram mais especificos e coerentes com os titulos das telas
+- os botoes principais de `Resumo` e `Prestacao de Contas` foram alinhados para `Atualizar relatorio`
+- a etapa permaneceu restrita a consistencia textual leve, sem alterar estrutura, rotas ou regra de negocio
