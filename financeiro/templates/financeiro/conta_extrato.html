@@ -3,6 +3,10 @@
 {% block title %}{{ page_title }}{% endblock %}
 {% block content %}
 <style>
+    .financeiro-extrato-print-header {
+        display: none;
+    }
+
     .financeiro-extrato-meta {
         display: flex;
         flex-wrap: wrap;
@@ -71,6 +75,36 @@
     .financeiro-extrato-table td:nth-child(9) {
         min-width: 12rem;
     }
+
+    .is-closing-balance td {
+        color: #1f2937;
+        background: #f7f9fc;
+        font-weight: 700;
+    }
+
+    @media print {
+        .financeiro-extrato-print-header {
+            display: block;
+            margin-bottom: 0.65rem;
+            padding-bottom: 0.45rem;
+            border-bottom: 1px solid #c7c7c7;
+        }
+
+        .financeiro-extrato-print-title {
+            margin: 0 0 0.18rem;
+            font-size: 15px;
+            font-weight: 700;
+            color: #111;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .financeiro-extrato-print-meta {
+            margin: 0.08rem 0;
+            font-size: 10px;
+            color: #111;
+        }
+    }
 </style>
 <div class="level financeiro-page-head">
     <div class="level-left">
@@ -81,13 +115,6 @@
                     <div class="financeiro-extrato-meta-item">
                         <strong>Conta</strong>
                         <span>{{ conta.nome }}</span>
-                    </div>
-                    <div class="financeiro-extrato-meta-item">
-                        <strong>Saldo inicial</strong>
-                        <span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_inicial|br_money }}</span></span>
-                        {% if data_saldo_inicial %}
-                            <span>em {{ data_saldo_inicial|date:'d/m/Y' }}</span>
-                        {% endif %}
                     </div>
                     {% if data_inicial or data_final %}
                         <div class="financeiro-extrato-meta-item">
@@ -114,7 +141,12 @@
     </div>
     {% if not show_conta_filter %}
         <div class="level-right no-print">
+            <button class="button is-light" type="button" onclick="window.print()">Imprimir</button>
             <a class="button" href="{% url 'financeiro:conta-list' %}">Voltar para contas</a>
+        </div>
+    {% elif conta %}
+        <div class="level-right no-print">
+            <button class="button is-light" type="button" onclick="window.print()">Imprimir</button>
         </div>
     {% endif %}
 </div>
@@ -161,6 +193,17 @@
 {% endif %}
 
 {% if conta %}
+    <div class="financeiro-extrato-print-header only-print">
+        <p class="financeiro-extrato-print-title">Extrato por Conta</p>
+        <p class="financeiro-extrato-print-meta"><strong>Conta:</strong> {{ conta.nome }}</p>
+        <p class="financeiro-extrato-print-meta">
+            <strong>Periodo:</strong>
+            {% if data_inicial %}{{ data_inicial }}{% else %}inicio em aberto{% endif %}
+            ate
+            {% if data_final %}{{ data_final }}{% else %}fim em aberto{% endif %}
+        </p>
+        <p class="financeiro-extrato-print-meta">Emitido em {% now "d/m/Y H:i" %}</p>
+    </div>
     <div class="table-wrapper">
         <table class="table is-fullwidth is-hoverable financeiro-table financeiro-extrato-table">
             <thead>
@@ -220,14 +263,17 @@
                     <td colspan="8">Nenhum lancamento quitado encontrado para esta conta.</td>
                 </tr>
             {% endfor %}
+                <tr class="is-closing-balance">
+                    <td>{% if data_final %}{{ data_final }}{% else %}-{% endif %}</td>
+                    <td>-</td>
+                    <td><strong>Saldo final</strong></td>
+                    <td><strong>Final</strong></td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td><strong><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_final|br_money }}</span></span></strong></td>
+                    <td>-</td>
+                </tr>
             </tbody>
-            <tfoot>
-            <tr>
-                <th colspan="6"><strong>Saldo final</strong></th>
-                <th><strong><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_final|br_money }}</span></span></strong></th>
-                <th></th>
-            </tr>
-            </tfoot>
         </table>
     </div>
 {% endif %}

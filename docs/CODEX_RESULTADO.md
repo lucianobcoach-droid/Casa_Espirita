@@ -391,3 +391,10 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - o `numero_documento` deixou de aparecer dentro da descricao e passou a usar coluna propria ao lado da data
 - a data principal exibida na linha do extrato passou a priorizar `data_pagamento`, com fallback para `data_competencia`
 - a descricao da linha foi limpa para nao repetir metadados do documento nem a frase de rateio consolidado
+
+## Ajuste do saldo inicial no corpo e preparacao da impressao do extrato
+
+- o `Saldo inicial` deixou de aparecer no bloco resumido superior e passou a ficar como primeira linha destacada no corpo da tabela do extrato
+- o `Saldo final` foi mantido como ultima linha destacada no corpo da tabela, sem migrar para o cabecalho de impressao
+- a tela do extrato passou a oferecer botao de impressao
+- a impressao do extrato ganhou cabecalho proprio com identificacao clara do relatorio, mantendo `Saldo inicial` e `Saldo final` dentro da tabela
