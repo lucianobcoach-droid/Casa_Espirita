@@ -132,7 +132,7 @@ Data: 2026-03-26
 
 - comportamento de transferencia em todas as telas e relatorios
 - UX do formulario de lancamento em casos limite
-- evolucao futura do rateio para edicao coordenada em bloco, ainda nao implementada, mas ja com estrategia aprovada de view e formulario proprios do grupo
+- base inicial da edicao coordenada do rateio ja implementada com view e formulario proprios do grupo, ainda pendente de refinamentos para a experiencia final
 - modelagem documental mais rica do rateio, se necessario em etapa posterior
 - acabamento operacional do rateio em edicao individual e leitura do grupo nas telas ja existentes
 - estrategia aprovada para futura edicao coordenada do grupo rateado com view e formulario proprios, dados comuns em bloco e salvamento transacional

@@ -8,6 +8,7 @@ from uuid import uuid4
 from django.contrib import messages
 from django.db import transaction
 from django.db.models import Q
+from django.http import Http404
 from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
@@ -21,6 +22,7 @@ from .forms import (
     CentroCustoForm,
     ContaFinanceiraForm,
     LancamentoFinanceiroForm,
+    LancamentoFinanceiroGrupoRateioForm,
     PessoaFinanceiraForm,
 )
 from .models import (
@@ -1277,6 +1279,150 @@ class LancamentoFinanceiroUpdateView(FinanceiroFormMixin, UpdateView):
             depois=depois,
         )
         return response
+
+
+class LancamentoFinanceiroGrupoRateioUpdateView(FinanceiroFormMixin, UpdateView):
+    model = LancamentoFinanceiro
+    form_class = LancamentoFinanceiroGrupoRateioForm
+    template_name = 'financeiro/lancamento_rateio_grupo_form.html'
+    success_url = reverse_lazy('financeiro:lancamento-list')
+    page_title = 'Editar Grupo de Rateio'
+    submit_label = 'Atualizar grupo'
+
+    def _get_grupo_lancamentos(self) -> list[LancamentoFinanceiro]:
+        if hasattr(self, '_grupo_lancamentos_cache'):
+            return self._grupo_lancamentos_cache
+
+        grupo_rateio = (self.kwargs.get('grupo_rateio') or '').strip()
+        queryset = list(
+            LancamentoFinanceiro.objects.filter(
+                com_rateio=True,
+                grupo_rateio=grupo_rateio,
+            )
+            .select_related(
+                'conta',
+                'conta_destino',
+                'pessoa',
+                'categoria',
+                'centro_custo',
+            )
+            .order_by('pk')
+        )
+        if not grupo_rateio or len(queryset) < 2:
+            raise Http404('Grupo de rateio invalido para edicao coordenada.')
+
+        self._grupo_lancamentos_cache = queryset
+        return self._grupo_lancamentos_cache
+
+    def get_object(self, queryset=None):
+        return self._get_grupo_lancamentos()[0]
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['grupo_lancamentos'] = self._get_grupo_lancamentos()
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        grupo_lancamentos = self._get_grupo_lancamentos()
+        context['rateio_categoria_opcoes'] = [
+            {'id': categoria.pk, 'label': str(categoria)}
+            for categoria in CategoriaFinanceira.objects.order_by('tipo', 'nome')
+        ]
+        context['grupo_rateio'] = grupo_lancamentos[0].grupo_rateio
+        context['grupo_rateio_quantidade_linhas'] = len(grupo_lancamentos)
+        context['grupo_rateio_valor_total'] = sum(
+            (lancamento.valor for lancamento in grupo_lancamentos),
+            Decimal('0.00'),
+        )
+        return context
+
+    def form_valid(self, form):
+        grupo_lancamentos = self._get_grupo_lancamentos()
+        rateio_linhas = form.cleaned_data.get('rateio_linhas') or []
+        dados_comuns = {
+            'descricao': form.cleaned_data['descricao'],
+            'tipo': form.cleaned_data['tipo'],
+            'status': form.cleaned_data['status'],
+            'data_competencia': form.cleaned_data['data_competencia'],
+            'data_pagamento': form.cleaned_data.get('data_pagamento'),
+            'numero_documento': (form.cleaned_data.get('numero_documento') or '').strip(),
+            'pessoa': form.cleaned_data.get('pessoa'),
+            'centro_custo': form.cleaned_data.get('centro_custo'),
+            'conta': form.cleaned_data['conta'],
+            'conta_destino': form.cleaned_data.get('conta_destino'),
+            'observacoes': form.cleaned_data.get('observacoes', ''),
+            'com_rateio': True,
+            'grupo_rateio': grupo_lancamentos[0].grupo_rateio,
+        }
+
+        existentes_por_id = {lancamento.pk: lancamento for lancamento in grupo_lancamentos}
+        ids_utilizados: set[int] = set()
+        lancamentos_finais: list[LancamentoFinanceiro] = []
+
+        for linha in rateio_linhas:
+            linha_id = linha.get('id')
+            if linha_id and int(linha_id) not in existentes_por_id:
+                form.add_error('rateio_payload', 'Foi informada uma linha que nao pertence a este grupo de rateio.')
+                return self.form_invalid(form)
+
+        with transaction.atomic():
+            for linha in rateio_linhas:
+                linha_id = linha.get('id')
+                if linha_id:
+                    lancamento = existentes_por_id.get(int(linha_id))
+                    ids_utilizados.add(lancamento.pk)
+                    antes = _snapshot_lancamento(lancamento)
+                    for campo, valor in dados_comuns.items():
+                        setattr(lancamento, campo, valor)
+                    lancamento.categoria = linha['categoria']
+                    lancamento.valor = linha['valor']
+                    lancamento.save()
+                    depois = _snapshot_lancamento(lancamento)
+                    if antes != depois:
+                        _registrar_auditoria_lancamento(
+                            request=self.request,
+                            acao=AuditoriaFinanceiro.AcaoAuditoria.UPDATE,
+                            lancamento=lancamento,
+                            antes=antes,
+                            depois=depois,
+                        )
+                    lancamentos_finais.append(lancamento)
+                    continue
+
+                lancamento = LancamentoFinanceiro.objects.create(
+                    **dados_comuns,
+                    categoria=linha['categoria'],
+                    valor=linha['valor'],
+                )
+                _registrar_auditoria_lancamento(
+                    request=self.request,
+                    acao=AuditoriaFinanceiro.AcaoAuditoria.CREATE,
+                    lancamento=lancamento,
+                    depois=_snapshot_lancamento(lancamento),
+                )
+                lancamentos_finais.append(lancamento)
+
+            for lancamento in grupo_lancamentos:
+                if lancamento.pk in ids_utilizados:
+                    continue
+                antes = _snapshot_lancamento(lancamento)
+                registro_id = lancamento.pk
+                lancamento.delete()
+                AuditoriaFinanceiro.objects.create(
+                    acao=AuditoriaFinanceiro.AcaoAuditoria.DELETE,
+                    modelo='LancamentoFinanceiro',
+                    registro_id=registro_id,
+                    usuario=_auditoria_usuario(self.request),
+                    campos_alterados=_build_auditoria_payload(antes, None),
+                )
+
+        self.object = lancamentos_finais[0]
+        messages.success(
+            self.request,
+            f'Grupo de rateio atualizado com sucesso em {len(lancamentos_finais)} linhas.',
+        )
+        return redirect(self.success_url)
 
 
 class LancamentoFinanceiroReciboView(DetailView):

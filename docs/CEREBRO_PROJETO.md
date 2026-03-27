@@ -182,7 +182,9 @@ Os tipos validos de lancamento sao:
 - no rateio, a soma das linhas deve ser igual ao `valor total do documento`
 - no rateio, categorias repetidas no payload devem ser consolidadas por soma antes de salvar as linhas finais
 - nesta primeira versao, `valor total do documento` e usado apenas para validacao do formulario e nao e persistido no model
-- nesta primeira versao, a edicao das linhas rateadas continua individual e nao existe edicao coordenada em bloco do grupo
+- a edicao individual das linhas rateadas continua disponivel como fluxo proprio, sem substituir a base inicial da edicao coordenada do grupo
+- a base inicial da edicao coordenada do grupo rateado agora existe em fluxo proprio, carregado por `grupo_rateio`, sem substituir a edicao individual de uma linha
+- a edicao coordenada inicial do grupo deve trabalhar apenas com grupos validos de rateio e manter salvamento transacional
 - no create com rateio, o redirecionamento final deve ocorrer sem depender de um `self.object` unico
 - quando `data_pagamento` for preenchida e `data_competencia` ainda estiver vazia no formulario, a competencia deve ser sugerida automaticamente sem bloquear edicao manual posterior
 - a revisao operacional de `data_pagamento` foi consolidada no formulario do modulo, tornando o campo obrigatorio no fluxo atual e com indicativo visual claro

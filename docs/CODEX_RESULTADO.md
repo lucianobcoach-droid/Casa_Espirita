@@ -290,3 +290,19 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - ficou registrado que esses documentos devem ser preservados sem retroagir historico e atualizados por acrescimo, consolidacao ou ajuste cirurgico
 - ficou registrado que todo novo chat deve comecar lendo os quatro documentos-base, mantendo o repositorio como fonte final de verdade
 - ficou registrado que a continuidade entre chats deve seguir protocolo permanente de preparacao e encerramento, sem destruir historico documental
+
+## Base inicial da edicao coordenada do grupo rateado
+
+- foi criada a primeira implementacao real do fluxo proprio de edicao coordenada do grupo rateado
+- a nova base usa view, rota e template proprios, sem substituir a edicao individual de uma linha
+- o grupo passa a ser carregado por `grupo_rateio` apenas quando houver grupo valido de rateio
+- o formulario inicial da tela passa a reunir dados comuns do grupo e linhas do rateio no mesmo fluxo
+- o salvamento inicial foi implementado de forma transacional, com preservacao do mesmo `grupo_rateio` e com auditoria de create, update e delete das linhas afetadas
+- a etapa abriu uma base funcional e coerente, mas ainda nao entrega a experiencia final completa dessa frente
+
+## Microcorrecao do casamento das linhas na edicao coordenada
+
+- a persistencia da edicao coordenada do grupo deixou de reaproveitar linhas apenas por posicao na lista
+- quando o payload traz `id`, a linha agora e atualizada exatamente pelo mesmo registro do `grupo_rateio` atual
+- ids invalidos ou externos ao grupo agora geram erro de validacao no formulario
+- linhas sem `id` continuam sendo criadas e linhas antigas ausentes no payload final continuam sendo removidas, com salvamento transacional e auditoria preservados

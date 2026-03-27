@@ -84,7 +84,7 @@ Leitura funcional:
 - na segunda versao do rateio, categorias repetidas no payload passam a ser consolidadas por soma antes da gravacao das linhas finais
 - na segunda versao do rateio, o create volta corretamente para a listagem apos criar multiplas linhas do grupo
 - nesta primeira versao, `valor_total_documento` nao e persistido no model; ele existe apenas no formulario para validacao
-- nesta primeira versao, a edicao de lancamentos rateados continua individual por linha e nao existe edicao coordenada do grupo
+- a edicao individual de lancamentos rateados continua disponivel por linha, agora ao lado da base inicial de edicao coordenada do grupo
 - se um grupo rateado antigo estiver internamente inconsistente em `numero_documento`, a validacao agora bloqueia novas gravacoes ate que o grupo seja regularizado
 - o campo `tipo` do formulario de lancamento agora abre preenchido com `receita` e sem opcao vazia inicial
 - no formulario de lancamento, `data_pagamento` passou a aparecer antes de `data_competencia`
@@ -107,8 +107,12 @@ Leitura funcional:
 - a leitura da auditoria agora possui filtros simples por acao, periodo inicial/final e id do registro, mantendo ordenacao por `data_hora` decrescente
 - nesta leitura operacional, o filtro por usuario ainda nao foi adicionado porque o proprio usuario da auditoria continua opcional na primeira versao
 - nesta primeira leitura operacional da auditoria, ainda nao existem filtros complexos nem paginacao avancada
-- a edicao coordenada do grupo rateado ainda nao existe; a edicao atual continua individual por linha
-- a estrategia da futura edicao coordenada do grupo ja esta definida, mas ainda nao foi implementada
+- a edicao coordenada do grupo rateado agora possui fluxo proprio inicial, com view, rota e template proprios, sem substituir a edicao individual da linha
+- a base atual da edicao coordenada carrega o grupo por `grupo_rateio`, trabalha apenas com grupos validos e prepara os dados comuns e as linhas de rateio no mesmo fluxo
+- na persistencia da edicao coordenada, linhas com `id` no payload agora sao casadas exatamente com a linha correspondente do mesmo `grupo_rateio`
+- ids de linhas que nao pertencem ao grupo atual agora geram erro de validacao no formulario e nao sao reaproveitados por posicao
+- o salvamento da edicao coordenada do grupo agora ocorre em transacao, preservando o mesmo `grupo_rateio` e mantendo a auditoria de create, update e delete das linhas afetadas
+- a experiencia final da edicao coordenada do grupo ainda nao foi concluida; a base inicial foi aberta sem encerrar os refinamentos futuros dessa frente
 - o extrato por conta passa a exibir `numero_documento` de forma discreta junto da descricao, quando existir
 - a listagem de lancamentos pode exibir `Transferencia entre Contas` quando uma transferencia nao tiver `pessoa`
 - os relatorios mantem tratamento defensivo para base antiga, exibindo `Sem categoria` se algum dado legado surgir

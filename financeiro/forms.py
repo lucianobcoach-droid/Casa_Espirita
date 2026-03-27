@@ -367,3 +367,225 @@ class LancamentoFinanceiroForm(forms.ModelForm):
             'data_pagamento': forms.DateInput(attrs={'type': 'date'}),
             'observacoes': forms.Textarea(attrs={'rows': 4}),
         }
+
+
+class LancamentoFinanceiroGrupoRateioForm(forms.ModelForm):
+    valor_total_documento = forms.DecimalField(
+        required=False,
+        max_digits=12,
+        decimal_places=2,
+        min_value=Decimal('0.01'),
+        label='Valor total do documento',
+        help_text='Usado para validar o fechamento do grupo de rateio nesta etapa.',
+    )
+    rateio_payload = forms.CharField(required=False, widget=forms.HiddenInput())
+
+    def __init__(self, *args, grupo_lancamentos=None, **kwargs):
+        self.grupo_lancamentos = list(grupo_lancamentos or [])
+        self.rateio_linhas_iniciais: list[dict[str, str]] = []
+        super().__init__(*args, **kwargs)
+        self.fields['tipo'].widget.attrs.update({'data-financeiro-tipo': 'true'})
+        self.fields['conta_destino'].widget.attrs.update({'data-financeiro-conta-destino': 'true'})
+        self.fields['pessoa'].required = False
+        self.fields['data_pagamento'].required = True
+        self.fields['data_pagamento'].error_messages['required'] = 'Informe a data de pagamento.'
+        self.fields['tipo'].choices = [choice for choice in self.fields['tipo'].choices if choice[0] != '']
+        autocomplete_urls = {
+            'pessoa': reverse_lazy('financeiro:autocomplete-pessoa'),
+            'centro_custo': reverse_lazy('financeiro:autocomplete-centro-custo'),
+            'conta': reverse_lazy('financeiro:autocomplete-conta'),
+            'conta_destino': reverse_lazy('financeiro:autocomplete-conta'),
+        }
+        for field_name, url in autocomplete_urls.items():
+            self.fields[field_name].widget.attrs.update(
+                {
+                    'data-financeiro-autocomplete': 'true',
+                    'data-autocomplete-url': str(url),
+                }
+            )
+        if self.is_bound:
+            self.rateio_linhas_iniciais = self._parse_rateio_payload(self.data.get('rateio_payload', ''))
+        else:
+            self.rateio_linhas_iniciais = [
+                {
+                    'id': str(lancamento.pk),
+                    'categoria': str(lancamento.categoria_id or ''),
+                    'valor': str(lancamento.valor or ''),
+                }
+                for lancamento in self.grupo_lancamentos
+            ]
+            self.fields['valor_total_documento'].initial = sum(
+                (lancamento.valor for lancamento in self.grupo_lancamentos),
+                Decimal('0.00'),
+            )
+
+    def _parse_rateio_payload(self, payload: str) -> list[dict[str, str]]:
+        if not payload:
+            return []
+        try:
+            data = json.loads(payload)
+        except json.JSONDecodeError:
+            return []
+        if not isinstance(data, list):
+            return []
+
+        linhas: list[dict[str, str]] = []
+        for item in data:
+            if not isinstance(item, dict):
+                continue
+            linhas.append(
+                {
+                    'id': str(item.get('id', '') or '').strip(),
+                    'categoria': str(item.get('categoria', '') or '').strip(),
+                    'valor': str(item.get('valor', '') or '').strip(),
+                }
+            )
+        return linhas
+
+    def clean(self):
+        cleaned_data = super().clean()
+        tipo = cleaned_data.get('tipo')
+        valor_total = cleaned_data.get('valor_total_documento')
+        linhas_existentes_por_id = {
+            str(lancamento.pk): lancamento for lancamento in self.grupo_lancamentos
+        }
+
+        if not cleaned_data.get('conta'):
+            self.add_error('conta', 'Informe a conta de origem.')
+
+        if tipo == LancamentoFinanceiro.TipoLancamento.TRANSFERENCIA:
+            self.add_error('tipo', 'Transferencia nao pode usar rateio nesta primeira versao.')
+
+        if tipo in {
+            LancamentoFinanceiro.TipoLancamento.RECEITA,
+            LancamentoFinanceiro.TipoLancamento.DESPESA,
+        } and not cleaned_data.get('pessoa'):
+            self.add_error('pessoa', 'Informe a pessoa para receita e despesa.')
+
+        if valor_total is None:
+            self.add_error('valor_total_documento', 'Informe o valor total do documento para validar o rateio.')
+
+        linhas_brutas = self._parse_rateio_payload(cleaned_data.get('rateio_payload', ''))
+        self.rateio_linhas_iniciais = linhas_brutas or self.rateio_linhas_iniciais or [
+            {'id': '', 'categoria': '', 'valor': ''},
+            {'id': '', 'categoria': '', 'valor': ''},
+        ]
+        if not linhas_brutas:
+            self.add_error('rateio_payload', 'Informe ao menos 2 linhas de rateio validas.')
+            cleaned_data['rateio_linhas'] = []
+            return cleaned_data
+
+        categorias_disponiveis = {
+            str(categoria.pk): categoria for categoria in CategoriaFinanceira.objects.all()
+        }
+        linhas_validas = 0
+        soma_rateio = Decimal('0.00')
+        rateio_por_categoria: dict[int, dict[str, object]] = {}
+
+        for indice, linha in enumerate(linhas_brutas, start=1):
+            linha_id = linha.get('id', '')
+            categoria_id = linha.get('categoria', '')
+            valor_raw = linha.get('valor', '')
+            if not linha_id and not categoria_id and not valor_raw:
+                continue
+
+            if linha_id:
+                try:
+                    linha_id = str(int(linha_id))
+                except (TypeError, ValueError):
+                    self.add_error('rateio_payload', f'Linha {indice}: identificador de linha invalido para este grupo de rateio.')
+                    continue
+                if linha_id not in linhas_existentes_por_id:
+                    self.add_error('rateio_payload', f'Linha {indice}: a linha informada nao pertence a este grupo de rateio.')
+                    continue
+
+            linhas_validas += 1
+            categoria = categorias_disponiveis.get(categoria_id)
+            if categoria is None:
+                self.add_error('rateio_payload', f'Linha {indice}: informe uma categoria valida.')
+                continue
+
+            try:
+                valor = Decimal(valor_raw)
+            except (InvalidOperation, TypeError):
+                self.add_error('rateio_payload', f'Linha {indice}: informe um valor valido.')
+                continue
+
+            if valor <= Decimal('0.00'):
+                self.add_error('rateio_payload', f'Linha {indice}: o valor precisa ser positivo.')
+                continue
+
+            soma_rateio += valor
+            if categoria.pk not in rateio_por_categoria:
+                rateio_por_categoria[categoria.pk] = {
+                    'id': linha_id,
+                    'categoria': categoria,
+                    'valor': Decimal('0.00'),
+                }
+            elif linha_id and not rateio_por_categoria[categoria.pk].get('id'):
+                rateio_por_categoria[categoria.pk]['id'] = linha_id
+            rateio_por_categoria[categoria.pk]['valor'] += valor
+
+        if linhas_validas < 2:
+            self.add_error('rateio_payload', 'Informe no minimo 2 linhas de rateio validas.')
+
+        rateio_linhas = list(rateio_por_categoria.values())
+        if valor_total is not None and linhas_validas and soma_rateio != valor_total:
+            self.add_error(
+                'rateio_payload',
+                'A soma das linhas de rateio precisa ser igual ao valor total do documento.',
+            )
+
+        cleaned_data['rateio_linhas'] = rateio_linhas
+        return cleaned_data
+
+    def _post_clean(self):
+        super()._post_clean()
+        if self.errors:
+            return
+
+        rateio_linhas = self.cleaned_data.get('rateio_linhas') or []
+        primeira_linha = rateio_linhas[0] if rateio_linhas else None
+        if not primeira_linha:
+            return
+
+        opts = self._meta
+        self.instance = construct_instance(self, self.instance, opts.fields, opts.exclude)
+        self.instance.com_rateio = True
+        self.instance.grupo_rateio = self.instance.grupo_rateio or (
+            self.grupo_lancamentos[0].grupo_rateio if self.grupo_lancamentos else ''
+        )
+        self.instance.categoria = primeira_linha['categoria']
+        self.instance.valor = primeira_linha['valor']
+
+        exclude = self._get_validation_exclusions()
+        try:
+            self.instance.full_clean(exclude=exclude, validate_unique=False)
+        except ValidationError as error:
+            self._update_errors(error)
+
+        try:
+            self.validate_unique()
+        except ValidationError as error:
+            self._update_errors(error)
+
+    class Meta:
+        model = LancamentoFinanceiro
+        fields = [
+            'descricao',
+            'tipo',
+            'status',
+            'data_competencia',
+            'data_pagamento',
+            'numero_documento',
+            'pessoa',
+            'centro_custo',
+            'conta',
+            'conta_destino',
+            'observacoes',
+        ]
+        widgets = {
+            'data_competencia': forms.DateInput(attrs={'type': 'date'}),
+            'data_pagamento': forms.DateInput(attrs={'type': 'date'}),
+            'observacoes': forms.Textarea(attrs={'rows': 4}),
+        }
