@@ -338,3 +338,9 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - o retorno apos salvar o grupo ficou mais previsivel, com volta sinalizada para a listagem principal de lancamentos
 - o cancelamento da tela coordenada agora retorna para a listagem com contexto operacional explicito de que nao houve gravacao
 - a navegacao de apoio entre a tela coordenada, a tela individual e a listagem principal ficou mais coerente sem substituir nenhum dos fluxos
+
+## Refinamentos finais de UX da tela coordenada
+
+- a tela propria de edicao coordenada recebeu acabamento visual leve para melhorar hierarquia entre resumo do grupo, dados comuns, linhas do rateio e bloco final de acoes
+- os blocos de aviso, orientacao e feedback passaram a seguir apresentacao mais consistente ao longo da tela
+- as acoes principais e secundarias ficaram visualmente mais legiveis e previsiveis, sem redesign amplo nem mudanca de regra de negocio
