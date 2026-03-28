@@ -18,11 +18,464 @@
             --financeiro-soft: #fafafa;
             --financeiro-print-text: #111827;
             --financeiro-container-max: 1380px;
+            --financeiro-shell-max: 1720px;
+            --financeiro-sidebar-width: 16.75rem;
+            --financeiro-sidebar-collapsed-width: 0rem;
         }
 
-        .section > .container {
-            width: min(var(--financeiro-container-max), calc(100vw - 2rem));
-            max-width: var(--financeiro-container-max) !important;
+        body {
+            background: #f5f7fb;
+        }
+
+        .financeiro-app-shell,
+        .financeiro-app-shell *,
+        .financeiro-app-shell *::before,
+        .financeiro-app-shell *::after {
+            box-sizing: border-box;
+        }
+
+        body.financeiro-drawer-open {
+            overflow: hidden;
+        }
+
+        body.financeiro-sidebar-collapsed {
+            --financeiro-sidebar-width: var(--financeiro-sidebar-collapsed-width);
+        }
+
+        .financeiro-app-shell {
+            min-height: 100vh;
+            width: 100%;
+            max-width: 100%;
+        }
+
+        .financeiro-app-utility-bar {
+            border-bottom: 1px solid rgba(203, 213, 225, 0.75);
+            background: rgba(248, 250, 252, 0.9);
+            backdrop-filter: blur(10px);
+        }
+
+        .financeiro-app-utility-bar .container {
+            width: min(var(--financeiro-shell-max), 100%);
+            max-width: var(--financeiro-shell-max) !important;
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
+        }
+
+        .financeiro-topbar {
+            background: transparent;
+        }
+
+        .financeiro-topbar-desktop {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            min-height: 3.4rem;
+            padding: 0.45rem 0;
+        }
+
+        .financeiro-topbar-desktop-main {
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+            min-width: 0;
+        }
+
+        .financeiro-topbar-reopen-slot {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 auto;
+        }
+
+        .financeiro-topbar-brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.55rem;
+            color: #1e293b;
+            font-size: 0.96rem;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .financeiro-topbar-brand:hover,
+        .financeiro-topbar-brand:focus {
+            color: var(--financeiro-receita);
+        }
+
+        .financeiro-topbar-brand-mark {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 1.9rem;
+            height: 1.9rem;
+            border-radius: 0.6rem;
+            background: rgba(31, 95, 191, 0.08);
+            color: var(--financeiro-receita);
+            font-size: 0.75rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .financeiro-topbar-desktop-actions {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: 0.55rem;
+        }
+
+        .financeiro-sidebar-desktop-toggle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+            min-height: 2.15rem;
+            min-width: 2.15rem;
+            padding: 0.28rem;
+            border: 1px solid rgba(203, 213, 225, 0.95);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.96);
+            color: #475569;
+            font-size: 0;
+            font-weight: 700;
+            line-height: 1.2;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+            transition: border-color 0.16s ease, background-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
+        }
+
+        .financeiro-sidebar-desktop-toggle:hover,
+        .financeiro-sidebar-desktop-toggle:focus {
+            border-color: #bfd0ea;
+            color: var(--financeiro-receita);
+            background: #f8fbff;
+        }
+
+        .financeiro-sidebar-desktop-toggle-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 1rem;
+            height: 1rem;
+            font-size: 0;
+        }
+
+        .financeiro-sidebar-desktop-toggle-icon::before {
+            content: "\2039";
+            font-size: 1rem;
+            line-height: 1;
+        }
+
+        body.financeiro-sidebar-collapsed .financeiro-sidebar-desktop-toggle-icon::before {
+            content: "\203A";
+        }
+
+        .financeiro-sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        .financeiro-topbar-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            min-height: 2rem;
+            padding: 0.3rem 0.7rem;
+            border: 1px solid rgba(203, 213, 225, 0.9);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #64748b;
+            font-size: 0.72rem;
+            font-weight: 700;
+            line-height: 1.2;
+            white-space: nowrap;
+        }
+
+        .financeiro-topbar-chip.is-current {
+            border-color: rgba(31, 95, 191, 0.18);
+            background: rgba(31, 95, 191, 0.06);
+            color: var(--financeiro-receita);
+        }
+
+        .financeiro-topbar-mobile {
+            display: none;
+        }
+
+        .financeiro-topbar-mobile-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            min-height: 3.25rem;
+            padding: 0.4rem 0;
+        }
+
+        .financeiro-topbar-mobile-main {
+            min-width: 0;
+        }
+
+        .financeiro-topbar-mobile-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+            flex: 0 0 auto;
+        }
+
+        .financeiro-drawer-toggle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.45rem;
+            min-height: 2.4rem;
+            padding: 0.45rem 0.85rem;
+            border: 1px solid rgba(203, 213, 225, 0.95);
+            border-radius: 0.8rem;
+            background: rgba(255, 255, 255, 0.92);
+            color: #334155;
+            font-size: 0.8rem;
+            font-weight: 700;
+            line-height: 1;
+            cursor: pointer;
+        }
+
+        .financeiro-drawer-toggle:hover,
+        .financeiro-drawer-toggle:focus {
+            border-color: #bfd0ea;
+            background: #f8fbff;
+            color: var(--financeiro-receita);
+        }
+
+        .financeiro-drawer-toggle-icon {
+            display: inline-flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 0.18rem;
+            width: 0.95rem;
+        }
+
+        .financeiro-drawer-toggle-icon span {
+            display: block;
+            width: 100%;
+            height: 2px;
+            border-radius: 999px;
+            background: currentColor;
+        }
+
+        .financeiro-app-shell-body {
+            display: grid;
+            grid-template-columns: minmax(0, var(--financeiro-sidebar-width)) minmax(0, 1fr);
+            gap: 0.9rem;
+            align-items: start;
+            width: min(var(--financeiro-shell-max), 100%);
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 1rem 0.5rem 1.25rem;
+        }
+
+        .financeiro-app-sidebar {
+            position: sticky;
+            top: 1rem;
+            min-width: 0;
+        }
+
+        .financeiro-app-sidebar-close {
+            display: none;
+        }
+
+        .financeiro-sidebar-overlay {
+            display: none;
+        }
+
+        .financeiro-sidebar-panel {
+            border: 1px solid rgba(203, 213, 225, 0.85);
+            border-radius: 1rem;
+            background: linear-gradient(180deg, #ffffff, #f8fafc 88%);
+            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.045);
+            overflow: hidden;
+        }
+
+        .financeiro-sidebar-panel-header {
+            padding: 0.82rem 0.9rem 0.72rem;
+            border-bottom: 1px solid rgba(226, 232, 240, 0.95);
+        }
+
+        .financeiro-sidebar-title {
+            margin: 0;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .financeiro-sidebar-panel-header-copy {
+            min-width: 0;
+        }
+
+        .financeiro-sidebar-nav {
+            padding: 0.62rem;
+        }
+
+        .financeiro-sidebar-group + .financeiro-sidebar-group {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #edf2f7;
+        }
+
+        .financeiro-sidebar-group.is-active {
+            position: relative;
+        }
+
+        .financeiro-sidebar-group.is-expanded {
+            background: rgba(248, 250, 252, 0.82);
+            border-radius: 0.9rem;
+            padding: 0.15rem 0.2rem 0.3rem;
+        }
+
+        .financeiro-sidebar-group-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            width: 100%;
+            margin: 0;
+            padding: 0.28rem 0.35rem 0.42rem;
+            border: 0;
+            background: transparent;
+            text-align: left;
+            cursor: pointer;
+            border-radius: 0.72rem;
+        }
+
+        .financeiro-sidebar-group-toggle:hover,
+        .financeiro-sidebar-group-toggle:focus {
+            color: #153a73;
+            background: rgba(31, 95, 191, 0.04);
+        }
+
+        .financeiro-sidebar-group-title {
+            margin: 0;
+            font-size: 0.7rem;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: #6b7280;
+        }
+
+        .financeiro-sidebar-group.is-active .financeiro-sidebar-group-title {
+            color: var(--financeiro-receita);
+        }
+
+        .financeiro-sidebar-group-indicator {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 1.35rem;
+            height: 1.35rem;
+            border-radius: 999px;
+            color: #94a3b8;
+            font-size: 0;
+            transition: transform 0.16s ease, background-color 0.16s ease, color 0.16s ease;
+            flex: 0 0 auto;
+        }
+
+        .financeiro-sidebar-group-indicator::before {
+            content: "\203A";
+            font-size: 1rem;
+            line-height: 1;
+        }
+
+        .financeiro-sidebar-group.is-expanded .financeiro-sidebar-group-indicator {
+            transform: rotate(90deg);
+        }
+
+        .financeiro-sidebar-group.is-active .financeiro-sidebar-group-indicator,
+        .financeiro-sidebar-group-toggle:hover .financeiro-sidebar-group-indicator,
+        .financeiro-sidebar-group-toggle:focus .financeiro-sidebar-group-indicator {
+            background: rgba(31, 95, 191, 0.07);
+            color: var(--financeiro-receita);
+        }
+
+        .financeiro-sidebar-group-panel[hidden] {
+            display: none !important;
+        }
+
+        .financeiro-sidebar-links {
+            display: flex;
+            flex-direction: column;
+            gap: 0.12rem;
+        }
+
+        .financeiro-sidebar-link {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            padding: 0.5rem 0.68rem;
+            border-radius: 0.7rem;
+            color: #334155;
+            font-size: 0.865rem;
+            font-weight: 600;
+            line-height: 1.3;
+            transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .financeiro-sidebar-link:hover,
+        .financeiro-sidebar-link:focus {
+            background: #eef4ff;
+            color: #153a73;
+        }
+
+        .financeiro-sidebar-link.is-active {
+            background: linear-gradient(90deg, rgba(31, 95, 191, 0.12), rgba(31, 95, 191, 0.05));
+            color: var(--financeiro-receita);
+            box-shadow: inset 3px 0 0 var(--financeiro-receita), 0 1px 0 rgba(255, 255, 255, 0.75);
+        }
+
+        .financeiro-sidebar-link-note {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 1.5rem;
+            min-height: 1.5rem;
+            padding: 0 0.35rem;
+            border-radius: 999px;
+            background: #f1f5f9;
+            color: #64748b;
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            flex: 0 0 auto;
+        }
+
+        .financeiro-sidebar-link.is-active .financeiro-sidebar-link-note {
+            background: rgba(31, 95, 191, 0.1);
+            color: var(--financeiro-receita);
+        }
+
+        .financeiro-app-main {
+            min-width: 0;
+            width: 100%;
+            max-width: 100%;
+            overflow-x: auto;
+        }
+
+        .financeiro-app-main .section {
+            padding: 0;
+            min-width: 0;
+        }
+
+        .financeiro-app-main .section > .container {
+            width: min(var(--financeiro-container-max), 100%);
+            max-width: 100% !important;
         }
 
         .table-wrapper {
@@ -902,6 +1355,8 @@
             }
 
             .navbar,
+            .financeiro-app-sidebar,
+            .financeiro-app-utility-bar,
             .no-print,
             .filters-box,
             .button,
@@ -916,6 +1371,19 @@
 
             .section {
                 padding: 0.5rem 0;
+            }
+
+            .financeiro-app-shell,
+            .financeiro-app-shell-body,
+            .financeiro-app-main,
+            .financeiro-app-main .section {
+                display: block !important;
+                width: 100% !important;
+                max-width: none !important;
+                min-width: 0 !important;
+                overflow: visible !important;
+                padding: 0 !important;
+                margin: 0 !important;
             }
 
             .container {
@@ -950,7 +1418,9 @@
             }
 
             .table-wrapper {
-                overflow: visible;
+                overflow: visible !important;
+                width: 100% !important;
+                max-width: none !important;
             }
 
             .financeiro-table {
@@ -1116,8 +1586,8 @@
         }
 
         @media screen and (max-width: 768px) {
-            .section > .container {
-                width: calc(100vw - 1rem);
+            .financeiro-app-main .section > .container {
+                width: 100%;
             }
 
             .financeiro-page-header-actions {
@@ -1137,57 +1607,597 @@
                 width: 100%;
             }
         }
+
+        @media screen and (max-width: 1023px) {
+            .financeiro-app-shell-body {
+                grid-template-columns: minmax(0, 1fr);
+                width: 100%;
+                max-width: 100%;
+                padding: 0.75rem 0.25rem 1rem;
+            }
+
+            .financeiro-app-sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                bottom: 0;
+                z-index: 45;
+                width: min(20.25rem, calc(100% - 1rem));
+                max-width: 100%;
+                padding: 0.65rem 0 0.65rem 0.65rem;
+                transform: translateX(calc(-100% - 1rem));
+                opacity: 0;
+                visibility: hidden;
+                pointer-events: none;
+                transition: transform 0.22s ease, opacity 0.22s ease, visibility 0.22s ease;
+            }
+
+            .financeiro-app-sidebar.is-open {
+                transform: translateX(0);
+                opacity: 1;
+                visibility: visible;
+                pointer-events: auto;
+            }
+
+            .financeiro-sidebar-panel {
+                height: 100%;
+                border-radius: 1rem;
+                box-shadow: 0 20px 42px rgba(15, 23, 42, 0.18);
+                overflow-y: auto;
+            }
+
+            .financeiro-topbar-desktop {
+                display: none;
+            }
+
+            .financeiro-topbar-mobile {
+                display: block;
+            }
+
+            .financeiro-app-sidebar-close {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 2.25rem;
+                height: 2.25rem;
+                border: 1px solid #dbe2ea;
+                border-radius: 0.8rem;
+                background: #fff;
+                color: #475569;
+                font-size: 0;
+                font-weight: 700;
+                line-height: 1;
+                cursor: pointer;
+            }
+
+            .financeiro-app-sidebar-close::before {
+                content: "\00D7";
+                font-size: 1rem;
+                line-height: 1;
+            }
+
+            .financeiro-sidebar-panel-header {
+                display: flex;
+                align-items: flex-start;
+                justify-content: space-between;
+                gap: 0.75rem;
+            }
+
+            .financeiro-sidebar-panel-header-copy {
+                min-width: 0;
+            }
+
+            .financeiro-sidebar-overlay {
+                display: block;
+                position: fixed;
+                inset: 0;
+                z-index: 40;
+                background: rgba(15, 23, 42, 0.34);
+                opacity: 0;
+                visibility: hidden;
+                pointer-events: none;
+                transition: opacity 0.2s ease, visibility 0.2s ease;
+            }
+
+            .financeiro-sidebar-overlay.is-open {
+                opacity: 1;
+                visibility: visible;
+                pointer-events: auto;
+            }
+
+            .financeiro-sidebar-group-toggle {
+                padding-right: 0;
+            }
+        }
+
+        @media screen and (min-width: 1024px) {
+            .financeiro-topbar-mobile {
+                display: none;
+            }
+
+            .financeiro-sidebar-overlay {
+                display: none !important;
+            }
+
+            body.financeiro-sidebar-collapsed .financeiro-app-shell-body {
+                grid-template-columns: minmax(0, 0) minmax(0, 1fr);
+                gap: 0;
+            }
+
+            body.financeiro-sidebar-collapsed .financeiro-app-sidebar {
+                opacity: 0;
+                visibility: hidden;
+                pointer-events: none;
+                transform: translateX(-1rem);
+            }
+
+            body.financeiro-sidebar-collapsed .financeiro-sidebar-panel {
+                box-shadow: none;
+            }
+
+        }
     </style>
 </head>
 <body>
-<nav class="navbar is-light" role="navigation" aria-label="main navigation">
-    <div class="container">
-        <div class="navbar-menu is-active">
-            <div class="navbar-start">
-                <a class="navbar-item" href="{% url 'financeiro:home' %}">Financeiro</a>
-                <a class="navbar-item" href="{% url 'financeiro:lancamento-list' %}">Lancamentos</a>
-                <a class="navbar-item" href="{% url 'financeiro:extrato-list' %}">Extratos</a>
-                <div class="navbar-item has-dropdown is-hoverable">
-                    <a class="navbar-link">Relatorios</a>
-                    <div class="navbar-dropdown">
-                        <a class="navbar-item" href="{% url 'financeiro:resumo' %}">Resumo do Periodo</a>
-                        <a class="navbar-item" href="{% url 'financeiro:prestacao-contas' %}">Prestacao de Contas</a>
-                    </div>
+{% with current_url_name=request.resolver_match.url_name %}
+<div class="financeiro-app-shell">
+    <header class="financeiro-app-utility-bar no-print">
+        <div class="container financeiro-topbar-desktop">
+            <div class="financeiro-topbar-desktop-main">
+                <div class="financeiro-topbar-reopen-slot">
+                    <button
+                        type="button"
+                        class="financeiro-sidebar-desktop-toggle no-print"
+                        data-financeiro-sidebar-toggle
+                        aria-expanded="true"
+                        aria-controls="financeiro-sidebar"
+                        aria-label="Recolher navegacao lateral"
+                        title="Recolher navegacao lateral"
+                    >
+                        <span class="financeiro-sidebar-desktop-toggle-icon" aria-hidden="true"></span>
+                        <span class="financeiro-sr-only" data-financeiro-sidebar-toggle-label>Recolher navegacao lateral</span>
+                    </button>
                 </div>
-                <div class="navbar-item has-dropdown is-hoverable">
-                    <a class="navbar-link">Cadastros</a>
-                    <div class="navbar-dropdown">
-                        <a class="navbar-item" href="{% url 'financeiro:conta-list' %}">Contas</a>
-                        <a class="navbar-item" href="{% url 'financeiro:pessoa-list' %}">Pessoas</a>
-                        <a class="navbar-item" href="{% url 'financeiro:categoria-list' %}">Categorias</a>
-                        <a class="navbar-item" href="{% url 'financeiro:centro-custo-list' %}">Centros de Custo</a>
+                <a class="financeiro-topbar-brand" href="{% url 'financeiro:home' %}">
+                    <span class="financeiro-topbar-brand-mark" title="{{ financeiro_shell_brand_name }}">{{ financeiro_shell_brand_initials }}</span>
+                    <span>Financeiro</span>
+                </a>
+            </div>
+            <div class="financeiro-topbar-desktop-actions">
+                <a class="button is-light is-small" href="{% url 'financeiro:home' %}">Inicio do modulo</a>
+                <span class="financeiro-topbar-chip is-current">
+                    {% if current_url_name == 'home' %}
+                        Visao geral
+                    {% elif current_url_name == 'lancamento-list' or current_url_name == 'lancamento-create' or current_url_name == 'lancamento-update' or current_url_name == 'lancamento-rateio-update' or current_url_name == 'lancamento-delete' or current_url_name == 'extrato-list' or current_url_name == 'conta-extrato' %}
+                        Movimentacao
+                    {% elif current_url_name == 'resumo' or current_url_name == 'prestacao-contas' or current_url_name == 'auditoria-lancamento-list' %}
+                        Relatorios
+                    {% elif current_url_name == 'conta-list' or current_url_name == 'conta-create' or current_url_name == 'conta-update' or current_url_name == 'conta-delete' or current_url_name == 'pessoa-list' or current_url_name == 'pessoa-create' or current_url_name == 'pessoa-update' or current_url_name == 'pessoa-delete' or current_url_name == 'categoria-list' or current_url_name == 'categoria-create' or current_url_name == 'categoria-update' or current_url_name == 'categoria-delete' or current_url_name == 'centro-custo-list' or current_url_name == 'centro-custo-create' or current_url_name == 'centro-custo-update' or current_url_name == 'centro-custo-delete' %}
+                        Cadastros
+                    {% elif current_url_name == 'assinatura-list' or current_url_name == 'assinatura-create' or current_url_name == 'assinatura-update' or current_url_name == 'assinatura-delete' or current_url_name == 'configuracao-institucional-list' or current_url_name == 'configuracao-institucional-create' or current_url_name == 'configuracao-institucional-update' or current_url_name == 'configuracao-institucional-delete' %}
+                        Institucional
+                    {% else %}
+                        Financeiro
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+
+        <nav class="navbar is-light financeiro-topbar financeiro-topbar-mobile" role="navigation" aria-label="controles mobile do financeiro">
+            <div class="container">
+                <div class="financeiro-topbar-mobile-inner">
+                    <div class="financeiro-topbar-mobile-main">
+                        <a class="financeiro-topbar-brand" href="{% url 'financeiro:home' %}">
+                            <span class="financeiro-topbar-brand-mark" title="{{ financeiro_shell_brand_name }}">{{ financeiro_shell_brand_initials }}</span>
+                            <span>Financeiro</span>
+                        </a>
                     </div>
-                </div>
-                <div class="navbar-item has-dropdown is-hoverable">
-                    <a class="navbar-link">Configuracoes</a>
-                    <div class="navbar-dropdown">
-                        <a class="navbar-item" href="{% url 'financeiro:auditoria-lancamento-list' %}">Auditoria do Financeiro</a>
-                        <a class="navbar-item" href="{% url 'financeiro:assinatura-list' %}">Assinaturas Institucionais</a>
-                        <a class="navbar-item" href="{% url 'financeiro:configuracao-institucional-list' %}">Configuracoes Institucionais</a>
+                    <div class="financeiro-topbar-mobile-actions">
+                        <button
+                            type="button"
+                            class="financeiro-drawer-toggle"
+                            data-financeiro-drawer-toggle
+                            aria-controls="financeiro-sidebar"
+                            aria-expanded="false"
+                            aria-label="Abrir navegacao do financeiro"
+                        >
+                            <span class="financeiro-drawer-toggle-icon" aria-hidden="true">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </span>
+                            <span>Menu</span>
+                        </button>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-</nav>
-<section class="section">
-    <div class="container">
-        {% if messages %}
-            {% for message in messages %}
-                <div class="notification {% if message.tags == 'error' %}is-danger{% elif message.tags == 'warning' %}is-warning{% else %}is-success{% endif %}">
-                    {{ message }}
+        </nav>
+    </header>
+
+    <div class="financeiro-app-shell-body">
+        <aside
+            id="financeiro-sidebar"
+            class="financeiro-app-sidebar no-print"
+            aria-label="Navegacao principal do financeiro"
+            data-financeiro-drawer
+            aria-hidden="true"
+        >
+            <div class="financeiro-sidebar-panel">
+                <div class="financeiro-sidebar-panel-header">
+                    <div class="financeiro-sidebar-panel-header-copy">
+                        <h2 class="financeiro-sidebar-title">Navegacao principal</h2>
+                    </div>
+                    <button
+                        type="button"
+                        class="financeiro-app-sidebar-close"
+                        data-financeiro-drawer-close
+                        aria-label="Fechar navegacao do financeiro"
+                    >
+                        ×
+                    </button>
                 </div>
-            {% endfor %}
-        {% endif %}
-        {% block content %}{% endblock %}
+                <nav class="financeiro-sidebar-nav">
+                    <section class="financeiro-sidebar-group{% if current_url_name == 'home' %} is-active is-expanded{% endif %}" data-sidebar-group>
+                        <button
+                            type="button"
+                            class="financeiro-sidebar-group-toggle"
+                            data-sidebar-group-toggle
+                            data-short="VG"
+                            aria-expanded="{% if current_url_name == 'home' %}true{% else %}false{% endif %}"
+                            aria-controls="financeiro-sidebar-group-home"
+                            aria-label="Alternar grupo Visao geral"
+                            title="Visao geral"
+                        >
+                            <h3 class="financeiro-sidebar-group-title">Visao geral</h3>
+                            <span class="financeiro-sidebar-group-indicator" aria-hidden="true">›</span>
+                        </button>
+                        <div
+                            id="financeiro-sidebar-group-home"
+                            class="financeiro-sidebar-group-panel"
+                            data-sidebar-group-panel
+                            {% if current_url_name != 'home' %}hidden{% endif %}
+                        >
+                        <div class="financeiro-sidebar-links">
+                            <a class="financeiro-sidebar-link{% if current_url_name == 'home' %} is-active{% endif %}" href="{% url 'financeiro:home' %}" data-short="FI" title="Financeiro" aria-label="Financeiro">
+                                <span class="financeiro-sidebar-link-label">Financeiro</span>
+                                <span class="financeiro-sidebar-link-note">App</span>
+                            </a>
+                        </div>
+                        </div>
+                    </section>
+
+                    <section class="financeiro-sidebar-group{% if current_url_name == 'lancamento-list' or current_url_name == 'lancamento-create' or current_url_name == 'lancamento-update' or current_url_name == 'lancamento-rateio-update' or current_url_name == 'lancamento-delete' or current_url_name == 'extrato-list' or current_url_name == 'conta-extrato' %} is-active is-expanded{% endif %}" data-sidebar-group>
+                        <button
+                            type="button"
+                            class="financeiro-sidebar-group-toggle"
+                            data-sidebar-group-toggle
+                            data-short="MV"
+                            aria-expanded="{% if current_url_name == 'lancamento-list' or current_url_name == 'lancamento-create' or current_url_name == 'lancamento-update' or current_url_name == 'lancamento-rateio-update' or current_url_name == 'lancamento-delete' or current_url_name == 'extrato-list' or current_url_name == 'conta-extrato' %}true{% else %}false{% endif %}"
+                            aria-controls="financeiro-sidebar-group-movimentacao"
+                            aria-label="Alternar grupo Movimentacao"
+                            title="Movimentacao"
+                        >
+                            <h3 class="financeiro-sidebar-group-title">Movimentacao</h3>
+                            <span class="financeiro-sidebar-group-indicator" aria-hidden="true">›</span>
+                        </button>
+                        <div
+                            id="financeiro-sidebar-group-movimentacao"
+                            class="financeiro-sidebar-group-panel"
+                            data-sidebar-group-panel
+                            {% if current_url_name != 'lancamento-list' and current_url_name != 'lancamento-create' and current_url_name != 'lancamento-update' and current_url_name != 'lancamento-rateio-update' and current_url_name != 'lancamento-delete' and current_url_name != 'extrato-list' and current_url_name != 'conta-extrato' %}hidden{% endif %}
+                        >
+                        <div class="financeiro-sidebar-links">
+                            <a class="financeiro-sidebar-link{% if current_url_name == 'lancamento-list' or current_url_name == 'lancamento-create' or current_url_name == 'lancamento-update' or current_url_name == 'lancamento-rateio-update' or current_url_name == 'lancamento-delete' %} is-active{% endif %}" href="{% url 'financeiro:lancamento-list' %}" data-short="LA" title="Lancamentos" aria-label="Lancamentos">
+                                <span class="financeiro-sidebar-link-label">Lancamentos</span>
+                                <span class="financeiro-sidebar-link-note">Fluxo</span>
+                            </a>
+                            <a class="financeiro-sidebar-link{% if current_url_name == 'extrato-list' or current_url_name == 'conta-extrato' %} is-active{% endif %}" href="{% url 'financeiro:extrato-list' %}" data-short="EX" title="Extratos" aria-label="Extratos">
+                                <span class="financeiro-sidebar-link-label">Extratos</span>
+                                <span class="financeiro-sidebar-link-note">Conta</span>
+                            </a>
+                        </div>
+                        </div>
+                    </section>
+
+                    <section class="financeiro-sidebar-group{% if current_url_name == 'resumo' or current_url_name == 'prestacao-contas' or current_url_name == 'auditoria-lancamento-list' %} is-active is-expanded{% endif %}" data-sidebar-group>
+                        <button
+                            type="button"
+                            class="financeiro-sidebar-group-toggle"
+                            data-sidebar-group-toggle
+                            data-short="RL"
+                            aria-expanded="{% if current_url_name == 'resumo' or current_url_name == 'prestacao-contas' or current_url_name == 'auditoria-lancamento-list' %}true{% else %}false{% endif %}"
+                            aria-controls="financeiro-sidebar-group-relatorios"
+                            aria-label="Alternar grupo Relatorios"
+                            title="Relatorios"
+                        >
+                            <h3 class="financeiro-sidebar-group-title">Relatorios</h3>
+                            <span class="financeiro-sidebar-group-indicator" aria-hidden="true">›</span>
+                        </button>
+                        <div
+                            id="financeiro-sidebar-group-relatorios"
+                            class="financeiro-sidebar-group-panel"
+                            data-sidebar-group-panel
+                            {% if current_url_name != 'resumo' and current_url_name != 'prestacao-contas' and current_url_name != 'auditoria-lancamento-list' %}hidden{% endif %}
+                        >
+                        <div class="financeiro-sidebar-links">
+                            <a class="financeiro-sidebar-link{% if current_url_name == 'resumo' %} is-active{% endif %}" href="{% url 'financeiro:resumo' %}" data-short="RP" title="Resumo do Periodo" aria-label="Resumo do Periodo">
+                                <span class="financeiro-sidebar-link-label">Resumo do Periodo</span>
+                            </a>
+                            <a class="financeiro-sidebar-link{% if current_url_name == 'prestacao-contas' %} is-active{% endif %}" href="{% url 'financeiro:prestacao-contas' %}" data-short="PC" title="Prestacao de Contas" aria-label="Prestacao de Contas">
+                                <span class="financeiro-sidebar-link-label">Prestacao de Contas</span>
+                            </a>
+                            <a class="financeiro-sidebar-link{% if current_url_name == 'auditoria-lancamento-list' %} is-active{% endif %}" href="{% url 'financeiro:auditoria-lancamento-list' %}" data-short="AU" title="Auditoria do Financeiro" aria-label="Auditoria do Financeiro">
+                                <span class="financeiro-sidebar-link-label">Auditoria do Financeiro</span>
+                            </a>
+                        </div>
+                        </div>
+                    </section>
+
+                    <section class="financeiro-sidebar-group{% if current_url_name == 'conta-list' or current_url_name == 'conta-create' or current_url_name == 'conta-update' or current_url_name == 'conta-delete' or current_url_name == 'pessoa-list' or current_url_name == 'pessoa-create' or current_url_name == 'pessoa-update' or current_url_name == 'pessoa-delete' or current_url_name == 'categoria-list' or current_url_name == 'categoria-create' or current_url_name == 'categoria-update' or current_url_name == 'categoria-delete' or current_url_name == 'centro-custo-list' or current_url_name == 'centro-custo-create' or current_url_name == 'centro-custo-update' or current_url_name == 'centro-custo-delete' %} is-active is-expanded{% endif %}" data-sidebar-group>
+                        <button
+                            type="button"
+                            class="financeiro-sidebar-group-toggle"
+                            data-sidebar-group-toggle
+                            data-short="CD"
+                            aria-expanded="{% if current_url_name == 'conta-list' or current_url_name == 'conta-create' or current_url_name == 'conta-update' or current_url_name == 'conta-delete' or current_url_name == 'pessoa-list' or current_url_name == 'pessoa-create' or current_url_name == 'pessoa-update' or current_url_name == 'pessoa-delete' or current_url_name == 'categoria-list' or current_url_name == 'categoria-create' or current_url_name == 'categoria-update' or current_url_name == 'categoria-delete' or current_url_name == 'centro-custo-list' or current_url_name == 'centro-custo-create' or current_url_name == 'centro-custo-update' or current_url_name == 'centro-custo-delete' %}true{% else %}false{% endif %}"
+                            aria-controls="financeiro-sidebar-group-cadastros"
+                            aria-label="Alternar grupo Cadastros"
+                            title="Cadastros"
+                        >
+                            <h3 class="financeiro-sidebar-group-title">Cadastros</h3>
+                            <span class="financeiro-sidebar-group-indicator" aria-hidden="true">›</span>
+                        </button>
+                        <div
+                            id="financeiro-sidebar-group-cadastros"
+                            class="financeiro-sidebar-group-panel"
+                            data-sidebar-group-panel
+                            {% if current_url_name != 'conta-list' and current_url_name != 'conta-create' and current_url_name != 'conta-update' and current_url_name != 'conta-delete' and current_url_name != 'pessoa-list' and current_url_name != 'pessoa-create' and current_url_name != 'pessoa-update' and current_url_name != 'pessoa-delete' and current_url_name != 'categoria-list' and current_url_name != 'categoria-create' and current_url_name != 'categoria-update' and current_url_name != 'categoria-delete' and current_url_name != 'centro-custo-list' and current_url_name != 'centro-custo-create' and current_url_name != 'centro-custo-update' and current_url_name != 'centro-custo-delete' %}hidden{% endif %}
+                        >
+                        <div class="financeiro-sidebar-links">
+                            <a class="financeiro-sidebar-link{% if current_url_name == 'conta-list' or current_url_name == 'conta-create' or current_url_name == 'conta-update' or current_url_name == 'conta-delete' %} is-active{% endif %}" href="{% url 'financeiro:conta-list' %}" data-short="CO" title="Contas" aria-label="Contas">
+                                <span class="financeiro-sidebar-link-label">Contas</span>
+                            </a>
+                            <a class="financeiro-sidebar-link{% if current_url_name == 'pessoa-list' or current_url_name == 'pessoa-create' or current_url_name == 'pessoa-update' or current_url_name == 'pessoa-delete' %} is-active{% endif %}" href="{% url 'financeiro:pessoa-list' %}" data-short="PE" title="Pessoas" aria-label="Pessoas">
+                                <span class="financeiro-sidebar-link-label">Pessoas</span>
+                            </a>
+                            <a class="financeiro-sidebar-link{% if current_url_name == 'categoria-list' or current_url_name == 'categoria-create' or current_url_name == 'categoria-update' or current_url_name == 'categoria-delete' %} is-active{% endif %}" href="{% url 'financeiro:categoria-list' %}" data-short="CA" title="Categorias" aria-label="Categorias">
+                                <span class="financeiro-sidebar-link-label">Categorias</span>
+                            </a>
+                            <a class="financeiro-sidebar-link{% if current_url_name == 'centro-custo-list' or current_url_name == 'centro-custo-create' or current_url_name == 'centro-custo-update' or current_url_name == 'centro-custo-delete' %} is-active{% endif %}" href="{% url 'financeiro:centro-custo-list' %}" data-short="CC" title="Centros de Custo" aria-label="Centros de Custo">
+                                <span class="financeiro-sidebar-link-label">Centros de Custo</span>
+                            </a>
+                        </div>
+                        </div>
+                    </section>
+
+                    <section class="financeiro-sidebar-group{% if current_url_name == 'assinatura-list' or current_url_name == 'assinatura-create' or current_url_name == 'assinatura-update' or current_url_name == 'assinatura-delete' or current_url_name == 'configuracao-institucional-list' or current_url_name == 'configuracao-institucional-create' or current_url_name == 'configuracao-institucional-update' or current_url_name == 'configuracao-institucional-delete' %} is-active is-expanded{% endif %}" data-sidebar-group>
+                        <button
+                            type="button"
+                            class="financeiro-sidebar-group-toggle"
+                            data-sidebar-group-toggle
+                            data-short="IN"
+                            aria-expanded="{% if current_url_name == 'assinatura-list' or current_url_name == 'assinatura-create' or current_url_name == 'assinatura-update' or current_url_name == 'assinatura-delete' or current_url_name == 'configuracao-institucional-list' or current_url_name == 'configuracao-institucional-create' or current_url_name == 'configuracao-institucional-update' or current_url_name == 'configuracao-institucional-delete' %}true{% else %}false{% endif %}"
+                            aria-controls="financeiro-sidebar-group-institucional"
+                            aria-label="Alternar grupo Institucional"
+                            title="Institucional"
+                        >
+                            <h3 class="financeiro-sidebar-group-title">Institucional</h3>
+                            <span class="financeiro-sidebar-group-indicator" aria-hidden="true">›</span>
+                        </button>
+                        <div
+                            id="financeiro-sidebar-group-institucional"
+                            class="financeiro-sidebar-group-panel"
+                            data-sidebar-group-panel
+                            {% if current_url_name != 'assinatura-list' and current_url_name != 'assinatura-create' and current_url_name != 'assinatura-update' and current_url_name != 'assinatura-delete' and current_url_name != 'configuracao-institucional-list' and current_url_name != 'configuracao-institucional-create' and current_url_name != 'configuracao-institucional-update' and current_url_name != 'configuracao-institucional-delete' %}hidden{% endif %}
+                        >
+                        <div class="financeiro-sidebar-links">
+                            <a class="financeiro-sidebar-link{% if current_url_name == 'assinatura-list' or current_url_name == 'assinatura-create' or current_url_name == 'assinatura-update' or current_url_name == 'assinatura-delete' %} is-active{% endif %}" href="{% url 'financeiro:assinatura-list' %}" data-short="AS" title="Assinaturas Institucionais" aria-label="Assinaturas Institucionais">
+                                <span class="financeiro-sidebar-link-label">Assinaturas Institucionais</span>
+                            </a>
+                            <a class="financeiro-sidebar-link{% if current_url_name == 'configuracao-institucional-list' or current_url_name == 'configuracao-institucional-create' or current_url_name == 'configuracao-institucional-update' or current_url_name == 'configuracao-institucional-delete' %} is-active{% endif %}" href="{% url 'financeiro:configuracao-institucional-list' %}" data-short="CI" title="Configuracoes Institucionais" aria-label="Configuracoes Institucionais">
+                                <span class="financeiro-sidebar-link-label">Configuracoes Institucionais</span>
+                            </a>
+                        </div>
+                        </div>
+                    </section>
+                </nav>
+            </div>
+        </aside>
+
+        <div class="financeiro-sidebar-overlay no-print" data-financeiro-drawer-overlay hidden></div>
+
+        <main class="financeiro-app-main">
+            <section class="section">
+                <div class="container">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="notification {% if message.tags == 'error' %}is-danger{% elif message.tags == 'warning' %}is-warning{% else %}is-success{% endif %}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                    {% block content %}{% endblock %}
+                </div>
+            </section>
+        </main>
     </div>
-</section>
+</div>
+{% endwith %}
 <script>
+    (() => {
+        const desktopSidebarMedia = window.matchMedia('(min-width: 1024px)');
+        const sidebarToggleButtons = document.querySelectorAll('[data-financeiro-sidebar-toggle]');
+        const sidebarToggleLabels = document.querySelectorAll('[data-financeiro-sidebar-toggle-label]');
+        const sidebarStorageKey = 'financeiro.sidebar.collapsed';
+        const updateDesktopSidebarState = (collapsed) => {
+            document.body.classList.toggle('financeiro-sidebar-collapsed', collapsed && desktopSidebarMedia.matches);
+            sidebarToggleButtons.forEach((button) => {
+                button.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+                const label = collapsed ? 'Expandir navegacao lateral' : 'Recolher navegacao lateral';
+                button.setAttribute('aria-label', label);
+                button.setAttribute('title', label);
+            });
+            sidebarToggleLabels.forEach((label) => {
+                label.textContent = collapsed ? 'Expandir navegacao lateral' : 'Recolher navegacao lateral';
+            });
+        };
+
+        const syncDesktopSidebarForViewport = () => {
+            const storedCollapsed = window.localStorage.getItem(sidebarStorageKey) === 'true';
+            updateDesktopSidebarState(storedCollapsed);
+            if (!desktopSidebarMedia.matches) {
+                document.body.classList.remove('financeiro-sidebar-collapsed');
+            }
+        };
+
+        sidebarToggleButtons.forEach((button) => {
+            button.addEventListener('click', () => {
+                if (!desktopSidebarMedia.matches) {
+                    return;
+                }
+                const collapsed = !document.body.classList.contains('financeiro-sidebar-collapsed');
+                window.localStorage.setItem(sidebarStorageKey, collapsed ? 'true' : 'false');
+                updateDesktopSidebarState(collapsed);
+            });
+        });
+
+        if (typeof desktopSidebarMedia.addEventListener === 'function') {
+            desktopSidebarMedia.addEventListener('change', syncDesktopSidebarForViewport);
+        } else if (typeof desktopSidebarMedia.addListener === 'function') {
+            desktopSidebarMedia.addListener(syncDesktopSidebarForViewport);
+        }
+
+        syncDesktopSidebarForViewport();
+
+        const groups = Array.from(document.querySelectorAll('[data-sidebar-group]'));
+
+        const setGroupState = (group, expanded) => {
+            const toggle = group.querySelector('[data-sidebar-group-toggle]');
+            const panel = group.querySelector('[data-sidebar-group-panel]');
+
+            if (!toggle || !panel) {
+                return;
+            }
+
+            group.classList.toggle('is-expanded', expanded);
+            group.classList.toggle('is-collapsed', !expanded);
+            toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+            panel.hidden = !expanded;
+        };
+
+        const collapseSiblingGroups = (currentGroup) => {
+            groups.forEach((group) => {
+                if (group !== currentGroup) {
+                    setGroupState(group, false);
+                }
+            });
+        };
+
+        groups.forEach((group) => {
+            const toggle = group.querySelector('[data-sidebar-group-toggle]');
+
+            if (!toggle) {
+                return;
+            }
+
+            const startsExpanded = group.classList.contains('is-expanded') || group.classList.contains('is-active');
+            setGroupState(group, startsExpanded);
+
+            toggle.addEventListener('click', () => {
+                const shouldExpand = !group.classList.contains('is-expanded');
+                if (shouldExpand) {
+                    collapseSiblingGroups(group);
+                }
+                setGroupState(group, shouldExpand);
+            });
+        });
+
+        const activeGroup = groups.find((group) => group.classList.contains('is-active'));
+        if (activeGroup) {
+            collapseSiblingGroups(activeGroup);
+            setGroupState(activeGroup, true);
+        } else if (groups.length) {
+            collapseSiblingGroups(groups[0]);
+            setGroupState(groups[0], true);
+        }
+
+        const drawer = document.querySelector('[data-financeiro-drawer]');
+        const overlay = document.querySelector('[data-financeiro-drawer-overlay]');
+        const toggleButtons = document.querySelectorAll('[data-financeiro-drawer-toggle]');
+        const closeButtons = document.querySelectorAll('[data-financeiro-drawer-close]');
+        const mobileMedia = window.matchMedia('(max-width: 1023px)');
+
+        if (!drawer || !overlay || !toggleButtons.length) {
+            return;
+        }
+
+        const setDrawerState = (open) => {
+            const shouldOpen = open && mobileMedia.matches;
+            drawer.classList.toggle('is-open', shouldOpen);
+            overlay.classList.toggle('is-open', shouldOpen);
+            drawer.setAttribute('aria-hidden', shouldOpen ? 'false' : 'true');
+            overlay.hidden = !shouldOpen;
+            document.body.classList.toggle('financeiro-drawer-open', shouldOpen);
+            toggleButtons.forEach((button) => {
+                button.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+            });
+        };
+
+        const closeDrawer = () => setDrawerState(false);
+
+        toggleButtons.forEach((button) => {
+            button.addEventListener('click', () => {
+                const isOpen = drawer.classList.contains('is-open');
+                setDrawerState(!isOpen);
+            });
+        });
+
+        closeButtons.forEach((button) => {
+            button.addEventListener('click', closeDrawer);
+        });
+
+        overlay.addEventListener('click', closeDrawer);
+
+        drawer.querySelectorAll('a[href]').forEach((link) => {
+            link.addEventListener('click', () => {
+                if (mobileMedia.matches) {
+                    closeDrawer();
+                }
+            });
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                closeDrawer();
+            }
+        });
+
+        const syncDrawerForViewport = () => {
+            if (!mobileMedia.matches) {
+                drawer.classList.remove('is-open');
+                drawer.setAttribute('aria-hidden', 'false');
+                overlay.classList.remove('is-open');
+                overlay.hidden = true;
+                document.body.classList.remove('financeiro-drawer-open');
+                toggleButtons.forEach((button) => {
+                    button.setAttribute('aria-expanded', 'false');
+                });
+                return;
+            }
+
+            drawer.setAttribute('aria-hidden', 'true');
+            overlay.hidden = true;
+        };
+
+        if (typeof mobileMedia.addEventListener === 'function') {
+            mobileMedia.addEventListener('change', syncDrawerForViewport);
+        } else if (typeof mobileMedia.addListener === 'function') {
+            mobileMedia.addListener(syncDrawerForViewport);
+        }
+
+        syncDrawerForViewport();
+    })();
+
     document.querySelectorAll('[data-contas-dropdown]').forEach((dropdown) => {
         const toggle = dropdown.querySelector('[data-contas-dropdown-toggle]');
         const panel = dropdown.querySelector('[data-contas-dropdown-panel]');
