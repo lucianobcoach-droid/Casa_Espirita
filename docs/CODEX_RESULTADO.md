@@ -786,3 +786,19 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - a validacao humana final aprovou o acabamento atual do `Extrato` impresso nesta branch
 - com isso, o ciclo visual do `Extrato` pode ser tratado como encerrado no estado atual do repositorio, sem necessidade de novo ajuste funcional ou documental amplo
 - qualquer evolucao posterior sobre esse relatorio deve ser tratada apenas como curadoria incremental por uso real, e nao como reabertura da frente principal de acabamento visual
+
+## Refinamento da experiencia da edicao coordenada do grupo rateado
+
+- `financeiro/templates/financeiro/lancamento_rateio_grupo_form.html` foi reorganizado para deixar mais clara a hierarquia entre resumo do grupo, dados comuns do documento, linhas do rateio e acoes finais
+- a tela passou a usar textos mais curtos e operacionais, reduzindo redundancias e reforcando de forma mais previsivel que salvar atualiza o grupo inteiro
+- os retornos para a listagem e para a linha representativa ficaram mais explicitos como saidas de navegacao, sem competir visualmente com a acao principal de salvar
+- nesta microetapa nao houve alteracao de regra de negocio, validacoes, transacao de salvamento, calculos nem integracao com `grupo_rateio`
+- foi possivel executar `py manage.py check` e validar a rota real de edicao coordenada `/financeiro/lancamentos/rateio/dea3341ddf044d799a792e810bed7d52/editar/` com status `200`
+
+## Microcorrecao visual adicional da grade do Extrato impresso
+
+- `financeiro/templates/financeiro/base.html` recebeu um ajuste fino adicional apenas no print do `Extrato` para aproximar a tabela da grade visual mais leve usada como referencia em telas operacionais do modulo
+- o cabecalho da tabela passou a ficar sem linha visivel no print, com tipografia um pouco mais leve e sem reintroduzir divisorias verticais
+- o corpo da tabela passou a usar apenas linhas horizontais ainda mais finas e zebra mais suave, preservando leitura limpa e documental
+- foram preservados o nome institucional no topo, o periodo em `dd/mm/aaaa`, o `saldo acumulado` com cor por sinal e sem negrito, e o destaque de `saldo inicial` / `saldo final`
+- nesta microetapa nao houve alteracao de regra de negocio, calculos, filtros, estrutura funcional nem reabertura da frente principal do `Extrato`

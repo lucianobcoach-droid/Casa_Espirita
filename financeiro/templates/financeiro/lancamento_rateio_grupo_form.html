@@ -1,13 +1,204 @@
 {% extends 'financeiro/base.html' %}
 {% block title %}{{ page_title }}{% endblock %}
 {% block content %}
+<style>
+    .financeiro-rateio-grupo-page {
+        display: flex;
+        flex-direction: column;
+        gap: 0.9rem;
+    }
+
+    .financeiro-rateio-page-intro {
+        border: 1px solid #dbe7f3;
+        border-radius: 0.9rem;
+        background: linear-gradient(180deg, #f8fbff, #ffffff);
+        padding: 0.9rem 1rem;
+        box-shadow: 0 8px 22px rgba(15, 23, 42, 0.03);
+    }
+
+    .financeiro-rateio-page-intro-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.8rem 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 0.65rem;
+    }
+
+    .financeiro-rateio-page-intro-title {
+        margin: 0;
+        font-size: 0.92rem;
+        font-weight: 700;
+        color: #1f2937;
+    }
+
+    .financeiro-rateio-page-intro-text {
+        margin: 0.15rem 0 0;
+        font-size: 0.84rem;
+        color: #64748b;
+        line-height: 1.45;
+        max-width: 40rem;
+    }
+
+    .financeiro-rateio-page-intro-alert {
+        margin: 0;
+        padding: 0.5rem 0.72rem;
+        border-radius: 999px;
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        color: #1d4ed8;
+        font-size: 0.78rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .financeiro-rateio-summary-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.65rem;
+    }
+
+    .financeiro-rateio-summary-card {
+        border: 1px solid #e2e8f0;
+        border-radius: 0.8rem;
+        background: #fff;
+        padding: 0.75rem 0.82rem;
+    }
+
+    .financeiro-rateio-summary-label {
+        display: block;
+        margin-bottom: 0.16rem;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: #64748b;
+    }
+
+    .financeiro-rateio-summary-value {
+        display: block;
+        font-size: 0.98rem;
+        font-weight: 700;
+        color: #1f2937;
+        line-height: 1.25;
+    }
+
+    .financeiro-rateio-section-kicker {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.22rem 0.5rem;
+        margin-bottom: 0.38rem;
+        border-radius: 999px;
+        background: #eef4ff;
+        color: #35548a;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+    }
+
+    .financeiro-rateio-panel-note-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        margin-bottom: 0.75rem;
+    }
+
+    .financeiro-rateio-panel-note-row .financeiro-rateio-note {
+        margin: 0;
+        flex: 1 1 24rem;
+    }
+
+    .financeiro-rateio-action-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+        gap: 0.85rem;
+        align-items: start;
+    }
+
+    .financeiro-rateio-action-card {
+        border: 1px solid #e5e7eb;
+        border-radius: 0.8rem;
+        background: #fff;
+        padding: 0.82rem 0.9rem;
+    }
+
+    .financeiro-rateio-action-card.is-primary {
+        border-color: #cfe0ff;
+        background: linear-gradient(180deg, #f8fbff, #ffffff);
+    }
+
+    .financeiro-rateio-action-card-title {
+        margin: 0 0 0.22rem;
+        font-size: 0.86rem;
+        font-weight: 700;
+        color: #1f2937;
+    }
+
+    .financeiro-rateio-action-card-text {
+        margin: 0;
+        font-size: 0.8rem;
+        line-height: 1.45;
+        color: #64748b;
+    }
+
+    .financeiro-rateio-action-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.55rem;
+    }
+
+    .financeiro-rateio-action-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        padding: 0.72rem 0.78rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.78rem;
+        background: #fff;
+    }
+
+    .financeiro-rateio-action-row-copy {
+        min-width: 0;
+    }
+
+    .financeiro-rateio-action-row-title {
+        margin: 0 0 0.14rem;
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: #1f2937;
+    }
+
+    .financeiro-rateio-action-row-text {
+        margin: 0;
+        font-size: 0.76rem;
+        line-height: 1.4;
+        color: #6b7280;
+    }
+
+    @media screen and (max-width: 860px) {
+        .financeiro-rateio-summary-grid,
+        .financeiro-rateio-action-grid {
+            grid-template-columns: minmax(0, 1fr);
+        }
+
+        .financeiro-rateio-action-row {
+            flex-direction: column;
+            align-items: stretch;
+        }
+    }
+</style>
+<div class="financeiro-rateio-grupo-page">
 <div class="financeiro-page-header financeiro-page-head">
     <div class="financeiro-page-header-main">
         <h1 class="title financeiro-page-title">{{ page_title }}</h1>
-        <p class="financeiro-page-subtitle">Edicao coordenada do grupo rateado, mantendo dados comuns e linhas do documento no mesmo fluxo especializado.</p>
+        <p class="financeiro-page-subtitle">Edicao coordenada do grupo rateado em um unico fluxo, preservando os dados comuns do documento e as linhas do rateio.</p>
     </div>
     <div class="financeiro-page-header-actions no-print">
-        <a class="button" href="{% url 'financeiro:lancamento-list' %}">Voltar para lancamentos</a>
+        <a class="button" href="{% url 'financeiro:lancamento-list' %}">Listagem</a>
         <a class="button is-light" href="{% url 'financeiro:lancamento-update' grupo_rateio_linha_representativa.pk %}?origem_fluxo=rateio_coordenado_retorno&grupo_rateio={{ grupo_rateio }}">Linha representativa</a>
     </div>
 </div>
@@ -17,6 +208,30 @@
         {% for error in form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
     </div>
 {% endif %}
+
+<section class="financeiro-rateio-page-intro">
+    <div class="financeiro-rateio-page-intro-head">
+        <div>
+            <p class="financeiro-rateio-page-intro-title">Resumo do grupo</p>
+            <p class="financeiro-rateio-page-intro-text">Salvar nesta tela atualiza o grupo inteiro. Voltar para a linha representativa ou para a listagem muda apenas a navegacao.</p>
+        </div>
+        <p class="financeiro-rateio-page-intro-alert">Edicao coordenada ativa</p>
+    </div>
+    <div class="financeiro-rateio-summary-grid">
+        <div class="financeiro-rateio-summary-card">
+            <span class="financeiro-rateio-summary-label">Grupo</span>
+            <span class="financeiro-rateio-summary-value">{{ grupo_rateio }}</span>
+        </div>
+        <div class="financeiro-rateio-summary-card">
+            <span class="financeiro-rateio-summary-label">Linhas atuais</span>
+            <span class="financeiro-rateio-summary-value">{{ grupo_rateio_quantidade_linhas }}</span>
+        </div>
+        <div class="financeiro-rateio-summary-card">
+            <span class="financeiro-rateio-summary-label">Total atual</span>
+            <span class="financeiro-rateio-summary-value">R$ {{ grupo_rateio_valor_total }}</span>
+        </div>
+    </div>
+</section>
 
 <form method="post">
     {% csrf_token %}
@@ -28,16 +243,9 @@
     <div class="financeiro-form-grid">
         <section class="financeiro-form-section">
             <div class="financeiro-form-section-body">
-                <div class="financeiro-form-section-title">Dados principais</div>
-                <div class="financeiro-form-section-text">Identificacao do lancamento e dados base do registro.</div>
-                <div class="financeiro-summary-chips">
-                    <div class="financeiro-summary-chip">Grupo: {{ grupo_rateio }}</div>
-                    <div class="financeiro-summary-chip">Linhas: {{ grupo_rateio_quantidade_linhas }}</div>
-                    <div class="financeiro-summary-chip">Total atual: R$ {{ grupo_rateio_valor_total }}</div>
-                </div>
-                <div class="financeiro-form-callout is-warning-soft mb-0">
-                    Esta edicao atualiza todas as linhas do rateio deste documento.
-                </div>
+                <div class="financeiro-rateio-section-kicker">Documento</div>
+                <div class="financeiro-form-section-title">Dados comuns do documento</div>
+                <div class="financeiro-form-section-text">Os campos abaixo valem para todas as linhas do grupo.</div>
 
                 <div class="field">
                     <label class="label" for="{{ form.descricao.id_for_label }}">{{ form.descricao.label }} *</label>
@@ -138,15 +346,14 @@
 
         <section class="financeiro-form-section is-rateio">
             <div class="financeiro-form-section-body">
-                <div class="financeiro-form-section-title">Rateio</div>
-                <div class="financeiro-form-section-text">Categorias e valores das linhas do documento.</div>
+                <div class="financeiro-rateio-section-kicker">Linhas</div>
+                <div class="financeiro-form-section-title">Linhas do rateio</div>
+                <div class="financeiro-form-section-text">Ajuste categorias e valores e confira o fechamento com o valor total informado no documento.</div>
 
                 <div class="financeiro-rateio-panel">
-                    <div class="financeiro-rateio-panel-header">
-                        <div class="financeiro-rateio-panel-notes">
-                            <div class="financeiro-rateio-note">
-                                Ajuste categorias e valores e confira o fechamento com o valor total do documento.
-                            </div>
+                    <div class="financeiro-rateio-panel-note-row">
+                        <div class="financeiro-rateio-note">
+                            Salvar atualiza o grupo inteiro com base nas linhas exibidas abaixo.
                         </div>
                         <div>
                             <button class="button is-small is-link is-light" type="button" data-financeiro-rateio-add="true">Adicionar linha</button>
@@ -173,20 +380,39 @@
 
         <section class="financeiro-form-section">
             <div class="financeiro-form-section-body">
-                <div class="financeiro-form-section-title">Acoes</div>
-                <div class="financeiro-form-section-text">Salvar atualiza o rateio inteiro. As demais acoes apenas mudam de tela.</div>
-                <div class="financeiro-form-callout is-group">
-                    A alteracao afeta o rateio inteiro deste documento.
-                </div>
-                <div class="financeiro-form-actions">
-                    <a class="button" href="{% url 'financeiro:lancamento-list' %}?origem_fluxo=rateio_coordenado_cancelado&grupo_rateio={{ grupo_rateio }}">Cancelar e voltar para a listagem</a>
-                    <a class="button is-light" href="{% url 'financeiro:lancamento-update' grupo_rateio_linha_representativa.pk %}?origem_fluxo=rateio_coordenado_retorno&grupo_rateio={{ grupo_rateio }}">Voltar para a linha representativa</a>
-                    <button class="button is-primary" type="submit">{{ submit_label }}</button>
+                <div class="financeiro-rateio-section-kicker">Fechamento</div>
+                <div class="financeiro-form-section-title">Acoes finais</div>
+                <div class="financeiro-form-section-text">Escolha entre salvar o grupo inteiro ou apenas sair do fluxo coordenado sem gravar.</div>
+                <div class="financeiro-rateio-action-grid">
+                    <div class="financeiro-rateio-action-card is-primary">
+                        <p class="financeiro-rateio-action-card-title">Salvar grupo inteiro</p>
+                        <p class="financeiro-rateio-action-card-text">Confirma os dados comuns e recalcula as linhas deste rateio no mesmo salvamento transacional.</p>
+                        <div class="financeiro-form-actions mt-4">
+                            <button class="button is-primary" type="submit">{{ submit_label }}</button>
+                        </div>
+                    </div>
+                    <div class="financeiro-rateio-action-list">
+                        <div class="financeiro-rateio-action-row">
+                            <div class="financeiro-rateio-action-row-copy">
+                                <p class="financeiro-rateio-action-row-title">Voltar para a listagem</p>
+                                <p class="financeiro-rateio-action-row-text">Sai do fluxo coordenado sem gravar e retorna para a revisao geral dos lancamentos.</p>
+                            </div>
+                            <a class="button" href="{% url 'financeiro:lancamento-list' %}?origem_fluxo=rateio_coordenado_cancelado&grupo_rateio={{ grupo_rateio }}">Listagem</a>
+                        </div>
+                        <div class="financeiro-rateio-action-row">
+                            <div class="financeiro-rateio-action-row-copy">
+                                <p class="financeiro-rateio-action-row-title">Voltar para a linha representativa</p>
+                                <p class="financeiro-rateio-action-row-text">Sai do fluxo coordenado sem gravar e reabre apenas a linha principal do grupo.</p>
+                            </div>
+                            <a class="button is-light" href="{% url 'financeiro:lancamento-update' grupo_rateio_linha_representativa.pk %}?origem_fluxo=rateio_coordenado_retorno&grupo_rateio={{ grupo_rateio }}">Linha representativa</a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
     </div>
 </form>
+</div>
 
 {{ rateio_categoria_opcoes|json_script:'financeiro-rateio-grupo-categorias' }}
 {{ form.rateio_linhas_iniciais|json_script:'financeiro-rateio-grupo-inicial' }}
