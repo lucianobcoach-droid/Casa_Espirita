@@ -7,41 +7,44 @@
         max-width: 860px;
         margin: 0 auto;
         background: #fff;
-        border: 1px solid #d8d1c4;
-        box-shadow: 0 12px 30px rgba(52, 46, 36, 0.07);
+        border: 1.4px solid #d1c7b8;
+        border-top-width: 4px;
+        box-shadow: 0 14px 34px rgba(52, 46, 36, 0.08);
         display: block;
         width: 100%;
     }
 
     .recibo-header {
-        padding: 1.6rem 2rem 1rem;
-        border-bottom: 1px solid #d8d1c4;
+        padding: 2rem 2.15rem 1.3rem;
+        border-bottom: 1.4px solid #d8d1c4;
         display: grid;
-        gap: 0.9rem;
+        gap: 1.05rem;
     }
 
     .recibo-identidade {
         display: flex;
         justify-content: space-between;
-        align-items: center;
+        align-items: flex-start;
         gap: 1rem;
     }
 
     .recibo-identidade-bloco {
         display: flex;
+        flex-direction: column;
         align-items: center;
-        gap: 0.9rem;
-        min-height: 32px;
+        justify-content: center;
+        gap: 0.45rem;
+        min-height: 72px;
         width: 100%;
     }
 
     .recibo-identidade-bloco.sem-logo {
-        gap: 0.55rem;
+        gap: 0.25rem;
     }
 
     .recibo-logo {
-        max-height: 54px;
-        max-width: 150px;
+        max-height: 84px;
+        max-width: 250px;
         object-fit: contain;
         display: block;
         flex-shrink: 0;
@@ -50,73 +53,100 @@
     .recibo-identidade-texto {
         display: flex;
         flex-direction: column;
-        gap: 0.1rem;
+        align-items: center;
+        gap: 0.12rem;
     }
 
     .recibo-instituicao {
-        font-size: 1rem;
-        font-weight: 600;
+        font-size: 1.08rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
         color: #2d2a24;
     }
 
     .recibo-identidade-faixa {
-        width: 100%;
-        height: 20px;
-        border-bottom: 1px solid #c8beaf;
+        width: min(220px, 100%);
+        height: 2px;
+        background: linear-gradient(90deg, transparent 0%, #c8beaf 18%, #c8beaf 82%, transparent 100%);
+    }
+
+    .recibo-identidade-subtitulo {
+        font-size: 0.8rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: #776e61;
     }
 
     .recibo-topo {
-        display: grid;
-        grid-template-columns: 1.4fr 1fr;
-        gap: 0.85rem;
-        align-items: stretch;
+        display: flex;
+        justify-content: space-between;
+        align-items: end;
+        gap: 1rem;
+        padding-top: 0.35rem;
     }
 
-    .recibo-titulo-box,
+    .recibo-titulo-box {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
     .recibo-valor-box {
-        border: 1px solid #d8d1c4;
-        padding: 0.8rem 0.95rem;
-        background: #fcfaf6;
-    }
-
-    .recibo-label {
-        display: block;
-        font-size: 0.78rem;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        color: #736a5a;
-        margin-bottom: 0.3rem;
+        flex: 0 0 auto;
+        min-width: 12rem;
+        text-align: right;
     }
 
     .recibo-titulo {
-        font-size: 1.7rem;
-        letter-spacing: 0.14em;
+        font-size: 1.95rem;
+        letter-spacing: 0.12em;
         margin: 0;
         font-weight: 700;
         color: #2d2a24;
     }
 
     .recibo-meta {
-        margin: 0.22rem 0 0;
+        margin: 0.3rem 0 0;
         color: #5f584d;
-        font-size: 0.9rem;
+        font-size: 0.92rem;
+    }
+
+    .recibo-meta-numero {
+        display: inline-flex;
+        align-items: baseline;
+        gap: 0.35rem;
+    }
+
+    .recibo-meta-numero strong {
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        font-size: 0.78rem;
+        color: #6c6458;
     }
 
     .recibo-valor {
         margin: 0;
-        font-size: 1.75rem;
+        font-size: 1.95rem;
         font-weight: 700;
         color: #1f5134;
         line-height: 1.1;
     }
 
+    .recibo-valor-label {
+        display: block;
+        margin-bottom: 0.28rem;
+        font-size: 0.78rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: #736a5a;
+    }
+
     .recibo-corpo {
-        padding: 1.45rem 2rem 1.1rem;
+        padding: 1.7rem 2.15rem 1.3rem;
     }
 
     .recibo-texto {
-        font-size: 1rem;
-        line-height: 1.65;
+        font-size: 1.02rem;
+        line-height: 1.68;
         color: #2e2a24;
     }
 
@@ -142,26 +172,38 @@
     }
 
     .recibo-data-local {
-        margin-top: 1.4rem;
+        margin-top: 1.15rem;
         text-align: right;
         color: #4f493f;
         font-size: 0.98rem;
     }
 
     .recibo-rodape {
-        padding: 0 2rem 1rem;
+        padding: 0 2.15rem 1.15rem;
     }
 
     .recibo-mensagem {
-        border-top: 1px solid #ddd4c5;
-        border-bottom: 1px solid #ddd4c5;
-        padding: 0.65rem 0;
-        margin-bottom: 0.9rem;
+        border-top: 1.4px solid #ddd4c5;
+        border-bottom: 1.4px solid #ddd4c5;
+        padding: 1.05rem 0.95rem;
+        margin-bottom: 1.1rem;
         color: #322d27;
+        text-align: center;
+        background: linear-gradient(180deg, #fdfbf7 0%, #faf7f1 100%);
+    }
+
+    .recibo-mensagem p {
+        margin: 0;
+        font-size: 1.02rem;
+        line-height: 1.55;
+    }
+
+    .recibo-mensagem p.has-text-weight-semibold {
+        font-size: 1.08rem;
     }
 
     .recibo-assinatura {
-        margin-top: 1rem;
+        margin-top: 1.25rem;
         text-align: center;
     }
 
@@ -176,7 +218,7 @@
     }
 
     .recibo-assinatura-nome {
-        margin: 0;
+        margin: 0.05rem 0 0;
         font-weight: 600;
         color: #2f2a24;
     }
@@ -194,6 +236,14 @@
         height: 1rem;
     }
 
+    .recibo-assinatura-fecho {
+        margin: 0 0 0.4rem;
+        font-size: 0.84rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #776d61;
+    }
+
     @media (max-width: 768px) {
         .recibo-header,
         .recibo-corpo,
@@ -202,13 +252,19 @@
             padding-right: 1.25rem;
         }
 
-        .recibo-topo {
-            grid-template-columns: 1fr;
-        }
-
         .recibo-identidade {
             flex-direction: column;
             align-items: stretch;
+        }
+
+        .recibo-topo {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .recibo-valor-box {
+            text-align: left;
+            min-width: 0;
         }
 
         .recibo-titulo,
@@ -223,14 +279,15 @@
 
     @media print {
         .recibo-documento {
-            max-width: 182mm;
-            border: none;
+            max-width: 170mm;
+            border: 1.35px solid #d1c7b8;
+            border-top-width: 4px;
             box-shadow: none;
             display: block;
-            width: 182mm;
+            width: 170mm;
             min-height: 0;
             height: auto;
-            margin: 4mm auto 0;
+            margin: 9mm auto 0;
             break-inside: avoid;
             page-break-inside: avoid;
         }
@@ -238,32 +295,45 @@
         .recibo-header,
         .recibo-corpo,
         .recibo-rodape {
-            padding-left: 0;
-            padding-right: 0;
+            padding-left: 0.75rem;
+            padding-right: 0.75rem;
         }
 
         .recibo-header {
-            padding-top: 0.35rem;
-            padding-bottom: 0.7rem;
+            padding-top: 0.7rem;
+            padding-bottom: 0.92rem;
         }
 
         .recibo-corpo {
-            padding-top: 0.9rem;
-            padding-bottom: 0.55rem;
+            padding-top: 1.05rem;
+            padding-bottom: 0.72rem;
         }
 
         .recibo-rodape {
-            padding-bottom: 0.2rem;
+            padding-bottom: 0.55rem;
         }
 
         .recibo-topo,
         .recibo-identidade {
-            gap: 0.55rem;
+            gap: 0.6rem;
         }
 
         .recibo-texto {
             font-size: 11.5pt;
             line-height: 1.45;
+        }
+
+        .recibo-logo {
+            max-height: 88px;
+            max-width: 255px;
+        }
+
+        .recibo-titulo {
+            font-size: 18pt;
+        }
+
+        .recibo-valor {
+            font-size: 18pt;
         }
 
         .recibo-assinatura-texto {
@@ -285,8 +355,8 @@
         }
 
         .recibo-mensagem {
-            padding-top: 0.45rem;
-            padding-bottom: 0.45rem;
+            padding-top: 0.6rem;
+            padding-bottom: 0.6rem;
             margin-bottom: 0.6rem;
         }
 
@@ -305,7 +375,7 @@
 <section class="recibo-documento">
     <header class="recibo-header">
         <div class="recibo-identidade">
-            <div class="recibo-identidade-bloco">
+            <div class="recibo-identidade-bloco{% if not recibo_logo_url %} sem-logo{% endif %}">
                 {% if recibo_logo_url %}
                     <img
                         class="recibo-logo"
@@ -317,9 +387,10 @@
                         onerror="this.style.display='none'; this.closest('.recibo-identidade-bloco').classList.add('sem-logo');"
                     >
                 {% endif %}
-                {% if recibo_nome_instituicao %}
+                {% if recibo_nome_instituicao and not recibo_logo_url %}
                     <div class="recibo-identidade-texto">
                         <span class="recibo-instituicao">{{ recibo_nome_instituicao }}</span>
+                        <span class="recibo-identidade-subtitulo">Documento financeiro</span>
                     </div>
                 {% elif not recibo_logo_url %}
                     <div class="recibo-identidade-faixa"></div>
@@ -333,14 +404,17 @@
 
         <div class="recibo-topo">
             <div class="recibo-titulo-box">
-                <span class="recibo-label">Documento</span>
                 <h1 class="recibo-titulo">RECIBO</h1>
-                <p class="recibo-meta">Numero: {{ lancamento.numero_documento|default:'-' }}</p>
+                <p class="recibo-meta">
+                    <span class="recibo-meta-numero">
+                        <strong>Numero</strong>
+                        <span>{{ lancamento.numero_documento|default:'-' }}</span>
+                    </span>
+                </p>
             </div>
             <div class="recibo-valor-box">
-                <span class="recibo-label">Valor</span>
+                <span class="recibo-valor-label">Valor recebido</span>
                 <p class="recibo-valor">R$ {{ lancamento.valor|br_money }}</p>
-                <p class="recibo-meta">{{ recibo_data_humana }}</p>
             </div>
         </div>
     </header>
@@ -379,6 +453,7 @@
             <p{% if recibo_mensagem_personalizada %} class="has-text-weight-semibold"{% endif %}>{{ recibo_mensagem_final }}</p>
         </div>
         <div class="recibo-assinatura">
+            <p class="recibo-assinatura-fecho">Para fins de comprovacao documental</p>
             {% if recibo_assinatura_padrao %}
                 <p class="recibo-assinatura-texto">{{ recibo_assinatura_padrao.assinatura_texto }}</p>
             {% endif %}

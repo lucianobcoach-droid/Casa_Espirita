@@ -73,8 +73,30 @@ Estas regras devem ser respeitadas em qualquer etapa:
 - a base inicial dessa padronizacao e o app `financeiro`, por concentrar hoje a camada visual mais madura do projeto
 - no app `financeiro`, a navegacao lateral padronizada ja foi autorizada e implementada de forma incremental no shell compartilhado, sem tornar essa mesma adocao automaticamente obrigatoria para os demais apps
 - paginas de impressao, PDF e recibo ficam fora da logica normal de navegacao e nao devem ser tratadas como alvo inicial da mesma padronizacao estrutural
+- no `financeiro`, relatorios e impressos operacionais devem manter margens explicitas de folha e isolamento do shell visual para nao herdarem sidebar, topbar ou wrappers de overflow no modo print
 - quando a natureza `receita` / `despesa` ja estiver clara pelo contexto da tela, pelo agrupamento ou por indicador de tipo, a exibicao visivel da categoria deve preferir nome curto, sem prefixos textuais redundantes
 - no shell do `financeiro`, a sigla visual da marca deve preferir iniciais dinamicas derivadas do nome da `ConfiguracaoInstitucional` ativa/padrao, com fallback seguro para `CE` quando nao houver nome configurado
+
+### 5.2. Diretriz estrutural futura de usuarios, perfis e permissoes
+- o projeto passa a registrar oficialmente como frente estrutural futura a camada de usuarios, autenticacao, perfis e permissoes
+- essa frente nao deve ser tratada como ajuste isolado do app `financeiro`
+- a autenticacao e o controle de acesso devem nascer como base transversal do sistema, preparados para convivio entre modulos atuais e futuros
+- deve existir separacao clara entre administracao global do sistema e administracoes ou cadastros especificos de cada modulo
+- o desenho futuro deve permitir permissoes por modulo, permissoes por acao e perfis/funcoes de acesso reutilizaveis
+- o desenho futuro tambem deve permitir centralizar cadastro de usuarios e controle de permissoes em camada comum do projeto
+- com a expansao para novos modulos, o projeto deve poder reorganizar o acesso administrativo global sem acoplar essa governanca a um modulo especifico
+- com a expansao para novos modulos, o projeto deve poder separar cadastros globais de cadastros especificos por modulo
+- tambem fica registrada como diretriz estrutural futura a possibilidade de unificacao de entidades compartilhadas, incluindo base comum de pessoas quando isso fizer sentido para o sistema como um todo
+
+### 5.3. Diretriz estrutural futura de identidade visual configuravel
+- o projeto passa a registrar oficialmente como frente estrutural futura a configuracao da paleta geral do sistema
+- essa frente nao deve ser tratada como aplicacao manual de cores soltas em telas isoladas
+- a partir de uma cor principal configurada, o sistema deve poder derivar uma paleta relacionada e coerente para elementos de apoio, contraste, estados e superficies
+- essa governanca futura da paleta deve ser transversal ao sistema, preservando consistencia entre shell, modulos, relatorios e demais superficies visuais
+
+### 5.4. Diretriz futura de log de acesso ao sistema
+- fica registrada como frente futura a trilha de acesso ao sistema em nivel de autenticacao e entrada de usuarios, separada da auditoria funcional do modulo `financeiro`
+- esse log de acesso deve nascer como camada estrutural do projeto e nao como ajuste isolado de uma tela especifica
 
 ## 6. Estado funcional ja validado
 Ate o momento, esta validado que:
@@ -325,6 +347,7 @@ Diretriz:
 ## 14. Etapas futuras ja pensadas, mas nao autorizadas agora
 As etapas abaixo podem existir no planejamento, mas nao devem ser implementadas antes da hora:
 
+- autenticacao por usuario, perfis e permissoes em camada estrutural do projeto
 - historico por favorecido
 - relatorio anual por favorecido
 - mapeamento e revisao de todas as mensagens visiveis ao usuario
@@ -362,3 +385,16 @@ Ao iniciar um novo chat ou nova execucao, usar algo como:
 Use esses arquivos como fonte de verdade.
 Antes de implementar, resuma o estado atual, informe divergencias reais e liste os arquivos que pretende alterar.
 Se houver conflito entre o pedido e o repositorio, pare e avise antes de codificar."
+
+## 17. Diretriz documental de impressao dos relatorios financeiros
+
+- `Extrato`, `Resumo` e `Prestacao de Contas` devem compartilhar um mesmo padrao documental de impressao/PDF, com cabecalho coerente, identidade institucional leve e hierarquia tipografica comum, sem perder a especificidade operacional de cada relatorio.
+- a identidade institucional dos relatorios deve priorizar logo institucional quando existir e, na ausencia dela, cair apenas para o nome institucional, sem usar sigla como pseudo-logo ou selo visual improvisado
+- a impressao deve continuar isolada do shell administrativo, sem heranca indevida de sidebar, topbar, drawer ou controles operacionais
+- evolucoes futuras como logo institucional, multiplas assinaturas e configuracao por relatorio devem entrar como acabamento incremental sobre essa base, e nao como reabertura estrutural do layout de impressao
+
+## 18. Diretriz documental do recibo
+
+- o recibo deve seguir linguagem de documento final, com topo institucional mais centrado, titulo principal unico e mensagem central com protagonismo maior do que controles ou ornamentos administrativos
+- quando a logo institucional ja cumpre funcao de identificacao visual suficiente, o recibo nao deve repetir ao lado dela o nome da instituicao apenas por redundancia
+- o recibo deve manter fallback discreto para nome institucional quando nao houver logo utilizavel, preservando sobriedade e leitura documental

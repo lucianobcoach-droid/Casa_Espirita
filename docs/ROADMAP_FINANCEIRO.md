@@ -129,6 +129,7 @@ Data: 2026-03-26
 - mensagens de erro mais claras em campos obrigatorios
 - layout mais compacto nas tabelas
 - impressao refinada para extrato e prestacao de contas
+- validacao manual real de impressao de `Extrato`, `Resumo` e `Prestacao de Contas` concluida com sucesso, sem necessidade de ajuste adicional nesta microetapa
 - menu proprio para extratos, resumo e prestacao de contas
 
 ## 3. O que ja existe, mas ainda pode ser refinado
@@ -151,13 +152,18 @@ Data: 2026-03-26
 - validacoes defensivas adicionais em fluxos operacionais
 - extrato com mais contexto operacional sem poluir a tela
 - filtros da listagem de lancamentos com melhorias de usabilidade
-- impressao da prestacao de contas com acabamento mais formal
-- padronizacao futura de margens em todos os relatorios para impressao
+- acabamento documental futuro complementar dos relatorios impressos, apenas apos uso real, especialmente quando entrarem logo institucional e configuracao avancada de assinaturas
+- evolucao futura da identidade institucional nos relatorios do financeiro, incluindo uso controlado de logo quando fizer sentido documental sem poluir a leitura operacional
 - evolucao futura da logica de assinaturas em relatorios do financeiro:
   - permitir mais de uma assinatura cadastrada por relatorio que tenha assinatura
   - permitir configurar em cada relatorio se mostra assinatura
   - permitir configurar quais assinaturas ativas devem aparecer em cada relatorio
+- item informativo futuro na tela de lancamentos, com simbolo `i` e historico de cadastro/alteracoes do documento ou lancamento quando houver ganho operacional real
 - mapeamento e revisao futura das mensagens visiveis ao usuario no modulo `financeiro`, em alinhamento com a futura frente transversal do projeto
+- integracao futura do `financeiro` com autenticacao e controle de acesso por usuario quando a frente estrutural do projeto for iniciada
+- definicao futura de permissoes por acao dentro do `financeiro`, sem isolar essa governanca do restante do sistema
+- convivencia futura do `financeiro` com administracao global centralizada de usuarios, perfis e permissoes, preservando a separacao entre cadastros globais e cadastros especificos do modulo
+- POC controlada de uso de template pronto no shell do `financeiro`, apenas como experimento comparativo e sem adocao abrupta no projeto
 
 ## 4. O que ainda falta implementar
 
@@ -177,8 +183,99 @@ Data: 2026-03-26
 - cadastro rapido de categoria dentro do lancamento
 - evolucoes futuras especificas do bloco de recibos ja entregue
 
-## 5. Proximas etapas sugeridas
+## 5. Fila restante reorganizada por prioridade pratica
 
+Observacao:
+- esta secao reorganiza a fila restante sem substituir nem apagar as secoes `3` e `4`
+- os itens abaixo permanecem futuros; a reorganizacao serve apenas para orientar prioridade pratica de execucao
+
+### Imediato
+- refinamentos futuros do shell visual do `financeiro` e da sidebar ja implantada, guiados por uso real e sem reabrir troca estrutural ampla da navegacao
+- consolidacao futura de componentes visuais compartilhados do modulo, como cabecalho de pagina, bloco de filtros, card padrao, KPI, tabela e formulario
+- refinamento visual transversal do modulo financeiro para melhorar largura de campos, distribuicao de colunas, densidade de filtros, quantidade de informacao visivel por tela, melhor aproveitamento horizontal em zoom 100% e consistencia visual entre telas, agora oficialmente iniciado pela base compartilhada e pelas telas de listagem/formulario de lancamentos
+- comportamento de transferencia em todas as telas e relatorios
+- consistencia visual do tratamento de transferencia
+- UX do formulario de lancamento em casos limite
+- validacoes defensivas adicionais em fluxos operacionais
+- extrato com mais contexto operacional sem poluir a tela
+- filtros da listagem de lancamentos com melhorias de usabilidade
+- expansao futura da auditoria de alteracoes no financeiro para alem de `LancamentoFinanceiro` e `ContaFinanceira`, ampliando o que ja existe para outras entidades do modulo e mantendo model proprio sem `signals`
+- refinamentos futuros de leitura para a tela de auditoria de `LancamentoFinanceiro`, alem dos filtros simples ja implementados
+- mapeamento e revisao futura das mensagens visiveis ao usuario no modulo `financeiro`, em alinhamento com a futura frente transversal do projeto
+
+### Proximo
+- base inicial da edicao coordenada do rateio ja implementada com view e formulario proprios do grupo, ainda pendente de refinamentos para a experiencia final
+- acabamento operacional do rateio em edicao individual e leitura do grupo nas telas ja existentes
+- estrategia aprovada para futura edicao coordenada do grupo rateado com view e formulario proprios, dados comuns em bloco e salvamento transacional
+- modelagem documental mais rica do rateio, se necessario em etapa posterior
+- regularizacao eventual de bases antigas de rateio sem `grupo_rateio` valido, caso precisem entrar na leitura consolidada do extrato
+- item informativo futuro na tela de lancamentos, com simbolo `i` e historico de cadastro/alteracoes do documento ou lancamento quando houver ganho operacional real
+- historico por favorecido
+- relatorio anual por favorecido
+- cadastro rapido de pessoa dentro do lancamento
+- cadastro rapido de categoria dentro do lancamento
+
+### Posterior
+- termo anual de quitacao
+- contratos a pagar e a receber
+- parcelas
+- recorrencia
+- anexos de comprovantes
+- balancete padrao
+- importacao de planilha historica
+- evolucoes futuras especificas do bloco de recibos ja entregue
+- a obrigatoriedade de `data_pagamento` ja foi consolidada no nivel de validacao da aplicacao; eventual endurecimento futuro do campo no banco depende apenas de estrategia segura para bases legadas
+- acabamento documental futuro complementar dos relatorios impressos, apenas apos uso real, especialmente quando entrarem logo institucional e configuracao avancada de assinaturas
+- evolucao futura da identidade institucional nos relatorios do financeiro, incluindo uso controlado de logo quando fizer sentido documental sem poluir a leitura operacional
+- permitir mais de uma assinatura cadastrada por relatorio que tenha assinatura
+- permitir configurar em cada relatorio se mostra assinatura
+- permitir configurar quais assinaturas ativas devem aparecer em cada relatorio
+
+## 7. Consolidacao desta microetapa de acabamento documental
+
+- `Extrato`, `Resumo` e `Prestacao de Contas` passaram a compartilhar cabecalho documental de impressao/PDF mais coerente, com identidade institucional leve, metadados visiveis e hierarquia visual menos tecnica.
+- `Prestacao de Contas` recebeu bloco final de assinatura mais formal, ainda simples e sem antecipar a futura frente de multiplas assinaturas.
+- a base atual de impressao/PDF dos tres relatorios deve ser tratada como padrao funcional e visual desta etapa; backlog futuro relacionado fica restrito a logo institucional, configuracao de assinaturas e eventual acabamento complementar por uso real
+- nesta microetapa nao houve alteracao de regra de negocio nem ampliacao de escopo funcional dos relatorios
+
+## 8. Refino posterior de identidade e margens dos relatorios
+
+- o uso de sigla como pseudo-logo deixou de ser diretriz aceitavel para os relatorios impressos do `financeiro`
+- a base atual passou a priorizar logo institucional quando existir e, na ausencia dela, usar apenas o nome institucional no cabecalho documental
+- a etapa tambem reforcou margens e respiro do documento impresso, mantendo o shell isolado e melhorando o aproveitamento visual do `Extrato`
+- backlog futuro de acabamento final continua restrito a logo institucional melhor curada por uso real, multiplas assinaturas e configuracao por relatorio, sem reabrir regra de negocio
+
+## 9. Refino documental do recibo e da leitura do saldo acumulado
+
+- o recibo passou a adotar topo mais limpo e institucional, com titulo principal unico, numero em linha secundaria e mensagem central com maior protagonismo
+- no recibo, a logo agora deve liderar a identidade visual quando existir; o nome institucional permanece apenas como fallback discreto quando nao houver logo utilizavel
+- o `saldo acumulado` do extrato passou a usar leitura visual por sinal, alinhada ao vocabulario de valores positivos e negativos ja usado no modulo
+- backlog futuro do bloco de recibos continua restrito a evolucoes especificas posteriores, sem reabrir regra de negocio nem o escopo funcional entregue
+
+## 10. Reforco documental de margens, bordas e identidade visual
+
+- a base atual dos relatorios impressos e do recibo passou a usar margens de pagina mais abertas, quadro documental mais explicito e respiro interno mais perceptivel
+- os relatorios passaram a evitar repeticao desnecessaria do nome institucional quando a logo ja esta presente de forma suficiente no cabecalho
+- backlog futuro de acabamento permanece restrito a curadoria fina por uso real, multiplas assinaturas e configuracao futura da identidade visual global do sistema
+
+## 11. Frentes futuras documentais relacionadas
+
+- futura configuracao da paleta geral do sistema, com definicao de cor principal e derivacao coerente da paleta relacionada, sem aplicacao manual de cor solta em cada tela
+- futuro log de acesso ao sistema em camada estrutural propria, separado da auditoria funcional do `financeiro`
+- revisao futura da posicao do `Extrato` na navegacao do modulo, sem decisao de mudanca nesta etapa
+
+### Estrutural futura
+- integracao futura do `financeiro` com autenticacao e controle de acesso por usuario quando a frente estrutural do projeto for iniciada
+- definicao futura de permissoes por acao dentro do `financeiro`, sem isolar essa governanca do restante do sistema
+- convivencia futura do `financeiro` com administracao global centralizada de usuarios, perfis e permissoes, preservando a separacao entre cadastros globais e cadastros especificos do modulo
+- frente estrutural futura de usuarios, login, perfis e permissoes, com centralizacao progressiva de autenticacao, acesso e governanca entre modulos
+- possibilidade futura de unificacao de cadastros compartilhados, incluindo base comum de pessoas e outras entidades transversais quando isso fizer sentido para o sistema como um todo
+
+### Experimental
+- POC controlada de uso de template pronto no shell do `financeiro`, apenas como experimento comparativo e sem adocao abrupta no projeto
+- telas de impressao, PDF e recibo ficam fora da primeira onda dessa padronizacao estrutural
+
+### Sequencia linear anteriormente sugerida
 1. consulta historica por favorecido
 2. relatorio anual por favorecido
 3. contratos previstos a pagar e a receber

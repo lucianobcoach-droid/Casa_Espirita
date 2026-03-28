@@ -659,3 +659,130 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - a navegacao de apoio da tela coordenada ficou mais integrada ao mesmo vocabulário visual ja adotado nas demais telas centrais, sem alterar a logica nem a experiencia especializada do rateio
 - com essa microetapa, a primeira onda de padronizacao visual do `financeiro` foi fechada nas telas operacionais centrais
 - sidebar ou menu lateral ainda nao foram implementados nesta microetapa
+
+## Ajuste de margens da tela e dos relatorios do financeiro
+
+- `financeiro/base.html` passou a usar respiro lateral mais explicito no shell compartilhado, tanto na barra utilitaria quanto na area principal de conteudo, melhorando a leitura em tela sem perder densidade operacional
+- o shell tambem passou a centralizar variaveis proprias para margem de impressao e pequeno respiro interno dos relatorios impressos
+- `conta_extrato.html`, `resumo.html` e `prestacao_contas.html` passaram a usar wrappers de folha mais explicitos para o modo print, mantendo o isolamento do shell e evitando que o conteudo fique colado nas bordas da pagina
+- a impressao de Extrato, Resumo e Prestacao de Contas agora compartilha margem de pagina mais consistente e pequeno respiro interno padronizado, sem reintroduzir heranca indevida de sidebar, topbar ou wrappers de overflow
+- a validacao local confirmou `py manage.py check`, `py -m compileall financeiro casa_espirita` e status `200` para `/financeiro/`, `/financeiro/extratos/`, `/financeiro/resumo/` e `/financeiro/prestacao-contas/` apos a microetapa
+
+## Auditoria final de lacunas documentais deste ciclo
+
+- foi feita revisao final entre este chat e os documentos-base para confirmar que pedidos futuros, sugestoes aprovadas e limitacoes atuais relevantes nao ficassem fora da documentacao
+- foi ampliado o registro da validacao manual pendente de impressao real para cobrir explicitamente `Extrato`, `Resumo` e `Prestacao de Contas`
+- o backlog futuro do `financeiro` passou a registrar de forma explicita a possivel exibicao controlada de logo institucional nos relatorios
+- o backlog futuro do `financeiro` tambem passou a registrar um item informativo futuro com simbolo `i` na tela de lancamentos, associado a historico de cadastro/alteracoes do documento ou lancamento
+- esta microetapa foi exclusivamente documental e nao executou patch de codigo
+
+## Microetapa documental sobre frente estrutural de usuarios e permissoes
+
+- foi registrada em `docs/CEREBRO_PROJETO.md` a diretriz estrutural futura de usuarios, autenticacao, perfis e permissoes como frente transversal do projeto, sem tratar o tema como ajuste isolado do `financeiro`
+- foi registrado em `docs/CEREBRO_PROJETO.md` que a evolucao futura deve prever separacao entre administracao global do sistema e camadas especificas dos modulos, alem da possibilidade de unificacao futura de entidades compartilhadas como base comum de pessoas
+- foi registrado em `docs/ROADMAP_FINANCEIRO.md` apenas o impacto futuro do `financeiro` nessa frente, cobrindo integracao por usuario, permissoes por acao e convivencia com administracao global centralizada
+- foi registrado em `docs/STATE.md` apenas que essa frente estrutural futura esta oficialmente aberta em nivel documental, sem implementacao marcada
+- esta microetapa foi exclusivamente documental e nao implementou login, usuarios, perfis, permissao ou qualquer outra regra nova no codigo
+
+## Organizacao documental da fila restante
+
+- foi reorganizada em `docs/ROADMAP_FINANCEIRO.md` a fila pratica restante por grupos de prioridade, sem apagar nem substituir as secoes semanticas ja existentes de backlog
+- a reorganizacao passou a distinguir explicitamente faixas como `Imediato`, `Proximo`, `Posterior`, `Estrutural futura` e `Experimental`, preservando o backlog anterior e a sequencia linear historica
+- foi acrescentado em `docs/ROADMAP_FINANCEIRO.md` o registro explicito da validacao manual real de impressao de `Extrato`, `Resumo` e `Prestacao de Contas`
+- foi acrescentado em `docs/ROADMAP_FINANCEIRO.md` o registro explicito da POC controlada de uso de template pronto no shell do `financeiro`
+- a organizacao desta etapa foi exclusivamente documental e nao implementou codigo nem removeu qualquer item ja registrado
+
+## Validacao manual real da impressao dos relatorios principais
+
+- foi executada validacao visual real da impressao de `Extrato`, `Resumo` e `Prestacao de Contas` usando navegador/PDF real sobre a base atual do projeto
+- o `Extrato` confirmou largura util adequada, ausencia de vestigio indevido do shell administrativo e leitura impressa coerente para a tabela e para o cabecalho proprio de impressao
+- o `Resumo` confirmou margens adequadas, boa distribuicao do conteudo na folha e ausencia de heranca indevida de sidebar, topbar ou drawer na saida de impressao
+- a `Prestacao de Contas` confirmou composicao formal adequada, boa leitura documental na folha e ausencia de heranca indevida do shell na saida de impressao
+- nesta microetapa nao foi necessario aplicar patch de codigo, porque a validacao real nao encontrou regressao visual que justificasse correcao adicional
+- `docs/STATE.md` passou a registrar o encerramento dessa pendencia e `docs/ROADMAP_FINANCEIRO.md` deixou de tratar essa validacao e o refinamento fino das margens como backlog aberto nesta base atual
+
+## Refinamento documental de impressao/PDF dos relatorios principais
+
+- `financeiro/templates/financeiro/base.html` passou a concentrar um vocabulario visual documental compartilhado para impressao/PDF dos relatorios do `financeiro`, incluindo cabecalho comum, metadados em cards, hierarquia tipografica e assinatura final mais formal para a prestacao
+- `financeiro/templates/financeiro/conta_extrato.html` passou a usar esse padrao no modo documental, deixando o `Extrato` menos parecido com uma tabela tecnica impressa e mais com um documento final por conta
+- `financeiro/templates/financeiro/resumo.html` passou a usar o mesmo padrao no topo de impressao, com cabecalho institucional leve, metadados do periodo e bloco inicial mais coerente com um relatorio consolidado final
+- `financeiro/templates/financeiro/prestacao_contas.html` passou a usar cabecalho documental mais consistente e bloco final de assinatura menos cru, sem antecipar logo institucional nem a futura frente de multiplas assinaturas
+- nesta microetapa nao houve alteracao de regra de negocio, calculos, filtros, agrupamentos nem conteudo funcional dos relatorios
+- foi possivel executar `py manage.py check`, validar localmente as rotas centrais dos relatorios com status `200` e gerar PDFs reais dos tres documentos em `tmp/print-validation/`
+
+## Refinamento institucional de cabecalho, margens e extrato
+
+- `financeiro/context_processors.py` passou a expor tambem `financeiro_shell_brand_logo_url` a partir da `ConfiguracaoInstitucional` ativa/padrao, para uso institucional correto nos relatorios
+- `financeiro/templates/financeiro/base.html` deixou de tratar sigla como elemento visual de relatorio e passou a preparar o cabecalho documental para usar logo quando existir, com fallback apenas para o nome institucional
+- as margens de impressao e o respiro interno foram reforcados no padrao compartilhado de print/PDF dos relatorios
+- `financeiro/templates/financeiro/conta_extrato.html` tambem recebeu ajuste especifico de densidade e distribuicao de colunas no print para aproveitar melhor a folha sem perder legibilidade
+- `financeiro/templates/financeiro/resumo.html` e `financeiro/templates/financeiro/prestacao_contas.html` foram alinhados a essa mesma logica de identidade institucional sem pseudo-logo
+- nesta microetapa nao houve alteracao de regra de negocio, calculos, filtros nem conteudo funcional dos relatorios
+- foi possivel executar `py manage.py check`, validar novamente as rotas dos relatorios com status `200` e regenerar PDFs reais atualizados em `tmp/print-validation/`
+
+## Refinamento documental do recibo e da leitura do saldo acumulado
+
+- `financeiro/templates/financeiro/lancamento_recibo.html` foi refinado para parecer mais documento final e menos cartao administrativo, com topo mais centrado, `RECIBO` como titulo principal, numero em linha secundaria mais limpa e valor destacado sem redundancia de data no topo
+- no recibo, a logo ganhou mais presenca visual e o nome institucional deixou de ser repetido ao lado dela quando a logo esta presente; o nome agora fica como fallback discreto quando nao ha logo utilizavel
+- a mensagem principal do recibo ganhou bloco central com mais protagonismo documental e o fechamento passou a soar mais formal
+- `financeiro/templates/financeiro/base.html` passou a oferecer classes de leitura visual para o `saldo acumulado` do extrato
+- `financeiro/templates/financeiro/conta_extrato.html` passou a aplicar ao `saldo acumulado` a logica visual de cor por sinal: positivo, negativo ou neutro
+- nesta microetapa nao houve alteracao de regra de negocio, calculos, filtros nem conteudo funcional de recibo ou extrato
+- foi possivel executar `py manage.py check`, validar localmente `/financeiro/lancamentos/1/recibo/` e `/financeiro/extratos/?conta=3` com status `200` e gerar PDFs reais atualizados em `tmp/print-validation/`
+
+## Reforco perceptivel de margens, bordas e identidade documental
+
+- `financeiro/templates/financeiro/base.html` recebeu novo reforco no padrao compartilhado de print com margens de pagina mais abertas, aumento do respiro interno e quadro documental mais explicito para os relatorios impressos
+- `financeiro/templates/financeiro/conta_extrato.html`, `financeiro/templates/financeiro/resumo.html` e `financeiro/templates/financeiro/prestacao_contas.html` foram alinhados para evitar repeticao desnecessaria do nome institucional quando a logo ja esta presente no cabecalho
+- `financeiro/templates/financeiro/lancamento_recibo.html` recebeu reforco visual adicional de borda, topo e respiro para ficar mais institucional e menos parecido com um bloco administrativo simples
+- nesta mesma etapa foi registrada, apenas em nivel documental, a futura frente de configuracao da paleta geral do sistema com derivacao coerente a partir de uma cor principal
+- nesta mesma etapa tambem foram registrados, apenas em nivel documental, o futuro log de acesso ao sistema e a revisao futura da posicao do `Extrato` na navegacao
+- nesta microetapa nao houve alteracao de regra de negocio, calculos, filtros, agrupamentos nem conteudo funcional
+- foi possivel executar `py manage.py check`, validar as rotas de recibo e relatorios com status `200` e gerar novamente PDFs reais atualizados em `tmp/print-validation/`
+
+## Ajuste visual cirurgico do saldo acumulado no extrato
+
+- `financeiro/templates/financeiro/base.html` recebeu ajuste fino para remover o negrito do `saldo acumulado` no extrato
+- o `saldo acumulado` manteve a leitura visual por sinal, usando cor para positivo, negativo e neutro
+- `saldo inicial` e `saldo final` permanecem como linhas destacadas em negrito no corpo do extrato
+- nesta microetapa nao houve alteracao de calculo, regra de negocio, logica funcional nem abertura de frente nova
+
+## Refinamento documental focado do Extrato
+
+- `financeiro/templates/financeiro/conta_extrato.html` teve o cabecalho documental simplificado para a versao impressa, com retirada de texto instrutivo e remocao do `saldo anterior` da faixa superior de metadados
+- `financeiro/templates/financeiro/base.html` recebeu ajuste especifico para o `Extrato` impresso, aumentando perceptivelmente a margem superior util, reduzindo o peso visual do topo e deixando o quadro documental menos carregado
+- a tabela do `Extrato` ganhou cabeÃ§alho com mais respiro, zebra leve no corpo e separacao visual mais clara entre `saldo acumulado` e `observacoes`
+- o `saldo acumulado` permaneceu sem negrito e com leitura por cor conforme o sinal do valor
+- nesta microetapa nao houve alteracao de calculo, filtros, agrupamentos, conteudo funcional nem regra de negocio
+- foi possivel executar `py manage.py check`, validar a rota `/financeiro/extratos/?conta=3` com status `200` e gerar PDF real atualizado em `tmp/print-validation/extrato-v5.pdf`
+
+## Fechamento visual do Extrato impresso
+
+- `financeiro/templates/financeiro/conta_extrato.html` passou a usar cabecalho impresso ainda mais simples, com titulo curto, linha unica de metadados documentais e rotulos abreviados no print para reduzir peso visual
+- `financeiro/templates/financeiro/base.html` recebeu alivio adicional no modo print do `Extrato`, com menos moldura, tipografia mais fina, bordas mais discretas, zebra mais suave e melhor distribuicao horizontal das colunas
+- a composicao do extrato impresso ficou mais proxima de um extrato bancario leve do que de uma tabela tecnica, especialmente no topo, no cabecalho da tabela e na separacao entre `Favorecido`, `Tipo`, `Saldo` e `Obs.`
+- o `saldo acumulado` foi preservado com cor por sinal e sem negrito, enquanto `saldo inicial` e `saldo final` continuaram destacados
+- nesta microetapa nao houve alteracao de calculo, filtros, agrupamentos, conteudo funcional nem regra de negocio
+- foi possivel executar `py manage.py check`, validar novamente `/financeiro/extratos/?conta=3` com status `200` e gerar PDF real atualizado em `tmp/print-validation/extrato-v6.pdf`
+
+## Ajuste fino final de data e grade do Extrato impresso
+
+- `financeiro/templates/financeiro/conta_extrato.html` passou a padronizar o periodo do cabecalho impresso em `dd/mm/aaaa`, sem alterar a estrutura funcional do extrato nem o comportamento dos filtros
+- `financeiro/templates/financeiro/base.html` recebeu alivio final da grade do print do `Extrato`, removendo divisorias verticais e afinando ainda mais as linhas horizontais para leitura mais leve e documental
+- o `saldo acumulado` foi preservado com cor por sinal e sem negrito, enquanto `saldo inicial` e `saldo final` continuaram destacados
+- nesta microetapa nao houve alteracao de regra de negocio, calculos, filtros, agrupamentos nem conteudo funcional
+- foi possivel executar `py manage.py check` e validar novamente `/financeiro/extratos/?conta=3` com status `200`
+
+## Ajuste final de cabecalho institucional e linhas do Extrato impresso
+
+- `financeiro/templates/financeiro/conta_extrato.html` deixou de usar logo institucional no cabecalho impresso do `Extrato` e passou a exibir apenas o nome da instituicao cadastrada, em negrito e com leitura documental limpa
+- `financeiro/templates/financeiro/base.html` recebeu ajuste fino adicional para afinar ainda mais as linhas horizontais da tabela do `Extrato`, mantendo a ausencia de divisorias verticais
+- o cabecalho preservou hierarquia visual leve e o `saldo acumulado` continuou com cor por sinal e sem negrito, sem alterar `saldo inicial` e `saldo final`
+- nesta microetapa nao houve alteracao de regra de negocio, calculos, filtros, agrupamentos nem conteudo funcional
+- foi possivel executar `py manage.py check` e validar novamente `/financeiro/extratos/?conta=3` com status `200`
+
+## Encerramento do ciclo visual do Extrato impresso
+
+- a validacao humana final aprovou o acabamento atual do `Extrato` impresso nesta branch
+- com isso, o ciclo visual do `Extrato` pode ser tratado como encerrado no estado atual do repositorio, sem necessidade de novo ajuste funcional ou documental amplo
+- qualquer evolucao posterior sobre esse relatorio deve ser tratada apenas como curadoria incremental por uso real, e nao como reabertura da frente principal de acabamento visual

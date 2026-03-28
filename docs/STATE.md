@@ -78,12 +78,15 @@ Data de atualizacao: 2026-03-27
 - Os controles de recolher e reabrir a lateral no desktop agora compartilham linguagem visual mais uniforme, com dimensoes, borda e sombra discretas coerentes com os demais controles utilitarios do shell.
 - O controle da lateral no desktop agora usa um unico slot fixo na barra utilitaria, ao lado da marca do modulo, sem trocar de lado entre os estados expandido e recolhido.
 - A estrategia de rolagem vertical do shell do `financeiro` foi simplificada para evitar concorrencia entre a pagina e a navegacao lateral no desktop; a sidebar deixa de manter scrollbar proprio nessa faixa e a leitura volta a depender de uma rolagem principal unica.
+- O shell do `financeiro` agora tambem usa respiro lateral mais explicito na barra utilitaria e na area principal de conteudo, evitando que a tela fique colada demais nas bordas em desktop sem desperdiçar largura util.
 - Foi identificada uma regressao real na impressao/PDF do extrato apos a evolucao do shell com sidebar: o layout podia sair espremido a esquerda por heranca indevida da estrutura principal de grid/largura/overflow do shell.
 - A correcao seguinte passou a isolar o extrato do shell no modo print, removendo a influencia de sidebar, topbar, wrappers de overflow e tracks do grid lateral na composicao impressa.
 - O toggle da lateral no desktop tambem passou a usar apenas icone visivel, mantendo acessibilidade por `title`, `aria-label` e texto apenas para leitor de tela.
 - `Resumo` e `Prestacao de Contas` agora tambem possuem acao lateral de `Imprimir`, reutilizando o isolamento de print do shell para nao herdar sidebar, topbar ou wrappers de overflow na versao impressa.
 - A exibicao visivel das categorias no modulo financeiro foi simplificada: quando a natureza ja esta clara pelo contexto da tela, pelo agrupamento ou por `Tipo`, a interface passou a mostrar apenas o nome da categoria, sem prefixos longos como `Receita - ...` ou `Despesa - ...`.
-- A validacao manual fina de print real de `Resumo` e `Prestacao de Contas` continua como verificacao complementar pendente fora do ambiente automatizado atual.
+- A validacao manual real de impressao de `Extrato`, `Resumo` e `Prestacao de Contas` foi concluida com sucesso em navegador/PDF real nesta base atual, sem regressao visual relevante de largura util, margens ou heranca indevida do shell.
+- Os relatorios operacionais do `financeiro` ainda nao exibem logo institucional propria; hoje essa identidade visual dinamica segue concentrada no recibo e pode evoluir em etapa futura especifica.
+- Extrato, Resumo e Prestacao de Contas agora tambem compartilham margem de impressao mais consistente, com pequeno respiro interno padronizado na folha e sem perder o isolamento do shell no modo print.
 - A primeira onda real de padronizacao visual do `financeiro` agora foi aplicada nas telas-chave mais seguras do modulo: listagem de lancamentos, formulario de lancamento e auditoria.
 - Essas tres telas passaram a compartilhar com mais consistencia o mesmo vocabulário de header/topo do shell do modulo, com titulo, subtitulo e acoes laterais alinhados ao padrao reutilizavel de `financeiro/base.html`.
 - A primeira onda visual agora tambem alcancou `conta_extrato.html`, `resumo.html` e `prestacao_contas.html`, alinhando topo, subtitulo, acoes laterais e hierarquia dos blocos principais ao shell compartilhado do modulo.
@@ -353,6 +356,7 @@ Com filtro por periodo:
 
 - Ficou registrada nesta auditoria funcional a frente residual de revisao estrutural da obrigatoriedade de `data_pagamento`, caso a regra hoje concentrada no formulario precise subir para nivel de modelagem.
 - Ficou registrada nesta auditoria funcional a frente de expansao da auditoria de alteracoes no financeiro para alem de `LancamentoFinanceiro`, preservando a abordagem incremental e sem `signals`.
+- Fica oficialmente aberta, apenas em nivel documental e sem implementacao nesta etapa, a frente estrutural futura de usuarios, autenticacao, perfis e permissoes do projeto, com separacao prevista entre administracao global e regras especificas dos modulos.
 - Nesta etapa de auditoria funcional e documental, nenhum patch de codigo foi executado.
 
 ## Diretriz incremental para auditoria de alteracoes
@@ -370,7 +374,38 @@ Com filtro por periodo:
 
 ## Validacao local
 
-- Nao foi possivel executar `py manage.py check` com sucesso no ambiente atual.
-- Motivo: o interpretador disponivel nao tem o pacote `django` instalado.
-- Foi possivel validar a sintaxe dos arquivos Python via `py -m compileall financeiro`.
-- Assim, a estrutura foi deixada pronta, mas a validacao automatica do runtime ainda depende de um ambiente com as dependencias instaladas.
+- Foi possivel executar `py manage.py check` com sucesso no ambiente atual.
+- Foi possivel validar a sintaxe dos arquivos Python via `py -m compileall financeiro casa_espirita`.
+- A validacao tecnica local do modulo hoje pode combinar checagem do Django, compilacao e requests controlados via `Client(HTTP_HOST='localhost')`.
+
+## Acabamento documental atual dos relatorios principais
+
+- `Extrato`, `Resumo` e `Prestacao de Contas` agora compartilham uma base visual documental mais coerente para impressao/PDF, com cabecalho comum, hierarquia tipografica mais clara e melhor aproveitamento da folha.
+- O padrao atual de identidade institucional dos relatorios passou a priorizar `logo_url` da `ConfiguracaoInstitucional` ativa/padrao quando existir e, sem logo, cair apenas para o nome institucional, sem usar sigla como pseudo-logo.
+- `Prestacao de Contas` ganhou bloco final de assinatura mais formal e menos generico, ainda propositalmente simples nesta etapa.
+- As margens de impressao e o respiro interno dos relatorios foram reforcados nesta etapa, com ganho adicional de aproveitamento visual no `Extrato`.
+- Nesta microetapa nao houve alteracao de regra de negocio, calculos, filtros nem conteudo funcional dos relatorios.
+- Foi possivel executar `py manage.py check`, validar localmente as rotas `/financeiro/extratos/`, `/financeiro/resumo/` e `/financeiro/prestacao-contas/` com status `200` e regenerar PDFs reais dos tres relatorios em `tmp/print-validation/`.
+- A validacao visual fina humana do acabamento final continua podendo ser revisitada depois por uso real, especialmente quando entrarem logo institucional e configuracao futura de assinaturas por relatorio.
+
+## Acabamento documental atual do recibo e do saldo acumulado do extrato
+
+- o recibo passou a ter topo mais institucional e menos fragmentado, com `RECIBO` como titulo principal, numero em linha secundaria limpa e maior presenca da logo quando existir
+- no recibo, o nome institucional agora aparece apenas como fallback discreto quando nao houver logo utilizavel; quando a logo esta presente, ela assume a identificacao visual principal do topo
+- a mensagem principal do recibo ganhou centralidade e maior peso documental, deixando de parecer observacao administrativa secundarizada
+- a data deixou de aparecer de forma redundante no topo do recibo, permanecendo apenas no corpo documental
+- no extrato, o `saldo acumulado` passou a usar cor coerente com o sinal do valor: positivo com leitura de receita, negativo com leitura de despesa e neutro com tom sobrio
+- numa microetapa posterior de ajuste fino, o `saldo acumulado` deixou de usar negrito e passou a manter apenas a leitura por cor, preservando `saldo inicial` e `saldo final` como linhas destacadas em negrito
+- numa microetapa posterior de refinamento documental do `Extrato`, o topo impresso ficou mais leve, o `saldo anterior` saiu do cabecalho e permaneceu apenas no corpo da tabela, e a tabela passou a ter zebra leve e separacao visual melhor entre `saldo acumulado` e `observacoes`
+- numa microetapa posterior de fechamento visual do `Extrato`, o cabecalho impresso foi simplificado para uma linha documental mais seca, os rotulos do print ficaram mais curtos, as linhas e bordas da tabela ficaram mais discretas e a distribuicao de colunas passou a reduzir melhor a sensacao de aperto entre `Favorecido`, `Tipo`, `Saldo acumulado` e `Observacoes`
+- numa microetapa posterior de ajuste fino final do `Extrato`, o periodo do cabecalho impresso foi padronizado em `dd/mm/aaaa` e a grade da tabela perdeu as divisorias verticais, mantendo apenas linhas horizontais mais finas e discretas para leitura documental leve
+- numa microetapa posterior de fechamento visual complementar do `Extrato`, a logo foi removida apenas do cabecalho impresso desse relatorio e substituida pelo nome institucional em negrito com leitura limpa, enquanto as linhas horizontais da tabela foram afinadas novamente para reduzir ainda mais o peso da grade
+- com a validacao humana final aprovada nesta base, o ciclo visual do `Extrato` impresso pode ser tratado como encerrado para a branch atual, permanecendo apenas eventual curadoria futura por uso real sem reabrir regra de negocio
+- nesta microetapa nao houve alteracao de regra de negocio, calculos, filtros nem conteudo funcional de recibo ou extrato
+- foi possivel executar `py manage.py check`, validar localmente `/financeiro/lancamentos/1/recibo/` e `/financeiro/extratos/?conta=3` com status `200` e gerar PDFs reais atualizados em `tmp/print-validation/`
+
+## Frentes futuras abertas apenas em nivel documental
+
+- fica oficialmente registrada, apenas em nivel documental e sem implementacao nesta etapa, a futura frente de configuracao da paleta geral do sistema, com derivacao coerente de cores a partir de uma cor principal
+- fica oficialmente registrada, apenas em nivel documental e sem implementacao nesta etapa, a futura frente de log de acesso ao sistema, separada da auditoria funcional ja existente no `financeiro`
+- fica registrada como revisao futura de navegacao, sem decisao de mudanca nesta etapa, a necessidade de reavaliar a posicao do `Extrato` na navegacao do modulo quando houver contexto suficiente de uso real

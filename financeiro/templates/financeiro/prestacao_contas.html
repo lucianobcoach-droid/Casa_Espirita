@@ -87,17 +87,61 @@
     {% if periodo_error %}
         <div class="notification is-warning">{{ periodo_error }}</div>
     {% else %}
-        <div class="prestacao-report">
+        <div class="prestacao-report financeiro-document-report">
             <header class="prestacao-report-header">
-                <h1 class="prestacao-report-title">{{ page_title }}</h1>
-                <p class="prestacao-report-meta"><strong>Periodo:</strong> {{ periodo_label }}</p>
-                <p class="prestacao-report-meta"><strong>Contas incluidas:</strong> {{ contas_incluidas_label }}</p>
-                <p class="report-print-meta only-print">Emitido em {% now "d/m/Y H:i" %}</p>
+                <div class="financeiro-document-header">
+                    <div class="financeiro-document-brand">
+                        {% if financeiro_shell_brand_logo_url %}
+                        <div class="financeiro-document-brand-identity">
+                            <img
+                                class="financeiro-document-logo"
+                                src="{{ financeiro_shell_brand_logo_url }}"
+                                alt="Logo institucional"
+                                loading="eager"
+                                decoding="async"
+                                referrerpolicy="no-referrer"
+                                onerror="this.closest('.financeiro-document-brand-identity').remove();"
+                            >
+                        </div>
+                        {% endif %}
+                        <div class="financeiro-document-brand-copy">
+                            <span class="financeiro-document-kicker">Prestacao Financeira</span>
+                            {% if not financeiro_shell_brand_logo_url %}
+                            <p class="financeiro-document-brand-name">{{ financeiro_shell_brand_name }}</p>
+                            {% endif %}
+                            <p class="financeiro-document-brand-note">Relatorio formal de prestacao de contas para leitura consolidada do periodo selecionado.</p>
+                        </div>
+                    </div>
+                    <div>
+                        <h1 class="financeiro-document-title">{{ page_title }}</h1>
+                        <p class="financeiro-document-subtitle">Composicao consolidada de saldos, receitas e despesas para emissao documental.</p>
+                    </div>
+                </div>
+
+                <div class="financeiro-document-meta-grid">
+                    <div class="financeiro-document-meta-card">
+                        <span class="financeiro-document-meta-label">Periodo</span>
+                        <span class="financeiro-document-meta-value">{{ periodo_label }}</span>
+                    </div>
+                    <div class="financeiro-document-meta-card">
+                        <span class="financeiro-document-meta-label">Contas incluidas</span>
+                        <span class="financeiro-document-meta-value">{{ contas_incluidas_label }}</span>
+                    </div>
+                    <div class="financeiro-document-meta-card">
+                        <span class="financeiro-document-meta-label">Saldo final</span>
+                        <span class="financeiro-document-meta-value"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_final_consolidado|br_money }}</span></span></span>
+                    </div>
+                    <div class="financeiro-document-meta-card">
+                        <span class="financeiro-document-meta-label">Emitido em</span>
+                        <span class="financeiro-document-meta-value">{% now "d/m/Y H:i" %}</span>
+                    </div>
+                </div>
+
                 {% if existe_lancamento_sem_categoria %}
-                    <p class="prestacao-report-meta">Lancamentos sem categoria aparecem no agrupamento como "Sem categoria".</p>
+                    <p class="financeiro-document-note">Lancamentos sem categoria aparecem no agrupamento como "Sem categoria".</p>
                 {% endif %}
                 {% if mostrar_centro_custo and existe_lancamento_sem_centro_custo %}
-                    <p class="prestacao-report-meta">Despesas sem centro de custo aparecem no agrupamento como "Sem centro de custo".</p>
+                    <p class="financeiro-document-note">Despesas sem centro de custo aparecem no agrupamento como "Sem centro de custo".</p>
                 {% endif %}
             </header>
 
@@ -307,9 +351,9 @@
             {% endif %}
 
             <div class="prestacao-signature">
-                <p>Local e data: _________________________________________________</p>
                 <div class="prestacao-signature-line"></div>
-                <p>Assinatura e identificacao</p>
+                <p>Responsavel pela prestacao de contas</p>
+                <p class="prestacao-signature-caption">Documento emitido para conferencia institucional de {{ financeiro_shell_brand_name }}.</p>
             </div>
         </div>
     {% endif %}

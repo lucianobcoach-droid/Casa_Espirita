@@ -33,11 +33,12 @@ def _extrair_iniciais(nome: str) -> str:
 
 def financeiro_shell_brand(request):
     nome_instituicao = 'Casa Espirita'
+    logo_url = ''
 
     try:
         configuracao = (
             ConfiguracaoInstitucional.objects.filter(ativo=True, padrao=True)
-            .only('nome_instituicao')
+            .only('nome_instituicao', 'logo_url')
             .first()
         )
     except (OperationalError, ProgrammingError):
@@ -45,8 +46,11 @@ def financeiro_shell_brand(request):
 
     if configuracao and configuracao.nome_instituicao and configuracao.nome_instituicao.strip():
         nome_instituicao = configuracao.nome_instituicao.strip()
+    if configuracao and configuracao.logo_url and configuracao.logo_url.strip():
+        logo_url = configuracao.logo_url.strip()
 
     return {
         'financeiro_shell_brand_name': nome_instituicao,
         'financeiro_shell_brand_initials': _extrair_iniciais(nome_instituicao),
+        'financeiro_shell_brand_logo_url': logo_url,
     }
