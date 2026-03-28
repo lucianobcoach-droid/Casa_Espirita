@@ -98,6 +98,10 @@ class CategoriaFinanceira(models.Model):
         verbose_name_plural = 'Categorias financeiras'
 
     def __str__(self) -> str:
+        return self.nome
+
+    @property
+    def label_completo(self) -> str:
         return f'{self.get_tipo_display()} - {self.nome}'
 
     @property

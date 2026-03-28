@@ -90,6 +90,25 @@
     }
 
     @media print {
+        .financeiro-app-shell-body,
+        .financeiro-app-main,
+        .financeiro-app-main .section,
+        .financeiro-app-main .section > .container {
+            display: block !important;
+            width: 100% !important;
+            max-width: none !important;
+            min-width: 0 !important;
+            overflow: visible !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+
+        .table-wrapper {
+            width: 100% !important;
+            max-width: none !important;
+            overflow: visible !important;
+        }
+
         .financeiro-extrato-screen-header {
             display: none !important;
         }
@@ -117,6 +136,7 @@
         }
 
         .financeiro-extrato-table {
+            width: 100% !important;
             table-layout: auto !important;
         }
 
