@@ -496,3 +496,54 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - o extrato passou a usar coluna propria de `Favorecido`, sem reintroduzir `Categoria` na tabela nesta microcorrecao
 - a microetapa preservou calculo, ordenacao, consolidacao funcional do rateio e o padrao visual limpo ja consolidado no extrato
 - o cabecalho visual da tela de auditoria foi reestruturado para eliminar a sobreposicao entre titulo, subtitulo e acao lateral
+
+## Consolidacao da hierarquia entre categoria pai e subcategoria nos lancamentos
+
+- `CategoriaFinanceira` passou a bloquear vinculacao direta de categoria pai em `LancamentoFinanceiro`
+- o formulario comum, o rateio inicial e a edicao coordenada do grupo passaram a aceitar apenas subcategorias validas, com `categoria_pai` preenchida
+- a validacao estrutural tambem subiu para o `clean()` de `LancamentoFinanceiro`, impedindo gravacao indevida mesmo fora do formulario
+- a microetapa preservou compatibilidade de base sem migracao nova, mas lancamentos futuros ou atualizados com categoria pai passam a exigir regularizacao para subcategoria valida
+
+## Diagnostico estrutural da camada visual e abertura da governanca visual
+
+- foi feito mapeamento estrutural da interface atual do projeto, cobrindo templates-base, tipos de tela, componentes visuais candidatos a padronizacao e dependencias de layout
+- o diagnostico confirmou que o `financeiro` hoje concentra a base visual mais madura, enquanto `biblioteca` e `configuracoes` ainda nao compartilham o mesmo shell visual
+- tambem ficou registrado que a adocao imediata de sidebar ou menu lateral no projeto inteiro nao e segura no estado atual, por ainda depender de reorganizacao previa do layout-base
+- nenhum patch de codigo foi feito nesta etapa
+- esta etapa foi exclusivamente de diagnostico e governanca documental da frente visual
+
+## Preparacao tecnica do shell visual compartilhado do financeiro
+
+- `financeiro/base.html` foi reorganizado de forma cirurgica como shell visual compartilhado do modulo, sem introduzir menu lateral e sem alterar paginas de impressao, PDF ou recibo
+- a base compartilhada passou a concentrar de forma mais explicita classes reutilizaveis de cabecalho de pagina, callouts, chips de resumo e blocos auxiliares usados em formularios e rateio
+- a inicializacao JS do dropdown de contas foi consolidada no shell compartilhado, reduzindo duplicacao entre telas de relatorio do modulo
+- a etapa preservou comportamento funcional e ficou restrita a preparacao tecnica anterior a qualquer futura troca estrutural da navegacao principal
+
+## Primeira onda de padronizacao visual das telas-chave do financeiro
+
+- `lancamento_list.html`, `lancamento_form.html` e `auditoria_lancamento_list.html` passaram a compartilhar com mais consistencia o mesmo padrao de header/topo do modulo
+- a etapa alinhou titulo, subtitulo e acoes laterais dessas tres telas ao vocabulário visual ja consolidado em `financeiro/base.html`
+- a leitura visual entre listagem, formulario e auditoria ficou mais coerente sem alterar regra de negocio, filtros, captura de auditoria ou fluxo operacional
+- sidebar ou menu lateral ainda nao foram implementados nesta microetapa
+
+## Validacao pratica e estabilizacao da primeira onda visual do financeiro
+
+- foi executada validacao tecnica local com `py manage.py check`, `py -m compileall financeiro casa_espirita` e requests via `Client(HTTP_HOST='localhost')` para as telas centrais do modulo
+- `lancamento_list`, `lancamento_form`, `auditoria_lancamento_list`, `conta_extrato`, `resumo`, `prestacao_contas`, `lancamento_rateio_grupo_form` e `lancamento_recibo` responderam com status `200` na validacao local
+- durante essa validacao apareceu uma regressao real na abertura da edicao coordenada do grupo rateado: o formulario especializado tentava acessar `self.fields['categoria']`, embora essa tela trabalhe o rateio por payload e nao tenha esse campo no `Meta.fields`
+- a estabilizacao ficou restrita a remover esse acesso indevido no `LancamentoFinanceiroGrupoRateioForm`, preservando o fluxo especializado do grupo e sem alterar regra de negocio
+- a validacao automatizada confirmou estabilidade tecnica da primeira onda visual no nivel da aplicacao; a validacao manual fina de browser e impressao real continua como verificacao complementar recomendada fora desta etapa
+
+## Fechamento da primeira onda visual nas telas de relatorio operacional
+
+- `conta_extrato.html`, `resumo.html` e `prestacao_contas.html` passaram a conversar com o mesmo shell visual compartilhado do `financeiro`, especialmente no topo, subtitulo, acoes laterais e hierarquia dos blocos principais
+- o resumo consolidado passou a usar um bloco principal mais coerente com os componentes-base compartilhados, sem alterar totais, agrupamentos ou filtros
+- o extrato e a prestacao de contas mantiveram suas particularidades operacionais e de impressao, mas ficaram mais alinhados ao mesmo vocabulário estrutural do modulo
+- sidebar ou menu lateral ainda nao foram implementados nesta microetapa
+
+## Fechamento da primeira onda visual na tela coordenada do grupo rateado
+
+- `lancamento_rateio_grupo_form.html` passou a usar header/topo mais alinhado ao shell compartilhado do `financeiro`, com subtitulo operacional e acoes laterais coerentes com o restante do modulo
+- a navegacao de apoio da tela coordenada ficou mais integrada ao mesmo vocabulário visual ja adotado nas demais telas centrais, sem alterar a logica nem a experiencia especializada do rateio
+- com essa microetapa, a primeira onda de padronizacao visual do `financeiro` foi fechada nas telas operacionais centrais
+- sidebar ou menu lateral ainda nao foram implementados nesta microetapa

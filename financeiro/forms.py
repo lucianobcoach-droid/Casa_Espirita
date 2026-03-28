@@ -20,6 +20,10 @@ from .models import (
 )
 
 
+def categorias_vinculaveis_queryset():
+    return CategoriaFinanceira.objects.filter(categoria_pai__isnull=False).order_by('tipo', 'nome')
+
+
 class ContaFinanceiraForm(forms.ModelForm):
     class Meta:
         model = ContaFinanceira
@@ -146,6 +150,7 @@ class LancamentoFinanceiroForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self._rateio_group_token = self.instance.grupo_rateio or uuid4().hex
         self.rateio_linhas_iniciais = []
+        self.fields['categoria'].queryset = categorias_vinculaveis_queryset()
         self.fields['tipo'].widget.attrs.update({'data-financeiro-tipo': 'true'})
         self.fields['conta_destino'].widget.attrs.update({'data-financeiro-conta-destino': 'true'})
         self.fields['conta'].error_messages['required'] = 'Informe a conta de origem.'
@@ -236,7 +241,7 @@ class LancamentoFinanceiroForm(forms.ModelForm):
         soma_rateio = Decimal('0.00')
         rateio_por_categoria: dict[int, dict[str, object]] = {}
         categorias_disponiveis = {
-            str(categoria.pk): categoria for categoria in CategoriaFinanceira.objects.all()
+            str(categoria.pk): categoria for categoria in categorias_vinculaveis_queryset()
         }
 
         for indice, linha in enumerate(linhas_brutas, start=1):
@@ -249,6 +254,13 @@ class LancamentoFinanceiroForm(forms.ModelForm):
             categoria = categorias_disponiveis.get(categoria_id)
             if categoria is None:
                 self.add_error('rateio_payload', f'Linha {indice}: informe uma categoria valida.')
+                continue
+
+            if not categoria.permite_vinculo_em_lancamento:
+                self.add_error(
+                    'rateio_payload',
+                    f'Linha {indice}: selecione uma subcategoria valida. Categoria pai nao pode ser usada no rateio.',
+                )
                 continue
 
             try:
@@ -308,6 +320,11 @@ class LancamentoFinanceiroForm(forms.ModelForm):
                 self.add_error('pessoa', 'Informe a pessoa para receita e despesa.')
             if not cleaned_data.get('categoria') and not lancamento_com_rateio:
                 self.add_error('categoria', 'Informe a categoria para receita e despesa.')
+            elif cleaned_data.get('categoria') and not cleaned_data['categoria'].permite_vinculo_em_lancamento:
+                self.add_error(
+                    'categoria',
+                    'Selecione uma subcategoria para receita e despesa. Categoria pai nao pode ser usada em lancamentos.',
+                )
 
         if lancamento_com_rateio:
             self._validar_rateio(cleaned_data)
@@ -482,7 +499,7 @@ class LancamentoFinanceiroGrupoRateioForm(forms.ModelForm):
             return cleaned_data
 
         categorias_disponiveis = {
-            str(categoria.pk): categoria for categoria in CategoriaFinanceira.objects.all()
+            str(categoria.pk): categoria for categoria in categorias_vinculaveis_queryset()
         }
         linhas_validas = 0
         soma_rateio = Decimal('0.00')
@@ -509,6 +526,13 @@ class LancamentoFinanceiroGrupoRateioForm(forms.ModelForm):
             categoria = categorias_disponiveis.get(categoria_id)
             if categoria is None:
                 self.add_error('rateio_payload', f'Linha {indice}: informe uma categoria valida.')
+                continue
+
+            if not categoria.permite_vinculo_em_lancamento:
+                self.add_error(
+                    'rateio_payload',
+                    f'Linha {indice}: selecione uma subcategoria valida. Categoria pai nao pode ser usada no rateio.',
+                )
                 continue
 
             try:

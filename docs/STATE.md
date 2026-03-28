@@ -25,6 +25,9 @@ Data de atualizacao: 2026-03-27
 - A `Prestacao de Contas` agora tem apresentacao mais formal, com menos aparencia de dashboard.
 - As telas de `Extratos` e `Resumo` agora tem impressao mais limpa, com melhor alinhamento de valores e identificacao do relatorio.
 - O menu superior do financeiro foi reorganizado para separar `Financeiro`, `Lancamentos`, `Extratos`, `Relatorios` e `Cadastros`.
+- Hoje a navegacao principal do `financeiro` continua em topbar.
+- Hoje nao existe sidebar ou menu lateral implementado no projeto.
+- Hoje nao existe shell visual compartilhado entre `financeiro`, `biblioteca` e `configuracoes`.
 - A home do modulo financeiro agora usa atalhos mais neutros e harmonicos, com destaque principal apenas para `Lancamentos`.
 - O menu superior do financeiro agora tambem possui dropdown `Configuracoes`, com acesso a `Assinaturas` e `Configuracao Institucional`.
 - A home do modulo financeiro agora tambem oferece atalhos visiveis para `Assinaturas` e `Configuracao Institucional`.
@@ -42,6 +45,19 @@ Data de atualizacao: 2026-03-27
 - A prestacao de contas agora tambem recebeu essa frente visual, com cabecalho, filtros e blocos de totais mais compactos e consistentes com o resumo por periodo, sem alterar calculos ou agrupamentos.
 - A tela de auditoria do financeiro agora tambem recebeu refinamento visual incremental, com cabecalho alinhado ao padrao compartilhado, filtros mais compactos e tabela mais densa para leitura em desktop 100%, sem alterar a leitura simples da auditoria.
 - Nos relatorios e extratos do financeiro, as datas visiveis ao usuario agora devem seguir apresentacao em `dd/mm/aaaa`, incluindo rotulos de periodo e metadados principais de emissao.
+- O `financeiro` permanece como o app com base visual mais madura do projeto.
+- A frente de governanca visual do projeto foi oficialmente aberta a partir do mapeamento estrutural da interface atual.
+- A subfrente futura de menu lateral padronizado inspirado no Tabler foi colocada em fila e ainda nao foi implementada.
+- O proximo passo correto da frente visual e consolidar shell visual e componentes compartilhados antes de mexer na navegacao principal.
+- O shell visual do `financeiro` em `financeiro/base.html` agora concentra de forma mais explicita a base compartilhada de topbar, container principal, mensagens globais e classes reutilizaveis do modulo.
+- A preparacao tecnica dessa frente agora tambem consolidou no shell compartilhado componentes-base como cabecalho de pagina, callouts, chips de resumo, blocos auxiliares do rateio e a inicializacao JS reutilizavel do dropdown de contas.
+- A troca futura da navegacao principal ainda depende de reduzir variacoes locais restantes entre templates importantes, especialmente em formularios complexos, extrato e relatorios.
+- A primeira onda real de padronizacao visual do `financeiro` agora foi aplicada nas telas-chave mais seguras do modulo: listagem de lancamentos, formulario de lancamento e auditoria.
+- Essas tres telas passaram a compartilhar com mais consistencia o mesmo vocabulário de header/topo do shell do modulo, com titulo, subtitulo e acoes laterais alinhados ao padrao reutilizavel de `financeiro/base.html`.
+- A primeira onda visual agora tambem alcancou `conta_extrato.html`, `resumo.html` e `prestacao_contas.html`, alinhando topo, subtitulo, acoes laterais e hierarquia dos blocos principais ao shell compartilhado do modulo.
+- `lancamento_rateio_grupo_form.html` agora tambem passou a conversar melhor com o shell compartilhado do modulo, especialmente no header/topo e na navegacao de apoio do fluxo coordenado.
+- Com essa etapa, a primeira onda de padronizacao visual do `financeiro` fica fechada nas telas operacionais centrais, restando antes da pre-etapa tecnica da sidebar apenas consolidacoes internas adicionais do shell e eventual limpeza de variacoes locais residuais.
+- Na validacao tecnica local dessa primeira onda visual, as telas centrais do modulo responderam corretamente com o shell compartilhado, e a abertura da edicao coordenada do grupo rateado foi estabilizada apos remover um acesso indevido ao campo `categoria` no formulario especializado do grupo.
 - O app `biblioteca` nao foi alterado.
 - Nao foram usados `signals`.
 
@@ -74,6 +90,7 @@ Leitura funcional:
 
 - o cadastro e a edicao de lancamento devem exigir `pessoa` em receita e despesa
 - o cadastro e a edicao de lancamento devem exigir `categoria` em receita e despesa
+- categoria pai agora nao pode ser usada em lancamento comum nem em rateio; apenas subcategoria com `categoria_pai` preenchida pode ser vinculada ao lancamento
 - em transferencia, o formulario limpa `pessoa`, `categoria` e `centro_custo`
 - em transferencia, `conta_destino` deve aparecer com obrigatoriedade visual e funcional
 - a ausencia de `pessoa`, `categoria`, `conta` ou `conta_destino` deve gerar erro no formulario, sem estourar `IntegrityError`
@@ -86,6 +103,7 @@ Leitura funcional:
 - no rateio inicial, o usuario informa um `valor total do documento` apenas para validar o fechamento do grupo
 - no rateio inicial, o sistema exige no minimo 2 linhas validas com categoria obrigatoria e valor positivo
 - no rateio inicial, a soma das linhas precisa ser igual ao `valor total do documento`
+- no rateio inicial e na edicao coordenada do grupo, categoria pai tambem fica bloqueada; apenas subcategorias validas podem compor as linhas finais
 - no rateio inicial, o mesmo `numero_documento` pode se repetir apenas como replicacao interna entre linhas do mesmo `grupo_rateio`
 - esse `numero_documento` nao pode coincidir com outro documento independente ja lancado no sistema, mesmo que o outro caso tambem seja rateado
 - na edicao individual de linhas rateadas, o sistema agora tambem impede que uma linha do grupo passe a divergir do `numero_documento` compartilhado pelas demais linhas do mesmo `grupo_rateio`
@@ -101,6 +119,7 @@ Leitura funcional:
 - a obrigatoriedade de `data_pagamento` agora tambem foi consolidada no `clean()` de `LancamentoFinanceiro`, subindo de regra apenas operacional do formulario para regra estrutural de validacao da aplicacao
 - nesta etapa, o campo continua aceitando `null/blank` na modelagem de banco por compatibilidade com bases legadas, mas novas gravacoes e atualizacoes passam a exigir `data_pagamento` no nivel da aplicacao
 - a obrigatoriedade final de `pessoa` e `categoria` permanece condicional na camada da aplicacao
+- a regra de hierarquia de categoria agora tambem foi consolidada na camada da aplicacao: tentativas de gravar `LancamentoFinanceiro` com categoria pai passam a falhar mesmo fora do formulario
 - o formulario de lancamento agora pode consultar e exibir os ultimos 5 lancamentos da `pessoa` selecionada
 - o bloco de historico do favorecido mostra data, tipo, descricao, valor, categoria e `numero_documento` quando existir
 - o historico do favorecido acompanha a selecao da pessoa no autocomplete sem alterar a logica atual do campo

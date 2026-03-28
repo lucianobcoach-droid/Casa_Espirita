@@ -2,15 +2,18 @@
 {% load financeiro_format %}
 {% block title %}{{ page_title }}{% endblock %}
 {% block content %}
-<div class="level financeiro-page-head">
-    <div class="level-left">
+<div class="financeiro-page-header financeiro-page-head">
+    <div class="financeiro-page-header-main">
         <div>
-            <h1 class="title">{{ page_title }}</h1>
-            <p class="subtitle no-print">Visao consolidada do periodo com totais e agrupamentos operacionais.</p>
+            <h1 class="title financeiro-page-title">{{ page_title }}</h1>
+            <p class="financeiro-page-subtitle no-print">Visao consolidada do periodo com totais e agrupamentos operacionais.</p>
             <p class="report-print-meta only-print">Periodo: {{ periodo_label|default:'Nao informado' }}</p>
             <p class="report-print-meta only-print">Contas incluidas: {{ contas_incluidas_label|default:'Todas as contas' }}</p>
             <p class="report-print-meta only-print">Emitido em {% now "d/m/Y H:i" %}</p>
         </div>
+    </div>
+    <div class="financeiro-page-header-actions no-print">
+        <a class="button" href="{% url 'financeiro:home' %}">Voltar ao financeiro</a>
     </div>
 </div>
 
@@ -86,40 +89,44 @@
 {% if periodo_error %}
     <div class="notification is-warning">{{ periodo_error }}</div>
 {% else %}
-    <div class="financeiro-hero">
-        <div class="tags no-print">
-            <span class="tag is-light"><strong>Periodo:</strong>&nbsp;{{ periodo_label }}</span>
-            <span class="tag is-light"><strong>Contas:</strong>&nbsp;{{ contas_incluidas_label }}</span>
+    <div class="financeiro-report-block">
+        <div class="financeiro-report-body">
+            <div class="financeiro-hero">
+                <div class="tags no-print">
+                    <span class="tag is-light"><strong>Periodo:</strong>&nbsp;{{ periodo_label }}</span>
+                    <span class="tag is-light"><strong>Contas:</strong>&nbsp;{{ contas_incluidas_label }}</span>
+                </div>
+                <div class="financeiro-kpi-grid">
+                    <div class="financeiro-kpi">
+                        <span class="financeiro-kpi-label">Saldo inicial consolidado</span>
+                        <span class="financeiro-kpi-value"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_inicial_consolidado|br_money }}</span></span></span>
+                    </div>
+                    <div class="financeiro-kpi">
+                        <span class="financeiro-kpi-label">Receitas do periodo</span>
+                        <span class="financeiro-kpi-value has-text-link"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ total_receitas_periodo|br_money }}</span></span></span>
+                    </div>
+                    <div class="financeiro-kpi">
+                        <span class="financeiro-kpi-label">Despesas do periodo</span>
+                        <span class="financeiro-kpi-value has-text-danger"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ total_despesas_periodo|br_money }}</span></span></span>
+                    </div>
+                    <div class="financeiro-kpi">
+                        <span class="financeiro-kpi-label">Saldo do periodo</span>
+                        <span class="financeiro-kpi-value"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_periodo|br_money }}</span></span></span>
+                    </div>
+                    <div class="financeiro-kpi">
+                        <span class="financeiro-kpi-label">Saldo final consolidado</span>
+                        <span class="financeiro-kpi-value"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_final_consolidado|br_money }}</span></span></span>
+                    </div>
+                </div>
+                <p class="table-caption">Transferencias internas entre contas proprias nao entram como receita nem despesa neste resumo consolidado.</p>
+                {% if existe_lancamento_sem_categoria %}
+                    <p class="table-caption">Lancamentos sem categoria aparecem agrupados como "Sem categoria".</p>
+                {% endif %}
+                {% if mostrar_centro_custo and existe_lancamento_sem_centro_custo %}
+                    <p class="table-caption">Despesas sem centro de custo aparecem agrupadas como "Sem centro de custo".</p>
+                {% endif %}
+            </div>
         </div>
-        <div class="financeiro-kpi-grid">
-            <div class="financeiro-kpi">
-                <span class="financeiro-kpi-label">Saldo inicial consolidado</span>
-                <span class="financeiro-kpi-value"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_inicial_consolidado|br_money }}</span></span></span>
-            </div>
-            <div class="financeiro-kpi">
-                <span class="financeiro-kpi-label">Receitas do periodo</span>
-                <span class="financeiro-kpi-value has-text-link"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ total_receitas_periodo|br_money }}</span></span></span>
-            </div>
-            <div class="financeiro-kpi">
-                <span class="financeiro-kpi-label">Despesas do periodo</span>
-                <span class="financeiro-kpi-value has-text-danger"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ total_despesas_periodo|br_money }}</span></span></span>
-            </div>
-            <div class="financeiro-kpi">
-                <span class="financeiro-kpi-label">Saldo do periodo</span>
-                <span class="financeiro-kpi-value"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_periodo|br_money }}</span></span></span>
-            </div>
-            <div class="financeiro-kpi">
-                <span class="financeiro-kpi-label">Saldo final consolidado</span>
-                <span class="financeiro-kpi-value"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_final_consolidado|br_money }}</span></span></span>
-            </div>
-        </div>
-        <p class="table-caption">Transferencias internas entre contas proprias nao entram como receita nem despesa neste resumo consolidado.</p>
-        {% if existe_lancamento_sem_categoria %}
-            <p class="table-caption">Lancamentos sem categoria aparecem agrupados como "Sem categoria".</p>
-        {% endif %}
-        {% if mostrar_centro_custo and existe_lancamento_sem_centro_custo %}
-            <p class="table-caption">Despesas sem centro de custo aparecem agrupadas como "Sem centro de custo".</p>
-        {% endif %}
     </div>
 
     <div class="columns is-multiline">
@@ -237,61 +244,4 @@
         </div>
     {% endif %}
 {% endif %}
-<script>
-    document.querySelectorAll('[data-contas-dropdown]').forEach((dropdown) => {
-        const toggle = dropdown.querySelector('[data-contas-dropdown-toggle]');
-        const panel = dropdown.querySelector('[data-contas-dropdown-panel]');
-        const summary = dropdown.querySelector('[data-contas-dropdown-summary]');
-        const checkboxes = dropdown.querySelectorAll('input[type="checkbox"][name="contas"]');
-        const total = checkboxes.length;
-
-        const updateSummary = () => {
-            const checkedCount = Array.from(checkboxes).filter((checkbox) => checkbox.checked).length;
-            if (checkedCount === 0 || checkedCount === total) {
-                summary.textContent = 'Contas: Todas';
-            } else if (checkedCount === 1) {
-                summary.textContent = 'Contas: 1 selecionada';
-            } else {
-                summary.textContent = `Contas: ${checkedCount} selecionadas`;
-            }
-        };
-
-        toggle.addEventListener('click', () => {
-            const isOpen = !panel.hasAttribute('hidden');
-            document.querySelectorAll('[data-contas-dropdown-panel]').forEach((otherPanel) => {
-                otherPanel.setAttribute('hidden', '');
-            });
-            document.querySelectorAll('[data-contas-dropdown-toggle]').forEach((otherToggle) => {
-                otherToggle.setAttribute('aria-expanded', 'false');
-            });
-            if (!isOpen) {
-                panel.removeAttribute('hidden');
-                toggle.setAttribute('aria-expanded', 'true');
-            }
-        });
-
-        dropdown.querySelectorAll('[data-contas-checklist-action]').forEach((button) => {
-            button.addEventListener('click', () => {
-                const markAll = button.dataset.contasChecklistAction === 'all';
-                checkboxes.forEach((checkbox) => {
-                    checkbox.checked = markAll;
-                });
-                updateSummary();
-            });
-        });
-
-        checkboxes.forEach((checkbox) => {
-            checkbox.addEventListener('change', updateSummary);
-        });
-
-        document.addEventListener('click', (event) => {
-            if (!dropdown.contains(event.target)) {
-                panel.setAttribute('hidden', '');
-                toggle.setAttribute('aria-expanded', 'false');
-            }
-        });
-
-        updateSummary();
-    });
-</script>
 {% endblock %}

@@ -151,10 +151,11 @@
         }
     }
 </style>
-<div class="level financeiro-page-head financeiro-extrato-screen-header">
-    <div class="level-left">
+<div class="financeiro-page-header financeiro-page-head financeiro-extrato-screen-header">
+    <div class="financeiro-page-header-main">
         <div>
-            <h1 class="title">{{ page_title }}</h1>
+            <h1 class="title financeiro-page-title">{{ page_title }}</h1>
+            <p class="financeiro-page-subtitle no-print">Consulta operacional por conta, com saldo anterior, saldo acumulado e leitura limpa do periodo.</p>
             {% if conta %}
                 <div class="financeiro-extrato-meta">
                     <div class="financeiro-extrato-meta-item">
@@ -180,12 +181,12 @@
         </div>
     </div>
     {% if not show_conta_filter %}
-        <div class="level-right no-print">
+        <div class="financeiro-page-header-actions no-print">
             <button class="button is-light" type="button" onclick="window.print()">Imprimir</button>
             <a class="button" href="{% url 'financeiro:conta-list' %}">Voltar para contas</a>
         </div>
     {% elif conta %}
-        <div class="level-right no-print">
+        <div class="financeiro-page-header-actions no-print">
             <button class="button is-light" type="button" onclick="window.print()">Imprimir</button>
         </div>
     {% endif %}

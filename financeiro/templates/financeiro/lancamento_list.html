@@ -10,11 +10,12 @@
         A edicao coordenada do grupo{% if request.GET.grupo_rateio %} `{{ request.GET.grupo_rateio }}`{% endif %} foi cancelada sem gravacao. A listagem principal continua disponivel para seguir com a revisao operacional.
     </div>
 {% endif %}
-<div class="level financeiro-page-head">
-    <div class="level-left">
-        <h1 class="title">Lancamentos Financeiros</h1>
+<div class="financeiro-page-header financeiro-page-head">
+    <div class="financeiro-page-header-main">
+        <h1 class="title financeiro-page-title">Lancamentos Financeiros</h1>
+        <p class="financeiro-page-subtitle">Listagem principal do modulo com filtros operacionais, recibo e acesso seguro a edicao comum ou rateada.</p>
     </div>
-    <div class="level-right no-print">
+    <div class="financeiro-page-header-actions no-print">
         <a class="button is-primary" href="{% url 'financeiro:lancamento-create' %}">Novo lancamento financeiro</a>
     </div>
 </div>
