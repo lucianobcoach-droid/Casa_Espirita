@@ -66,6 +66,14 @@ Estas regras devem ser respeitadas em qualquer etapa:
 - preservar os documentos-base do projeto sem destruir historico util
 - atualizar os documentos-base por acrescimo, consolidacao ou ajuste cirurgico, sem reescrita ampla desnecessaria
 
+### 5.1. Governanca visual duradoura
+- o projeto passa a ter frente oficial de governanca visual
+- o padrao desejado para as telas administrativas e um layout limpo, funcional e inspirado no tema Tabler, sem copia literal de estrutura nem implementacao abrupta
+- a adocao desse padrao deve acontecer de forma progressiva, guiada por componentes reutilizaveis e por reorganizacao controlada do layout-base
+- a base inicial dessa padronizacao e o app `financeiro`, por concentrar hoje a camada visual mais madura do projeto
+- a subfrente de menu lateral padronizado fica registrada como etapa futura e depende antes de reorganizacao do shell visual atual
+- paginas de impressao, PDF e recibo ficam fora da logica normal de navegacao e nao devem ser tratadas como alvo inicial da mesma padronizacao estrutural
+
 ## 6. Estado funcional ja validado
 Ate o momento, esta validado que:
 
@@ -164,6 +172,7 @@ Os tipos validos de lancamento sao:
 - quando nenhuma conta e selecionada explicitamente, `Resumo` e `Prestacao de Contas` consideram todas as contas por padrao
 - `receita` e `despesa` exigem `pessoa`
 - `receita` e `despesa` exigem `categoria`
+- categoria pai nao pode ser usada em lancamento comum nem em rateio; apenas subcategoria/categoria filha pode ser vinculada a `LancamentoFinanceiro`
 - `transferencia` nao exige `pessoa`
 - `transferencia` nao exige `categoria`
 - `transferencia` nao exige `centro_custo`

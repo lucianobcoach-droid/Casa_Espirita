@@ -731,6 +731,9 @@ class CategoriaFinanceiraAutocompleteView(FinanceiroAutocompleteView):
     model = CategoriaFinanceira
     search_fields = ('nome',)
 
+    def get_queryset(self):
+        return super().get_queryset().filter(categoria_pai__isnull=False)
+
 
 class ContaFinanceiraAutocompleteView(FinanceiroAutocompleteView):
     model = ContaFinanceira
@@ -1601,7 +1604,7 @@ class LancamentoFinanceiroCreateView(FinanceiroFormMixin, CreateView):
         context = super().get_context_data(**kwargs)
         context['rateio_categoria_opcoes'] = [
             {'id': categoria.pk, 'label': str(categoria)}
-            for categoria in CategoriaFinanceira.objects.order_by('tipo', 'nome')
+            for categoria in CategoriaFinanceira.objects.filter(categoria_pai__isnull=False).order_by('tipo', 'nome')
         ]
         return context
 
@@ -1680,7 +1683,7 @@ class LancamentoFinanceiroUpdateView(FinanceiroFormMixin, UpdateView):
         context = super().get_context_data(**kwargs)
         context['rateio_categoria_opcoes'] = [
             {'id': categoria.pk, 'label': str(categoria)}
-            for categoria in CategoriaFinanceira.objects.order_by('tipo', 'nome')
+            for categoria in CategoriaFinanceira.objects.filter(categoria_pai__isnull=False).order_by('tipo', 'nome')
         ]
         return context
 
@@ -1795,7 +1798,7 @@ class LancamentoFinanceiroGrupoRateioUpdateView(FinanceiroFormMixin, UpdateView)
         grupo_lancamentos = self._get_grupo_lancamentos()
         context['rateio_categoria_opcoes'] = [
             {'id': categoria.pk, 'label': str(categoria)}
-            for categoria in CategoriaFinanceira.objects.order_by('tipo', 'nome')
+            for categoria in CategoriaFinanceira.objects.filter(categoria_pai__isnull=False).order_by('tipo', 'nome')
         ]
         context['grupo_rateio'] = grupo_lancamentos[0].grupo_rateio
         context['grupo_rateio_quantidade_linhas'] = len(grupo_lancamentos)

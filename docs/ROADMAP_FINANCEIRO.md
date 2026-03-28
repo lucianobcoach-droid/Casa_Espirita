@@ -94,6 +94,7 @@ Data: 2026-03-26
 ### Validacoes ja implantadas
 - pessoa obrigatoria em receita e despesa
 - categoria obrigatoria em receita e despesa
+- categoria pai nao pode ser usada em lancamento; vinculacao passou a exigir subcategoria/categoria filha
 - data de pagamento nao pode ser anterior a data de competencia
 - erros de regra retornam ao formulario
 - validacao de transferencia ocorre antes da gravacao
@@ -142,6 +143,11 @@ Data: 2026-03-26
 - refinamentos futuros de leitura para a tela de auditoria de `LancamentoFinanceiro`, alem dos filtros simples ja implementados
 - consistencia visual do tratamento de transferencia
 - refinamento visual transversal do modulo financeiro para melhorar largura de campos, distribuicao de colunas, densidade de filtros, quantidade de informacao visivel por tela, melhor aproveitamento horizontal em zoom 100% e consistencia visual entre telas, agora oficialmente iniciado pela base compartilhada e pelas telas de listagem/formulario de lancamentos
+- reorganizacao futura do shell visual do `financeiro`, antes de qualquer troca estrutural da navegacao principal
+- consolidacao futura de componentes visuais compartilhados do modulo, como cabecalho de pagina, bloco de filtros, card padrao, KPI, tabela e formulario
+- aplicacao piloto dessa padronizacao em telas-chave do modulo, antes de expansao mais ampla
+- adocao futura de menu lateral padronizado no `financeiro`, apenas depois da reorganizacao previa do shell visual
+- telas de impressao, PDF e recibo ficam fora da primeira onda dessa padronizacao estrutural
 - validacoes defensivas adicionais em fluxos operacionais
 - extrato com mais contexto operacional sem poluir a tela
 - filtros da listagem de lancamentos com melhorias de usabilidade

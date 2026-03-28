@@ -100,6 +100,10 @@ class CategoriaFinanceira(models.Model):
     def __str__(self) -> str:
         return f'{self.get_tipo_display()} - {self.nome}'
 
+    @property
+    def permite_vinculo_em_lancamento(self) -> bool:
+        return bool(self.categoria_pai_id)
+
 
 class AssinaturaInstitucional(models.Model):
     nome = models.CharField(max_length=150)
@@ -310,6 +314,8 @@ class LancamentoFinanceiro(models.Model):
 
         if lancamento_operacional and not self.categoria_id:
             errors['categoria'] = 'Categoria e obrigatoria para receita e despesa.'
+        elif lancamento_operacional and self.categoria_id and not self.categoria.permite_vinculo_em_lancamento:
+            errors['categoria'] = 'Selecione uma subcategoria para receita e despesa. Categoria pai nao pode ser usada em lancamentos.'
 
         numero_documento = (self.numero_documento or '').strip()
         if numero_documento:
