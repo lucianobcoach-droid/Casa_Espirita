@@ -526,6 +526,118 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - a leitura visual entre listagem, formulario e auditoria ficou mais coerente sem alterar regra de negocio, filtros, captura de auditoria ou fluxo operacional
 - sidebar ou menu lateral ainda nao foram implementados nesta microetapa
 
+## Consolidacao da sidebar como navegacao principal no desktop do financeiro
+
+- `financeiro/base.html` foi refinado para colocar a sidebar do modulo como navegacao principal no desktop, mantendo a topbar apenas como barra utilitaria minima
+- os grupos `Visao geral`, `Movimentacao`, `Relatorios`, `Cadastros` e `Institucional` passaram a organizar a navegacao lateral de forma coerente com as rotas ja existentes do modulo
+- o estado ativo da navegacao passou a ficar visivel tanto no item lateral quanto no grupo correspondente, sem alterar regra de negocio nem refatorar telas individuais
+- a navegacao mobile foi preservada em modo conservador nesta etapa, ainda apoiada pela topbar e sem drawer lateral completo
+- a validacao local confirmou status `200` para home, listagem, formulario, auditoria, extrato, resumo, prestacao de contas e edicao coordenada do grupo rateado apos a correcao do template da sidebar
+
+## Drawer mobile da sidebar do financeiro
+
+- `financeiro/base.html` passou a oferecer a versao mobile da sidebar em modo drawer/offcanvas, com abertura e fechamento controlados pela topbar compacta do modulo
+- a implementacao incluiu overlay, botao de abertura, botao de fechamento e encerramento do drawer por clique fora ou tecla `Escape`, sem depender de hover
+- o desktop foi preservado como ja estava, com a sidebar seguindo como navegacao principal e sem regressao nas telas centrais do modulo
+- a validacao local confirmou status `200` para home, listagem, formulario, auditoria, extrato, resumo, prestacao de contas e edicao coordenada do grupo rateado, e tambem confirmou a presenca dos hooks HTML do drawer no shell renderizado
+
+## Refino visual e ergonomico da sidebar do financeiro
+
+- `financeiro/base.html` foi refinado para reduzir textos explicativos permanentes na topbar e na lateral, deixando o shell mais silencioso visualmente
+- os grupos da sidebar passaram a funcionar como blocos expansivos/recolhiveis, com indicacao visual de grupo ativo, item ativo, grupo expandido e grupo recolhido
+- o grupo da rota ativa passa a abrir automaticamente no carregamento, e a interacao foi simplificada para manter um grupo aberto por vez no shell
+- a mesma logica de expansao segue funcional por clique/toque no desktop e no mobile, sem depender de hover
+- a validacao local confirmou status `200` para home, listagem, formulario, auditoria, extrato, resumo, prestacao de contas e edicao coordenada do grupo rateado apos esse refino
+
+## Acabamento visual final do shell da sidebar no financeiro
+
+- `financeiro/base.html` recebeu acabamento visual de contraste, espacamento e densidade para deixar a sidebar mais limpa, mais silenciosa e mais confortavel em uso continuo
+- o estado ativo da navegacao ficou mais claro com melhor diferenca entre grupo ativo, grupo expandido, item ativo e item neutro, sem alterar a arquitetura ja consolidada
+- a topbar foi deixada ainda mais discreta, com menos peso visual e menor competicao com a lateral e com o `financeiro-page-header`
+- o drawer mobile tambem foi refinado em largura, overlay e ergonomia visual, mantendo a base funcional ja entregue
+- a validacao local confirmou status `200` para home, listagem, formulario, auditoria, extrato, resumo, prestacao de contas e edicao coordenada do grupo rateado apos esse acabamento
+
+## Correcao estrutural de overflow horizontal no shell do financeiro
+
+- foi corrigido um problema real de responsividade no shell do `financeiro`, em que parte do conteudo podia ficar cortada a direita sem acesso por rolagem adequada
+- a causa principal estava na combinacao de larguras estruturais baseadas em `100vw` com padding/box model do shell, o que podia empurrar o layout alem da area util visivel
+- `financeiro/base.html` foi ajustado para usar `width: ... 100%` nos wrappers principais, reforcar `max-width: 100%` e `min-width: 0` no miolo do shell e deixar a area principal com `overflow-x: auto` quando necessario
+- a validacao local confirmou status `200` para home, listagem, formulario, auditoria, extrato, resumo, prestacao de contas e edicao coordenada do grupo rateado apos essa correcao, e o HTML renderizado confirmou a presenca dos novos pontos estruturais de largura e scroll
+
+## Sidebar recolhivel no desktop do financeiro
+
+- `financeiro/base.html` passou a oferecer controle explicito para recolher e expandir a sidebar no desktop, sem alterar a arquitetura ja consolidada do shell
+- a area principal agora convive com dois estados laterais no desktop, `expandido` e `recolhido`, ganhando largura util quando a navegacao e compactada
+- o estado ativo da navegacao continua perceptivel no modo recolhido e o comportamento mobile permaneceu separado, ainda em drawer/offcanvas
+- a preferencia de recolher ou expandir a sidebar passou a ser persistida no navegador por `localStorage`
+- a validacao local confirmou status `200` para home, listagem, formulario, auditoria, extrato, resumo, prestacao de contas e edicao coordenada do grupo rateado apos essa microetapa
+
+## Correcao do modo recolhido da sidebar no desktop
+
+- o modo recolhido da sidebar deixou de operar como mini-menu compacto e passou a recolher o menu lateral de verdade no desktop
+- no estado recolhido, a coluna lateral vai a zero no shell principal e grupos, links, abreviacoes e submenus deixam de permanecer visiveis ou espremidos
+- a reabertura passou a ficar em botao fixo no desktop, com icone de tres traços e acessibilidade por `title` e `aria-label`
+- a area principal passa a aproveitar de forma mais evidente a largura liberada quando a sidebar esta recolhida
+- a validacao local confirmou `py manage.py check`, `py -m compileall financeiro casa_espirita` e status `200` nas telas centrais do modulo apos essa correcao
+
+## Correcao da impressao do extrato e limpeza visual do toggle lateral
+
+- foi corrigida uma regressao de print/PDF do extrato em que a pagina podia sair espremida a esquerda por heranca indevida do shell com sidebar
+- a solucao isolou o extrato do grid principal no modo impressao, removendo a influencia de wrappers de largura, overflow e da coluna lateral na composicao impressa
+- `conta_extrato.html` tambem passou a reforcar no proprio print a ocupacao integral da largura util da pagina e o uso de `overflow: visible`
+- o toggle da lateral no desktop deixou de exibir texto permanente e passou a usar apenas icone visivel, mantendo acessibilidade por `aria-label`, `title` e texto reservado a leitor de tela
+- a validacao local confirmou status `200` para home e extrato apos o ajuste e confirmou no HTML renderizado os novos marcadores estruturais de print e acessibilidade do toggle
+
+## Impressao de resumo e prestacao de contas, com simplificacao visual das categorias
+
+- `resumo.html` e `prestacao_contas.html` passaram a oferecer acao lateral de `Imprimir` no topo da tela, sem alterar calculos, agrupamentos ou filtros
+- a impressao desses relatorios continua usando o isolamento de print do shell compartilhado, mantendo sidebar, topbar, drawer e controles fora da versao impressa
+- `CategoriaFinanceira` passou a usar exibicao curta por padrao no modulo, retornando apenas `nome` na representacao visual comum
+- a natureza `Receita` / `Despesa` continua compreensivel pelo contexto da tela, pelos blocos separados de relatorio e pelos badges ou colunas de tipo ja existentes nas telas operacionais
+- a etapa reduziu ruido textual em relatorios, autocomplete, historico operacional e opcoes de rateio, evitando prefixos longos como `Receita - ...` e `Despesa - ...` quando eles eram redundantes
+
+## Conciliacao documental completa deste ciclo
+
+- foi feita revisao cirurgica dos documentos-base para reconciliar o historico deste chat com o estado real do repositorio e com as decisoes ja aprovadas
+- `docs/CEREBRO_PROJETO.md` deixou de tratar a sidebar do `financeiro` como apenas futura e passou a registrar essa navegacao lateral como referencia inicial ja implementada no shell do modulo
+- `docs/STATE.md` foi ajustado para refletir corretamente o drawer mobile ja funcional, a referencia do shell lateral do `financeiro` dentro da governanca visual e a pendencia atual de validacao manual fina do print real de `Resumo` e `Prestacao de Contas`
+- `docs/ROADMAP_FINANCEIRO.md` recebeu backlog futuro ainda nao executado para: refinamento final do shell/sidebar por uso real, padronizacao futura de margens em relatorios impressos, evolucao futura da logica de assinaturas em relatorios e revisao futura das mensagens visiveis ao usuario dentro do modulo
+- `docs/CEREBRO_PROJETO.md` tambem passou a registrar como frente futura transversal o mapeamento e a revisao de todas as mensagens visiveis ao usuario
+- esta microetapa foi exclusivamente documental e nao executou patch de codigo
+
+## Reposicionamento do botao de reabrir e unificacao do scroll do shell
+
+- `financeiro/base.html` foi ajustado para tirar o botao de reabrir a sidebar da faixa do conteudo e encaixa-lo na barra utilitaria superior do shell, em posicao estavel e sem sobreposicao de titulo, subtitulo, filtros ou tabelas
+- no desktop recolhido, a reabertura continua acessivel por icone apenas, com `title`, `aria-label` e texto reservado a leitor de tela, mas agora usa o mesmo vocabulario visual utilitario do shell
+- a causa mais provavel da dupla barra de rolagem era a concorrencia entre a rolagem principal da pagina e o `overflow-y: auto` mantido pela navegacao lateral no desktop
+- a correcao removeu essa disputa no desktop, deixando a sidebar sem scrollbar vertical proprio nessa faixa e concentrando a rolagem principal no fluxo normal da pagina
+- a validacao local confirmou `py manage.py check`, `py -m compileall financeiro casa_espirita` e status `200` em home, lancamentos, formulario, auditoria, extratos, resumo e prestacao de contas apos o ajuste
+
+## Sigla dinamica do shell e padronizacao fina do toggle lateral
+
+- a sigla visual do shell do `financeiro` deixou de ficar hardcoded em `CE` no template base
+- foi criado contexto compartilhado para expor nome institucional e iniciais dinamicas a partir da `ConfiguracaoInstitucional` ativa/padrao, com fallback seguro para `Casa Espirita` e para a sigla `CE`
+- a regra de iniciais passou a priorizar as duas primeiras palavras relevantes do nome institucional, ignorando conectivos simples como `de`, `da` e `do`
+- o `base.html` passou a usar essas iniciais dinamicas tanto no desktop quanto no mobile, sem alterar a navegacao nem a regra de negocio do modulo
+- os controles de recolher e reabrir a lateral no desktop tambem receberam alinhamento visual fino para compartilhar melhor o mesmo padrao de borda, dimensao, sombra e peso discreto
+- a validacao local confirmou `py manage.py check`, `py -m compileall financeiro casa_espirita` e status `200` nas telas centrais do modulo apos a mudanca
+
+## Unificacao do controle da lateral em slot unico do shell
+
+- o `base.html` deixou de manter um botao de recolher dentro da propria sidebar e outro botao de reabrir em slot separado
+- no desktop, o controle da lateral passou a existir apenas em um unico slot fixo da barra utilitaria, ao lado da marca do modulo
+- o mesmo botao agora recolhe a lateral quando ela esta expandida e expande a lateral quando ela esta recolhida, sem trocar de lado nem quebrar o padrao visual do shell
+- o comportamento manteve icone sem texto visivel permanente, com `title`, `aria-label` e texto para leitor de tela
+- a validacao local confirmou `py manage.py check`, `py -m compileall financeiro casa_espirita` e status `200` em home, lancamentos, formulario, auditoria, extratos, resumo e prestacao de contas apos essa unificacao
+
+## Preparacao estrutural do shell para a futura sidebar do financeiro
+
+- `financeiro/base.html` passou a usar wrappers explicitos de app shell, com area utilitaria superior, area estrutural de sidebar e area principal de conteudo
+- a topbar atual foi preservada em convivio controlado como navegacao principal durante a transicao, sem migracao abrupta das telas ja estabilizadas
+- a sidebar entrou apenas como base estrutural e secundaria no desktop, preparando a proxima microetapa da navegacao lateral sem substituir ainda a navegacao atual
+- o `financeiro-page-header` das paginas foi mantido como camada contextual interna, separado da navegacao do shell
+- a validacao tecnica local confirmou status `200` nas telas centrais do modulo apos essa mudanca estrutural, incluindo listagem, formulario, auditoria, extrato, resumo, prestacao e rateio coordenado
+
 ## Validacao pratica e estabilizacao da primeira onda visual do financeiro
 
 - foi executada validacao tecnica local com `py manage.py check`, `py -m compileall financeiro casa_espirita` e requests via `Client(HTTP_HOST='localhost')` para as telas centrais do modulo

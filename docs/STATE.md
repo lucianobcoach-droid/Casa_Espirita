@@ -25,8 +25,9 @@ Data de atualizacao: 2026-03-27
 - A `Prestacao de Contas` agora tem apresentacao mais formal, com menos aparencia de dashboard.
 - As telas de `Extratos` e `Resumo` agora tem impressao mais limpa, com melhor alinhamento de valores e identificacao do relatorio.
 - O menu superior do financeiro foi reorganizado para separar `Financeiro`, `Lancamentos`, `Extratos`, `Relatorios` e `Cadastros`.
-- Hoje a navegacao principal do `financeiro` continua em topbar.
-- Hoje nao existe sidebar ou menu lateral implementado no projeto.
+- Hoje a navegacao principal do `financeiro`, no desktop, passa a ficar priorizada na sidebar do modulo.
+- A topbar do `financeiro` agora permanece como barra utilitaria minima e camada de transicao, sem substituir abruptamente a navegacao existente no mobile.
+- Hoje ja existe sidebar/menu lateral implementada no shell do `financeiro` em desktop e mobile, com drawer funcional no mobile e comportamento proprio separado do desktop.
 - Hoje nao existe shell visual compartilhado entre `financeiro`, `biblioteca` e `configuracoes`.
 - A home do modulo financeiro agora usa atalhos mais neutros e harmonicos, com destaque principal apenas para `Lancamentos`.
 - O menu superior do financeiro agora tambem possui dropdown `Configuracoes`, com acesso a `Assinaturas` e `Configuracao Institucional`.
@@ -47,11 +48,42 @@ Data de atualizacao: 2026-03-27
 - Nos relatorios e extratos do financeiro, as datas visiveis ao usuario agora devem seguir apresentacao em `dd/mm/aaaa`, incluindo rotulos de periodo e metadados principais de emissao.
 - O `financeiro` permanece como o app com base visual mais madura do projeto.
 - A frente de governanca visual do projeto foi oficialmente aberta a partir do mapeamento estrutural da interface atual.
-- A subfrente futura de menu lateral padronizado inspirado no Tabler foi colocada em fila e ainda nao foi implementada.
-- O proximo passo correto da frente visual e consolidar shell visual e componentes compartilhados antes de mexer na navegacao principal.
+- A referencia inicial de menu lateral padronizado inspirado no Tabler agora ja foi implementada no shell do `financeiro`, enquanto expansoes para outros apps e refinamentos adicionais continuam dependentes de etapas futuras proprias.
+- O shell do `financeiro` agora funciona como referencia inicial da governanca visual do projeto, mas ainda nao existe base compartilhada equivalente entre os demais apps.
 - O shell visual do `financeiro` em `financeiro/base.html` agora concentra de forma mais explicita a base compartilhada de topbar, container principal, mensagens globais e classes reutilizaveis do modulo.
+- A sigla visual da marca no shell do `financeiro` nao fica mais fixa em `CE`: ela agora deriva das iniciais do nome da `ConfiguracaoInstitucional` ativa/padrao, com fallback seguro para `CE` quando esse nome nao estiver preenchido.
 - A preparacao tecnica dessa frente agora tambem consolidou no shell compartilhado componentes-base como cabecalho de pagina, callouts, chips de resumo, blocos auxiliares do rateio e a inicializacao JS reutilizavel do dropdown de contas.
-- A troca futura da navegacao principal ainda depende de reduzir variacoes locais restantes entre templates importantes, especialmente em formularios complexos, extrato e relatorios.
+- A evolucao futura da sidebar ainda depende de reduzir variacoes locais restantes entre templates importantes, especialmente em formularios complexos, extrato e relatorios, e de fechar a experiencia mobile de forma segura.
+- `financeiro/base.html` agora tambem possui estrutura explicita de app shell com area utilitaria superior, area preparada para sidebar e area principal de conteudo.
+- Nesta primeira microetapa da futura sidebar, a topbar atual foi preservada como navegacao principal em convivio controlado com uma sidebar estrutural secundaria no desktop, sem migracao integral da navegacao.
+- O `financeiro-page-header` das paginas foi preservado como camada contextual interna, separada da navegacao principal do shell.
+- Na microetapa seguinte da sidebar, o desktop do `financeiro` passou a usar a lateral como navegacao principal, com grupos coerentes, item ativo visivel e topbar reduzida a funcao utilitaria minima.
+- Na microetapa seguinte, a navegacao mobile do `financeiro` passou a abrir a sidebar em modo drawer/offcanvas, com overlay, botao de abertura na topbar e fechamento previsivel sem depender de hover.
+- A topbar mobile do `financeiro` agora permanece apenas como barra compacta de contexto e controle do drawer lateral.
+- A experiencia mobile da sidebar ainda nao foi refinada visualmente em todos os detalhes, mas o fluxo base de abrir, fechar e navegar ja ficou funcional e preservou a estabilidade do desktop.
+- Na microetapa seguinte, a sidebar do `financeiro` passou a usar grupos expansivos/recolhiveis, com grupo ativo aberto automaticamente e item ativo destacado com mais clareza.
+- O shell do `financeiro` agora trabalha com menos texto explicativo permanente no topo e na lateral, reduzindo ruido visual e aproximando a navegacao de um painel administrativo mais silencioso.
+- Nesta fase, a ergonomia da sidebar ficou mais escalavel: no shell renderizado, um grupo aberto por vez simplifica a leitura no desktop e segue funcional por clique/toque no mobile.
+- Na microetapa seguinte, o shell compartilhado do `financeiro` recebeu acabamento visual final na sidebar, na topbar e no drawer mobile, com contraste funcional mais claro e menos peso visual.
+- A sidebar desktop passou a trabalhar com largura, espacamentos e estados ativos mais maduros, deixando grupo ativo, item ativo e grupo expandido mais legiveis sem aumentar o ruido.
+- O drawer mobile ficou visualmente mais leve e ergonomico, com largura mais controlada, overlay menos pesado e topbar ainda mais discreta.
+- Foi identificada uma limitacao real de responsividade no shell do `financeiro`: parte do conteudo podia ficar cortada a direita por combinacao de larguras estruturais baseadas em `100vw` e comportamento de box model no shell.
+- A correcao estrutural seguinte removeu esse acoplamento de largura no `financeiro/base.html`, passou a usar `width: ... 100%` nos wrappers principais, reforcou `min-width: 0`/`max-width: 100%` no conteudo principal e deixou a area central com `overflow-x: auto` quando necessario.
+- Com essa correcao, o conteudo principal do `financeiro` deixa de depender de corte invisivel: tabelas, filtros e blocos largos passam a coexistir com a sidebar sem perder acessibilidade por rolagem horizontal quando precisarem exceder a largura disponivel.
+- Na microetapa seguinte, a sidebar do `financeiro` passou a poder ser recolhida e expandida no desktop, liberando mais area util de trabalho sem alterar o comportamento do drawer mobile.
+- O shell agora possui dois estados de navegacao lateral no desktop: expandido e recolhido real, com adaptacao correspondente da area principal.
+- O estado da sidebar no desktop passou a ser persistido no navegador para manter a preferencia do usuario entre recarregamentos.
+- No modo recolhido real da sidebar no desktop, o menu lateral desaparece do layout e deixa de exibir grupos, links, abreviacoes ou submenus.
+- Quando a lateral esta recolhida, permanece apenas um botao de expandir encaixado na barra utilitaria do shell do desktop, com icone discreto, `title` e `aria-label`, sem sobrepor titulo, subtitulo ou conteudo principal.
+- Os controles de recolher e reabrir a lateral no desktop agora compartilham linguagem visual mais uniforme, com dimensoes, borda e sombra discretas coerentes com os demais controles utilitarios do shell.
+- O controle da lateral no desktop agora usa um unico slot fixo na barra utilitaria, ao lado da marca do modulo, sem trocar de lado entre os estados expandido e recolhido.
+- A estrategia de rolagem vertical do shell do `financeiro` foi simplificada para evitar concorrencia entre a pagina e a navegacao lateral no desktop; a sidebar deixa de manter scrollbar proprio nessa faixa e a leitura volta a depender de uma rolagem principal unica.
+- Foi identificada uma regressao real na impressao/PDF do extrato apos a evolucao do shell com sidebar: o layout podia sair espremido a esquerda por heranca indevida da estrutura principal de grid/largura/overflow do shell.
+- A correcao seguinte passou a isolar o extrato do shell no modo print, removendo a influencia de sidebar, topbar, wrappers de overflow e tracks do grid lateral na composicao impressa.
+- O toggle da lateral no desktop tambem passou a usar apenas icone visivel, mantendo acessibilidade por `title`, `aria-label` e texto apenas para leitor de tela.
+- `Resumo` e `Prestacao de Contas` agora tambem possuem acao lateral de `Imprimir`, reutilizando o isolamento de print do shell para nao herdar sidebar, topbar ou wrappers de overflow na versao impressa.
+- A exibicao visivel das categorias no modulo financeiro foi simplificada: quando a natureza ja esta clara pelo contexto da tela, pelo agrupamento ou por `Tipo`, a interface passou a mostrar apenas o nome da categoria, sem prefixos longos como `Receita - ...` ou `Despesa - ...`.
+- A validacao manual fina de print real de `Resumo` e `Prestacao de Contas` continua como verificacao complementar pendente fora do ambiente automatizado atual.
 - A primeira onda real de padronizacao visual do `financeiro` agora foi aplicada nas telas-chave mais seguras do modulo: listagem de lancamentos, formulario de lancamento e auditoria.
 - Essas tres telas passaram a compartilhar com mais consistencia o mesmo vocabulário de header/topo do shell do modulo, com titulo, subtitulo e acoes laterais alinhados ao padrao reutilizavel de `financeiro/base.html`.
 - A primeira onda visual agora tambem alcancou `conta_extrato.html`, `resumo.html` e `prestacao_contas.html`, alinhando topo, subtitulo, acoes laterais e hierarquia dos blocos principais ao shell compartilhado do modulo.

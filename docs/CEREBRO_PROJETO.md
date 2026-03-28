@@ -71,8 +71,10 @@ Estas regras devem ser respeitadas em qualquer etapa:
 - o padrao desejado para as telas administrativas e um layout limpo, funcional e inspirado no tema Tabler, sem copia literal de estrutura nem implementacao abrupta
 - a adocao desse padrao deve acontecer de forma progressiva, guiada por componentes reutilizaveis e por reorganizacao controlada do layout-base
 - a base inicial dessa padronizacao e o app `financeiro`, por concentrar hoje a camada visual mais madura do projeto
-- a subfrente de menu lateral padronizado fica registrada como etapa futura e depende antes de reorganizacao do shell visual atual
+- no app `financeiro`, a navegacao lateral padronizada ja foi autorizada e implementada de forma incremental no shell compartilhado, sem tornar essa mesma adocao automaticamente obrigatoria para os demais apps
 - paginas de impressao, PDF e recibo ficam fora da logica normal de navegacao e nao devem ser tratadas como alvo inicial da mesma padronizacao estrutural
+- quando a natureza `receita` / `despesa` ja estiver clara pelo contexto da tela, pelo agrupamento ou por indicador de tipo, a exibicao visivel da categoria deve preferir nome curto, sem prefixos textuais redundantes
+- no shell do `financeiro`, a sigla visual da marca deve preferir iniciais dinamicas derivadas do nome da `ConfiguracaoInstitucional` ativa/padrao, com fallback seguro para `CE` quando nao houver nome configurado
 
 ## 6. Estado funcional ja validado
 Ate o momento, esta validado que:
@@ -325,6 +327,7 @@ As etapas abaixo podem existir no planejamento, mas nao devem ser implementadas 
 
 - historico por favorecido
 - relatorio anual por favorecido
+- mapeamento e revisao de todas as mensagens visiveis ao usuario
 - contratos a pagar e a receber
 - parcelas e recorrencia
 - anexos de comprovantes
