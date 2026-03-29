@@ -809,3 +809,73 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - `financeiro/templates/financeiro/lancamento_form.html` passou a tratar a edicao individual de linha rateada com bloco mais operacional, diferenciando melhor a revisao da linha isolada do caminho para o grupo inteiro
 - os retornos entre listagem, linha individual e grupo coordenado passaram a depender menos de texto corrido e mais de leitura operacional curta com acoes claras
 - nesta microetapa nao houve alteracao de regra de negocio, validacoes, calculos, salvamento transacional nem integracao com `grupo_rateio`
+
+## Refinamento da entrada do rateio no formulario principal
+
+- `financeiro/templates/financeiro/lancamento_form.html` passou a diferenciar melhor, logo na entrada da tela, o fluxo de lancamento comum e o fluxo com `Lancamento com rateio`
+- a tela passou a organizar melhor o que pertence aos dados comuns do documento, o que pertence ao `valor total do documento` e o que pertence as linhas do rateio, reduzindo ruido textual e deixando a transicao para o bloco de rateio menos mecanica
+- a linguagem usada no create simples foi aproximada da leitura operacional ja consolidada na edicao coordenada do grupo, sem alterar a mecanica do formulario
+- nesta microetapa nao houve alteracao de regra de negocio, validacoes, calculos, `grupo_rateio`, `numero_documento` compartilhado nem payload JS do rateio
+- foi possivel executar `py manage.py check` e validar a rota real de criacao `/financeiro/lancamentos/novo/` com status `200`, confirmando tambem no HTML renderizado a presenca dos blocos `Lancamento com rateio`, `Ativar rateio deste documento` e `Rateio simples`
+
+## Enxugamento textual inicial do formulario principal de lancamento
+
+- `financeiro/templates/financeiro/lancamento_form.html` teve reducao cirurgica de textos explicativos no subtitulo da pagina e nos blocos ligados ao `rateio`, mantendo apenas a orientacao realmente util para a acao
+- o ajuste concentrou-se no bloco `Modo do lancamento`, no callout de `valor total do documento` e na introducao do bloco `Rateio simples`, trocando frases mais longas por rotulagem operacional mais curta
+- nesta microetapa nao houve alteracao de regra de negocio, validacoes, payload JS, `grupo_rateio`, `numero_documento`, calculos nem comportamento do formulario
+- foi possivel executar `py manage.py check` e validar novamente a rota `/financeiro/lancamentos/novo/` com status `200`, confirmando no HTML renderizado a presenca dos textos enxugados dessa etapa
+
+## Enxugamento textual mais incisivo do bloco de rateio no formulario principal
+
+- `financeiro/templates/financeiro/lancamento_form.html` reduziu ainda mais o texto fixo da entrada do `rateio`, cortando explicacoes que a propria estrutura da tela ja comunicava
+- os cards comparativos da abertura do rateio foram simplificados de forma forte, a orientacao fixa ficou mais seca e a ajuda excepcional foi concentrada em poucos icones `i` discretos com `title`
+- o ajuste ficou focado no bloco `Modo do lancamento`, no toggle `Lancamento com rateio`, no `valor total do documento` e na introducao das linhas do rateio
+- nesta microetapa nao houve alteracao de regra de negocio, validacoes, payload JS, `grupo_rateio`, `numero_documento`, calculos nem comportamento do formulario
+- foi possivel executar `py manage.py check` e validar novamente `/financeiro/lancamentos/novo/` com status `200`, confirmando no HTML renderizado a presenca do novo texto minimo e do apoio discreto via `i`
+
+## Faxina fina de comunicacao no formulario principal de lancamento
+
+- `financeiro/templates/financeiro/lancamento_form.html` removeu descricoes de secao redundantes em `Dados principais`, `Valores e datas` e `Informacoes complementares`
+- o bloco `Modo do lancamento` ficou mais leve, perdeu elementos decorativos sem funcao real e manteve apenas o toggle com ajuda discreta realmente necessaria
+- o bloco `Valor total do documento` deixou de repetir semanticamente titulo e explicacao fixa, mantendo apenas rotulo direto e ajuda curta por `i`
+- a abertura de `Linhas do rateio` perdeu camadas redundantes de titulo e textos que repetiam o que a propria tabela ja mostra
+- a tela tambem passou a padronizar melhor rotulos e acentuacao visiveis, incluindo `Lançamento`, `Informações`, `Últimos`, `Ação` e `Número do documento`
+- nesta microetapa nao houve alteracao de regra de negocio, validacoes, payload JS, `grupo_rateio`, `numero_documento`, calculos nem comportamento do formulario
+- foi possivel executar `py manage.py check` e validar novamente `/financeiro/lancamentos/novo/` com status `200`
+
+## Acabamento fino complementar do formulario principal
+
+- `financeiro/templates/financeiro/lancamento_form.html` recebeu um ultimo ajuste fino para deixar o `i` com aparencia mais consolidada em alinhamento, contraste e espacamento, sem proliferar novos pontos de ajuda na tela
+- os blocos `Modo do lancamento` e `Valor total do documento` ficaram discretamente mais compactos e leves, preservando a clareza operacional minima
+- o estado vazio do historico ficou menos carregado e a linguagem do bloco foi alinhada com o campo principal da tela, passando a tratar o historico como leitura da `pessoa`
+- nesta microetapa nao houve alteracao de regra de negocio, validacoes, payload JS, `grupo_rateio`, `numero_documento`, calculos nem comportamento do formulario
+- foi possivel executar `py manage.py check` e validar novamente `/financeiro/lancamentos/novo/` com status `200`
+
+## Ajuste curtissimo final de rotulagem e icone no formulario principal
+
+- `financeiro/templates/financeiro/lancamento_form.html` manteve a rotulagem visivel de `Valor total do documento` na forma padronizada final e passou a renderizar o icone `i` em italico, sem mudar seu tamanho, alinhamento, contraste ou espacamento
+- nesta microetapa nao houve alteracao de regra de negocio, validacoes, payload JS, `grupo_rateio`, `numero_documento`, calculos nem comportamento do formulario
+- foi possivel executar `py manage.py check` e validar novamente `/financeiro/lancamentos/novo/` com status `200`
+
+## Polimento visual residual do formulario principal
+
+- `financeiro/templates/financeiro/lancamento_form.html` recebeu um polimento curtissimo para dar um pouco mais de legibilidade ao `i`, aliviar o peso visual do bloco `Valor total do documento`, amarrar melhor o botao `Adicionar linha` e dar mais leitura ao `Remover`
+- o estado vazio de `Ultimos lancamentos da pessoa` tambem ficou mais discreto, preservando a mesma funcao e sem reintroduzir texto explicativo
+- nesta microetapa nao houve alteracao de regra de negocio, validacoes, payload JS, `grupo_rateio`, `numero_documento`, calculos nem comportamento do formulario
+- foi possivel executar `py manage.py check` e validar novamente `/financeiro/lancamentos/novo/` com status `200`
+
+## Reorganizacao visual do formulario principal para fluxo mais continuo
+
+- `financeiro/templates/financeiro/lancamento_form.html` foi reorganizado para reduzir a sensacao de empilhamento de caixas independentes e se aproximar mais de uma tela unica de inputs de cadastro, com blocos mais leves, compactos e integrados
+- o bloco `Valor total do documento` passou a ter leitura mais proxima dos demais campos, sem caixa alta no rotulo visivel, e o rateio deixou de parecer uma tela dentro da tela ao trazer `Adicionar linha` para o cabecalho das `Linhas do rateio`
+- `Remover` ganhou um pouco mais de legibilidade e o estado vazio de `Ultimos lancamentos da pessoa` ficou mais leve, sem alterar nenhuma regra, validacao, payload JS ou logica de exibicao/ocultacao do rateio
+- foi possivel executar `py manage.py check` e validar novamente `/financeiro/lancamentos/novo/` com status `200`; no HTML renderizado, permaneceram presentes o bloco de rateio, o `Adicionar linha` e o rotulo `Valor total do documento`
+
+## Acabamento fino final de consistencia no formulario principal
+
+- `financeiro/templates/financeiro/lancamento_form.html` recebeu ajuste final de consistencia, removendo o subtitulo residual da pagina e compactando um pouco mais o bloco `Modo do lançamento`
+- o componente visual do `i` ficou mais coerente em tamanho, alinhamento, contraste e espacamento, sem ampliar seu uso na tela
+- o `i` de `Linhas do rateio` foi removido por redundancia, enquanto os pontos de ajuda realmente necessarios permaneceram apenas em `Lançamento com rateio` e `Valor total do documento`
+- o estado vazio de `Últimos lançamentos do favorecido` ficou mais leve, e as acoes `Adicionar linha` / `Remover` ficaram discretamente mais ajustadas ao restante da tela
+- nesta microetapa nao houve alteracao de regra de negocio, validacoes, payload JS, `grupo_rateio`, `numero_documento`, calculos nem comportamento do formulario
+- foi possivel executar `py manage.py check` e validar novamente `/financeiro/lancamentos/novo/` com status `200`

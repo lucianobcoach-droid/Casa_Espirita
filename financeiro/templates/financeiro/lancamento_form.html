@@ -2,6 +2,150 @@
 {% block title %}{{ page_title }}{% endblock %}
 {% block content %}
 <style>
+    .financeiro-form-grid {
+        gap: 0.45rem;
+    }
+
+    .financeiro-form-section {
+        border-color: #edf1f5;
+        border-radius: 0.68rem;
+        box-shadow: none;
+    }
+
+    .financeiro-form-section.is-rateio {
+        border-color: #e6eef7;
+        background: #fdfefe;
+    }
+
+    .financeiro-form-section-body {
+        padding: 0.72rem 0.82rem;
+    }
+
+    .financeiro-form-section-title {
+        margin-bottom: 0.08rem;
+        font-size: 0.83rem;
+    }
+
+    .financeiro-form-grid .field:not(:last-child) {
+        margin-bottom: 0.58rem;
+    }
+
+    .financeiro-form-grid .columns:last-child {
+        margin-bottom: 0;
+    }
+
+    .financeiro-rateio-create-box {
+        border: 1px solid #e6edf5;
+        border-radius: 0.78rem;
+        background: #fff;
+        padding: 0.5rem 0.65rem;
+    }
+
+    .financeiro-rateio-toggle-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.6rem;
+        padding: 0.5rem 0.68rem;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+    }
+
+    .financeiro-rateio-toggle-copy {
+        flex: 1 1 20rem;
+    }
+
+    .financeiro-rateio-toggle-title {
+        margin: 0;
+        color: #1f2937;
+        font-size: 0.82rem;
+        font-weight: 700;
+        line-height: 1.25;
+    }
+
+    .financeiro-inline-help {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1rem;
+        height: 1rem;
+        margin-left: 0.24rem;
+        border-radius: 999px;
+        border: 1px solid #b6c8db;
+        background: #fff;
+        color: #415a74;
+        font-size: 0.67rem;
+        font-weight: 800;
+        font-style: italic;
+        line-height: 1;
+        cursor: help;
+        vertical-align: middle;
+        box-shadow: 0 1px 1px rgba(15, 23, 42, 0.03);
+    }
+
+    .financeiro-rateio-total-callout {
+        padding: 0.44rem 0.62rem;
+        border: 1px solid #e6edf5;
+        border-radius: 0.78rem;
+        background: #fff;
+    }
+
+    .financeiro-rateio-total-callout .label {
+        margin-bottom: 0.22rem;
+        font-size: 0.76rem;
+        letter-spacing: 0;
+        text-transform: none;
+    }
+
+    .financeiro-rateio-simple-box {
+        border: 1px solid #e6edf5;
+        border-radius: 0.78rem;
+        background: #fff;
+        padding: 0.62rem 0.7rem;
+    }
+
+    .financeiro-rateio-simple-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.6rem;
+        margin-bottom: 0.38rem;
+    }
+
+    .financeiro-rateio-panel {
+        margin-top: 0.12rem;
+    }
+
+    .financeiro-rateio-add-button {
+        min-width: 7.4rem;
+        padding-inline: 0.78rem;
+    }
+
+    .financeiro-rateio-table .button.is-small {
+        min-width: 5.2rem;
+        padding-inline: 0.72rem;
+    }
+
+    .financeiro-rateio-table .button.is-small.financeiro-rateio-remove {
+        border-color: #e7d8dc;
+        color: #9f5966;
+        background: #fffafb;
+    }
+
+    [data-financeiro-pessoa-historico="true"] {
+        border: 1px solid #eef2f6;
+        box-shadow: none;
+    }
+
+    [data-financeiro-pessoa-historico="true"] .help[data-historico-vazio="true"] {
+        color: #8894a3;
+        font-size: 0.74rem;
+        margin-bottom: 0.3rem !important;
+    }
+
     .financeiro-rateio-individual-box {
         border: 1px solid #ead7a7;
         border-radius: 0.9rem;
@@ -135,10 +279,9 @@
 <div class="financeiro-page-header financeiro-page-head">
     <div class="financeiro-page-header-main">
         <h1 class="title financeiro-page-title">{{ page_title }}</h1>
-        <p class="financeiro-page-subtitle">Formulario principal do modulo para lancamento comum, transferencia e rateio simples do mesmo documento.</p>
     </div>
     <div class="financeiro-page-header-actions no-print">
-        <a class="button" href="{% url 'financeiro:lancamento-list' %}">Voltar para lancamentos</a>
+        <a class="button" href="{% url 'financeiro:lancamento-list' %}">Voltar para lançamentos</a>
     </div>
 </div>
 {% if form.non_field_errors %}
@@ -156,10 +299,9 @@
         <section class="financeiro-form-section">
             <div class="financeiro-form-section-body">
                 <div class="financeiro-form-section-title">Dados principais</div>
-                <div class="financeiro-form-section-text">Identificacao do lancamento e dados base do registro.</div>
 
                 <div class="field">
-                    <label class="label" for="{{ form.descricao.id_for_label }}">{{ form.descricao.label }} *</label>
+                    <label class="label" for="{{ form.descricao.id_for_label }}">DESCRIÇÃO *</label>
                     <div class="control">{{ form.descricao }}</div>
                     {% for error in form.descricao.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
                 </div>
@@ -181,7 +323,7 @@
                     </div>
                     <div class="column is-12-mobile is-12-tablet is-4-desktop">
                         <div class="field">
-                            <label class="label" for="{{ form.numero_documento.id_for_label }}">{{ form.numero_documento.label }}</label>
+                            <label class="label" for="{{ form.numero_documento.id_for_label }}">Número do documento</label>
                             <div class="control">{{ form.numero_documento }}</div>
                             {% for error in form.numero_documento.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
                         </div>
@@ -192,20 +334,24 @@
 
         <section class="financeiro-form-section">
             <div class="financeiro-form-section-body">
-                <div class="financeiro-form-section-title">Modo do lancamento</div>
-                <div class="financeiro-form-section-text">Escolha entre lancamento comum e rateio simples do mesmo documento.</div>
+                <div class="financeiro-form-section-title">Modo do lançamento</div>
 
                 {% if not form.instance.pk %}
-                    <div class="financeiro-form-toggle">
-                        <div>
-                            <label class="checkbox" for="{{ form.lancamento_com_rateio.id_for_label }}">
-                                {{ form.lancamento_com_rateio }}
-                                {{ form.lancamento_com_rateio.label }}
-                            </label>
-                            {% for error in form.lancamento_com_rateio.errors %}<p class="help is-danger mt-2">{{ error }}</p>{% endfor %}
-                        </div>
-                        <div class="financeiro-form-toggle-help">
-                            Use esta opcao quando o mesmo documento precisar ser dividido em mais de uma linha de categoria e valor.
+                    <div class="financeiro-rateio-create-box">
+                        <div class="financeiro-rateio-toggle-row">
+                            <div class="financeiro-rateio-toggle-copy">
+                                <p class="financeiro-rateio-toggle-title">
+                                    Lançamento com rateio
+                                    <span class="financeiro-inline-help" title="Use quando o mesmo documento precisar ser dividido entre mais de uma categoria." aria-label="Ajuda: use quando o mesmo documento precisar ser dividido entre mais de uma categoria.">i</span>
+                                </p>
+                            </div>
+                            <div>
+                                <label class="checkbox" for="{{ form.lancamento_com_rateio.id_for_label }}">
+                                    {{ form.lancamento_com_rateio }}
+                                    {{ form.lancamento_com_rateio.label }}
+                                </label>
+                                {% for error in form.lancamento_com_rateio.errors %}<p class="help is-danger mt-2">{{ error }}</p>{% endfor %}
+                            </div>
                         </div>
                     </div>
                 {% elif form.instance.com_rateio %}
@@ -274,7 +420,6 @@
         <section class="financeiro-form-section">
             <div class="financeiro-form-section-body">
                 <div class="financeiro-form-section-title">Valores e datas</div>
-                <div class="financeiro-form-section-text">Campos principais para valor, competencia e pagamento.</div>
 
                 <div class="columns is-multiline is-variable is-3">
                     <div class="column is-12-mobile is-6-tablet is-4-desktop">
@@ -285,10 +430,14 @@
                         </div>
                         {% if not form.instance.pk %}
                             <div class="field" data-financeiro-rateio-total-wrapper="true" hidden>
-                                <label class="label" for="{{ form.valor_total_documento.id_for_label }}">{{ form.valor_total_documento.label }} *</label>
-                                <div class="control">{{ form.valor_total_documento }}</div>
-                                {% if form.valor_total_documento.help_text %}<p class="help">{{ form.valor_total_documento.help_text }}</p>{% endif %}
-                                {% for error in form.valor_total_documento.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+                                <div class="financeiro-rateio-total-callout">
+                                    <label class="label" for="{{ form.valor_total_documento.id_for_label }}">
+                                        Valor total do documento *
+                                        <span class="financeiro-inline-help" title="A soma final das linhas do rateio precisa fechar com este valor." aria-label="Ajuda: a soma final das linhas do rateio precisa fechar com este valor.">i</span>
+                                    </label>
+                                    <div class="control">{{ form.valor_total_documento }}</div>
+                                    {% for error in form.valor_total_documento.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+                                </div>
                             </div>
                         {% endif %}
                     </div>
@@ -301,7 +450,7 @@
                     </div>
                     <div class="column is-12-mobile is-6-tablet is-4-desktop">
                         <div class="field">
-                            <label class="label" for="{{ form.data_competencia.id_for_label }}">{{ form.data_competencia.label }} *</label>
+                            <label class="label" for="{{ form.data_competencia.id_for_label }}">DATA COMPETÊNCIA *</label>
                             <div class="control">{{ form.data_competencia }}</div>
                             {% for error in form.data_competencia.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
                         </div>
@@ -313,26 +462,22 @@
         {% if not form.instance.pk %}
             <section class="financeiro-form-section is-rateio" data-financeiro-rateio-box="true" hidden>
                 <div class="financeiro-form-section-body">
-                    <div class="financeiro-form-section-title">Rateio</div>
-                    <div class="financeiro-form-section-text">Linhas do mesmo documento com categoria e valor por item.</div>
-
-                    <div class="financeiro-rateio-panel">
-                        <div class="level mb-3">
-                            <div class="level-left">
-                                <div class="financeiro-form-section-text mb-0">Informe no minimo 2 linhas validas e confira o fechamento com o valor total do documento.</div>
-                            </div>
-                            <div class="level-right">
-                                <button class="button is-small is-link is-light" type="button" data-financeiro-rateio-add="true">Adicionar linha</button>
-                            </div>
+                    <div class="financeiro-rateio-simple-box">
+                        <div class="financeiro-rateio-simple-head">
+                            <div class="financeiro-form-section-title">Linhas do rateio</div>
+                            <button class="button is-small is-link is-light financeiro-rateio-add-button" type="button" data-financeiro-rateio-add="true">Adicionar linha</button>
                         </div>
-                        {% for error in form.rateio_payload.errors %}<p class="help is-danger mb-2">{{ error }}</p>{% endfor %}
-                        <div class="table-container">
-                            <table class="table is-fullwidth is-narrow is-striped financeiro-rateio-table">
-                                <thead>
-                                <tr><th>Categoria</th><th>Valor</th><th class="has-text-right">Acao</th></tr>
-                                </thead>
-                                <tbody data-financeiro-rateio-body="true"></tbody>
-                            </table>
+
+                        <div class="financeiro-rateio-panel">
+                            {% for error in form.rateio_payload.errors %}<p class="help is-danger mb-2">{{ error }}</p>{% endfor %}
+                            <div class="table-container">
+                                <table class="table is-fullwidth is-narrow is-striped financeiro-rateio-table">
+                                    <thead>
+                                    <tr><th>Categoria</th><th>Valor</th><th class="has-text-right">Ação</th></tr>
+                                    </thead>
+                                    <tbody data-financeiro-rateio-body="true"></tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -341,8 +486,7 @@
 
         <section class="financeiro-form-section">
             <div class="financeiro-form-section-body">
-                <div class="financeiro-form-section-title">Informacoes complementares</div>
-                <div class="financeiro-form-section-text">Pessoa, categoria, centro de custo, contas e observacoes.</div>
+                <div class="financeiro-form-section-title">Informações complementares</div>
                 <div class="columns is-multiline is-variable is-3">
                     <div class="column is-12-mobile is-6-tablet is-6-desktop">
                         <div class="field" data-financeiro-pessoa-wrapper="true">
@@ -385,7 +529,7 @@
                 </div>
 
                 <div class="field">
-                    <label class="label" for="{{ form.observacoes.id_for_label }}">{{ form.observacoes.label }}</label>
+                    <label class="label" for="{{ form.observacoes.id_for_label }}">OBSERVAÇÕES</label>
                     <div class="control">{{ form.observacoes }}</div>
                     {% for error in form.observacoes.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
                 </div>
@@ -404,11 +548,11 @@
 </form>
 
 <section class="box mt-5" data-financeiro-pessoa-historico="true" data-history-url-template="{% url 'financeiro:pessoa-ultimos-lancamentos' 0 %}" hidden>
-    <h2 class="title is-6 mb-3">Ultimos lancamentos do favorecido</h2>
-    <p class="help mb-3" data-historico-vazio="true">Selecione uma pessoa para ver os ultimos 5 lancamentos.</p>
+    <h2 class="title is-6 mb-3">Últimos lançamentos da pessoa</h2>
+    <p class="help mb-3" data-historico-vazio="true">Selecione uma pessoa.</p>
     <div class="table-container" data-historico-tabela-wrapper="true" hidden>
         <table class="table is-fullwidth is-striped is-narrow">
-            <thead><tr><th>Data</th><th>Tipo</th><th>Descricao</th><th>Valor</th><th>Categoria</th><th>Documento</th></tr></thead>
+            <thead><tr><th>Data</th><th>Tipo</th><th>Descrição</th><th>Valor</th><th>Categoria</th><th>Documento</th></tr></thead>
             <tbody data-historico-body="true"></tbody>
         </table>
     </div>
@@ -614,7 +758,7 @@
                 return;
             }
             if (!pessoaField.value) {
-                clearHistorico('Selecione uma pessoa para ver os ultimos 5 lancamentos.');
+                clearHistorico('Selecione uma pessoa.');
                 return;
             }
             const urlTemplate = pessoaHistoricoBox.dataset.historyUrlTemplate;
@@ -624,12 +768,12 @@
                 .then((data) => {
                     const items = data.results || [];
                     if (!items.length) {
-                        clearHistorico('Nenhum lancamento encontrado para este favorecido.');
+                        clearHistorico('Nenhum lançamento encontrado para esta pessoa.');
                         return;
                     }
                     renderHistoricoState('', items);
                 })
-                .catch(() => { clearHistorico('Nao foi possivel carregar o historico deste favorecido agora.'); });
+                .catch(() => { clearHistorico('Não foi possível carregar o histórico desta pessoa agora.'); });
         }
 
         function serializeRateioRows() {
@@ -694,7 +838,7 @@
                 acaoCell.className = 'has-text-right';
                 const removeButton = document.createElement('button');
                 removeButton.type = 'button';
-                removeButton.className = 'button is-small is-light';
+                removeButton.className = 'button is-small is-light financeiro-rateio-remove';
                 removeButton.textContent = 'Remover';
                 removeButton.addEventListener('click', function () {
                     rateioRows.splice(index, 1);
