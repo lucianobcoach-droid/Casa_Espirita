@@ -273,6 +273,13 @@ Observacao:
 - ordem recomendada de aplicacao no restante do `financeiro`: 1) `home.html`; 2) `auditoria_lancamento_list.html`; 3) listas principais de cadastros auxiliares (`conta`, `pessoa`, `categoria`, `centro_custo`); 4) formularios auxiliares; 5) consolidacao final de componentes compartilhados para reaproveitamento transversal
 - esse mesmo padrao deve orientar tanto futuros ajustes nas telas existentes quanto novos itens e novas telas que entrarem no sistema, evitando reintroducao de excesso de texto, `i` disperso e empilhamento desnecessario de blocos
 
+## 13. Reclassificacao estrutural da home do modulo financeiro
+
+- a `home.html` do `financeiro` deixa de ser tratada como entrada principal do modulo e passa a ser considerada rota secundaria explicita, porque a sidebar ja cobre a navegacao estrutural e a tela nao justifica uma camada intermediaria propria
+- a entrada correta do modulo passa a ser a listagem principal de lancamentos, o que reduz redundancia e alinha a navegacao com a diretriz transversal de fluxo operacional direto
+- com essa decisao, a fila imediata da auditoria transversal deixa de comecar por `home.html` e passa a seguir por `auditoria_lancamento_list.html`, depois `conta_list.html`, `pessoa_list.html`, `categoria_list.html`, `centro_custo_list.html` e respectivos formularios auxiliares
+- a antiga home so deve voltar a ganhar protagonismo estrutural se um dashboard operacional real vier a existir em etapa futura propria e justificada
+
 ### Estrutural futura
 - integracao futura do `financeiro` com autenticacao e controle de acesso por usuario quando a frente estrutural do projeto for iniciada
 - definicao futura de permissoes por acao dentro do `financeiro`, sem isolar essa governanca do restante do sistema

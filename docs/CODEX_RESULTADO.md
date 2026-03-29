@@ -843,6 +843,32 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - nesta microetapa nao houve alteracao de regra de negocio, validacoes, payload JS, `grupo_rateio`, `numero_documento`, calculos nem comportamento do formulario
 - foi possivel executar `py manage.py check` e validar novamente `/financeiro/lancamentos/novo/` com status `200`
 
+## Compactacao mais incisiva do formulario principal
+
+- `financeiro/templates/financeiro/lancamento_form.html` recebeu uma nova passada de densidade para reduzir de forma mais firme o espaco vertical total e aproximar mais os campos entre si
+- os titulos internos passaram a operar mais como separadores discretos do que como seções altas, enquanto a ficha principal reduziu paddings, margens e respiros entre linhas de inputs
+- `Modo do lancamento`, `Valores e datas`, `Informacoes complementares`, `Observacoes`, a faixa de acoes finais e o bloco de `rateio` ficaram visualmente mais compactos sem perder legibilidade
+- o historico vazio da pessoa ficou ainda mais secundario e mais proximo do restante da tela, sem ganhar protagonismo visual desnecessario
+- nesta microetapa nao houve alteracao de regra de negocio, validacoes, payload JS, `grupo_rateio`, `numero_documento`, calculos nem comportamento do formulario
+- foi possivel executar `py manage.py check` e validar novamente `/financeiro/lancamentos/novo/` com status `200`
+
+## Ajuste de grade e proporcao do formulario principal
+
+- `financeiro/templates/financeiro/lancamento_form.html` recebeu uma passada complementar de proporcao para reduzir a sensacao de campos ilhados e aproximar mais a leitura de uma ficha operacional de lancamento
+- as linhas de `Tipo`, `Status` e `Numero do documento`, o bloco de `Valores e datas` e as linhas de complementares passaram a usar distribuicao mais firme de colunas e gaps mais contidos
+- `Modo do lancamento`, a area de acoes finais e o historico vazio ficaram menos destacados como faixas independentes e mais encaixados no mesmo fluxo vertical da tela
+- nesta microetapa nao houve alteracao de regra de negocio, validacoes, payload JS, `grupo_rateio`, `numero_documento`, calculos nem comportamento do formulario
+- foi possivel executar `py manage.py check` e validar novamente `/financeiro/lancamentos/novo/` com status `200`
+
+## Compactacao espacial do formulario principal
+
+- `financeiro/templates/financeiro/lancamento_form.html` recebeu uma passada especifica de densidade para reduzir espaco em branco e aproximar a experiencia de uma ficha de lancamento mais sequencial
+- a ficha principal passou a operar com blocos internos mais proximos entre si, paddings menores e menor distancia entre titulos, linhas de inputs e acoes finais
+- o bloco de `rateio`, quando ativado, foi mantido como continuacao natural do formulario, mas agora tambem com respiro mais curto e leitura mais compacta
+- o historico da pessoa foi mantido funcional, porem com menos protagonismo visual e menor peso no fluxo principal da tela
+- nesta microetapa nao houve alteracao de regra de negocio, validacoes, payload JS, `grupo_rateio`, `numero_documento`, calculos nem comportamento do formulario
+- foi possivel executar `py manage.py check` e validar novamente `/financeiro/lancamentos/novo/` com status `200`
+
 ## Acabamento fino complementar do formulario principal
 
 - `financeiro/templates/financeiro/lancamento_form.html` recebeu um ultimo ajuste fino para deixar o `i` com aparencia mais consolidada em alinhamento, contraste e espacamento, sem proliferar novos pontos de ajuda na tela
@@ -886,6 +912,20 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - os atalhos foram redistribuidos em blocos mais maduros de `Movimentacao`, `Relatorios`, `Cadastros` e `Controle e configuracao`, reduzindo a sensacao de grade solta sem alterar links, rotas ou navegacao
 - a linguagem visivel da home foi padronizada com acentuacao e rotulos mais consistentes, sem introduzir novas explicacoes textuais
 - foi possivel executar `py manage.py check` e validar novamente `/financeiro/` com status `200`
+
+## Redefinicao estrutural da entrada do modulo financeiro
+
+- a avaliacao estrutural posterior concluiu que a `home` do `financeiro` ficou redundante como tela de entrada, porque a sidebar do modulo ja cobre a navegacao estrutural e a pagina inicial nao agrega funcao operacional suficiente para justificar um passo intermediario
+- com isso, `financeiro/urls.py` passou a redirecionar `/financeiro/` diretamente para a listagem principal de lancamentos, preservando a navegacao funcional e evitando abrir frente nova de dashboard sem base real
+- a antiga `FinanceiroHomeView` foi preservada apenas como rota secundaria explicita, para compatibilidade e eventual referencia temporaria, sem seguir como entrada principal do modulo
+- nesta microetapa nao houve alteracao de regra de negocio, calculos, validacoes nem comportamento funcional das telas operacionais do modulo
+
+## Refinamento da leitura operacional da auditoria do financeiro
+
+- `financeiro/templates/financeiro/auditoria_lancamento_list.html` recebeu um ajuste contido para ficar mais alinhada ao padrao transversal de UX/comunicacao: o subtitulo explicativo saiu, o retorno passou a apontar para `Lançamentos` e o bloco de filtros ficou mais maduro sem mudar sua logica
+- a tabela perdeu a explicacao fixa redundante, os rotulos visiveis foram padronizados com acentuacao mais consistente e a leitura de `Campos alterados` ficou um pouco mais limpa mantendo `details/summary` como base funcional
+- o estado vazio passou a ser mais curto e menos cru, sem criar nova funcionalidade, sem paginacao e sem alterar a ordenacao simples por evento mais recente
+- nesta microetapa nao houve alteracao de regra de negocio, filtros, view, ordenacao nem estrutura funcional da auditoria
 
 ## Acabamento fino final de consistencia no formulario principal
 

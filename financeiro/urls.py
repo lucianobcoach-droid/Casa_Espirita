@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from django.urls import path
+from django.views.generic import RedirectView
 
 from .views import (
     AssinaturaInstitucionalCreateView,
@@ -49,7 +50,8 @@ from .views import (
 app_name = 'financeiro'
 
 urlpatterns = [
-    path('', FinanceiroHomeView.as_view(), name='home'),
+    path('', RedirectView.as_view(pattern_name='financeiro:lancamento-list', permanent=False), name='home'),
+    path('inicio/', FinanceiroHomeView.as_view(), name='home-secundaria'),
     path('extratos/', ExtratoFinanceiroView.as_view(), name='extrato-list'),
     path('auditoria/lancamentos/', AuditoriaLancamentoFinanceiroListView.as_view(), name='auditoria-lancamento-list'),
     path('prestacao-contas/', PrestacaoContasFinanceiroView.as_view(), name='prestacao-contas'),

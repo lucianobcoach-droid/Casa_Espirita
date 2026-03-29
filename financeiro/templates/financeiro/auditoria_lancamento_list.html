@@ -1,20 +1,70 @@
 {% extends 'financeiro/base.html' %}
 {% block title %}{{ page_title }}{% endblock %}
 {% block content %}
+<style>
+    .financeiro-auditoria-filtros {
+        margin-bottom: 0.8rem;
+        padding: 0.8rem 0.9rem 0.35rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.8rem;
+        background: #fff;
+    }
+
+    .financeiro-auditoria-filtros .label {
+        margin-bottom: 0.2rem;
+    }
+
+    .financeiro-auditoria-filtros .buttons {
+        gap: 0.45rem;
+    }
+
+    .financeiro-auditoria-lista-vazia {
+        padding: 1rem 0.8rem !important;
+        color: #6b7280;
+        text-align: center;
+        font-size: 0.88rem;
+    }
+
+    .financeiro-auditoria-campos {
+        display: grid;
+        gap: 0.35rem;
+    }
+
+    .financeiro-auditoria-campos summary {
+        cursor: pointer;
+        color: #334155;
+        font-weight: 600;
+    }
+
+    .financeiro-auditoria-campos summary::marker {
+        color: #64748b;
+    }
+
+    .financeiro-auditoria-campos ul {
+        margin: 0.15rem 0 0;
+    }
+
+    .financeiro-auditoria-campos li {
+        margin-bottom: 0.22rem;
+    }
+
+    .financeiro-auditoria-campos-vazio {
+        color: #9ca3af;
+    }
+</style>
 <div class="financeiro-page-header financeiro-page-head">
     <div class="financeiro-page-header-main">
         <h1 class="title financeiro-page-title">{{ page_title }}</h1>
-        <p class="financeiro-page-subtitle">Leitura simples da trilha de create, update e delete das entidades auditadas, com filtros operacionais mantidos em uma unica tela.</p>
     </div>
     <div class="financeiro-page-header-actions no-print">
-        <a class="button" href="{% url 'financeiro:home' %}">Voltar ao financeiro</a>
+        <a class="button" href="{% url 'financeiro:lancamento-list' %}">Voltar para lançamentos</a>
     </div>
 </div>
 
-<form method="get" class="filters-box no-print">
+<form method="get" class="financeiro-auditoria-filtros no-print">
     <div class="columns is-multiline">
         <div class="column is-12-mobile is-6-tablet is-3-desktop">
-            <label class="label">Acao</label>
+            <label class="label">Ação</label>
             <div class="select is-fullwidth">
                 <select name="acao">
                     <option value="">Todas</option>
@@ -33,11 +83,11 @@
             <input class="input" type="date" name="data_final" value="{{ filtro_data_final }}">
         </div>
         <div class="column is-12-mobile is-6-tablet is-2-desktop">
-            <label class="label">Id do registro</label>
+            <label class="label">ID do registro</label>
             <input class="input" type="number" min="1" step="1" name="registro_id" value="{{ filtro_registro_id }}">
         </div>
         <div class="column is-12-mobile is-6-tablet is-3-desktop">
-            <label class="label">Usuario</label>
+            <label class="label">Usuário</label>
             <div class="select is-fullwidth">
                 <select name="usuario">
                     <option value="">Todos</option>
@@ -62,16 +112,15 @@
         <h2 class="financeiro-report-title">Eventos de auditoria</h2>
     </div>
     <div class="financeiro-report-body">
-        <p class="table-caption">A listagem abaixo permanece simples, ordenada do evento mais recente para o mais antigo e agora tambem pode ser filtrada por usuario.</p>
         <div class="table-wrapper">
             <table class="table is-fullwidth is-hoverable financeiro-table">
                 <thead>
                 <tr>
                     <th>Data/Hora</th>
-                    <th>Acao</th>
+                    <th>Ação</th>
                     <th>Modelo</th>
                     <th>Registro</th>
-                    <th>Usuario</th>
+                    <th>Usuário</th>
                     <th>Campos alterados</th>
                 </tr>
                 </thead>
@@ -91,7 +140,7 @@
                         </td>
                         <td>
                             {% if auditoria.campos_alterados %}
-                                <details>
+                                <details class="financeiro-auditoria-campos">
                                     <summary>{{ auditoria.campos_alterados|length }} campo(s)</summary>
                                     <div class="content mt-2">
                                         <ul>
@@ -107,13 +156,13 @@
                                     </div>
                                 </details>
                             {% else %}
-                                <span class="has-text-grey">-</span>
+                                <span class="financeiro-auditoria-campos-vazio">-</span>
                             {% endif %}
                         </td>
                     </tr>
                 {% empty %}
                     <tr>
-                        <td colspan="6">Nenhum evento de auditoria encontrado para as entidades auditadas do financeiro.</td>
+                        <td colspan="6" class="financeiro-auditoria-lista-vazia">Nenhum evento encontrado com os filtros atuais.</td>
                     </tr>
                 {% endfor %}
                 </tbody>

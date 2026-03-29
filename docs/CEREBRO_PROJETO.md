@@ -85,6 +85,7 @@ Estas regras devem ser respeitadas em qualquer etapa:
 - a linguagem textual das telas deve buscar consistencia visivel de rotulos, microtextos e acentuacao, evitando variacoes desnecessarias entre paginas equivalentes
 - formularios e fluxos operacionais devem buscar leitura continua e sensacao de cadastro unico, evitando empilhamento desnecessario de caixas, cards ou blocos altos quando a mesma tela puder guiar a acao de forma mais fluida
 - esse padrao transversal de UX e comunicacao operacional deve orientar tanto refinamentos futuros nas telas existentes quanto a construcao de novas telas, componentes, estados vazios, headings, acoes e mensagens do sistema
+- quando um modulo ja possui navegacao estrutural persistente por sidebar ou menu lateral, uma home propria so deve permanecer como entrada principal se oferecer funcao operacional real; quando ela for apenas redundante como camada extra de atalhos, a entrada do modulo deve preferir redirecionar para a tela operacional central do fluxo
 
 ### 5.2. Diretriz estrutural futura de usuarios, perfis e permissoes
 - o projeto passa a registrar oficialmente como frente estrutural futura a camada de usuarios, autenticacao, perfis e permissoes
@@ -352,6 +353,7 @@ Escopo ja consolidado no repositorio:
 
 Diretriz:
 - as proximas etapas devem partir desse estado consolidado, sem regressao e sem reabrir etapas ja aprovadas
+- a raiz `/financeiro/` deixa de funcionar como home intermediaria e passa a abrir diretamente a listagem principal de lancamentos; a antiga home pode permanecer apenas como rota secundaria explicita enquanto isso fizer sentido de compatibilidade interna
 
 ## 14. Etapas futuras ja pensadas, mas nao autorizadas agora
 As etapas abaixo podem existir no planejamento, mas nao devem ser implementadas antes da hora:
