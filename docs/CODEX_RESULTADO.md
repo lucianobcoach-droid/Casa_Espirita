@@ -849,6 +849,24 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - a correcao foi mantida estritamente no template da tela piloto, com classes locais e breakpoints explicitos para garantir que o desktop exiba apenas `Navegacao` e o mobile exiba apenas `Menu`
 - nesta microetapa nao houve alteracao de regra de negocio, validacoes, payload JS, `grupo_rateio`, `numero_documento`, calculos, linha financeira nem ordem dos blocos do formulario
 
+## Primeira expansao controlada da frente transversal em listagem auxiliar
+
+- `financeiro/templates/financeiro/centro_custo_list.html` foi escolhida como primeira expansao controlada fora da tela piloto por ser a listagem auxiliar mais simples do grupo e permitir reaproveitar o padrao validado com menor risco
+- a tela passou a usar `page header` limpo e coerente com o shell atual, bloco de filtros mais maduro, tabela alinhada ao padrao visual do modulo e linguagem visivel corrigida em acentuacao e microtextos
+- o estado vazio deixou de soar como cadastro cru e passou a responder de forma mais operacional aos filtros atuais, sem criar explicacoes extras nem alterar URLs, acoes ou comportamento funcional da listagem
+
+## Consolidacao estrutural da listagem de centros de custo
+
+- a auditoria humana posterior mostrou que a tela ainda parecia parcialmente aplicada: o header tinha melhorado, mas filtros e tabela continuavam visivelmente soltos dentro do shell, reforcando sensacao hibrida entre padrao antigo e padrao novo
+- a consolidacao seguinte ficou restrita a `financeiro/templates/financeiro/centro_custo_list.html`, reunindo filtros e tabela em um unico card/listagem e removendo a dependencia de rolagem local no bloco da tabela para evitar scrollbar interna indevida nessa tela simples
+- a etapa preservou titulo, botao `Novo centro de custo`, filtros existentes, acoes da tabela, estado vazio operacional e microtextos corrigidos, sem alterar regra de negocio nem abrir refinamento paralelo nas demais telas auxiliares
+
+## Alinhamento do topo da listagem de centros de custo com o shell aprovado
+
+- a auditoria humana seguinte mostrou que o corpo da listagem tinha melhorado, mas a barra superior ainda continuava herdando o padrao antigo completo do shell, deixando topo e menu visualmente desalinhados em relacao ao padrao aprovado na tela piloto
+- a correcao ficou restrita a `financeiro/templates/financeiro/centro_custo_list.html`, que passou a sobrescrever apenas o `financeiro_shell_header` com a mesma logica de header enxuto ja validada na POC: `Navegacao` no desktop e `Menu` no mobile, sem reabrir a faixa antiga de contexto no topo
+- o corpo ja consolidado da listagem foi preservado integralmente, incluindo page header, botao principal, filtros, tabela, chip de `Ativo`, estado vazio operacional e comportamento funcional da tela
+
 ## Tentativas manuais de recomposicao visual no formulario principal
 
 - `financeiro/templates/financeiro/lancamento_form.html` recebeu tentativas manuais de recomposicao visual para testar um corpo mais central, mais compacto e organizado por linhas de preenchimento relacionadas, em vez de continuar acumulando apenas microajustes incrementais sobre a composicao antiga

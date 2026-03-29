@@ -1,60 +1,206 @@
 {% extends 'financeiro/base.html' %}
 {% block title %}Centros de Custo{% endblock %}
-{% block content %}
-<div class="level">
-    <div class="level-left">
-        <h1 class="title">Centros de Custo</h1>
-    </div>
-    <div class="level-right">
-        <a class="button is-primary" href="{% url 'financeiro:centro-custo-create' %}">Novo centro de custo</a>
-    </div>
-</div>
-<form method="get" class="filters-box">
-    <div class="columns is-multiline">
-        <div class="column is-5">
-            <label class="label">Código</label>
-            <input class="input" type="text" name="codigo" value="{{ request.GET.codigo }}" placeholder="Buscar por código">
-        </div>
-        <div class="column is-5">
-            <label class="label">Nome</label>
-            <input class="input" type="text" name="nome" value="{{ request.GET.nome }}" placeholder="Buscar por nome">
-        </div>
-        <div class="column is-2">
-            <label class="label">&nbsp;</label>
-            <div class="buttons">
-                <button class="button is-link is-fullwidth" type="submit">Filtrar</button>
-                <a class="button is-light is-fullwidth" href="{% url 'financeiro:centro-custo-list' %}">Limpar</a>
+{% block financeiro_shell_header %}
+    <header class="financeiro-app-utility-bar no-print">
+        <div class="container financeiro-topbar-desktop financeiro-centro-custo-shell-desktop">
+            <div class="financeiro-topbar-desktop-main">
+                <div class="financeiro-topbar-reopen-slot">
+                    <button
+                        type="button"
+                        class="financeiro-drawer-toggle no-print"
+                        data-financeiro-sidebar-toggle
+                        aria-expanded="true"
+                        aria-controls="financeiro-sidebar"
+                        aria-label="Recolher navegacao lateral"
+                        title="Recolher navegacao lateral"
+                    >
+                        <span class="financeiro-drawer-toggle-icon" aria-hidden="true">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </span>
+                        <span aria-hidden="true">Navegação</span>
+                        <span class="financeiro-sr-only" data-financeiro-sidebar-toggle-label>Recolher navegacao lateral</span>
+                    </button>
+                </div>
             </div>
+            <div class="financeiro-topbar-desktop-actions"></div>
+        </div>
+
+        <nav class="navbar is-light financeiro-topbar financeiro-topbar-mobile financeiro-centro-custo-shell-mobile" role="navigation" aria-label="controles mobile do financeiro">
+            <div class="container">
+                <div class="financeiro-topbar-mobile-inner">
+                    <div class="financeiro-topbar-mobile-main"></div>
+                    <div class="financeiro-topbar-mobile-actions">
+                        <button
+                            type="button"
+                            class="financeiro-drawer-toggle"
+                            data-financeiro-drawer-toggle
+                            aria-controls="financeiro-sidebar"
+                            aria-expanded="false"
+                            aria-label="Abrir navegacao do financeiro"
+                        >
+                            <span class="financeiro-drawer-toggle-icon" aria-hidden="true">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </span>
+                            <span>Menu</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+{% endblock %}
+{% block content %}
+<style>
+    .financeiro-centro-custo-shell-mobile {
+        display: none !important;
+    }
+
+    .financeiro-centro-custo-page {
+        display: grid;
+        gap: 0.9rem;
+    }
+
+    .financeiro-centro-custo-card {
+        border: 1px solid rgba(203, 213, 225, 0.85);
+        border-radius: 1rem;
+        background: #fff;
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.045);
+        overflow: hidden;
+    }
+
+    .financeiro-centro-custo-card .filters-box {
+        margin-bottom: 0;
+        padding: 0.8rem 0.95rem 0.9rem;
+        border: 0;
+        border-bottom: 1px solid #edf2f7;
+        border-radius: 0;
+        background: linear-gradient(180deg, #fbfcfe 0%, #f8fafc 100%);
+    }
+
+    .financeiro-centro-custo-table-wrap {
+        overflow: visible;
+    }
+
+    .financeiro-centro-custo-table {
+        margin-bottom: 0;
+    }
+
+    .financeiro-centro-custo-table td,
+    .financeiro-centro-custo-table th {
+        vertical-align: middle;
+    }
+
+    .financeiro-centro-custo-status {
+        display: inline-flex;
+        align-items: center;
+        min-height: 1.6rem;
+        padding: 0.15rem 0.55rem;
+        border-radius: 999px;
+        background: #f3f6fb;
+        color: #475569;
+        font-size: 0.72rem;
+        font-weight: 700;
+        line-height: 1.1;
+    }
+
+    .financeiro-centro-custo-status.is-active {
+        background: rgba(47, 133, 90, 0.12);
+        color: #236746;
+    }
+
+    .financeiro-centro-custo-empty {
+        color: #64748b;
+    }
+
+    @media screen and (max-width: 1023px) {
+        .financeiro-centro-custo-shell-desktop {
+            display: none !important;
+        }
+
+        .financeiro-centro-custo-shell-mobile {
+            display: block !important;
+        }
+    }
+
+    @media screen and (min-width: 1024px) {
+        .financeiro-centro-custo-shell-desktop {
+            display: flex !important;
+        }
+
+        .financeiro-centro-custo-shell-mobile {
+            display: none !important;
+        }
+    }
+</style>
+
+<div class="financeiro-centro-custo-page">
+    <div class="financeiro-page-header financeiro-page-head">
+        <div class="financeiro-page-header-main">
+            <h1 class="title financeiro-page-title">Centros de custo</h1>
+        </div>
+        <div class="financeiro-page-header-actions no-print">
+            <a class="button is-primary" href="{% url 'financeiro:centro-custo-create' %}">Novo centro de custo</a>
         </div>
     </div>
-</form>
-<div class="table-wrapper">
-    <table class="table is-fullwidth is-striped is-hoverable">
-        <thead>
-        <tr>
-            <th>Código</th>
-            <th>Nome</th>
-            <th>Ativo</th>
-            <th>Ações</th>
-        </tr>
-        </thead>
-        <tbody>
-        {% for centro in centros_custo %}
-            <tr>
-                <td>{{ centro.codigo }}</td>
-                <td>{{ centro.nome }}</td>
-                <td>{% if centro.ativo %}Sim{% else %}Não{% endif %}</td>
-                <td class="actions-cell">
-                    <a class="button is-small is-link is-light" href="{% url 'financeiro:centro-custo-update' centro.pk %}">Editar</a>
-                    <a class="button is-small is-danger is-light" href="{% url 'financeiro:centro-custo-delete' centro.pk %}">Excluir</a>
-                </td>
-            </tr>
-        {% empty %}
-            <tr>
-                <td colspan="4">Nenhum centro de custo cadastrado.</td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+
+    <section class="financeiro-centro-custo-card">
+        <form method="get" class="filters-box no-print">
+            <div class="columns is-multiline">
+                <div class="column is-12-mobile is-6-tablet is-5-desktop">
+                    <label class="label">Código</label>
+                    <input class="input" type="text" name="codigo" value="{{ request.GET.codigo }}" placeholder="Buscar por código">
+                </div>
+                <div class="column is-12-mobile is-6-tablet is-5-desktop">
+                    <label class="label">Nome</label>
+                    <input class="input" type="text" name="nome" value="{{ request.GET.nome }}" placeholder="Buscar por nome">
+                </div>
+                <div class="column is-12-mobile is-12-tablet is-2-desktop">
+                    <label class="label">&nbsp;</label>
+                    <div class="buttons">
+                        <button class="button is-link is-fullwidth" type="submit">Filtrar</button>
+                        <a class="button is-light is-fullwidth" href="{% url 'financeiro:centro-custo-list' %}">Limpar</a>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+        <div class="financeiro-centro-custo-table-wrap">
+            <table class="table is-fullwidth is-hoverable financeiro-table financeiro-centro-custo-table">
+                <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Nome</th>
+                    <th>Ativo</th>
+                    <th class="no-print">Ações</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for centro in centros_custo %}
+                    <tr>
+                        <td>{{ centro.codigo }}</td>
+                        <td>{{ centro.nome }}</td>
+                        <td>
+                            <span class="financeiro-centro-custo-status{% if centro.ativo %} is-active{% endif %}">
+                                {% if centro.ativo %}Sim{% else %}Não{% endif %}
+                            </span>
+                        </td>
+                        <td class="actions-cell no-print">
+                            <a class="button is-small is-link is-light" href="{% url 'financeiro:centro-custo-update' centro.pk %}">Editar</a>
+                            <a class="button is-small is-danger is-light" href="{% url 'financeiro:centro-custo-delete' centro.pk %}">Excluir</a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="4" class="financeiro-centro-custo-empty">Nenhum centro de custo encontrado com os filtros atuais.</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
 </div>
 {% endblock %}

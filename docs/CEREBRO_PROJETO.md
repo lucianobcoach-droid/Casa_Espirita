@@ -72,6 +72,7 @@ Estas regras devem ser respeitadas em qualquer etapa:
 - a adocao desse padrao deve acontecer de forma progressiva, guiada por componentes reutilizaveis e por reorganizacao controlada do layout-base
 - a base inicial dessa padronizacao e o app `financeiro`, por concentrar hoje a camada visual mais madura do projeto
 - no app `financeiro`, a navegacao lateral padronizada ja foi autorizada e implementada de forma incremental no shell compartilhado, sem tornar essa mesma adocao automaticamente obrigatoria para os demais apps
+- no `financeiro`, a navegacao principal do modulo deve permanecer lateral; o topo do shell nao deve competir com essa navegacao nem repetir contexto do modulo quando a propria sidebar ja cumpre esse papel
 - paginas de impressao, PDF e recibo ficam fora da logica normal de navegacao e nao devem ser tratadas como alvo inicial da mesma padronizacao estrutural
 - no `financeiro`, relatorios e impressos operacionais devem manter margens explicitas de folha e isolamento do shell visual para nao herdarem sidebar, topbar ou wrappers de overflow no modo print
 - quando a natureza `receita` / `despesa` ja estiver clara pelo contexto da tela, pelo agrupamento ou por indicador de tipo, a exibicao visivel da categoria deve preferir nome curto, sem prefixos textuais redundantes
@@ -79,6 +80,9 @@ Estas regras devem ser respeitadas em qualquer etapa:
 - quando a frente incremental de refinamento visual entrar em retrabalho repetitivo sobre a mesma tela, o projeto pode abrir POC controlada de tema/base visual pronta e leve, desde que exista primeiro um ponto de restauracao seguro em Git
 - essa POC deve nascer em escopo minimo, começar por uma unica tela claramente definida e so pode se expandir para outras superficies depois de auditoria visual e funcional explicita
 - durante a POC visual, regra de negocio, validacoes, payload JS, navegacao e comportamento funcional devem permanecer preservados
+- em microetapas de refinamento visual de telas operacionais do `financeiro`, a avaliacao do `financeiro_shell_header` herdado de `financeiro/base.html` deve acontecer no inicio da etapa, antes de refinamentos no corpo local da pagina
+- quando o `financeiro_shell_header` padrao causar duplicidade visual, excesso de contexto no topo ou sensacao de shell antigo sobre corpo novo, a tela deve preferir override com versao enxuta, preservando a navegacao lateral como camada estrutural principal
+- a decisao de shell/topo deve ser fechada antes de ajustes em filtros, tabelas, formularios, estados vazios ou demais blocos do conteudo local
 
 ### 5.1.1. Diretriz duradoura de comunicacao operacional nas telas
 - texto fixo nas telas deve ficar restrito ao minimo operacional necessario para a acao

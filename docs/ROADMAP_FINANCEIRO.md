@@ -194,6 +194,7 @@ Observacao:
 - consolidacao futura de componentes visuais compartilhados do modulo, como cabecalho de pagina, bloco de filtros, card padrao, KPI, tabela e formulario
 - refinamento visual transversal do modulo financeiro para melhorar largura de campos, distribuicao de colunas, densidade de filtros, quantidade de informacao visivel por tela, melhor aproveitamento horizontal em zoom 100% e consistencia visual entre telas, agora oficialmente iniciado pela base compartilhada e pelas telas de listagem/formulario de lancamentos
 - auditoria e aplicacao incremental do novo padrao transversal de UX/comunicacao operacional no restante das telas do `financeiro`, com foco em fluxo continuo, texto fixo minimo, padronizacao de linguagem e uso raro do `i`
+- nas proximas microetapas dessa frente, a decisao sobre shell/topo deve vir antes do refinamento do corpo das telas: em listagens e formularios operacionais, o `financeiro_shell_header` herdado precisa ser avaliado logo no inicio e pode exigir override enxuto quando gerar sensacao de corpo novo sob topo antigo
 - POC controlada de tema/base visual pronta e leve, iniciando somente em `financeiro/templates/financeiro/lancamento_form.html` e sem expansao para outras telas antes de auditoria visual e funcional explicita
 - comportamento de transferencia em todas as telas e relatorios
 - consistencia visual do tratamento de transferencia
