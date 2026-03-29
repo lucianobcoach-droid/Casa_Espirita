@@ -1,68 +1,250 @@
 {% extends 'financeiro/base.html' %}
 {% block title %}Pessoas Financeiras{% endblock %}
-{% block content %}
-<div class="level">
-    <div class="level-left">
-        <h1 class="title">Pessoas Financeiras</h1>
-    </div>
-    <div class="level-right">
-        <a class="button is-primary" href="{% url 'financeiro:pessoa-create' %}">Nova pessoa financeira</a>
-    </div>
-</div>
-<form method="get" class="filters-box">
-    <div class="columns is-multiline">
-        <div class="column is-5">
-            <label class="label">Nome</label>
-            <input class="input" type="text" name="nome" value="{{ request.GET.nome }}" placeholder="Buscar por nome">
-        </div>
-        <div class="column is-5">
-            <label class="label">Código</label>
-            <input class="input" type="text" name="codigo" value="{{ request.GET.codigo }}" placeholder="Buscar por código">
-        </div>
-        <div class="column is-2">
-            <label class="label">&nbsp;</label>
-            <div class="buttons">
-                <button class="button is-link is-fullwidth" type="submit">Filtrar</button>
-                <a class="button is-light is-fullwidth" href="{% url 'financeiro:pessoa-list' %}">Limpar</a>
+{% block financeiro_shell_header %}
+    <header class="financeiro-app-utility-bar no-print">
+        <div class="container financeiro-topbar-desktop financeiro-pessoa-shell-desktop">
+            <div class="financeiro-topbar-desktop-main">
+                <div class="financeiro-topbar-reopen-slot">
+                    <button
+                        type="button"
+                        class="financeiro-drawer-toggle no-print"
+                        data-financeiro-sidebar-toggle
+                        aria-expanded="true"
+                        aria-controls="financeiro-sidebar"
+                        aria-label="Recolher navega&ccedil;&atilde;o lateral"
+                        title="Recolher navega&ccedil;&atilde;o lateral"
+                    >
+                        <span class="financeiro-drawer-toggle-icon" aria-hidden="true">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </span>
+                        <span aria-hidden="true">Navega&ccedil;&atilde;o</span>
+                        <span class="financeiro-sr-only" data-financeiro-sidebar-toggle-label>Recolher navega&ccedil;&atilde;o lateral</span>
+                    </button>
+                </div>
             </div>
+            <div class="financeiro-topbar-desktop-actions"></div>
+        </div>
+
+        <nav class="navbar is-light financeiro-topbar financeiro-topbar-mobile financeiro-pessoa-shell-mobile" role="navigation" aria-label="controles mobile do financeiro">
+            <div class="container">
+                <div class="financeiro-topbar-mobile-inner">
+                    <div class="financeiro-topbar-mobile-main"></div>
+                    <div class="financeiro-topbar-mobile-actions">
+                        <button
+                            type="button"
+                            class="financeiro-drawer-toggle"
+                            data-financeiro-drawer-toggle
+                            aria-controls="financeiro-sidebar"
+                            aria-expanded="false"
+                            aria-label="Abrir navega&ccedil;&atilde;o do financeiro"
+                        >
+                            <span class="financeiro-drawer-toggle-icon" aria-hidden="true">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </span>
+                            <span>Menu</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+{% endblock %}
+{% block content %}
+<style>
+    .financeiro-pessoa-shell-mobile {
+        display: none !important;
+    }
+
+    .financeiro-pessoa-page {
+        display: grid;
+        gap: 0.9rem;
+    }
+
+    .financeiro-pessoa-card {
+        border: 1px solid rgba(203, 213, 225, 0.85);
+        border-radius: 1rem;
+        background: #fff;
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.045);
+        overflow: hidden;
+    }
+
+    .financeiro-pessoa-card .filters-box {
+        margin-bottom: 0;
+        padding: 0.8rem 0.95rem 0.9rem;
+        border: 0;
+        border-bottom: 1px solid #edf2f7;
+        border-radius: 0;
+        background: linear-gradient(180deg, #fbfcfe 0%, #f8fafc 100%);
+    }
+
+    .financeiro-pessoa-table-wrap {
+        overflow: visible;
+    }
+
+    .financeiro-pessoa-table {
+        margin-bottom: 0;
+    }
+
+    .financeiro-pessoa-table td,
+    .financeiro-pessoa-table th {
+        vertical-align: middle;
+    }
+
+    .financeiro-pessoa-type,
+    .financeiro-pessoa-contact,
+    .financeiro-pessoa-document {
+        color: #475569;
+    }
+
+    .financeiro-pessoa-type.is-empty,
+    .financeiro-pessoa-contact.is-empty,
+    .financeiro-pessoa-document.is-empty {
+        color: #94a3b8;
+    }
+
+    .financeiro-pessoa-status {
+        display: inline-flex;
+        align-items: center;
+        min-height: 1.6rem;
+        padding: 0.15rem 0.55rem;
+        border-radius: 999px;
+        background: #f3f6fb;
+        color: #475569;
+        font-size: 0.72rem;
+        font-weight: 700;
+        line-height: 1.1;
+    }
+
+    .financeiro-pessoa-status.is-active {
+        background: rgba(47, 133, 90, 0.12);
+        color: #236746;
+    }
+
+    .financeiro-pessoa-empty {
+        color: #64748b;
+    }
+
+    @media screen and (max-width: 1023px) {
+        .financeiro-pessoa-shell-desktop {
+            display: none !important;
+        }
+
+        .financeiro-pessoa-shell-mobile {
+            display: block !important;
+        }
+    }
+
+    @media screen and (min-width: 1024px) {
+        .financeiro-pessoa-shell-desktop {
+            display: flex !important;
+        }
+
+        .financeiro-pessoa-shell-mobile {
+            display: none !important;
+        }
+    }
+</style>
+
+<div class="financeiro-pessoa-page">
+    <div class="financeiro-page-header financeiro-page-head">
+        <div class="financeiro-page-header-main">
+            <h1 class="title financeiro-page-title">Pessoas financeiras</h1>
+        </div>
+        <div class="financeiro-page-header-actions no-print">
+            <a class="button is-primary" href="{% url 'financeiro:pessoa-create' %}">Nova pessoa financeira</a>
         </div>
     </div>
-</form>
-<div class="table-wrapper">
-    <table class="table is-fullwidth is-striped is-hoverable">
-        <thead>
-        <tr>
-            <th>Código</th>
-            <th>Nome</th>
-            <th>Tipo pessoa</th>
-            <th>Documento</th>
-            <th>Telefone</th>
-            <th>E-mail</th>
-            <th>Ativo</th>
-            <th>Ações</th>
-        </tr>
-        </thead>
-        <tbody>
-        {% for pessoa in pessoas %}
-            <tr>
-                <td>{{ pessoa.codigo }}</td>
-                <td>{{ pessoa.nome }}</td>
-                <td>{{ pessoa.get_tipo_pessoa_display|default:'-' }}</td>
-                <td>{{ pessoa.documento|default:'-' }}</td>
-                <td>{{ pessoa.telefone|default:'-' }}</td>
-                <td>{{ pessoa.email|default:'-' }}</td>
-                <td>{% if pessoa.ativo %}Sim{% else %}Não{% endif %}</td>
-                <td class="actions-cell">
-                    <a class="button is-small is-link is-light" href="{% url 'financeiro:pessoa-update' pessoa.pk %}">Editar</a>
-                    <a class="button is-small is-danger is-light" href="{% url 'financeiro:pessoa-delete' pessoa.pk %}">Excluir</a>
-                </td>
-            </tr>
-        {% empty %}
-            <tr>
-                <td colspan="8">Nenhuma pessoa financeira cadastrada.</td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+
+    <section class="financeiro-pessoa-card">
+        <form method="get" class="filters-box no-print">
+            <div class="columns is-multiline">
+                <div class="column is-12-mobile is-6-tablet is-5-desktop">
+                    <label class="label">Nome</label>
+                    <input class="input" type="text" name="nome" value="{{ request.GET.nome }}" placeholder="Buscar por nome">
+                </div>
+                <div class="column is-12-mobile is-6-tablet is-5-desktop">
+                    <label class="label">C&oacute;digo</label>
+                    <input class="input" type="text" name="codigo" value="{{ request.GET.codigo }}" placeholder="Buscar por c&oacute;digo">
+                </div>
+                <div class="column is-12-mobile is-12-tablet is-2-desktop">
+                    <label class="label">&nbsp;</label>
+                    <div class="buttons">
+                        <button class="button is-link is-fullwidth" type="submit">Filtrar</button>
+                        <a class="button is-light is-fullwidth" href="{% url 'financeiro:pessoa-list' %}">Limpar</a>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+        <div class="financeiro-pessoa-table-wrap">
+            <table class="table is-fullwidth is-hoverable financeiro-table financeiro-pessoa-table">
+                <thead>
+                <tr>
+                    <th>C&oacute;digo</th>
+                    <th>Nome</th>
+                    <th>Tipo pessoa</th>
+                    <th>Documento</th>
+                    <th>Telefone</th>
+                    <th>E-mail</th>
+                    <th>Ativo</th>
+                    <th class="no-print">A&ccedil;&otilde;es</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for pessoa in pessoas %}
+                    <tr>
+                        <td>{{ pessoa.codigo }}</td>
+                        <td>{{ pessoa.nome }}</td>
+                        <td>
+                            {% if pessoa.get_tipo_pessoa_display %}
+                                <span class="financeiro-pessoa-type">{{ pessoa.get_tipo_pessoa_display }}</span>
+                            {% else %}
+                                <span class="financeiro-pessoa-type is-empty">N&atilde;o informado</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if pessoa.documento %}
+                                <span class="financeiro-pessoa-document">{{ pessoa.documento }}</span>
+                            {% else %}
+                                <span class="financeiro-pessoa-document is-empty">N&atilde;o informado</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if pessoa.telefone %}
+                                <span class="financeiro-pessoa-contact">{{ pessoa.telefone }}</span>
+                            {% else %}
+                                <span class="financeiro-pessoa-contact is-empty">N&atilde;o informado</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if pessoa.email %}
+                                <span class="financeiro-pessoa-contact">{{ pessoa.email }}</span>
+                            {% else %}
+                                <span class="financeiro-pessoa-contact is-empty">N&atilde;o informado</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="financeiro-pessoa-status{% if pessoa.ativo %} is-active{% endif %}">
+                                {% if pessoa.ativo %}Sim{% else %}N&atilde;o{% endif %}
+                            </span>
+                        </td>
+                        <td class="actions-cell no-print">
+                            <a class="button is-small is-link is-light" href="{% url 'financeiro:pessoa-update' pessoa.pk %}">Editar</a>
+                            <a class="button is-small is-danger is-light" href="{% url 'financeiro:pessoa-delete' pessoa.pk %}">Excluir</a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="8" class="financeiro-pessoa-empty">Nenhuma pessoa encontrada com os filtros atuais.</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
 </div>
 {% endblock %}

@@ -856,6 +856,13 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - nessa tela, a sidebar foi preservada como navegacao principal e o topo deixou de competir com o conteudo, usando header enxuto com `Navegacao` no desktop e `Menu` no mobile
 - o conteudo local passou a usar page header mais limpo, filtros mais maduros e tabela mais coerente com o shell atual, sem alterar urls, filtros, links, acoes nem comportamento funcional da listagem
 - a leitura de `Descricao`, `Saldo inicial`, `Saldo atual (quitado)`, `Ativa` e `Acoes` ficou mais clara, com melhor hierarquia visual de valores e correcao dos microtextos visiveis
+
+## Expansao controlada da listagem de pessoas
+
+- `financeiro/templates/financeiro/pessoa_list.html` recebeu a expansao controlada seguinte da frente transversal, repetindo a ordem estrutural aprovada: primeiro override enxuto do `financeiro_shell_header`, depois refinamento do corpo da listagem
+- nessa tela, a sidebar foi preservada como navegacao principal e o topo deixou de competir com o conteudo, usando header enxuto com `Navegacao` no desktop e `Menu` no mobile
+- o conteudo local passou a usar page header mais limpo, filtros mais maduros e tabela mais coerente com o shell atual, sem alterar urls, filtros, links, acoes nem comportamento funcional da listagem
+- a leitura de `Tipo pessoa`, `Documento`, `Telefone`, `E-mail`, `Ativo` e `Acoes` ficou mais clara, com correcao dos microtextos visiveis e estado vazio mais operacional
  
 ## Correcao responsiva do controle de navegacao na tela piloto
 
