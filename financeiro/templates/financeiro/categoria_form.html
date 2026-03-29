@@ -89,6 +89,35 @@
         margin-top: 0.24rem;
     }
 
+    .financeiro-categoria-form-field-boolean .label {
+        margin-bottom: 0.38rem;
+    }
+
+    .financeiro-categoria-form-checkbox {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.2rem 0.05rem 0;
+    }
+
+    .financeiro-categoria-form-checkbox input[type="checkbox"] {
+        width: 1rem;
+        min-width: 1rem;
+        height: 1rem;
+        min-height: 1rem;
+        margin: 0;
+        padding: 0;
+        border-radius: 0.3rem;
+        accent-color: #206bc4;
+        box-shadow: none;
+    }
+
+    .financeiro-categoria-form-checkbox-label {
+        color: #314256;
+        font-size: 0.9rem;
+        line-height: 1.2;
+    }
+
     .financeiro-categoria-form-errors {
         margin-bottom: 0.85rem;
     }
@@ -142,10 +171,17 @@
                 {% csrf_token %}
                 <div class="financeiro-categoria-form-grid">
                     {% for field in form %}
-                        <div class="field financeiro-categoria-form-field">
+                        <div class="field financeiro-categoria-form-field{% if field.field.widget.input_type == 'checkbox' %} financeiro-categoria-form-field-boolean{% endif %}">
                             <label class="label" for="{{ field.id_for_label }}">{{ field.label }}</label>
                             <div class="control">
-                                {{ field }}
+                                {% if field.field.widget.input_type == 'checkbox' %}
+                                    <label class="financeiro-categoria-form-checkbox" for="{{ field.id_for_label }}">
+                                        {{ field }}
+                                        <span class="financeiro-categoria-form-checkbox-label">{{ field.label }}</span>
+                                    </label>
+                                {% else %}
+                                    {{ field }}
+                                {% endif %}
                             </div>
                             {% if field.help_text %}
                                 <p class="help">{{ field.help_text }}</p>

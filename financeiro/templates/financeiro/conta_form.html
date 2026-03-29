@@ -95,6 +95,35 @@
         margin-top: 0.24rem;
     }
 
+    .financeiro-conta-form-field-boolean .label {
+        margin-bottom: 0.38rem;
+    }
+
+    .financeiro-conta-form-checkbox {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.2rem 0.05rem 0;
+    }
+
+    .financeiro-conta-form-checkbox input[type="checkbox"] {
+        width: 1rem;
+        min-width: 1rem;
+        height: 1rem;
+        min-height: 1rem;
+        margin: 0;
+        padding: 0;
+        border-radius: 0.3rem;
+        accent-color: #206bc4;
+        box-shadow: none;
+    }
+
+    .financeiro-conta-form-checkbox-label {
+        color: #314256;
+        font-size: 0.9rem;
+        line-height: 1.2;
+    }
+
     .financeiro-conta-form-errors {
         margin-bottom: 0.85rem;
     }
@@ -205,10 +234,13 @@
                         </div>
                     </div>
 
-                    <div class="field financeiro-conta-form-field">
+                    <div class="field financeiro-conta-form-field financeiro-conta-form-field-boolean">
                         <label class="label" for="{{ form.ativa.id_for_label }}">{{ form.ativa.label }}</label>
                         <div class="control">
-                            {{ form.ativa }}
+                            <label class="financeiro-conta-form-checkbox" for="{{ form.ativa.id_for_label }}">
+                                {{ form.ativa }}
+                                <span class="financeiro-conta-form-checkbox-label">{{ form.ativa.label }}</span>
+                            </label>
                         </div>
                         {% if form.ativa.help_text %}
                             <p class="help">{{ form.ativa.help_text }}</p>

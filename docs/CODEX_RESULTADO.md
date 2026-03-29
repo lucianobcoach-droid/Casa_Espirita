@@ -1074,6 +1074,8 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - nessa mesma passada, `observacoes` foi mantido em bloco proprio e ganhou leitura mais coerente com os demais campos, sem alterar labels, `help_text`, erros, acoes, validacoes nem envio do formulario
 - numa microcorrecao visual posterior dessa mesma tela, o campo booleano `Ativo` foi reduzido e enquadrado como controle mais discreto, com checkbox menor e leitura mais proporcional ao restante do card
 - nessa mesma passada, label, envio, validacoes e comportamento funcional do booleano foram preservados integralmente
+- numa microcorrecao visual transversal posterior, `financeiro/templates/financeiro/centro_custo_form.html`, `financeiro/templates/financeiro/categoria_form.html` e `financeiro/templates/financeiro/conta_form.html` passaram a adotar a mesma apresentacao visual discreta dos booleanos ja aprovada em `financeiro/templates/financeiro/pessoa_form.html`
+- com isso, os checkboxes auxiliares deixaram de usar a aparencia amarela/laranja residual e passaram a operar com a mesma leitura azul, menor e mais proporcional ao tema, sem alterar labels, envio, validacoes nem comportamento funcional dos formularios
 
 ## Acabamento fino final de consistencia no formulario principal
 
