@@ -849,6 +849,13 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - nessa tela, a solucao correta foi sobrescrever o `financeiro_shell_header` com versao enxuta, mantendo a sidebar como navegacao principal e evitando a sensacao de shell antigo sobre corpo novo
 - o conteudo local passou a usar page header mais limpo, bloco de filtros mais maduro e tabela mais coerente com o shell atual, sem alterar urls, filtros, links, acoes nem comportamento funcional da listagem
 - a leitura de `Categoria pai`, `Ativo` e `Acoes` ficou mais clara, a acentuacao visivel deixou de carregar quebra de encoding e o estado vazio passou a ficar mais operacional
+
+## Expansao controlada da listagem de contas
+
+- `financeiro/templates/financeiro/conta_list.html` recebeu a expansao controlada seguinte da frente transversal, repetindo a ordem estrutural aprovada: primeiro override enxuto do `financeiro_shell_header`, depois consolidacao do corpo da listagem
+- nessa tela, a sidebar foi preservada como navegacao principal e o topo deixou de competir com o conteudo, usando header enxuto com `Navegacao` no desktop e `Menu` no mobile
+- o conteudo local passou a usar page header mais limpo, filtros mais maduros e tabela mais coerente com o shell atual, sem alterar urls, filtros, links, acoes nem comportamento funcional da listagem
+- a leitura de `Descricao`, `Saldo inicial`, `Saldo atual (quitado)`, `Ativa` e `Acoes` ficou mais clara, com melhor hierarquia visual de valores e correcao dos microtextos visiveis
  
 ## Correcao responsiva do controle de navegacao na tela piloto
 

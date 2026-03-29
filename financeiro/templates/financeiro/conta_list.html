@@ -1,76 +1,262 @@
 {% extends 'financeiro/base.html' %}
 {% block title %}Contas Financeiras{% endblock %}
+{% block financeiro_shell_header %}
+    <header class="financeiro-app-utility-bar no-print">
+        <div class="container financeiro-topbar-desktop financeiro-conta-shell-desktop">
+            <div class="financeiro-topbar-desktop-main">
+                <div class="financeiro-topbar-reopen-slot">
+                    <button
+                        type="button"
+                        class="financeiro-drawer-toggle no-print"
+                        data-financeiro-sidebar-toggle
+                        aria-expanded="true"
+                        aria-controls="financeiro-sidebar"
+                        aria-label="Recolher navega&ccedil;&atilde;o lateral"
+                        title="Recolher navega&ccedil;&atilde;o lateral"
+                    >
+                        <span class="financeiro-drawer-toggle-icon" aria-hidden="true">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </span>
+                        <span aria-hidden="true">Navega&ccedil;&atilde;o</span>
+                        <span class="financeiro-sr-only" data-financeiro-sidebar-toggle-label>Recolher navega&ccedil;&atilde;o lateral</span>
+                    </button>
+                </div>
+            </div>
+            <div class="financeiro-topbar-desktop-actions"></div>
+        </div>
+
+        <nav class="navbar is-light financeiro-topbar financeiro-topbar-mobile financeiro-conta-shell-mobile" role="navigation" aria-label="controles mobile do financeiro">
+            <div class="container">
+                <div class="financeiro-topbar-mobile-inner">
+                    <div class="financeiro-topbar-mobile-main"></div>
+                    <div class="financeiro-topbar-mobile-actions">
+                        <button
+                            type="button"
+                            class="financeiro-drawer-toggle"
+                            data-financeiro-drawer-toggle
+                            aria-controls="financeiro-sidebar"
+                            aria-expanded="false"
+                            aria-label="Abrir navega&ccedil;&atilde;o do financeiro"
+                        >
+                            <span class="financeiro-drawer-toggle-icon" aria-hidden="true">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </span>
+                            <span>Menu</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+{% endblock %}
 {% block content %}
-<div class="level">
-    <div class="level-left">
-        <h1 class="title">Contas Financeiras</h1>
-    </div>
-    <div class="level-right no-print">
-        <a class="button is-primary" href="{% url 'financeiro:conta-create' %}">Nova conta financeira</a>
-    </div>
-</div>
-<form method="get" class="filters-box no-print">
-    <div class="columns is-multiline">
-        <div class="column is-5">
-            <label class="label">Nome</label>
-            <input class="input" type="text" name="nome" value="{{ request.GET.nome }}" placeholder="Buscar por nome">
+<style>
+    .financeiro-conta-shell-mobile {
+        display: none !important;
+    }
+
+    .financeiro-conta-page {
+        display: grid;
+        gap: 0.9rem;
+    }
+
+    .financeiro-conta-card {
+        border: 1px solid rgba(203, 213, 225, 0.85);
+        border-radius: 1rem;
+        background: #fff;
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.045);
+        overflow: hidden;
+    }
+
+    .financeiro-conta-card .filters-box {
+        margin-bottom: 0;
+        padding: 0.8rem 0.95rem 0.9rem;
+        border: 0;
+        border-bottom: 1px solid #edf2f7;
+        border-radius: 0;
+        background: linear-gradient(180deg, #fbfcfe 0%, #f8fafc 100%);
+    }
+
+    .financeiro-conta-table-wrap {
+        overflow: visible;
+    }
+
+    .financeiro-conta-table {
+        margin-bottom: 0;
+    }
+
+    .financeiro-conta-table td,
+    .financeiro-conta-table th {
+        vertical-align: middle;
+    }
+
+    .financeiro-conta-description {
+        color: #475569;
+    }
+
+    .financeiro-conta-description.is-empty {
+        color: #94a3b8;
+    }
+
+    .financeiro-conta-balance {
+        display: grid;
+        gap: 0.12rem;
+    }
+
+    .financeiro-conta-balance-value {
+        font-weight: 700;
+        color: #0f172a;
+    }
+
+    .financeiro-conta-balance-meta {
+        color: #64748b;
+        font-size: 0.74rem;
+        line-height: 1.2;
+    }
+
+    .financeiro-conta-balance.is-current .financeiro-conta-balance-value {
+        color: #153a73;
+    }
+
+    .financeiro-conta-status {
+        display: inline-flex;
+        align-items: center;
+        min-height: 1.6rem;
+        padding: 0.15rem 0.55rem;
+        border-radius: 999px;
+        background: #f3f6fb;
+        color: #475569;
+        font-size: 0.72rem;
+        font-weight: 700;
+        line-height: 1.1;
+    }
+
+    .financeiro-conta-status.is-active {
+        background: rgba(47, 133, 90, 0.12);
+        color: #236746;
+    }
+
+    .financeiro-conta-empty {
+        color: #64748b;
+    }
+
+    @media screen and (max-width: 1023px) {
+        .financeiro-conta-shell-desktop {
+            display: none !important;
+        }
+
+        .financeiro-conta-shell-mobile {
+            display: block !important;
+        }
+    }
+
+    @media screen and (min-width: 1024px) {
+        .financeiro-conta-shell-desktop {
+            display: flex !important;
+        }
+
+        .financeiro-conta-shell-mobile {
+            display: none !important;
+        }
+    }
+</style>
+
+<div class="financeiro-conta-page">
+    <div class="financeiro-page-header financeiro-page-head">
+        <div class="financeiro-page-header-main">
+            <h1 class="title financeiro-page-title">Contas financeiras</h1>
         </div>
-        <div class="column is-5">
-            <label class="label">Situacao</label>
-            <div class="select is-fullwidth">
-                <select name="ativa">
-                    <option value="">Todas</option>
-                    <option value="ativas" {% if request.GET.ativa == 'ativas' %}selected{% endif %}>Ativas</option>
-                    <option value="inativas" {% if request.GET.ativa == 'inativas' %}selected{% endif %}>Inativas</option>
-                </select>
+        <div class="financeiro-page-header-actions no-print">
+            <a class="button is-primary" href="{% url 'financeiro:conta-create' %}">Nova conta financeira</a>
+        </div>
+    </div>
+
+    <section class="financeiro-conta-card">
+        <form method="get" class="filters-box no-print">
+            <div class="columns is-multiline">
+                <div class="column is-12-mobile is-6-tablet is-5-desktop">
+                    <label class="label">Nome</label>
+                    <input class="input" type="text" name="nome" value="{{ request.GET.nome }}" placeholder="Buscar por nome">
+                </div>
+                <div class="column is-12-mobile is-6-tablet is-5-desktop">
+                    <label class="label">Situa&ccedil;&atilde;o</label>
+                    <div class="select is-fullwidth">
+                        <select name="ativa">
+                            <option value="">Todas</option>
+                            <option value="ativas" {% if request.GET.ativa == 'ativas' %}selected{% endif %}>Ativas</option>
+                            <option value="inativas" {% if request.GET.ativa == 'inativas' %}selected{% endif %}>Inativas</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="column is-12-mobile is-12-tablet is-2-desktop">
+                    <label class="label">&nbsp;</label>
+                    <div class="buttons">
+                        <button class="button is-link is-fullwidth" type="submit">Filtrar</button>
+                        <a class="button is-light is-fullwidth" href="{% url 'financeiro:conta-list' %}">Limpar</a>
+                    </div>
+                </div>
             </div>
+        </form>
+
+        <div class="financeiro-conta-table-wrap">
+            <table class="table is-fullwidth is-hoverable financeiro-table financeiro-conta-table">
+                <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Descri&ccedil;&atilde;o</th>
+                    <th>Saldo inicial</th>
+                    <th>Saldo atual (quitado)</th>
+                    <th>Ativa</th>
+                    <th class="no-print">A&ccedil;&otilde;es</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for conta in contas %}
+                    <tr>
+                        <td>{{ conta.nome }}</td>
+                        <td>
+                            {% if conta.descricao %}
+                                <span class="financeiro-conta-description">{{ conta.descricao }}</span>
+                            {% else %}
+                                <span class="financeiro-conta-description is-empty">N&atilde;o informada</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="financeiro-conta-balance">
+                                <span class="financeiro-conta-balance-value">R$ {{ conta.saldo_inicial }}</span>
+                                {% if conta.data_saldo_inicial %}
+                                    <span class="financeiro-conta-balance-meta">{{ conta.data_saldo_inicial|date:'d/m/Y' }}</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="financeiro-conta-balance is-current">
+                                <span class="financeiro-conta-balance-value">R$ {{ conta.saldo_atual }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="financeiro-conta-status{% if conta.ativa %} is-active{% endif %}">
+                                {% if conta.ativa %}Sim{% else %}N&atilde;o{% endif %}
+                            </span>
+                        </td>
+                        <td class="actions-cell no-print">
+                            <a class="button is-small is-info is-light" href="{% url 'financeiro:conta-extrato' conta.pk %}">Extrato</a>
+                            <a class="button is-small is-link is-light" href="{% url 'financeiro:conta-update' conta.pk %}">Editar</a>
+                            <a class="button is-small is-danger is-light" href="{% url 'financeiro:conta-delete' conta.pk %}">Excluir</a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6" class="financeiro-conta-empty">Nenhuma conta encontrada com os filtros atuais.</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
         </div>
-        <div class="column is-2">
-            <label class="label">&nbsp;</label>
-            <div class="buttons">
-                <button class="button is-link is-fullwidth" type="submit">Filtrar</button>
-                <a class="button is-light is-fullwidth" href="{% url 'financeiro:conta-list' %}">Limpar</a>
-            </div>
-        </div>
-    </div>
-</form>
-<div class="table-wrapper">
-    <table class="table is-fullwidth is-hoverable financeiro-table">
-        <thead>
-        <tr>
-            <th>Nome</th>
-            <th>Descricao</th>
-            <th>Saldo inicial</th>
-            <th>Saldo atual (quitado)</th>
-            <th>Ativa</th>
-            <th class="no-print">Acoes</th>
-        </tr>
-        </thead>
-        <tbody>
-        {% for conta in contas %}
-            <tr>
-                <td>{{ conta.nome }}</td>
-                <td>{{ conta.descricao|default:'-' }}</td>
-                <td>
-                    R$ {{ conta.saldo_inicial }}
-                    {% if conta.data_saldo_inicial %}
-                        <small class="financeiro-meta">{{ conta.data_saldo_inicial|date:'d/m/Y' }}</small>
-                    {% endif %}
-                </td>
-                <td><strong>R$ {{ conta.saldo_atual }}</strong></td>
-                <td>{% if conta.ativa %}Sim{% else %}Nao{% endif %}</td>
-                <td class="actions-cell no-print">
-                    <a class="button is-small is-info is-light" href="{% url 'financeiro:conta-extrato' conta.pk %}">Extrato</a>
-                    <a class="button is-small is-link is-light" href="{% url 'financeiro:conta-update' conta.pk %}">Editar</a>
-                    <a class="button is-small is-danger is-light" href="{% url 'financeiro:conta-delete' conta.pk %}">Excluir</a>
-                </td>
-            </tr>
-        {% empty %}
-            <tr>
-                <td colspan="6">Nenhuma conta financeira cadastrada.</td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+    </section>
 </div>
 {% endblock %}
