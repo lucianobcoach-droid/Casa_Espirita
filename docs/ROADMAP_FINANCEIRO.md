@@ -191,6 +191,7 @@ Observacao:
 
 ### Imediato
 - refinamentos futuros do shell visual do `financeiro` e da sidebar ja implantada, guiados por uso real e sem reabrir troca estrutural ampla da navegacao
+- refinamento futuro do menu lateral para ficar mais leve, mais coerente com o tema, menos pesado visualmente e com item ativo mais elegante, reduzindo a sensacao de painel antigo sem trocar a sidebar como navegacao principal
 - consolidacao futura de componentes visuais compartilhados do modulo, como cabecalho de pagina, bloco de filtros, card padrao, KPI, tabela e formulario
 - refinamento visual transversal do modulo financeiro para melhorar largura de campos, distribuicao de colunas, densidade de filtros, quantidade de informacao visivel por tela, melhor aproveitamento horizontal em zoom 100% e consistencia visual entre telas, agora oficialmente iniciado pela base compartilhada e pelas telas de listagem/formulario de lancamentos
 - auditoria e aplicacao incremental do novo padrao transversal de UX/comunicacao operacional no restante das telas do `financeiro`, com foco em fluxo continuo, texto fixo minimo, padronizacao de linguagem e uso raro do `i`
@@ -207,6 +208,7 @@ Observacao:
 - mapeamento e revisao futura das mensagens visiveis ao usuario no modulo `financeiro`, em alinhamento com a futura frente transversal do projeto
 
 ### Proximo
+- evolucao futura do cadastro de categorias para deixar explicito na propria UI se o usuario esta cadastrando `Categoria` ou `Subcategoria`, com possibilidade de seletor `Categoria | Subcategoria` e exibicao condicional do campo `Categoria`
 - base inicial da edicao coordenada do rateio ja implementada com view e formulario proprios do grupo, ainda pendente de refinamentos para a experiencia final
 - acabamento operacional do rateio em edicao individual e leitura do grupo nas telas ja existentes
 - estrategia aprovada para futura edicao coordenada do grupo rateado com view e formulario proprios, dados comuns em bloco e salvamento transacional
@@ -217,6 +219,8 @@ Observacao:
 - relatorio anual por favorecido
 - cadastro rapido de pessoa dentro do lancamento
 - cadastro rapido de categoria dentro do lancamento
+- assistencia futura por regras no cadastro de lancamentos, com sugestao de regras existentes a partir de nome/descricao, preenchimento automatico revisavel de campos relacionados e possibilidade posterior de cadastrar nova regra a partir do proprio lancamento
+- acao futura `Clonar lancamento`, abrindo novo cadastro preenchido com base no original e preservando o registro original sem alteracao
 - evolucao futura dos relatorios financeiros para leitura hierarquica por `Categoria` e `Subcategoria`, preservando a distincao entre agrupador analitico e item operacional lancavel
 - estudo futuro de agrupamento por categoria com comportamento de expandir/recolher grupos nos relatorios e visoes consolidadas
 - estudo futuro de checkboxes para definir exibicao de `centro de custo`, `categoria` e `subcategoria` em relatorios e visoes agrupadas
@@ -291,6 +295,7 @@ Observacao:
 - convivencia futura do `financeiro` com administracao global centralizada de usuarios, perfis e permissoes, preservando a separacao entre cadastros globais e cadastros especificos do modulo
 - frente estrutural futura de usuarios, login, perfis e permissoes, com centralizacao progressiva de autenticacao, acesso e governanca entre modulos
 - possibilidade futura de unificacao de cadastros compartilhados, incluindo base comum de pessoas e outras entidades transversais quando isso fizer sentido para o sistema como um todo
+- permissões, acesso, login e perfis continuam explicitamente como frente futura e nao entram por microetapas locais desta frente visual/operacional do `financeiro`
 
 ### Experimental
 - POC controlada de uso de template pronto no shell do `financeiro`, apenas como experimento comparativo e sem adocao abrupta no projeto

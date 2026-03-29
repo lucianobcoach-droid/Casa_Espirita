@@ -100,6 +100,10 @@ Estas regras devem ser respeitadas em qualquer etapa:
 - nessa mesma hierarquia, `Subcategoria` deve ser tratada como item operacional lancavel
 - por regra de negocio duradoura, `Categoria` nao deve entrar como opcao selecionavel no lancamento; a opcao selecionavel deve ser a `Subcategoria`
 - essa definicao deve orientar evolucoes futuras de cadastro, filtros, relatorios, textos visiveis e organizacao analitica do modulo, sem implicar por si so implementacao imediata em qualquer microetapa isolada
+- como diretriz futura de UX para o proprio cadastro de categorias, a tela deve evoluir para deixar explicito se o usuario esta cadastrando `Categoria` ou `Subcategoria`, evitando depender apenas da leitura implícita do campo hierarquico
+- uma abordagem futura aceitavel para isso e usar seletor claro de tipo de cadastro, como toggle, radio ou seletor `Categoria | Subcategoria`
+- nessa evolucao futura, quando o cadastro for de `Categoria`, o campo de vinculo hierarquico nao deve aparecer; quando o cadastro for de `Subcategoria`, o campo `Categoria` deve aparecer como vinculo obrigatorio ou explicitamente guiado
+- essa definicao e apenas diretriz futura de clareza operacional e nao representa implementacao funcional concluida na UI atual
 
 ### 5.2. Diretriz estrutural futura de usuarios, perfis e permissoes
 - o projeto passa a registrar oficialmente como frente estrutural futura a camada de usuarios, autenticacao, perfis e permissoes
@@ -111,6 +115,27 @@ Estas regras devem ser respeitadas em qualquer etapa:
 - com a expansao para novos modulos, o projeto deve poder reorganizar o acesso administrativo global sem acoplar essa governanca a um modulo especifico
 - com a expansao para novos modulos, o projeto deve poder separar cadastros globais de cadastros especificos por modulo
 - tambem fica registrada como diretriz estrutural futura a possibilidade de unificacao de entidades compartilhadas, incluindo base comum de pessoas quando isso fizer sentido para o sistema como um todo
+- essa frente continua futura e nao deve ser misturada com microetapas locais de formulários, listagens, extratos ou refinamentos visuais isolados do `financeiro`
+
+### 5.1.3. Diretriz futura de leveza e refinamento do menu lateral do financeiro
+- a navegacao lateral do `financeiro` continua sendo a camada principal de navegacao do modulo
+- como evolucao futura de UX, essa lateral deve ficar mais leve, mais coerente com o tema-base adotado e menos carregada visualmente
+- o item ativo deve evoluir para leitura mais elegante e menos pesada, reduzindo a sensacao de painel antigo sem perder clareza operacional
+- essa diretriz representa backlog de refinamento visual do shell e nao alteracao imediata da estrutura atual
+
+### 5.1.4. Diretriz futura de assistencia por regras no lancamento
+- fica registrada como frente funcional futura a possibilidade de sugerir regras existentes durante o preenchimento de novos lancamentos, a partir de campo-chave como nome ou descricao
+- nessa evolucao, ao reconhecer uma regra existente e seleciona-la, o sistema pode preencher automaticamente outros campos relacionados para revisao do usuario antes do salvamento
+- editar manualmente os campos preenchidos a partir da sugestao nao deve alterar automaticamente a regra de origem
+- tambem fica registrada como possibilidade futura a acao de cadastrar nova regra a partir do proprio fluxo de lancamento, em etapa propria
+- esta frente nao esta implementada no estado atual do repositorio e nao deve ser confundida com o autocomplete ja existente
+
+### 5.1.5. Diretriz futura de clonagem de lancamento
+- fica registrada como frente funcional futura a acao `Clonar lancamento`
+- nessa evolucao, a clonagem deve abrir uma nova tela de cadastro ja preenchida com base no lancamento original
+- o usuario deve poder revisar e alterar os dados antes de salvar
+- o salvamento deve criar um novo lancamento sem alterar o registro original
+- esta frente permanece futura e nao esta implementada no estado atual do repositorio
 
 ### 5.3. Diretriz estrutural futura de identidade visual configuravel
 - o projeto passa a registrar oficialmente como frente estrutural futura a configuracao da paleta geral do sistema
