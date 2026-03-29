@@ -2183,78 +2183,84 @@
 <body>
 {% with current_url_name=request.resolver_match.url_name %}
 <div class="financeiro-app-shell">
-    <header class="financeiro-app-utility-bar no-print">
-        <div class="container financeiro-topbar-desktop">
-            <div class="financeiro-topbar-desktop-main">
-                <div class="financeiro-topbar-reopen-slot">
-                    <button
-                        type="button"
-                        class="financeiro-sidebar-desktop-toggle no-print"
-                        data-financeiro-sidebar-toggle
-                        aria-expanded="true"
-                        aria-controls="financeiro-sidebar"
-                        aria-label="Recolher navegacao lateral"
-                        title="Recolher navegacao lateral"
-                    >
-                        <span class="financeiro-sidebar-desktop-toggle-icon" aria-hidden="true"></span>
-                        <span class="financeiro-sr-only" data-financeiro-sidebar-toggle-label>Recolher navegacao lateral</span>
-                    </button>
+    {% block financeiro_shell_header %}
+        <header class="financeiro-app-utility-bar no-print">
+            <div class="container financeiro-topbar-desktop">
+                <div class="financeiro-topbar-desktop-main">
+                    <div class="financeiro-topbar-reopen-slot">
+                        {% block financeiro_desktop_toggle %}
+                            <button
+                                type="button"
+                                class="financeiro-sidebar-desktop-toggle no-print"
+                                data-financeiro-sidebar-toggle
+                                aria-expanded="true"
+                                aria-controls="financeiro-sidebar"
+                                aria-label="Recolher navegacao lateral"
+                                title="Recolher navegacao lateral"
+                            >
+                                <span class="financeiro-sidebar-desktop-toggle-icon" aria-hidden="true"></span>
+                                <span class="financeiro-sr-only" data-financeiro-sidebar-toggle-label>Recolher navegacao lateral</span>
+                            </button>
+                        {% endblock %}
+                    </div>
+                    <a class="financeiro-topbar-brand" href="{% url 'financeiro:home' %}">
+                        <span class="financeiro-topbar-brand-mark" title="{{ financeiro_shell_brand_name }}">{{ financeiro_shell_brand_initials }}</span>
+                        <span>Financeiro</span>
+                    </a>
                 </div>
-                <a class="financeiro-topbar-brand" href="{% url 'financeiro:home' %}">
-                    <span class="financeiro-topbar-brand-mark" title="{{ financeiro_shell_brand_name }}">{{ financeiro_shell_brand_initials }}</span>
-                    <span>Financeiro</span>
-                </a>
+                <div class="financeiro-topbar-desktop-actions">
+                    <a class="button is-light is-small" href="{% url 'financeiro:home' %}">Inicio do modulo</a>
+                    <span class="financeiro-topbar-chip is-current">
+                        {% if current_url_name == 'home' %}
+                            Visao geral
+                        {% elif current_url_name == 'lancamento-list' or current_url_name == 'lancamento-create' or current_url_name == 'lancamento-update' or current_url_name == 'lancamento-rateio-update' or current_url_name == 'lancamento-delete' or current_url_name == 'extrato-list' or current_url_name == 'conta-extrato' %}
+                            Movimentacao
+                        {% elif current_url_name == 'resumo' or current_url_name == 'prestacao-contas' or current_url_name == 'auditoria-lancamento-list' %}
+                            Relatorios
+                        {% elif current_url_name == 'conta-list' or current_url_name == 'conta-create' or current_url_name == 'conta-update' or current_url_name == 'conta-delete' or current_url_name == 'pessoa-list' or current_url_name == 'pessoa-create' or current_url_name == 'pessoa-update' or current_url_name == 'pessoa-delete' or current_url_name == 'categoria-list' or current_url_name == 'categoria-create' or current_url_name == 'categoria-update' or current_url_name == 'categoria-delete' or current_url_name == 'centro-custo-list' or current_url_name == 'centro-custo-create' or current_url_name == 'centro-custo-update' or current_url_name == 'centro-custo-delete' %}
+                            Cadastros
+                        {% elif current_url_name == 'assinatura-list' or current_url_name == 'assinatura-create' or current_url_name == 'assinatura-update' or current_url_name == 'assinatura-delete' or current_url_name == 'configuracao-institucional-list' or current_url_name == 'configuracao-institucional-create' or current_url_name == 'configuracao-institucional-update' or current_url_name == 'configuracao-institucional-delete' %}
+                            Institucional
+                        {% else %}
+                            Financeiro
+                        {% endif %}
+                    </span>
+                </div>
             </div>
-            <div class="financeiro-topbar-desktop-actions">
-                <a class="button is-light is-small" href="{% url 'financeiro:home' %}">Inicio do modulo</a>
-                <span class="financeiro-topbar-chip is-current">
-                    {% if current_url_name == 'home' %}
-                        Visao geral
-                    {% elif current_url_name == 'lancamento-list' or current_url_name == 'lancamento-create' or current_url_name == 'lancamento-update' or current_url_name == 'lancamento-rateio-update' or current_url_name == 'lancamento-delete' or current_url_name == 'extrato-list' or current_url_name == 'conta-extrato' %}
-                        Movimentacao
-                    {% elif current_url_name == 'resumo' or current_url_name == 'prestacao-contas' or current_url_name == 'auditoria-lancamento-list' %}
-                        Relatorios
-                    {% elif current_url_name == 'conta-list' or current_url_name == 'conta-create' or current_url_name == 'conta-update' or current_url_name == 'conta-delete' or current_url_name == 'pessoa-list' or current_url_name == 'pessoa-create' or current_url_name == 'pessoa-update' or current_url_name == 'pessoa-delete' or current_url_name == 'categoria-list' or current_url_name == 'categoria-create' or current_url_name == 'categoria-update' or current_url_name == 'categoria-delete' or current_url_name == 'centro-custo-list' or current_url_name == 'centro-custo-create' or current_url_name == 'centro-custo-update' or current_url_name == 'centro-custo-delete' %}
-                        Cadastros
-                    {% elif current_url_name == 'assinatura-list' or current_url_name == 'assinatura-create' or current_url_name == 'assinatura-update' or current_url_name == 'assinatura-delete' or current_url_name == 'configuracao-institucional-list' or current_url_name == 'configuracao-institucional-create' or current_url_name == 'configuracao-institucional-update' or current_url_name == 'configuracao-institucional-delete' %}
-                        Institucional
-                    {% else %}
-                        Financeiro
-                    {% endif %}
-                </span>
-            </div>
-        </div>
 
-        <nav class="navbar is-light financeiro-topbar financeiro-topbar-mobile" role="navigation" aria-label="controles mobile do financeiro">
-            <div class="container">
-                <div class="financeiro-topbar-mobile-inner">
-                    <div class="financeiro-topbar-mobile-main">
-                        <a class="financeiro-topbar-brand" href="{% url 'financeiro:home' %}">
-                            <span class="financeiro-topbar-brand-mark" title="{{ financeiro_shell_brand_name }}">{{ financeiro_shell_brand_initials }}</span>
-                            <span>Financeiro</span>
-                        </a>
-                    </div>
-                    <div class="financeiro-topbar-mobile-actions">
-                        <button
-                            type="button"
-                            class="financeiro-drawer-toggle"
-                            data-financeiro-drawer-toggle
-                            aria-controls="financeiro-sidebar"
-                            aria-expanded="false"
-                            aria-label="Abrir navegacao do financeiro"
-                        >
-                            <span class="financeiro-drawer-toggle-icon" aria-hidden="true">
-                                <span></span>
-                                <span></span>
-                                <span></span>
-                            </span>
-                            <span>Menu</span>
-                        </button>
+            <nav class="navbar is-light financeiro-topbar financeiro-topbar-mobile" role="navigation" aria-label="controles mobile do financeiro">
+                <div class="container">
+                    <div class="financeiro-topbar-mobile-inner">
+                        <div class="financeiro-topbar-mobile-main">
+                            <a class="financeiro-topbar-brand" href="{% url 'financeiro:home' %}">
+                                <span class="financeiro-topbar-brand-mark" title="{{ financeiro_shell_brand_name }}">{{ financeiro_shell_brand_initials }}</span>
+                                <span>Financeiro</span>
+                            </a>
+                        </div>
+                        {% block financeiro_mobile_actions %}
+                            <div class="financeiro-topbar-mobile-actions">
+                                <button
+                                    type="button"
+                                    class="financeiro-drawer-toggle"
+                                    data-financeiro-drawer-toggle
+                                    aria-controls="financeiro-sidebar"
+                                    aria-expanded="false"
+                                    aria-label="Abrir navegacao do financeiro"
+                                >
+                                    <span class="financeiro-drawer-toggle-icon" aria-hidden="true">
+                                        <span></span>
+                                        <span></span>
+                                        <span></span>
+                                    </span>
+                                    <span>Menu</span>
+                                </button>
+                            </div>
+                        {% endblock %}
                     </div>
                 </div>
-            </div>
-        </nav>
-    </header>
+            </nav>
+        </header>
+    {% endblock %}
 
     <div class="financeiro-app-shell-body">
         <aside

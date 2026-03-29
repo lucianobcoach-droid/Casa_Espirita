@@ -412,3 +412,13 @@ Se houver conflito entre o pedido e o repositorio, pare e avise antes de codific
 - o recibo deve seguir linguagem de documento final, com topo institucional mais centrado, titulo principal unico e mensagem central com protagonismo maior do que controles ou ornamentos administrativos
 - quando a logo institucional ja cumpre funcao de identificacao visual suficiente, o recibo nao deve repetir ao lado dela o nome da instituicao apenas por redundancia
 - o recibo deve manter fallback discreto para nome institucional quando nao houver logo utilizavel, preservando sobriedade e leitura documental
+
+## 19. Diretriz estrutural da frente visual/UX
+
+- quando uma tela transacional entrar em ciclo de retrabalho por microajustes incrementais de layout sem resolver a base visual, o projeto deve preferir testar um tema gratis real como fundamento da composicao, em vez de continuar remendando a estrutura atual
+- na frente visual atual do `financeiro`, o tema-base escolhido para a POC controlada e o **Tabler**
+- essa adocao deve acontecer de forma controlada: primeiro em uma unica tela piloto, com preservacao integral de regra de negocio e comportamento funcional, antes de qualquer expansao
+- na etapa atual, a tela piloto autorizada para essa POC e `financeiro/templates/financeiro/lancamento_form.html`
+- tentativas manuais anteriores de recomposicao visual do `lancamento_form.html` devem ser tratadas apenas como montagem intermediaria de estudo e nao como execucao valida da POC com tema-base real
+- a expansao do tema para outras telas do `financeiro` ou para modulos futuros so pode acontecer depois de auditoria visual e funcional real da tela piloto
+- se a base do tema resolver o problema visual de forma convincente, customizacoes pontuais por cima dela passam a ser aceitaveis; antes disso, a prioridade e validar a base pronta em vez de reabrir refinamentos incrementais

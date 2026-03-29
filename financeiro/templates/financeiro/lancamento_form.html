@@ -1,711 +1,422 @@
-{% extends 'financeiro/base.html' %}
+﻿{% extends 'financeiro/base.html' %}
 {% block title %}{{ page_title }}{% endblock %}
+{% block financeiro_shell_header %}
+    <header class="financeiro-app-utility-bar no-print">
+        <div class="container financeiro-topbar-desktop financeiro-tabler-shell-desktop">
+            <div class="financeiro-topbar-desktop-main">
+                <div class="financeiro-topbar-reopen-slot">
+                    <button
+                        type="button"
+                        class="financeiro-drawer-toggle no-print"
+                        data-financeiro-sidebar-toggle
+                        aria-expanded="true"
+                        aria-controls="financeiro-sidebar"
+                        aria-label="Recolher navegacao lateral"
+                        title="Recolher navegacao lateral"
+                    >
+                        <span class="financeiro-drawer-toggle-icon" aria-hidden="true">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </span>
+                        <span aria-hidden="true">Navegação</span>
+                        <span class="financeiro-sr-only" data-financeiro-sidebar-toggle-label>Recolher navegacao lateral</span>
+                    </button>
+                </div>
+            </div>
+            <div class="financeiro-topbar-desktop-actions"></div>
+        </div>
+
+        <nav class="navbar is-light financeiro-topbar financeiro-topbar-mobile financeiro-tabler-shell-mobile" role="navigation" aria-label="controles mobile do financeiro">
+            <div class="container">
+                <div class="financeiro-topbar-mobile-inner">
+                    <div class="financeiro-topbar-mobile-main"></div>
+                    <div class="financeiro-topbar-mobile-actions">
+                        <button
+                            type="button"
+                            class="financeiro-drawer-toggle"
+                            data-financeiro-drawer-toggle
+                            aria-controls="financeiro-sidebar"
+                            aria-expanded="false"
+                            aria-label="Abrir navegacao do financeiro"
+                        >
+                            <span class="financeiro-drawer-toggle-icon" aria-hidden="true">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </span>
+                            <span>Menu</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+{% endblock %}
 {% block content %}
 <style>
-    .financeiro-lancamento-form-shell {
-        max-width: 1080px;
-        margin: 0 auto;
-    }
-
-    .financeiro-form-grid {
-        gap: 0.35rem;
-    }
-
-    .financeiro-form-section {
-        border-color: #edf1f5;
-        border-radius: 0.68rem;
-        box-shadow: none;
-    }
-
-    .financeiro-lancamento-sheet {
-        border-color: #e7edf3;
-        background: #fff;
-    }
-
-    .financeiro-lancamento-sheet-body {
-        padding: 0.62rem 0.72rem 0.68rem;
-    }
-
-    .financeiro-lancamento-block + .financeiro-lancamento-block {
-        margin-top: 0.5rem;
-        padding-top: 0.48rem;
-        border-top: 1px solid #f2f5f8;
-    }
-
-    .financeiro-lancamento-block.is-identificacao-grid,
-    .financeiro-lancamento-block.is-modo,
-    .financeiro-lancamento-block.is-complementares,
-    .financeiro-lancamento-block.is-acoes {
-        margin-top: 0.24rem;
-        padding-top: 0.24rem;
-        border-top-color: #f5f7fa;
-    }
-
-    .financeiro-lancamento-block.is-descricao + .financeiro-lancamento-block.is-identificacao-grid,
-    .financeiro-lancamento-block.is-identificacao-grid + .financeiro-lancamento-block.is-modo {
-        margin-top: 0.22rem;
-        padding-top: 0.22rem;
-        border-top: 0;
-    }
-
-    .financeiro-lancamento-block.is-rateio {
-        padding-top: 0.38rem;
-    }
-
-    .financeiro-form-section.is-rateio {
-        border-color: #e6eef7;
-        background: #fdfefe;
-    }
-
-    .financeiro-form-section-body {
-        padding: 0.62rem 0.72rem;
-    }
-
-    .financeiro-form-section-title {
-        margin-bottom: 0.02rem;
-        color: #55606d;
-        font-size: 0.72rem;
-        font-weight: 700;
-        letter-spacing: 0.02em;
-    }
-
-    .financeiro-lancamento-block .financeiro-form-section-title {
-        margin-bottom: 0.24rem;
-    }
-
-    .financeiro-form-grid .field:not(:last-child) {
-        margin-bottom: 0.34rem;
-    }
-
-    .financeiro-form-grid .columns:last-child {
-        margin-bottom: 0;
-    }
-
-    .financeiro-lancamento-block .columns.is-variable.is-2 {
-        --columnGap: 0.56rem;
-    }
-
-    .financeiro-lancamento-sheet-body .columns {
-        margin-bottom: -0.22rem;
-    }
-
-    .financeiro-lancamento-sheet-body .column {
-        padding-top: 0.22rem;
-        padding-bottom: 0.22rem;
-    }
-
-    .financeiro-lancamento-sheet-body .label {
-        margin-bottom: 0.18rem;
-        font-size: 0.72rem;
-    }
-
-    .financeiro-lancamento-sheet-body .input,
-    .financeiro-lancamento-sheet-body .textarea,
-    .financeiro-lancamento-sheet-body .select select {
-        min-height: 2.35rem;
-        padding-top: 0.42rem;
-        padding-bottom: 0.42rem;
-    }
-
-    .financeiro-lancamento-sheet-body .textarea {
-        min-height: 4.35rem;
-    }
-
-    .financeiro-lancamento-row-grid {
-        display: grid;
-        grid-template-columns: repeat(12, minmax(0, 1fr));
-        gap: 0.34rem 0.56rem;
-        align-items: end;
-    }
-
-    .financeiro-grid-span-12 { grid-column: span 12; }
-    .financeiro-grid-span-8 { grid-column: span 8; }
-    .financeiro-grid-span-6 { grid-column: span 6; }
-    .financeiro-grid-span-5 { grid-column: span 5; }
-    .financeiro-grid-span-4 { grid-column: span 4; }
-    .financeiro-grid-span-3 { grid-column: span 3; }
-
-    .financeiro-lancamento-row-grid .field {
-        margin-bottom: 0 !important;
-    }
-
-    .financeiro-lancamento-inline-mode {
-        display: flex;
-        align-items: center;
-        min-height: 2.35rem;
-        padding: 0.18rem 0.34rem;
-        border: 1px solid #edf2f7;
-        border-radius: 0.58rem;
-        background: #fcfdff;
-    }
-
-    .financeiro-rateio-create-box {
-        border: 1px solid #edf2f7;
-        border-radius: 0.62rem;
-        background: #fcfdff;
-        padding: 0.2rem 0.28rem;
-    }
-
-    .financeiro-rateio-toggle-row {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: space-between;
-        gap: 0.28rem 0.62rem;
-        padding: 0.24rem 0.32rem;
-        border: 0;
-        border-radius: 0;
-        background: transparent;
-    }
-
-    .financeiro-rateio-toggle-copy {
-        flex: 1 1 20rem;
-    }
-
-    .financeiro-rateio-toggle-title {
-        margin: 0;
-        color: #1f2937;
-        font-size: 0.78rem;
-        font-weight: 700;
-        line-height: 1.2;
-    }
-
-    .financeiro-inline-help {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 1rem;
-        height: 1rem;
-        margin-left: 0.24rem;
-        border-radius: 999px;
-        border: 1px solid #b6c8db;
-        background: #fff;
-        color: #415a74;
-        font-size: 0.67rem;
-        font-weight: 800;
-        font-style: italic;
-        line-height: 1;
-        cursor: help;
-        vertical-align: middle;
-        box-shadow: 0 1px 1px rgba(15, 23, 42, 0.03);
-    }
-
-    .financeiro-rateio-total-callout {
-        padding: 0.22rem 0.36rem;
-        border: 1px solid #f1f4f7;
-        border-radius: 0.62rem;
-        background: #fcfdff;
-    }
-
-    .financeiro-rateio-total-callout .label {
-        margin-bottom: 0.12rem;
-        font-size: 0.72rem;
-        letter-spacing: 0;
-        text-transform: none;
-    }
-
-    .financeiro-rateio-simple-box {
-        border: 1px solid #edf2f7;
-        border-radius: 0.64rem;
-        background: #fcfdff;
-        padding: 0.36rem 0.42rem;
-    }
-
-    .financeiro-rateio-simple-head {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: space-between;
-        gap: 0.3rem 0.45rem;
-        margin-bottom: 0.14rem;
-    }
-
-    .financeiro-rateio-panel {
-        margin-top: 0;
-    }
-
-    .financeiro-rateio-add-button {
-        min-width: 6.6rem;
-        padding-inline: 0.62rem;
-    }
-
-    .financeiro-rateio-table .button.is-small {
-        min-width: 4.7rem;
-        padding-inline: 0.56rem;
-    }
-
-    .financeiro-rateio-table .button.is-small.financeiro-rateio-remove {
-        border-color: #e7d8dc;
-        color: #9f5966;
-        background: #fffafb;
-    }
-
-    [data-financeiro-pessoa-historico="true"] {
-        border: 1px solid #eef2f6;
-        box-shadow: none;
-        max-width: 1120px;
-        margin-left: auto;
-        margin-right: auto;
-        padding-top: 0.62rem;
-        padding-bottom: 0.58rem;
-        background: #fcfdff;
-    }
-
-    [data-financeiro-pessoa-historico="true"] .help[data-historico-vazio="true"] {
-        color: #97a2af;
-        font-size: 0.69rem;
-        margin-bottom: 0.16rem !important;
-    }
-
-    [data-financeiro-pessoa-historico="true"] .title {
-        margin-bottom: 0.18rem !important;
-        color: #667180;
-        font-size: 0.9rem;
-    }
-
-    .financeiro-rateio-individual-box {
-        border: 1px solid #ead7a7;
-        border-radius: 0.9rem;
-        background: linear-gradient(180deg, #fffdf6, #fff9eb);
-        padding: 0.95rem 1rem;
-    }
-
-    .financeiro-rateio-individual-head {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 0.75rem;
-        margin-bottom: 0.85rem;
-    }
-
-    .financeiro-rateio-individual-title {
-        margin: 0;
-        color: #7a5612;
-        font-size: 0.74rem;
-        font-weight: 800;
-        letter-spacing: 0.05em;
-        line-height: 1.2;
-        text-transform: uppercase;
-    }
-
-    .financeiro-rateio-individual-text {
-        margin: 0.18rem 0 0;
-        color: #5f4a1b;
-        font-size: 0.9rem;
-        line-height: 1.45;
-    }
-
-    .financeiro-rateio-individual-chip {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.35rem;
-        min-height: 1.8rem;
-        padding: 0.3rem 0.6rem;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.72);
-        color: #7a5612;
-        font-size: 0.72rem;
-        font-weight: 700;
-        line-height: 1.2;
-        white-space: nowrap;
-    }
-
-    .financeiro-rateio-individual-chip strong {
-        color: #1f2937;
-        font-weight: 800;
-    }
-
-    .financeiro-rateio-individual-grid {
-        display: grid;
-        grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
-        gap: 0.85rem;
-        align-items: start;
-    }
-
-    .financeiro-rateio-individual-card {
-        padding: 0.8rem 0.85rem;
-        border: 1px solid rgba(191, 161, 89, 0.35);
-        border-radius: 0.85rem;
-        background: rgba(255, 255, 255, 0.72);
-    }
-
-    .financeiro-rateio-individual-card.is-primary {
-        border-color: rgba(31, 95, 191, 0.18);
-        background: rgba(248, 251, 255, 0.92);
-    }
-
-    .financeiro-rateio-individual-card-title {
-        margin: 0;
-        color: #1f2937;
-        font-size: 0.84rem;
-        font-weight: 700;
-        line-height: 1.25;
-    }
-
-    .financeiro-rateio-individual-card-text {
-        margin: 0.3rem 0 0;
-        color: #5b6470;
-        font-size: 0.8rem;
-        line-height: 1.4;
-    }
-
-    .financeiro-rateio-individual-actions {
-        display: flex;
-        flex-direction: column;
-        gap: 0.7rem;
-    }
-
-    .financeiro-rateio-individual-action-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 0.75rem;
-        padding: 0.62rem 0.72rem;
-        border: 1px solid rgba(191, 161, 89, 0.24);
-        border-radius: 0.85rem;
-        background: rgba(255, 255, 255, 0.58);
-    }
-
-    .financeiro-form-actions {
-        padding-top: 0;
-        margin-top: -0.08rem;
-    }
-
-    .financeiro-form-actions .button {
-        min-height: 2.3rem;
-    }
-
-    .financeiro-lancamento-block.is-complementares > .field {
-        margin-top: 0.18rem;
-        margin-bottom: 0 !important;
-    }
-
-    .financeiro-rateio-individual-action-title {
-        margin: 0;
-        color: #1f2937;
-        font-size: 0.82rem;
-        font-weight: 700;
-        line-height: 1.25;
-    }
-
-    .financeiro-rateio-individual-action-text {
-        margin: 0.22rem 0 0;
-        color: #6b7280;
-        font-size: 0.76rem;
-        line-height: 1.35;
-    }
-
-    @media (max-width: 1023px) {
-        .financeiro-lancamento-row-grid {
-            grid-template-columns: repeat(6, minmax(0, 1fr));
-        }
-
-        .financeiro-grid-span-8,
-        .financeiro-grid-span-6,
-        .financeiro-grid-span-5,
-        .financeiro-grid-span-4,
-        .financeiro-grid-span-3 {
-            grid-column: span 6;
-        }
-
-        .financeiro-rateio-individual-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .financeiro-rateio-individual-action-row {
-            flex-direction: column;
-            align-items: stretch;
-        }
-
-        .financeiro-lancamento-sheet-body {
-            padding: 0.58rem 0.62rem 0.62rem;
-        }
-    }
-
+    @import url("https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta20/dist/css/tabler.min.css");
+
+    .financeiro-tabler-scope { max-width: 1120px; margin: 0 auto; }
+    .financeiro-tabler-scope .financeiro-page-header { margin-bottom: 1rem; }
+    .financeiro-tabler-scope .financeiro-page-title { color: #182433; font-weight: 700; }
+    .financeiro-tabler-scope .financeiro-topbar-desktop .financeiro-drawer-toggle { min-height: 2.2rem; padding: 0.4rem 0.8rem; }
+    .financeiro-tabler-shell-mobile { display: none !important; }
+    .financeiro-tabler-card { border: 1px solid #dce7f5; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 12px 28px rgba(15, 23, 42, 0.05); }
+    .financeiro-tabler-card-body { padding: 1rem 1rem 0.95rem; }
+    .financeiro-tabler-row + .financeiro-tabler-row { margin-top: 0.9rem; padding-top: 0.9rem; border-top: 1px solid #edf2f7; }
+    .financeiro-tabler-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 0.8rem 1rem; align-items: end; }
+    .financeiro-col-12 { grid-column: span 12; }
+    .financeiro-col-8 { grid-column: span 8; }
+    .financeiro-col-7 { grid-column: span 7; }
+    .financeiro-col-6 { grid-column: span 6; }
+    .financeiro-col-5 { grid-column: span 5; }
+    .financeiro-col-4 { grid-column: span 4; }
+    .financeiro-col-3 { grid-column: span 3; }
+    .financeiro-tabler-field { margin: 0; }
+    .financeiro-tabler-slot-stack { display: grid; gap: 0; }
+    .financeiro-tabler-finance-slot > [hidden] { display: none !important; }
+    .financeiro-tabler-card .label { margin-bottom: 0.35rem; color: #5f6b7a; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.02em; text-transform: uppercase; }
+    .financeiro-tabler-card .label.financeiro-tabler-label-regular { font-size: 0.75rem; letter-spacing: 0; text-transform: none; }
+    .financeiro-tabler-card .control > input,
+    .financeiro-tabler-card .control > textarea,
+    .financeiro-tabler-card .control > select,
+    .financeiro-tabler-card .control .input,
+    .financeiro-tabler-card .control .textarea,
+    .financeiro-tabler-card .control .select select,
+    .financeiro-tabler-card .financeiro-autocomplete input,
+    .financeiro-tabler-card .financeiro-rateio-select select { min-height: 2.5rem; width: 100%; border: 1px solid #d7e2f0; border-radius: 8px; background: #fff; box-shadow: none; color: #182433; transition: border-color 0.15s ease, box-shadow 0.15s ease; }
+    .financeiro-tabler-card .control > input:focus,
+    .financeiro-tabler-card .control > textarea:focus,
+    .financeiro-tabler-card .control > select:focus,
+    .financeiro-tabler-card .control .input:focus,
+    .financeiro-tabler-card .control .textarea:focus,
+    .financeiro-tabler-card .control .select select:focus,
+    .financeiro-tabler-card .financeiro-autocomplete input:focus,
+    .financeiro-tabler-card .financeiro-rateio-select select:focus { border-color: #206bc4; box-shadow: 0 0 0 0.2rem rgba(32, 107, 196, 0.12); outline: 0; }
+    .financeiro-tabler-card .control .textarea,
+    .financeiro-tabler-card textarea { min-height: 4.2rem; resize: vertical; }
+    .financeiro-tabler-mode,
+    .financeiro-tabler-total { min-height: 2.5rem; padding: 0.75rem 0.85rem; border: 1px solid #dce7f5; border-radius: 10px; background: #f8fbff; }
+    .financeiro-tabler-mode { background: linear-gradient(180deg, #f8fbff 0%, #f3f7fc 100%); }
+    .financeiro-tabler-mode-head,
+    .financeiro-tabler-subhead { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem 0.75rem; }
+    .financeiro-tabler-subhead { margin-bottom: 0.75rem; }
+    .financeiro-tabler-mode-title,
+    .financeiro-tabler-subtitle { margin: 0; color: #182433; font-size: 0.86rem; font-weight: 700; line-height: 1.2; }
+    .financeiro-tabler-mode-text,
+    .financeiro-tabler-meta { margin: 0.28rem 0 0; color: #667382; font-size: 0.76rem; line-height: 1.35; }
+    .financeiro-tabler-check { display: inline-flex; align-items: center; gap: 0.45rem; margin: 0; color: #334155; font-size: 0.84rem; font-weight: 600; }
+    .financeiro-tabler-check input { margin: 0; }
+    .financeiro-inline-help { display: inline-flex; align-items: center; justify-content: center; width: 1rem; height: 1rem; margin-left: 0.28rem; border: 1px solid #b9cadf; border-radius: 999px; background: #fff; color: #48627e; font-size: 0.66rem; font-style: italic; font-weight: 700; line-height: 1; vertical-align: middle; cursor: help; }
+    .financeiro-tabler-rateio { padding: 0.95rem 1rem; border: 1px solid #dce7f5; border-radius: 12px; background: #f9fbfe; }
+    .financeiro-rateio-table { margin-bottom: 0; }
+    .financeiro-rateio-table th { color: #5f6b7a; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; }
+    .financeiro-rateio-table td, .financeiro-rateio-table th { padding-top: 0.65rem; padding-bottom: 0.65rem; vertical-align: middle; }
+    .financeiro-rateio-select select { padding-right: 2rem; }
+    .financeiro-rateio-individual-box { padding: 0.95rem 1rem; border: 1px solid #dce7f5; border-radius: 12px; background: #f9fbfe; }
+    .financeiro-rateio-individual-head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 0.65rem 1rem; margin-bottom: 0.9rem; }
+    .financeiro-rateio-individual-title { margin: 0; color: #182433; font-size: 0.92rem; font-weight: 700; }
+    .financeiro-rateio-individual-text { margin: 0.25rem 0 0; color: #667382; font-size: 0.78rem; line-height: 1.4; }
+    .financeiro-rateio-individual-chip { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.3rem 0.65rem; border-radius: 999px; background: #eaf2fc; color: #365b85; font-size: 0.74rem; font-weight: 700; white-space: nowrap; }
+    .financeiro-rateio-individual-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 0.8rem; }
+    .financeiro-rateio-individual-card, .financeiro-rateio-individual-action-row { padding: 0.85rem 0.9rem; border: 1px solid #dce7f5; border-radius: 10px; background: #fff; }
+    .financeiro-rateio-individual-card.is-primary { background: linear-gradient(180deg, #f8fbff 0%, #f0f6ff 100%); }
+    .financeiro-rateio-individual-card-title, .financeiro-rateio-individual-action-title { margin: 0 0 0.28rem; color: #182433; font-size: 0.82rem; font-weight: 700; }
+    .financeiro-rateio-individual-card-text, .financeiro-rateio-individual-action-text { margin: 0; color: #667382; font-size: 0.76rem; line-height: 1.4; }
+    .financeiro-rateio-individual-actions { display: grid; gap: 0.7rem; }
+    .financeiro-rateio-individual-action-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.6rem 0.9rem; }
+    .financeiro-tabler-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.75rem; margin-top: 0.15rem; }
+    .financeiro-autocomplete { position: relative; }
+    .financeiro-autocomplete-menu { position: absolute; top: calc(100% + 0.35rem); left: 0; right: 0; z-index: 20; padding: 0.35rem; border: 1px solid #d7e2f0; border-radius: 10px; background: #fff; box-shadow: 0 0.75rem 1.5rem rgba(15, 23, 42, 0.12); }
+    .financeiro-autocomplete-option { display: block; width: 100%; padding: 0.5rem 0.65rem; border: 0; border-radius: 8px; background: transparent; color: #182433; font-size: 0.85rem; text-align: left; }
+    .financeiro-autocomplete-option:hover, .financeiro-autocomplete-option:focus { background: #f2f6fb; outline: 0; }
+    .financeiro-autocomplete-empty { padding: 0.55rem 0.65rem; color: #667382; font-size: 0.78rem; }
+    [data-financeiro-pessoa-historico="true"] { max-width: 1120px; margin: 0.9rem auto 0; padding: 0.9rem 1rem; border: 1px solid #edf2f7; border-radius: 12px; background: #fafcff; box-shadow: none; }
+    [data-financeiro-pessoa-historico="true"] .title { margin-bottom: 0.5rem !important; color: #425466; font-size: 0.88rem; }
+    [data-financeiro-pessoa-historico="true"] .help[data-historico-vazio="true"] { margin-bottom: 0 !important; color: #94a3b8; font-size: 0.72rem; }
+    .financeiro-tabler-card .help.is-danger, [data-financeiro-pessoa-historico="true"] .help.is-danger { margin-top: 0.3rem; font-size: 0.72rem; }
+    @media (max-width: 1024px) { .financeiro-rateio-individual-grid { grid-template-columns: 1fr; } }
     @media (max-width: 768px) {
-        .financeiro-lancamento-row-grid {
-            grid-template-columns: 1fr;
-            gap: 0.28rem;
-        }
-
-        .financeiro-grid-span-12,
-        .financeiro-grid-span-8,
-        .financeiro-grid-span-6,
-        .financeiro-grid-span-5,
-        .financeiro-grid-span-4,
-        .financeiro-grid-span-3 {
-            grid-column: auto;
-        }
+        .financeiro-tabler-card-body { padding: 0.9rem; }
+        .financeiro-tabler-grid { grid-template-columns: 1fr; gap: 0.75rem; }
+        .financeiro-col-12, .financeiro-col-8, .financeiro-col-7, .financeiro-col-6, .financeiro-col-5, .financeiro-col-4, .financeiro-col-3 { grid-column: auto; }
+        .financeiro-tabler-actions { justify-content: stretch; }
+        .financeiro-tabler-actions .btn, .financeiro-tabler-actions .button { width: 100%; }
+    }
+    @media screen and (max-width: 1023px) {
+        .financeiro-tabler-shell-desktop { display: none !important; }
+        .financeiro-tabler-shell-mobile { display: block !important; }
+    }
+    @media screen and (min-width: 1024px) {
+        .financeiro-tabler-shell-desktop { display: flex !important; }
+        .financeiro-tabler-shell-mobile { display: none !important; }
     }
 </style>
-<div class="financeiro-page-header financeiro-page-head">
-    <div class="financeiro-page-header-main">
-        <h1 class="title financeiro-page-title">{{ page_title }}</h1>
+<div class="financeiro-tabler-scope">
+    <div class="financeiro-page-header no-print">
+        <div class="financeiro-page-header-main">
+            <h1 class="title is-4 financeiro-page-title">{{ page_title }}</h1>
+        </div>
+        <div class="financeiro-page-header-actions">
+            <a class="btn btn-outline-secondary btn-sm" href="{% url 'financeiro:lancamento-list' %}">Voltar para lançamentos</a>
+        </div>
     </div>
-    <div class="financeiro-page-header-actions no-print">
-        <a class="button" href="{% url 'financeiro:lancamento-list' %}">Voltar para lançamentos</a>
-    </div>
-</div>
-{% if form.non_field_errors %}
-    <div class="notification is-danger">{{ form.non_field_errors }}</div>
-{% endif %}
+    {% if form.non_field_errors %}
+        <div class="alert alert-danger mb-3" role="alert">{{ form.non_field_errors }}</div>
+    {% endif %}
 
-<form method="post" class="financeiro-lancamento-form-shell">
-    {% csrf_token %}
-    {% for hidden_field in form.hidden_fields %}{{ hidden_field }}{% endfor %}
-    {% for hidden_field in form.hidden_fields %}
-        {% for error in hidden_field.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
-    {% endfor %}
+    <form method="post" class="financeiro-lancamento-form-shell">
+        {% csrf_token %}
+        {% for hidden_field in form.hidden_fields %}{{ hidden_field }}{% endfor %}
+        {% for hidden_field in form.hidden_fields %}
+            {% for error in hidden_field.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+        {% endfor %}
 
-    <div class="financeiro-form-grid">
-        <section class="financeiro-form-section financeiro-lancamento-sheet">
-            <div class="financeiro-form-section-body financeiro-lancamento-sheet-body">
-                <div class="financeiro-lancamento-block is-descricao">
-                <div class="financeiro-form-section-title">Dados principais</div>
-
-                <div class="field">
-                    <label class="label" for="{{ form.descricao.id_for_label }}">DESCRIÇÃO *</label>
-                    <div class="control">{{ form.descricao }}</div>
-                    {% for error in form.descricao.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
-                </div>
-                </div>
-
-                <div class="financeiro-lancamento-block is-identificacao-grid">
-                <div class="columns is-multiline is-variable is-2">
-                    <div class="column is-12-mobile is-6-tablet is-3-desktop">
-                        <div class="field">
-                            <label class="label" for="{{ form.tipo.id_for_label }}">{{ form.tipo.label }} *</label>
-                            <div class="control">{{ form.tipo }}</div>
-                            {% for error in form.tipo.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
-                        </div>
-                    </div>
-                    <div class="column is-12-mobile is-6-tablet is-3-desktop">
-                        <div class="field">
-                            <label class="label" for="{{ form.status.id_for_label }}">{{ form.status.label }} *</label>
-                            <div class="control">{{ form.status }}</div>
-                            {% for error in form.status.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
-                        </div>
-                    </div>
-                    <div class="column is-12-mobile is-12-tablet is-6-desktop">
-                        <div class="field">
-                            <label class="label" for="{{ form.numero_documento.id_for_label }}">Número do documento</label>
-                            <div class="control">{{ form.numero_documento }}</div>
-                            {% for error in form.numero_documento.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
-                        </div>
-                    </div>
-                </div>
-                </div>
-
-                <div class="financeiro-lancamento-block is-modo">
-                <div class="financeiro-form-section-title">Modo do lançamento</div>
-
-                {% if not form.instance.pk %}
-                    <div class="financeiro-rateio-create-box">
-                        <div class="financeiro-rateio-toggle-row">
-                            <div class="financeiro-rateio-toggle-copy">
-                                <p class="financeiro-rateio-toggle-title">
-                                    Lançamento com rateio
-                                    <span class="financeiro-inline-help" title="Use quando o mesmo documento precisar ser dividido entre mais de uma categoria." aria-label="Ajuda: use quando o mesmo documento precisar ser dividido entre mais de uma categoria.">i</span>
-                                </p>
+        <section class="card financeiro-tabler-card">
+            <div class="card-body financeiro-tabler-card-body">
+                <div class="financeiro-tabler-row">
+                    <div class="financeiro-tabler-grid">
+                        <div class="financeiro-col-8">
+                            <div class="field financeiro-tabler-field">
+                                <label class="label" for="{{ form.descricao.id_for_label }}">Descrição *</label>
+                                <div class="control">{{ form.descricao }}</div>
+                                {% for error in form.descricao.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
                             </div>
-                            <div>
-                                <label class="checkbox" for="{{ form.lancamento_com_rateio.id_for_label }}">
-                                    {{ form.lancamento_com_rateio }}
-                                    {{ form.lancamento_com_rateio.label }}
-                                </label>
-                                {% for error in form.lancamento_com_rateio.errors %}<p class="help is-danger mt-2">{{ error }}</p>{% endfor %}
+                        </div>
+                        <div class="financeiro-col-4">
+                            <div class="field financeiro-tabler-field">
+                                <label class="label" for="{{ form.numero_documento.id_for_label }}">Número do documento</label>
+                                <div class="control">{{ form.numero_documento }}</div>
+                                {% for error in form.numero_documento.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
                             </div>
                         </div>
                     </div>
-                {% elif form.instance.com_rateio %}
-                    <div class="financeiro-rateio-individual-box">
-                        <div class="financeiro-rateio-individual-head">
-                            <div>
-                                <p class="financeiro-rateio-individual-title">Linha de grupo rateado</p>
-                                <p class="financeiro-rateio-individual-text">Esta tela revisa apenas esta linha. Quando o ajuste afetar o documento inteiro, use a edicao coordenada do grupo.</p>
+                </div>
+
+                <div class="financeiro-tabler-row">
+                    <div class="financeiro-tabler-grid">
+                        <div class="financeiro-col-3">
+                            <div class="field financeiro-tabler-field">
+                                <label class="label" for="{{ form.tipo.id_for_label }}">{{ form.tipo.label }} *</label>
+                                <div class="control">{{ form.tipo }}</div>
+                                {% for error in form.tipo.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
                             </div>
-                            {% if form.instance.grupo_rateio %}
-                                <span class="financeiro-rateio-individual-chip">
-                                    <strong>Grupo</strong>
-                                    <span>{{ form.instance.grupo_rateio|slice:":8" }}</span>
-                                </span>
+                        </div>
+                        <div class="financeiro-col-3">
+                            <div class="field financeiro-tabler-field">
+                                <label class="label" for="{{ form.status.id_for_label }}">{{ form.status.label }} *</label>
+                                <div class="control">{{ form.status }}</div>
+                                {% for error in form.status.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+                            </div>
+                        </div>
+                        <div class="financeiro-col-6">
+                            {% if not form.instance.pk %}
+                                <div class="financeiro-tabler-mode">
+                                    <div class="financeiro-tabler-mode-head">
+                                        <p class="financeiro-tabler-mode-title">Lançamento com rateio <span class="financeiro-inline-help" title="Use quando o mesmo documento precisar ser dividido entre mais de uma categoria." aria-label="Ajuda: use quando o mesmo documento precisar ser dividido entre mais de uma categoria.">i</span></p>
+                                        <label class="financeiro-tabler-check" for="{{ form.lancamento_com_rateio.id_for_label }}">{{ form.lancamento_com_rateio }} {{ form.lancamento_com_rateio.label }}</label>
+                                    </div>
+                                    <p class="financeiro-tabler-mode-text">Ative só quando o mesmo documento precisar ser distribuído entre categorias.</p>
+                                    {% for error in form.lancamento_com_rateio.errors %}<p class="help is-danger mt-2">{{ error }}</p>{% endfor %}
+                                </div>
+                            {% elif form.instance.com_rateio %}
+                                <div class="financeiro-tabler-mode">
+                                    <div class="financeiro-tabler-mode-head">
+                                        <p class="financeiro-tabler-mode-title">Documento rateado</p>
+                                        {% if form.instance.grupo_rateio %}<span class="badge bg-blue-lt text-blue">{{ form.instance.grupo_rateio|slice:":8" }}</span>{% endif %}
+                                    </div>
+                                    <p class="financeiro-tabler-mode-text">Esta edição continua tratando apenas a linha atual.</p>
+                                </div>
                             {% endif %}
                         </div>
-
-                        <div class="financeiro-rateio-individual-grid">
-                            <div class="financeiro-rateio-individual-card is-primary">
-                                <p class="financeiro-rateio-individual-card-title">Edicao individual ativa</p>
-                                <p class="financeiro-rateio-individual-card-text">Use esta tela para revisar so esta linha sem recalcular as demais. O fluxo coordenado permanece separado e continua sendo o caminho certo para alterar o grupo inteiro.</p>
-                                {% if request.GET.origem_fluxo == 'rateio_coordenado' %}
-                                    <p class="financeiro-rateio-individual-card-text">
-                                        <strong>Fluxo coordenado nao aberto:</strong>
-                                        {% if request.GET.motivo_fluxo == 'grupo_invalido' %}
-                                            o grupo informado nao estava valido para esse tipo de edicao.
-                                        {% elif request.GET.motivo_fluxo == 'grupo_nao_encontrado' %}
-                                            nao foi encontrado um grupo rateado consistente para abrir a edicao em bloco.
-                                        {% elif request.GET.motivo_fluxo == 'grupo_insuficiente' %}
-                                            o grupo nao possui linhas suficientes para a edicao coordenada.
-                                        {% elif request.GET.motivo_fluxo == 'documento_divergente' %}
-                                            o grupo possui `numero_documento` divergente e precisa de regularizacao antes da edicao em bloco.
-                                        {% else %}
-                                            este grupo precisa de revisao individual antes de voltar ao fluxo em bloco.
-                                        {% endif %}
-                                    </p>
-                                {% elif request.GET.origem_fluxo == 'rateio_coordenado_retorno' %}
-                                    <p class="financeiro-rateio-individual-card-text"><strong>Retorno do grupo:</strong> voce saiu da edicao coordenada sem gravar por ali e voltou para revisar apenas esta linha.</p>
+                    </div>
+                </div>
+                {% if form.instance.com_rateio %}
+                    <div class="financeiro-tabler-row">
+                        <div class="financeiro-rateio-individual-box">
+                            <div class="financeiro-rateio-individual-head">
+                                <div>
+                                    <p class="financeiro-rateio-individual-title">Linha de grupo rateado</p>
+                                    <p class="financeiro-rateio-individual-text">Esta tela revisa apenas esta linha. Quando o ajuste afetar o documento inteiro, use a edição coordenada do grupo.</p>
+                                </div>
+                                {% if form.instance.grupo_rateio %}
+                                    <span class="financeiro-rateio-individual-chip"><strong>Grupo</strong><span>{{ form.instance.grupo_rateio|slice:":8" }}</span></span>
                                 {% endif %}
                             </div>
-
-                            <div class="financeiro-rateio-individual-actions">
-                                {% if form.instance.grupo_rateio %}
+                            <div class="financeiro-rateio-individual-grid">
+                                <div class="financeiro-rateio-individual-card is-primary">
+                                    <p class="financeiro-rateio-individual-card-title">Edição individual ativa</p>
+                                    <p class="financeiro-rateio-individual-card-text">Use esta tela para revisar só esta linha sem recalcular as demais. O fluxo coordenado continua sendo o caminho certo para alterar o grupo inteiro.</p>
+                                    {% if request.GET.origem_fluxo == 'rateio_coordenado' %}
+                                        <p class="financeiro-rateio-individual-card-text">
+                                            <strong>Fluxo coordenado não aberto:</strong>
+                                            {% if request.GET.motivo_fluxo == 'grupo_invalido' %}
+                                                o grupo informado não estava válido para esse tipo de edição.
+                                            {% elif request.GET.motivo_fluxo == 'grupo_nao_encontrado' %}
+                                                não foi encontrado um grupo rateado consistente para abrir a edição em bloco.
+                                            {% elif request.GET.motivo_fluxo == 'grupo_insuficiente' %}
+                                                o grupo não possui linhas suficientes para a edição coordenada.
+                                            {% elif request.GET.motivo_fluxo == 'documento_divergente' %}
+                                                o grupo possui `numero_documento` divergente e precisa de regularização antes da edição em bloco.
+                                            {% else %}
+                                                este grupo precisa de revisão individual antes de voltar ao fluxo em bloco.
+                                            {% endif %}
+                                        </p>
+                                    {% elif request.GET.origem_fluxo == 'rateio_coordenado_retorno' %}
+                                        <p class="financeiro-rateio-individual-card-text"><strong>Retorno do grupo:</strong> você saiu da edição coordenada sem gravar por ali e voltou para revisar apenas esta linha.</p>
+                                    {% endif %}
+                                </div>
+                                <div class="financeiro-rateio-individual-actions">
+                                    {% if form.instance.grupo_rateio %}
+                                        <div class="financeiro-rateio-individual-action-row">
+                                            <div>
+                                                <p class="financeiro-rateio-individual-action-title">Seguir para o grupo inteiro</p>
+                                                <p class="financeiro-rateio-individual-action-text">Abre a edição coordenada do mesmo documento rateado.</p>
+                                            </div>
+                                            <a class="btn btn-outline-primary btn-sm" href="{% url 'financeiro:lancamento-rateio-update' form.instance.grupo_rateio %}">Editar grupo</a>
+                                        </div>
+                                    {% endif %}
                                     <div class="financeiro-rateio-individual-action-row">
                                         <div>
-                                            <p class="financeiro-rateio-individual-action-title">Seguir para o grupo inteiro</p>
-                                            <p class="financeiro-rateio-individual-action-text">Abre a edicao coordenada do mesmo documento rateado.</p>
+                                            <p class="financeiro-rateio-individual-action-title">Permanecer nesta linha</p>
+                                            <p class="financeiro-rateio-individual-action-text">Mantém a revisão individual sem alterar o fluxo geral do grupo.</p>
                                         </div>
-                                        <a class="button is-link is-light" href="{% url 'financeiro:lancamento-rateio-update' form.instance.grupo_rateio %}">Editar grupo</a>
+                                        <span class="btn btn-outline-secondary btn-sm disabled" aria-disabled="true">Linha atual</span>
                                     </div>
-                                {% endif %}
-                                <div class="financeiro-rateio-individual-action-row">
-                                    <div>
-                                        <p class="financeiro-rateio-individual-action-title">Permanecer nesta linha</p>
-                                        <p class="financeiro-rateio-individual-action-text">Mantem a revisao individual sem alterar o fluxo geral do grupo.</p>
-                                    </div>
-                                    <span class="button is-static">Linha atual</span>
                                 </div>
                             </div>
                         </div>
                     </div>
                 {% endif %}
-                </div>
 
-                <div class="financeiro-lancamento-block is-valores">
-                <div class="financeiro-form-section-title">Valores e datas</div>
-
-                <div class="columns is-multiline is-variable is-2">
-                    <div class="column is-12-mobile is-6-tablet is-3-desktop">
-                        <div class="field" data-financeiro-valor-wrapper="true">
-                            <label class="label" for="{{ form.valor.id_for_label }}">{{ form.valor.label }} *</label>
-                            <div class="control">{{ form.valor }}</div>
-                            {% for error in form.valor.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
-                        </div>
-                        {% if not form.instance.pk %}
-                            <div class="field" data-financeiro-rateio-total-wrapper="true" hidden>
-                                <div class="financeiro-rateio-total-callout">
-                                    <label class="label" for="{{ form.valor_total_documento.id_for_label }}">
-                                        Valor total do documento *
-                                        <span class="financeiro-inline-help" title="A soma final das linhas do rateio precisa fechar com este valor." aria-label="Ajuda: a soma final das linhas do rateio precisa fechar com este valor.">i</span>
-                                    </label>
-                                    <div class="control">{{ form.valor_total_documento }}</div>
-                                    {% for error in form.valor_total_documento.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+                <div class="financeiro-tabler-row">
+                    <div class="financeiro-tabler-grid">
+                        <div class="financeiro-col-3">
+                            <div class="financeiro-tabler-slot-stack financeiro-tabler-finance-slot">
+                                <div data-financeiro-valor-wrapper="true">
+                                    <div class="field financeiro-tabler-field">
+                                        <label class="label" for="{{ form.valor.id_for_label }}">{{ form.valor.label }} *</label>
+                                        <div class="control">{{ form.valor }}</div>
+                                        {% for error in form.valor.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+                                    </div>
                                 </div>
+                                {% if not form.instance.pk %}
+                                    <div data-financeiro-rateio-total-wrapper="true" hidden>
+                                        <div class="field financeiro-tabler-field">
+                                            <label class="label financeiro-tabler-label-regular" for="{{ form.valor_total_documento.id_for_label }}">Valor total do documento * <span class="financeiro-inline-help" title="A soma final das linhas do rateio precisa fechar com este valor." aria-label="Ajuda: a soma final das linhas do rateio precisa fechar com este valor.">i</span></label>
+                                            <div class="control">{{ form.valor_total_documento }}</div>
+                                            {% for error in form.valor_total_documento.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+                                        </div>
+                                    </div>
+                                {% endif %}
                             </div>
-                        {% endif %}
-                    </div>
-                    <div class="column is-12-mobile is-6-tablet is-3-desktop">
-                        <div class="field">
-                            <label class="label" for="{{ form.data_pagamento.id_for_label }}">{{ form.data_pagamento.label }} *</label>
-                            <div class="control">{{ form.data_pagamento }}</div>
-                            {% for error in form.data_pagamento.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
                         </div>
-                    </div>
-                    <div class="column is-12-mobile is-6-tablet is-3-desktop">
-                        <div class="field">
-                            <label class="label" for="{{ form.data_competencia.id_for_label }}">DATA COMPETÊNCIA *</label>
-                            <div class="control">{{ form.data_competencia }}</div>
-                            {% for error in form.data_competencia.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+                        <div class="financeiro-col-3">
+                            <div class="field financeiro-tabler-field">
+                                <label class="label" for="{{ form.data_pagamento.id_for_label }}">{{ form.data_pagamento.label }} *</label>
+                                <div class="control">{{ form.data_pagamento }}</div>
+                                {% for error in form.data_pagamento.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+                            </div>
+                        </div>
+                        <div class="financeiro-col-3">
+                            <div class="field financeiro-tabler-field">
+                                <label class="label" for="{{ form.data_competencia.id_for_label }}">Data competência *</label>
+                                <div class="control">{{ form.data_competencia }}</div>
+                                {% for error in form.data_competencia.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+                            </div>
                         </div>
                     </div>
                 </div>
+
+                <div class="financeiro-tabler-row">
+                    <div class="financeiro-tabler-grid">
+                        <div class="financeiro-col-7" data-financeiro-pessoa-wrapper="true">
+                            <div class="field financeiro-tabler-field">
+                                <label class="label" for="{{ form.pessoa.id_for_label }}">{{ form.pessoa.label }}<span data-financeiro-required-marker="true"> *</span></label>
+                                <div class="control">{{ form.pessoa }}</div>
+                                {% for error in form.pessoa.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+                            </div>
+                        </div>
+                        <div class="financeiro-col-5" data-financeiro-categoria-wrapper="true">
+                            <div class="field financeiro-tabler-field">
+                                <label class="label" for="{{ form.categoria.id_for_label }}">{{ form.categoria.label }}<span data-financeiro-required-marker="true"> *</span></label>
+                                <div class="control">{{ form.categoria }}</div>
+                                {% for error in form.categoria.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="financeiro-tabler-row">
+                    <div class="financeiro-tabler-grid">
+                        <div class="financeiro-col-4" data-financeiro-centro-custo-wrapper="true">
+                            <div class="field financeiro-tabler-field">
+                                <label class="label" for="{{ form.centro_custo.id_for_label }}">{{ form.centro_custo.label }}</label>
+                                <div class="control">{{ form.centro_custo }}</div>
+                                {% for error in form.centro_custo.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+                            </div>
+                        </div>
+                        <div class="financeiro-col-4">
+                            <div class="field financeiro-tabler-field">
+                                <label class="label" for="{{ form.conta.id_for_label }}">{{ form.conta.label }} *</label>
+                                <div class="control">{{ form.conta }}</div>
+                                {% for error in form.conta.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+                            </div>
+                        </div>
+                        <div class="financeiro-col-4" data-financeiro-conta-destino-wrapper="true">
+                            <div class="field financeiro-tabler-field">
+                                <label class="label" for="{{ form.conta_destino.id_for_label }}">{{ form.conta_destino.label }}<span data-financeiro-required-marker="true"> *</span></label>
+                                <div class="control">{{ form.conta_destino }}</div>
+                                {% for error in form.conta_destino.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 {% if not form.instance.pk %}
-                <div class="financeiro-lancamento-block is-rateio" data-financeiro-rateio-box="true" hidden>
-                    <div class="financeiro-rateio-simple-box">
-                        <div class="financeiro-rateio-simple-head">
-                            <div class="financeiro-form-section-title">Linhas do rateio</div>
-                            <button class="button is-small is-link is-light financeiro-rateio-add-button" type="button" data-financeiro-rateio-add="true">Adicionar linha</button>
-                        </div>
-
-                        <div class="financeiro-rateio-panel">
+                    <div class="financeiro-tabler-row" data-financeiro-rateio-box="true" hidden>
+                        <div class="financeiro-tabler-rateio">
+                            <div class="financeiro-tabler-subhead">
+                                <div>
+                                    <p class="financeiro-tabler-subtitle">Linhas do rateio</p>
+                                    <p class="financeiro-tabler-meta">Distribua o mesmo documento entre as categorias necessárias.</p>
+                                </div>
+                                <button class="btn btn-outline-primary btn-sm financeiro-rateio-add-button" type="button" data-financeiro-rateio-add="true">Adicionar linha</button>
+                            </div>
                             {% for error in form.rateio_payload.errors %}<p class="help is-danger mb-2">{{ error }}</p>{% endfor %}
-                            <div class="table-container">
-                                <table class="table is-fullwidth is-narrow is-striped financeiro-rateio-table">
-                                    <thead>
-                                    <tr><th>Categoria</th><th>Valor</th><th class="has-text-right">Ação</th></tr>
-                                    </thead>
+                            <div class="table-responsive">
+                                <table class="table table-vcenter financeiro-rateio-table">
+                                    <thead><tr><th>Categoria</th><th>Valor</th><th class="text-end">Ação</th></tr></thead>
                                     <tbody data-financeiro-rateio-body="true"></tbody>
                                 </table>
                             </div>
                         </div>
                     </div>
-                </div>
                 {% endif %}
 
-                <div class="financeiro-lancamento-block is-complementares">
-                <div class="financeiro-form-section-title">Informações complementares</div>
-                <div class="columns is-multiline is-variable is-2">
-                    <div class="column is-12-mobile is-6-tablet is-5-desktop">
-                        <div class="field" data-financeiro-pessoa-wrapper="true">
-                            <label class="label" for="{{ form.pessoa.id_for_label }}">{{ form.pessoa.label }}<span data-financeiro-required-marker="true"> *</span></label>
-                            <div class="control">{{ form.pessoa }}</div>
-                            {% for error in form.pessoa.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
-                        </div>
-                    </div>
-                    <div class="column is-12-mobile is-6-tablet is-4-desktop">
-                        <div class="field" data-financeiro-categoria-wrapper="true">
-                            <label class="label" for="{{ form.categoria.id_for_label }}">{{ form.categoria.label }}<span data-financeiro-required-marker="true"> *</span></label>
-                            <div class="control">{{ form.categoria }}</div>
-                            {% for error in form.categoria.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
-                        </div>
-                    </div>
-                </div>
-
-                <div class="columns is-multiline is-variable is-2">
-                    <div class="column is-12-mobile is-6-tablet is-3-desktop">
-                        <div class="field" data-financeiro-centro-custo-wrapper="true">
-                            <label class="label" for="{{ form.centro_custo.id_for_label }}">{{ form.centro_custo.label }}</label>
-                            <div class="control">{{ form.centro_custo }}</div>
-                            {% for error in form.centro_custo.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
-                        </div>
-                    </div>
-                    <div class="column is-12-mobile is-6-tablet is-3-desktop">
-                        <div class="field">
-                            <label class="label" for="{{ form.conta.id_for_label }}">{{ form.conta.label }} *</label>
-                            <div class="control">{{ form.conta }}</div>
-                            {% for error in form.conta.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
-                        </div>
-                    </div>
-                    <div class="column is-12-mobile is-6-tablet is-3-desktop">
-                        <div class="field" data-financeiro-conta-destino-wrapper="true">
-                            <label class="label" for="{{ form.conta_destino.id_for_label }}">{{ form.conta_destino.label }}<span data-financeiro-required-marker="true"> *</span></label>
-                            <div class="control">{{ form.conta_destino }}</div>
-                            {% for error in form.conta_destino.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
-                        </div>
-                    </div>
-                </div>
-
-                    <div class="field">
-                        <label class="label" for="{{ form.observacoes.id_for_label }}">OBSERVAÇÕES</label>
+                <div class="financeiro-tabler-row">
+                    <div class="field financeiro-tabler-field">
+                        <label class="label" for="{{ form.observacoes.id_for_label }}">Observações</label>
                         <div class="control">{{ form.observacoes }}</div>
                         {% for error in form.observacoes.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
                     </div>
                 </div>
 
-                <div class="financeiro-lancamento-block is-acoes">
-                <div class="financeiro-form-actions">
-                    <a class="button" href="{% url 'financeiro:lancamento-list' %}">Voltar</a>
-                    <button class="button is-primary" type="submit">{{ submit_label }}</button>
+                <div class="financeiro-tabler-row">
+                    <div class="financeiro-tabler-actions no-print">
+                        <a class="btn btn-outline-secondary" href="{% url 'financeiro:lancamento-list' %}">Voltar</a>
+                        <button class="btn btn-primary" type="submit">{{ submit_label }}</button>
+                    </div>
                 </div>
             </div>
         </section>
-    </div>
-</form>
+    </form>
+</div>
 
-<section class="box mt-3" data-financeiro-pessoa-historico="true" data-history-url-template="{% url 'financeiro:pessoa-ultimos-lancamentos' 0 %}" hidden>
-    <h2 class="title is-6 mb-3">Últimos lançamentos da pessoa</h2>
-    <p class="help mb-3" data-historico-vazio="true">Selecione uma pessoa.</p>
+<section class="box" data-financeiro-pessoa-historico="true" data-history-url-template="{% url 'financeiro:pessoa-ultimos-lancamentos' 0 %}" hidden>
+    <h2 class="title is-6">Últimos lançamentos da pessoa</h2>
+    <p class="help" data-historico-vazio="true">Selecione uma pessoa.</p>
     <div class="table-container" data-historico-tabela-wrapper="true" hidden>
         <table class="table is-fullwidth is-striped is-narrow">
             <thead><tr><th>Data</th><th>Tipo</th><th>Descrição</th><th>Valor</th><th>Categoria</th><th>Documento</th></tr></thead>
@@ -755,7 +466,7 @@
             container.className = 'financeiro-autocomplete';
             const input = document.createElement('input');
             input.type = 'text';
-            input.className = 'input';
+            input.className = 'form-control';
             input.autocomplete = 'off';
             input.placeholder = 'Digite para buscar';
             input.required = select.required;
@@ -907,6 +618,18 @@
             dataCompetenciaField.dataset.autoFilledCompetencia = 'true';
         }
 
+        function syncValorSlotState(isRateio) {
+            if (!valorField || !valorTotalField) return;
+            const fallbackValue = valorField.defaultValue || valorTotalField.defaultValue || valorField.value || valorTotalField.value || '0,00';
+            if (isRateio) {
+                if (!valorTotalField.value && valorField.value) valorTotalField.value = valorField.value;
+                if (!valorTotalField.value) valorTotalField.value = fallbackValue;
+                return;
+            }
+            if (!valorField.value && valorTotalField.value) valorField.value = valorTotalField.value;
+            if (!valorField.value) valorField.value = fallbackValue;
+        }
+
         function loadPessoaHistorico() {
             if (!pessoaField || !pessoaHistoricoBox) return;
             if (pessoaField.disabled) {
@@ -941,8 +664,9 @@
 
         function createRateioCategoriaSelect(selectedValue, rowIndex) {
             const wrapper = document.createElement('div');
-            wrapper.className = 'select is-fullwidth';
+            wrapper.className = 'financeiro-rateio-select';
             const select = document.createElement('select');
+            select.className = 'form-select';
             select.dataset.rateioCategoria = String(rowIndex);
             const emptyOption = document.createElement('option');
             emptyOption.value = '';
@@ -968,7 +692,7 @@
             input.type = 'number';
             input.step = '0.01';
             input.min = '0.01';
-            input.className = 'input';
+            input.className = 'form-control';
             input.value = selectedValue || '';
             input.dataset.rateioValor = String(rowIndex);
             input.addEventListener('input', function () {
@@ -991,10 +715,10 @@
                 valorCell.appendChild(createRateioValorInput(row.valor, index));
                 tr.appendChild(valorCell);
                 const acaoCell = document.createElement('td');
-                acaoCell.className = 'has-text-right';
+                acaoCell.className = 'text-end';
                 const removeButton = document.createElement('button');
                 removeButton.type = 'button';
-                removeButton.className = 'button is-small is-light financeiro-rateio-remove';
+                removeButton.className = 'btn btn-sm btn-outline-secondary financeiro-rateio-remove';
                 removeButton.textContent = 'Remover';
                 removeButton.addEventListener('click', function () {
                     rateioRows.splice(index, 1);
@@ -1017,6 +741,7 @@
                     isRateio = false;
                 }
             }
+            syncValorSlotState(isRateio);
             syncConditionalField(contaDestinoField, contaDestinoWrapper, { visible: isTransferencia, required: isTransferencia, clearWhenHidden: !isTransferencia });
             syncConditionalField(pessoaField, pessoaWrapper, { visible: !isTransferencia, required: !isTransferencia, clearWhenHidden: isTransferencia });
             syncConditionalField(categoriaField, categoriaWrapper, { visible: !isTransferencia && !isRateio, required: !isTransferencia && !isRateio, clearWhenHidden: isTransferencia || isRateio });

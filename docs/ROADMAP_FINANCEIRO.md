@@ -292,6 +292,14 @@ Observacao:
 - POC controlada de uso de template pronto no shell do `financeiro`, apenas como experimento comparativo e sem adocao abrupta no projeto
 - telas de impressao, PDF e recibo ficam fora da primeira onda dessa padronizacao estrutural
 
+### Prioridade imediata atual
+- a frente imediata prioritaria deixa de ser novos microajustes incrementais no layout atual de `lancamento_form.html`
+- a proxima microetapa correta passa a ser uma POC visual controlada com base no **Tabler** apenas em `financeiro/templates/financeiro/lancamento_form.html`
+- essa tela piloto deve preservar integralmente regra de negocio, validacoes, payload JS, `grupo_rateio`, `numero_documento`, calculos, comportamento atual do formulario e logica de exibicao/ocultacao do rateio
+- recomposicoes manuais locais anteriores do `lancamento_form.html` nao contam como execucao valida dessa POC e devem ser tratadas apenas como montagem intermediaria a ser reaproveitada ou descartada de forma controlada antes da adocao real do tema-base
+- a expansao do Tabler para outras telas do `financeiro` ou para outros modulos fica bloqueada ate auditoria visual e funcional real da primeira tela piloto
+- so depois de validada essa POC na tela piloto o projeto pode decidir por continuidade, abandono da base ou customizacoes pontuais por cima dela
+
 ### Sequencia linear anteriormente sugerida
 1. consulta historica por favorecido
 2. relatorio anual por favorecido

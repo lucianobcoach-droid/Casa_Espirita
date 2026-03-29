@@ -842,6 +842,75 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - a tela tambem passou a padronizar melhor rotulos e acentuacao visiveis, incluindo `Lançamento`, `Informações`, `Últimos`, `Ação` e `Número do documento`
 - nesta microetapa nao houve alteracao de regra de negocio, validacoes, payload JS, `grupo_rateio`, `numero_documento`, calculos nem comportamento do formulario
 - foi possivel executar `py manage.py check` e validar novamente `/financeiro/lancamentos/novo/` com status `200`
+ 
+## Correcao responsiva do controle de navegacao na tela piloto
+
+- a auditoria humana mostrou que `Navegacao` e `Menu` ainda podiam aparecer juntos no topo de `financeiro/templates/financeiro/lancamento_form.html`, porque o header local da tela piloto renderizava os dois controles e dependia apenas da separacao responsiva herdada do shell
+- a correcao foi mantida estritamente no template da tela piloto, com classes locais e breakpoints explicitos para garantir que o desktop exiba apenas `Navegacao` e o mobile exiba apenas `Menu`
+- nesta microetapa nao houve alteracao de regra de negocio, validacoes, payload JS, `grupo_rateio`, `numero_documento`, calculos, linha financeira nem ordem dos blocos do formulario
+
+## Tentativas manuais de recomposicao visual no formulario principal
+
+- `financeiro/templates/financeiro/lancamento_form.html` recebeu tentativas manuais de recomposicao visual para testar um corpo mais central, mais compacto e organizado por linhas de preenchimento relacionadas, em vez de continuar acumulando apenas microajustes incrementais sobre a composicao antiga
+- nessas tentativas, `Descricao` + `Numero do documento`, `Tipo` + `Status` + `Lancamento com rateio`, `Valor` + datas + `Valor total do documento`, `Pessoa` + `Categoria` e `Centro de custo` + `Conta` + `Conta destino` passaram a ser tratados como sequencia operacional unica
+- `Observacoes` ficou mais baixa e mais discreta, o rateio passou a continuar o mesmo corpo principal sem cara de tela separada e a faixa de acoes finais foi aproximada do fluxo; o historico da pessoa permaneceu funcional, mas com protagonismo visual reduzido
+- essas tentativas manuais nao devem ser tratadas como execucao valida da POC com tema-base real: elas serviram apenas como experimento intermediario para demonstrar que a base atual ja nao respondia bem a novos remendos incrementais
+- nessas tentativas nao houve alteracao de regra de negocio, validacoes, payload JS, `grupo_rateio`, `numero_documento`, calculos nem comportamento funcional do formulario
+
+## Decisao estrategica sobre a nova base visual do formulario principal
+
+- a avaliacao acumulada desta conversa concluiu que insistir em microajustes incrementais sobre o layout atual de `financeiro/templates/financeiro/lancamento_form.html` passou a gerar retrabalho demais e ganho insuficiente
+- por isso, a estrategia aprovada deixa de tentar apenas "imitar" uma base pronta e passa a preferir o uso controlado de um tema gratis real como fundamento da composicao visual
+- o tema escolhido como referencia principal para a proxima POC e o **Tabler**
+- a POC valida ainda nao foi executada como adocao real de tema-base: ela deve acontecer primeiro apenas em `financeiro/templates/financeiro/lancamento_form.html`, sem expansao para outras telas antes de auditoria visual e funcional posterior
+- a futura POC com Tabler deve preservar integralmente regras de negocio, validacoes, payload JS, `grupo_rateio`, `numero_documento`, calculos, comportamento atual do formulario e logica de exibicao/ocultacao do rateio
+- se a base do tema resolver de fato a leitura visual da tela, customizacoes pontuais posteriores por cima dela passam a ser aceitaveis; antes disso, o foco correto e validar a base pronta e leve em uma unica tela piloto
+- fica registrado para o proximo chat que a microetapa correta seguinte e aplicar uma POC visual controlada com Tabler apenas em `financeiro/templates/financeiro/lancamento_form.html` e depois auditar layout, legibilidade, ativacao de `Lancamento com rateio`, integridade dos campos, JS/payload, navegacao e preservacao do comportamento funcional
+
+## POC Tabler executada no formulario principal
+
+- `financeiro/templates/financeiro/lancamento_form.html` recebeu a primeira execucao real da POC visual com base no **Tabler**, sem espalhar a base do tema para outras telas do modulo
+- a tela piloto passou a usar composicao mais central, continua e densa, com cabecalho seco, card principal unico, linhas de preenchimento mais relacionadas e bloco de `rateio` encaixado no mesmo corpo visual
+- a execucao preservou os mesmos `{{ form.campo }}`, wrappers condicionais, `data-*`, `rateio_payload`, historico da pessoa, edicao individual de linha rateada e logica atual de exibicao/ocultacao do `rateio`
+- foi possivel executar `py manage.py check` com sucesso e validar `/financeiro/lancamentos/novo/` com status `200`, confirmando no HTML renderizado a presenca de `lancamento_com_rateio`, `data-financeiro-rateio-box` e `Numero do documento`
+- apesar disso, a etapa ainda depende de auditoria humana visual e funcional propria antes de qualquer continuidade: a expansao da base Tabler para outras telas segue explicitamente bloqueada
+
+## Ajuste cirurgico pos-auditoria da tela piloto
+
+- `financeiro/templates/financeiro/lancamento_form.html` recebeu um ajuste pontual no topo para remover, apenas nessa tela piloto, os controles herdados de menu/recolhimento que estavam visivelmente bons, mas sem funcao real confiavel no contexto da pagina
+- a navegacao util da propria tela foi preservada, sem reabrir a frente de shell nem espalhar o tema para outras telas
+- a linha dos campos financeiros foi reorganizada para manter a ordem logica do fluxo: sem rateio, o primeiro slot segue como `Valor`; com rateio, esse mesmo slot passa a mostrar `Valor total do documento`, seguido por `Data pagamento` e `Data competencia`, sem deixar o total deslocado depois das datas
+- nesta microetapa nao houve alteracao de regra de negocio, validacoes, payload JS, `grupo_rateio`, `numero_documento`, calculos nem logica de exibicao/ocultacao do rateio
+- a POC continua restrita ao `lancamento_form.html` e ainda depende de auditoria humana visual/funcional propria antes de qualquer expansao
+
+## Limpeza estrutural do topo da tela piloto
+
+- a redundancia do topo deixou de ser tratada como maquiagem local no proprio template: `financeiro/base.html` recebeu pontos de override cirurgicos para os controles de topo do shell, permitindo que a tela piloto remova apenas o que nao deve aparecer nela sem quebrar a navegacao estrutural das demais telas
+- em `financeiro/templates/financeiro/lancamento_form.html`, o header local passou a usar apenas a camada de conteudo da pagina, mantendo titulo e acao `Voltar para lancamentos` sem repetir contexto que o shell ja comunica
+- com isso, a abertura visual da tela ficou organizada em tres niveis claros: shell do modulo, header de conteudo e formulario
+- nesta microetapa nao houve alteracao de regra de negocio, validacoes, payload JS, `grupo_rateio`, `numero_documento`, calculos nem comportamento funcional do formulario
+
+## Remocao da segunda faixa redundante do topo
+
+- a redundancia visual restante vinha da propria `financeiro-app-utility-bar` do shell, onde a marca `CE / Financeiro` seguia aparecendo acima do header de conteudo desta tela piloto
+- para esta pagina, a solucao final foi neutralizar estruturalmente o `header` utilitario inteiro por heranca de template, em vez de continuar apenas desligando controles internos dele
+- com isso, a abertura da tela passou a preservar somente a navegacao estrutural principal do shell e, logo abaixo, o cabecalho de conteudo com `Novo Lancamento Financeiro` e `Voltar para lancamentos`
+- nesta microetapa nao houve alteracao de regra de negocio, validacoes, payload JS, `grupo_rateio`, `numero_documento`, calculos nem comportamento funcional do formulario
+
+## Reativacao do shell lateral e unificacao do primeiro slot financeiro
+
+- a perda da navegacao lateral visivel nesta tela piloto foi causada pelo override completo de `financeiro_shell_header` em `financeiro/templates/financeiro/lancamento_form.html`, que havia removido junto a faixa estrutural necessaria para os controles do shell
+- a correcao passou a reativar nessa mesma tela uma faixa estrutural minima do shell, mantendo o toggle lateral no desktop e o acionamento do drawer no mobile, mas sem reintroduzir a marca `Financeiro` como contexto duplicado antes do header da pagina
+- no primeiro slot financeiro, `Valor` e `Valor total do documento` passaram a compartilhar o mesmo container visual e a mesma casca de campo; com isso, quando o rateio e ativado, a troca passa a parecer apenas mudanca de label/campo no mesmo lugar, e nao a entrada de uma caixa visual diferente
+- nesta microetapa nao houve alteracao de regra de negocio, validacoes, payload JS, `grupo_rateio`, `numero_documento`, calculos nem logica do rateio
+
+## Ajustes cirurgicos finais de menu e ordem do fluxo
+
+- o icone `>` vinha do proprio `financeiro-sidebar-desktop-toggle` do shell compartilhado, que usa pseudo-elemento com chevron para recolher/expandir a lateral; nesta tela piloto, o controle passou a usar um affordance mais coerente com a navegacao lateral do tema, com iconografia de menu em vez de seta isolada
+- `Valor total do documento` passou a usar o mesmo padrao visual dos demais campos do slot financeiro, sem reforco indevido de caixa alta nem aparencia de componente diferente
+- `Linhas do rateio` foi reposicionado para antes de `Observacoes`, preservando integralmente o mesmo conteudo e a mesma mecanica do bloco
+- ao marcar `Lancamento com rateio`, o primeiro slot financeiro agora preserva consistencia de valor inicial: se `Valor` ja nasce com `0,00`, `Valor total do documento` assume esse mesmo valor-base no mesmo lugar visual, sem aparentar reset ou perda de estado
+- nesta microetapa nao houve alteracao de regra de negocio, validacoes, payload JS, `grupo_rateio`, `numero_documento`, calculos nem logica do rateio
 
 ## Compactacao mais incisiva do formulario principal
 
