@@ -1063,6 +1063,17 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - `saldo_inicial` e `data_saldo_inicial` passaram a ler juntos na mesma faixa do formulario, reforcando a compreensao do saldo-base sem alterar validacoes, envio nem comportamento funcional do cadastro
 - `help_text`, erros por campo e `non_field_errors` foram preservados funcionalmente, mas ganharam leitura mais clara dentro do mesmo card
 - nesta microetapa nao houve alteracao de views, forms, models, regras de negocio nem necessidade de mexer em `financeiro/templates/financeiro/base.html`
+- `financeiro/templates/financeiro/pessoa_form.html` passou a seguir a mesma ordem estrutural aprovada nas telas auxiliares mais recentes: primeiro override enxuto do `financeiro_shell_header`, preservando a sidebar como navegacao principal, e so depois refinamento do corpo do formulario
+- nessa mesma tela, o `h1` cru e o formulario solto deram lugar a page header limpo, card unico de formulario, agrupamento visual mais previsivel dos campos e bloco de acoes final mais coerente
+- `tipo_pessoa`, `documento`, `telefone`, `email` e `observacoes` passaram a operar em agrupamentos mais legiveis dentro do mesmo fluxo de cadastro, sem alterar validacoes, envio nem comportamento funcional da tela
+- `help_text`, erros por campo e `non_field_errors` foram preservados funcionalmente, mas ganharam leitura mais clara dentro do mesmo card
+- nesta microetapa nao houve alteracao de views, forms, models, regras de negocio nem necessidade de mexer em `financeiro/templates/financeiro/base.html`
+- num ajuste fino visual posterior dessa mesma tela, a grade passou a usar distribuicao horizontal mais bem justificada entre as linhas de identificacao, documento e contato, reduzindo a sensacao de campos curtos demais dentro do card
+- `observacoes` permaneceu em largura integral, mas com leitura mais confortavel dentro da mesma ficha, sem alterar labels, `help_text`, erros, acoes nem comportamento funcional do formulario
+- num polimento visual seguinte dessa mesma tela, a casca dos campos foi aproximada do padrao mais agradavel do `lancamento_form.html`, com bordas menos quadradas, altura/padding mais confortaveis, largura 100% real nas colunas e foco mais claro
+- nessa mesma passada, `observacoes` foi mantido em bloco proprio e ganhou leitura mais coerente com os demais campos, sem alterar labels, `help_text`, erros, acoes, validacoes nem envio do formulario
+- numa microcorrecao visual posterior dessa mesma tela, o campo booleano `Ativo` foi reduzido e enquadrado como controle mais discreto, com checkbox menor e leitura mais proporcional ao restante do card
+- nessa mesma passada, label, envio, validacoes e comportamento funcional do booleano foram preservados integralmente
 
 ## Acabamento fino final de consistencia no formulario principal
 

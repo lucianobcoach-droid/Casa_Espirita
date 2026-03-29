@@ -1,31 +1,362 @@
 {% extends 'financeiro/base.html' %}
 {% block title %}{{ page_title }}{% endblock %}
-{% block content %}
-<h1 class="title">{{ page_title }}</h1>
-{% if form.non_field_errors %}
-    <div class="notification is-danger">
-        {{ form.non_field_errors }}
-    </div>
-{% endif %}
-<form method="post">
-    {% csrf_token %}
-    {% for field in form %}
-        <div class="field">
-            <label class="label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-            <div class="control">
-                {{ field }}
+{% block financeiro_shell_header %}
+    <header class="financeiro-app-utility-bar no-print">
+        <div class="container financeiro-topbar-desktop financeiro-pessoa-form-shell-desktop">
+            <div class="financeiro-topbar-desktop-main">
+                <div class="financeiro-topbar-reopen-slot">
+                    <button
+                        type="button"
+                        class="financeiro-drawer-toggle no-print"
+                        data-financeiro-sidebar-toggle
+                        aria-expanded="true"
+                        aria-controls="financeiro-sidebar"
+                        aria-label="Recolher navega&ccedil;&atilde;o lateral"
+                        title="Recolher navega&ccedil;&atilde;o lateral"
+                    >
+                        <span class="financeiro-drawer-toggle-icon" aria-hidden="true">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </span>
+                        <span aria-hidden="true">Navega&ccedil;&atilde;o</span>
+                        <span class="financeiro-sr-only" data-financeiro-sidebar-toggle-label>Recolher navega&ccedil;&atilde;o lateral</span>
+                    </button>
+                </div>
             </div>
-            {% if field.help_text %}
-                <p class="help">{{ field.help_text }}</p>
-            {% endif %}
-            {% for error in field.errors %}
-                <p class="help is-danger">{{ error }}</p>
-            {% endfor %}
+            <div class="financeiro-topbar-desktop-actions"></div>
         </div>
-    {% endfor %}
-    <div class="buttons">
-        <button class="button is-primary" type="submit">{{ submit_label }}</button>
-        <a class="button" href="{% url 'financeiro:pessoa-list' %}">Voltar</a>
+
+        <nav class="navbar is-light financeiro-topbar financeiro-topbar-mobile financeiro-pessoa-form-shell-mobile" role="navigation" aria-label="controles mobile do financeiro">
+            <div class="container">
+                <div class="financeiro-topbar-mobile-inner">
+                    <div class="financeiro-topbar-mobile-main"></div>
+                    <div class="financeiro-topbar-mobile-actions">
+                        <button
+                            type="button"
+                            class="financeiro-drawer-toggle"
+                            data-financeiro-drawer-toggle
+                            aria-controls="financeiro-sidebar"
+                            aria-expanded="false"
+                            aria-label="Abrir navega&ccedil;&atilde;o do financeiro"
+                        >
+                            <span class="financeiro-drawer-toggle-icon" aria-hidden="true">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </span>
+                            <span>Menu</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+{% endblock %}
+{% block content %}
+<style>
+    .financeiro-pessoa-form-shell-mobile {
+        display: none !important;
+    }
+
+    .financeiro-pessoa-form-page {
+        display: grid;
+        gap: 0.9rem;
+    }
+
+    .financeiro-pessoa-form-card {
+        border: 1px solid #dce7f5;
+        border-radius: 1rem;
+        background: #fff;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 12px 28px rgba(15, 23, 42, 0.05);
+        overflow: hidden;
+    }
+
+    .financeiro-pessoa-form-body {
+        padding: 1rem 1.15rem 1.1rem;
+    }
+
+    .financeiro-pessoa-form-grid {
+        display: grid;
+        gap: 0.95rem;
+    }
+
+    .financeiro-pessoa-form-grid-duo {
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .financeiro-pessoa-form-grid-identificacao {
+        grid-template-columns: minmax(10rem, 0.85fr) minmax(0, 1.75fr);
+    }
+
+    .financeiro-pessoa-form-grid-documento {
+        grid-template-columns: minmax(12rem, 0.95fr) minmax(0, 1.25fr);
+    }
+
+    .financeiro-pessoa-form-grid-contato {
+        grid-template-columns: minmax(12rem, 0.95fr) minmax(0, 1.25fr);
+    }
+
+    .financeiro-pessoa-form-field .label {
+        margin-bottom: 0.22rem;
+    }
+
+    .financeiro-pessoa-form-field .control,
+    .financeiro-pessoa-form-field .control > * {
+        width: 100%;
+    }
+
+    .financeiro-pessoa-form-field .control > input,
+    .financeiro-pessoa-form-field .control > textarea,
+    .financeiro-pessoa-form-field .control > select,
+    .financeiro-pessoa-form-field .control .input,
+    .financeiro-pessoa-form-field .control .textarea,
+    .financeiro-pessoa-form-field .control .select select {
+        min-height: 2.5rem;
+        width: 100%;
+        padding: 0.55rem 0.8rem;
+        border: 1px solid #d7e2f0;
+        border-radius: 8px;
+        background: #fff;
+        box-shadow: none;
+        color: #182433;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .financeiro-pessoa-form-field .control > input:focus,
+    .financeiro-pessoa-form-field .control > textarea:focus,
+    .financeiro-pessoa-form-field .control > select:focus,
+    .financeiro-pessoa-form-field .control .input:focus,
+    .financeiro-pessoa-form-field .control .textarea:focus,
+    .financeiro-pessoa-form-field .control .select select:focus {
+        border-color: #206bc4;
+        box-shadow: 0 0 0 0.2rem rgba(32, 107, 196, 0.12);
+        outline: 0;
+    }
+
+    .financeiro-pessoa-form-field .help {
+        margin-top: 0.24rem;
+        color: #5b6b7f;
+        font-size: 0.82rem;
+    }
+
+    .financeiro-pessoa-form-field textarea {
+        min-height: 8.75rem;
+        resize: vertical;
+        line-height: 1.5;
+    }
+
+    .financeiro-pessoa-form-field .help.is-danger {
+        color: #c0392b;
+    }
+
+    .financeiro-pessoa-form-field-boolean .label {
+        margin-bottom: 0.38rem;
+    }
+
+    .financeiro-pessoa-form-checkbox {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.2rem 0.05rem 0;
+    }
+
+    .financeiro-pessoa-form-checkbox input[type="checkbox"] {
+        width: 1rem;
+        min-width: 1rem;
+        height: 1rem;
+        min-height: 1rem;
+        margin: 0;
+        padding: 0;
+        border-radius: 0.3rem;
+        accent-color: #206bc4;
+        box-shadow: none;
+    }
+
+    .financeiro-pessoa-form-checkbox-label {
+        color: #314256;
+        font-size: 0.9rem;
+        line-height: 1.2;
+    }
+
+    .financeiro-pessoa-form-errors {
+        margin-bottom: 0.85rem;
+    }
+
+    .financeiro-pessoa-form-actions {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.45rem;
+        padding-top: 0.85rem;
+        border-top: 1px solid #edf2f7;
+    }
+
+    @media screen and (max-width: 1023px) {
+        .financeiro-pessoa-form-shell-desktop {
+            display: none !important;
+        }
+
+        .financeiro-pessoa-form-shell-mobile {
+            display: block !important;
+        }
+
+        .financeiro-pessoa-form-grid-duo {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media screen and (min-width: 1024px) {
+        .financeiro-pessoa-form-shell-desktop {
+            display: flex !important;
+        }
+
+        .financeiro-pessoa-form-shell-mobile {
+            display: none !important;
+        }
+    }
+</style>
+
+<div class="financeiro-pessoa-form-page">
+    <div class="financeiro-page-header financeiro-page-head">
+        <div class="financeiro-page-header-main">
+            <h1 class="title financeiro-page-title">{{ page_title }}</h1>
+        </div>
     </div>
-</form>
+
+    <section class="financeiro-pessoa-form-card">
+        <div class="financeiro-pessoa-form-body">
+            {% if form.non_field_errors %}
+                <div class="notification is-danger financeiro-pessoa-form-errors">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="financeiro-pessoa-form-grid">
+                    <div class="financeiro-pessoa-form-grid-duo financeiro-pessoa-form-grid-identificacao">
+                        <div class="field financeiro-pessoa-form-field">
+                            <label class="label" for="{{ form.codigo.id_for_label }}">{{ form.codigo.label }}</label>
+                            <div class="control">
+                                {{ form.codigo }}
+                            </div>
+                            {% if form.codigo.help_text %}
+                                <p class="help">{{ form.codigo.help_text }}</p>
+                            {% endif %}
+                            {% for error in form.codigo.errors %}
+                                <p class="help is-danger">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+
+                        <div class="field financeiro-pessoa-form-field">
+                            <label class="label" for="{{ form.nome.id_for_label }}">{{ form.nome.label }}</label>
+                            <div class="control">
+                                {{ form.nome }}
+                            </div>
+                            {% if form.nome.help_text %}
+                                <p class="help">{{ form.nome.help_text }}</p>
+                            {% endif %}
+                            {% for error in form.nome.errors %}
+                                <p class="help is-danger">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="financeiro-pessoa-form-grid-duo financeiro-pessoa-form-grid-documento">
+                        <div class="field financeiro-pessoa-form-field">
+                            <label class="label" for="{{ form.tipo_pessoa.id_for_label }}">{{ form.tipo_pessoa.label }}</label>
+                            <div class="control">
+                                {{ form.tipo_pessoa }}
+                            </div>
+                            {% if form.tipo_pessoa.help_text %}
+                                <p class="help">{{ form.tipo_pessoa.help_text }}</p>
+                            {% endif %}
+                            {% for error in form.tipo_pessoa.errors %}
+                                <p class="help is-danger">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+
+                        <div class="field financeiro-pessoa-form-field">
+                            <label class="label" for="{{ form.documento.id_for_label }}">{{ form.documento.label }}</label>
+                            <div class="control">
+                                {{ form.documento }}
+                            </div>
+                            {% if form.documento.help_text %}
+                                <p class="help">{{ form.documento.help_text }}</p>
+                            {% endif %}
+                            {% for error in form.documento.errors %}
+                                <p class="help is-danger">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="financeiro-pessoa-form-grid-duo financeiro-pessoa-form-grid-contato">
+                        <div class="field financeiro-pessoa-form-field">
+                            <label class="label" for="{{ form.telefone.id_for_label }}">{{ form.telefone.label }}</label>
+                            <div class="control">
+                                {{ form.telefone }}
+                            </div>
+                            {% if form.telefone.help_text %}
+                                <p class="help">{{ form.telefone.help_text }}</p>
+                            {% endif %}
+                            {% for error in form.telefone.errors %}
+                                <p class="help is-danger">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+
+                        <div class="field financeiro-pessoa-form-field">
+                            <label class="label" for="{{ form.email.id_for_label }}">{{ form.email.label }}</label>
+                            <div class="control">
+                                {{ form.email }}
+                            </div>
+                            {% if form.email.help_text %}
+                                <p class="help">{{ form.email.help_text }}</p>
+                            {% endif %}
+                            {% for error in form.email.errors %}
+                                <p class="help is-danger">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="field financeiro-pessoa-form-field">
+                        <label class="label" for="{{ form.observacoes.id_for_label }}">{{ form.observacoes.label }}</label>
+                        <div class="control">
+                            {{ form.observacoes }}
+                        </div>
+                        {% if form.observacoes.help_text %}
+                            <p class="help">{{ form.observacoes.help_text }}</p>
+                        {% endif %}
+                        {% for error in form.observacoes.errors %}
+                            <p class="help is-danger">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+
+                    <div class="field financeiro-pessoa-form-field financeiro-pessoa-form-field-boolean">
+                        <label class="label" for="{{ form.ativo.id_for_label }}">{{ form.ativo.label }}</label>
+                        <div class="control">
+                            <label class="financeiro-pessoa-form-checkbox" for="{{ form.ativo.id_for_label }}">
+                                {{ form.ativo }}
+                                <span class="financeiro-pessoa-form-checkbox-label">{{ form.ativo.label }}</span>
+                            </label>
+                        </div>
+                        {% if form.ativo.help_text %}
+                            <p class="help">{{ form.ativo.help_text }}</p>
+                        {% endif %}
+                        {% for error in form.ativo.errors %}
+                            <p class="help is-danger">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="financeiro-pessoa-form-actions">
+                    <button class="button is-primary" type="submit">{{ submit_label }}</button>
+                    <a class="button" href="{% url 'financeiro:pessoa-list' %}">Voltar</a>
+                </div>
+            </form>
+        </div>
+    </section>
+</div>
 {% endblock %}
