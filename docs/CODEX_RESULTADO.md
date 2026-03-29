@@ -860,6 +860,15 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - nesta microetapa nao houve alteracao de regra de negocio, validacoes, payload JS, `grupo_rateio`, `numero_documento`, calculos nem comportamento do formulario
 - foi possivel executar `py manage.py check` e validar novamente `/financeiro/lancamentos/novo/` com status `200`
 
+## Ponto de restauracao e abertura documental da POC visual
+
+- antes de abrir uma nova tentativa de salto visual no `lancamento_form.html`, o estado rastreado atual do `financeiro` foi consolidado em commit proprio como ponto de restauracao seguro
+- a partir desse marco, a frente seguinte fica enquadrada como POC controlada de tema/base visual pronta e leve, sem expansao imediata para outras telas
+- a POC deve comecar somente em `financeiro/templates/financeiro/lancamento_form.html`
+- a expansao posterior para outras telas so pode acontecer apos auditoria visual e funcional explicita
+- essa auditoria posterior deve verificar layout, legibilidade, ativacao de `Lancamento com rateio`, integridade dos campos, JS/payload, navegacao e preservacao do comportamento funcional
+- a abertura da POC nao autoriza mudanca de regra de negocio
+
 ## Compactacao espacial do formulario principal
 
 - `financeiro/templates/financeiro/lancamento_form.html` recebeu uma passada especifica de densidade para reduzir espaco em branco e aproximar a experiencia de uma ficha de lancamento mais sequencial

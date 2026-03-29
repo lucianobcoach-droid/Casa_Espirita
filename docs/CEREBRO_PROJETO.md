@@ -76,6 +76,9 @@ Estas regras devem ser respeitadas em qualquer etapa:
 - no `financeiro`, relatorios e impressos operacionais devem manter margens explicitas de folha e isolamento do shell visual para nao herdarem sidebar, topbar ou wrappers de overflow no modo print
 - quando a natureza `receita` / `despesa` ja estiver clara pelo contexto da tela, pelo agrupamento ou por indicador de tipo, a exibicao visivel da categoria deve preferir nome curto, sem prefixos textuais redundantes
 - no shell do `financeiro`, a sigla visual da marca deve preferir iniciais dinamicas derivadas do nome da `ConfiguracaoInstitucional` ativa/padrao, com fallback seguro para `CE` quando nao houver nome configurado
+- quando a frente incremental de refinamento visual entrar em retrabalho repetitivo sobre a mesma tela, o projeto pode abrir POC controlada de tema/base visual pronta e leve, desde que exista primeiro um ponto de restauracao seguro em Git
+- essa POC deve nascer em escopo minimo, começar por uma unica tela claramente definida e so pode se expandir para outras superficies depois de auditoria visual e funcional explicita
+- durante a POC visual, regra de negocio, validacoes, payload JS, navegacao e comportamento funcional devem permanecer preservados
 
 ### 5.1.1. Diretriz duradoura de comunicacao operacional nas telas
 - texto fixo nas telas deve ficar restrito ao minimo operacional necessario para a acao
