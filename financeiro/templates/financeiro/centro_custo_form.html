@@ -65,28 +65,73 @@
     }
 
     .financeiro-centro-custo-form-card {
-        border: 1px solid rgba(203, 213, 225, 0.85);
+        border: 1px solid #dce7f5;
         border-radius: 1rem;
         background: #fff;
-        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.045);
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 12px 28px rgba(15, 23, 42, 0.05);
         overflow: hidden;
     }
 
     .financeiro-centro-custo-form-body {
-        padding: 1rem 1.05rem 1.05rem;
+        padding: 1rem 1.15rem 1.1rem;
     }
 
     .financeiro-centro-custo-form-grid {
         display: grid;
-        gap: 0.85rem;
+        gap: 0.95rem;
     }
 
     .financeiro-centro-custo-form-field .label {
         margin-bottom: 0.22rem;
     }
 
+    .financeiro-centro-custo-form-field .control,
+    .financeiro-centro-custo-form-field .control > * {
+        width: 100%;
+    }
+
+    .financeiro-centro-custo-form-field .control > input,
+    .financeiro-centro-custo-form-field .control > textarea,
+    .financeiro-centro-custo-form-field .control > select,
+    .financeiro-centro-custo-form-field .control .input,
+    .financeiro-centro-custo-form-field .control .textarea,
+    .financeiro-centro-custo-form-field .control .select select {
+        min-height: 2.5rem;
+        width: 100%;
+        padding: 0.55rem 0.8rem;
+        border: 1px solid #d7e2f0;
+        border-radius: 8px;
+        background: #fff;
+        box-shadow: none;
+        color: #182433;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .financeiro-centro-custo-form-field .control > input:focus,
+    .financeiro-centro-custo-form-field .control > textarea:focus,
+    .financeiro-centro-custo-form-field .control > select:focus,
+    .financeiro-centro-custo-form-field .control .input:focus,
+    .financeiro-centro-custo-form-field .control .textarea:focus,
+    .financeiro-centro-custo-form-field .control .select select:focus {
+        border-color: #206bc4;
+        box-shadow: 0 0 0 0.2rem rgba(32, 107, 196, 0.12);
+        outline: 0;
+    }
+
     .financeiro-centro-custo-form-field .help {
         margin-top: 0.24rem;
+        color: #5b6b7f;
+        font-size: 0.82rem;
+    }
+
+    .financeiro-centro-custo-form-field textarea {
+        min-height: 8.75rem;
+        resize: vertical;
+        line-height: 1.5;
+    }
+
+    .financeiro-centro-custo-form-field .help.is-danger {
+        color: #c0392b;
     }
 
     .financeiro-centro-custo-form-field-boolean .label {
