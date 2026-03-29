@@ -1,43 +1,108 @@
 {% extends 'financeiro/base.html' %}
 {% block title %}Financeiro{% endblock %}
 {% block content %}
-<div class="financeiro-hero">
-    <h1 class="title">Modulo Financeiro</h1>
-    <p class="subtitle">Acesso rapido as rotinas operacionais, relatorios, cadastros e configuracoes do modulo.</p>
-    <div class="financeiro-shortcuts">
-        <a class="financeiro-shortcut is-primary-shortcut" href="{% url 'financeiro:lancamento-list' %}">
-            <span class="financeiro-shortcut-label">Lancamentos</span>
-        </a>
-        <a class="financeiro-shortcut" href="{% url 'financeiro:extrato-list' %}">
-            <span class="financeiro-shortcut-label">Extratos por Conta</span>
-        </a>
-        <a class="financeiro-shortcut" href="{% url 'financeiro:resumo' %}">
-            <span class="financeiro-shortcut-label">Resumo do Periodo</span>
-        </a>
-        <a class="financeiro-shortcut" href="{% url 'financeiro:prestacao-contas' %}">
-            <span class="financeiro-shortcut-label">Prestacao de Contas</span>
-        </a>
-        <a class="financeiro-shortcut" href="{% url 'financeiro:conta-list' %}">
-            <span class="financeiro-shortcut-label">Contas</span>
-        </a>
-        <a class="financeiro-shortcut" href="{% url 'financeiro:centro-custo-list' %}">
-            <span class="financeiro-shortcut-label">Centros de Custo</span>
-        </a>
-        <a class="financeiro-shortcut" href="{% url 'financeiro:pessoa-list' %}">
-            <span class="financeiro-shortcut-label">Pessoas</span>
-        </a>
-        <a class="financeiro-shortcut" href="{% url 'financeiro:categoria-list' %}">
-            <span class="financeiro-shortcut-label">Categorias</span>
-        </a>
-        <a class="financeiro-shortcut" href="{% url 'financeiro:auditoria-lancamento-list' %}">
-            <span class="financeiro-shortcut-label">Auditoria do Financeiro</span>
-        </a>
-        <a class="financeiro-shortcut" href="{% url 'financeiro:assinatura-list' %}">
-            <span class="financeiro-shortcut-label">Assinaturas Institucionais</span>
-        </a>
-        <a class="financeiro-shortcut" href="{% url 'financeiro:configuracao-institucional-list' %}">
-            <span class="financeiro-shortcut-label">Configuracoes Institucionais</span>
-        </a>
+<style>
+    .financeiro-home-grid {
+        display: grid;
+        gap: 0.65rem;
+    }
+
+    .financeiro-home-group {
+        border: 1px solid #e7edf4;
+        border-radius: 0.72rem;
+        background: #fff;
+        padding: 0.72rem 0.82rem;
+    }
+
+    .financeiro-home-group-title {
+        margin: 0 0 0.48rem;
+        color: #526171;
+        font-size: 0.71rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        line-height: 1.2;
+        text-transform: uppercase;
+    }
+
+    .financeiro-home-shortcuts {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 0.55rem;
+    }
+
+    .financeiro-home-shortcuts .financeiro-shortcut {
+        min-height: 3rem;
+        padding: 0.72rem 0.82rem;
+        box-shadow: none;
+    }
+
+    .financeiro-home-shortcuts .financeiro-shortcut-label {
+        font-size: 0.92rem;
+    }
+</style>
+
+<div class="financeiro-page-header financeiro-page-head">
+    <div class="financeiro-page-header-main">
+        <h1 class="title financeiro-page-title">Módulo financeiro</h1>
     </div>
+</div>
+
+<div class="financeiro-home-grid">
+    <section class="financeiro-home-group">
+        <p class="financeiro-home-group-title">Movimentação</p>
+        <div class="financeiro-home-shortcuts">
+            <a class="financeiro-shortcut is-primary-shortcut" href="{% url 'financeiro:lancamento-list' %}">
+                <span class="financeiro-shortcut-label">Lançamentos</span>
+            </a>
+            <a class="financeiro-shortcut" href="{% url 'financeiro:extrato-list' %}">
+                <span class="financeiro-shortcut-label">Extratos por conta</span>
+            </a>
+        </div>
+    </section>
+
+    <section class="financeiro-home-group">
+        <p class="financeiro-home-group-title">Relatórios</p>
+        <div class="financeiro-home-shortcuts">
+            <a class="financeiro-shortcut" href="{% url 'financeiro:resumo' %}">
+                <span class="financeiro-shortcut-label">Resumo do período</span>
+            </a>
+            <a class="financeiro-shortcut" href="{% url 'financeiro:prestacao-contas' %}">
+                <span class="financeiro-shortcut-label">Prestação de contas</span>
+            </a>
+        </div>
+    </section>
+
+    <section class="financeiro-home-group">
+        <p class="financeiro-home-group-title">Cadastros</p>
+        <div class="financeiro-home-shortcuts">
+            <a class="financeiro-shortcut" href="{% url 'financeiro:conta-list' %}">
+                <span class="financeiro-shortcut-label">Contas</span>
+            </a>
+            <a class="financeiro-shortcut" href="{% url 'financeiro:centro-custo-list' %}">
+                <span class="financeiro-shortcut-label">Centros de custo</span>
+            </a>
+            <a class="financeiro-shortcut" href="{% url 'financeiro:pessoa-list' %}">
+                <span class="financeiro-shortcut-label">Pessoas</span>
+            </a>
+            <a class="financeiro-shortcut" href="{% url 'financeiro:categoria-list' %}">
+                <span class="financeiro-shortcut-label">Categorias</span>
+            </a>
+        </div>
+    </section>
+
+    <section class="financeiro-home-group">
+        <p class="financeiro-home-group-title">Controle e configuração</p>
+        <div class="financeiro-home-shortcuts">
+            <a class="financeiro-shortcut" href="{% url 'financeiro:auditoria-lancamento-list' %}">
+                <span class="financeiro-shortcut-label">Auditoria do financeiro</span>
+            </a>
+            <a class="financeiro-shortcut" href="{% url 'financeiro:assinatura-list' %}">
+                <span class="financeiro-shortcut-label">Assinaturas institucionais</span>
+            </a>
+            <a class="financeiro-shortcut" href="{% url 'financeiro:configuracao-institucional-list' %}">
+                <span class="financeiro-shortcut-label">Configuração institucional</span>
+            </a>
+        </div>
+    </section>
 </div>
 {% endblock %}

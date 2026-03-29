@@ -880,6 +880,13 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - a ordem sugerida de aplicacao dessa frente ficou assim: 1) telas transacionais e de consulta do proprio `financeiro`; 2) cadastros auxiliares do modulo; 3) consolidacao de componentes compartilhados; 4) propagacao do padrao para novos itens e futuros modulos
 - nesta etapa nao houve implementacao transversal nas telas auditadas; o trabalho ficou restrito a consolidar a diretriz duradoura, abrir a frente oficialmente e registrar o mapa inicial para execucao posterior por microetapas
 
+## Refinamento da home do financeiro no novo padrao transversal
+
+- `financeiro/templates/financeiro/home.html` deixou de usar hero com subtitulo generico e passou a funcionar como entrada mais operacional do modulo, com titulo seco e grade organizada por grupos de uso real
+- os atalhos foram redistribuidos em blocos mais maduros de `Movimentacao`, `Relatorios`, `Cadastros` e `Controle e configuracao`, reduzindo a sensacao de grade solta sem alterar links, rotas ou navegacao
+- a linguagem visivel da home foi padronizada com acentuacao e rotulos mais consistentes, sem introduzir novas explicacoes textuais
+- foi possivel executar `py manage.py check` e validar novamente `/financeiro/` com status `200`
+
 ## Acabamento fino final de consistencia no formulario principal
 
 - `financeiro/templates/financeiro/lancamento_form.html` recebeu ajuste final de consistencia, removendo o subtitulo residual da pagina e compactando um pouco mais o bloco `Modo do lançamento`
