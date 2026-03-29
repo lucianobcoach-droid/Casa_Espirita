@@ -1,6 +1,45 @@
 {% extends 'financeiro/base.html' %}
 {% block title %}Lancamentos Financeiros{% endblock %}
 {% block content %}
+<style>
+    .financeiro-rateio-list-hint {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        margin-top: 0.28rem;
+        padding: 0.18rem 0.5rem;
+        border-radius: 999px;
+        background: #f3f6fb;
+        color: #506071;
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        line-height: 1.2;
+        text-transform: uppercase;
+    }
+
+    .financeiro-rateio-list-hint strong {
+        color: #1f5fbf;
+        font-weight: 800;
+    }
+
+    .financeiro-rateio-list-meta {
+        display: block;
+        margin-top: 0.24rem;
+        color: #6b7280;
+        font-size: 0.75rem;
+        line-height: 1.3;
+    }
+
+    .financeiro-rateio-action-note {
+        display: block;
+        margin-top: 0.28rem;
+        color: #6b7280;
+        font-size: 0.68rem;
+        line-height: 1.25;
+        white-space: normal;
+    }
+</style>
 {% if request.GET.origem_fluxo == 'rateio_coordenado_salvo' %}
     <div class="notification is-success is-light">
         O grupo rateado{% if request.GET.grupo_rateio %} `{{ request.GET.grupo_rateio }}`{% endif %} foi atualizado e voce voltou para a listagem principal de lancamentos.
@@ -127,7 +166,16 @@
         <tbody>
         {% for lancamento in lancamentos %}
             <tr{% if lancamento.status == 'aberto' %} class="is-unsettled"{% endif %}>
-                <td>{{ lancamento.descricao }}</td>
+                <td>
+                    {{ lancamento.descricao }}
+                    {% if lancamento.com_rateio and lancamento.grupo_rateio %}
+                        <span class="financeiro-rateio-list-hint">
+                            <strong>Rateio</strong>
+                            <span>grupo {{ lancamento.grupo_rateio|slice:":8" }}</span>
+                        </span>
+                        <span class="financeiro-rateio-list-meta">A acao de edicao desta linha abre o fluxo coordenado do grupo inteiro.</span>
+                    {% endif %}
+                </td>
                 <td>
                     <span class="tipo-badge {% if lancamento.tipo == 'receita' %}is-receita{% elif lancamento.tipo == 'despesa' %}is-despesa{% else %}is-transferencia{% endif %}">
                         {{ lancamento.get_tipo_display }}
@@ -162,6 +210,7 @@
                     <a class="button is-small is-info is-light" href="{% url 'financeiro:lancamento-recibo' lancamento.pk %}">Recibo</a>
                     {% if lancamento.com_rateio and lancamento.grupo_rateio %}
                         <a class="button is-small is-link is-light" href="{% url 'financeiro:lancamento-rateio-update' lancamento.grupo_rateio %}">Editar</a>
+                        <span class="financeiro-rateio-action-note">Segue direto para a edicao coordenada do grupo.</span>
                     {% else %}
                         <a class="button is-small is-link is-light" href="{% url 'financeiro:lancamento-update' lancamento.pk %}">Editar</a>
                     {% endif %}

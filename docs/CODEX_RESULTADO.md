@@ -802,3 +802,10 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - o corpo da tabela passou a usar apenas linhas horizontais ainda mais finas e zebra mais suave, preservando leitura limpa e documental
 - foram preservados o nome institucional no topo, o periodo em `dd/mm/aaaa`, o `saldo acumulado` com cor por sinal e sem negrito, e o destaque de `saldo inicial` / `saldo final`
 - nesta microetapa nao houve alteracao de regra de negocio, calculos, filtros, estrutura funcional nem reabertura da frente principal do `Extrato`
+
+## Refinamento da leitura operacional do grupo rateado fora da tela coordenada
+
+- `financeiro/templates/financeiro/lancamento_list.html` passou a sinalizar de forma mais explicita quando a linha pertence a um grupo rateado, deixando mais claro que a acao `Editar` abre a edicao coordenada do grupo inteiro
+- `financeiro/templates/financeiro/lancamento_form.html` passou a tratar a edicao individual de linha rateada com bloco mais operacional, diferenciando melhor a revisao da linha isolada do caminho para o grupo inteiro
+- os retornos entre listagem, linha individual e grupo coordenado passaram a depender menos de texto corrido e mais de leitura operacional curta com acoes claras
+- nesta microetapa nao houve alteracao de regra de negocio, validacoes, calculos, salvamento transacional nem integracao com `grupo_rateio`
