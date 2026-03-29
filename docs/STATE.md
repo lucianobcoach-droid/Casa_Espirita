@@ -472,3 +472,5 @@ Com filtro por periodo:
 - em decisao documental e funcional posterior, o projeto consolidou para o `financeiro` a hierarquia de nomenclatura `Categoria` / `Subcategoria`: `Categoria` como agrupadora analitica e `Subcategoria` como item operacional lancavel
 - essa decisao tambem consolidou que `Categoria` nao deve ser selecionavel em lancamentos; a opcao selecionavel deve ser a `Subcategoria`
 - essa definicao ainda nao foi implementada no codigo nesta etapa e permanece registrada apenas como decisao de negocio e orientacao para evolucoes futuras do modulo
+- na expansao controlada seguinte, `financeiro/templates/financeiro/conta_form.html` passou a seguir a mesma ordem estrutural aprovada: primeiro override enxuto do `financeiro_shell_header`, preservando a sidebar como navegacao principal, e so depois refinamento do corpo do formulario
+- nessa mesma tela, o page header ficou mais limpo, o formulario ganhou card unico mais maduro, melhor agrupamento visual dos campos e bloco de acoes mais coerente, com atencao especial para a leitura conjunta de `saldo_inicial` e `data_saldo_inicial`, sem alterar validacoes, envio nem comportamento funcional do cadastro

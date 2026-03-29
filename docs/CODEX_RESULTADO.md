@@ -1058,6 +1058,11 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - em microetapa documental posterior, foi registrada a decisao funcional de consolidar no `financeiro` a nomenclatura `Categoria` / `Subcategoria`, com `Categoria` como agrupadora analitica e `Subcategoria` como item operacional lancavel
 - nessa mesma decisao, ficou registrado que `Categoria` nao deve ser opcao selecionavel em lancamentos e que a opcao selecionavel deve ser a `Subcategoria`
 - esta microetapa foi apenas documental: nao houve alteracao de models, forms, views, templates, relatorios nem qualquer mudanca funcional em producao
+- `financeiro/templates/financeiro/conta_form.html` passou a seguir a mesma ordem estrutural aprovada nas telas auxiliares mais recentes: primeiro override enxuto do `financeiro_shell_header`, preservando a sidebar como navegacao principal, e so depois refinamento do corpo do formulario
+- nessa mesma tela, o `h1` cru e o formulario solto deram lugar a page header limpo, card unico de formulario, agrupamento visual mais previsivel dos campos e bloco de acoes final mais coerente
+- `saldo_inicial` e `data_saldo_inicial` passaram a ler juntos na mesma faixa do formulario, reforcando a compreensao do saldo-base sem alterar validacoes, envio nem comportamento funcional do cadastro
+- `help_text`, erros por campo e `non_field_errors` foram preservados funcionalmente, mas ganharam leitura mais clara dentro do mesmo card
+- nesta microetapa nao houve alteracao de views, forms, models, regras de negocio nem necessidade de mexer em `financeiro/templates/financeiro/base.html`
 
 ## Acabamento fino final de consistencia no formulario principal
 
