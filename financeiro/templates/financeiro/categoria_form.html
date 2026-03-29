@@ -81,6 +81,64 @@
         gap: 0.95rem;
     }
 
+    .financeiro-categoria-form-mode {
+        display: grid;
+        gap: 0.55rem;
+        padding: 0.85rem 0.95rem;
+        border: 1px solid #dce7f5;
+        border-radius: 0.9rem;
+        background: linear-gradient(180deg, #f8fbff 0%, #f4f8fc 100%);
+    }
+
+    .financeiro-categoria-form-mode-label {
+        margin: 0;
+        color: #4b5b70;
+        font-size: 0.82rem;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        text-transform: uppercase;
+    }
+
+    .financeiro-categoria-form-mode-options {
+        display: inline-flex;
+        flex-wrap: wrap;
+        gap: 0.55rem;
+    }
+
+    .financeiro-categoria-form-mode-option {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        padding: 0.5rem 0.8rem;
+        border: 1px solid #d7e2f0;
+        border-radius: 999px;
+        background: #fff;
+        color: #314256;
+        font-size: 0.92rem;
+        line-height: 1.2;
+        cursor: pointer;
+        transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .financeiro-categoria-form-mode-option input[type="radio"] {
+        margin: 0;
+        accent-color: #206bc4;
+    }
+
+    .financeiro-categoria-form-mode-option.is-active {
+        border-color: #206bc4;
+        background: rgba(32, 107, 196, 0.08);
+        color: #15417a;
+        box-shadow: 0 0 0 0.18rem rgba(32, 107, 196, 0.08);
+    }
+
+    .financeiro-categoria-form-mode-help {
+        margin: 0;
+        color: #5b6b7f;
+        font-size: 0.84rem;
+        line-height: 1.45;
+    }
+
     .financeiro-categoria-form-field .label {
         margin-bottom: 0.22rem;
     }
@@ -176,6 +234,10 @@
         border-top: 1px solid #edf2f7;
     }
 
+    .financeiro-categoria-form-field.is-hidden-by-mode {
+        display: none;
+    }
+
     @media screen and (max-width: 1023px) {
         .financeiro-categoria-form-shell-desktop {
             display: none !important;
@@ -215,15 +277,32 @@
             <form method="post">
                 {% csrf_token %}
                 <div class="financeiro-categoria-form-grid">
+                    <div class="financeiro-categoria-form-mode" aria-labelledby="financeiro-categoria-form-mode-label">
+                        <p class="financeiro-categoria-form-mode-label" id="financeiro-categoria-form-mode-label">Tipo de cadastro</p>
+                        <div class="financeiro-categoria-form-mode-options" role="radiogroup" aria-label="tipo de cadastro de categoria financeira">
+                            <label class="financeiro-categoria-form-mode-option" data-categoria-mode-option>
+                                <input type="radio" name="categoria-ui-mode" value="categoria" data-categoria-mode-control>
+                                <span>Categoria</span>
+                            </label>
+                            <label class="financeiro-categoria-form-mode-option" data-categoria-mode-option>
+                                <input type="radio" name="categoria-ui-mode" value="subcategoria" data-categoria-mode-control>
+                                <span>Subcategoria</span>
+                            </label>
+                        </div>
+                        <p class="financeiro-categoria-form-mode-help" data-categoria-mode-help>
+                            Use <strong>Categoria</strong> para o agrupador analitico. Use <strong>Subcategoria</strong> quando o cadastro ficar vinculado a uma Categoria.
+                        </p>
+                    </div>
+
                     {% for field in form %}
-                        <div class="field financeiro-categoria-form-field{% if field.field.widget.input_type == 'checkbox' %} financeiro-categoria-form-field-boolean{% endif %}">
+                        <div class="field financeiro-categoria-form-field{% if field.field.widget.input_type == 'checkbox' %} financeiro-categoria-form-field-boolean{% endif %}{% if field.name == 'categoria_pai' %} financeiro-categoria-form-parent-field{% endif %}"{% if field.name == 'categoria_pai' %} data-categoria-parent-field{% endif %}>
                             <label class="label" for="{{ field.id_for_label }}">
                                 {% if field.name == 'categoria_pai' %}
                                     Categoria
                                 {% elif field.name == 'tipo' %}
                                     Tipo
                                 {% elif field.name == 'nome' %}
-                                    Subcategoria
+                                    <span data-categoria-name-label>Subcategoria</span>
                                 {% else %}
                                     {{ field.label }}
                                 {% endif %}
@@ -239,7 +318,7 @@
                                 {% endif %}
                             </div>
                             {% if field.name == 'categoria_pai' %}
-                                <p class="help">Selecione uma Categoria para cadastrar esta Subcategoria. Deixe em branco quando estiver cadastrando a propria Categoria.</p>
+                                <p class="help" data-categoria-parent-help>Selecione uma Categoria para cadastrar esta Subcategoria. Deixe em branco quando estiver cadastrando a propria Categoria.</p>
                             {% elif field.name == 'mensagem_recibo' %}
                                 <p class="help">Opcional. Quando preenchida, substitui a mensagem padrao simples do recibo para esta categoria ou subcategoria.</p>
                             {% elif field.help_text %}
@@ -260,4 +339,55 @@
         </div>
     </section>
 </div>
+<script>
+    (function () {
+        var form = document.currentScript ? document.currentScript.previousElementSibling : null;
+        var modeControls = Array.prototype.slice.call(document.querySelectorAll('[data-categoria-mode-control]'));
+        var modeOptions = Array.prototype.slice.call(document.querySelectorAll('[data-categoria-mode-option]'));
+        var parentField = document.querySelector('[data-categoria-parent-field]');
+        var parentSelect = document.getElementById('{{ form.categoria_pai.id_for_label }}');
+        var nameLabel = document.querySelector('[data-categoria-name-label]');
+        var parentHelp = document.querySelector('[data-categoria-parent-help]');
+        var modeHelp = document.querySelector('[data-categoria-mode-help]');
+
+        if (!modeControls.length || !parentField || !parentSelect || !nameLabel || !parentHelp || !modeHelp) {
+            return;
+        }
+
+        function applyMode(mode) {
+            var isSubcategoria = mode === 'subcategoria';
+
+            modeControls.forEach(function (control) {
+                control.checked = control.value === mode;
+            });
+
+            modeOptions.forEach(function (option) {
+                var control = option.querySelector('[data-categoria-mode-control]');
+                option.classList.toggle('is-active', !!control && control.value === mode);
+            });
+
+            parentField.classList.toggle('is-hidden-by-mode', !isSubcategoria);
+            parentSelect.disabled = !isSubcategoria;
+
+            if (!isSubcategoria) {
+                parentSelect.value = '';
+            }
+
+            nameLabel.textContent = isSubcategoria ? 'Subcategoria' : 'Categoria';
+            parentHelp.textContent = 'Selecione uma Categoria para cadastrar esta Subcategoria.';
+            modeHelp.innerHTML = isSubcategoria
+                ? 'Voce esta cadastrando uma <strong>Subcategoria</strong>. Escolha abaixo a <strong>Categoria</strong> a que ela pertence.'
+                : 'Voce esta cadastrando uma <strong>Categoria</strong>. O campo de vinculo nao precisa aparecer neste modo.';
+        }
+
+        var initialMode = parentSelect.value ? 'subcategoria' : 'categoria';
+        applyMode(initialMode);
+
+        modeControls.forEach(function (control) {
+            control.addEventListener('change', function () {
+                applyMode(control.value);
+            });
+        });
+    })();
+</script>
 {% endblock %}

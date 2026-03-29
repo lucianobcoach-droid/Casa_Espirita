@@ -1083,6 +1083,12 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - nessa mesma passada, label, envio, validacoes e comportamento funcional do booleano foram preservados integralmente
 - numa microcorrecao visual transversal posterior, `financeiro/templates/financeiro/centro_custo_form.html`, `financeiro/templates/financeiro/categoria_form.html` e `financeiro/templates/financeiro/conta_form.html` passaram a adotar a mesma apresentacao visual discreta dos booleanos ja aprovada em `financeiro/templates/financeiro/pessoa_form.html`
 - com isso, os checkboxes auxiliares deixaram de usar a aparencia amarela/laranja residual e passaram a operar com a mesma leitura azul, menor e mais proporcional ao tema, sem alterar labels, envio, validacoes nem comportamento funcional dos formularios
+- em microetapa documental posterior, foram consolidadas sem patch de codigo quatro frentes futuras do `financeiro`: 1) a necessidade de deixar mais explicito na UI do cadastro de categorias se o usuario esta criando `Categoria` ou `Subcategoria`; 2) o refinamento futuro do menu lateral para leitura mais leve e elegante; 3) a sugestao futura de regras reutilizaveis no lancamento com preenchimento automatico revisavel; 4) a acao futura `Clonar lancamento`
+- nessa mesma passada documental, tambem ficou reforcado que permissões, acesso, login e perfis continuam como frente estrutural futura e nao entram nesta etapa
+- esta microetapa foi apenas documental: nao houve alteracao de models, forms, views, templates, relatorios nem qualquer mudanca funcional em producao
+- numa microetapa posterior de clareza de UI, `financeiro/templates/financeiro/categoria_form.html` passou a usar um seletor visual simples `Categoria | Subcategoria` no proprio formulario, sem alterar models, forms Python, views nem a regra profunda do cadastro
+- nessa mesma passada, o campo principal de nome passou a trocar visualmente entre `Categoria` e `Subcategoria`, e o campo `Categoria` passou a ficar oculto/desativado no modo `Categoria` e visivel no modo `Subcategoria`, preservando envio, validacoes e comportamento geral da tela
+- esta evolucao ainda nao deve ser lida como implementacao completa da regra funcional futura; ela atua apenas como camada intermediaria de clareza operacional na UI atual
 
 ## Acabamento fino final de consistencia no formulario principal
 
