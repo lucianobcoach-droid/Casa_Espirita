@@ -193,6 +193,7 @@ Observacao:
 - refinamentos futuros do shell visual do `financeiro` e da sidebar ja implantada, guiados por uso real e sem reabrir troca estrutural ampla da navegacao
 - consolidacao futura de componentes visuais compartilhados do modulo, como cabecalho de pagina, bloco de filtros, card padrao, KPI, tabela e formulario
 - refinamento visual transversal do modulo financeiro para melhorar largura de campos, distribuicao de colunas, densidade de filtros, quantidade de informacao visivel por tela, melhor aproveitamento horizontal em zoom 100% e consistencia visual entre telas, agora oficialmente iniciado pela base compartilhada e pelas telas de listagem/formulario de lancamentos
+- auditoria e aplicacao incremental do novo padrao transversal de UX/comunicacao operacional no restante das telas do `financeiro`, com foco em fluxo continuo, texto fixo minimo, padronizacao de linguagem e uso raro do `i`
 - comportamento de transferencia em todas as telas e relatorios
 - consistencia visual do tratamento de transferencia
 - UX do formulario de lancamento em casos limite
@@ -263,6 +264,14 @@ Observacao:
 - futura configuracao da paleta geral do sistema, com definicao de cor principal e derivacao coerente da paleta relacionada, sem aplicacao manual de cor solta em cada tela
 - futuro log de acesso ao sistema em camada estrutural propria, separado da auditoria funcional do `financeiro`
 - revisao futura da posicao do `Extrato` na navegacao do modulo, sem decisao de mudanca nesta etapa
+
+## 12. Auditoria inicial da frente transversal de UX/comunicacao operacional
+
+- telas hoje mais alinhadas ao padrao: `lancamento_form.html`, `lancamento_rateio_grupo_form.html`, `lancamento_list.html`, `conta_extrato.html`, `resumo.html`, `prestacao_contas.html` e `lancamento_recibo.html`
+- telas com maior necessidade de padronizacao futura: `home.html`, `auditoria_lancamento_list.html`, `conta_list.html`, `pessoa_list.html`, `categoria_list.html`, `centro_custo_list.html` e respectivos formularios auxiliares ainda nao revisitados
+- os desvios mais recorrentes nessa auditoria inicial foram: subtitulos e explicacoes acima do necessario, segmentacao visual mais antiga, headings e labels menos consistentes, estados vazios crus e acentuacao/linguagem ainda nao uniformizadas em todas as listas e cadastros
+- ordem recomendada de aplicacao no restante do `financeiro`: 1) `home.html`; 2) `auditoria_lancamento_list.html`; 3) listas principais de cadastros auxiliares (`conta`, `pessoa`, `categoria`, `centro_custo`); 4) formularios auxiliares; 5) consolidacao final de componentes compartilhados para reaproveitamento transversal
+- esse mesmo padrao deve orientar tanto futuros ajustes nas telas existentes quanto novos itens e novas telas que entrarem no sistema, evitando reintroducao de excesso de texto, `i` disperso e empilhamento desnecessario de blocos
 
 ### Estrutural futura
 - integracao futura do `financeiro` com autenticacao e controle de acesso por usuario quando a frente estrutural do projeto for iniciada

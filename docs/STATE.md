@@ -421,3 +421,11 @@ Com filtro por periodo:
 - fica oficialmente registrada, apenas em nivel documental e sem implementacao nesta etapa, a futura frente de configuracao da paleta geral do sistema, com derivacao coerente de cores a partir de uma cor principal
 - fica oficialmente registrada, apenas em nivel documental e sem implementacao nesta etapa, a futura frente de log de acesso ao sistema, separada da auditoria funcional ja existente no `financeiro`
 - fica registrada como revisao futura de navegacao, sem decisao de mudanca nesta etapa, a necessidade de reavaliar a posicao do `Extrato` na navegacao do modulo quando houver contexto suficiente de uso real
+
+## Frente transversal de padronizacao de UX e comunicacao operacional
+
+- fica oficialmente aberta, a partir desta etapa, a frente transversal de padronizacao de UX e comunicacao operacional do sistema, iniciada pelo `financeiro` e orientada pela leitura de fluxo continuo, texto fixo minimo, uso raro e padronizado do `i` e consistencia de linguagem visivel
+- no estado atual do `financeiro`, `lancamento_form.html` e a referencia mais avancada dessa direcao, enquanto `lancamento_rateio_grupo_form.html` e `lancamento_list.html` ja possuem base intermediaria mais alinhada ao padrao
+- as telas de relatorio impresso e recibo permanecem mais maduras no seu proprio eixo documental, sem substituir a necessidade de padronizacao operacional das telas transacionais do modulo
+- a auditoria inicial desta frente mostrou que as listas e cadastros mais antigos do `financeiro`, assim como a home do modulo e a tela de auditoria, ainda concentram parte relevante da segmentacao visual excessiva, subtitulos explicativos, estados vazios pesados e inconsistencias de linguagem/acentuacao
+- a continuidade correta dessa frente deve acontecer por microetapas, priorizando primeiro as telas transacionais e de consulta do `financeiro`, depois os cadastros auxiliares do proprio modulo e, so depois, a propagacao do padrao para outros apps do sistema

@@ -871,6 +871,15 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - `Remover` ganhou um pouco mais de legibilidade e o estado vazio de `Ultimos lancamentos da pessoa` ficou mais leve, sem alterar nenhuma regra, validacao, payload JS ou logica de exibicao/ocultacao do rateio
 - foi possivel executar `py manage.py check` e validar novamente `/financeiro/lancamentos/novo/` com status `200`; no HTML renderizado, permaneceram presentes o bloco de rateio, o `Adicionar linha` e o rotulo `Valor total do documento`
 
+## Abertura documental da frente transversal de UX e comunicacao operacional
+
+- nesta etapa, o estado aprovado de refinamento do `lancamento_form.html` foi primeiro fechado no Git em commit proprio antes da abertura da nova frente transversal
+- a partir desse fechamento, foi registrada oficialmente uma frente estrutural de padronizacao de UX e comunicacao operacional, com foco em fluxo continuo, texto fixo minimo, uso raro e padronizado do `i` e consistencia de linguagem, labels, headings, microtextos e estados vazios
+- a auditoria inicial das telas principais do `financeiro` apontou como grupo mais alinhado ao padrao atual: `lancamento_form.html`, `lancamento_rateio_grupo_form.html`, `lancamento_list.html`, relatorios impressos e recibo
+- a mesma auditoria apontou como grupo ainda mais pendente de padronizacao: `home.html`, `auditoria_lancamento_list.html`, `conta_list.html`, `pessoa_list.html` e, por extensao, os demais cadastros auxiliares do modulo que ainda preservam linguagem antiga, acentuacao inconsistente, segmentacao visual menos madura e estados vazios mais crus
+- a ordem sugerida de aplicacao dessa frente ficou assim: 1) telas transacionais e de consulta do proprio `financeiro`; 2) cadastros auxiliares do modulo; 3) consolidacao de componentes compartilhados; 4) propagacao do padrao para novos itens e futuros modulos
+- nesta etapa nao houve implementacao transversal nas telas auditadas; o trabalho ficou restrito a consolidar a diretriz duradoura, abrir a frente oficialmente e registrar o mapa inicial para execucao posterior por microetapas
+
 ## Acabamento fino final de consistencia no formulario principal
 
 - `financeiro/templates/financeiro/lancamento_form.html` recebeu ajuste final de consistencia, removendo o subtitulo residual da pagina e compactando um pouco mais o bloco `Modo do lançamento`

@@ -77,6 +77,15 @@ Estas regras devem ser respeitadas em qualquer etapa:
 - quando a natureza `receita` / `despesa` ja estiver clara pelo contexto da tela, pelo agrupamento ou por indicador de tipo, a exibicao visivel da categoria deve preferir nome curto, sem prefixos textuais redundantes
 - no shell do `financeiro`, a sigla visual da marca deve preferir iniciais dinamicas derivadas do nome da `ConfiguracaoInstitucional` ativa/padrao, com fallback seguro para `CE` quando nao houver nome configurado
 
+### 5.1.1. Diretriz duradoura de comunicacao operacional nas telas
+- texto fixo nas telas deve ficar restrito ao minimo operacional necessario para a acao
+- explicacoes sobre regra de negocio nao devem ficar espalhadas pela interface quando a propria estrutura da tela, o fluxo ou a validacao ja resolvem a compreensao
+- ajuda por icone `i` deve existir apenas em pontos realmente relevantes e excepcionais, sem proliferacao decorativa pela tela
+- o componente visual de ajuda por `i` deve seguir padrao coerente de aparencia e semantica sempre que for usado
+- a linguagem textual das telas deve buscar consistencia visivel de rotulos, microtextos e acentuacao, evitando variacoes desnecessarias entre paginas equivalentes
+- formularios e fluxos operacionais devem buscar leitura continua e sensacao de cadastro unico, evitando empilhamento desnecessario de caixas, cards ou blocos altos quando a mesma tela puder guiar a acao de forma mais fluida
+- esse padrao transversal de UX e comunicacao operacional deve orientar tanto refinamentos futuros nas telas existentes quanto a construcao de novas telas, componentes, estados vazios, headings, acoes e mensagens do sistema
+
 ### 5.2. Diretriz estrutural futura de usuarios, perfis e permissoes
 - o projeto passa a registrar oficialmente como frente estrutural futura a camada de usuarios, autenticacao, perfis e permissoes
 - essa frente nao deve ser tratada como ajuste isolado do app `financeiro`
