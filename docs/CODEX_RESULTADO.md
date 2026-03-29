@@ -863,6 +863,13 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - nessa tela, a sidebar foi preservada como navegacao principal e o topo deixou de competir com o conteudo, usando header enxuto com `Navegacao` no desktop e `Menu` no mobile
 - o conteudo local passou a usar page header mais limpo, filtros mais maduros e tabela mais coerente com o shell atual, sem alterar urls, filtros, links, acoes nem comportamento funcional da listagem
 - a leitura de `Tipo pessoa`, `Documento`, `Telefone`, `E-mail`, `Ativo` e `Acoes` ficou mais clara, com correcao dos microtextos visiveis e estado vazio mais operacional
+
+## Expansao controlada do formulario de centro de custo
+
+- `financeiro/templates/financeiro/centro_custo_form.html` recebeu a expansao controlada seguinte da frente transversal, repetindo a ordem estrutural aprovada: primeiro override enxuto do `financeiro_shell_header`, depois refinamento do corpo do formulario
+- nessa tela, a sidebar foi preservada como navegacao principal e o topo deixou de competir com o conteudo, usando header enxuto com `Navegacao` no desktop e `Menu` no mobile
+- o conteudo local passou a usar page header mais limpo, card unico de formulario, agrupamento visual mais maduro dos campos e bloco de acoes mais coerente, sem alterar campos, validacoes, envio nem comportamento funcional
+- a leitura de `help_text`, erros de campo e erros gerais ficou mais limpa, mantendo a simplicidade do formulario e sem introduzir explicacoes desnecessarias
  
 ## Correcao responsiva do controle de navegacao na tela piloto
 
