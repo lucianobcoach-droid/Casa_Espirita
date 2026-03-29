@@ -1,68 +1,228 @@
 {% extends 'financeiro/base.html' %}
 {% block title %}Categorias Financeiras{% endblock %}
+{% block financeiro_shell_header %}
+    <header class="financeiro-app-utility-bar no-print">
+        <div class="container financeiro-topbar-desktop financeiro-categoria-shell-desktop">
+            <div class="financeiro-topbar-desktop-main">
+                <div class="financeiro-topbar-reopen-slot">
+                    <button
+                        type="button"
+                        class="financeiro-drawer-toggle no-print"
+                        data-financeiro-sidebar-toggle
+                        aria-expanded="true"
+                        aria-controls="financeiro-sidebar"
+                        aria-label="Recolher navega&ccedil;&atilde;o lateral"
+                        title="Recolher navega&ccedil;&atilde;o lateral"
+                    >
+                        <span class="financeiro-drawer-toggle-icon" aria-hidden="true">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </span>
+                        <span aria-hidden="true">Navega&ccedil;&atilde;o</span>
+                        <span class="financeiro-sr-only" data-financeiro-sidebar-toggle-label>Recolher navega&ccedil;&atilde;o lateral</span>
+                    </button>
+                </div>
+            </div>
+            <div class="financeiro-topbar-desktop-actions"></div>
+        </div>
+
+        <nav class="navbar is-light financeiro-topbar financeiro-topbar-mobile financeiro-categoria-shell-mobile" role="navigation" aria-label="controles mobile do financeiro">
+            <div class="container">
+                <div class="financeiro-topbar-mobile-inner">
+                    <div class="financeiro-topbar-mobile-main"></div>
+                    <div class="financeiro-topbar-mobile-actions">
+                        <button
+                            type="button"
+                            class="financeiro-drawer-toggle"
+                            data-financeiro-drawer-toggle
+                            aria-controls="financeiro-sidebar"
+                            aria-expanded="false"
+                            aria-label="Abrir navega&ccedil;&atilde;o do financeiro"
+                        >
+                            <span class="financeiro-drawer-toggle-icon" aria-hidden="true">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </span>
+                            <span>Menu</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+{% endblock %}
 {% block content %}
-<div class="level">
-    <div class="level-left">
-        <h1 class="title">Categorias Financeiras</h1>
-    </div>
-    <div class="level-right">
-        <a class="button is-primary" href="{% url 'financeiro:categoria-create' %}">Nova categoria financeira</a>
-    </div>
-</div>
-<form method="get" class="filters-box">
-    <div class="columns is-multiline">
-        <div class="column is-5">
-            <label class="label">Nome</label>
-            <input class="input" type="text" name="nome" value="{{ request.GET.nome }}" placeholder="Buscar por nome">
+<style>
+    .financeiro-categoria-shell-mobile {
+        display: none !important;
+    }
+
+    .financeiro-categoria-page {
+        display: grid;
+        gap: 0.9rem;
+    }
+
+    .financeiro-categoria-card {
+        border: 1px solid rgba(203, 213, 225, 0.85);
+        border-radius: 1rem;
+        background: #fff;
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.045);
+        overflow: hidden;
+    }
+
+    .financeiro-categoria-card .filters-box {
+        margin-bottom: 0;
+        padding: 0.8rem 0.95rem 0.9rem;
+        border: 0;
+        border-bottom: 1px solid #edf2f7;
+        border-radius: 0;
+        background: linear-gradient(180deg, #fbfcfe 0%, #f8fafc 100%);
+    }
+
+    .financeiro-categoria-table-wrap {
+        overflow: visible;
+    }
+
+    .financeiro-categoria-table {
+        margin-bottom: 0;
+    }
+
+    .financeiro-categoria-table td,
+    .financeiro-categoria-table th {
+        vertical-align: middle;
+    }
+
+    .financeiro-categoria-parent {
+        color: #475569;
+    }
+
+    .financeiro-categoria-parent.is-empty {
+        color: #94a3b8;
+    }
+
+    .financeiro-categoria-status {
+        display: inline-flex;
+        align-items: center;
+        min-height: 1.6rem;
+        padding: 0.15rem 0.55rem;
+        border-radius: 999px;
+        background: #f3f6fb;
+        color: #475569;
+        font-size: 0.72rem;
+        font-weight: 700;
+        line-height: 1.1;
+    }
+
+    .financeiro-categoria-status.is-active {
+        background: rgba(47, 133, 90, 0.12);
+        color: #236746;
+    }
+
+    .financeiro-categoria-empty {
+        color: #64748b;
+    }
+
+    @media screen and (max-width: 1023px) {
+        .financeiro-categoria-shell-desktop {
+            display: none !important;
+        }
+
+        .financeiro-categoria-shell-mobile {
+            display: block !important;
+        }
+    }
+
+    @media screen and (min-width: 1024px) {
+        .financeiro-categoria-shell-desktop {
+            display: flex !important;
+        }
+
+        .financeiro-categoria-shell-mobile {
+            display: none !important;
+        }
+    }
+</style>
+
+<div class="financeiro-categoria-page">
+    <div class="financeiro-page-header financeiro-page-head">
+        <div class="financeiro-page-header-main">
+            <h1 class="title financeiro-page-title">Categorias financeiras</h1>
         </div>
-        <div class="column is-5">
-            <label class="label">Tipo</label>
-            <div class="select is-fullwidth">
-                <select name="tipo">
-                    <option value="">Todos</option>
-                    <option value="receita" {% if request.GET.tipo == 'receita' %}selected{% endif %}>Receita</option>
-                    <option value="despesa" {% if request.GET.tipo == 'despesa' %}selected{% endif %}>Despesa</option>
-                </select>
+        <div class="financeiro-page-header-actions no-print">
+            <a class="button is-primary" href="{% url 'financeiro:categoria-create' %}">Nova categoria financeira</a>
+        </div>
+    </div>
+
+    <section class="financeiro-categoria-card">
+        <form method="get" class="filters-box no-print">
+            <div class="columns is-multiline">
+                <div class="column is-12-mobile is-6-tablet is-5-desktop">
+                    <label class="label">Nome</label>
+                    <input class="input" type="text" name="nome" value="{{ request.GET.nome }}" placeholder="Buscar por nome">
+                </div>
+                <div class="column is-12-mobile is-6-tablet is-5-desktop">
+                    <label class="label">Tipo</label>
+                    <div class="select is-fullwidth">
+                        <select name="tipo">
+                            <option value="">Todos</option>
+                            <option value="receita" {% if request.GET.tipo == 'receita' %}selected{% endif %}>Receita</option>
+                            <option value="despesa" {% if request.GET.tipo == 'despesa' %}selected{% endif %}>Despesa</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="column is-12-mobile is-12-tablet is-2-desktop">
+                    <label class="label">&nbsp;</label>
+                    <div class="buttons">
+                        <button class="button is-link is-fullwidth" type="submit">Filtrar</button>
+                        <a class="button is-light is-fullwidth" href="{% url 'financeiro:categoria-list' %}">Limpar</a>
+                    </div>
+                </div>
             </div>
+        </form>
+
+        <div class="financeiro-categoria-table-wrap">
+            <table class="table is-fullwidth is-hoverable financeiro-table financeiro-categoria-table">
+                <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Tipo</th>
+                    <th>Categoria pai</th>
+                    <th>Ativo</th>
+                    <th class="no-print">A&ccedil;&otilde;es</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for categoria in categorias %}
+                    <tr>
+                        <td>{{ categoria.nome }}</td>
+                        <td>{{ categoria.get_tipo_display }}</td>
+                        <td>
+                            {% if categoria.categoria_pai %}
+                                <span class="financeiro-categoria-parent">{{ categoria.categoria_pai }}</span>
+                            {% else %}
+                                <span class="financeiro-categoria-parent is-empty">N&atilde;o informada</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="financeiro-categoria-status{% if categoria.ativo %} is-active{% endif %}">
+                                {% if categoria.ativo %}Sim{% else %}N&atilde;o{% endif %}
+                            </span>
+                        </td>
+                        <td class="actions-cell no-print">
+                            <a class="button is-small is-link is-light" href="{% url 'financeiro:categoria-update' categoria.pk %}">Editar</a>
+                            <a class="button is-small is-danger is-light" href="{% url 'financeiro:categoria-delete' categoria.pk %}">Excluir</a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="5" class="financeiro-categoria-empty">Nenhuma categoria encontrada com os filtros atuais.</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
         </div>
-        <div class="column is-2">
-            <label class="label">&nbsp;</label>
-            <div class="buttons">
-                <button class="button is-link is-fullwidth" type="submit">Filtrar</button>
-                <a class="button is-light is-fullwidth" href="{% url 'financeiro:categoria-list' %}">Limpar</a>
-            </div>
-        </div>
-    </div>
-</form>
-<div class="table-wrapper">
-    <table class="table is-fullwidth is-striped is-hoverable">
-        <thead>
-        <tr>
-            <th>Nome</th>
-            <th>Tipo</th>
-            <th>Categoria pai</th>
-            <th>Ativo</th>
-            <th>Ações</th>
-        </tr>
-        </thead>
-        <tbody>
-        {% for categoria in categorias %}
-            <tr>
-                <td>{{ categoria.nome }}</td>
-                <td>{{ categoria.get_tipo_display }}</td>
-                <td>{{ categoria.categoria_pai|default:'-' }}</td>
-                <td>{% if categoria.ativo %}Sim{% else %}Não{% endif %}</td>
-                <td class="actions-cell">
-                    <a class="button is-small is-link is-light" href="{% url 'financeiro:categoria-update' categoria.pk %}">Editar</a>
-                    <a class="button is-small is-danger is-light" href="{% url 'financeiro:categoria-delete' categoria.pk %}">Excluir</a>
-                </td>
-            </tr>
-        {% empty %}
-            <tr>
-                <td colspan="5">Nenhuma categoria financeira cadastrada.</td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+    </section>
 </div>
 {% endblock %}

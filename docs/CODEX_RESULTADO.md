@@ -842,6 +842,13 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - a tela tambem passou a padronizar melhor rotulos e acentuacao visiveis, incluindo `Lançamento`, `Informações`, `Últimos`, `Ação` e `Número do documento`
 - nesta microetapa nao houve alteracao de regra de negocio, validacoes, payload JS, `grupo_rateio`, `numero_documento`, calculos nem comportamento do formulario
 - foi possivel executar `py manage.py check` e validar novamente `/financeiro/lancamentos/novo/` com status `200`
+
+## Expansao controlada da listagem de categorias
+
+- `financeiro/templates/financeiro/categoria_list.html` recebeu a proxima expansao controlada da frente transversal, seguindo a ordem estrutural ja formalizada: primeiro decisao de shell/topo, depois refinamento do corpo
+- nessa tela, a solucao correta foi sobrescrever o `financeiro_shell_header` com versao enxuta, mantendo a sidebar como navegacao principal e evitando a sensacao de shell antigo sobre corpo novo
+- o conteudo local passou a usar page header mais limpo, bloco de filtros mais maduro e tabela mais coerente com o shell atual, sem alterar urls, filtros, links, acoes nem comportamento funcional da listagem
+- a leitura de `Categoria pai`, `Ativo` e `Acoes` ficou mais clara, a acentuacao visivel deixou de carregar quebra de encoding e o estado vazio passou a ficar mais operacional
  
 ## Correcao responsiva do controle de navegacao na tela piloto
 
