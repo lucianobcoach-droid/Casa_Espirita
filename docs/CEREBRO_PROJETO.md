@@ -94,6 +94,13 @@ Estas regras devem ser respeitadas em qualquer etapa:
 - esse padrao transversal de UX e comunicacao operacional deve orientar tanto refinamentos futuros nas telas existentes quanto a construcao de novas telas, componentes, estados vazios, headings, acoes e mensagens do sistema
 - quando um modulo ja possui navegacao estrutural persistente por sidebar ou menu lateral, uma home propria so deve permanecer como entrada principal se oferecer funcao operacional real; quando ela for apenas redundante como camada extra de atalhos, a entrada do modulo deve preferir redirecionar para a tela operacional central do fluxo
 
+### 5.1.2. Diretriz duradoura de hierarquia analitica de categorias no financeiro
+- no modulo `financeiro`, a nomenclatura funcional duradoura deve preferir `Categoria` e `Subcategoria`
+- nessa hierarquia, `Categoria` deve ser tratada como agrupadora analitica
+- nessa mesma hierarquia, `Subcategoria` deve ser tratada como item operacional lancavel
+- por regra de negocio duradoura, `Categoria` nao deve entrar como opcao selecionavel no lancamento; a opcao selecionavel deve ser a `Subcategoria`
+- essa definicao deve orientar evolucoes futuras de cadastro, filtros, relatorios, textos visiveis e organizacao analitica do modulo, sem implicar por si so implementacao imediata em qualquer microetapa isolada
+
 ### 5.2. Diretriz estrutural futura de usuarios, perfis e permissoes
 - o projeto passa a registrar oficialmente como frente estrutural futura a camada de usuarios, autenticacao, perfis e permissoes
 - essa frente nao deve ser tratada como ajuste isolado do app `financeiro`

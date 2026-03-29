@@ -1050,6 +1050,14 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - a tabela perdeu a explicacao fixa redundante, os rotulos visiveis foram padronizados com acentuacao mais consistente e a leitura de `Campos alterados` ficou um pouco mais limpa mantendo `details/summary` como base funcional
 - o estado vazio passou a ser mais curto e menos cru, sem criar nova funcionalidade, sem paginacao e sem alterar a ordenacao simples por evento mais recente
 - nesta microetapa nao houve alteracao de regra de negocio, filtros, view, ordenacao nem estrutura funcional da auditoria
+- `financeiro/templates/financeiro/categoria_form.html` passou a seguir a mesma ordem estrutural aprovada nas telas auxiliares mais recentes: primeiro override enxuto do `financeiro_shell_header`, preservando a sidebar como navegacao principal, e so depois refinamento do corpo do formulario
+- nessa mesma tela, o `h1` cru e o formulario solto deram lugar a page header limpo, card unico de formulario, agrupamento visual mais previsivel dos campos e bloco de acoes final mais coerente, sem alterar validacoes, envio nem comportamento funcional do cadastro
+- `help_text`, erros por campo e `non_field_errors` foram preservados funcionalmente, mas ganharam leitura mais clara dentro do mesmo card
+- nesta microetapa nao houve alteracao de views, forms, models, regras de negocio nem necessidade de mexer em `financeiro/templates/financeiro/base.html`
+- foi possivel executar `py manage.py check` com sucesso; a tentativa de validar localmente `/financeiro/categorias/nova/` via `manage.py shell -c` nao concluiu no ambiente atual por `Acesso negado`
+- em microetapa documental posterior, foi registrada a decisao funcional de consolidar no `financeiro` a nomenclatura `Categoria` / `Subcategoria`, com `Categoria` como agrupadora analitica e `Subcategoria` como item operacional lancavel
+- nessa mesma decisao, ficou registrado que `Categoria` nao deve ser opcao selecionavel em lancamentos e que a opcao selecionavel deve ser a `Subcategoria`
+- esta microetapa foi apenas documental: nao houve alteracao de models, forms, views, templates, relatorios nem qualquer mudanca funcional em producao
 
 ## Acabamento fino final de consistencia no formulario principal
 
