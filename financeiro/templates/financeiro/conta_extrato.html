@@ -3,6 +3,11 @@
 {% block title %}{{ page_title }}{% endblock %}
 {% block content %}
 <style>
+    .financeiro-extrato-screen-header .financeiro-page-subtitle {
+        max-width: 42rem;
+        color: #5b6b7f;
+    }
+
     .financeiro-extrato-meta {
         display: flex;
         flex-wrap: wrap;
@@ -26,6 +31,82 @@
     .financeiro-extrato-meta-item strong {
         color: #1f2937;
         font-weight: 700;
+    }
+
+    .financeiro-extrato-filter-card {
+        margin-bottom: 0.9rem;
+        padding: 0.8rem 0.9rem;
+        border: 1px solid #dce7f5;
+        border-radius: 1rem;
+        background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 12px 28px rgba(15, 23, 42, 0.04);
+    }
+
+    .financeiro-extrato-filter-card .columns {
+        row-gap: 0.35rem;
+    }
+
+    .financeiro-extrato-filter-card .column {
+        padding-top: 0.2rem;
+        padding-bottom: 0.2rem;
+    }
+
+    .financeiro-extrato-filter-card .label {
+        margin-bottom: 0.22rem;
+        color: #4b5b70;
+        font-size: 0.72rem;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+    }
+
+    .financeiro-extrato-filter-card .input,
+    .financeiro-extrato-filter-card .select select {
+        min-height: 2.45rem;
+        border: 1px solid #d7e2f0;
+        border-radius: 0.8rem;
+        box-shadow: none;
+    }
+
+    .financeiro-extrato-filter-card .input:focus,
+    .financeiro-extrato-filter-card .select select:focus {
+        border-color: #206bc4;
+        box-shadow: 0 0 0 0.2rem rgba(32, 107, 196, 0.12);
+    }
+
+    .financeiro-extrato-filter-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.45rem;
+    }
+
+    .financeiro-extrato-filter-actions .button {
+        min-height: 2.45rem;
+        border-radius: 0.8rem;
+    }
+
+    .financeiro-extrato-state {
+        margin-bottom: 0.9rem;
+        border-radius: 0.95rem;
+    }
+
+    .financeiro-extrato-document-number {
+        color: #475569;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .financeiro-extrato-document .financeiro-document-note {
+        border-top: 0;
+        border-bottom: 0;
+        padding-top: 0;
+        padding-bottom: 0.35rem;
+    }
+
+    .financeiro-extrato-table td {
+        vertical-align: top;
+    }
+
+    .financeiro-extrato-table tbody td {
+        line-height: 1.35;
     }
 
     .financeiro-extrato-table th:nth-child(1),
@@ -84,14 +165,63 @@
         border-left: 1px solid #eef2f7;
     }
 
-    .is-closing-balance td {
+    .financeiro-extrato-col-date {
+        width: 7.5rem;
+    }
+
+    .financeiro-extrato-col-doc {
+        width: 8.5rem;
+    }
+
+    .financeiro-extrato-col-desc {
+        width: 16rem;
+    }
+
+    .financeiro-extrato-col-fav {
+        width: 12.5rem;
+    }
+
+    .financeiro-extrato-col-type {
+        width: 6.1rem;
+    }
+
+    .financeiro-extrato-col-in,
+    .financeiro-extrato-col-out {
+        width: 10.25rem;
+    }
+
+    .financeiro-extrato-col-balance {
+        width: 11rem;
+    }
+
+    .financeiro-extrato-col-obs {
+        width: 14.35rem;
+    }
+
+    .is-closing-balance td,
+    .is-closing-balance th {
         color: #1f2937;
         background: #f7f9fc;
         font-weight: 700;
     }
 
+    .financeiro-extrato-table thead tr.is-closing-balance th {
+        font-size: inherit;
+        letter-spacing: normal;
+        text-transform: none;
+        color: #1f2937;
+        vertical-align: top;
+    }
+
     .financeiro-balance-line-label {
         font-weight: 700;
+    }
+
+    .financeiro-extrato-empty-row td {
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+        color: #5b6b7f;
+        text-align: center;
     }
 
     @media print {
@@ -118,12 +248,67 @@
             display: none !important;
         }
 
+        .financeiro-extrato-document .financeiro-document-note {
+            border-top: 0 !important;
+            border-bottom: 0 !important;
+            padding-top: 0 !important;
+            padding-bottom: 0.35rem !important;
+        }
+
         .financeiro-extrato-table th,
         .financeiro-extrato-table td {
             word-break: normal !important;
             overflow-wrap: normal !important;
             line-height: 1.2 !important;
             vertical-align: top !important;
+        }
+
+        .financeiro-extrato-document table.financeiro-extrato-table thead tr th {
+            padding-top: 0.08rem !important;
+            padding-bottom: 0.1rem !important;
+            border-top: 0 !important;
+            border-left: 0 !important;
+            border-right: 0 !important;
+            border-bottom: 0.35pt solid #dde5ed !important;
+        }
+
+        .financeiro-extrato-document table.financeiro-extrato-table tbody tr td {
+            padding-top: 0.08rem !important;
+            padding-bottom: 0.1rem !important;
+            border-top: 0 !important;
+            border-left: 0 !important;
+            border-right: 0 !important;
+            border-bottom: 0.35pt solid #e6edf3 !important;
+        }
+
+        .financeiro-extrato-document table.financeiro-extrato-table col.financeiro-extrato-col-date {
+            width: 7% !important;
+        }
+
+        .financeiro-extrato-document table.financeiro-extrato-table col.financeiro-extrato-col-doc {
+            width: 7.5% !important;
+        }
+
+        .financeiro-extrato-document table.financeiro-extrato-table col.financeiro-extrato-col-desc {
+            width: 20% !important;
+        }
+
+        .financeiro-extrato-document table.financeiro-extrato-table col.financeiro-extrato-col-fav {
+            width: 15.5% !important;
+        }
+
+        .financeiro-extrato-document table.financeiro-extrato-table col.financeiro-extrato-col-type {
+            width: 6% !important;
+        }
+
+        .financeiro-extrato-document table.financeiro-extrato-table col.financeiro-extrato-col-in,
+        .financeiro-extrato-document table.financeiro-extrato-table col.financeiro-extrato-col-out,
+        .financeiro-extrato-document table.financeiro-extrato-table col.financeiro-extrato-col-balance {
+            width: 11% !important;
+        }
+
+        .financeiro-extrato-document table.financeiro-extrato-table col.financeiro-extrato-col-obs {
+            width: 14% !important;
         }
 
         .financeiro-extrato-table th:nth-child(1),
@@ -153,7 +338,7 @@
     <div class="financeiro-page-header-main">
         <div>
             <h1 class="title financeiro-page-title">{{ page_title }}</h1>
-            <p class="financeiro-page-subtitle no-print">Consulta operacional por conta, com saldo anterior, saldo acumulado e leitura limpa do periodo.</p>
+            <p class="financeiro-page-subtitle no-print">Consulta por conta, com saldos do per&iacute;odo e leitura operacional mais direta.</p>
             {% if conta %}
                 <div class="financeiro-extrato-meta">
                     <div class="financeiro-extrato-meta-item">
@@ -162,9 +347,9 @@
                     </div>
                     {% if data_inicial or data_final %}
                         <div class="financeiro-extrato-meta-item">
-                            <strong>Periodo</strong>
-                            <span>{% if data_inicial %}{{ data_inicial }}{% else %}inicio em aberto{% endif %}</span>
-                            <span>ate</span>
+                            <strong>Per&iacute;odo</strong>
+                            <span>{% if data_inicial %}{{ data_inicial }}{% else %}in&iacute;cio em aberto{% endif %}</span>
+                            <span>at&eacute;</span>
                             <span>{% if data_final %}{{ data_final }}{% else %}fim em aberto{% endif %}</span>
                         </div>
                     {% endif %}
@@ -190,7 +375,7 @@
     {% endif %}
 </div>
 
-<form method="get" class="filters-box no-print">
+<form method="get" class="filters-box financeiro-extrato-filter-card no-print">
     <div class="columns is-multiline">
         {% if show_conta_filter %}
             <div class="column is-12-mobile is-6-tablet is-4-desktop">
@@ -217,7 +402,7 @@
         </div>
         <div class="column is-12-mobile is-6-tablet {% if show_conta_filter %}is-2-desktop{% else %}is-4-desktop{% endif %}">
             <label class="label">&nbsp;</label>
-            <div class="buttons">
+            <div class="buttons financeiro-extrato-filter-actions">
                 <button class="button is-link is-fullwidth" type="submit">Aplicar</button>
                 <a class="button is-light is-fullwidth" href="{{ clear_extrato_url }}">Limpar</a>
             </div>
@@ -226,9 +411,9 @@
 </form>
 
 {% if extrato_error %}
-    <div class="notification is-warning">{{ extrato_error }}</div>
+    <div class="notification is-warning financeiro-extrato-state">{{ extrato_error }}</div>
 {% elif not conta and show_conta_filter %}
-    <div class="notification is-light">Selecione uma conta para visualizar o extrato.</div>
+    <div class="notification is-light financeiro-extrato-state">Selecione uma conta para carregar o extrato.</div>
 {% endif %}
 
 {% if conta %}
@@ -246,44 +431,55 @@
             <p class="financeiro-document-note only-print">
                 <strong>Conta:</strong> {{ conta.nome }}
                 <span class="financeiro-document-note-separator">|</span>
-                <strong>Periodo:</strong> {% if data_inicial %}{{ data_inicial|slice:"8:10" }}/{{ data_inicial|slice:"5:7" }}/{{ data_inicial|slice:"0:4" }}{% else %}inicio em aberto{% endif %} ate {% if data_final %}{{ data_final|slice:"8:10" }}/{{ data_final|slice:"5:7" }}/{{ data_final|slice:"0:4" }}{% else %}fim em aberto{% endif %}
+                <strong>Per&iacute;odo:</strong> {% if data_inicial %}{{ data_inicial|slice:"8:10" }}/{{ data_inicial|slice:"5:7" }}/{{ data_inicial|slice:"0:4" }}{% else %}in&iacute;cio em aberto{% endif %} at&eacute; {% if data_final %}{{ data_final|slice:"8:10" }}/{{ data_final|slice:"5:7" }}/{{ data_final|slice:"0:4" }}{% else %}fim em aberto{% endif %}
                 <span class="financeiro-document-note-separator">|</span>
                 <strong>Emitido em:</strong> {% now "d/m/Y H:i" %}
             </p>
 
             <div class="table-wrapper">
                 <table class="table is-fullwidth is-hoverable financeiro-table financeiro-extrato-table">
+                    <colgroup>
+                        <col class="financeiro-extrato-col-date">
+                        <col class="financeiro-extrato-col-doc">
+                        <col class="financeiro-extrato-col-desc">
+                        <col class="financeiro-extrato-col-fav">
+                        <col class="financeiro-extrato-col-type">
+                        <col class="financeiro-extrato-col-in">
+                        <col class="financeiro-extrato-col-out">
+                        <col class="financeiro-extrato-col-balance">
+                        <col class="financeiro-extrato-col-obs">
+                    </colgroup>
                     <thead>
+                    {% if exibe_linha_saldo_inicial %}
+                    <tr class="is-closing-balance">
+                        <th></th>
+                        <th></th>
+                        <th><span class="financeiro-balance-line-label">Saldo anterior</span></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th><strong><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_anterior|default:saldo_inicial|br_money }}</span></span></strong></th>
+                        <th></th>
+                    </tr>
+                    {% endif %}
                     <tr>
                         <th>Data</th>
                         <th><span class="no-print">Documento</span><span class="only-print">Doc.</span></th>
-                        <th>Descricao</th>
+                        <th>Descri&ccedil;&atilde;o</th>
                         <th><span class="no-print">Favorecido</span><span class="only-print">Favorecido</span></th>
                         <th><span class="no-print">Tipo</span><span class="only-print">Mov.</span></th>
                         <th>Entrada</th>
-                        <th>Saida</th>
+                        <th>Sa&iacute;da</th>
                         <th><span class="no-print">Saldo acumulado</span><span class="only-print">Saldo</span></th>
-                        <th><span class="no-print">Observacoes</span><span class="only-print">Obs.</span></th>
+                        <th><span class="no-print">Observa&ccedil;&otilde;es</span><span class="only-print">Obs.</span></th>
                     </tr>
                     </thead>
                     <tbody>
-                    {% if exibe_linha_saldo_inicial %}
-                        <tr class="is-opening-balance">
-                            <td></td>
-                            <td></td>
-                            <td><span class="financeiro-balance-line-label">Saldo anterior</span></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td><strong><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_anterior|default:saldo_inicial|br_money }}</span></span></strong></td>
-                            <td></td>
-                        </tr>
-                    {% endif %}
                     {% for item in itens_extrato %}
                         <tr>
                             <td>{{ item.lancamento.data_pagamento|default:item.lancamento.data_competencia|date:'d/m/Y' }}</td>
-                            <td>{{ item.lancamento.numero_documento|default:'-' }}</td>
+                            <td><span class="financeiro-extrato-document-number">{{ item.lancamento.numero_documento|default:'-' }}</span></td>
                             <td>{{ item.lancamento.descricao }}</td>
                             <td>{{ item.favorecido_exibicao }}</td>
                             <td>
@@ -319,8 +515,8 @@
                             </td>
                         </tr>
                     {% empty %}
-                        <tr>
-                            <td colspan="9">Nenhum lancamento quitado encontrado para esta conta.</td>
+                        <tr class="financeiro-extrato-empty-row">
+                            <td colspan="9">Nenhum lan&ccedil;amento quitado encontrado para os filtros atuais.</td>
                         </tr>
                     {% endfor %}
                         <tr class="is-closing-balance">
