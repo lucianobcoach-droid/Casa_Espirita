@@ -28,6 +28,9 @@ Data de atualizacao: 2026-03-27
 - Hoje a navegacao principal do `financeiro`, no desktop, passa a ficar priorizada na sidebar do modulo.
 - A topbar do `financeiro` agora permanece como barra utilitaria minima e camada de transicao, sem substituir abruptamente a navegacao existente no mobile.
 - Hoje ja existe sidebar/menu lateral implementada no shell do `financeiro` em desktop e mobile, com drawer funcional no mobile e comportamento proprio separado do desktop.
+- Na primeira passada controlada da nova frente de leveza do menu lateral, o shell do `financeiro` passou a usar casca visual mais discreta no desktop, com barra utilitaria menos carregada, header interno da sidebar mais leve e item ativo mais elegante, sem alterar JS, drawer, rotas, `aria` ou a mecanica de expansao dos grupos.
+- No ajuste fino seguinte dessa mesma frente, o controle de recolher/expandir lateral no desktop voltou a uma linguagem mais coerente com o tema, e a hierarquia tipografica do menu foi aliviada para concentrar negrito forte apenas no item ativo.
+- No ajuste fino final desta rodada do shell lateral, o grupo expandido passou a usar destaque mais suave, o titulo `Navegacao principal` perdeu agressividade visual e o toggle lateral ficou ainda mais integrado ao shell, preservando negrito forte apenas no item ativo.
 - Hoje nao existe shell visual compartilhado entre `financeiro`, `biblioteca` e `configuracoes`.
 - A home do modulo financeiro agora usa atalhos mais neutros e harmonicos, com destaque principal apenas para `Lancamentos`.
 - O menu superior do financeiro agora tambem possui dropdown `Configuracoes`, com acesso a `Assinaturas` e `Configuracao Institucional`.

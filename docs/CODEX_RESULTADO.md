@@ -6,6 +6,31 @@ Data: 2026-03-27
 
 Foi executada a etapa incremental para impedir repeticao de `numero_documento` em lancamentos financeiros, sem alterar as regras ja aprovadas de transferencia, extrato, resumo ou prestacao de contas.
 
+## Microetapa atual de leveza do shell lateral
+
+- `financeiro/templates/financeiro/base.html` recebeu a primeira passada controlada de refinamento visual do shell lateral do `financeiro`
+- a barra utilitaria desktop ficou menos carregada, com chip atual mais discreto e menor peso de borda/sombra
+- o header interno da sidebar ficou mais leve
+- grupos, links e `link-notes` ficaram menos pesados visualmente, com item ativo mais elegante
+- a etapa permaneceu restrita a contraste, borda, sombra e espacamento
+- nao houve alteracao de JS, drawer, rotas, `aria`, logica de expansao/colapso nem comportamento mobile/desktop
+
+## Ajuste fino posterior do shell lateral
+
+- o botao de recolher/expandir lateral no desktop foi refinado para ficar mais leve e mais coerente com o tema-base do modulo
+- a hierarquia tipografica do menu foi aliviada
+- grupos, titulos e links comuns perderam excesso de negrito
+- o negrito forte ficou restrito ao item selecionado/ativo
+- a etapa continuou sem alterar HTML estrutural relevante, JS, drawer, rotas, `aria` ou mecanica de expansao do menu
+
+## Ajuste fino final desta rodada do shell lateral
+
+- o toggle lateral do desktop perdeu contorno e destaque artificial
+- o grupo expandido/ativo deixou de parecer uma caixa pesada e passou a usar presenca mais suave
+- `Navegacao principal`, titulos de grupo e `link-notes` ficaram mais leves no conjunto
+- o negrito forte continuou restrito ao item ativo
+- a etapa permaneceu puramente visual, sem alterar logica, JS, drawer, rotas, `aria` ou comportamento mobile/desktop
+
 ## Regras aplicadas nesta etapa
 
 - `numero_documento` continua opcional para o usuario
