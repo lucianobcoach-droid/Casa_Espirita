@@ -10,7 +10,7 @@ from django.contrib import messages
 from django.db import transaction
 from django.db.models import Q
 from django.http import JsonResponse
-from django.shortcuts import redirect
+from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.views import View
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, TemplateView, UpdateView
@@ -692,10 +692,10 @@ class FinanceiroAutocompleteView(View):
             for field in self.search_fields:
                 filters |= Q(**{f'{field}__icontains': query})
             queryset = queryset.filter(filters)
-        return queryset[: self.limit]
+        return queryset
 
     def get(self, request, *args, **kwargs):
-        results = [{'id': obj.pk, 'label': str(obj)} for obj in self.get_queryset()]
+        results = [{'id': obj.pk, 'label': str(obj)} for obj in self.get_queryset()[: self.limit]]
         return JsonResponse({'results': results})
 
 
@@ -1668,6 +1668,59 @@ class LancamentoFinanceiroCreateView(FinanceiroFormMixin, CreateView):
             f'Lancamento com rateio cadastrado com sucesso em {len(lancamentos_criados)} linhas.',
         )
         return redirect(self.success_url)
+
+
+class LancamentoFinanceiroCloneView(LancamentoFinanceiroCreateView):
+    page_title = 'Clonar Lancamento Financeiro'
+    submit_label = 'Salvar clone'
+    success_message = 'Lancamento financeiro clonado com sucesso.'
+
+    def dispatch(self, request, *args, **kwargs):
+        self.lancamento_origem = get_object_or_404(
+            LancamentoFinanceiro.objects.select_related(
+                'conta',
+                'conta_destino',
+                'pessoa',
+                'categoria',
+                'centro_custo',
+            ),
+            pk=kwargs['pk'],
+        )
+        if self.lancamento_origem.com_rateio or self.lancamento_origem.grupo_rateio:
+            messages.warning(
+                request,
+                'Lancamentos com rateio ainda nao podem ser clonados nesta etapa. O registro original permaneceu inalterado.',
+            )
+            return redirect(self.success_url)
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_initial(self):
+        initial = super().get_initial()
+        initial.update(
+            {
+                'descricao': self.lancamento_origem.descricao,
+                'tipo': self.lancamento_origem.tipo,
+                'status': self.lancamento_origem.status,
+                'valor': self.lancamento_origem.valor,
+                'data_competencia': self.lancamento_origem.data_competencia,
+                'data_pagamento': self.lancamento_origem.data_pagamento,
+                'conta': self.lancamento_origem.conta,
+                'observacoes': self.lancamento_origem.observacoes,
+            }
+        )
+
+        if self.lancamento_origem.tipo == LancamentoFinanceiro.TipoLancamento.TRANSFERENCIA:
+            initial['conta_destino'] = self.lancamento_origem.conta_destino
+            return initial
+
+        initial.update(
+            {
+                'pessoa': self.lancamento_origem.pessoa,
+                'categoria': self.lancamento_origem.categoria,
+                'centro_custo': self.lancamento_origem.centro_custo,
+            }
+        )
+        return initial
 
 
 class LancamentoFinanceiroUpdateView(FinanceiroFormMixin, UpdateView):

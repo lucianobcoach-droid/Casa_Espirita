@@ -6,6 +6,7 @@ from uuid import uuid4
 
 from django import forms
 from django.core.exceptions import ValidationError
+from django.db.models import Q
 from django.forms.models import construct_instance
 from django.urls import reverse_lazy
 
@@ -151,6 +152,23 @@ class LancamentoFinanceiroForm(forms.ModelForm):
         self._rateio_group_token = self.instance.grupo_rateio or uuid4().hex
         self.rateio_linhas_iniciais = []
         self.fields['categoria'].queryset = categorias_vinculaveis_queryset()
+        categoria_inicial = self.initial.get('categoria') or self.instance.categoria
+        categoria_inicial_id = getattr(categoria_inicial, 'pk', categoria_inicial)
+        if categoria_inicial_id:
+            self.fields['categoria'].queryset = CategoriaFinanceira.objects.filter(
+                Q(categoria_pai__isnull=False) | Q(pk=categoria_inicial_id)
+            ).order_by('tipo', 'nome')
+        for field_name in ('data_competencia', 'data_pagamento'):
+            self.fields[field_name].widget.format = '%Y-%m-%d'
+            if self.is_bound:
+                continue
+            valor_inicial = self.initial.get(field_name) or getattr(self.instance, field_name, None)
+            if valor_inicial:
+                self.initial[field_name] = (
+                    valor_inicial.strftime('%Y-%m-%d')
+                    if hasattr(valor_inicial, 'strftime')
+                    else str(valor_inicial)
+                )
         self.fields['tipo'].widget.attrs.update({'data-financeiro-tipo': 'true'})
         self.fields['conta_destino'].widget.attrs.update({'data-financeiro-conta-destino': 'true'})
         self.fields['conta'].error_messages['required'] = 'Informe a conta de origem.'

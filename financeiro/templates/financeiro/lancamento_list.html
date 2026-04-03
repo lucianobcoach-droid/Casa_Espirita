@@ -1,7 +1,99 @@
 {% extends 'financeiro/base.html' %}
 {% block title %}Lancamentos Financeiros{% endblock %}
+{% block financeiro_shell_header %}
+    <header class="financeiro-app-utility-bar no-print">
+        <div class="container financeiro-topbar-desktop financeiro-lancamento-shell-desktop">
+            <div class="financeiro-topbar-desktop-main">
+                <div class="financeiro-topbar-reopen-slot">
+                    <button
+                        type="button"
+                        class="financeiro-drawer-toggle no-print"
+                        data-financeiro-sidebar-toggle
+                        aria-expanded="true"
+                        aria-controls="financeiro-sidebar"
+                        aria-label="Recolher navegacao lateral"
+                        title="Recolher navegacao lateral"
+                    >
+                        <span class="financeiro-drawer-toggle-icon" aria-hidden="true">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </span>
+                        <span aria-hidden="true">Navegacao</span>
+                        <span class="financeiro-sr-only" data-financeiro-sidebar-toggle-label>Recolher navegacao lateral</span>
+                    </button>
+                </div>
+            </div>
+            <div class="financeiro-topbar-desktop-actions"></div>
+        </div>
+
+        <nav class="navbar is-light financeiro-topbar financeiro-topbar-mobile financeiro-lancamento-shell-mobile" role="navigation" aria-label="controles mobile do financeiro">
+            <div class="container">
+                <div class="financeiro-topbar-mobile-inner">
+                    <div class="financeiro-topbar-mobile-main"></div>
+                    <div class="financeiro-topbar-mobile-actions">
+                        <button
+                            type="button"
+                            class="financeiro-drawer-toggle"
+                            data-financeiro-drawer-toggle
+                            aria-controls="financeiro-sidebar"
+                            aria-expanded="false"
+                            aria-label="Abrir navegacao do financeiro"
+                        >
+                            <span class="financeiro-drawer-toggle-icon" aria-hidden="true">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </span>
+                            <span>Menu</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+{% endblock %}
 {% block content %}
 <style>
+    .financeiro-lancamento-shell-mobile {
+        display: none !important;
+    }
+
+    .financeiro-lancamento-page {
+        display: grid;
+        gap: 0.9rem;
+    }
+
+    .financeiro-lancamento-card {
+        border: 1px solid rgba(203, 213, 225, 0.85);
+        border-radius: 1rem;
+        background: #fff;
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.045);
+        overflow: hidden;
+    }
+
+    .financeiro-lancamento-card .filters-box {
+        margin-bottom: 0;
+        padding: 0.8rem 0.95rem 0.9rem;
+        border: 0;
+        border-bottom: 1px solid #edf2f7;
+        border-radius: 0;
+        background: linear-gradient(180deg, #fbfcfe 0%, #f8fafc 100%);
+    }
+
+    .financeiro-lancamento-table-wrap {
+        overflow: visible;
+    }
+
+    .financeiro-lancamento-table {
+        margin-bottom: 0;
+    }
+
+    .financeiro-lancamento-table td,
+    .financeiro-lancamento-table th {
+        vertical-align: middle;
+    }
+
     .financeiro-rateio-list-hint {
         display: inline-flex;
         align-items: center;
@@ -23,206 +115,214 @@
         font-weight: 800;
     }
 
-    .financeiro-rateio-list-meta {
-        display: block;
-        margin-top: 0.24rem;
-        color: #6b7280;
-        font-size: 0.75rem;
-        line-height: 1.3;
+    .financeiro-lancamento-empty {
+        color: #64748b;
     }
 
-    .financeiro-rateio-action-note {
-        display: block;
-        margin-top: 0.28rem;
-        color: #6b7280;
-        font-size: 0.68rem;
-        line-height: 1.25;
-        white-space: normal;
+    @media screen and (max-width: 1023px) {
+        .financeiro-lancamento-shell-desktop {
+            display: none !important;
+        }
+
+        .financeiro-lancamento-shell-mobile {
+            display: block !important;
+        }
+    }
+
+    @media screen and (min-width: 1024px) {
+        .financeiro-lancamento-shell-desktop {
+            display: flex !important;
+        }
+
+        .financeiro-lancamento-shell-mobile {
+            display: none !important;
+        }
     }
 </style>
 {% if request.GET.origem_fluxo == 'rateio_coordenado_salvo' %}
     <div class="notification is-success is-light">
-        O grupo rateado{% if request.GET.grupo_rateio %} `{{ request.GET.grupo_rateio }}`{% endif %} foi atualizado e voce voltou para a listagem principal de lancamentos.
+        Grupo rateado atualizado.
     </div>
 {% elif request.GET.origem_fluxo == 'rateio_coordenado_cancelado' %}
     <div class="notification is-warning is-light">
-        A edicao coordenada do grupo{% if request.GET.grupo_rateio %} `{{ request.GET.grupo_rateio }}`{% endif %} foi cancelada sem gravacao. A listagem principal continua disponivel para seguir com a revisao operacional.
+        Edicao coordenada cancelada sem gravacao.
     </div>
 {% endif %}
-<div class="financeiro-page-header financeiro-page-head">
-    <div class="financeiro-page-header-main">
-        <h1 class="title financeiro-page-title">Lancamentos Financeiros</h1>
-        <p class="financeiro-page-subtitle">Listagem principal do modulo com filtros operacionais, recibo e acesso seguro a edicao comum ou rateada.</p>
-    </div>
-    <div class="financeiro-page-header-actions no-print">
-        <a class="button is-primary" href="{% url 'financeiro:lancamento-create' %}">Novo lancamento financeiro</a>
-    </div>
-</div>
-<form method="get" class="filters-box no-print">
-    <div class="columns is-multiline">
-        <div class="column is-12-mobile is-6-tablet is-3-desktop">
-            <label class="label">Descricao</label>
-            <input class="input" type="text" name="descricao" value="{{ request.GET.descricao }}" placeholder="Buscar por descricao">
+<div class="financeiro-lancamento-page">
+    <div class="financeiro-page-header financeiro-page-head">
+        <div class="financeiro-page-header-main">
+            <h1 class="title financeiro-page-title">Lancamentos financeiros</h1>
         </div>
-        <div class="column is-12-mobile is-6-tablet is-3-desktop">
-            <label class="label">Numero do documento</label>
-            <input class="input" type="text" name="numero_documento" value="{{ request.GET.numero_documento }}" placeholder="Buscar por documento">
-        </div>
-        <div class="column is-6-mobile is-3-tablet is-2-desktop">
-            <label class="label">Tipo</label>
-            <div class="select is-fullwidth">
-                <select name="tipo">
-                    <option value="">Todos</option>
-                    <option value="receita" {% if request.GET.tipo == 'receita' %}selected{% endif %}>Receita</option>
-                    <option value="despesa" {% if request.GET.tipo == 'despesa' %}selected{% endif %}>Despesa</option>
-                    <option value="transferencia" {% if request.GET.tipo == 'transferencia' %}selected{% endif %}>Transferencia</option>
-                </select>
-            </div>
-        </div>
-        <div class="column is-6-mobile is-3-tablet is-2-desktop">
-            <label class="label">Status</label>
-            <div class="select is-fullwidth">
-                <select name="status">
-                    <option value="">Todos</option>
-                    <option value="aberto" {% if request.GET.status == 'aberto' %}selected{% endif %}>Aberto</option>
-                    <option value="quitado" {% if request.GET.status == 'quitado' %}selected{% endif %}>Quitado</option>
-                    <option value="cancelado" {% if request.GET.status == 'cancelado' %}selected{% endif %}>Cancelado</option>
-                </select>
-            </div>
-        </div>
-        <div class="column is-6-mobile is-3-tablet is-2-desktop">
-            <label class="label">Data inicial</label>
-            <input class="input" type="date" name="data_inicial" value="{{ request.GET.data_inicial }}">
-        </div>
-        <div class="column is-6-mobile is-3-tablet is-2-desktop">
-            <label class="label">Data final</label>
-            <input class="input" type="date" name="data_final" value="{{ request.GET.data_final }}">
-        </div>
-        <div class="column is-12-mobile is-6-tablet is-4-desktop">
-            <label class="label">Conta</label>
-            <div class="select is-fullwidth">
-                <select name="conta">
-                    <option value="">Todas</option>
-                    {% for conta in contas_disponiveis %}
-                        <option value="{{ conta.pk }}" {% if request.GET.conta == conta.pk|stringformat:'s' %}selected{% endif %}>
-                            {{ conta.nome }}
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
-        </div>
-        <div class="column is-12-mobile is-6-tablet is-4-desktop">
-            <label class="label">Pessoa</label>
-            <div class="select is-fullwidth">
-                <select name="pessoa">
-                    <option value="">Todas</option>
-                    {% for pessoa in pessoas_disponiveis %}
-                        <option value="{{ pessoa.pk }}" {% if request.GET.pessoa == pessoa.pk|stringformat:'s' %}selected{% endif %}>
-                            {{ pessoa.nome }}
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
-        </div>
-        <div class="column is-12-mobile is-6-tablet is-4-desktop">
-            <label class="label">Categoria</label>
-            <div class="select is-fullwidth">
-                <select name="categoria">
-                    <option value="">Todas</option>
-                    {% for categoria in categorias_disponiveis %}
-                        <option value="{{ categoria.pk }}" {% if request.GET.categoria == categoria.pk|stringformat:'s' %}selected{% endif %}>
-                            {{ categoria.nome }}
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
-        </div>
-        <div class="column is-12-mobile is-6-tablet is-3-desktop">
-            <label class="label">&nbsp;</label>
-            <div class="buttons">
-                <button class="button is-link is-fullwidth" type="submit">Filtrar</button>
-                <a class="button is-light is-fullwidth" href="{% url 'financeiro:lancamento-list' %}">Limpar</a>
-            </div>
+        <div class="financeiro-page-header-actions no-print">
+            <a class="button is-primary" href="{% url 'financeiro:lancamento-create' %}">Novo lancamento financeiro</a>
         </div>
     </div>
-</form>
-<p class="table-caption">Os tipos usam destaque de cor. O negrito fica restrito aos lancamentos em aberto para facilitar a leitura operacional.</p>
-<div class="table-wrapper">
-    <table class="table is-fullwidth is-hoverable financeiro-table">
-        <thead>
-        <tr>
-            <th>Descricao</th>
-            <th>Tipo</th>
-            <th>Status</th>
-            <th>Valor</th>
-            <th>Conta</th>
-            <th>Conta destino</th>
-            <th>Pessoa</th>
-            <th>Data</th>
-            <th>Documento</th>
-            <th class="no-print">Acoes</th>
-        </tr>
-        </thead>
-        <tbody>
-        {% for lancamento in lancamentos %}
-            <tr{% if lancamento.status == 'aberto' %} class="is-unsettled"{% endif %}>
-                <td>
-                    {{ lancamento.descricao }}
-                    {% if lancamento.com_rateio and lancamento.grupo_rateio %}
-                        <span class="financeiro-rateio-list-hint">
-                            <strong>Rateio</strong>
-                            <span>grupo {{ lancamento.grupo_rateio|slice:":8" }}</span>
-                        </span>
-                        <span class="financeiro-rateio-list-meta">A acao de edicao desta linha abre o fluxo coordenado do grupo inteiro.</span>
-                    {% endif %}
-                </td>
-                <td>
-                    <span class="tipo-badge {% if lancamento.tipo == 'receita' %}is-receita{% elif lancamento.tipo == 'despesa' %}is-despesa{% else %}is-transferencia{% endif %}">
-                        {{ lancamento.get_tipo_display }}
-                    </span>
-                </td>
-                <td>
-                    <span class="status-badge {% if lancamento.status == 'quitado' %}is-quitado{% elif lancamento.status == 'aberto' %}is-aberto{% else %}is-cancelado{% endif %}">
-                        {{ lancamento.get_status_display }}
-                    </span>
-                </td>
-                <td>
-                    <span class="valor-chip {% if lancamento.tipo == 'receita' %}is-receita{% elif lancamento.tipo == 'despesa' %}is-despesa{% else %}is-transferencia{% endif %}">
-                        R$ {{ lancamento.valor }}
-                    </span>
-                </td>
-                <td>{{ lancamento.conta }}</td>
-                <td>
-                    {{ lancamento.conta_destino|default:'-' }}
-                </td>
-                <td>
-                    {% if lancamento.pessoa %}
-                        {{ lancamento.pessoa }}
-                    {% elif lancamento.tipo == 'transferencia' %}
-                        Transferencia entre Contas
-                    {% else %}
-                        -
-                    {% endif %}
-                </td>
-                <td>{{ lancamento.data_competencia|date:'d/m/Y' }}</td>
-                <td>{{ lancamento.numero_documento|default:'-' }}</td>
-                <td class="actions-cell no-print">
-                    <a class="button is-small is-info is-light" href="{% url 'financeiro:lancamento-recibo' lancamento.pk %}">Recibo</a>
-                    {% if lancamento.com_rateio and lancamento.grupo_rateio %}
-                        <a class="button is-small is-link is-light" href="{% url 'financeiro:lancamento-rateio-update' lancamento.grupo_rateio %}">Editar</a>
-                        <span class="financeiro-rateio-action-note">Segue direto para a edicao coordenada do grupo.</span>
-                    {% else %}
-                        <a class="button is-small is-link is-light" href="{% url 'financeiro:lancamento-update' lancamento.pk %}">Editar</a>
-                    {% endif %}
-                    <a class="button is-small is-danger is-light" href="{% url 'financeiro:lancamento-delete' lancamento.pk %}">Excluir</a>
-                </td>
-            </tr>
-        {% empty %}
-            <tr>
-                <td colspan="10">Nenhum lancamento financeiro cadastrado.</td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+
+    <section class="financeiro-lancamento-card">
+        <form method="get" class="filters-box no-print">
+            <div class="columns is-multiline">
+                <div class="column is-12-mobile is-6-tablet is-3-desktop">
+                    <label class="label">Descricao</label>
+                    <input class="input" type="text" name="descricao" value="{{ request.GET.descricao }}" placeholder="Buscar por descricao">
+                </div>
+                <div class="column is-12-mobile is-6-tablet is-3-desktop">
+                    <label class="label">Documento</label>
+                    <input class="input" type="text" name="numero_documento" value="{{ request.GET.numero_documento }}" placeholder="Buscar por documento">
+                </div>
+                <div class="column is-6-mobile is-3-tablet is-2-desktop">
+                    <label class="label">Tipo</label>
+                    <div class="select is-fullwidth">
+                        <select name="tipo">
+                            <option value="">Todos</option>
+                            <option value="receita" {% if request.GET.tipo == 'receita' %}selected{% endif %}>Receita</option>
+                            <option value="despesa" {% if request.GET.tipo == 'despesa' %}selected{% endif %}>Despesa</option>
+                            <option value="transferencia" {% if request.GET.tipo == 'transferencia' %}selected{% endif %}>Transferencia</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="column is-6-mobile is-3-tablet is-2-desktop">
+                    <label class="label">Status</label>
+                    <div class="select is-fullwidth">
+                        <select name="status">
+                            <option value="">Todos</option>
+                            <option value="aberto" {% if request.GET.status == 'aberto' %}selected{% endif %}>Aberto</option>
+                            <option value="quitado" {% if request.GET.status == 'quitado' %}selected{% endif %}>Quitado</option>
+                            <option value="cancelado" {% if request.GET.status == 'cancelado' %}selected{% endif %}>Cancelado</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="column is-6-mobile is-3-tablet is-2-desktop">
+                    <label class="label">Data inicial</label>
+                    <input class="input" type="date" name="data_inicial" value="{{ request.GET.data_inicial }}">
+                </div>
+                <div class="column is-6-mobile is-3-tablet is-2-desktop">
+                    <label class="label">Data final</label>
+                    <input class="input" type="date" name="data_final" value="{{ request.GET.data_final }}">
+                </div>
+                <div class="column is-12-mobile is-6-tablet is-4-desktop">
+                    <label class="label">Conta</label>
+                    <div class="select is-fullwidth">
+                        <select name="conta">
+                            <option value="">Todas</option>
+                            {% for conta in contas_disponiveis %}
+                                <option value="{{ conta.pk }}" {% if request.GET.conta == conta.pk|stringformat:'s' %}selected{% endif %}>
+                                    {{ conta.nome }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="column is-12-mobile is-6-tablet is-4-desktop">
+                    <label class="label">Pessoa</label>
+                    <div class="select is-fullwidth">
+                        <select name="pessoa">
+                            <option value="">Todas</option>
+                            {% for pessoa in pessoas_disponiveis %}
+                                <option value="{{ pessoa.pk }}" {% if request.GET.pessoa == pessoa.pk|stringformat:'s' %}selected{% endif %}>
+                                    {{ pessoa.nome }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="column is-12-mobile is-6-tablet is-4-desktop">
+                    <label class="label">Categoria</label>
+                    <div class="select is-fullwidth">
+                        <select name="categoria">
+                            <option value="">Todas</option>
+                            {% for categoria in categorias_disponiveis %}
+                                <option value="{{ categoria.pk }}" {% if request.GET.categoria == categoria.pk|stringformat:'s' %}selected{% endif %}>
+                                    {{ categoria.nome }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="column is-12-mobile is-6-tablet is-3-desktop">
+                    <label class="label">&nbsp;</label>
+                    <div class="buttons">
+                        <button class="button is-link is-fullwidth" type="submit">Filtrar</button>
+                        <a class="button is-light is-fullwidth" href="{% url 'financeiro:lancamento-list' %}">Limpar</a>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+        <div class="financeiro-lancamento-table-wrap">
+            <table class="table is-fullwidth is-hoverable financeiro-table financeiro-lancamento-table">
+                <thead>
+                <tr>
+                    <th>Descricao</th>
+                    <th>Tipo</th>
+                    <th>Status</th>
+                    <th>Valor</th>
+                    <th>Conta</th>
+                    <th>Conta destino</th>
+                    <th>Pessoa</th>
+                    <th>Data</th>
+                    <th>Documento</th>
+                    <th class="no-print">Acoes</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for lancamento in lancamentos %}
+                    <tr{% if lancamento.status == 'aberto' %} class="is-unsettled"{% endif %}>
+                        <td>
+                            {{ lancamento.descricao }}
+                            {% if lancamento.com_rateio and lancamento.grupo_rateio %}
+                                <span class="financeiro-rateio-list-hint">
+                                    <strong>Rateio</strong>
+                                    <span>{{ lancamento.grupo_rateio|slice:":8" }}</span>
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="tipo-badge {% if lancamento.tipo == 'receita' %}is-receita{% elif lancamento.tipo == 'despesa' %}is-despesa{% else %}is-transferencia{% endif %}">
+                                {{ lancamento.get_tipo_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="status-badge {% if lancamento.status == 'quitado' %}is-quitado{% elif lancamento.status == 'aberto' %}is-aberto{% else %}is-cancelado{% endif %}">
+                                {{ lancamento.get_status_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="valor-chip {% if lancamento.tipo == 'receita' %}is-receita{% elif lancamento.tipo == 'despesa' %}is-despesa{% else %}is-transferencia{% endif %}">
+                                R$ {{ lancamento.valor }}
+                            </span>
+                        </td>
+                        <td>{{ lancamento.conta }}</td>
+                        <td>{{ lancamento.conta_destino|default:'-' }}</td>
+                        <td>
+                            {% if lancamento.pessoa %}
+                                {{ lancamento.pessoa }}
+                            {% elif lancamento.tipo == 'transferencia' %}
+                                Transferencia entre contas
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>{{ lancamento.data_competencia|date:'d/m/Y' }}</td>
+                        <td>{{ lancamento.numero_documento|default:'-' }}</td>
+                        <td class="actions-cell no-print">
+                            <a class="button is-small is-info is-light" href="{% url 'financeiro:lancamento-recibo' lancamento.pk %}">Recibo</a>
+                            {% if lancamento.com_rateio and lancamento.grupo_rateio %}
+                                <a class="button is-small is-link is-light" href="{% url 'financeiro:lancamento-rateio-update' lancamento.grupo_rateio %}">Editar grupo</a>
+                            {% else %}
+                                <a class="button is-small is-link is-light" href="{% url 'financeiro:lancamento-clone' lancamento.pk %}">Clonar</a>
+                                <a class="button is-small is-link is-light" href="{% url 'financeiro:lancamento-update' lancamento.pk %}">Editar</a>
+                            {% endif %}
+                            <a class="button is-small is-danger is-light" href="{% url 'financeiro:lancamento-delete' lancamento.pk %}">Excluir</a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="10" class="financeiro-lancamento-empty">Nenhum lancamento encontrado com os filtros atuais.</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
 </div>
 {% endblock %}
