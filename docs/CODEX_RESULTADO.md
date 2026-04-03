@@ -39,6 +39,16 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - PDF ficou registrado apenas como possibilidade quando houver sentido documental
 - ficou explicito que essa frente permanece como backlog futuro e nao deve ser misturada nesta microetapa com permissoes/acesso, regras reutilizaveis ou clonagem de lancamento
 
+## Delimitacao documental do MVP de clonar lancamento
+
+- foi registrado sem patch de codigo que a primeira implementacao dessa frente deve ser `clonar lancamento comum sem rateio`
+- o MVP ficou definido como abertura de `lancamento_form.html` em modo criacao, pre-preenchido a partir do lancamento original e sem alterar o registro de origem
+- os campos definidos como copiaveis nessa primeira versao foram `descricao`, `tipo`, `pessoa`, `categoria`, `centro_custo`, `conta`, `conta_destino` quando transferencia, e `observacoes`
+- os campos explicitamente excluidos da copia foram `pk`, `numero_documento`, `data_competencia`, `data_pagamento`, `status`, auditoria, `grupo_rateio` e quaisquer identificadores capazes de gerar colisao ou confusao entre clone e edicao
+- ficou registrado que lancamentos com rateio permanecem fora do MVP e que a acao de clone pode ficar indisponivel nesses casos ate haver desenho proprio de clonagem por grupo
+- tambem ficou registrado o cuidado especifico com transferencia, para preservar `conta` e `conta_destino` sem reintroduzir campos que nao fazem parte desse tipo
+- a microetapa foi exclusivamente documental e nao alterou templates, models, views, forms, rotas nem regras em producao
+
 ## Regras aplicadas nesta etapa
 
 - `numero_documento` continua opcional para o usuario

@@ -224,7 +224,8 @@ Observacao:
 - cadastro rapido de categoria dentro do lancamento
 - importacao/exportacao futura de lancamentos, com importacao em massa validada por pre-visualizacao e exportacao tabular de consultas filtradas
 - assistencia futura por regras no cadastro de lancamentos, com sugestao de regras existentes a partir de nome/descricao, preenchimento automatico revisavel de campos relacionados e possibilidade posterior de cadastrar nova regra a partir do proprio lancamento
-- acao futura `Clonar lancamento`, abrindo novo cadastro preenchido com base no original e preservando o registro original sem alteracao
+- acao futura `Clonar lancamento`, com MVP inicial restrito a lancamento comum sem rateio: abrir `lancamento_form.html` em modo criacao, copiar apenas campos operacionais seguros (`descricao`, `tipo`, `pessoa`, `categoria`, `centro_custo`, `conta`, `conta_destino` quando transferencia, `observacoes`), nao copiar `pk`, `numero_documento`, datas, `status`, auditoria nem `grupo_rateio`, e manter o registro original intacto
+- nessa primeira fase, a clonagem de lancamentos rateados por `grupo_rateio` deve permanecer fora de escopo ou com acao indisponivel, ate existir desenho proprio para clone de grupo
 - evolucao futura dos relatorios financeiros para leitura hierarquica por `Categoria` e `Subcategoria`, preservando a distincao entre agrupador analitico e item operacional lancavel
 - estudo futuro de agrupamento por categoria com comportamento de expandir/recolher grupos nos relatorios e visoes consolidadas
 - estudo futuro de checkboxes para definir exibicao de `centro de custo`, `categoria` e `subcategoria` em relatorios e visoes agrupadas

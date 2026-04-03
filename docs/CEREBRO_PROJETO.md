@@ -132,9 +132,13 @@ Estas regras devem ser respeitadas em qualquer etapa:
 
 ### 5.1.5. Diretriz futura de clonagem de lancamento
 - fica registrada como frente funcional futura a acao `Clonar lancamento`
-- nessa evolucao, a clonagem deve abrir uma nova tela de cadastro ja preenchida com base no lancamento original
-- o usuario deve poder revisar e alterar os dados antes de salvar
-- o salvamento deve criar um novo lancamento sem alterar o registro original
+- o MVP inicial dessa frente deve ficar restrito a `clonar lancamento comum sem rateio`, sem clonagem por grupo e sem misturar importacao/exportacao, permissoes ou regras reutilizaveis
+- nessa primeira versao, a clonagem deve abrir `financeiro/templates/financeiro/lancamento_form.html` em modo de criacao, ja preenchido a partir do lancamento original, mas sem alterar o registro de origem
+- no MVP, os campos naturalmente copiaveis sao `descricao`, `tipo`, `pessoa`, `categoria`, `centro_custo`, `conta`, `conta_destino` quando o tipo for `transferencia`, e `observacoes`
+- no MVP, nao devem ser reaproveitados `pk`, `numero_documento`, `data_competencia`, `data_pagamento`, `status`, campos de auditoria, `grupo_rateio` ou qualquer identificador capaz de causar colisao ou confusao entre clone e edicao
+- lancamentos com rateio devem ficar explicitamente fora dessa primeira versao; a acao de clone pode permanecer indisponivel para eles ate existir desenho proprio para clonagem de grupo
+- transferencias exigem cuidado especifico para preservar o par `conta` / `conta_destino` sem reintroduzir pessoa, categoria ou centro de custo em um tipo que nao exige esses campos
+- o usuario deve poder revisar e alterar os dados antes de salvar, e o salvamento deve sempre criar um novo lancamento
 - esta frente permanece futura e nao esta implementada no estado atual do repositorio
 
 ### 5.1.6. Diretriz futura de importacao e exportacao de lancamentos
