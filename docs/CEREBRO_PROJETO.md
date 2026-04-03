@@ -139,7 +139,10 @@ Estas regras devem ser respeitadas em qualquer etapa:
 - lancamentos com rateio devem ficar explicitamente fora dessa primeira versao; a acao de clone pode permanecer indisponivel para eles ate existir desenho proprio para clonagem de grupo
 - transferencias exigem cuidado especifico para preservar o par `conta` / `conta_destino` sem reintroduzir pessoa, categoria ou centro de custo em um tipo que nao exige esses campos
 - o usuario deve poder revisar e alterar os dados antes de salvar, e o salvamento deve sempre criar um novo lancamento
-- esta frente permanece futura e nao esta implementada no estado atual do repositorio
+- por decisao de negocio posterior, o clone comum nao deve manter qualquer vinculo operacional com o lancamento original; ele deve funcionar apenas como um modelo ja preenchido para acelerar o cadastro de um novo lancamento
+- nessa evolucao, o clone comum pode copiar tambem outros campos editaveis seguros do formulario, como `valor`, `data_competencia`, `data_pagamento` e `status`, desde que nao traga `numero_documento`, auditoria, `grupo_rateio`, `com_rateio` ou qualquer identificador interno do original
+- como fase futura posterior ao MVP comum, a clonagem deve evoluir para lancamentos com rateio por grupo, tambem sem vinculo com o documento original, abrindo um novo lancamento/documento rateado ja preenchido para revisao manual
+- nessa futura clonagem de rateio, se o usuario alterar o `valor total do documento`, as linhas/categorias do rateio deverao ser ajustadas manualmente no proprio clone, sem sincronizacao automatica nem qualquer efeito sobre o grupo original
 
 ### 5.1.6. Diretriz futura de importacao e exportacao de lancamentos
 - fica registrada como backlog funcional futuro do `financeiro` a frente de importacao em massa e exportacao de lancamentos

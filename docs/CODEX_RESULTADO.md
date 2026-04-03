@@ -49,6 +49,45 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - tambem ficou registrado o cuidado especifico com transferencia, para preservar `conta` e `conta_destino` sem reintroduzir campos que nao fazem parte desse tipo
 - a microetapa foi exclusivamente documental e nao alterou templates, models, views, forms, rotas nem regras em producao
 
+## Primeira implementacao minima de clonar lancamento comum
+
+- foi criada uma rota/view dedicada para clonar lancamento comum sem rateio, reaproveitando `financeiro/templates/financeiro/lancamento_form.html` em modo de criacao e sem alterar o lancamento original
+- a listagem principal de lancamentos passou a exibir a acao `Clonar` apenas quando o lancamento nao e rateado, mantendo lancamentos com `com_rateio` e `grupo_rateio` fora do MVP
+- o pre-preenchimento do clone ficou restrito a `descricao`, `tipo`, `pessoa`, `categoria`, `centro_custo`, `conta`, `conta_destino` quando transferencia, e `observacoes`
+- `pk`, `numero_documento`, `data_competencia`, `data_pagamento`, `status`, auditoria, `grupo_rateio` e `com_rateio` nao sao reaproveitados do lancamento original
+- acessos diretos a clone de lancamento rateado sao bloqueados com aviso e retorno seguro a listagem principal
+- esta microetapa nao abriu regras reutilizaveis, importacao/exportacao, permissoes nem clone por grupo de rateio
+
+## Ajuste do clone comum como modelo editavel e registro da futura clonagem com rateio
+
+- apos auditoria humana posterior, a regra de negocio do clone comum foi consolidada como copia sem vinculo com o original, apenas para acelerar o preenchimento de um novo lancamento
+- a view dedicada de clone comum passou a preencher tambem `status`, `valor`, `data_competencia` e `data_pagamento`, mantendo `numero_documento`, `pk`, auditoria, `grupo_rateio` e `com_rateio` fora do clone
+- a documentacao-base passou a registrar como fase futura a clonagem de lancamentos com rateio por grupo, tambem sem vinculo com o original e sem qualquer sincronizacao automatica entre clone e documento de origem
+- nessa fase futura de rateio, se o `valor total do documento` for alterado no clone, as linhas/categorias deverao ser ajustadas manualmente pelo usuario antes de salvar
+- esta microetapa nao implementou clone com rateio, regras reutilizaveis, importacao/exportacao, permissoes nem alteracao estrutural de models/forms
+
+## Correcao cirurgica do preenchimento de datas e categoria no clone comum
+
+- foi identificado que `data_competencia` e `data_pagamento` chegavam ao `form.initial`, mas o `DateInput(type=\"date\")` renderizava valores em `dd/mm/aaaa`, formato que o navegador nao preenche nesse tipo de campo
+- `financeiro/forms.py` passou a normalizar esses dois campos para `%Y-%m-%d` em formularios nao vinculados, preservando o comportamento atual de create/edit e sem mexer na regra de negocio
+- foi identificado tambem que a `categoria` do lancamento original podia ficar fora do queryset renderizado quando o registro antigo apontava para uma categoria que nao entra mais no conjunto padrao de subcategorias vinculaveis
+- o queryset do campo `categoria` passou a reincluir a categoria inicial/da instancia quando necessario, para que o clone comum abra visualmente preenchido, mas a validacao do `clean()` continua bloqueando categorias pai ao salvar se o usuario nao ajustar
+
+## Correcao do autocomplete parcial de categoria no formulario de lancamento
+
+- foi identificado que `Pessoa`, `Conta` e `Centro de custo` ja usavam a mesma base de autocomplete com busca por `icontains`, mas o endpoint de `Categoria` quebrava ao aplicar `filter(categoria_pai__isnull=False)` depois que a classe base ja tinha fatiado o queryset
+- a classe base `FinanceiroAutocompleteView` passou a montar o queryset sem slice antecipado e a aplicar o limite de resultados apenas no `get()`, permitindo que subclasses como `CategoriaFinanceiraAutocompleteView` filtrem antes da paginacao curta
+- com isso, o campo `categoria` em `financeiro/templates/financeiro/lancamento_form.html` volta a usar busca/autopreenchimento por digitacao parcial com o mesmo comportamento dos demais campos, inclusive no fluxo de clone comum que reaproveita o mesmo formulario
+- esta correcao nao alterou regras de negocio, validacoes, logica de rateio, permissÃµes, importacao/exportacao nem clone com rateio
+
+## Primeira passada de alinhamento visual da listagem principal de lancamentos
+
+- foi identificado que `financeiro/templates/financeiro/lancamento_list.html` ainda herdava o `financeiro_shell_header` padrao completo de `financeiro/base.html`, enquanto as listagens auxiliares mais recentes ja usavam override enxuto de topo, o que mantinha essa tela com sensacao de shell/layout antigo
+- a tela passou a usar override local do `financeiro_shell_header` com o mesmo padrao enxuto aplicado em `categoria_list.html`, `conta_list.html` e `centro_custo_list.html`, preservando a sidebar como navegacao principal e mantendo o comportamento desktop/mobile do drawer
+- filtros e tabela passaram a ficar reunidos em um unico card visual, reduzindo a sensacao de blocos soltos sem alterar filtros, acoes, rotas, clone comum nem logica de rateio
+- o subtitulo explicativo do header, a legenda fixa da tabela e as notas longas de orientacao em lancamentos rateados foram removidos/aliviados para reduzir excesso de informacao, mantendo apenas o chip curto de rateio e a acao `Editar grupo`
+- esta microetapa nao alterou regras de negocio, validacoes, autocomplete de `categoria`, clone comum, permissoes nem importacao/exportacao
+
 ## Regras aplicadas nesta etapa
 
 - `numero_documento` continua opcional para o usuario
