@@ -85,8 +85,17 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - foi identificado que `financeiro/templates/financeiro/lancamento_list.html` ainda herdava o `financeiro_shell_header` padrao completo de `financeiro/base.html`, enquanto as listagens auxiliares mais recentes ja usavam override enxuto de topo, o que mantinha essa tela com sensacao de shell/layout antigo
 - a tela passou a usar override local do `financeiro_shell_header` com o mesmo padrao enxuto aplicado em `categoria_list.html`, `conta_list.html` e `centro_custo_list.html`, preservando a sidebar como navegacao principal e mantendo o comportamento desktop/mobile do drawer
 - filtros e tabela passaram a ficar reunidos em um unico card visual, reduzindo a sensacao de blocos soltos sem alterar filtros, acoes, rotas, clone comum nem logica de rateio
-- o subtitulo explicativo do header, a legenda fixa da tabela e as notas longas de orientacao em lancamentos rateados foram removidos/aliviados para reduzir excesso de informacao, mantendo apenas o chip curto de rateio e a acao `Editar grupo`
+- o subtitulo explicativo do header, a legenda fixa da tabela e as notas longas de orientacao em lancamentos rateados foram removidos/aliviados para reduzir excesso de informacao, mantendo apenas um icone pequeno de ramificacao para rateio e a acao `Editar`
 - esta microetapa nao alterou regras de negocio, validacoes, autocomplete de `categoria`, clone comum, permissoes nem importacao/exportacao
+
+## Primeira implementacao minima de clonar grupo rateado
+
+- foi criada rota/view dedicada por `grupo_rateio` para abrir `financeiro/templates/financeiro/lancamento_form.html` em modo criacao com um novo documento rateado pre-preenchido, sem alterar nem vincular o grupo original
+- a listagem principal de lancamentos passou a exibir `Clonar` tambem em lancamentos com `com_rateio` e `grupo_rateio`, ao lado de `Editar`, usando apenas um icone pequeno de ramificacao para diferenciar rateio e sem mostrar o texto `Rateio` nem o hash tecnico do `grupo_rateio`
+- entram no clone `descricao`, `tipo`, `status`, `data_competencia`, `data_pagamento`, `pessoa`, `centro_custo`, `conta`, `conta_destino` quando aplicavel, `observacoes`, `valor_total_documento` e as linhas de rateio com `categoria` e `valor`
+- ficam fora `pk`, `numero_documento`, `grupo_rateio` original, IDs antigos das linhas, auditoria e qualquer identificador interno capaz de manter vinculo com o original
+- grupos invalidos, vazios, com menos de 2 linhas ou com `numero_documento` divergente nao abrem clone e retornam com aviso para a listagem, preservando o documento de origem
+- esta microetapa nao reutilizou a view/form de edicao de grupo, nao criou sincronizacao entre original e clone, nao mexeu em `forms.py`, nao abriu importacao/exportacao nem permissoes
 
 ## Regras aplicadas nesta etapa
 

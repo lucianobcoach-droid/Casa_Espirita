@@ -97,22 +97,22 @@
     .financeiro-rateio-list-hint {
         display: inline-flex;
         align-items: center;
-        gap: 0.35rem;
+        justify-content: center;
+        width: 1rem;
+        height: 1rem;
         margin-top: 0.28rem;
-        padding: 0.18rem 0.5rem;
-        border-radius: 999px;
-        background: #f3f6fb;
-        color: #506071;
-        font-size: 0.68rem;
-        font-weight: 700;
-        letter-spacing: 0.03em;
-        line-height: 1.2;
-        text-transform: uppercase;
+        margin-left: 0.35rem;
+        border-radius: 0.45rem;
+        border: 1px solid #d6e4fb;
+        background: #f6f9fe;
+        color: #4f7fd9;
+        vertical-align: middle;
     }
 
-    .financeiro-rateio-list-hint strong {
-        color: #1f5fbf;
-        font-weight: 800;
+    .financeiro-rateio-list-icon {
+        width: 0.72rem;
+        height: 0.72rem;
+        display: block;
     }
 
     .financeiro-lancamento-empty {
@@ -270,9 +270,15 @@
                         <td>
                             {{ lancamento.descricao }}
                             {% if lancamento.com_rateio and lancamento.grupo_rateio %}
-                                <span class="financeiro-rateio-list-hint">
-                                    <strong>Rateio</strong>
-                                    <span>{{ lancamento.grupo_rateio|slice:":8" }}</span>
+                                <span class="financeiro-rateio-list-hint" title="Lancamento rateado" aria-label="Lancamento rateado">
+                                    <svg class="financeiro-rateio-list-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true" focusable="false">
+                                        <path d="M4 3.25V6.5C4 7.6 4.9 8.5 6 8.5H10C11.1 8.5 12 9.4 12 10.5V12.75" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M4 12.75V10.5C4 9.4 4.9 8.5 6 8.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <circle cx="4" cy="3" r="1.4" fill="currentColor"/>
+                                        <circle cx="4" cy="13" r="1.4" fill="currentColor"/>
+                                        <circle cx="12" cy="13" r="1.4" fill="currentColor"/>
+                                    </svg>
+                                    <span class="financeiro-sr-only">Lancamento rateado</span>
                                 </span>
                             {% endif %}
                         </td>
@@ -307,7 +313,8 @@
                         <td class="actions-cell no-print">
                             <a class="button is-small is-info is-light" href="{% url 'financeiro:lancamento-recibo' lancamento.pk %}">Recibo</a>
                             {% if lancamento.com_rateio and lancamento.grupo_rateio %}
-                                <a class="button is-small is-link is-light" href="{% url 'financeiro:lancamento-rateio-update' lancamento.grupo_rateio %}">Editar grupo</a>
+                                <a class="button is-small is-link is-light" href="{% url 'financeiro:lancamento-rateio-clone' lancamento.grupo_rateio %}">Clonar</a>
+                                <a class="button is-small is-link is-light" href="{% url 'financeiro:lancamento-rateio-update' lancamento.grupo_rateio %}">Editar</a>
                             {% else %}
                                 <a class="button is-small is-link is-light" href="{% url 'financeiro:lancamento-clone' lancamento.pk %}">Clonar</a>
                                 <a class="button is-small is-link is-light" href="{% url 'financeiro:lancamento-update' lancamento.pk %}">Editar</a>

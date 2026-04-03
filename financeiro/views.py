@@ -1723,6 +1723,116 @@ class LancamentoFinanceiroCloneView(LancamentoFinanceiroCreateView):
         return initial
 
 
+class LancamentoFinanceiroGrupoRateioCloneView(LancamentoFinanceiroCreateView):
+    page_title = 'Clonar Lancamento Financeiro com Rateio'
+    submit_label = 'Salvar clone'
+
+    def _get_grupo_origem_info(self) -> dict[str, object]:
+        if hasattr(self, '_grupo_origem_info_cache'):
+            return self._grupo_origem_info_cache
+
+        grupo_rateio = (self.kwargs.get('grupo_rateio') or '').strip()
+        lancamentos = list(
+            LancamentoFinanceiro.objects.filter(
+                com_rateio=True,
+                grupo_rateio=grupo_rateio,
+            )
+            .select_related(
+                'conta',
+                'conta_destino',
+                'pessoa',
+                'categoria',
+                'centro_custo',
+            )
+            .order_by('pk')
+        )
+
+        erro = ''
+        if not grupo_rateio:
+            erro = 'Grupo de rateio invalido para clonagem.'
+        elif not lancamentos:
+            erro = 'Nenhum lancamento rateado foi encontrado para este grupo.'
+        elif len(lancamentos) < 2:
+            erro = 'Este grupo nao possui linhas suficientes para clonagem.'
+        else:
+            numeros_documento = {(lancamento.numero_documento or '').strip() for lancamento in lancamentos}
+            numeros_documento.discard('')
+            if len(numeros_documento) > 1:
+                erro = 'Este grupo possui numeros de documento divergentes e precisa de regularizacao antes da clonagem.'
+
+        self._grupo_origem_info_cache = {
+            'grupo_rateio': grupo_rateio,
+            'lancamentos': lancamentos,
+            'erro': erro,
+            'representante': lancamentos[0] if lancamentos else None,
+        }
+        return self._grupo_origem_info_cache
+
+    def _get_grupo_origem_lancamentos(self) -> list[LancamentoFinanceiro]:
+        return self._get_grupo_origem_info()['lancamentos']
+
+    def dispatch(self, request, *args, **kwargs):
+        grupo_info = self._get_grupo_origem_info()
+        if grupo_info['erro']:
+            messages.warning(
+                request,
+                f"{grupo_info['erro']} O clone do grupo nao foi aberto e o documento original permaneceu inalterado.",
+            )
+            return redirect(self.success_url)
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_initial(self):
+        initial = super().get_initial()
+        lancamento_origem = self._get_grupo_origem_lancamentos()[0]
+        initial.update(
+            {
+                'descricao': lancamento_origem.descricao,
+                'tipo': lancamento_origem.tipo,
+                'status': lancamento_origem.status,
+                'data_competencia': lancamento_origem.data_competencia,
+                'data_pagamento': lancamento_origem.data_pagamento,
+                'pessoa': lancamento_origem.pessoa,
+                'centro_custo': lancamento_origem.centro_custo,
+                'conta': lancamento_origem.conta,
+                'conta_destino': (
+                    lancamento_origem.conta_destino
+                    if lancamento_origem.tipo == LancamentoFinanceiro.TipoLancamento.TRANSFERENCIA
+                    else None
+                ),
+                'observacoes': lancamento_origem.observacoes,
+                'lancamento_com_rateio': True,
+                'valor_total_documento': sum(
+                    (lancamento.valor for lancamento in self._get_grupo_origem_lancamentos()),
+                    Decimal('0.00'),
+                ),
+            }
+        )
+        return initial
+
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        if form.is_bound:
+            return form
+
+        form.fields['lancamento_com_rateio'].initial = True
+        form.initial['lancamento_com_rateio'] = True
+
+        valor_total_documento = sum(
+            (lancamento.valor for lancamento in self._get_grupo_origem_lancamentos()),
+            Decimal('0.00'),
+        )
+        form.fields['valor_total_documento'].initial = valor_total_documento
+        form.initial['valor_total_documento'] = valor_total_documento
+        form.rateio_linhas_iniciais = [
+            {
+                'categoria': str(lancamento.categoria_id or ''),
+                'valor': str(lancamento.valor or ''),
+            }
+            for lancamento in self._get_grupo_origem_lancamentos()
+        ]
+        return form
+
+
 class LancamentoFinanceiroUpdateView(FinanceiroFormMixin, UpdateView):
     model = LancamentoFinanceiro
     form_class = LancamentoFinanceiroForm
