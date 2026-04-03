@@ -36,6 +36,7 @@ Data: 2026-03-26
 - consultas historicas por favorecido
 - relatorios anuais
 - balancete
+- exportacao futura de consultas/listagens de lancamentos em CSV/Excel, respeitando filtros aplicados, e PDF apenas quando houver sentido documental
 
 ### Extrato e saldo
 - saldo inicial por conta
@@ -45,6 +46,7 @@ Data: 2026-03-26
 
 ### Importacao de historico
 - importacao de planilha historica
+- importacao futura em massa de lancamentos com modelo de arquivo, validacao previa, pre-visualizacao e tratamento de duplicidades
 - saneamento de dados importados
 - conciliacao inicial de base
 
@@ -179,6 +181,7 @@ Data: 2026-03-26
 ### Media prioridade
 - balancete padrao
 - importacao de planilha historica
+- importacao/exportacao futura de lancamentos com validacao de estrutura e dados, pre-visualizacao antes de confirmar, tratamento de linhas invalidas e duplicidades, e respeito as regras de negocio existentes
 - cadastro rapido de pessoa dentro do lancamento
 - cadastro rapido de categoria dentro do lancamento
 - evolucoes futuras especificas do bloco de recibos ja entregue
@@ -219,6 +222,7 @@ Observacao:
 - relatorio anual por favorecido
 - cadastro rapido de pessoa dentro do lancamento
 - cadastro rapido de categoria dentro do lancamento
+- importacao/exportacao futura de lancamentos, com importacao em massa validada por pre-visualizacao e exportacao tabular de consultas filtradas
 - assistencia futura por regras no cadastro de lancamentos, com sugestao de regras existentes a partir de nome/descricao, preenchimento automatico revisavel de campos relacionados e possibilidade posterior de cadastrar nova regra a partir do proprio lancamento
 - acao futura `Clonar lancamento`, abrindo novo cadastro preenchido com base no original e preservando o registro original sem alteracao
 - evolucao futura dos relatorios financeiros para leitura hierarquica por `Categoria` e `Subcategoria`, preservando a distincao entre agrupador analitico e item operacional lancavel

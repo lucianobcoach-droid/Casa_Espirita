@@ -137,6 +137,14 @@ Estas regras devem ser respeitadas em qualquer etapa:
 - o salvamento deve criar um novo lancamento sem alterar o registro original
 - esta frente permanece futura e nao esta implementada no estado atual do repositorio
 
+### 5.1.6. Diretriz futura de importacao e exportacao de lancamentos
+- fica registrada como backlog funcional futuro do `financeiro` a frente de importacao em massa e exportacao de lancamentos
+- na importacao, deve existir modelo de planilha/arquivo e validacao previa de colunas obrigatorias, tipos de dados e aderencia as regras de negocio ja existentes
+- a importacao deve prever pre-visualizacao/validacao antes da confirmacao definitiva, comportamento claro para linhas invalidas e tratamento explicito de duplicidades
+- na exportacao, consultas e listagens relevantes devem respeitar os filtros aplicados e podem evoluir para CSV/Excel; PDF deve ser reservado apenas quando fizer sentido documental
+- essa frente continua futura, nao deve ser misturada com permissoes/acesso nem com regras reutilizaveis ou `Clonar lancamento`, embora possa se relacionar a elas depois
+- esta diretriz nao representa implementacao concluida no estado atual do repositorio
+
 ### 5.3. Diretriz estrutural futura de identidade visual configuravel
 - o projeto passa a registrar oficialmente como frente estrutural futura a configuracao da paleta geral do sistema
 - essa frente nao deve ser tratada como aplicacao manual de cores soltas em telas isoladas

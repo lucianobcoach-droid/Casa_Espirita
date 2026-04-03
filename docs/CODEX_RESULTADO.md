@@ -31,6 +31,14 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - o negrito forte continuou restrito ao item ativo
 - a etapa permaneceu puramente visual, sem alterar logica, JS, drawer, rotas, `aria` ou comportamento mobile/desktop
 
+## Consolidacao documental de importacao e exportacao de lancamentos
+
+- foi registrada sem patch de codigo a frente futura de importacao em massa de lancamentos
+- a importacao futura deve prever modelo de planilha/arquivo, validacao de colunas obrigatorias, validacao de tipos de dados, pre-visualizacao antes da confirmacao, comportamento para linhas invalidas, tratamento de duplicidades e preservacao das regras de negocio atuais
+- foi registrada sem patch de codigo a frente futura de exportacao de consultas/listagens de lancamentos, respeitando filtros aplicados e priorizando formatos tabulares como CSV/Excel
+- PDF ficou registrado apenas como possibilidade quando houver sentido documental
+- ficou explicito que essa frente permanece como backlog futuro e nao deve ser misturada nesta microetapa com permissoes/acesso, regras reutilizaveis ou clonagem de lancamento
+
 ## Regras aplicadas nesta etapa
 
 - `numero_documento` continua opcional para o usuario
