@@ -1045,6 +1045,7 @@ def _validar_conteudo_planilha_importacao_lancamentos_xlsx(arquivo_importacao) -
                             campo,
                             mensagem,
                         ),
+                        'valor_informado': (dados_linha.get(campo) or '').strip(),
                     }
                     for campo, mensagens in erros_linha.items()
                     for mensagem in mensagens
@@ -1094,6 +1095,7 @@ def _normalizar_erros_importacao_lancamentos_relatorio(valor_serializado: str) -
                 'rotulo': str(erro_campo.get('rotulo') or '').strip(),
                 'mensagem': str(erro_campo.get('mensagem') or '').strip(),
                 'orientacao': str(erro_campo.get('orientacao') or '').strip(),
+                'valor_informado': str(erro_campo.get('valor_informado') or '').strip(),
             })
 
         if campos_normalizados:
@@ -1108,7 +1110,7 @@ def _normalizar_erros_importacao_lancamentos_relatorio(valor_serializado: str) -
 def _gerar_relatorio_inconsistencias_importacao_lancamentos_xlsx(
     erros: list[dict[str, object]],
 ) -> bytes:
-    linhas = [['Linha', 'Campo', 'Mensagem', 'Como corrigir']]
+    linhas = [['Linha', 'Campo', 'Mensagem', 'Como corrigir', 'Valor informado']]
 
     for erro_linha in erros:
         for erro_campo in erro_linha.get('campos', []):
@@ -1117,6 +1119,7 @@ def _gerar_relatorio_inconsistencias_importacao_lancamentos_xlsx(
                 erro_campo.get('rotulo', ''),
                 erro_campo.get('mensagem', ''),
                 erro_campo.get('orientacao', ''),
+                erro_campo.get('valor_informado', ''),
             ])
 
     return _gerar_arquivo_xlsx([('Inconsistências', linhas)])

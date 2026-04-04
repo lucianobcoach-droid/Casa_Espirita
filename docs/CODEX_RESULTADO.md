@@ -1354,3 +1354,9 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - o relatorio XLSX de inconsistencias da importacao passou a incluir a coluna `Como corrigir`, preservando `Linha`, `Campo` e `Mensagem`
 - as dicas sao curtas e operacionais, por exemplo formato de data, revisao de nomes cadastrados, compatibilidade entre `Tipo` e `Categoria`, preenchimento de `Conta de destino` e revisao de duplicidade de `Documento`
 - a coluna e derivada do campo/erro ja validado e nao altera a logica de importacao, a politica all-or-nothing, a estrutura da tela nem a aba unica `Inconsistencias`
+
+## Apoio adicional para correcao da planilha importada
+
+- o relatorio XLSX de inconsistencias passou a incluir tambem a coluna `Valor informado`, preenchida com o valor da propria celula/campo lido da aba `Modelo` quando esse dado esta disponivel
+- essa coluna ajuda o usuario a localizar rapidamente o conteudo que precisa ser corrigido na planilha original, sem reescrever o arquivo enviado e sem alterar o fluxo atual de importacao
+- a aba `Inconsistencias`, as colunas `Linha`, `Campo`, `Mensagem` e `Como corrigir`, a validacao ja existente e a politica all-or-nothing permaneceram preservadas
