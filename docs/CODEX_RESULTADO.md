@@ -229,6 +229,13 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - o relatorio gerado contem as colunas `Linha`, `Campo` e `Mensagem`, preservando o numero da linha, o rotulo amigavel exibido ao usuario e a mensagem operacional curta para facilitar a correcao da planilha original
 - a leitura principal da tela e o arquivo baixado continuam priorizando rotulos amigaveis, sem expor a coluna de campo tecnico ao usuario final
 
+## Alinhamento do formato de datas na importacao
+
+- a leitura da importacao passou a priorizar datas em `dd/mm/aaaa`, mantendo `AAAA-MM-DD` como formato adicional tolerado internamente para nao quebrar arquivos tecnicamente validos
+- a aba `Instruções` da planilha modelo passou a orientar `dd/mm/aaaa` como formato principal de preenchimento de datas, em coerencia com a exportacao e com o formato visual exibido ao usuario
+- as mensagens de erro de `Data de competência` e `Data de pagamento` passaram a indicar explicitamente `dd/mm/aaaa`
+- nao houve alteracao da politica all-or-nothing, nem abertura de importacao parcial, nem mudanca de regra de negocio
+
 ## Regras aplicadas nesta etapa
 
 - `numero_documento` continua opcional para o usuario

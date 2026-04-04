@@ -161,6 +161,7 @@ Estas regras devem ser respeitadas em qualquer etapa:
 - na primeira versao real da importacao de lancamentos, o arquivo deve ser conciliado apenas contra cadastros ja existentes do sistema, sem criacao automatica de pessoas, categorias, contas ou centros de custo
 - nessa primeira versao real, a gravacao deve ser integral e nao parcial: se houver qualquer erro de linha ou campo, nenhum lancamento deve ser importado
 - nessa primeira versao real, as mensagens exibidas ao usuario devem usar rotulos amigaveis de campo, como `Pessoa`, `Categoria`, `Centro de custo`, `Conta`, `Documento` e `Data de pagamento`, preservando o numero da linha e evitando expor nomes tecnicos da planilha na interface
+- na importacao de lancamentos, o formato de data orientado ao usuario deve priorizar `dd/mm/aaaa`, alinhado a exportacao e a leitura visual do sistema; se for tecnicamente simples e seguro, `AAAA-MM-DD` pode continuar aceito apenas como tolerancia interna
 - o preview operacional antes de gravar, a importacao de cadastros auxiliares e uma eventual importacao parcial ficam registrados apenas como evolucoes futuras, sem entrar na primeira versao real
 - na exportacao, consultas e listagens relevantes devem respeitar os filtros aplicados e podem evoluir para CSV/Excel; PDF deve ser reservado apenas quando fizer sentido documental
 - essa frente continua futura, nao deve ser misturada com permissoes/acesso nem com regras reutilizaveis ou `Clonar lancamento`, embora possa se relacionar a elas depois

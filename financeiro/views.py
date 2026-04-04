@@ -383,7 +383,7 @@ LANCAMENTO_IMPORTACAO_MODELO_INSTRUCOES = [
     ],
     [
         'Datas e valores',
-        'Use datas no formato AAAA-MM-DD e valores numéricos com ponto decimal quando necessário.',
+        'Use datas no formato dd/mm/aaaa. Se necessário, o sistema também aceita AAAA-MM-DD. Para valores, use número com vírgula ou ponto decimal.',
     ],
     [
         'Campos opcionais',
@@ -630,7 +630,7 @@ def _parse_data_importacao_lancamento(valor: str) -> date | None:
     if not valor_normalizado:
         return None
 
-    for formato_data in ('%Y-%m-%d', '%d/%m/%Y'):
+    for formato_data in ('%d/%m/%Y', '%Y-%m-%d'):
         try:
             return datetime.strptime(valor_normalizado, formato_data).date()
         except ValueError:
@@ -857,7 +857,7 @@ def _validar_linha_importacao_lancamento(
         _adicionar_erro_importacao(
             erros_por_campo,
             'data_competencia',
-            'Use uma data de competência válida.',
+            'Use uma data de competência válida no formato dd/mm/aaaa.',
         )
 
     data_pagamento = _parse_data_importacao_lancamento(data_pagamento_texto)
@@ -871,7 +871,7 @@ def _validar_linha_importacao_lancamento(
         _adicionar_erro_importacao(
             erros_por_campo,
             'data_pagamento',
-            'Use uma data de pagamento válida.',
+            'Use uma data de pagamento válida no formato dd/mm/aaaa.',
         )
 
     pessoa = None
