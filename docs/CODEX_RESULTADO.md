@@ -215,6 +215,13 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - a pagina de `Importacao` passou a informar `Linhas lidas`, `Linhas validas`, `Linhas importadas` e `Linhas com erro`, e a ajuda rapida passou a reforcar que somente cadastros ja existentes podem ser usados e que a importacao nao e parcial
 - esta microetapa nao implementou preview avancado, segunda tela de confirmacao, importacao parcial, criacao automatica de cadastros auxiliares nem rateio por importacao
 
+## Refinamento visual do retorno da importacao
+
+- o card de resultado da importacao passou a exibir um banner de status no topo, diferenciando visualmente importacao concluida e validacao com erro sem alterar a politica all-or-nothing
+- os totais de linhas lidas, validas, importadas e com erro foram mantidos em cards de destaque logo abaixo desse banner, priorizando leitura rapida do resumo
+- a lista de erros por linha ficou mais legivel: cada linha com inconsistencia aparece em bloco proprio e cada campo com erro passou a ser apresentado em uma faixa separada com rotulo amigavel e mensagem curta
+- esta microetapa foi restrita a organizacao visual e texto operacional do retorno da importacao, sem alterar validacao, gravacao, transacao, resolucao de cadastros ou regras de negocio ja consolidadas
+
 ## Regras aplicadas nesta etapa
 
 - `numero_documento` continua opcional para o usuario

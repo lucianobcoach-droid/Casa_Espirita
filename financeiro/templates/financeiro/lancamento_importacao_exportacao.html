@@ -66,6 +66,45 @@
         grid-template-columns: repeat(4, minmax(0, 1fr));
     }
 
+    .financeiro-importacao-resultado-banner {
+        margin-bottom: 1rem;
+        border-radius: 1rem;
+        padding: 1rem;
+        border: 1px solid transparent;
+    }
+
+    .financeiro-importacao-resultado-banner.is-success {
+        border-color: #bbf7d0;
+        background: #f0fdf4;
+    }
+
+    .financeiro-importacao-resultado-banner.is-error {
+        border-color: #fecaca;
+        background: #fef2f2;
+    }
+
+    .financeiro-importacao-resultado-banner-title {
+        margin-bottom: 0.35rem;
+        font-size: 1rem;
+        font-weight: 800;
+        letter-spacing: -0.01em;
+    }
+
+    .financeiro-importacao-resultado-banner.is-success .financeiro-importacao-resultado-banner-title {
+        color: #166534;
+    }
+
+    .financeiro-importacao-resultado-banner.is-error .financeiro-importacao-resultado-banner-title {
+        color: #991b1b;
+    }
+
+    .financeiro-importacao-resultado-banner-text {
+        margin: 0;
+        color: #475569;
+        font-size: 0.92rem;
+        line-height: 1.5;
+    }
+
     .financeiro-importacao-resultado-item {
         border-radius: 0.85rem;
         background: #f8fafc;
@@ -98,7 +137,7 @@
         border-radius: 0.85rem;
         border: 1px solid #fecaca;
         background: #fef2f2;
-        padding: 0.8rem 0.9rem;
+        padding: 0.9rem 1rem;
     }
 
     .financeiro-importacao-erro-titulo {
@@ -108,10 +147,28 @@
     }
 
     .financeiro-importacao-erro-campos {
-        margin: 0.45rem 0 0 1rem;
+        margin: 0.7rem 0 0;
+        display: grid;
+        gap: 0.55rem;
+        list-style: none;
+        padding: 0;
         color: #7f1d1d;
         font-size: 0.9rem;
         line-height: 1.5;
+    }
+
+    .financeiro-importacao-erro-campo-item {
+        border-radius: 0.75rem;
+        background: rgba(255, 255, 255, 0.7);
+        padding: 0.6rem 0.75rem;
+    }
+
+    .financeiro-importacao-erro-campo-rotulo {
+        display: inline-flex;
+        align-items: center;
+        margin-right: 0.4rem;
+        color: #991b1b;
+        font-weight: 800;
     }
 
     @media screen and (max-width: 768px) {
@@ -163,13 +220,19 @@
     {% if resultado_importacao_validacao %}
         <section class="financeiro-importacao-card">
             <h2 class="financeiro-importacao-card-title">Resultado da importação</h2>
-            <p class="financeiro-importacao-card-text">
+            <div class="financeiro-importacao-resultado-banner {% if resultado_importacao_validacao.linhas_invalidas %}is-error{% else %}is-success{% endif %}">
                 {% if resultado_importacao_validacao.linhas_importadas %}
-                    Importação concluída. O resumo abaixo mostra o total lido, importado e eventuais erros.
+                    <h3 class="financeiro-importacao-resultado-banner-title">Importação concluída com sucesso</h3>
+                    <p class="financeiro-importacao-resultado-banner-text">
+                        Todas as linhas válidas foram gravadas. Confira abaixo o total lido, importado e sem erros.
+                    </p>
                 {% else %}
-                    Nenhuma linha foi importada. Use o resumo abaixo para ajustar a planilha, se necessário.
+                    <h3 class="financeiro-importacao-resultado-banner-title">Nenhuma linha foi importada</h3>
+                    <p class="financeiro-importacao-resultado-banner-text">
+                        Há ajustes pendentes na planilha. Veja o resumo e a lista por linha para corrigir os campos indicados.
+                    </p>
                 {% endif %}
-            </p>
+            </div>
 
             <div class="financeiro-importacao-resultado-grid">
                 <div class="financeiro-importacao-resultado-item">
@@ -197,7 +260,10 @@
                             <div class="financeiro-importacao-erro-titulo">Linha {{ erro_linha.linha }}</div>
                             <ul class="financeiro-importacao-erro-campos">
                                 {% for erro_campo in erro_linha.campos %}
-                                    <li><strong>{{ erro_campo.rotulo }}:</strong> {{ erro_campo.mensagem }}</li>
+                                    <li class="financeiro-importacao-erro-campo-item">
+                                        <span class="financeiro-importacao-erro-campo-rotulo">{{ erro_campo.rotulo }}</span>
+                                        {{ erro_campo.mensagem }}
+                                    </li>
                                 {% endfor %}
                             </ul>
                         </div>
