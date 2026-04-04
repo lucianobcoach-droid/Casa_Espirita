@@ -1448,3 +1448,13 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - `Operador biblioteca` ficou restrito ao modulo `biblioteca` e a leitura institucional de `SiteConfig /`, sem herdar rotas, atalhos ou endpoints auxiliares do `financeiro`
 - foi adicionada ao proprio documento uma convencao de leitura da matriz, criterios para futuras excecoes individuais e uma observacao de governanca para que endpoints auxiliares sigam a permissao do recurso principal
 - esta microetapa nao alterou codigo, `docs/CEREBRO_PROJETO.md`, `docs/PADRAO_UX_SISTEMA.md` nem `docs/CHECKLIST_EVOLUCAO_SISTEMA.md`
+
+## Plano tecnico de implementacao de permissoes/autenticacao
+
+- foi criado `docs/PLANO_TECNICO_PERMISSOES.md` para transformar `docs/MATRIZ_PERMISSOES.md` em plano tecnico de execucao, sem iniciar codigo nesta microetapa
+- o documento registra objetivo tecnico da frente, escopo da V1, itens fora de escopo, arquitetura proposta, modelagem conceitual minima, estrategia de aplicacao em camadas, ordem incremental de microetapas, riscos/dependencias e o primeiro ponto de aplicacao real
+- a decisao tecnica registrada foi adotar um modelo hibrido: `User`/autenticacao/sessao/login/logout do Django para identidade e camada propria do sistema para `Perfil`, `Permissao do sistema`, `Perfil-Permissao` e `Usuario-Perfil`, mantendo `Group/Permission` nativo fora da governanca funcional principal da V1
+- a justificativa registrada foi a aderencia da matriz ja aprovada ao formato `Modulo > Tela/Recurso > Acao`, a necessidade de governanca de menu/botoes/endpoints auxiliares e a compatibilidade futura com `permissao final = perfil base + extras individuais - bloqueios individuais`
+- a ordem proposta de implementacao ficou: 1) estrutura de dados e seeds de perfis/permissoes; 2) login/logout e primeiro enforcement backend no `financeiro`; 3) sidebar/botoes/templates do `financeiro`; 4) expansao para `biblioteca` e `configuracoes`; 5) UI propria de administracao funcional de perfis; 6) endurecimento/auditoria e preparacao para extras/bloqueios individuais futuros
+- o primeiro modulo de aplicacao real da V1 foi definido como `financeiro`, com foco inicial em `Lancamentos`, `Auditoria do Financeiro`, `Configuracoes institucionais`, `Assinaturas institucionais`, `Importar/Exportar` e endpoints auxiliares de formulario/historico
+- esta microetapa atualizou `docs/STATE.md` e nao alterou codigo, `docs/CEREBRO_PROJETO.md`, `docs/MATRIZ_PERMISSOES.md`, `docs/PADRAO_UX_SISTEMA.md` nem `docs/CHECKLIST_EVOLUCAO_SISTEMA.md`
