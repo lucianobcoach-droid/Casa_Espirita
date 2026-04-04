@@ -60,9 +60,67 @@
         margin-top: 0.45rem;
     }
 
+    .financeiro-importacao-resultado-grid {
+        display: grid;
+        gap: 0.75rem;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .financeiro-importacao-resultado-item {
+        border-radius: 0.85rem;
+        background: #f8fafc;
+        padding: 0.85rem;
+    }
+
+    .financeiro-importacao-resultado-label {
+        color: #64748b;
+        font-size: 0.75rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    .financeiro-importacao-resultado-valor {
+        margin-top: 0.2rem;
+        color: #0f172a;
+        font-size: 1.3rem;
+        font-weight: 800;
+        line-height: 1;
+    }
+
+    .financeiro-importacao-erros-lista {
+        margin-top: 1rem;
+        display: grid;
+        gap: 0.75rem;
+    }
+
+    .financeiro-importacao-erro-item {
+        border-radius: 0.85rem;
+        border: 1px solid #fecaca;
+        background: #fef2f2;
+        padding: 0.8rem 0.9rem;
+    }
+
+    .financeiro-importacao-erro-titulo {
+        color: #991b1b;
+        font-size: 0.9rem;
+        font-weight: 800;
+    }
+
+    .financeiro-importacao-erro-campos {
+        margin: 0.45rem 0 0 1rem;
+        color: #7f1d1d;
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+
     @media screen and (max-width: 768px) {
         .financeiro-importacao-grid {
             grid-template-columns: minmax(0, 1fr);
+        }
+
+        .financeiro-importacao-resultado-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
         }
     }
 </style>
@@ -81,7 +139,7 @@
         <section class="financeiro-importacao-card">
             <h2 class="financeiro-importacao-card-title">Importar lançamentos</h2>
             <p class="financeiro-importacao-card-text">
-                Envie uma planilha XLSX preenchida no layout do sistema. Nesta fase, o sistema valida apenas a estrutura do arquivo e ainda não grava lançamentos.
+                Envie uma planilha XLSX preenchida no layout do sistema. Se todas as linhas estiverem válidas, o sistema importa tudo; se houver qualquer erro, nenhuma linha é gravada.
             </p>
 
             <form method="post" enctype="multipart/form-data">
@@ -94,7 +152,7 @@
                 </div>
 
                 <div class="financeiro-importacao-actions">
-                    <button class="button is-primary" type="submit">Validar planilha</button>
+                    <button class="button is-primary" type="submit">Importar planilha</button>
                     <a class="button is-link is-light" href="{% url 'financeiro:lancamento-importacao-modelo' %}">Baixar planilha modelo</a>
                 </div>
             </form>
@@ -102,12 +160,59 @@
 
     </div>
 
+    {% if resultado_importacao_validacao %}
+        <section class="financeiro-importacao-card">
+            <h2 class="financeiro-importacao-card-title">Resultado da importação</h2>
+            <p class="financeiro-importacao-card-text">
+                {% if resultado_importacao_validacao.linhas_importadas %}
+                    Importação concluída. O resumo abaixo mostra o total lido, importado e eventuais erros.
+                {% else %}
+                    Nenhuma linha foi importada. Use o resumo abaixo para ajustar a planilha, se necessário.
+                {% endif %}
+            </p>
+
+            <div class="financeiro-importacao-resultado-grid">
+                <div class="financeiro-importacao-resultado-item">
+                    <div class="financeiro-importacao-resultado-label">Linhas lidas</div>
+                    <div class="financeiro-importacao-resultado-valor">{{ resultado_importacao_validacao.linhas_lidas }}</div>
+                </div>
+                <div class="financeiro-importacao-resultado-item">
+                    <div class="financeiro-importacao-resultado-label">Linhas válidas</div>
+                    <div class="financeiro-importacao-resultado-valor">{{ resultado_importacao_validacao.linhas_validas }}</div>
+                </div>
+                <div class="financeiro-importacao-resultado-item">
+                    <div class="financeiro-importacao-resultado-label">Linhas importadas</div>
+                    <div class="financeiro-importacao-resultado-valor">{{ resultado_importacao_validacao.linhas_importadas }}</div>
+                </div>
+                <div class="financeiro-importacao-resultado-item">
+                    <div class="financeiro-importacao-resultado-label">Linhas com erro</div>
+                    <div class="financeiro-importacao-resultado-valor">{{ resultado_importacao_validacao.linhas_invalidas }}</div>
+                </div>
+            </div>
+
+            {% if resultado_importacao_validacao.erros %}
+                <div class="financeiro-importacao-erros-lista">
+                    {% for erro_linha in resultado_importacao_validacao.erros %}
+                        <div class="financeiro-importacao-erro-item">
+                            <div class="financeiro-importacao-erro-titulo">Linha {{ erro_linha.linha }}</div>
+                            <ul class="financeiro-importacao-erro-campos">
+                                {% for erro_campo in erro_linha.campos %}
+                                    <li><strong>{{ erro_campo.rotulo }}:</strong> {{ erro_campo.mensagem }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </section>
+    {% endif %}
+
     <section class="financeiro-importacao-card">
         <h2 class="financeiro-importacao-card-title">Ajuda rápida</h2>
         <ul class="financeiro-importacao-help-list">
             <li>Baixe a planilha modelo XLSX e preencha os campos na ordem esperada pelo sistema.</li>
-            <li>Use o bloco de importação para enviar o arquivo e validar se as abas e os cabeçalhos estão corretos.</li>
-            <li>Nesta fase, a planilha enviada passa apenas por validação estrutural; a gravação dos lançamentos fica para uma etapa posterior.</li>
+            <li>Use o bloco de importação para enviar o arquivo, validar abas, cabeçalhos e conteúdo, e concluir a importação quando tudo estiver correto.</li>
+            <li>Use apenas pessoas, categorias, centros de custo e contas que já existam no sistema. Se houver qualquer erro, nenhuma linha é importada.</li>
         </ul>
     </section>
 </div>

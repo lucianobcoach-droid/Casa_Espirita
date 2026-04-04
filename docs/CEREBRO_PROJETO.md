@@ -160,10 +160,11 @@ Estas regras devem ser respeitadas em qualquer etapa:
 - a importacao deve prever pre-visualizacao/validacao antes da confirmacao definitiva, comportamento claro para linhas invalidas e tratamento explicito de duplicidades
 - na primeira versao real da importacao de lancamentos, o arquivo deve ser conciliado apenas contra cadastros ja existentes do sistema, sem criacao automatica de pessoas, categorias, contas ou centros de custo
 - nessa primeira versao real, a gravacao deve ser integral e nao parcial: se houver qualquer erro de linha ou campo, nenhum lancamento deve ser importado
-- a devolucao detalhada de erros por linha/campo, o preview operacional antes de gravar, a importacao de cadastros auxiliares e uma eventual importacao parcial ficam registrados apenas como evolucoes futuras, sem entrar na primeira versao real
+- nessa primeira versao real, as mensagens exibidas ao usuario devem usar rotulos amigaveis de campo, como `Pessoa`, `Categoria`, `Centro de custo`, `Conta`, `Documento` e `Data de pagamento`, preservando o numero da linha e evitando expor nomes tecnicos da planilha na interface
+- o preview operacional antes de gravar, a importacao de cadastros auxiliares e uma eventual importacao parcial ficam registrados apenas como evolucoes futuras, sem entrar na primeira versao real
 - na exportacao, consultas e listagens relevantes devem respeitar os filtros aplicados e podem evoluir para CSV/Excel; PDF deve ser reservado apenas quando fizer sentido documental
 - essa frente continua futura, nao deve ser misturada com permissoes/acesso nem com regras reutilizaveis ou `Clonar lancamento`, embora possa se relacionar a elas depois
-- esta diretriz nao representa implementacao concluida no estado atual do repositorio
+- no estado atual do repositorio, a primeira versao real da importacao de lancamentos ja executa validacao estrutural, validacao de conteudo linha a linha com rotulos amigaveis e gravacao transacional all-or-nothing quando o arquivo esta 100% valido; preview, importacao de cadastros auxiliares, tratamento avancado de duplicidades e importacao parcial continuam futuros
 
 ### 5.3. Diretriz estrutural futura de identidade visual configuravel
 - o projeto passa a registrar oficialmente como frente estrutural futura a configuracao da paleta geral do sistema

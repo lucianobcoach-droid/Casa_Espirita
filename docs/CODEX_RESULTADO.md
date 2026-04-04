@@ -199,6 +199,22 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - tambem ficou registrado como fase posterior que o sistema deve evoluir para devolver erros por linha/campo, oferecer preview/validacao detalhada antes de gravar, tratar importacao de cadastros auxiliares em frente propria e avaliar eventual importacao parcial apenas no futuro
 - esta microetapa nao abriu leitura detalhada das linhas, validacao de negocio linha a linha, tratamento de duplicidades, pre-visualizacao de importacao nem gravacao em massa no banco
 
+## Fase 2 da importacao de lancamentos: validacao de conteudo linha a linha
+
+- a validacao da aba `Modelo` passou a ler as linhas de dados, ignorar linhas totalmente vazias e validar cada linha/campo sem gravar nada no banco
+- `tipo`, `status`, `descricao`, `valor`, `data_competencia`, `data_pagamento`, `pessoa_nome`, `categoria_nome`, `centro_custo_nome`, `conta_nome` e `conta_destino_nome` passaram a ser conferidos linha a linha, resolvendo nomes apenas contra cadastros existentes e reaproveitando `LancamentoFinanceiro.full_clean()` para regras ja consolidadas como obrigatoriedade de pessoa/categoria em receita/despesa, subcategoria valida, data de pagamento nao anterior a competencia, conta de destino em transferencia e bloqueio de contas iguais
+- a pagina de `Importacao` passou a exibir um card de `Resultado da validacao` com total de linhas lidas, linhas validas, linhas com erro e uma lista de erros por linha/campo em linguagem operacional, mantendo explicito que nenhum lancamento foi importado nesta fase
+- esta microetapa nao implementou gravacao/importacao real, confirmacao final, preview persistido em sessao, importacao parcial nem criacao automatica de cadastros auxiliares
+
+## Fase 3 da importacao de lancamentos: gravacao all-or-nothing e mensagens amigaveis
+
+- os erros da importacao deixaram de exibir nomes tecnicos da planilha na interface e passaram a mostrar rotulos amigaveis ao usuario, como `Pessoa`, `Categoria`, `Centro de custo`, `Conta`, `Data de pagamento` e `Observacoes`, mantendo o numero da linha e a mensagem curta de validacao
+- a validacao de conteudo passou a devolver tambem os `LancamentoFinanceiro` validos ja preparados em memoria, mantendo a resolucao apenas contra cadastros existentes e reaproveitando `LancamentoFinanceiro.full_clean()` para as regras de negocio ja consolidadas
+- quando nao existe erro em nenhuma linha, a `LancamentoFinanceiroImportacaoExportacaoView` grava todos os lancamentos dentro de `transaction.atomic()`, registra auditoria de criacao para cada lancamento e atualiza o total de `Linhas importadas`
+- se qualquer linha tiver erro, nenhuma gravacao e executada e a tela informa explicitamente que nenhuma linha foi importada; se ocorrer inconsistencia no momento da gravacao, a transacao e revertida e o resultado volta a indicar importacao zerada
+- a pagina de `Importacao` passou a informar `Linhas lidas`, `Linhas validas`, `Linhas importadas` e `Linhas com erro`, e a ajuda rapida passou a reforcar que somente cadastros ja existentes podem ser usados e que a importacao nao e parcial
+- esta microetapa nao implementou preview avancado, segunda tela de confirmacao, importacao parcial, criacao automatica de cadastros auxiliares nem rateio por importacao
+
 ## Regras aplicadas nesta etapa
 
 - `numero_documento` continua opcional para o usuario

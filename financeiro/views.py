@@ -12,6 +12,7 @@ from xml.sax.saxutils import escape
 from zipfile import ZIP_DEFLATED, BadZipFile, ZipFile
 
 from django.contrib import messages
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Q
 from django.http import HttpResponse, JsonResponse
@@ -328,6 +329,30 @@ LANCAMENTO_IMPORTACAO_MODELO_COLUNAS = [
     'observacoes',
 ]
 
+LANCAMENTO_IMPORTACAO_MODELO_ROTULOS = {
+    'tipo': 'Tipo',
+    'status': 'Status',
+    'descricao': 'Descrição',
+    'valor': 'Valor',
+    'data_competencia': 'Data de competência',
+    'data_pagamento': 'Data de pagamento',
+    'pessoa_nome': 'Pessoa',
+    'categoria_nome': 'Categoria',
+    'centro_custo_nome': 'Centro de custo',
+    'conta_nome': 'Conta',
+    'conta_destino_nome': 'Conta de destino',
+    'numero_documento': 'Documento',
+    'observacoes': 'Observações',
+}
+
+LANCAMENTO_IMPORTACAO_CAMPOS_MODELO = {
+    'pessoa': 'pessoa_nome',
+    'categoria': 'categoria_nome',
+    'centro_custo': 'centro_custo_nome',
+    'conta': 'conta_nome',
+    'conta_destino': 'conta_destino_nome',
+}
+
 LANCAMENTO_IMPORTACAO_ABAS_OBRIGATORIAS = ['Modelo', 'Instruções']
 
 LANCAMENTO_EXPORTACAO_COLUNAS = [
@@ -545,6 +570,86 @@ def _xlsx_ler_valor_celula(celula, shared_strings: list[str], namespace: dict[st
     return valor.text.strip()
 
 
+def _xlsx_indice_coluna_celula(celula_referencia: str) -> int:
+    letras_coluna = ''.join(caractere for caractere in (celula_referencia or '') if caractere.isalpha())
+    if not letras_coluna:
+        return 0
+
+    indice_coluna = 0
+    for letra in letras_coluna.upper():
+        indice_coluna = indice_coluna * 26 + (ord(letra) - 64)
+    return indice_coluna
+
+
+def _xlsx_ler_linhas_planilha(
+    arquivo_xlsx: ZipFile,
+    caminho_planilha: str,
+    shared_strings: list[str],
+    namespace: dict[str, str],
+) -> list[tuple[int, list[str]]]:
+    planilha_tree = ElementTree.fromstring(arquivo_xlsx.read(caminho_planilha))
+    linhas = []
+
+    for indice_padrao, linha_xml in enumerate(
+        planilha_tree.findall('main:sheetData/main:row', namespace),
+        start=1,
+    ):
+        numero_linha = int(linha_xml.get('r') or indice_padrao)
+        valores_linha = [''] * len(LANCAMENTO_IMPORTACAO_MODELO_COLUNAS)
+
+        for indice_celula, celula in enumerate(linha_xml.findall('main:c', namespace), start=1):
+            indice_coluna = _xlsx_indice_coluna_celula(celula.get('r', '')) or indice_celula
+            if 1 <= indice_coluna <= len(LANCAMENTO_IMPORTACAO_MODELO_COLUNAS):
+                valores_linha[indice_coluna - 1] = _xlsx_ler_valor_celula(
+                    celula,
+                    shared_strings,
+                    namespace,
+                )
+
+        linhas.append((numero_linha, valores_linha))
+
+    return linhas
+
+
+def _parse_decimal_importacao_lancamento(valor: str) -> Decimal | None:
+    valor_normalizado = (valor or '').strip()
+    if not valor_normalizado:
+        return None
+
+    if ',' in valor_normalizado:
+        valor_normalizado = valor_normalizado.replace('.', '').replace(',', '.')
+    try:
+        return Decimal(valor_normalizado)
+    except Exception:
+        return None
+
+
+def _parse_data_importacao_lancamento(valor: str) -> date | None:
+    valor_normalizado = (valor or '').strip()
+    if not valor_normalizado:
+        return None
+
+    for formato_data in ('%Y-%m-%d', '%d/%m/%Y'):
+        try:
+            return datetime.strptime(valor_normalizado, formato_data).date()
+        except ValueError:
+            pass
+
+    try:
+        dias_excel = Decimal(valor_normalizado)
+    except Exception:
+        return None
+
+    if dias_excel < 1:
+        return None
+
+    return date(1899, 12, 30) + timedelta(days=int(dias_excel))
+
+
+def _normalizar_nome_importacao_lancamento(valor: str) -> str:
+    return (valor or '').strip().lower()
+
+
 def _validar_estrutura_planilha_importacao_lancamentos_xlsx(arquivo_importacao) -> list[str]:
     nome_arquivo = (arquivo_importacao.name or '').lower()
     if not nome_arquivo.endswith('.xlsx'):
@@ -612,6 +717,317 @@ def _validar_estrutura_planilha_importacao_lancamentos_xlsx(arquivo_importacao) 
         arquivo_importacao.seek(0)
 
     return []
+
+
+def _xlsx_ler_dados_modelo_importacao_lancamentos_xlsx(arquivo_importacao) -> list[tuple[int, list[str]]]:
+    try:
+        with ZipFile(arquivo_importacao) as arquivo_xlsx:
+            namespace = {
+                'main': 'http://schemas.openxmlformats.org/spreadsheetml/2006/main',
+                'rel': 'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
+                'pkg': 'http://schemas.openxmlformats.org/package/2006/relationships',
+            }
+            workbook_tree = ElementTree.fromstring(arquivo_xlsx.read('xl/workbook.xml'))
+            relacoes_tree = ElementTree.fromstring(arquivo_xlsx.read('xl/_rels/workbook.xml.rels'))
+            shared_strings = _xlsx_ler_strings_compartilhadas(arquivo_xlsx)
+
+            relacoes_planilhas = {
+                relacao.get('Id'): _xlsx_normalizar_target_relacao(relacao.get('Target', ''))
+                for relacao in relacoes_tree.findall('pkg:Relationship', namespace)
+            }
+            caminho_modelo = ''
+            for planilha in workbook_tree.findall('main:sheets/main:sheet', namespace):
+                if planilha.get('name', '') == 'Modelo':
+                    caminho_modelo = relacoes_planilhas.get(
+                        planilha.get(
+                            '{http://schemas.openxmlformats.org/officeDocument/2006/relationships}id'
+                        ),
+                        '',
+                    )
+                    break
+
+            if not caminho_modelo or caminho_modelo not in arquivo_xlsx.namelist():
+                return []
+
+            return _xlsx_ler_linhas_planilha(
+                arquivo_xlsx,
+                caminho_modelo,
+                shared_strings,
+                namespace,
+            )
+    except (BadZipFile, KeyError, ParseError, OSError):
+        return []
+    finally:
+        arquivo_importacao.seek(0)
+
+
+def _montar_indice_importacao_por_nome(queryset):
+    indice = {}
+    for item in queryset:
+        chave = _normalizar_nome_importacao_lancamento(item.nome)
+        if chave and chave not in indice:
+            indice[chave] = item
+    return indice
+
+
+def _montar_indice_categoria_importacao_por_tipo():
+    indice = {}
+    for categoria in CategoriaFinanceira.objects.filter(
+        categoria_pai__isnull=False,
+        ativo=True,
+    ).order_by('pk'):
+        chave = (categoria.tipo, _normalizar_nome_importacao_lancamento(categoria.nome))
+        if chave[1] and chave not in indice:
+            indice[chave] = categoria
+    return indice
+
+
+def _adicionar_erro_importacao(erros_por_campo: dict[str, list[str]], campo: str, mensagem: str) -> None:
+    erros_por_campo.setdefault(campo, []).append(mensagem)
+
+
+def _rotulo_campo_importacao_lancamento(campo: str) -> str:
+    return LANCAMENTO_IMPORTACAO_MODELO_ROTULOS.get(campo, campo)
+
+
+def _validar_linha_importacao_lancamento(
+    dados_linha: dict[str, str],
+    pessoas_por_nome: dict[str, PessoaFinanceira],
+    categorias_por_tipo_nome: dict[tuple[str, str], CategoriaFinanceira],
+    centros_custo_por_nome: dict[str, CentroCusto],
+    contas_por_nome: dict[str, ContaFinanceira],
+) -> tuple[LancamentoFinanceiro | None, dict[str, list[str]]]:
+    erros_por_campo: dict[str, list[str]] = {}
+
+    tipo = (dados_linha.get('tipo') or '').strip()
+    status = (dados_linha.get('status') or '').strip()
+    descricao = (dados_linha.get('descricao') or '').strip()
+    valor_texto = (dados_linha.get('valor') or '').strip()
+    data_competencia_texto = (dados_linha.get('data_competencia') or '').strip()
+    data_pagamento_texto = (dados_linha.get('data_pagamento') or '').strip()
+    pessoa_nome = (dados_linha.get('pessoa_nome') or '').strip()
+    categoria_nome = (dados_linha.get('categoria_nome') or '').strip()
+    centro_custo_nome = (dados_linha.get('centro_custo_nome') or '').strip()
+    conta_nome = (dados_linha.get('conta_nome') or '').strip()
+    conta_destino_nome = (dados_linha.get('conta_destino_nome') or '').strip()
+    numero_documento = (dados_linha.get('numero_documento') or '').strip()
+    observacoes = (dados_linha.get('observacoes') or '').strip()
+
+    tipos_validos = {escolha for escolha, _ in LancamentoFinanceiro.TipoLancamento.choices}
+    status_validos = {escolha for escolha, _ in LancamentoFinanceiro.StatusLancamento.choices}
+
+    if not tipo:
+        _adicionar_erro_importacao(erros_por_campo, 'tipo', 'Informe o tipo do lançamento.')
+    elif tipo not in tipos_validos:
+        _adicionar_erro_importacao(
+            erros_por_campo,
+            'tipo',
+            'Use um tipo válido: receita, despesa ou transferencia.',
+        )
+
+    if not status:
+        _adicionar_erro_importacao(erros_por_campo, 'status', 'Informe o status do lançamento.')
+    elif status not in status_validos:
+        _adicionar_erro_importacao(
+            erros_por_campo,
+            'status',
+            'Use um status válido: aberto, quitado ou cancelado.',
+        )
+
+    if not descricao:
+        _adicionar_erro_importacao(erros_por_campo, 'descricao', 'Informe a descrição.')
+
+    valor = _parse_decimal_importacao_lancamento(valor_texto)
+    if not valor_texto:
+        _adicionar_erro_importacao(erros_por_campo, 'valor', 'Informe o valor.')
+    elif valor is None:
+        _adicionar_erro_importacao(erros_por_campo, 'valor', 'Informe um valor numérico válido.')
+    elif valor <= 0:
+        _adicionar_erro_importacao(erros_por_campo, 'valor', 'Informe um valor maior que zero.')
+
+    data_competencia = _parse_data_importacao_lancamento(data_competencia_texto)
+    if not data_competencia_texto:
+        _adicionar_erro_importacao(
+            erros_por_campo,
+            'data_competencia',
+            'Informe a data de competência.',
+        )
+    elif data_competencia is None:
+        _adicionar_erro_importacao(
+            erros_por_campo,
+            'data_competencia',
+            'Use uma data de competência válida.',
+        )
+
+    data_pagamento = _parse_data_importacao_lancamento(data_pagamento_texto)
+    if not data_pagamento_texto:
+        _adicionar_erro_importacao(
+            erros_por_campo,
+            'data_pagamento',
+            'Informe a data de pagamento.',
+        )
+    elif data_pagamento is None:
+        _adicionar_erro_importacao(
+            erros_por_campo,
+            'data_pagamento',
+            'Use uma data de pagamento válida.',
+        )
+
+    pessoa = None
+    if pessoa_nome:
+        pessoa = pessoas_por_nome.get(_normalizar_nome_importacao_lancamento(pessoa_nome))
+        if pessoa is None:
+            _adicionar_erro_importacao(
+                erros_por_campo,
+                'pessoa_nome',
+                'Pessoa não encontrada no cadastro.',
+            )
+
+    categoria = None
+    if categoria_nome and tipo in tipos_validos:
+        categoria = categorias_por_tipo_nome.get(
+            (tipo, _normalizar_nome_importacao_lancamento(categoria_nome))
+        )
+        if categoria is None:
+            _adicionar_erro_importacao(
+                erros_por_campo,
+                'categoria_nome',
+                'Subcategoria não encontrada para o tipo informado.',
+            )
+
+    centro_custo = None
+    if centro_custo_nome:
+        centro_custo = centros_custo_por_nome.get(
+            _normalizar_nome_importacao_lancamento(centro_custo_nome)
+        )
+        if centro_custo is None:
+            _adicionar_erro_importacao(
+                erros_por_campo,
+                'centro_custo_nome',
+                'Centro de custo não encontrado no cadastro.',
+            )
+
+    conta = None
+    if conta_nome:
+        conta = contas_por_nome.get(_normalizar_nome_importacao_lancamento(conta_nome))
+        if conta is None:
+            _adicionar_erro_importacao(
+                erros_por_campo,
+                'conta_nome',
+                'Conta não encontrada no cadastro.',
+            )
+    else:
+        _adicionar_erro_importacao(erros_por_campo, 'conta_nome', 'Informe a conta.')
+
+    conta_destino = None
+    if conta_destino_nome:
+        conta_destino = contas_por_nome.get(
+            _normalizar_nome_importacao_lancamento(conta_destino_nome)
+        )
+        if conta_destino is None:
+            _adicionar_erro_importacao(
+                erros_por_campo,
+                'conta_destino_nome',
+                'Conta de destino não encontrada no cadastro.',
+            )
+
+    lancamento = LancamentoFinanceiro(
+        descricao=descricao,
+        tipo=tipo,
+        status=status,
+        valor=valor or Decimal('0.00'),
+        data_competencia=data_competencia,
+        data_pagamento=data_pagamento,
+        pessoa=pessoa,
+        categoria=categoria,
+        centro_custo=centro_custo,
+        conta=conta,
+        conta_destino=conta_destino,
+        numero_documento=numero_documento,
+        observacoes=observacoes,
+    )
+
+    try:
+        lancamento.full_clean()
+    except ValidationError as error:
+        for campo, mensagens in error.message_dict.items():
+            campo_planilha = LANCAMENTO_IMPORTACAO_CAMPOS_MODELO.get(campo, campo)
+            if campo_planilha in erros_por_campo:
+                continue
+            for mensagem in mensagens:
+                _adicionar_erro_importacao(erros_por_campo, campo_planilha, mensagem)
+
+    return (None if erros_por_campo else lancamento), erros_por_campo
+
+
+def _validar_conteudo_planilha_importacao_lancamentos_xlsx(arquivo_importacao) -> dict[str, object]:
+    resultado = {
+        'linhas_lidas': 0,
+        'linhas_validas': 0,
+        'linhas_importadas': 0,
+        'linhas_invalidas': 0,
+        'erros': [],
+        'lancamentos_validos': [],
+    }
+
+    linhas_planilha = _xlsx_ler_dados_modelo_importacao_lancamentos_xlsx(arquivo_importacao)
+    linhas_dados = linhas_planilha[1:] if linhas_planilha else []
+
+    pessoas_por_nome = _montar_indice_importacao_por_nome(
+        PessoaFinanceira.objects.filter(ativo=True).order_by('pk')
+    )
+    centros_custo_por_nome = _montar_indice_importacao_por_nome(
+        CentroCusto.objects.filter(ativo=True).order_by('pk')
+    )
+    contas_por_nome = _montar_indice_importacao_por_nome(
+        ContaFinanceira.objects.filter(ativa=True).order_by('pk')
+    )
+    categorias_por_tipo_nome = _montar_indice_categoria_importacao_por_tipo()
+    documentos_importacao: dict[str, int] = {}
+
+    for numero_linha, valores_linha in linhas_dados:
+        dados_linha = dict(zip(LANCAMENTO_IMPORTACAO_MODELO_COLUNAS, valores_linha))
+        if not any((valor or '').strip() for valor in dados_linha.values()):
+            continue
+
+        resultado['linhas_lidas'] += 1
+        lancamento_validado, erros_linha = _validar_linha_importacao_lancamento(
+            dados_linha,
+            pessoas_por_nome,
+            categorias_por_tipo_nome,
+            centros_custo_por_nome,
+            contas_por_nome,
+        )
+
+        numero_documento = (dados_linha.get('numero_documento') or '').strip()
+        if numero_documento and numero_documento in documentos_importacao:
+            _adicionar_erro_importacao(
+                erros_linha,
+                'numero_documento',
+                f'Documento repetido na linha {documentos_importacao[numero_documento]} desta planilha.',
+            )
+        elif numero_documento and lancamento_validado:
+            documentos_importacao[numero_documento] = numero_linha
+
+        if erros_linha:
+            resultado['linhas_invalidas'] += 1
+            resultado['erros'].append({
+                'linha': numero_linha,
+                'campos': [
+                    {
+                        'campo': campo,
+                        'rotulo': _rotulo_campo_importacao_lancamento(campo),
+                        'mensagem': mensagem,
+                    }
+                    for campo, mensagens in erros_linha.items()
+                    for mensagem in mensagens
+                ],
+            })
+        else:
+            resultado['linhas_validas'] += 1
+            resultado['lancamentos_validos'].append(lancamento_validado)
+
+    return resultado
 
 
 def _filtrar_lancamentos_por_parametros(queryset, parametros):
@@ -2020,13 +2436,13 @@ class LancamentoFinanceiroImportacaoExportacaoView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['page_title'] = 'Importação de Lançamentos'
+        context['resultado_importacao_validacao'] = kwargs.get('resultado_importacao_validacao')
         return context
-
 
     def post(self, request, *args, **kwargs):
         arquivo_importacao = request.FILES.get('arquivo_importacao')
         if not arquivo_importacao:
-            messages.error(request, 'Selecione uma planilha XLSX antes de validar a importacao.')
+            messages.error(request, 'Selecione uma planilha XLSX antes de importar.')
             return self.get(request, *args, **kwargs)
 
         erros_estrutura = _validar_estrutura_planilha_importacao_lancamentos_xlsx(arquivo_importacao)
@@ -2035,11 +2451,55 @@ class LancamentoFinanceiroImportacaoExportacaoView(TemplateView):
                 messages.error(request, erro)
             return self.get(request, *args, **kwargs)
 
-        messages.success(
-            request,
-            'Estrutura da planilha validada com sucesso. Nenhum lancamento foi importado nesta fase.',
+        resultado_importacao_validacao = _validar_conteudo_planilha_importacao_lancamentos_xlsx(
+            arquivo_importacao
         )
-        return redirect('financeiro:lancamento-importacao-exportacao')
+
+        if resultado_importacao_validacao['linhas_lidas'] == 0:
+            messages.warning(
+                request,
+                'A estrutura da planilha está correta, mas não há linhas preenchidas na aba Modelo.',
+            )
+        elif resultado_importacao_validacao['linhas_invalidas']:
+            messages.error(
+                request,
+                'Nenhuma linha foi importada porque a planilha ainda tem erros. '
+                'Ajuste os campos abaixo e envie novamente.',
+            )
+        else:
+            try:
+                with transaction.atomic():
+                    for lancamento in resultado_importacao_validacao['lancamentos_validos']:
+                        lancamento.save()
+                        _registrar_auditoria_lancamento(
+                            request=request,
+                            acao=AuditoriaFinanceiro.AcaoAuditoria.CREATE,
+                            lancamento=lancamento,
+                            antes=None,
+                            depois=_snapshot_lancamento(lancamento),
+                        )
+                resultado_importacao_validacao['linhas_importadas'] = (
+                    resultado_importacao_validacao['linhas_validas']
+                )
+                messages.success(
+                    request,
+                    'Importação concluída com sucesso. '
+                    f'{resultado_importacao_validacao["linhas_importadas"]} '
+                    'lançamentos importados.',
+                )
+            except ValidationError:
+                resultado_importacao_validacao['linhas_importadas'] = 0
+                messages.error(
+                    request,
+                    'Nenhuma linha foi importada porque a planilha ficou inconsistente durante '
+                    'a gravação. Revise o arquivo e envie novamente.',
+                )
+
+        return self.render_to_response(
+            self.get_context_data(
+                resultado_importacao_validacao=resultado_importacao_validacao,
+            )
+        )
 
 
 class LancamentoFinanceiroImportacaoModeloView(View):
