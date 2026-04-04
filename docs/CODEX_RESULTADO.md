@@ -1348,3 +1348,9 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - o estado vazio de `Últimos lançamentos do favorecido` ficou mais leve, e as acoes `Adicionar linha` / `Remover` ficaram discretamente mais ajustadas ao restante da tela
 - nesta microetapa nao houve alteracao de regra de negocio, validacoes, payload JS, `grupo_rateio`, `numero_documento`, calculos nem comportamento do formulario
 - foi possivel executar `py manage.py check` e validar novamente `/financeiro/lancamentos/novo/` com status `200`
+
+## Refinamento do relatorio de inconsistencias da importacao
+
+- o relatorio XLSX de inconsistencias da importacao passou a incluir a coluna `Como corrigir`, preservando `Linha`, `Campo` e `Mensagem`
+- as dicas sao curtas e operacionais, por exemplo formato de data, revisao de nomes cadastrados, compatibilidade entre `Tipo` e `Categoria`, preenchimento de `Conta de destino` e revisao de duplicidade de `Documento`
+- a coluna e derivada do campo/erro ja validado e nao altera a logica de importacao, a politica all-or-nothing, a estrutura da tela nem a aba unica `Inconsistencias`

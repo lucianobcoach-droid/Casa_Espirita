@@ -346,6 +346,21 @@ LANCAMENTO_IMPORTACAO_MODELO_ROTULOS = {
     'observacoes': 'Observações',
 }
 
+LANCAMENTO_IMPORTACAO_ORIENTACOES = {
+    'tipo': 'Use receita, despesa ou transferencia.',
+    'status': 'Use aberto, quitado ou cancelado.',
+    'descricao': 'Preencha uma descrição para identificar o lançamento.',
+    'valor': 'Informe um número maior que zero, com vírgula ou ponto decimal.',
+    'data_competencia': 'Use o formato dd/mm/aaaa.',
+    'data_pagamento': 'Use o formato dd/mm/aaaa.',
+    'pessoa_nome': 'Revise o nome exatamente como está cadastrado.',
+    'categoria_nome': 'Revise Tipo e Categoria e use uma subcategoria já cadastrada.',
+    'centro_custo_nome': 'Revise o nome exatamente como está cadastrado.',
+    'conta_nome': 'Revise o nome da conta ou preencha uma conta já cadastrada.',
+    'conta_destino_nome': 'Preencha uma conta de destino já cadastrada quando o tipo for transferência.',
+    'numero_documento': 'Revise duplicidade ou deixe em branco para geração automática.',
+}
+
 LANCAMENTO_IMPORTACAO_CAMPOS_MODELO = {
     'pessoa': 'pessoa_nome',
     'categoria': 'categoria_nome',
@@ -791,6 +806,13 @@ def _rotulo_campo_importacao_lancamento(campo: str) -> str:
     return LANCAMENTO_IMPORTACAO_MODELO_ROTULOS.get(campo, campo)
 
 
+def _orientacao_campo_importacao_lancamento(campo: str, mensagem: str) -> str:
+    if campo == 'conta_destino_nome' and 'iguais' in mensagem.lower():
+        return 'Escolha uma conta de destino diferente da conta de origem.'
+
+    return LANCAMENTO_IMPORTACAO_ORIENTACOES.get(campo, '')
+
+
 def _validar_linha_importacao_lancamento(
     dados_linha: dict[str, str],
     pessoas_por_nome: dict[str, PessoaFinanceira],
@@ -1019,6 +1041,10 @@ def _validar_conteudo_planilha_importacao_lancamentos_xlsx(arquivo_importacao) -
                         'campo': campo,
                         'rotulo': _rotulo_campo_importacao_lancamento(campo),
                         'mensagem': mensagem,
+                        'orientacao': _orientacao_campo_importacao_lancamento(
+                            campo,
+                            mensagem,
+                        ),
                     }
                     for campo, mensagens in erros_linha.items()
                     for mensagem in mensagens
@@ -1067,6 +1093,7 @@ def _normalizar_erros_importacao_lancamentos_relatorio(valor_serializado: str) -
                 'campo': str(erro_campo.get('campo') or '').strip(),
                 'rotulo': str(erro_campo.get('rotulo') or '').strip(),
                 'mensagem': str(erro_campo.get('mensagem') or '').strip(),
+                'orientacao': str(erro_campo.get('orientacao') or '').strip(),
             })
 
         if campos_normalizados:
@@ -1081,7 +1108,7 @@ def _normalizar_erros_importacao_lancamentos_relatorio(valor_serializado: str) -
 def _gerar_relatorio_inconsistencias_importacao_lancamentos_xlsx(
     erros: list[dict[str, object]],
 ) -> bytes:
-    linhas = [['Linha', 'Campo', 'Mensagem']]
+    linhas = [['Linha', 'Campo', 'Mensagem', 'Como corrigir']]
 
     for erro_linha in erros:
         for erro_campo in erro_linha.get('campos', []):
@@ -1089,6 +1116,7 @@ def _gerar_relatorio_inconsistencias_importacao_lancamentos_xlsx(
                 erro_linha.get('linha', ''),
                 erro_campo.get('rotulo', ''),
                 erro_campo.get('mensagem', ''),
+                erro_campo.get('orientacao', ''),
             ])
 
     return _gerar_arquivo_xlsx([('Inconsistências', linhas)])
