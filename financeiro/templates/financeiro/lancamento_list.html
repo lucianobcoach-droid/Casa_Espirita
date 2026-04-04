@@ -154,7 +154,6 @@
         list-style: none;
         display: flex;
         align-items: center;
-        gap: 0.5rem;
         cursor: pointer;
     }
 
@@ -180,6 +179,20 @@
         font-size: 0.8rem;
         font-weight: 700;
         flex: 0 0 auto;
+    }
+
+    .financeiro-lancamento-descricao-wrap {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        min-width: 0;
+    }
+
+    .financeiro-lancamento-descricao-spacer {
+        width: 1.55rem;
+        height: 1.55rem;
+        flex: 0 0 1.55rem;
+        visibility: hidden;
     }
 
     .financeiro-rateio-summary-text {
@@ -440,8 +453,9 @@
                             {% if lancamento_visual.eh_rateio %}
                                 <details class="financeiro-rateio-details">
                                     <summary>
-                                        <span class="financeiro-rateio-toggle" aria-hidden="true">+</span>
-                                        <span class="financeiro-rateio-summary-text">
+                                        <span class="financeiro-lancamento-descricao-wrap">
+                                            <span class="financeiro-rateio-toggle" aria-hidden="true">+</span>
+                                            <span class="financeiro-rateio-summary-text">
                                             <span>
                                                 {{ lancamento.descricao }}
                                                 <span class="financeiro-rateio-list-hint" title="LanÃ§amento rateado" aria-label="LanÃ§amento rateado">
@@ -460,6 +474,7 @@
                                                     {{ lancamento_visual.linhas_rateio|length }} linha(s): {{ lancamento_visual.resumo_rateio }}
                                                 </span>
                                             {% endif %}
+                                            </span>
                                         </span>
                                     </summary>
                                     <div class="financeiro-rateio-lines">
@@ -475,7 +490,10 @@
                                     </div>
                                 </details>
                             {% else %}
-                                {{ lancamento.descricao }}
+                                <span class="financeiro-lancamento-descricao-wrap">
+                                    <span class="financeiro-lancamento-descricao-spacer" aria-hidden="true"></span>
+                                    <span>{{ lancamento.descricao }}</span>
+                                </span>
                             {% endif %}
                             {% if not lancamento_visual.eh_rateio and lancamento.com_rateio and lancamento.grupo_rateio %}
                                 <span class="financeiro-rateio-list-hint" title="Lançamento rateado" aria-label="Lançamento rateado">
