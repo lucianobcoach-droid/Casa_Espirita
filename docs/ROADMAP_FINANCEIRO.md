@@ -130,6 +130,7 @@ Data: 2026-03-26
 - historico simples com os ultimos 5 lancamentos do favorecido no formulario de lancamento
 - acao `Clonar` diretamente na secao de ultimos lancamentos da pessoa dentro do formulario de lancamento, reaproveitando o fluxo ja existente de clone comum e de clone por grupo rateado
 - filtro do campo `Categoria`/`Subcategoria` pelo `tipo` selecionado no lancamento, exibindo apenas subcategorias de despesa em `despesa` e apenas subcategorias de receita em `receita`, com preservacao do comportamento de `transferencia`
+- fase 1 da importacao/exportacao de lancamentos com pagina propria reunindo upload preparado para fase futura, link de baixar planilha modelo XLSX com abas `Modelo` e `Instruções`, acao visual de exportacao e ajuda rapida operacional, ainda sem upload/importacao final, pre-validacao em massa, tratamento de duplicidades ou exportacao completa
 - MVP de regras automaticas no cadastro de lancamento comum, com sugestoes por digitacao em `descricao`, `pessoa` apenas como refinador opcional, preenchimento automatico por selecao da sugestao e check explicito para salvar o lancamento atual como nova regra futura
 - recibo em HTML imprimivel a partir do lancamento, com refinamentos posteriores de conteudo, assinatura, configuracao institucional e impressao
 - mensagens de erro mais claras em campos obrigatorios
@@ -186,7 +187,7 @@ Data: 2026-03-26
 - balancete padrao
 - importacao de planilha historica
 - importacao/exportacao futura de lancamentos com validacao de estrutura e dados, pre-visualizacao antes de confirmar, tratamento de linhas invalidas e duplicidades, e respeito as regras de negocio existentes
-- download de planilha modelo da importacao futura, em formato tabular com layout proprio do sistema e ordem de colunas compatível com o processo de importacao
+- evolucao da importacao futura para receber arquivo preenchido pelo usuario, validar colunas/tipos/dados, pre-visualizar antes de confirmar e tratar duplicidades, tomando como base a planilha modelo XLSX ja entregue
 - cadastro rapido de pessoa dentro do lancamento
 - cadastro rapido de categoria dentro do lancamento
 - evolucoes futuras especificas do bloco de recibos ja entregue
@@ -216,6 +217,7 @@ Observacao:
 - mapeamento e revisao futura das mensagens visiveis ao usuario no modulo `financeiro`, em alinhamento com a futura frente transversal do projeto
 
 ### Proximo
+- frente futura de edicao em lote nos cadastros e listagens operacionais, com selecao multipla de registros e aplicacao de acoes em massa, por exemplo excluir varios lancamentos, excluir varias categorias ou trocar situacao/status em lote, tratada como melhoria de UX/operacao e nao como regra de negocio estrutural
 - pagina futura de ajuda/manual de uso do sistema, voltada ao usuario final e focada em orientacao pratica de utilizacao das telas e fluxos, tratada como frente de UX/documentacao ao usuario e nao como regra de negocio nem como regras operacionais internas do modulo
 - evolucao futura do cadastro de categorias para deixar explicito na propria UI se o usuario esta cadastrando `Categoria` ou `Subcategoria`, com possibilidade de seletor `Categoria | Subcategoria` e exibicao condicional do campo `Categoria`
 - base inicial da edicao coordenada do rateio ja implementada com view e formulario proprios do grupo, ainda pendente de refinamentos para a experiencia final

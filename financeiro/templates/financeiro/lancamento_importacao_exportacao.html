@@ -1,0 +1,122 @@
+{% extends 'financeiro/base.html' %}
+
+{% block title %}Importacao / Exportacao de Lancamentos{% endblock %}
+
+{% block content %}
+<style>
+    .financeiro-importacao-page {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .financeiro-importacao-grid {
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .financeiro-importacao-card {
+        border: 1px solid rgba(203, 213, 225, 0.9);
+        border-radius: 1rem;
+        background: #fff;
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.05);
+        padding: 1rem;
+    }
+
+    .financeiro-importacao-card-title {
+        margin-bottom: 0.35rem;
+        color: #0f172a;
+        font-size: 1rem;
+        font-weight: 800;
+        letter-spacing: -0.01em;
+    }
+
+    .financeiro-importacao-card-text {
+        margin-bottom: 0.85rem;
+        color: #64748b;
+        font-size: 0.92rem;
+        line-height: 1.5;
+    }
+
+    .financeiro-importacao-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        align-items: center;
+    }
+
+    .financeiro-importacao-file {
+        max-width: 100%;
+    }
+
+    .financeiro-importacao-help-list {
+        margin-left: 1rem;
+        color: #475569;
+        font-size: 0.92rem;
+        line-height: 1.6;
+    }
+
+    .financeiro-importacao-help-list li + li {
+        margin-top: 0.45rem;
+    }
+
+    @media screen and (max-width: 768px) {
+        .financeiro-importacao-grid {
+            grid-template-columns: minmax(0, 1fr);
+        }
+    }
+</style>
+
+<div class="financeiro-importacao-page">
+    <div class="financeiro-page-header financeiro-page-head">
+        <div class="financeiro-page-header-main">
+            <h1 class="title financeiro-page-title">Importacao / Exportacao de Lancamentos</h1>
+        </div>
+        <div class="financeiro-page-header-actions no-print">
+            <a class="button is-light" href="{% url 'financeiro:lancamento-list' %}">Voltar para lancamentos</a>
+        </div>
+    </div>
+
+    <div class="financeiro-importacao-grid">
+        <section class="financeiro-importacao-card">
+            <h2 class="financeiro-importacao-card-title">Importar lancamentos</h2>
+            <p class="financeiro-importacao-card-text">
+                Envie uma planilha XLSX preenchida no layout do sistema. Nesta fase, o envio ainda fica apenas preparado para a proxima etapa da importacao.
+            </p>
+
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="field">
+                    <label class="label" for="arquivo_importacao">Arquivo de importacao</label>
+                    <div class="control">
+                        <input class="input financeiro-importacao-file" type="file" id="arquivo_importacao" name="arquivo_importacao" accept=".xlsx,.xls" disabled>
+                    </div>
+                </div>
+
+                <div class="financeiro-importacao-actions">
+                    <button class="button is-primary" type="button" disabled>Importar lancamentos</button>
+                    <a class="button is-link is-light" href="{% url 'financeiro:lancamento-importacao-modelo' %}">Baixar planilha modelo</a>
+                </div>
+            </form>
+        </section>
+
+        <section class="financeiro-importacao-card">
+            <h2 class="financeiro-importacao-card-title">Exportar lancamentos</h2>
+            <p class="financeiro-importacao-card-text">
+                Baixe uma planilha com os lancamentos do sistema. A exportacao completa sera ativada em uma proxima fase.
+            </p>
+
+            <button class="button is-link" type="button" disabled>Exportar lancamentos</button>
+        </section>
+    </div>
+
+    <section class="financeiro-importacao-card">
+        <h2 class="financeiro-importacao-card-title">Ajuda rapida</h2>
+        <ul class="financeiro-importacao-help-list">
+            <li>Baixe a planilha modelo XLSX e preencha os campos na ordem esperada pelo sistema.</li>
+            <li>Use o bloco de importacao para selecionar o arquivo quando a proxima fase de envio estiver liberada.</li>
+            <li>Use o bloco de exportacao para baixar os lancamentos quando a exportacao completa for habilitada.</li>
+        </ul>
+    </section>
+</div>
+{% endblock %}

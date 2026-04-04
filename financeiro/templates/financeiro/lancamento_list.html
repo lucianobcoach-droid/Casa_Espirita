@@ -154,6 +154,9 @@
             <h1 class="title financeiro-page-title">Lancamentos financeiros</h1>
         </div>
         <div class="financeiro-page-header-actions no-print">
+            <a class="button is-link is-light" href="{% url 'financeiro:lancamento-importacao-exportacao' %}">
+                Importacao / Exportacao
+            </a>
             <a class="button is-primary" href="{% url 'financeiro:lancamento-create' %}">Novo lancamento financeiro</a>
         </div>
     </div>

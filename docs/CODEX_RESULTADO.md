@@ -171,6 +171,15 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - na auditoria humana posterior, a causa exata da omissao de categorias validas foi identificada como o `limit = 10` herdado por `CategoriaFinanceiraAutocompleteView`, que fatiava a resposta final do endpoint mesmo quando o queryset do form ja continha mais subcategorias compativeis; essa view passou a usar um limite proprio amplo para nao truncar opcoes validas
 - a microetapa preserva o fluxo de clone comum, clone rateado, regras automaticas, create comum e transferencia, sem abrir importacao/exportacao, pagina de ajuda ou refatoracao ampla do formulario
 
+## Fase 1 da importacao/exportacao de lancamentos: planilha modelo
+
+- foi criada a rota `lancamentos/importacao/modelo/` para baixar a planilha modelo da futura importacao de lancamentos; numa correcao posterior desta fase, o arquivo deixou de ser CSV com exemplos e passou a ser XLSX com duas abas: `Modelo` e `Instruções`
+- foi criada uma pagina dedicada de `Importacao / Exportacao de Lancamentos`, acessivel a partir da listagem principal, organizando em um unico lugar upload preparado para fase futura, link para baixar modelo, acao visual de exportacao e um bloco de ajuda rapida sem expor regras internas
+- a listagem de lancamentos deixou de exibir o download do modelo como acao solta e passou a oferecer a entrada `Importacao / Exportacao` no topo, sem alterar filtros, tabela, clone, recibo, rateio ou regras automaticas
+- o layout oficial inicial do modelo foi definido com as colunas `tipo`, `status`, `descricao`, `valor`, `data_competencia`, `data_pagamento`, `pessoa_nome`, `categoria_nome`, `centro_custo_nome`, `conta_nome`, `conta_destino_nome`, `numero_documento` e `observacoes`
+- a aba `Modelo` passa a conter apenas a linha de cabecalhos oficiais, sem linhas de exemplo, e a aba `Instruções` concentra orientacoes operacionais curtas sobre finalidade, preservacao dos cabecalhos, uma linha por lancamento, formato de datas/valores, campos que podem ficar em branco e uso de `conta_destino_nome` em transferencias
+- esta fase segue sem implementar upload/importacao de arquivo do usuario, pre-validacao em massa, tratamento de duplicidades ou exportacao completa
+
 ## Regras aplicadas nesta etapa
 
 - `numero_documento` continua opcional para o usuario

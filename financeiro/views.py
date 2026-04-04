@@ -3,13 +3,16 @@ from __future__ import annotations
 from calendar import monthrange
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+from io import BytesIO
 from urllib.parse import urlencode
 from uuid import uuid4
+from xml.sax.saxutils import escape
+from zipfile import ZIP_DEFLATED, ZipFile
 
 from django.contrib import messages
 from django.db import transaction
 from django.db.models import Q
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.views import View
@@ -306,6 +309,129 @@ MESES_EXTENSO = (
     'novembro',
     'dezembro',
 )
+
+LANCAMENTO_IMPORTACAO_MODELO_COLUNAS = [
+    'tipo',
+    'status',
+    'descricao',
+    'valor',
+    'data_competencia',
+    'data_pagamento',
+    'pessoa_nome',
+    'categoria_nome',
+    'centro_custo_nome',
+    'conta_nome',
+    'conta_destino_nome',
+    'numero_documento',
+    'observacoes',
+]
+
+LANCAMENTO_IMPORTACAO_MODELO_INSTRUCOES = [
+    [
+        'Finalidade',
+        'Use esta planilha como base para preparar lancamentos que serao importados em uma proxima etapa do sistema.',
+    ],
+    [
+        'Cabecalhos',
+        'Mantenha os nomes das colunas da aba Modelo exatamente como estao e preencha uma linha por lancamento.',
+    ],
+    [
+        'Datas e valores',
+        'Use datas no formato AAAA-MM-DD e valores numericos com ponto decimal quando necessario.',
+    ],
+    [
+        'Campos opcionais',
+        'Deixe em branco os campos que nao se aplicarem ao lancamento, como centro_custo_nome, numero_documento e observacoes.',
+    ],
+    [
+        'Transferencias',
+        'Preencha conta_destino_nome apenas quando o lancamento for uma transferencia entre contas.',
+    ],
+    [
+        'Layout do sistema',
+        'Preencha os dados seguindo a ordem e a estrutura da aba Modelo para facilitar a futura importacao.',
+    ],
+]
+
+
+def _xlsx_coluna_referencia(indice_coluna: int) -> str:
+    referencia = ''
+    while indice_coluna:
+        indice_coluna, resto = divmod(indice_coluna - 1, 26)
+        referencia = f'{chr(65 + resto)}{referencia}'
+    return referencia
+
+
+def _xlsx_planilha_xml(linhas: list[list[str]]) -> str:
+    linhas_xml = []
+    for indice_linha, linha in enumerate(linhas, start=1):
+        celulas_xml = []
+        for indice_coluna, valor in enumerate(linha, start=1):
+            referencia = f'{_xlsx_coluna_referencia(indice_coluna)}{indice_linha}'
+            celulas_xml.append(
+                f'<c r="{referencia}" t="inlineStr"><is><t>{escape(str(valor))}</t></is></c>'
+            )
+        linhas_xml.append(f'<row r="{indice_linha}">{"".join(celulas_xml)}</row>')
+
+    return (
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+        '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+        f'<sheetData>{"".join(linhas_xml)}</sheetData>'
+        '</worksheet>'
+    )
+
+
+def _gerar_planilha_modelo_lancamentos_xlsx() -> bytes:
+    arquivo = BytesIO()
+
+    with ZipFile(arquivo, 'w', ZIP_DEFLATED) as workbook:
+        workbook.writestr(
+            '[Content_Types].xml',
+            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+            '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+            '<Default Extension="xml" ContentType="application/xml"/>'
+            '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
+            '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'
+            '<Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'
+            '</Types>',
+        )
+        workbook.writestr(
+            '_rels/.rels',
+            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+            '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>'
+            '</Relationships>',
+        )
+        workbook.writestr(
+            'xl/workbook.xml',
+            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" '
+            'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+            '<sheets>'
+            '<sheet name="Modelo" sheetId="1" r:id="rId1"/>'
+            '<sheet name="Instruções" sheetId="2" r:id="rId2"/>'
+            '</sheets>'
+            '</workbook>',
+        )
+        workbook.writestr(
+            'xl/_rels/workbook.xml.rels',
+            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+            '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>'
+            '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/>'
+            '</Relationships>',
+        )
+        workbook.writestr(
+            'xl/worksheets/sheet1.xml',
+            _xlsx_planilha_xml([LANCAMENTO_IMPORTACAO_MODELO_COLUNAS]),
+        )
+        workbook.writestr(
+            'xl/worksheets/sheet2.xml',
+            _xlsx_planilha_xml([['Item', 'Orientacao'], *LANCAMENTO_IMPORTACAO_MODELO_INSTRUCOES]),
+        )
+
+    return arquivo.getvalue()
 
 
 def _centena_por_extenso(numero: int) -> str:
@@ -1694,6 +1820,26 @@ class LancamentoFinanceiroListView(ListView):
         context['pessoas_disponiveis'] = PessoaFinanceira.objects.order_by('nome')
         context['categorias_disponiveis'] = CategoriaFinanceira.objects.order_by('tipo', 'nome')
         return context
+
+
+class LancamentoFinanceiroImportacaoExportacaoView(TemplateView):
+    template_name = 'financeiro/lancamento_importacao_exportacao.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['page_title'] = 'Importacao / Exportacao de Lancamentos'
+        return context
+
+
+class LancamentoFinanceiroImportacaoModeloView(View):
+    def get(self, request, *args, **kwargs):
+        response = HttpResponse(
+            _gerar_planilha_modelo_lancamentos_xlsx(),
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        )
+        response['Content-Disposition'] = 'attachment; filename="modelo_importacao_lancamentos.xlsx"'
+
+        return response
 
 
 class LancamentoFinanceiroCreateView(FinanceiroFormMixin, CreateView):

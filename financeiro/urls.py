@@ -36,6 +36,8 @@ from .views import (
     LancamentoFinanceiroDeleteView,
     LancamentoFinanceiroGrupoRateioCloneView,
     LancamentoFinanceiroGrupoRateioUpdateView,
+    LancamentoFinanceiroImportacaoExportacaoView,
+    LancamentoFinanceiroImportacaoModeloView,
     LancamentoFinanceiroListView,
     LancamentoFinanceiroReciboView,
     LancamentoFinanceiroUpdateView,
@@ -110,6 +112,16 @@ urlpatterns = [
         name='configuracao-institucional-delete',
     ),
     path('lancamentos/', LancamentoFinanceiroListView.as_view(), name='lancamento-list'),
+    path(
+        'lancamentos/importacao-exportacao/',
+        LancamentoFinanceiroImportacaoExportacaoView.as_view(),
+        name='lancamento-importacao-exportacao',
+    ),
+    path(
+        'lancamentos/importacao/modelo/',
+        LancamentoFinanceiroImportacaoModeloView.as_view(),
+        name='lancamento-importacao-modelo',
+    ),
     path('lancamentos/novo/', LancamentoFinanceiroCreateView.as_view(), name='lancamento-create'),
     path(
         'lancamentos/regras/sugestoes/',
