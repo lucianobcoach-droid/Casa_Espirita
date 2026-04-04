@@ -24,6 +24,7 @@ from .forms import (
     LancamentoFinanceiroForm,
     LancamentoFinanceiroGrupoRateioForm,
     PessoaFinanceiraForm,
+    categorias_vinculaveis_queryset,
 )
 from .models import (
     AssinaturaInstitucional,
@@ -759,9 +760,17 @@ class PessoaFinanceiraUltimosLancamentosView(View):
 class CategoriaFinanceiraAutocompleteView(FinanceiroAutocompleteView):
     model = CategoriaFinanceira
     search_fields = ('nome',)
+    limit = 1000
 
     def get_queryset(self):
-        return super().get_queryset().filter(categoria_pai__isnull=False)
+        queryset = super().get_queryset().filter(categoria_pai__isnull=False)
+        tipo = self.request.GET.get('tipo', '').strip()
+        if tipo in {
+            LancamentoFinanceiro.TipoLancamento.RECEITA,
+            LancamentoFinanceiro.TipoLancamento.DESPESA,
+        }:
+            queryset = queryset.filter(tipo=tipo)
+        return queryset
 
 
 class ContaFinanceiraAutocompleteView(FinanceiroAutocompleteView):
@@ -1698,8 +1707,8 @@ class LancamentoFinanceiroCreateView(FinanceiroFormMixin, CreateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['rateio_categoria_opcoes'] = [
-            {'id': categoria.pk, 'label': str(categoria)}
-            for categoria in CategoriaFinanceira.objects.filter(categoria_pai__isnull=False).order_by('tipo', 'nome')
+            {'id': categoria.pk, 'label': str(categoria), 'tipo': categoria.tipo}
+            for categoria in categorias_vinculaveis_queryset()
         ]
         return context
 
@@ -1943,8 +1952,8 @@ class LancamentoFinanceiroUpdateView(FinanceiroFormMixin, UpdateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['rateio_categoria_opcoes'] = [
-            {'id': categoria.pk, 'label': str(categoria)}
-            for categoria in CategoriaFinanceira.objects.filter(categoria_pai__isnull=False).order_by('tipo', 'nome')
+            {'id': categoria.pk, 'label': str(categoria), 'tipo': categoria.tipo}
+            for categoria in categorias_vinculaveis_queryset()
         ]
         return context
 
@@ -2058,8 +2067,8 @@ class LancamentoFinanceiroGrupoRateioUpdateView(FinanceiroFormMixin, UpdateView)
         context = super().get_context_data(**kwargs)
         grupo_lancamentos = self._get_grupo_lancamentos()
         context['rateio_categoria_opcoes'] = [
-            {'id': categoria.pk, 'label': str(categoria)}
-            for categoria in CategoriaFinanceira.objects.filter(categoria_pai__isnull=False).order_by('tipo', 'nome')
+            {'id': categoria.pk, 'label': str(categoria), 'tipo': categoria.tipo}
+            for categoria in categorias_vinculaveis_queryset()
         ]
         context['grupo_rateio'] = grupo_lancamentos[0].grupo_rateio
         context['grupo_rateio_quantidade_linhas'] = len(grupo_lancamentos)

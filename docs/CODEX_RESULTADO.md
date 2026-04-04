@@ -163,6 +163,14 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - `PessoaFinanceiraUltimosLancamentosView` passou a retornar `clone_url` no payload JSON de cada item, apontando para `financeiro:lancamento-clone` em lancamento comum sem rateio e para `financeiro:lancamento-rateio-clone` quando o item historico exibido pertence a um `grupo_rateio` valido
 - o template reaproveita diretamente essas URLs ja existentes, sem duplicar regra de clone no JavaScript e sem alterar o formulario atual, o autocomplete de regras, o rateio, a transferencia ou a listagem principal
 
+## Filtro de categoria/subcategoria por tipo do lancamento
+
+- o queryset do campo `categoria` em `LancamentoFinanceiroForm` passou a considerar o `tipo` atual do lancamento, carregando apenas subcategorias de `receita` ou apenas subcategorias de `despesa` conforme o caso, sem reintroduzir categoria em `transferencia`
+- o endpoint `CategoriaFinanceiraAutocompleteView` passou a aceitar o parametro opcional `tipo` e a filtrar as sugestoes de categoria pelo mesmo recorte quando o tipo e `receita` ou `despesa`
+- o JS de `financeiro/templates/financeiro/lancamento_form.html` passou a enviar o `tipo` atual no autocomplete de `categoria`, limpar a categoria selecionada quando o tipo muda manualmente e filtrar tambem as opcoes das linhas de rateio conforme `receita` ou `despesa`
+- na auditoria humana posterior, a causa exata da omissao de categorias validas foi identificada como o `limit = 10` herdado por `CategoriaFinanceiraAutocompleteView`, que fatiava a resposta final do endpoint mesmo quando o queryset do form ja continha mais subcategorias compativeis; essa view passou a usar um limite proprio amplo para nao truncar opcoes validas
+- a microetapa preserva o fluxo de clone comum, clone rateado, regras automaticas, create comum e transferencia, sem abrir importacao/exportacao, pagina de ajuda ou refatoracao ampla do formulario
+
 ## Regras aplicadas nesta etapa
 
 - `numero_documento` continua opcional para o usuario

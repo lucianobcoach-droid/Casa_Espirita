@@ -571,6 +571,9 @@
                 const requestId = activeRequestId;
                 const url = new URL(endpointUrl, window.location.origin);
                 url.searchParams.set('q', query);
+                if (select.name === 'categoria' && tipoField && tipoField.value) {
+                    url.searchParams.set('tipo', tipoField.value);
+                }
                 fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
                     .then((response) => response.json())
                     .then((data) => {
@@ -789,6 +792,16 @@
 
         function clearHistorico(message) { renderHistoricoState(message, []); }
 
+        function getRateioCategoriasFiltradas() {
+            const tipoAtual = tipoField ? tipoField.value : '';
+            if (tipoAtual !== 'receita' && tipoAtual !== 'despesa') {
+                return rateioCategorias;
+            }
+            return rateioCategorias.filter(function (categoria) {
+                return categoria.tipo === tipoAtual;
+            });
+        }
+
         function syncDataCompetenciaFromPagamento() {
             if (!dataCompetenciaField || !dataPagamentoField) return;
             if (!dataPagamentoField.value) return;
@@ -851,7 +864,7 @@
             emptyOption.value = '';
             emptyOption.textContent = 'Selecione';
             select.appendChild(emptyOption);
-            rateioCategorias.forEach(function (categoria) {
+            getRateioCategoriasFiltradas().forEach(function (categoria) {
                 const option = document.createElement('option');
                 option.value = String(categoria.id);
                 option.textContent = categoria.label;
@@ -885,7 +898,15 @@
             if (!rateioBody) return;
             rateioBody.innerHTML = '';
             if (!rateioRows.length) rateioRows = [{ categoria: '', valor: '' }, { categoria: '', valor: '' }];
+            const categoriasPermitidasIds = new Set(
+                getRateioCategoriasFiltradas().map(function (categoria) {
+                    return String(categoria.id);
+                })
+            );
             rateioRows.forEach(function (row, index) {
+                if (row.categoria && !categoriasPermitidasIds.has(String(row.categoria))) {
+                    row.categoria = '';
+                }
                 const tr = document.createElement('tr');
                 const categoriaCell = document.createElement('td');
                 categoriaCell.appendChild(createRateioCategoriaSelect(row.categoria, index));
@@ -943,6 +964,10 @@
             } else {
                 clearRegraSugestoes();
             }
+            if (isRateio) {
+                renderRateioRows();
+                serializeRateioRows();
+            }
         }
 
         autocompleteFields.forEach(createAutocomplete);
@@ -972,7 +997,21 @@
         }
         if (pessoaField) pessoaField.addEventListener('change', loadPessoaHistorico);
         if (pessoaField) pessoaField.addEventListener('change', handleRegraSugestaoTrigger);
-        if (tipoField) tipoField.addEventListener('change', syncRateioState);
+        if (tipoField) {
+            tipoField.addEventListener('change', function () {
+                if (
+                    categoriaField
+                    && categoriaField.value
+                    && !regraSugestaoAplicacaoEmAndamento
+                ) {
+                    const hadValue = !!categoriaField.value;
+                    categoriaField.value = '';
+                    if (categoriaField._autocompleteInput) categoriaField._autocompleteInput.value = '';
+                    if (hadValue) categoriaField.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+                syncRateioState();
+            });
+        }
         if (rateioToggle) rateioToggle.addEventListener('change', syncRateioState);
         if (dataCompetenciaField) {
             dataCompetenciaField.dataset.autoFilledCompetencia = dataCompetenciaField.value ? 'false' : 'true';

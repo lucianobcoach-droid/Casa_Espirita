@@ -129,6 +129,7 @@ Data: 2026-03-26
 - comportamento condicional do formulario de lancamento
 - historico simples com os ultimos 5 lancamentos do favorecido no formulario de lancamento
 - acao `Clonar` diretamente na secao de ultimos lancamentos da pessoa dentro do formulario de lancamento, reaproveitando o fluxo ja existente de clone comum e de clone por grupo rateado
+- filtro do campo `Categoria`/`Subcategoria` pelo `tipo` selecionado no lancamento, exibindo apenas subcategorias de despesa em `despesa` e apenas subcategorias de receita em `receita`, com preservacao do comportamento de `transferencia`
 - MVP de regras automaticas no cadastro de lancamento comum, com sugestoes por digitacao em `descricao`, `pessoa` apenas como refinador opcional, preenchimento automatico por selecao da sugestao e check explicito para salvar o lancamento atual como nova regra futura
 - recibo em HTML imprimivel a partir do lancamento, com refinamentos posteriores de conteudo, assinatura, configuracao institucional e impressao
 - mensagens de erro mais claras em campos obrigatorios
@@ -230,7 +231,6 @@ Observacao:
 - importacao/exportacao futura de lancamentos, com importacao em massa validada por pre-visualizacao e exportacao tabular de consultas filtradas
 - na importacao/exportacao futura, o fluxo de importacao deve oferecer download de planilha modelo no layout proprio do sistema, preservando a ordem e as colunas esperadas pelo backend de importacao
 - refinamentos futuros do MVP de regras automaticas ja aberto no lancamento, preservando `descricao` como gatilho principal por digitacao, `pessoa` apenas como refinador opcional, preenchimento automatico por selecao de uma sugestao e check explicito para salvar nova regra a partir de lancamento comum; melhorias futuras podem incluir curadoria, edicao e governanca dessas regras em tela propria
-- filtro futuro do campo `Categoria`/`Subcategoria` pelo `tipo` selecionado no lancamento: ao escolher `despesa`, listar apenas subcategorias de despesa; ao escolher `receita`, listar apenas subcategorias de receita
 - acao `Clonar lancamento`, com MVP inicial restrito a lancamento comum sem rateio: abrir `lancamento_form.html` em modo criacao como modelo editavel sem vinculo com o original, copiando campos operacionais seguros (`descricao`, `tipo`, `status`, `valor`, `data_competencia`, `data_pagamento`, `pessoa`, `categoria`, `centro_custo`, `conta`, `conta_destino` quando transferencia, `observacoes`) e sem copiar `pk`, `numero_documento`, auditoria, `grupo_rateio` nem `com_rateio`
 - fase futura posterior de clonagem de lancamentos rateados por `grupo_rateio`, tambem sem vinculo com o original, abrindo novo documento rateado ja preenchido e exigindo ajuste manual das linhas/categorias se o `valor total do documento` for alterado no clone
 - evolucao futura dos relatorios financeiros para leitura hierarquica por `Categoria` e `Subcategoria`, preservando a distincao entre agrupador analitico e item operacional lancavel

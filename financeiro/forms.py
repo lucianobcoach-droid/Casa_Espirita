@@ -6,7 +6,6 @@ from uuid import uuid4
 
 from django import forms
 from django.core.exceptions import ValidationError
-from django.db.models import Q
 from django.forms.models import construct_instance
 from django.urls import reverse_lazy
 
@@ -21,8 +20,16 @@ from .models import (
 )
 
 
-def categorias_vinculaveis_queryset():
-    return CategoriaFinanceira.objects.filter(categoria_pai__isnull=False).order_by('tipo', 'nome')
+def categorias_vinculaveis_queryset(tipo: str | None = None, categoria_extra_id: int | str | None = None):
+    queryset = CategoriaFinanceira.objects.filter(categoria_pai__isnull=False)
+    if tipo in {
+        LancamentoFinanceiro.TipoLancamento.RECEITA,
+        LancamentoFinanceiro.TipoLancamento.DESPESA,
+    }:
+        queryset = queryset.filter(tipo=tipo)
+    if categoria_extra_id:
+        queryset = queryset | CategoriaFinanceira.objects.filter(pk=categoria_extra_id)
+    return queryset.order_by('tipo', 'nome')
 
 
 class ContaFinanceiraForm(forms.ModelForm):
@@ -155,13 +162,13 @@ class LancamentoFinanceiroForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self._rateio_group_token = self.instance.grupo_rateio or uuid4().hex
         self.rateio_linhas_iniciais = []
-        self.fields['categoria'].queryset = categorias_vinculaveis_queryset()
+        tipo_atual = self._get_tipo_atual()
         categoria_inicial = self.initial.get('categoria') or self.instance.categoria
         categoria_inicial_id = getattr(categoria_inicial, 'pk', categoria_inicial)
-        if categoria_inicial_id:
-            self.fields['categoria'].queryset = CategoriaFinanceira.objects.filter(
-                Q(categoria_pai__isnull=False) | Q(pk=categoria_inicial_id)
-            ).order_by('tipo', 'nome')
+        self.fields['categoria'].queryset = categorias_vinculaveis_queryset(
+            tipo=tipo_atual,
+            categoria_extra_id=categoria_inicial_id,
+        )
         for field_name in ('data_competencia', 'data_pagamento'):
             self.fields[field_name].widget.format = '%Y-%m-%d'
             if self.is_bound:
@@ -215,6 +222,15 @@ class LancamentoFinanceiroForm(forms.ModelForm):
         self.fields['categoria'].widget.attrs.pop('required', None)
         self.fields['pessoa'].widget.attrs.pop('required', None)
 
+    def _get_tipo_atual(self) -> str:
+        if self.is_bound:
+            return (self.data.get(self.add_prefix('tipo')) or '').strip()
+        return (
+            self.initial.get('tipo')
+            or self.instance.tipo
+            or LancamentoFinanceiro.TipoLancamento.RECEITA
+        )
+
     def _parse_rateio_payload(self, payload: str) -> list[dict[str, str]]:
         if not payload:
             return []
@@ -264,7 +280,7 @@ class LancamentoFinanceiroForm(forms.ModelForm):
         soma_rateio = Decimal('0.00')
         rateio_por_categoria: dict[int, dict[str, object]] = {}
         categorias_disponiveis = {
-            str(categoria.pk): categoria for categoria in categorias_vinculaveis_queryset()
+            str(categoria.pk): categoria for categoria in categorias_vinculaveis_queryset(tipo)
         }
 
         for indice, linha in enumerate(linhas_brutas, start=1):
@@ -347,6 +363,11 @@ class LancamentoFinanceiroForm(forms.ModelForm):
                 self.add_error(
                     'categoria',
                     'Selecione uma subcategoria para receita e despesa. Categoria pai nao pode ser usada em lancamentos.',
+                )
+            elif cleaned_data.get('categoria') and cleaned_data['categoria'].tipo != tipo:
+                self.add_error(
+                    'categoria',
+                    'Selecione uma subcategoria compativel com o tipo do lancamento.',
                 )
 
         if lancamento_com_rateio:
@@ -531,7 +552,7 @@ class LancamentoFinanceiroGrupoRateioForm(forms.ModelForm):
             return cleaned_data
 
         categorias_disponiveis = {
-            str(categoria.pk): categoria for categoria in categorias_vinculaveis_queryset()
+            str(categoria.pk): categoria for categoria in categorias_vinculaveis_queryset(tipo)
         }
         linhas_validas = 0
         soma_rateio = Decimal('0.00')
