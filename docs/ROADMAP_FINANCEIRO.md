@@ -132,6 +132,7 @@ Data: 2026-03-26
 - filtro do campo `Categoria`/`Subcategoria` pelo `tipo` selecionado no lancamento, exibindo apenas subcategorias de despesa em `despesa` e apenas subcategorias de receita em `receita`, com preservacao do comportamento de `transferencia`
 - fase 1 de edicao em lote na listagem de lancamentos, com selecao multipla por checkbox, marcar todos os itens visiveis, exclusao em lote com confirmacao e alteracao transacional de status dos selecionados, ainda sem expandir para outros cadastros
 - agrupamento visual de rateios na listagem de lancamentos como uma unica linha-resumo expandivel por `grupo_rateio`, com leitura das linhas internas sob demanda, valor total consolidado no resumo e selecao em lote mirando o grupo inteiro, sem alterar o modelo fisico nem outras telas nesta etapa
+- padronizacao visual da coluna de acoes na listagem de lancamentos por slots fixos, com `Recibo` contextual apenas quando aplicavel, descricoes truncadas com reticencias e tooltip para leitura rapida, e ordenacao padrao por data principal mais recente primeiro
 - fases 1, 2 e 3 da importacao/exportacao de lancamentos com pagina propria focada em upload e link de baixar planilha modelo XLSX com abas `Modelo` e `Instruções`, validacao estrutural do XLSX enviado por extensao/formato/abas/cabecalhos, validacao de conteudo linha a linha da aba `Modelo` contra cadastros ja existentes, importacao orientada prioritariamente a datas em `dd/mm/aaaa` com tolerancia interna tambem a `AAAA-MM-DD`, mensagens com rotulos amigaveis, resumo de linhas lidas/validas/importadas/com erro, download de relatorio XLSX de inconsistencias quando ha erros e importacao real all-or-nothing quando todas as linhas estao validas, primeira exportacao real simples em XLSX acionada pela propria listagem de lancamentos com respeito aos filtros ativos, cabecalhos amigaveis ao usuario, datas em `dd/mm/aaaa` e valores com virgula decimal, e ajuda rapida operacional, ainda sem preview avancado de linhas, criacao automatica de cadastros auxiliares, importacao parcial, tratamento avancado de duplicidades ou exportacao avancada com variacoes
 - MVP de regras automaticas no cadastro de lancamento comum, com sugestoes por digitacao em `descricao`, `pessoa` apenas como refinador opcional, preenchimento automatico por selecao da sugestao e check explicito para salvar o lancamento atual como nova regra futura
 - recibo em HTML imprimivel a partir do lancamento, com refinamentos posteriores de conteudo, assinatura, configuracao institucional e impressao
@@ -161,6 +162,7 @@ Data: 2026-03-26
 - validacoes defensivas adicionais em fluxos operacionais
 - extrato com mais contexto operacional sem poluir a tela
 - filtros da listagem de lancamentos com melhorias de usabilidade
+- evolucao futura da listagem de lancamentos com mostrar/ocultar colunas, redimensionamento manual de colunas e preferencias persistentes de visualizacao por usuario ou navegador, tratada como refinamento de UX e nao como regra de negocio
 - acabamento documental futuro complementar dos relatorios impressos, apenas apos uso real, especialmente quando entrarem logo institucional e configuracao avancada de assinaturas
 - evolucao futura da identidade institucional nos relatorios do financeiro, incluindo uso controlado de logo quando fizer sentido documental sem poluir a leitura operacional
 - evolucao futura da logica de assinaturas em relatorios do financeiro:
@@ -200,6 +202,9 @@ Observacao:
 - os itens abaixo permanecem futuros; a reorganizacao serve apenas para orientar prioridade pratica de execucao
 
 ### Imediato
+- proxima frente funcional prioritaria do sistema: `permissoes/autenticacao` com configuracao hierarquica de perfis por `Modulo` > `Tela/Recurso` > `Acao`, em camada transversal do projeto e nao como ajuste isolado do `financeiro`
+- na abertura real da frente de `permissoes/autenticacao`, criar `docs/MATRIZ_PERMISSOES.md` como documento proprio de mapeamento de permissoes; este arquivo nao deve ser criado nesta microetapa documental
+- auditoria de UX entre telas existentes e consolidacao de um padrao visual/funcional transversal em `docs/PADRAO_UX_SISTEMA.md`, com padronizacao progressiva das melhorias ja aprovadas no `financeiro` para outros modulos
 - refinamentos futuros do shell visual do `financeiro` e da sidebar ja implantada, guiados por uso real e sem reabrir troca estrutural ampla da navegacao
 - refinamento futuro do menu lateral para ficar mais leve, mais coerente com o tema, menos pesado visualmente e com item ativo mais elegante, reduzindo a sensacao de painel antigo sem trocar a sidebar como navegacao principal
 - consolidacao futura de componentes visuais compartilhados do modulo, como cabecalho de pagina, bloco de filtros, card padrao, KPI, tabela e formulario
@@ -218,6 +223,7 @@ Observacao:
 - mapeamento e revisao futura das mensagens visiveis ao usuario no modulo `financeiro`, em alinhamento com a futura frente transversal do projeto
 
 ### Proximo
+- evolucao futura do cadastro de logo institucional/configuracao visual para aceitar imagem opcional por URL ou upload local, com preview no formulario e regra clara de uso/fallback
 - expansao futura da edicao em lote para outros cadastros e listagens operacionais alem de lancamentos, com selecao multipla de registros e aplicacao de acoes em massa, por exemplo excluir varias categorias ou trocar situacao/status em lote, tratada como melhoria de UX/operacao e nao como regra de negocio estrutural
 - pagina futura de ajuda/manual de uso do sistema, voltada ao usuario final e focada em orientacao pratica de utilizacao das telas e fluxos, tratada como frente de UX/documentacao ao usuario e nao como regra de negocio nem como regras operacionais internas do modulo
 - evolucao futura do cadastro de categorias para deixar explicito na propria UI se o usuario esta cadastrando `Categoria` ou `Subcategoria`, com possibilidade de seletor `Categoria | Subcategoria` e exibicao condicional do campo `Categoria`
@@ -256,6 +262,19 @@ Observacao:
 - permitir mais de uma assinatura cadastrada por relatorio que tenha assinatura
 - permitir configurar em cada relatorio se mostra assinatura
 - permitir configurar quais assinaturas ativas devem aparecer em cada relatorio
+
+## 14. Checklist permanente de amarracao para novas implementacoes
+
+- a referencia operacional curta dessa revisao passa a ser `docs/CHECKLIST_EVOLUCAO_SISTEMA.md`
+- Navegacao, menu e atalhos
+- Permissoes por modulo, tela/recurso e acao
+- Impacto em listagens: filtros, ordenacao, colunas, truncamento, acoes em lote e exportacao
+- Impacto em formularios: rotulos, obrigatoriedade, mensagens, preview e consistencia visual
+- Impacto em importacao/exportacao
+- Impacto em auditoria/log
+- Impacto em ajuda/manual do usuario
+- Aderencia ao padrao UX/layout do sistema
+- Atualizacao obrigatoria de `docs/CEREBRO_PROJETO.md`, `docs/STATE.md`, `docs/CODEX_RESULTADO.md` e `docs/ROADMAP_FINANCEIRO.md`
 
 ## 7. Consolidacao desta microetapa de acabamento documental
 

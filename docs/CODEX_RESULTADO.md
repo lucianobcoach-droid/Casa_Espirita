@@ -1376,3 +1376,32 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - o checkbox da linha-resumo de rateio passou a enviar um token de grupo para que a exclusao em lote e a alteracao de status em lote atuem sobre todas as linhas do `grupo_rateio`, enquanto lancamentos comuns continuam enviando o identificador individual
 - na linha-resumo de rateio, as acoes visiveis ficaram restritas as operacoes ja semanticamente de grupo (`Clonar` e `Editar` por `grupo_rateio`), evitando expor `Recibo` e `Excluir` diretos que ainda sao rotas por linha individual; essa e uma decisao de UX apenas da listagem, sem mudanca em extrato, prestacao, recibo, auditoria e demais telas nesta microetapa
 - num ajuste fino posterior, a celula de `Descricao` passou a usar a mesma estrutura interna para linhas comuns e rateios, com placeholder invisivel de mesma largura do toggle nas linhas sem expansao, eliminando o desalinhamento horizontal sem alterar a interacao do `details/summary`
+
+## Refinamento de acoes, ordenacao e leitura da descricao na listagem
+
+- a coluna de acoes da listagem passou a usar quatro slots fixos por funcao (`Recibo`, `Clonar`, `Editar`, `Excluir`), com placeholders invisiveis quando uma acao nao se aplica, preservando alinhamento visual entre lancamentos comuns e grupos rateados
+- `Recibo` foi tratado como acao contextual e, nesta etapa, aparece apenas em lancamentos comuns do tipo `receita`, sem deslocar os demais botoes quando nao esta disponivel
+- a ordenacao padrao da listagem foi ajustada para priorizar a data principal mais recente do lancamento/grupo, usando `data_pagamento` quando preenchida e `data_competencia` como fallback, com desempate por `pk` mais recente; nos rateios, a linha representativa exibida segue o primeiro lancamento do grupo encontrado nessa ordenacao
+- a coluna `Descricao` passou a usar truncamento com reticencias para evitar quebra excessiva na tabela, mantendo o texto completo acessivel por `title` no lancamento comum e no `summary` do grupo rateado
+
+## Iconografia compacta na listagem de lancamentos
+
+- os botoes de `Recibo`, `Clonar`, `Editar` e `Excluir` foram trocados por icones SVG compactos dentro dos mesmos quatro slots fixos ja aprovados, mantendo `title`, `aria-label` e texto apenas para leitor de tela
+- `Tipo` passou a ser representado por setas compactas (`receita` para cima, `despesa` para baixo e `transferencia` com setas opostas), com tooltip e rotulo acessivel preservando o nome completo
+- `Status` passou a usar iconografia compacta (`aberto` com um check, `quitado` com dois checks e `cancelado` com X), mantendo cor, tooltip e `aria-label`
+- a largura visual da coluna de acoes foi reduzida e a coluna `Pessoa` ganhou `min-width`, liberando leitura mais confortavel sem alterar truncamento da descricao, rateio agrupado, filtros, edicao em lote ou regras de negocio
+
+## Consolidacao documental de governanca e proximas prioridades estruturais
+
+- foi registrado que a proxima frente funcional prioritaria do sistema deve ser `permissoes/autenticacao`, com interface de perfis hierarquicos em `Modulo` > `Tela/Recurso` > `Acao`, depois da estabilizacao do `financeiro`
+- foram formalizadas como proximas frentes: auditoria de UX entre telas existentes, documento transversal de padrao visual/funcional do sistema, padronizacao das melhorias aprovadas no `financeiro` para outros modulos, cadastro de logo com URL ou upload local e preview, e expansao futura de acoes em lote para outros cadastros
+- foi registrada uma checklist permanente para toda nova implementacao cobrindo navegacao/menu/atalhos, permissoes, listagens, formularios, importacao/exportacao, auditoria/log, ajuda/manual, aderencia ao padrao UX/layout e atualizacao obrigatoria dos docs-base
+- foi criado `docs/PADRAO_UX_SISTEMA.md` como referencia inicial enxuta de UX/layout do sistema
+- esta microetapa foi exclusivamente documental/estrutural e nao abriu implementacao de permissoes, nem alteracao de models, views, forms ou templates operacionais
+
+## Checklist operacional permanente de evolucao do sistema
+
+- foi criado `docs/CHECKLIST_EVOLUCAO_SISTEMA.md` como checklist curta e permanente para revisar toda nova funcionalidade antes de auditoria/commit
+- o documento cobre navegacao/menu/atalhos, permissoes por modulo/tela/acao, impacto em listagens, impacto em formularios, importacao/exportacao, auditoria/log, ajuda/manual do usuario, aderencia a `docs/PADRAO_UX_SISTEMA.md` e atualizacao dos docs-base
+- ficou registrado no roadmap que `docs/MATRIZ_PERMISSOES.md` so deve ser criado quando a frente de permissoes/autenticacao for efetivamente aberta, e nao nesta microetapa
+- esta microetapa foi exclusivamente documental/estrutural e nao alterou codigo, `docs/CEREBRO_PROJETO.md` ou `docs/PADRAO_UX_SISTEMA.md`
