@@ -3,7 +3,16 @@ from __future__ import annotations
 
 from django.contrib import admin
 
-from .models import SiteConfig
+from .models import PerfilAcesso, PerfilPermissaoSistema, PermissaoSistema, SiteConfig, UsuarioPerfilAcesso
+
+
+class PerfilPermissaoSistemaInline(admin.TabularInline):
+    """Vinculos de permissoes do perfil dentro do admin tecnico."""
+
+    model = PerfilPermissaoSistema
+    extra = 0
+    autocomplete_fields = ('permissao',)
+    readonly_fields = ('criado_em',)
 
 
 @admin.register(SiteConfig)
@@ -26,3 +35,48 @@ class SiteConfigAdmin(admin.ModelAdmin):
         ),
         ('Auditoria', {'fields': ('atualizado_em',)}),
     )
+
+
+@admin.register(PermissaoSistema)
+class PermissaoSistemaAdmin(admin.ModelAdmin):
+    """Consulta tecnica das permissoes funcionais semeadas no sistema."""
+
+    list_display = ('codigo', 'nome', 'modulo', 'recurso', 'acao', 'ativo')
+    list_filter = ('modulo', 'recurso', 'acao', 'ativo')
+    search_fields = ('codigo', 'nome', 'modulo', 'recurso', 'acao')
+    readonly_fields = ('codigo', 'modulo', 'recurso', 'acao', 'criado_em', 'atualizado_em')
+    ordering = ('modulo', 'recurso', 'acao', 'codigo')
+
+
+@admin.register(PerfilAcesso)
+class PerfilAcessoAdmin(admin.ModelAdmin):
+    """Administracao temporaria dos perfis-base ate existir UI funcional propria."""
+
+    list_display = ('nome', 'codigo', 'ativo', 'atualizado_em')
+    list_filter = ('ativo',)
+    search_fields = ('nome', 'codigo', 'descricao')
+    readonly_fields = ('criado_em', 'atualizado_em')
+    inlines = (PerfilPermissaoSistemaInline,)
+    ordering = ('nome', 'codigo')
+
+
+@admin.register(PerfilPermissaoSistema)
+class PerfilPermissaoSistemaAdmin(admin.ModelAdmin):
+    """Consulta direta dos vinculos perfil-permissao."""
+
+    list_display = ('perfil', 'permissao', 'criado_em')
+    list_filter = ('perfil', 'permissao__modulo', 'permissao__recurso', 'permissao__acao')
+    search_fields = ('perfil__nome', 'perfil__codigo', 'permissao__nome', 'permissao__codigo')
+    autocomplete_fields = ('perfil', 'permissao')
+    readonly_fields = ('criado_em',)
+
+
+@admin.register(UsuarioPerfilAcesso)
+class UsuarioPerfilAcessoAdmin(admin.ModelAdmin):
+    """Vinculo operacional temporario entre usuario Django e perfil-base da V1."""
+
+    list_display = ('usuario', 'perfil', 'atualizado_em')
+    list_filter = ('perfil',)
+    search_fields = ('usuario__username', 'usuario__first_name', 'usuario__last_name', 'perfil__nome', 'perfil__codigo')
+    autocomplete_fields = ('usuario', 'perfil')
+    readonly_fields = ('criado_em', 'atualizado_em')

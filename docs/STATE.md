@@ -603,3 +603,13 @@ Com filtro por periodo:
 - a migration de seed inicial cria de forma idempotente os perfis-base `Administrador geral`, `Gestao administrativa`, `Operador financeiro`, `Operador biblioteca` e `Consulta/visualizacao`, alem de um conjunto inicial de permissoes funcionais para `financeiro`, `biblioteca` e `configuracoes`
 - o vinculo perfil-permissao inicial ja reflete a matriz V1 em pontos sensiveis: `/admin/` exclusivo de `Administrador geral`; `Gestao administrativa` sem admin tecnico global; `Operador financeiro` sem exclusoes sensiveis, auditoria e configuracoes institucionais; `Operador biblioteca` restrito a `biblioteca` e leitura institucional; `Consulta/visualizacao` apenas leitura/impressao/exportacao, sem escrita/importacao/lote/autocomplete de formulario
 - a compatibilidade futura para extras individuais e bloqueios individuais por usuario permanece somente documental nesta etapa e nao foi implementada em models/migrations
+
+## Bootstrap operacional de autenticacao e resolucao central de permissoes
+
+- foram adicionadas rotas e views de `login` e `logout` no app `configuracoes`, usando a autenticacao base do Django e um template minimo proprio em `configuracoes/templates/configuracoes/login.html`
+- `casa_espirita/settings.py` passou a declarar `LOGIN_URL`, `LOGIN_REDIRECT_URL` e `LOGOUT_REDIRECT_URL`, apontando o fluxo autenticado para o `financeiro` e o logout de volta para `/login/`
+- foi criada a camada central `configuracoes/permissoes.py` com helpers para obter o perfil-base ativo do usuario e verificar uma permissao funcional por codigo canonico ja semeado
+- a regra segura adotada para usuario autenticado sem perfil-base foi negar permissao funcional por padrao: `usuario_possui_permissao()` retorna `False` quando nao existe `UsuarioPerfilAcesso`, quando o usuario nao esta autenticado ou quando o perfil vinculado esta inativo
+- os models `PermissaoSistema`, `PerfilAcesso`, `PerfilPermissaoSistema` e `UsuarioPerfilAcesso` foram registrados no Django admin como caminho operacional temporario de consulta/manutencao ate existir uma UI funcional propria de perfis
+- a estrategia de bootstrap escolhida para o primeiro administrador funcional foi nao criar bypass automatico nesta V1: o vinculo entre um superusuario existente e o perfil `Administrador geral` deve ser feito manualmente via `/admin/`, preservando controle explicito e evitando permissao implicita baseada apenas em `is_superuser`
+- esta microetapa nao aplicou enforcement fino em rotas/views/templates do `financeiro`, nao ocultou sidebar/menu por permissao e nao implementou extras ou bloqueios individuais

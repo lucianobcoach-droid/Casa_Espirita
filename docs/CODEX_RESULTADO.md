@@ -1468,3 +1468,12 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - os perfis-base semeados foram `Administrador geral`, `Gestao administrativa`, `Operador financeiro`, `Operador biblioteca` e `Consulta/visualizacao`
 - o seed inicial inclui permissoes funcionais para `financeiro`, `biblioteca`, `configuracoes.siteconfig` e `configuracoes.admin_global`, ja refletindo as restricoes centrais da matriz V1 sem ativar enforcement em views/templates/menu
 - limitacao intencional desta microetapa: nao houve login/logout customizado, decorators/mixins, protecao de rotas, ocultacao de menu/sidebar, UI de administracao de perfis, atribuicao automatica de perfil a usuarios existentes nem implementacao de extras/bloqueios individuais
+
+## Bootstrap operacional minimo de autenticacao e permissoes
+
+- foram criadas rotas/views de `login` e `logout` em `configuracoes`, apoiadas na autenticacao padrao do Django e em um template minimo de login com linguagem visual propria e sem abrir uma frente ampla de UX
+- `casa_espirita/urls.py` passou a incluir `configuracoes.urls`, preservando a rota da home institucional e expondo `/login/` e `/logout/`; `casa_espirita/settings.py` passou a definir os redirecionamentos padrao de login/logout
+- foi criada a camada central `configuracoes/permissoes.py` com `obter_perfil_base_usuario()` e `usuario_possui_permissao()`, ja preparada para o proximo enforcement backend no `financeiro`
+- a regra adotada para usuario autenticado sem `UsuarioPerfilAcesso` vinculado foi deny-by-default: nao ha permissao funcional implicita por estar logado nem por ser superusuario, enquanto o controle operacional do primeiro admin funcional deve ser feito por vinculo manual ao perfil `Administrador geral` via `/admin/`
+- `PermissaoSistema`, `PerfilAcesso`, `PerfilPermissaoSistema` e `UsuarioPerfilAcesso` foram registrados no Django admin como bootstrap temporario de operacao dessa base de acesso
+- esta microetapa nao aplicou enforcement fino no `financeiro`, nao condicionou sidebar/menu/templates por perfil, nao criou grupos Django e nao implementou extras individuais ou bloqueios individuais
