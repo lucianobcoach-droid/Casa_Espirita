@@ -128,10 +128,16 @@ Estas regras devem ser respeitadas em qualquer etapa:
 - nessa evolucao, ao reconhecer uma regra existente e seleciona-la, o sistema pode preencher automaticamente outros campos relacionados para revisao do usuario antes do salvamento
 - editar manualmente os campos preenchidos a partir da sugestao nao deve alterar automaticamente a regra de origem
 - tambem fica registrada como possibilidade futura a acao de cadastrar nova regra a partir do proprio fluxo de lancamento, em etapa propria
-- esta frente nao esta implementada no estado atual do repositorio e nao deve ser confundida com o autocomplete ja existente
-- o MVP inicial dessa frente deve usar `descricao` + `pessoa` como gatilho de sugestao, com uma acao explicita `Usar sugestao`, sem autoaplicacao silenciosa no formulario
+- historicamente, esta frente nasceu como diretriz futura separada do autocomplete ja existente e o primeiro desenho previa `descricao` + `pessoa` como gatilho conjunto, com botao `Usar sugestao`
 - no MVP, a regra reutilizavel pode preencher `descricao`, `tipo`, `pessoa`, `categoria`, `centro_custo`, `conta`, `conta_destino` e `observacoes`, mas deve deixar fora `numero_documento`, datas, `status`, `valor`, rateio, auditoria e qualquer id interno
-- a acao `Salvar como regra` nao deve entrar no primeiro patch dessa frente; ela permanece como fase seguinte, apenas depois de validar o uso explicito de sugestoes
+- historicamente, a acao `Salvar como regra` ficou prevista para uma fase posterior ao primeiro patch de sugestoes
+- em decisao de negocio posterior, a dependencia rigida de `descricao` + `pessoa` juntas deixa de ser a direcao desejada para a sugestao: a regra deve poder ser sugerida a partir de um campo gatilho individual, com primeira avaliacao priorizando `descricao` assim que o usuario comecar a digitar, enquanto `pessoa` pode atuar depois como complemento/filtro futuro, mas nao como pre-requisito rigido do MVP
+- a selecao da sugestao continua devendo preencher automaticamente apenas os campos da regra para revisao manual do usuario, sem criar vinculo com lancamento anterior e sem alterar a regra quando o formulario for editado depois
+- fica registrada como direcao de UX futura a existencia de uma opcao explicita `Salvar como regra` no proprio fluxo de cadastro do lancamento, em fase posterior e separada de `Usar sugestao`
+- fica registrada tambem como melhoria futura imediata a acao `Clonar` diretamente na secao `Ultimos lancamentos da pessoa` do `lancamento_form.html`, permitindo reaproveitar um lancamento anterior daquela lista sem alterar o documento original e mantendo a mesma logica de clone ja aprovada no restante do modulo
+- na implementacao consolidada atual desse MVP, `descricao` passa a ser o gatilho principal de sugestao por digitacao, `pessoa` atua apenas como refinador opcional, a selecao da sugestao acontece por clique direto no item sugerido sem botao `Usar sugestao`, e o formulario de novo lancamento passa a ter check explicito `Salvar como regra automatica`
+- quando esse check e marcado no cadastro de lancamento comum, o sistema salva uma nova `RegraLancamentoFinanceiro` com `descricao`, `tipo`, `pessoa`, `categoria`, `centro_custo`, `conta`, `conta_destino` e `observacoes`, sem copiar `numero_documento`, datas, `status`, `valor`, rateio, auditoria, `pk` ou qualquer vinculo operacional com o lancamento original
+- esse check de salvar regra nao deve ser usado no fluxo de rateio nesta etapa, e a acao futura `Clonar` dentro de `Ultimos lancamentos da pessoa` permanece separada das regras automaticas e fora deste MVP
 
 ### 5.1.5. Diretriz futura de clonagem de lancamento
 - fica registrada como frente funcional futura a acao `Clonar lancamento`
@@ -150,6 +156,7 @@ Estas regras devem ser respeitadas em qualquer etapa:
 ### 5.1.6. Diretriz futura de importacao e exportacao de lancamentos
 - fica registrada como backlog funcional futuro do `financeiro` a frente de importacao em massa e exportacao de lancamentos
 - na importacao, deve existir modelo de planilha/arquivo e validacao previa de colunas obrigatorias, tipos de dados e aderencia as regras de negocio ja existentes
+- a importacao futura tambem deve oferecer acao explicita para baixar uma planilha modelo no layout proprio do sistema, com colunas e ordem esperadas para preenchimento e posterior importacao
 - a importacao deve prever pre-visualizacao/validacao antes da confirmacao definitiva, comportamento claro para linhas invalidas e tratamento explicito de duplicidades
 - na exportacao, consultas e listagens relevantes devem respeitar os filtros aplicados e podem evoluir para CSV/Excel; PDF deve ser reservado apenas quando fizer sentido documental
 - essa frente continua futura, nao deve ser misturada com permissoes/acesso nem com regras reutilizaveis ou `Clonar lancamento`, embora possa se relacionar a elas depois

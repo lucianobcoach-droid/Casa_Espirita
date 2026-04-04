@@ -34,6 +34,7 @@ from .models import (
     ContaFinanceira,
     LancamentoFinanceiro,
     PessoaFinanceira,
+    RegraLancamentoFinanceiro,
 )
 
 
@@ -227,6 +228,20 @@ def _registrar_auditoria_configuracao(
         registro_id=configuracao.pk,
         usuario=_auditoria_usuario(request),
         campos_alterados=_build_auditoria_payload(antes, depois),
+    )
+
+
+def _criar_regra_automatica_lancamento(lancamento: LancamentoFinanceiro) -> RegraLancamentoFinanceiro:
+    return RegraLancamentoFinanceiro.objects.create(
+        descricao=lancamento.descricao,
+        tipo=lancamento.tipo,
+        pessoa=lancamento.pessoa,
+        categoria=lancamento.categoria,
+        centro_custo=lancamento.centro_custo,
+        conta=lancamento.conta,
+        conta_destino=lancamento.conta_destino,
+        observacoes=lancamento.observacoes,
+        ativa=True,
     )
 
 
@@ -743,6 +758,72 @@ class ContaFinanceiraAutocompleteView(FinanceiroAutocompleteView):
 class CentroCustoAutocompleteView(FinanceiroAutocompleteView):
     model = CentroCusto
     search_fields = ('codigo', 'nome')
+
+
+class RegraLancamentoFinanceiroSugestaoView(View):
+    limit = 5
+
+    def get(self, request, *args, **kwargs):
+        descricao = request.GET.get('descricao', '').strip()
+        pessoa_id = request.GET.get('pessoa', '').strip()
+
+        if not descricao:
+            return JsonResponse({'results': []})
+
+        filtros = Q(ativa=True, descricao__icontains=descricao)
+        if pessoa_id:
+            try:
+                pessoa_id_int = int(pessoa_id)
+            except ValueError:
+                pessoa_id_int = None
+            if pessoa_id_int:
+                filtros &= Q(pessoa_id=pessoa_id_int) | Q(pessoa__isnull=True)
+
+        regras = (
+            RegraLancamentoFinanceiro.objects.filter(filtros)
+            .select_related('pessoa', 'categoria', 'centro_custo', 'conta', 'conta_destino')
+            .order_by('descricao', '-atualizado_em', '-pk')[: self.limit]
+        )
+
+        results = []
+        for regra in regras:
+            resumo_partes = [regra.get_tipo_display(), str(regra.conta)]
+            if regra.categoria:
+                resumo_partes.append(str(regra.categoria))
+            results.append(
+                {
+                    'id': regra.pk,
+                    'label': regra.descricao,
+                    'resumo': ' | '.join(resumo_partes),
+                    'payload': {
+                        'descricao': regra.descricao,
+                        'tipo': regra.tipo,
+                        'pessoa': (
+                            {'id': regra.pessoa_id, 'label': str(regra.pessoa)}
+                            if regra.pessoa_id
+                            else None
+                        ),
+                        'categoria': (
+                            {'id': regra.categoria_id, 'label': str(regra.categoria)}
+                            if regra.categoria_id
+                            else None
+                        ),
+                        'centro_custo': (
+                            {'id': regra.centro_custo_id, 'label': str(regra.centro_custo)}
+                            if regra.centro_custo_id
+                            else None
+                        ),
+                        'conta': {'id': regra.conta_id, 'label': str(regra.conta)},
+                        'conta_destino': (
+                            {'id': regra.conta_destino_id, 'label': str(regra.conta_destino)}
+                            if regra.conta_destino_id
+                            else None
+                        ),
+                        'observacoes': regra.observacoes,
+                    },
+                }
+            )
+        return JsonResponse({'results': results})
 
 
 class ContaFinanceiraListView(ListView):
@@ -1610,13 +1691,16 @@ class LancamentoFinanceiroCreateView(FinanceiroFormMixin, CreateView):
 
     def form_valid(self, form):
         if not form.cleaned_data.get('lancamento_com_rateio'):
-            response = super().form_valid(form)
-            _registrar_auditoria_lancamento(
-                request=self.request,
-                acao=AuditoriaFinanceiro.AcaoAuditoria.CREATE,
-                lancamento=self.object,
-                depois=_snapshot_lancamento(self.object),
-            )
+            with transaction.atomic():
+                response = super().form_valid(form)
+                if form.cleaned_data.get('salvar_como_regra_automatica'):
+                    _criar_regra_automatica_lancamento(self.object)
+                _registrar_auditoria_lancamento(
+                    request=self.request,
+                    acao=AuditoriaFinanceiro.AcaoAuditoria.CREATE,
+                    lancamento=self.object,
+                    depois=_snapshot_lancamento(self.object),
+                )
             return response
 
         rateio_linhas = form.cleaned_data.get('rateio_linhas') or []

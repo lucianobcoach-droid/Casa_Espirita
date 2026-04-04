@@ -137,6 +137,10 @@ class ConfiguracaoInstitucionalForm(forms.ModelForm):
 
 class LancamentoFinanceiroForm(forms.ModelForm):
     lancamento_com_rateio = forms.BooleanField(required=False, label='Lancamento com rateio')
+    salvar_como_regra_automatica = forms.BooleanField(
+        required=False,
+        label='Salvar como regra automatica',
+    )
     valor_total_documento = forms.DecimalField(
         required=False,
         max_digits=12,
@@ -184,6 +188,7 @@ class LancamentoFinanceiroForm(forms.ModelForm):
         self.fields['lancamento_com_rateio'].initial = bool(self.instance.pk and self.instance.com_rateio)
         if self.instance.pk:
             self.fields['lancamento_com_rateio'].widget = forms.HiddenInput()
+            self.fields['salvar_como_regra_automatica'].widget = forms.HiddenInput()
             self.fields['valor_total_documento'].widget = forms.HiddenInput()
             self.fields['rateio_payload'].widget = forms.HiddenInput()
         elif self.is_bound:
@@ -345,6 +350,7 @@ class LancamentoFinanceiroForm(forms.ModelForm):
                 )
 
         if lancamento_com_rateio:
+            cleaned_data['salvar_como_regra_automatica'] = False
             self._validar_rateio(cleaned_data)
         else:
             if not cleaned_data.get('valor'):
@@ -398,6 +404,14 @@ class LancamentoFinanceiroForm(forms.ModelForm):
             'observacoes',
         ]
         widgets = {
+            'descricao': forms.TextInput(
+                attrs={
+                    'autocomplete': 'off',
+                    'autocorrect': 'off',
+                    'autocapitalize': 'none',
+                    'spellcheck': 'false',
+                }
+            ),
             'data_competencia': forms.DateInput(attrs={'type': 'date'}),
             'data_pagamento': forms.DateInput(attrs={'type': 'date'}),
             'observacoes': forms.Textarea(attrs={'rows': 4}),

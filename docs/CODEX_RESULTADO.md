@@ -1,6 +1,6 @@
 # CODEX_RESULTADO
 
-Data: 2026-03-27
+Data: 2026-04-04
 
 ## Entrega realizada
 
@@ -105,6 +105,57 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - ficaram explicitamente fora do MVP `numero_documento`, datas, `status`, `valor`, rateio, auditoria e qualquer id interno
 - `Salvar como regra` nao entra no primeiro patch e fica como fase seguinte, depois de validar o uso manual de `Usar sugestao`
 - esta microetapa foi apenas documental e nao alterou models, forms, views, templates nem rotas
+
+## Primeira implementacao minima de `Usar sugestao`
+
+- foi criado o model `RegraLancamentoFinanceiro`, com estrutura minima para guardar `descricao`, `tipo`, `pessoa`, `categoria`, `centro_custo`, `conta`, `conta_destino`, `observacoes`, estado `ativa` e timestamps, sem incluir `numero_documento`, datas, `status`, `valor`, rateio ou vinculos internos do lancamento
+- foi criada rota/view JSON dedicada para buscar sugestoes a partir de `descricao` + `pessoa`, retornando lista curta com `id`, `label`, `resumo` e payload dos campos que podem ser aplicados no formulario
+- `financeiro/templates/financeiro/lancamento_form.html` passou a ter um bloco discreto e ocultavel de sugestoes, escondido por padrao e exibido apenas apos interacao do usuario quando `descricao` e `pessoa` estao preenchidos
+- a aplicacao da sugestao acontece somente por botao `Usar sugestao`, preenche explicitamente os campos do MVP, dispara `change` nos selects para reaproveitar o JS atual e preserva os demais valores do formulario
+- esta microetapa nao implementou `Salvar como regra`, nao misturou a frente com clone, rateio, importacao/exportacao ou permissoes, e nao exigiu alteracao em `financeiro/forms.py`
+
+## Revisao documental da direcao de regras reutilizaveis e nova melhoria de UX
+
+- foi registrada sem patch de codigo uma mudanca de direcao de negocio na frente de regras reutilizaveis: a sugestao deixa de depender obrigatoriamente de `descricao` + `pessoa` juntas e passa a ser pensada por campo gatilho individual, com `descricao` como primeiro gatilho a avaliar durante a digitacao
+- `pessoa` permanece como possivel complemento/filtro futuro da sugestao, mas nao como dependencia rigida do MVP
+- ao selecionar uma sugestao, o sistema deve continuar preenchendo automaticamente os campos da regra apenas como modelo revisavel, sem criar vinculo com lancamento anterior e sem alterar a regra quando o usuario editar o formulario depois
+- foi registrada como direcao futura de UX a acao explicita `Salvar como regra` no proprio fluxo de cadastro de lancamento, em etapa posterior e separada da aplicacao de `Usar sugestao`
+- tambem foi registrada como melhoria futura imediata a inclusao de `Clonar` na secao `Ultimos lancamentos da pessoa` de `financeiro/templates/financeiro/lancamento_form.html`, para reaproveitar um lancamento anterior direto da lista sem alterar o original e mantendo a mesma logica de clone ja aprovada
+- esta microetapa foi exclusivamente documental e nao alterou templates, models, views, forms, migrations nem rotas
+
+## Regularizacao operacional do MVP de regras automaticas de lancamento
+
+- o endpoint de sugestoes de regras passou a usar `descricao` como gatilho principal por digitacao, sem depender obrigatoriamente de `pessoa`; quando `pessoa` e enviada, ela apenas refina a busca
+- `financeiro/templates/financeiro/lancamento_form.html` deixou de usar o botao `Usar sugestao`; cada item de sugestao passou a funcionar como opcao clicavel e, ao ser selecionado, preenche automaticamente `descricao`, `tipo`, `pessoa`, `categoria`, `centro_custo`, `conta`, `conta_destino` e `observacoes`, sem submeter o formulario e sem bloquear edicao manual posterior
+- `financeiro/forms.py` passou a expor o check `Salvar como regra automatica` apenas no formulario de criacao/clonagem em modo create e a neutralizar esse check quando `Lancamento com rateio` esta ativo
+- `LancamentoFinanceiroCreateView` passou a persistir uma nova `RegraLancamentoFinanceiro` quando o check de regra automatica vem marcado em lancamento comum, sem reutilizar `numero_documento`, datas, `status`, `valor`, rateio, auditoria ou qualquer vinculo operacional com o lancamento salvo
+- a melhoria futura de `Clonar` dentro de `Ultimos lancamentos da pessoa` nao entrou nesta etapa; a separacao entre regras automaticas e clone contextual permaneceu preservada
+- a migration local `financeiro/migrations/0012_regralancamentofinanceiro.py` foi reaproveitada em lugar, sem necessidade de criar uma nova migration
+- foi possivel executar `py manage.py check` com sucesso, validar `/financeiro/lancamentos/novo/` com status `200` e validar o endpoint `/financeiro/lancamentos/regras/sugestoes/?descricao=Teste` com status `200`
+
+## Correcao cirurgica da UX final e do clique de autopreenchimento nas regras automaticas
+
+- foi removido do corpo superior do formulario o card destacado de `Regra automatica`, que deixava o check visualmente mais pesado e fora da posicao desejada
+- o check `Salvar como regra automatica` passou para a mesma linha da barra final de acoes, ao lado da regiao de salvar, com estilo mais discreto e secundario, mantendo disponibilidade apenas em create/clone e ocultacao no modo de rateio
+- foi identificado como causa pratica do nao autopreenchimento um problema de timing na ativacao do item de sugestao por `click` puro, somado a selecao menos explicita da `option` nos campos geridos pelo autocomplete
+- a selecao da sugestao passou a responder em `mousedown` com `preventDefault()`, espelhando a estrategia ja usada no autocomplete principal, e `setSelectValueFromSugestao()` passou a marcar a `option` como `selected` antes de emitir `change`
+- com isso, a escolha da sugestao volta a preencher imediatamente `descricao`, `tipo`, `pessoa`, `categoria`, `centro_custo`, `conta`, `conta_destino` e `observacoes`, sem submeter o formulario automaticamente e preservando edicao manual posterior
+- a frente futura de importacao/exportacao de lancamentos foi reforcada apenas em documentacao, incluindo a necessidade de acao para baixar planilha modelo no layout proprio do sistema e de respeitar a ordem/estrutura esperada de colunas
+
+## Ajuste final do autocomplete de regras no proprio campo Descricao
+
+- a lista separada com titulo `Sugestoes encontradas` foi removida de `financeiro/templates/financeiro/lancamento_form.html`
+- o dropdown de sugestoes de regras passou a ficar acoplado diretamente ao campo `Descricao`, usando a mesma linguagem visual do autocomplete ja existente no formulario
+- a selecao da sugestao no proprio campo continua acionando `applyRegraSugestao()` e preenchendo os demais campos da regra sem submeter o formulario automaticamente
+- o check discreto `Salvar como regra automatica` permaneceu na barra final de acoes, ao lado de `Salvar`, e continua oculto no modo de rateio
+- ficou registrada apenas em backlog, sem implementacao nesta etapa, a futura filtragem do campo `Categoria`/`Subcategoria` por `tipo`: ao escolher `despesa`, mostrar apenas opcoes de despesa; ao escolher `receita`, mostrar apenas opcoes de receita
+
+## Bloqueio do autocomplete nativo do navegador no campo Descricao
+
+- o `<form>` de `financeiro/templates/financeiro/lancamento_form.html` passou a declarar `autocomplete="off"`
+- o widget `descricao` de `LancamentoFinanceiroForm` passou a renderizar `autocomplete="off"`, `autocorrect="off"`, `autocapitalize="none"` e `spellcheck="false"`
+- o script da propria tela tambem reaplica esses atributos em `descricaoField` na inicializacao para manter o dropdown do sistema como unica sugestao visivel nesse campo
+- a microcorrecao nao alterou regras de negocio, endpoint de sugestoes, persistencia de `RegraLancamentoFinanceiro`, clone, rateio nem validacoes ja consolidadas
 
 ## Regras aplicadas nesta etapa
 

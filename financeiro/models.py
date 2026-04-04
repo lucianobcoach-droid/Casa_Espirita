@@ -381,3 +381,85 @@ class LancamentoFinanceiro(models.Model):
             self.numero_documento = self._gerar_numero_documento()
         self.full_clean()
         super().save(*args, **kwargs)
+
+
+class RegraLancamentoFinanceiro(models.Model):
+    descricao = models.CharField(max_length=255)
+    tipo = models.CharField(max_length=20, choices=LancamentoFinanceiro.TipoLancamento.choices)
+    pessoa = models.ForeignKey(
+        PessoaFinanceira,
+        on_delete=models.PROTECT,
+        related_name='regras_lancamento',
+        blank=True,
+        null=True,
+    )
+    categoria = models.ForeignKey(
+        CategoriaFinanceira,
+        on_delete=models.PROTECT,
+        related_name='regras_lancamento',
+        blank=True,
+        null=True,
+    )
+    centro_custo = models.ForeignKey(
+        CentroCusto,
+        on_delete=models.PROTECT,
+        related_name='regras_lancamento',
+        blank=True,
+        null=True,
+    )
+    conta = models.ForeignKey(
+        ContaFinanceira,
+        on_delete=models.PROTECT,
+        related_name='regras_lancamento_origem',
+    )
+    conta_destino = models.ForeignKey(
+        ContaFinanceira,
+        on_delete=models.PROTECT,
+        related_name='regras_lancamento_destino',
+        blank=True,
+        null=True,
+    )
+    observacoes = models.TextField(blank=True)
+    ativa = models.BooleanField(default=True)
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['descricao', '-atualizado_em', '-pk']
+        verbose_name = 'Regra de lancamento financeiro'
+        verbose_name_plural = 'Regras de lancamento financeiro'
+
+    def __str__(self) -> str:
+        return self.descricao
+
+    def clean(self) -> None:
+        errors: dict[str, str] = {}
+        transferencia = self.tipo == LancamentoFinanceiro.TipoLancamento.TRANSFERENCIA
+        lancamento_operacional = self.tipo in {
+            LancamentoFinanceiro.TipoLancamento.RECEITA,
+            LancamentoFinanceiro.TipoLancamento.DESPESA,
+        }
+
+        if transferencia and not self.conta_destino_id:
+            errors['conta_destino'] = 'Transferencia exige conta_destino.'
+
+        if not transferencia and self.conta_destino_id:
+            errors['conta_destino'] = 'conta_destino so pode ser usada em transferencia.'
+
+        if self.conta_id and self.conta_destino_id and self.conta_id == self.conta_destino_id:
+            errors['conta_destino'] = 'conta e conta_destino nao podem ser iguais.'
+
+        if lancamento_operacional and not self.pessoa_id:
+            errors['pessoa'] = 'Pessoa e obrigatoria para receita e despesa.'
+
+        if lancamento_operacional and not self.categoria_id:
+            errors['categoria'] = 'Categoria e obrigatoria para receita e despesa.'
+        elif lancamento_operacional and self.categoria_id and not self.categoria.permite_vinculo_em_lancamento:
+            errors['categoria'] = 'Selecione uma subcategoria para receita e despesa. Categoria pai nao pode ser usada em regras.'
+
+        if errors:
+            raise ValidationError(errors)
+
+    def save(self, *args, **kwargs) -> None:
+        self.full_clean()
+        super().save(*args, **kwargs)

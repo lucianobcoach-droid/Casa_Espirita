@@ -47,6 +47,7 @@ Data: 2026-03-26
 ### Importacao de historico
 - importacao de planilha historica
 - importacao futura em massa de lancamentos com modelo de arquivo, validacao previa, pre-visualizacao e tratamento de duplicidades
+- na importacao futura, deve existir acao para baixar planilha modelo no layout proprio do sistema, com colunas e ordem esperadas para preenchimento e importacao
 - saneamento de dados importados
 - conciliacao inicial de base
 
@@ -127,6 +128,7 @@ Data: 2026-03-26
 - autocomplete real com busca por contem
 - comportamento condicional do formulario de lancamento
 - historico simples com os ultimos 5 lancamentos do favorecido no formulario de lancamento
+- MVP de regras automaticas no cadastro de lancamento comum, com sugestoes por digitacao em `descricao`, `pessoa` apenas como refinador opcional, preenchimento automatico por selecao da sugestao e check explicito para salvar o lancamento atual como nova regra futura
 - recibo em HTML imprimivel a partir do lancamento, com refinamentos posteriores de conteudo, assinatura, configuracao institucional e impressao
 - mensagens de erro mais claras em campos obrigatorios
 - layout mais compacto nas tabelas
@@ -182,6 +184,7 @@ Data: 2026-03-26
 - balancete padrao
 - importacao de planilha historica
 - importacao/exportacao futura de lancamentos com validacao de estrutura e dados, pre-visualizacao antes de confirmar, tratamento de linhas invalidas e duplicidades, e respeito as regras de negocio existentes
+- download de planilha modelo da importacao futura, em formato tabular com layout proprio do sistema e ordem de colunas compatível com o processo de importacao
 - cadastro rapido de pessoa dentro do lancamento
 - cadastro rapido de categoria dentro do lancamento
 - evolucoes futuras especificas do bloco de recibos ja entregue
@@ -223,7 +226,10 @@ Observacao:
 - cadastro rapido de pessoa dentro do lancamento
 - cadastro rapido de categoria dentro do lancamento
 - importacao/exportacao futura de lancamentos, com importacao em massa validada por pre-visualizacao e exportacao tabular de consultas filtradas
-- assistencia futura por regras no cadastro de lancamentos, com MVP inicial baseado em sugestao por `descricao` + `pessoa`, acao explicita `Usar sugestao`, preenchimento revisavel de `descricao`, `tipo`, `pessoa`, `categoria`, `centro_custo`, `conta`, `conta_destino` e `observacoes`, sem incluir `numero_documento`, datas, `status`, `valor`, rateio, auditoria ou ids internos; `Salvar como regra` fica para fase posterior
+- na importacao/exportacao futura, o fluxo de importacao deve oferecer download de planilha modelo no layout proprio do sistema, preservando a ordem e as colunas esperadas pelo backend de importacao
+- refinamentos futuros do MVP de regras automaticas ja aberto no lancamento, preservando `descricao` como gatilho principal por digitacao, `pessoa` apenas como refinador opcional, preenchimento automatico por selecao de uma sugestao e check explicito para salvar nova regra a partir de lancamento comum; melhorias futuras podem incluir curadoria, edicao e governanca dessas regras em tela propria
+- filtro futuro do campo `Categoria`/`Subcategoria` pelo `tipo` selecionado no lancamento: ao escolher `despesa`, listar apenas subcategorias de despesa; ao escolher `receita`, listar apenas subcategorias de receita
+- melhoria futura imediata na secao `Ultimos lancamentos da pessoa` do `lancamento_form.html`, adicionando acao `Clonar` direto na lista para reaproveitar um lancamento anterior sem vinculo com o original e sem confundir esse clone contextual com as regras automaticas
 - acao `Clonar lancamento`, com MVP inicial restrito a lancamento comum sem rateio: abrir `lancamento_form.html` em modo criacao como modelo editavel sem vinculo com o original, copiando campos operacionais seguros (`descricao`, `tipo`, `status`, `valor`, `data_competencia`, `data_pagamento`, `pessoa`, `categoria`, `centro_custo`, `conta`, `conta_destino` quando transferencia, `observacoes`) e sem copiar `pk`, `numero_documento`, auditoria, `grupo_rateio` nem `com_rateio`
 - fase futura posterior de clonagem de lancamentos rateados por `grupo_rateio`, tambem sem vinculo com o original, abrindo novo documento rateado ja preenchido e exigindo ajuste manual das linhas/categorias se o `valor total do documento` for alterado no clone
 - evolucao futura dos relatorios financeiros para leitura hierarquica por `Categoria` e `Subcategoria`, preservando a distincao entre agrupador analitico e item operacional lancavel

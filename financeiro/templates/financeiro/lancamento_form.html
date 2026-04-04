@@ -126,12 +126,18 @@
     .financeiro-rateio-individual-card-text, .financeiro-rateio-individual-action-text { margin: 0; color: #667382; font-size: 0.76rem; line-height: 1.4; }
     .financeiro-rateio-individual-actions { display: grid; gap: 0.7rem; }
     .financeiro-rateio-individual-action-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.6rem 0.9rem; }
-    .financeiro-tabler-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.75rem; margin-top: 0.15rem; }
+    .financeiro-tabler-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem 1rem; margin-top: 0.15rem; }
+    .financeiro-tabler-save-rule-inline { display: inline-flex; align-items: center; gap: 0.45rem; margin: 0; color: #667382; font-size: 0.78rem; font-weight: 500; line-height: 1.2; cursor: pointer; }
+    .financeiro-tabler-save-rule-inline input { width: 0.95rem; height: 0.95rem; margin: 0; cursor: pointer; }
+    .financeiro-tabler-actions-buttons { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.75rem; margin-left: auto; }
     .financeiro-autocomplete { position: relative; }
     .financeiro-autocomplete-menu { position: absolute; top: calc(100% + 0.35rem); left: 0; right: 0; z-index: 20; padding: 0.35rem; border: 1px solid #d7e2f0; border-radius: 10px; background: #fff; box-shadow: 0 0.75rem 1.5rem rgba(15, 23, 42, 0.12); }
     .financeiro-autocomplete-option { display: block; width: 100%; padding: 0.5rem 0.65rem; border: 0; border-radius: 8px; background: transparent; color: #182433; font-size: 0.85rem; text-align: left; }
     .financeiro-autocomplete-option:hover, .financeiro-autocomplete-option:focus { background: #f2f6fb; outline: 0; }
     .financeiro-autocomplete-empty { padding: 0.55rem 0.65rem; color: #667382; font-size: 0.78rem; }
+    .financeiro-rule-suggestions-item { display: block; width: 100%; }
+    .financeiro-rule-suggestions-label { display: block; margin: 0; color: #182433; font-size: 0.84rem; font-weight: 700; line-height: 1.25; }
+    .financeiro-rule-suggestions-meta { display: block; margin-top: 0.14rem; color: #667382; font-size: 0.74rem; line-height: 1.3; }
     [data-financeiro-pessoa-historico="true"] { max-width: 1120px; margin: 0.9rem auto 0; padding: 0.9rem 1rem; border: 1px solid #edf2f7; border-radius: 12px; background: #fafcff; box-shadow: none; }
     [data-financeiro-pessoa-historico="true"] .title { margin-bottom: 0.5rem !important; color: #425466; font-size: 0.88rem; }
     [data-financeiro-pessoa-historico="true"] .help[data-historico-vazio="true"] { margin-bottom: 0 !important; color: #94a3b8; font-size: 0.72rem; }
@@ -142,6 +148,8 @@
         .financeiro-tabler-grid { grid-template-columns: 1fr; gap: 0.75rem; }
         .financeiro-col-12, .financeiro-col-8, .financeiro-col-7, .financeiro-col-6, .financeiro-col-5, .financeiro-col-4, .financeiro-col-3 { grid-column: auto; }
         .financeiro-tabler-actions { justify-content: stretch; }
+        .financeiro-tabler-save-rule-inline { width: 100%; justify-content: flex-start; }
+        .financeiro-tabler-actions-buttons { width: 100%; }
         .financeiro-tabler-actions .btn, .financeiro-tabler-actions .button { width: 100%; }
     }
     @media screen and (max-width: 1023px) {
@@ -166,7 +174,7 @@
         <div class="alert alert-danger mb-3" role="alert">{{ form.non_field_errors }}</div>
     {% endif %}
 
-    <form method="post" class="financeiro-lancamento-form-shell">
+    <form method="post" class="financeiro-lancamento-form-shell" autocomplete="off">
         {% csrf_token %}
         {% for hidden_field in form.hidden_fields %}{{ hidden_field }}{% endfor %}
         {% for hidden_field in form.hidden_fields %}
@@ -180,7 +188,20 @@
                         <div class="financeiro-col-8">
                             <div class="field financeiro-tabler-field">
                                 <label class="label" for="{{ form.descricao.id_for_label }}">Descrição *</label>
-                                <div class="control">{{ form.descricao }}</div>
+                                <div class="control">
+                                    <div
+                                        class="financeiro-autocomplete"
+                                        data-financeiro-regra-sugestoes="true"
+                                        data-sugestoes-url="{% url 'financeiro:lancamento-regra-sugestoes' %}"
+                                    >
+                                        {{ form.descricao }}
+                                        <div
+                                            class="financeiro-autocomplete-menu"
+                                            data-financeiro-regra-sugestoes-lista="true"
+                                            hidden
+                                        ></div>
+                                    </div>
+                                </div>
                                 {% for error in form.descricao.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
                             </div>
                         </div>
@@ -405,8 +426,21 @@
 
                 <div class="financeiro-tabler-row">
                     <div class="financeiro-tabler-actions no-print">
-                        <a class="btn btn-outline-secondary" href="{% url 'financeiro:lancamento-list' %}">Voltar</a>
-                        <button class="btn btn-primary" type="submit">{{ submit_label }}</button>
+                        {% if not form.instance.pk %}
+                            <label
+                                class="financeiro-tabler-save-rule-inline"
+                                for="{{ form.salvar_como_regra_automatica.id_for_label }}"
+                                data-financeiro-salvar-regra-wrapper="true"
+                                title="Guardar este preenchimento como sugestao futura."
+                            >
+                                {{ form.salvar_como_regra_automatica }}
+                                <span>{{ form.salvar_como_regra_automatica.label }}</span>
+                            </label>
+                        {% endif %}
+                        <div class="financeiro-tabler-actions-buttons">
+                            <a class="btn btn-outline-secondary" href="{% url 'financeiro:lancamento-list' %}">Voltar</a>
+                            <button class="btn btn-primary" type="submit">{{ submit_label }}</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -429,6 +463,7 @@
 <script>
     (function () {
         const tipoField = document.querySelector('[data-financeiro-tipo="true"]');
+        const descricaoField = document.querySelector('[name="descricao"]');
         const contaDestinoField = document.querySelector('[data-financeiro-conta-destino="true"]');
         const contaDestinoWrapper = document.querySelector('[data-financeiro-conta-destino-wrapper="true"]');
         const pessoaField = document.querySelector('[name="pessoa"]');
@@ -453,11 +488,18 @@
         const pessoaHistoricoEmpty = document.querySelector('[data-historico-vazio="true"]');
         const pessoaHistoricoTableWrapper = document.querySelector('[data-historico-tabela-wrapper="true"]');
         const pessoaHistoricoBody = document.querySelector('[data-historico-body="true"]');
+        const regraSugestoesBox = document.querySelector('[data-financeiro-regra-sugestoes="true"]');
+        const regraSugestoesList = document.querySelector('[data-financeiro-regra-sugestoes-lista="true"]');
+        const salvarRegraWrapper = document.querySelector('[data-financeiro-salvar-regra-wrapper="true"]');
+        const salvarRegraField = document.querySelector('[name="salvar_como_regra_automatica"]');
         const rateioCategoriasNode = document.getElementById('financeiro-rateio-categorias');
         const rateioInicialNode = document.getElementById('financeiro-rateio-inicial');
         const rateioCategorias = rateioCategoriasNode ? JSON.parse(rateioCategoriasNode.textContent) : [];
         const rateioInicial = rateioInicialNode ? JSON.parse(rateioInicialNode.textContent) : [];
         let rateioRows = Array.isArray(rateioInicial) ? rateioInicial.slice() : [];
+        let regraSugestaoRequestId = 0;
+        let regraSugestaoAtivadaPorUsuario = false;
+        let regraSugestaoAplicacaoEmAndamento = false;
 
         function createAutocomplete(select) {
             const control = select.parentElement;
@@ -583,6 +625,128 @@
                 if (field._autocompleteInput) field._autocompleteInput.value = '';
                 if (hadValue) field.dispatchEvent(new Event('change', { bubbles: true }));
             }
+        }
+
+        function clearRegraSugestoes() {
+            regraSugestaoRequestId += 1;
+            if (regraSugestoesList) regraSugestoesList.innerHTML = '';
+            if (regraSugestoesList) regraSugestoesList.hidden = true;
+        }
+
+        function setSelectValueFromSugestao(field, payload) {
+            if (!field) return;
+            if (!payload || !payload.id) {
+                const hadValue = !!field.value;
+                field.value = '';
+                if (field._autocompleteInput) field._autocompleteInput.value = '';
+                if (hadValue) field.dispatchEvent(new Event('change', { bubbles: true }));
+                return;
+            }
+
+            let option = Array.from(field.options).find((current) => current.value === String(payload.id));
+            if (!option) {
+                option = document.createElement('option');
+                option.value = payload.id;
+                field.appendChild(option);
+            }
+            option.text = payload.label;
+            option.selected = true;
+            field.value = option.value;
+            if (field._autocompleteInput) field._autocompleteInput.value = option.text;
+            field.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+
+        function applyRegraSugestao(payload) {
+            if (!payload) return;
+            regraSugestaoAplicacaoEmAndamento = true;
+            regraSugestaoAtivadaPorUsuario = false;
+            if (descricaoField) {
+                descricaoField.value = payload.descricao || '';
+                descricaoField.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+            if (tipoField && payload.tipo) {
+                tipoField.value = payload.tipo;
+                tipoField.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+            setSelectValueFromSugestao(pessoaField, payload.pessoa);
+            setSelectValueFromSugestao(categoriaField, payload.categoria);
+            setSelectValueFromSugestao(centroCustoField, payload.centro_custo);
+            setSelectValueFromSugestao(contaDestinoField, payload.conta_destino);
+            setSelectValueFromSugestao(document.querySelector('[name="conta"]'), payload.conta);
+            const observacoesField = document.querySelector('[name="observacoes"]');
+            if (observacoesField) observacoesField.value = payload.observacoes || '';
+            clearRegraSugestoes();
+            syncRateioState();
+            regraSugestaoAplicacaoEmAndamento = false;
+        }
+
+        function renderRegraSugestoes(items) {
+            if (!regraSugestoesBox || !regraSugestoesList) return;
+            regraSugestoesList.innerHTML = '';
+            if (!items.length) {
+                regraSugestoesList.hidden = true;
+                return;
+            }
+            items.forEach(function (item) {
+                const row = document.createElement('button');
+                row.type = 'button';
+                row.className = 'financeiro-autocomplete-option financeiro-rule-suggestions-item';
+
+                const title = document.createElement('span');
+                title.className = 'financeiro-rule-suggestions-label';
+                title.textContent = item.label || 'Sugestão';
+                row.appendChild(title);
+                if (item.resumo) {
+                    const meta = document.createElement('span');
+                    meta.className = 'financeiro-rule-suggestions-meta';
+                    meta.textContent = item.resumo;
+                    row.appendChild(meta);
+                }
+
+                row.addEventListener('mousedown', function (event) {
+                    event.preventDefault();
+                    applyRegraSugestao(item.payload || {});
+                });
+                row.addEventListener('click', function () {
+                    applyRegraSugestao(item.payload || {});
+                });
+
+                regraSugestoesList.appendChild(row);
+            });
+            regraSugestoesList.hidden = false;
+        }
+
+        function loadRegraSugestoes() {
+            if (!regraSugestaoAtivadaPorUsuario || !descricaoField || !regraSugestoesBox) return;
+            const sugestoesUrl = regraSugestoesBox.dataset.sugestoesUrl;
+            const descricao = descricaoField.value.trim();
+            const pessoaId = pessoaField && !pessoaField.disabled ? pessoaField.value : '';
+            if (!sugestoesUrl || !descricao || (!!rateioToggle && rateioToggle.checked)) {
+                clearRegraSugestoes();
+                return;
+            }
+
+            regraSugestaoRequestId += 1;
+            const requestId = regraSugestaoRequestId;
+            const url = new URL(sugestoesUrl, window.location.origin);
+            url.searchParams.set('descricao', descricao);
+            if (pessoaId) url.searchParams.set('pessoa', pessoaId);
+            fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then((response) => response.json())
+                .then((data) => {
+                    if (requestId !== regraSugestaoRequestId) return;
+                    renderRegraSugestoes(data.results || []);
+                })
+                .catch(() => {
+                    if (requestId !== regraSugestaoRequestId) return;
+                    clearRegraSugestoes();
+                });
+        }
+
+        function handleRegraSugestaoTrigger() {
+            if (regraSugestaoAplicacaoEmAndamento) return;
+            regraSugestaoAtivadaPorUsuario = true;
+            loadRegraSugestoes();
         }
 
         function renderHistoricoState(message, items) {
@@ -752,10 +916,27 @@
                 rateioBox.style.display = isRateio ? '' : 'none';
                 rateioBox.hidden = !isRateio;
             }
+            if (salvarRegraWrapper) {
+                salvarRegraWrapper.hidden = isRateio;
+            }
+            if (salvarRegraField && isRateio) {
+                salvarRegraField.checked = false;
+            }
             loadPessoaHistorico();
+            if (!isRateio) {
+                loadRegraSugestoes();
+            } else {
+                clearRegraSugestoes();
+            }
         }
 
         autocompleteFields.forEach(createAutocomplete);
+        if (descricaoField) {
+            descricaoField.setAttribute('autocomplete', 'off');
+            descricaoField.setAttribute('autocorrect', 'off');
+            descricaoField.setAttribute('autocapitalize', 'none');
+            descricaoField.setAttribute('spellcheck', 'false');
+        }
         if (rateioBox) {
             renderRateioRows();
             serializeRateioRows();
@@ -767,7 +948,15 @@
                 });
             }
         }
+        if (descricaoField) descricaoField.addEventListener('input', handleRegraSugestaoTrigger);
+        if (descricaoField) descricaoField.addEventListener('focus', handleRegraSugestaoTrigger);
+        if (descricaoField) {
+            descricaoField.addEventListener('blur', function () {
+                window.setTimeout(clearRegraSugestoes, 120);
+            });
+        }
         if (pessoaField) pessoaField.addEventListener('change', loadPessoaHistorico);
+        if (pessoaField) pessoaField.addEventListener('change', handleRegraSugestaoTrigger);
         if (tipoField) tipoField.addEventListener('change', syncRateioState);
         if (rateioToggle) rateioToggle.addEventListener('change', syncRateioState);
         if (dataCompetenciaField) {

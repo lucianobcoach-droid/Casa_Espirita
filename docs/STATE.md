@@ -1,6 +1,6 @@
 # STATE
 
-Data de atualizacao: 2026-03-27
+Data de atualizacao: 2026-04-04
 
 ## Estado atual do modulo financeiro
 
@@ -31,7 +31,7 @@ Data de atualizacao: 2026-03-27
 - Na primeira passada controlada da nova frente de leveza do menu lateral, o shell do `financeiro` passou a usar casca visual mais discreta no desktop, com barra utilitaria menos carregada, header interno da sidebar mais leve e item ativo mais elegante, sem alterar JS, drawer, rotas, `aria` ou a mecanica de expansao dos grupos.
 - No ajuste fino seguinte dessa mesma frente, o controle de recolher/expandir lateral no desktop voltou a uma linguagem mais coerente com o tema, e a hierarquia tipografica do menu foi aliviada para concentrar negrito forte apenas no item ativo.
 - No ajuste fino final desta rodada do shell lateral, o grupo expandido passou a usar destaque mais suave, o titulo `Navegacao principal` perdeu agressividade visual e o toggle lateral ficou ainda mais integrado ao shell, preservando negrito forte apenas no item ativo.
-- Foi registrada como frente futura, ainda sem implementacao, a importacao/exportacao de lancamentos, incluindo importacao em massa com modelo de arquivo, validacao previa de colunas e tipos, pre-visualizacao antes de confirmar, tratamento de linhas invalidas e duplicidades, e exportacao de consultas/listagens com respeito aos filtros aplicados.
+- Foi registrada como frente futura, ainda sem implementacao, a importacao/exportacao de lancamentos, incluindo importacao em massa com acao para baixar planilha modelo no layout proprio do sistema, validacao previa de colunas e tipos, pre-visualizacao antes de confirmar, tratamento de linhas invalidas e duplicidades, e exportacao de consultas/listagens com respeito aos filtros aplicados.
 - Hoje nao existe shell visual compartilhado entre `financeiro`, `biblioteca` e `configuracoes`.
 - A home do modulo financeiro agora usa atalhos mais neutros e harmonicos, com destaque principal apenas para `Lancamentos`.
 - O menu superior do financeiro agora tambem possui dropdown `Configuracoes`, com acesso a `Assinaturas` e `Configuracao Institucional`.
@@ -97,6 +97,7 @@ Data de atualizacao: 2026-03-27
 - `lancamento_rateio_grupo_form.html` agora tambem passou a conversar melhor com o shell compartilhado do modulo, especialmente no header/topo e na navegacao de apoio do fluxo coordenado.
 - Com essa etapa, a primeira onda de padronizacao visual do `financeiro` fica fechada nas telas operacionais centrais, restando antes da pre-etapa tecnica da sidebar apenas consolidacoes internas adicionais do shell e eventual limpeza de variacoes locais residuais.
 - Na validacao tecnica local dessa primeira onda visual, as telas centrais do modulo responderam corretamente com o shell compartilhado, e a abertura da edicao coordenada do grupo rateado foi estabilizada apos remover um acesso indevido ao campo `categoria` no formulario especializado do grupo.
+- No MVP de regras automaticas do lancamento, o check `Salvar como regra automatica` foi reposicionado para a linha final de acoes do formulario, com visual discreto e ocultacao no modo rateio, e a sugestao de regra deixou de aparecer em bloco inferior separado: agora o dropdown de sugestoes fica acoplado ao proprio campo `Descricao`, com o autocomplete nativo do navegador desativado no form/campo para evitar sobreposicao visual, e a selecao aplica o payload imediatamente no formulario por `mousedown` preventivo e selecao explicita da `option` nos campos com autocomplete.
 - O app `biblioteca` nao foi alterado.
 - Nao foram usados `signals`.
 
@@ -494,6 +495,16 @@ Com filtro por periodo:
 - nessa mesma consolidacao, foi registrada como abordagem futura aceitavel a possibilidade de seletor ou toggle `Categoria | Subcategoria`, com exibicao do campo `Categoria` apenas quando o cadastro for de `Subcategoria`
 - tambem ficaram registradas como frentes futuras, sem implementacao no estado atual, a leveza adicional do menu lateral, a sugestao de regras reutilizaveis no lancamento e a futura acao `Clonar lancamento`
 - em delimitacao documental posterior da frente de regras reutilizaveis, o MVP inicial ficou definido com gatilho `descricao` + `pessoa`, sugestao apresentada para aplicacao apenas por acao explicita `Usar sugestao`, preenchendo `descricao`, `tipo`, `pessoa`, `categoria`, `centro_custo`, `conta`, `conta_destino` e `observacoes`, mas deixando fora `numero_documento`, datas, `status`, `valor`, rateio, ids internos e auditoria; `Salvar como regra` permanece para uma fase seguinte
+- na primeira implementacao minima desse MVP, foi criado o model `RegraLancamentoFinanceiro` e um endpoint JSON dedicado de sugestoes por `descricao` + `pessoa`, retornando lista curta com resumo e payload apenas dos campos aplicaveis
+- nessa mesma implementacao, `financeiro/templates/financeiro/lancamento_form.html` passou a exibir um bloco discreto e ocultavel de sugestoes apenas depois de interacao do usuario com `descricao` e `pessoa`, e a acao `Usar sugestao` preenche explicitamente apenas `descricao`, `tipo`, `pessoa`, `categoria`, `centro_custo`, `conta`, `conta_destino` e `observacoes`, preservando clone, rateio, datas, `status`, `valor` e `numero_documento`
+- em decisao de negocio posterior, esse desenho com dependencia rigida de `descricao` + `pessoa` juntas foi revisado: a direcao atual passa a pedir sugestao disparada por campo gatilho individual, com `descricao` como primeiro gatilho avaliado ja durante a digitacao, enquanto `pessoa` pode entrar apenas como complemento/filtro futuro e nao como requisito obrigatorio do MVP
+- a regra continua devendo funcionar como modelo preenchido sem vinculo com lancamento anterior, e alteracoes feitas pelo usuario no formulario depois de aplicar a sugestao nao devem editar automaticamente a regra de origem
+- ficou registrada como fase posterior a acao explicita `Salvar como regra` dentro do fluxo de cadastro de lancamento, sem implementacao nesta microetapa
+- ficou registrada tambem como melhoria futura imediata a acao `Clonar` dentro de `Ultimos lancamentos da pessoa` no `lancamento_form.html`, para reaproveitar um lancamento anterior diretamente da lista sem alterar o documento original e mantendo a mesma semantica de clone ja aprovada
+- na regularizacao operacional posterior dessa frente, o endpoint JSON de sugestoes passou a aceitar `descricao` como gatilho principal sem exigir `pessoa`; quando `pessoa` vem informada, ela atua apenas como refinador opcional da busca
+- nessa mesma regularizacao, o bloco de sugestoes do `lancamento_form.html` deixou de depender do botao `Usar sugestao`: cada item sugerido passou a ser selecionavel por clique direto, preenchendo automaticamente apenas os campos estruturais da regra e mantendo o usuario livre para editar antes de salvar
+- o formulario de novo lancamento passou a ter o check explicito `Salvar como regra automatica`; quando marcado em lancamento comum, o `LancamentoFinanceiroCreateView` persiste uma nova `RegraLancamentoFinanceiro` sem `numero_documento`, datas, `status`, `valor`, rateio, auditoria ou vinculo com o lancamento original
+- no fluxo de rateio desse MVP, o check de salvar regra automatica e ocultado e desmarcado para evitar gravacao parcial de regra a partir de documento rateado; a melhoria futura de `Clonar` na secao `Ultimos lancamentos da pessoa` continua fora desta etapa
 - permissões, acesso e perfis continuam explicitamente como frente estrutural futura e nao entraram nesta microetapa documental
 - em decisao documental posterior, o MVP inicial de `Clonar lancamento` foi delimitado para lancamento comum sem rateio, abrindo `lancamento_form.html` em modo criacao com dados pre-preenchidos do original, mas sem alterar o lancamento de origem
 - nessa mesma delimitacao, ficou registrado que o clone deve copiar `descricao`, `tipo`, `pessoa`, `categoria`, `centro_custo`, `conta`, `conta_destino` quando transferencia, e `observacoes`, mas nao deve copiar `pk`, `numero_documento`, datas, `status`, auditoria, `grupo_rateio` ou identificadores sujeitos a colisao

@@ -47,6 +47,7 @@ from .views import (
     PessoaFinanceiraUpdateView,
     PrestacaoContasFinanceiroView,
     ResumoFinanceiroView,
+    RegraLancamentoFinanceiroSugestaoView,
 )
 
 app_name = 'financeiro'
@@ -110,6 +111,11 @@ urlpatterns = [
     ),
     path('lancamentos/', LancamentoFinanceiroListView.as_view(), name='lancamento-list'),
     path('lancamentos/novo/', LancamentoFinanceiroCreateView.as_view(), name='lancamento-create'),
+    path(
+        'lancamentos/regras/sugestoes/',
+        RegraLancamentoFinanceiroSugestaoView.as_view(),
+        name='lancamento-regra-sugestoes',
+    ),
     path('lancamentos/<int:pk>/clonar/', LancamentoFinanceiroCloneView.as_view(), name='lancamento-clone'),
     path(
         'lancamentos/rateio/<str:grupo_rateio>/editar/',
