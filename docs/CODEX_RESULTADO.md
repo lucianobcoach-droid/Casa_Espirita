@@ -1458,3 +1458,13 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - a ordem proposta de implementacao ficou: 1) estrutura de dados e seeds de perfis/permissoes; 2) login/logout e primeiro enforcement backend no `financeiro`; 3) sidebar/botoes/templates do `financeiro`; 4) expansao para `biblioteca` e `configuracoes`; 5) UI propria de administracao funcional de perfis; 6) endurecimento/auditoria e preparacao para extras/bloqueios individuais futuros
 - o primeiro modulo de aplicacao real da V1 foi definido como `financeiro`, com foco inicial em `Lancamentos`, `Auditoria do Financeiro`, `Configuracoes institucionais`, `Assinaturas institucionais`, `Importar/Exportar` e endpoints auxiliares de formulario/historico
 - esta microetapa atualizou `docs/STATE.md` e nao alterou codigo, `docs/CEREBRO_PROJETO.md`, `docs/MATRIZ_PERMISSOES.md`, `docs/PADRAO_UX_SISTEMA.md` nem `docs/CHECKLIST_EVOLUCAO_SISTEMA.md`
+
+## Base de dados e seeds iniciais da V1 de permissoes
+
+- foi implementada a estrutura de dados minima da V1 de permissoes no app `configuracoes`, com `PerfilAcesso`, `PermissaoSistema`, `PerfilPermissaoSistema` e `UsuarioPerfilAcesso`
+- a modelagem preserva `User` do Django como identidade/autenticacao e usa uma camada propria do sistema para a governanca funcional de permissoes, em linha com a decisao tecnica hibrida ja documentada
+- a regra V1 de 1 perfil base por usuario foi materializada com `UsuarioPerfilAcesso.usuario` em `OneToOneField` para `AUTH_USER_MODEL`, sem implementar extras individuais ou bloqueios individuais nesta fase
+- foram criadas as migrations de schema e seed inicial de `configuracoes`, com seeds idempotentes baseados em `update_or_create` e vinculo perfil-permissao sincronizado por codigo estavel
+- os perfis-base semeados foram `Administrador geral`, `Gestao administrativa`, `Operador financeiro`, `Operador biblioteca` e `Consulta/visualizacao`
+- o seed inicial inclui permissoes funcionais para `financeiro`, `biblioteca`, `configuracoes.siteconfig` e `configuracoes.admin_global`, ja refletindo as restricoes centrais da matriz V1 sem ativar enforcement em views/templates/menu
+- limitacao intencional desta microetapa: nao houve login/logout customizado, decorators/mixins, protecao de rotas, ocultacao de menu/sidebar, UI de administracao de perfis, atribuicao automatica de perfil a usuarios existentes nem implementacao de extras/bloqueios individuais
