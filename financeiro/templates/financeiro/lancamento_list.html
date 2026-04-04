@@ -1,5 +1,5 @@
 {% extends 'financeiro/base.html' %}
-{% block title %}Lancamentos Financeiros{% endblock %}
+{% block title %}Lançamentos Financeiros{% endblock %}
 {% block financeiro_shell_header %}
     <header class="financeiro-app-utility-bar no-print">
         <div class="container financeiro-topbar-desktop financeiro-lancamento-shell-desktop">
@@ -151,13 +151,16 @@
 <div class="financeiro-lancamento-page">
     <div class="financeiro-page-header financeiro-page-head">
         <div class="financeiro-page-header-main">
-            <h1 class="title financeiro-page-title">Lancamentos financeiros</h1>
+            <h1 class="title financeiro-page-title">Lançamentos financeiros</h1>
         </div>
         <div class="financeiro-page-header-actions no-print">
-            <a class="button is-link is-light" href="{% url 'financeiro:lancamento-importacao-exportacao' %}">
-                Importacao / Exportacao
+            <a class="button is-link is-light" href="{{ exportacao_lancamentos_url }}">
+                Exportar
             </a>
-            <a class="button is-primary" href="{% url 'financeiro:lancamento-create' %}">Novo lancamento financeiro</a>
+            <a class="button is-link is-light" href="{% url 'financeiro:lancamento-importacao-exportacao' %}">
+                Importar
+            </a>
+            <a class="button is-primary" href="{% url 'financeiro:lancamento-create' %}">Novo lançamento financeiro</a>
         </div>
     </div>
 
@@ -165,8 +168,8 @@
         <form method="get" class="filters-box no-print">
             <div class="columns is-multiline">
                 <div class="column is-12-mobile is-6-tablet is-3-desktop">
-                    <label class="label">Descricao</label>
-                    <input class="input" type="text" name="descricao" value="{{ request.GET.descricao }}" placeholder="Buscar por descricao">
+                    <label class="label">Descrição</label>
+                    <input class="input" type="text" name="descricao" value="{{ request.GET.descricao }}" placeholder="Buscar por descrição">
                 </div>
                 <div class="column is-12-mobile is-6-tablet is-3-desktop">
                     <label class="label">Documento</label>
@@ -179,7 +182,7 @@
                             <option value="">Todos</option>
                             <option value="receita" {% if request.GET.tipo == 'receita' %}selected{% endif %}>Receita</option>
                             <option value="despesa" {% if request.GET.tipo == 'despesa' %}selected{% endif %}>Despesa</option>
-                            <option value="transferencia" {% if request.GET.tipo == 'transferencia' %}selected{% endif %}>Transferencia</option>
+                            <option value="transferencia" {% if request.GET.tipo == 'transferencia' %}selected{% endif %}>Transferência</option>
                         </select>
                     </div>
                 </div>
@@ -255,7 +258,7 @@
             <table class="table is-fullwidth is-hoverable financeiro-table financeiro-lancamento-table">
                 <thead>
                 <tr>
-                    <th>Descricao</th>
+                    <th>Descrição</th>
                     <th>Tipo</th>
                     <th>Status</th>
                     <th>Valor</th>
@@ -273,7 +276,7 @@
                         <td>
                             {{ lancamento.descricao }}
                             {% if lancamento.com_rateio and lancamento.grupo_rateio %}
-                                <span class="financeiro-rateio-list-hint" title="Lancamento rateado" aria-label="Lancamento rateado">
+                                <span class="financeiro-rateio-list-hint" title="Lançamento rateado" aria-label="Lançamento rateado">
                                     <svg class="financeiro-rateio-list-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true" focusable="false">
                                         <path d="M4 3.25V6.5C4 7.6 4.9 8.5 6 8.5H10C11.1 8.5 12 9.4 12 10.5V12.75" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                                         <path d="M4 12.75V10.5C4 9.4 4.9 8.5 6 8.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -281,7 +284,7 @@
                                         <circle cx="4" cy="13" r="1.4" fill="currentColor"/>
                                         <circle cx="12" cy="13" r="1.4" fill="currentColor"/>
                                     </svg>
-                                    <span class="financeiro-sr-only">Lancamento rateado</span>
+                                    <span class="financeiro-sr-only">Lançamento rateado</span>
                                 </span>
                             {% endif %}
                         </td>
@@ -306,7 +309,7 @@
                             {% if lancamento.pessoa %}
                                 {{ lancamento.pessoa }}
                             {% elif lancamento.tipo == 'transferencia' %}
-                                Transferencia entre contas
+                                Transferência entre contas
                             {% else %}
                                 -
                             {% endif %}
@@ -327,7 +330,7 @@
                     </tr>
                 {% empty %}
                     <tr>
-                        <td colspan="10" class="financeiro-lancamento-empty">Nenhum lancamento encontrado com os filtros atuais.</td>
+                        <td colspan="10" class="financeiro-lancamento-empty">Nenhum lançamento encontrado com os filtros atuais.</td>
                     </tr>
                 {% endfor %}
                 </tbody>

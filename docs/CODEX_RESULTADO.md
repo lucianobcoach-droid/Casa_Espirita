@@ -180,6 +180,15 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - a aba `Modelo` passa a conter apenas a linha de cabecalhos oficiais, sem linhas de exemplo, e a aba `Instruções` concentra orientacoes operacionais curtas sobre finalidade, preservacao dos cabecalhos, uma linha por lancamento, formato de datas/valores, campos que podem ficar em branco e uso de `conta_destino_nome` em transferencias
 - esta fase segue sem implementar upload/importacao de arquivo do usuario, pre-validacao em massa, tratamento de duplicidades ou exportacao completa
 
+## Primeira exportacao real de lancamentos em XLSX
+
+- foi criada a rota `lancamentos/exportacao/` para baixar uma planilha XLSX real com os lancamentos cadastrados e, em ajuste posterior desta mesma frente, essa exportacao passou a operar a partir da propria tela de listagem de lancamentos
+- a exportacao usa uma aba `Lancamentos` com cabecalhos amigaveis ao usuario na mesma ordem do modelo de importacao: `Tipo`, `Status`, `Descricao`, `Valor`, `Data de competencia`, `Data de pagamento`, `Pessoa`, `Categoria`, `Centro de custo`, `Conta`, `Conta de destino`, `Documento` e `Observacoes`
+- `LancamentoFinanceiroListView` passou a montar a URL de exportacao preservando a querystring ativa, e `LancamentoFinanceiroExportacaoView` passou a reaproveitar a mesma funcao de filtro da listagem para gerar exatamente o subconjunto filtrado
+- a pagina dedicada foi ajustada para ficar visualmente focada em importacao futura e download do modelo; a exportacao principal permanece na listagem de `Lancamentos`, e a pagina dedicada passou a evitar um bloco concorrente de exportacao
+- nesta mesma passada, rotulos visiveis dessa frente foram revisados para corrigir acentuacao e nomenclatura na listagem e na pagina dedicada de importacao
+- esta primeira versao permanece simples e nao abre novos filtros avancados, multiplas variacoes de layout, importacao real do arquivo enviado nem validacao em massa
+
 ## Regras aplicadas nesta etapa
 
 - `numero_documento` continua opcional para o usuario

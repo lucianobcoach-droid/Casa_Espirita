@@ -34,6 +34,7 @@ from .views import (
     LancamentoFinanceiroCreateView,
     LancamentoFinanceiroCloneView,
     LancamentoFinanceiroDeleteView,
+    LancamentoFinanceiroExportacaoView,
     LancamentoFinanceiroGrupoRateioCloneView,
     LancamentoFinanceiroGrupoRateioUpdateView,
     LancamentoFinanceiroImportacaoExportacaoView,
@@ -121,6 +122,11 @@ urlpatterns = [
         'lancamentos/importacao/modelo/',
         LancamentoFinanceiroImportacaoModeloView.as_view(),
         name='lancamento-importacao-modelo',
+    ),
+    path(
+        'lancamentos/exportacao/',
+        LancamentoFinanceiroExportacaoView.as_view(),
+        name='lancamento-exportacao',
     ),
     path('lancamentos/novo/', LancamentoFinanceiroCreateView.as_view(), name='lancamento-create'),
     path(

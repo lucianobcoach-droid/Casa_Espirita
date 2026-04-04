@@ -130,7 +130,7 @@ Data: 2026-03-26
 - historico simples com os ultimos 5 lancamentos do favorecido no formulario de lancamento
 - acao `Clonar` diretamente na secao de ultimos lancamentos da pessoa dentro do formulario de lancamento, reaproveitando o fluxo ja existente de clone comum e de clone por grupo rateado
 - filtro do campo `Categoria`/`Subcategoria` pelo `tipo` selecionado no lancamento, exibindo apenas subcategorias de despesa em `despesa` e apenas subcategorias de receita em `receita`, com preservacao do comportamento de `transferencia`
-- fase 1 da importacao/exportacao de lancamentos com pagina propria reunindo upload preparado para fase futura, link de baixar planilha modelo XLSX com abas `Modelo` e `Instruções`, acao visual de exportacao e ajuda rapida operacional, ainda sem upload/importacao final, pre-validacao em massa, tratamento de duplicidades ou exportacao completa
+- fase 1 da importacao/exportacao de lancamentos com pagina propria focada em upload preparado para fase futura e link de baixar planilha modelo XLSX com abas `Modelo` e `Instruções`, primeira exportacao real simples em XLSX acionada pela propria listagem de lancamentos com respeito aos filtros ativos e cabecalhos amigaveis ao usuario, e ajuda rapida operacional, ainda sem upload/importacao final, pre-validacao em massa, tratamento de duplicidades ou exportacao avancada com variacoes
 - MVP de regras automaticas no cadastro de lancamento comum, com sugestoes por digitacao em `descricao`, `pessoa` apenas como refinador opcional, preenchimento automatico por selecao da sugestao e check explicito para salvar o lancamento atual como nova regra futura
 - recibo em HTML imprimivel a partir do lancamento, com refinamentos posteriores de conteudo, assinatura, configuracao institucional e impressao
 - mensagens de erro mais claras em campos obrigatorios
@@ -231,6 +231,7 @@ Observacao:
 - cadastro rapido de pessoa dentro do lancamento
 - cadastro rapido de categoria dentro do lancamento
 - importacao/exportacao futura de lancamentos, com importacao em massa validada por pre-visualizacao e exportacao tabular de consultas filtradas
+- evolucao futura da exportacao de lancamentos para oferecer variacoes controladas de saida e refinar o layout conforme uso real
 - na importacao/exportacao futura, o fluxo de importacao deve oferecer download de planilha modelo no layout proprio do sistema, preservando a ordem e as colunas esperadas pelo backend de importacao
 - refinamentos futuros do MVP de regras automaticas ja aberto no lancamento, preservando `descricao` como gatilho principal por digitacao, `pessoa` apenas como refinador opcional, preenchimento automatico por selecao de uma sugestao e check explicito para salvar nova regra a partir de lancamento comum; melhorias futuras podem incluir curadoria, edicao e governanca dessas regras em tela propria
 - acao `Clonar lancamento`, com MVP inicial restrito a lancamento comum sem rateio: abrir `lancamento_form.html` em modo criacao como modelo editavel sem vinculo com o original, copiando campos operacionais seguros (`descricao`, `tipo`, `status`, `valor`, `data_competencia`, `data_pagamento`, `pessoa`, `categoria`, `centro_custo`, `conta`, `conta_destino` quando transferencia, `observacoes`) e sem copiar `pk`, `numero_documento`, auditoria, `grupo_rateio` nem `com_rateio`

@@ -1,6 +1,6 @@
 {% extends 'financeiro/base.html' %}
 
-{% block title %}Importacao / Exportacao de Lancamentos{% endblock %}
+{% block title %}Importação de Lançamentos{% endblock %}
 
 {% block content %}
 <style>
@@ -70,52 +70,44 @@
 <div class="financeiro-importacao-page">
     <div class="financeiro-page-header financeiro-page-head">
         <div class="financeiro-page-header-main">
-            <h1 class="title financeiro-page-title">Importacao / Exportacao de Lancamentos</h1>
+            <h1 class="title financeiro-page-title">Importação de Lançamentos</h1>
         </div>
         <div class="financeiro-page-header-actions no-print">
-            <a class="button is-light" href="{% url 'financeiro:lancamento-list' %}">Voltar para lancamentos</a>
+            <a class="button is-light" href="{% url 'financeiro:lancamento-list' %}">Voltar para lançamentos</a>
         </div>
     </div>
 
     <div class="financeiro-importacao-grid">
         <section class="financeiro-importacao-card">
-            <h2 class="financeiro-importacao-card-title">Importar lancamentos</h2>
+            <h2 class="financeiro-importacao-card-title">Importar lançamentos</h2>
             <p class="financeiro-importacao-card-text">
-                Envie uma planilha XLSX preenchida no layout do sistema. Nesta fase, o envio ainda fica apenas preparado para a proxima etapa da importacao.
+                Envie uma planilha XLSX preenchida no layout do sistema. Nesta fase, o envio ainda fica apenas preparado para a próxima etapa da importação.
             </p>
 
             <form method="post" enctype="multipart/form-data">
                 {% csrf_token %}
                 <div class="field">
-                    <label class="label" for="arquivo_importacao">Arquivo de importacao</label>
+                    <label class="label" for="arquivo_importacao">Arquivo de importação</label>
                     <div class="control">
                         <input class="input financeiro-importacao-file" type="file" id="arquivo_importacao" name="arquivo_importacao" accept=".xlsx,.xls" disabled>
                     </div>
                 </div>
 
                 <div class="financeiro-importacao-actions">
-                    <button class="button is-primary" type="button" disabled>Importar lancamentos</button>
+                    <button class="button is-primary" type="button" disabled>Importar lançamentos</button>
                     <a class="button is-link is-light" href="{% url 'financeiro:lancamento-importacao-modelo' %}">Baixar planilha modelo</a>
                 </div>
             </form>
         </section>
 
-        <section class="financeiro-importacao-card">
-            <h2 class="financeiro-importacao-card-title">Exportar lancamentos</h2>
-            <p class="financeiro-importacao-card-text">
-                Baixe uma planilha com os lancamentos do sistema. A exportacao completa sera ativada em uma proxima fase.
-            </p>
-
-            <button class="button is-link" type="button" disabled>Exportar lancamentos</button>
-        </section>
     </div>
 
     <section class="financeiro-importacao-card">
-        <h2 class="financeiro-importacao-card-title">Ajuda rapida</h2>
+        <h2 class="financeiro-importacao-card-title">Ajuda rápida</h2>
         <ul class="financeiro-importacao-help-list">
             <li>Baixe a planilha modelo XLSX e preencha os campos na ordem esperada pelo sistema.</li>
-            <li>Use o bloco de importacao para selecionar o arquivo quando a proxima fase de envio estiver liberada.</li>
-            <li>Use o bloco de exportacao para baixar os lancamentos quando a exportacao completa for habilitada.</li>
+            <li>Use o bloco de importação para selecionar o arquivo quando a próxima fase de envio estiver liberada.</li>
+            <li>Use a tela de Lançamentos para exportar a listagem conforme os filtros aplicados.</li>
         </ul>
     </section>
 </div>

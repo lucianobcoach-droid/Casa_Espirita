@@ -326,30 +326,46 @@ LANCAMENTO_IMPORTACAO_MODELO_COLUNAS = [
     'observacoes',
 ]
 
+LANCAMENTO_EXPORTACAO_COLUNAS = [
+    'Tipo',
+    'Status',
+    'Descrição',
+    'Valor',
+    'Data de competência',
+    'Data de pagamento',
+    'Pessoa',
+    'Categoria',
+    'Centro de custo',
+    'Conta',
+    'Conta de destino',
+    'Documento',
+    'Observações',
+]
+
 LANCAMENTO_IMPORTACAO_MODELO_INSTRUCOES = [
     [
         'Finalidade',
-        'Use esta planilha como base para preparar lancamentos que serao importados em uma proxima etapa do sistema.',
+        'Use esta planilha como base para preparar lançamentos que serão importados em uma próxima etapa do sistema.',
     ],
     [
-        'Cabecalhos',
-        'Mantenha os nomes das colunas da aba Modelo exatamente como estao e preencha uma linha por lancamento.',
+        'Cabeçalhos',
+        'Mantenha os nomes das colunas da aba Modelo exatamente como estão e preencha uma linha por lançamento.',
     ],
     [
         'Datas e valores',
-        'Use datas no formato AAAA-MM-DD e valores numericos com ponto decimal quando necessario.',
+        'Use datas no formato AAAA-MM-DD e valores numéricos com ponto decimal quando necessário.',
     ],
     [
         'Campos opcionais',
-        'Deixe em branco os campos que nao se aplicarem ao lancamento, como centro_custo_nome, numero_documento e observacoes.',
+        'Deixe em branco os campos que não se aplicarem ao lançamento, como centro_custo_nome, numero_documento e observacoes.',
     ],
     [
-        'Transferencias',
-        'Preencha conta_destino_nome apenas quando o lancamento for uma transferencia entre contas.',
+        'Transferências',
+        'Preencha conta_destino_nome apenas quando o lançamento for uma transferência entre contas.',
     ],
     [
         'Layout do sistema',
-        'Preencha os dados seguindo a ordem e a estrutura da aba Modelo para facilitar a futura importacao.',
+        'Preencha os dados seguindo a ordem e a estrutura da aba Modelo para facilitar a futura importação.',
     ],
 ]
 
@@ -381,10 +397,26 @@ def _xlsx_planilha_xml(linhas: list[list[str]]) -> str:
     )
 
 
-def _gerar_planilha_modelo_lancamentos_xlsx() -> bytes:
+def _gerar_arquivo_xlsx(planilhas: list[tuple[str, list[list[str]]]]) -> bytes:
     arquivo = BytesIO()
 
     with ZipFile(arquivo, 'w', ZIP_DEFLATED) as workbook:
+        planilhas_content_types = ''.join(
+            f'<Override PartName="/xl/worksheets/sheet{indice}.xml" '
+            'ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'
+            for indice, _ in enumerate(planilhas, start=1)
+        )
+        planilhas_workbook = ''.join(
+            f'<sheet name="{escape(nome)}" sheetId="{indice}" r:id="rId{indice}"/>'
+            for indice, (nome, _) in enumerate(planilhas, start=1)
+        )
+        planilhas_rels = ''.join(
+            f'<Relationship Id="rId{indice}" '
+            'Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" '
+            f'Target="worksheets/sheet{indice}.xml"/>'
+            for indice, _ in enumerate(planilhas, start=1)
+        )
+
         workbook.writestr(
             '[Content_Types].xml',
             '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
@@ -392,8 +424,7 @@ def _gerar_planilha_modelo_lancamentos_xlsx() -> bytes:
             '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
             '<Default Extension="xml" ContentType="application/xml"/>'
             '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
-            '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'
-            '<Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'
+            f'{planilhas_content_types}'
             '</Types>',
         )
         workbook.writestr(
@@ -409,8 +440,7 @@ def _gerar_planilha_modelo_lancamentos_xlsx() -> bytes:
             '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" '
             'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
             '<sheets>'
-            '<sheet name="Modelo" sheetId="1" r:id="rId1"/>'
-            '<sheet name="Instruções" sheetId="2" r:id="rId2"/>'
+            f'{planilhas_workbook}'
             '</sheets>'
             '</workbook>',
         )
@@ -418,20 +448,84 @@ def _gerar_planilha_modelo_lancamentos_xlsx() -> bytes:
             'xl/_rels/workbook.xml.rels',
             '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
             '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
-            '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>'
-            '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/>'
+            f'{planilhas_rels}'
             '</Relationships>',
         )
-        workbook.writestr(
-            'xl/worksheets/sheet1.xml',
-            _xlsx_planilha_xml([LANCAMENTO_IMPORTACAO_MODELO_COLUNAS]),
-        )
-        workbook.writestr(
-            'xl/worksheets/sheet2.xml',
-            _xlsx_planilha_xml([['Item', 'Orientacao'], *LANCAMENTO_IMPORTACAO_MODELO_INSTRUCOES]),
-        )
+
+        for indice, (_, linhas) in enumerate(planilhas, start=1):
+            workbook.writestr(
+                f'xl/worksheets/sheet{indice}.xml',
+                _xlsx_planilha_xml(linhas),
+            )
 
     return arquivo.getvalue()
+
+
+def _gerar_planilha_modelo_lancamentos_xlsx() -> bytes:
+    return _gerar_arquivo_xlsx(
+        [
+            ('Modelo', [LANCAMENTO_IMPORTACAO_MODELO_COLUNAS]),
+            ('Instruções', [['Item', 'Orientação'], *LANCAMENTO_IMPORTACAO_MODELO_INSTRUCOES]),
+        ]
+    )
+
+
+def _linha_exportacao_lancamento(lancamento: LancamentoFinanceiro) -> list[str]:
+    return [
+        lancamento.tipo,
+        lancamento.status,
+        lancamento.descricao,
+        str(lancamento.valor),
+        lancamento.data_competencia.isoformat(),
+        lancamento.data_pagamento.isoformat() if lancamento.data_pagamento else '',
+        lancamento.pessoa.nome if lancamento.pessoa_id else '',
+        lancamento.categoria.nome if lancamento.categoria_id else '',
+        lancamento.centro_custo.nome if lancamento.centro_custo_id else '',
+        lancamento.conta.nome if lancamento.conta_id else '',
+        lancamento.conta_destino.nome if lancamento.conta_destino_id else '',
+        lancamento.numero_documento,
+        lancamento.observacoes,
+    ]
+
+
+def _gerar_planilha_exportacao_lancamentos_xlsx(lancamentos) -> bytes:
+    linhas = [LANCAMENTO_EXPORTACAO_COLUNAS]
+    linhas.extend(_linha_exportacao_lancamento(lancamento) for lancamento in lancamentos)
+
+    return _gerar_arquivo_xlsx([('Lancamentos', linhas)])
+
+
+def _filtrar_lancamentos_por_parametros(queryset, parametros):
+    descricao = parametros.get('descricao', '').strip()
+    numero_documento = parametros.get('numero_documento', '').strip()
+    tipo = parametros.get('tipo', '').strip()
+    status = parametros.get('status', '').strip()
+    data_inicial = parametros.get('data_inicial', '').strip()
+    data_final = parametros.get('data_final', '').strip()
+    conta = parametros.get('conta', '').strip()
+    pessoa = parametros.get('pessoa', '').strip()
+    categoria = parametros.get('categoria', '').strip()
+
+    if descricao:
+        queryset = queryset.filter(descricao__icontains=descricao)
+    if numero_documento:
+        queryset = queryset.filter(numero_documento__icontains=numero_documento)
+    if tipo:
+        queryset = queryset.filter(tipo=tipo)
+    if status:
+        queryset = queryset.filter(status=status)
+    if data_inicial:
+        queryset = queryset.filter(data_competencia__gte=data_inicial)
+    if data_final:
+        queryset = queryset.filter(data_competencia__lte=data_final)
+    if conta:
+        queryset = queryset.filter(Q(conta_id=conta) | Q(conta_destino_id=conta))
+    if pessoa:
+        queryset = queryset.filter(pessoa_id=pessoa)
+    if categoria:
+        queryset = queryset.filter(categoria_id=categoria)
+
+    return queryset
 
 
 def _centena_por_extenso(numero: int) -> str:
@@ -1785,33 +1879,7 @@ class LancamentoFinanceiroListView(ListView):
             'pessoa',
             'categoria',
         )
-        descricao = self.request.GET.get('descricao', '').strip()
-        numero_documento = self.request.GET.get('numero_documento', '').strip()
-        tipo = self.request.GET.get('tipo', '').strip()
-        status = self.request.GET.get('status', '').strip()
-        data_inicial = self.request.GET.get('data_inicial', '').strip()
-        data_final = self.request.GET.get('data_final', '').strip()
-        conta = self.request.GET.get('conta', '').strip()
-        pessoa = self.request.GET.get('pessoa', '').strip()
-        categoria = self.request.GET.get('categoria', '').strip()
-        if descricao:
-            queryset = queryset.filter(descricao__icontains=descricao)
-        if numero_documento:
-            queryset = queryset.filter(numero_documento__icontains=numero_documento)
-        if tipo:
-            queryset = queryset.filter(tipo=tipo)
-        if status:
-            queryset = queryset.filter(status=status)
-        if data_inicial:
-            queryset = queryset.filter(data_competencia__gte=data_inicial)
-        if data_final:
-            queryset = queryset.filter(data_competencia__lte=data_final)
-        if conta:
-            queryset = queryset.filter(Q(conta_id=conta) | Q(conta_destino_id=conta))
-        if pessoa:
-            queryset = queryset.filter(pessoa_id=pessoa)
-        if categoria:
-            queryset = queryset.filter(categoria_id=categoria)
+        queryset = _filtrar_lancamentos_por_parametros(queryset, self.request.GET)
         return queryset.order_by('-data_competencia', '-data_pagamento', '-criado_em', '-pk')
 
     def get_context_data(self, **kwargs):
@@ -1819,6 +1887,11 @@ class LancamentoFinanceiroListView(ListView):
         context['contas_disponiveis'] = ContaFinanceira.objects.order_by('nome')
         context['pessoas_disponiveis'] = PessoaFinanceira.objects.order_by('nome')
         context['categorias_disponiveis'] = CategoriaFinanceira.objects.order_by('tipo', 'nome')
+        exportacao_url = reverse('financeiro:lancamento-exportacao')
+        filtros_ativos = self.request.GET.urlencode()
+        if filtros_ativos:
+            exportacao_url = f'{exportacao_url}?{filtros_ativos}'
+        context['exportacao_lancamentos_url'] = exportacao_url
         return context
 
 
@@ -1827,7 +1900,7 @@ class LancamentoFinanceiroImportacaoExportacaoView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['page_title'] = 'Importacao / Exportacao de Lancamentos'
+        context['page_title'] = 'Importação de Lançamentos'
         return context
 
 
@@ -1838,6 +1911,30 @@ class LancamentoFinanceiroImportacaoModeloView(View):
             content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         )
         response['Content-Disposition'] = 'attachment; filename="modelo_importacao_lancamentos.xlsx"'
+
+        return response
+
+
+class LancamentoFinanceiroExportacaoView(View):
+    def get(self, request, *args, **kwargs):
+        lancamentos = (
+            _filtrar_lancamentos_por_parametros(
+                LancamentoFinanceiro.objects.select_related(
+                    'pessoa',
+                    'categoria',
+                    'centro_custo',
+                    'conta',
+                    'conta_destino',
+                ),
+                request.GET,
+            )
+            .order_by('-data_competencia', '-data_pagamento', '-criado_em', '-pk')
+        )
+        response = HttpResponse(
+            _gerar_planilha_exportacao_lancamentos_xlsx(lancamentos),
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        )
+        response['Content-Disposition'] = 'attachment; filename="exportacao_lancamentos.xlsx"'
 
         return response
 
