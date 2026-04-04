@@ -565,3 +565,21 @@ Com filtro por periodo:
 - nessa mesma correcao, o `@media print` do extrato manteve cor proxima da base, mas recalibrou a grade pela combinacao de borda `1px` e menor `padding-top`/`padding-bottom` de `th` e `td`, para afinar a percepção da linha sem depender de clareamento progressivo
 - numa reversao posterior dessa mesma microetapa, o `Saldo anterior` deixou de usar novamente tabela auxiliar e voltou a ocupar a posicao anterior acima do cabecalho, enquanto sua linha do `thead` passou a espelhar apenas a gramática visual do `Saldo final` sem alterar este ultimo
 - nessa mesma reversao, o `@media print` do extrato foi recalibrado outra vez com foco em espessura e densidade da grade, reduzindo ainda mais `padding-top`/`padding-bottom` de `th` e `td` e usando borda mais fina em `pt`, sem depender de novo clareamento progressivo
+
+## Levantamento estrutural inicial para futura matriz de permissoes
+
+- O estado real do Git foi conferido nesta microetapa: a branch atual permanece `feat/reinicio-financeiro`, o working tree nao possui modificacoes rastreadas abertas e `tmp/` e o unico item untracked visivel no status.
+- `docs/MATRIZ_PERMISSOES.md` ainda nao existe e nao foi criado nesta etapa, preservando a regra de documento protegido e a decisao ja registrada de so abrir esse arquivo quando a frente de permissoes for formalmente iniciada.
+- No modulo `financeiro`, a navegacao exposta ao usuario hoje esta organizada no shell lateral em `Visao geral`, `Movimentacao`, `Relatorios`, `Cadastros` e `Institucional`, alem da `home` secundaria em `/financeiro/inicio/`.
+- Ainda no `financeiro`, os recursos/telas reais ja identificados para a futura matriz sao:
+  - `Lancamentos`: listar, criar, editar, excluir, clonar lancamento comum, clonar rateio, editar grupo rateado, emitir recibo, alterar status em lote, excluir em lote, exportar listagem filtrada, importar XLSX, baixar modelo, baixar relatorio de inconsistencias, consultar ultimos lancamentos da pessoa e obter sugestoes de regras automaticas.
+  - `Extratos`: abrir a tela geral de extratos, consultar extrato por conta e filtrar por periodo.
+  - `Resumo` e `Prestacao de Contas`: consultar relatorios por periodo/contas e imprimir.
+  - `Auditoria do Financeiro`: listar registros de auditoria e filtrar por acao, periodo e id do registro.
+  - `Contas`, `Pessoas`, `Categorias`, `Centros de Custo`, `Assinaturas Institucionais` e `Configuracoes Institucionais`: listar, criar, editar e excluir, com `Contas` tambem expondo extrato individual.
+  - Endpoints auxiliares de autocomplete e historico (`autocomplete/pessoas`, `autocomplete/categorias`, `autocomplete/contas`, `autocomplete/centros-custo`, `historico/pessoas/.../ultimos-lancamentos`) aparecem como suporte de formulario/tela e devem herdar a mesma governanca de acesso do recurso de origem.
+- No modulo `biblioteca`, os recursos/telas reais ja expostos em menu proprio sao `Autores`, `Livros`, `Vendas` e `Emprestimos`, todos com acoes atuais de listar e criar; nao foram identificadas rotas proprias de edicao/exclusao nesse app nesta leitura.
+- No modulo `configuracoes`, a raiz do projeto (`/`) exibe `SiteConfigDetailView` como tela de configuracao/site institucional, e nao existe `configuracoes/urls.py` dedicado no estado atual; o Django admin segue exposto em `/admin/`.
+- A proposta inicial de hierarquia de perfis, ainda sem implementacao e sem criacao de grupos Django, fica assim registrada para avaliacao futura: `Administrador geral`, `Gestao administrativa`, `Operador financeiro`, `Operador biblioteca` e `Consulta/visualizacao`.
+- Pontos que exigirao controle de acesso na futura frente: exibicao/ocultacao de menus e atalhos por perfil, protecao de rotas e endpoints auxiliares, restricao de acoes destrutivas (`excluir`, lote, configuracoes institucionais), separacao entre leitura e escrita em relatorios/listagens/formularios, governanca de importacao/exportacao, visibilidade da auditoria e futura coerencia do log de acesso.
+- Impactos transversais obrigatorios da frente de permissoes ja levantados para a proxima etapa: revisar navegacao/menu, listagens, formularios, importacao/exportacao, auditoria/log, ajuda/manual, aderencia a `docs/PADRAO_UX_SISTEMA.md` e atualizacao dos docs-base conforme `docs/CHECKLIST_EVOLUCAO_SISTEMA.md`.
