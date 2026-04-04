@@ -222,6 +222,13 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - a lista de erros por linha ficou mais legivel: cada linha com inconsistencia aparece em bloco proprio e cada campo com erro passou a ser apresentado em uma faixa separada com rotulo amigavel e mensagem curta
 - esta microetapa foi restrita a organizacao visual e texto operacional do retorno da importacao, sem alterar validacao, gravacao, transacao, resolucao de cadastros ou regras de negocio ja consolidadas
 
+## Relatorio de inconsistencias para download na importacao
+
+- quando a importacao encontra erros, o banner de resultado da pagina de importacao passa a oferecer a acao `Baixar relatorio de inconsistencias`
+- foi criada uma rota POST dedicada para gerar um XLSX simples de uma unica aba `Inconsistencias`, a partir da lista de erros ja calculada pela validacao atual, sem mudar a politica all-or-nothing nem revalidar ou regravar lancamentos nesse endpoint
+- o relatorio gerado contem as colunas `Linha`, `Campo` e `Mensagem`, preservando o numero da linha, o rotulo amigavel exibido ao usuario e a mensagem operacional curta para facilitar a correcao da planilha original
+- a leitura principal da tela e o arquivo baixado continuam priorizando rotulos amigaveis, sem expor a coluna de campo tecnico ao usuario final
+
 ## Regras aplicadas nesta etapa
 
 - `numero_documento` continua opcional para o usuario

@@ -38,6 +38,7 @@ from .views import (
     LancamentoFinanceiroGrupoRateioCloneView,
     LancamentoFinanceiroGrupoRateioUpdateView,
     LancamentoFinanceiroImportacaoExportacaoView,
+    LancamentoFinanceiroImportacaoInconsistenciasView,
     LancamentoFinanceiroImportacaoModeloView,
     LancamentoFinanceiroListView,
     LancamentoFinanceiroReciboView,
@@ -122,6 +123,11 @@ urlpatterns = [
         'lancamentos/importacao/modelo/',
         LancamentoFinanceiroImportacaoModeloView.as_view(),
         name='lancamento-importacao-modelo',
+    ),
+    path(
+        'lancamentos/importacao/inconsistencias/',
+        LancamentoFinanceiroImportacaoInconsistenciasView.as_view(),
+        name='lancamento-importacao-inconsistencias',
     ),
     path(
         'lancamentos/exportacao/',

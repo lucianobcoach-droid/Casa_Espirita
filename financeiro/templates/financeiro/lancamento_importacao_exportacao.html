@@ -105,6 +105,10 @@
         line-height: 1.5;
     }
 
+    .financeiro-importacao-resultado-banner-form {
+        margin-top: 0.85rem;
+    }
+
     .financeiro-importacao-resultado-item {
         border-radius: 0.85rem;
         background: #f8fafc;
@@ -231,6 +235,19 @@
                     <p class="financeiro-importacao-resultado-banner-text">
                         Há ajustes pendentes na planilha. Veja o resumo e a lista por linha para corrigir os campos indicados.
                     </p>
+                    {% if resultado_importacao_erros_json %}
+                        <form
+                            class="financeiro-importacao-resultado-banner-form"
+                            method="post"
+                            action="{% url 'financeiro:lancamento-importacao-inconsistencias' %}"
+                        >
+                            {% csrf_token %}
+                            <textarea hidden name="erros_importacao">{{ resultado_importacao_erros_json }}</textarea>
+                            <button class="button is-danger is-light" type="submit">
+                                Baixar relatório de inconsistências
+                            </button>
+                        </form>
+                    {% endif %}
                 {% endif %}
             </div>
 

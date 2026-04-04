@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from calendar import monthrange
 from datetime import date, datetime, timedelta
 from decimal import Decimal
@@ -1028,6 +1029,69 @@ def _validar_conteudo_planilha_importacao_lancamentos_xlsx(arquivo_importacao) -
             resultado['lancamentos_validos'].append(lancamento_validado)
 
     return resultado
+
+
+def _serializar_erros_importacao_lancamentos(erros: list[dict[str, object]]) -> str:
+    return json.dumps(erros, ensure_ascii=False)
+
+
+def _normalizar_erros_importacao_lancamentos_relatorio(valor_serializado: str) -> list[dict[str, object]]:
+    try:
+        erros = json.loads(valor_serializado or '[]')
+    except json.JSONDecodeError:
+        return []
+
+    if not isinstance(erros, list):
+        return []
+
+    erros_normalizados = []
+    for erro_linha in erros:
+        if not isinstance(erro_linha, dict):
+            continue
+
+        try:
+            linha = int(erro_linha.get('linha'))
+        except (TypeError, ValueError):
+            continue
+
+        campos_normalizados = []
+        campos = erro_linha.get('campos')
+        if not isinstance(campos, list):
+            campos = []
+
+        for erro_campo in campos:
+            if not isinstance(erro_campo, dict):
+                continue
+
+            campos_normalizados.append({
+                'campo': str(erro_campo.get('campo') or '').strip(),
+                'rotulo': str(erro_campo.get('rotulo') or '').strip(),
+                'mensagem': str(erro_campo.get('mensagem') or '').strip(),
+            })
+
+        if campos_normalizados:
+            erros_normalizados.append({
+                'linha': linha,
+                'campos': campos_normalizados,
+            })
+
+    return erros_normalizados
+
+
+def _gerar_relatorio_inconsistencias_importacao_lancamentos_xlsx(
+    erros: list[dict[str, object]],
+) -> bytes:
+    linhas = [['Linha', 'Campo', 'Mensagem']]
+
+    for erro_linha in erros:
+        for erro_campo in erro_linha.get('campos', []):
+            linhas.append([
+                erro_linha.get('linha', ''),
+                erro_campo.get('rotulo', ''),
+                erro_campo.get('mensagem', ''),
+            ])
+
+    return _gerar_arquivo_xlsx([('Inconsistências', linhas)])
 
 
 def _filtrar_lancamentos_por_parametros(queryset, parametros):
@@ -2437,6 +2501,7 @@ class LancamentoFinanceiroImportacaoExportacaoView(TemplateView):
         context = super().get_context_data(**kwargs)
         context['page_title'] = 'Importação de Lançamentos'
         context['resultado_importacao_validacao'] = kwargs.get('resultado_importacao_validacao')
+        context['resultado_importacao_erros_json'] = kwargs.get('resultado_importacao_erros_json', '')
         return context
 
     def post(self, request, *args, **kwargs):
@@ -2498,8 +2563,40 @@ class LancamentoFinanceiroImportacaoExportacaoView(TemplateView):
         return self.render_to_response(
             self.get_context_data(
                 resultado_importacao_validacao=resultado_importacao_validacao,
+                resultado_importacao_erros_json=(
+                    _serializar_erros_importacao_lancamentos(
+                        resultado_importacao_validacao['erros']
+                    )
+                    if resultado_importacao_validacao['erros']
+                    else ''
+                ),
             )
         )
+
+
+class LancamentoFinanceiroImportacaoInconsistenciasView(View):
+    def post(self, request, *args, **kwargs):
+        erros = _normalizar_erros_importacao_lancamentos_relatorio(
+            request.POST.get('erros_importacao', '')
+        )
+
+        if not erros:
+            messages.warning(
+                request,
+                'Não há inconsistências disponíveis para baixar neste momento. '
+                'Envie a planilha novamente para gerar o relatório.',
+            )
+            return redirect('financeiro:lancamento-importacao-exportacao')
+
+        response = HttpResponse(
+            _gerar_relatorio_inconsistencias_importacao_lancamentos_xlsx(erros),
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        )
+        response['Content-Disposition'] = (
+            'attachment; filename="relatorio_inconsistencias_importacao_lancamentos.xlsx"'
+        )
+
+        return response
 
 
 class LancamentoFinanceiroImportacaoModeloView(View):
