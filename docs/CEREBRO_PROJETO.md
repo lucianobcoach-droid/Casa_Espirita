@@ -129,6 +129,9 @@ Estas regras devem ser respeitadas em qualquer etapa:
 - editar manualmente os campos preenchidos a partir da sugestao nao deve alterar automaticamente a regra de origem
 - tambem fica registrada como possibilidade futura a acao de cadastrar nova regra a partir do proprio fluxo de lancamento, em etapa propria
 - esta frente nao esta implementada no estado atual do repositorio e nao deve ser confundida com o autocomplete ja existente
+- o MVP inicial dessa frente deve usar `descricao` + `pessoa` como gatilho de sugestao, com uma acao explicita `Usar sugestao`, sem autoaplicacao silenciosa no formulario
+- no MVP, a regra reutilizavel pode preencher `descricao`, `tipo`, `pessoa`, `categoria`, `centro_custo`, `conta`, `conta_destino` e `observacoes`, mas deve deixar fora `numero_documento`, datas, `status`, `valor`, rateio, auditoria e qualquer id interno
+- a acao `Salvar como regra` nao deve entrar no primeiro patch dessa frente; ela permanece como fase seguinte, apenas depois de validar o uso explicito de sugestoes
 
 ### 5.1.5. Diretriz futura de clonagem de lancamento
 - fica registrada como frente funcional futura a acao `Clonar lancamento`

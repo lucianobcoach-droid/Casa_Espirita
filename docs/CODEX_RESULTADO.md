@@ -97,6 +97,15 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - grupos invalidos, vazios, com menos de 2 linhas ou com `numero_documento` divergente nao abrem clone e retornam com aviso para a listagem, preservando o documento de origem
 - esta microetapa nao reutilizou a view/form de edicao de grupo, nao criou sincronizacao entre original e clone, nao mexeu em `forms.py`, nao abriu importacao/exportacao nem permissoes
 
+## Delimitacao documental do MVP de regras reutilizaveis no lancamento
+
+- foi registrado sem patch de codigo que o MVP inicial dessa frente deve usar `descricao` + `pessoa` como gatilho de sugestao de regra
+- a aplicacao da sugestao deve acontecer apenas por acao explicita `Usar sugestao`, sem autoaplicacao silenciosa no formulario de lancamento
+- os campos definidos como aplicaveis pela regra no MVP foram `descricao`, `tipo`, `pessoa`, `categoria`, `centro_custo`, `conta`, `conta_destino` e `observacoes`
+- ficaram explicitamente fora do MVP `numero_documento`, datas, `status`, `valor`, rateio, auditoria e qualquer id interno
+- `Salvar como regra` nao entra no primeiro patch e fica como fase seguinte, depois de validar o uso manual de `Usar sugestao`
+- esta microetapa foi apenas documental e nao alterou models, forms, views, templates nem rotas
+
 ## Regras aplicadas nesta etapa
 
 - `numero_documento` continua opcional para o usuario
