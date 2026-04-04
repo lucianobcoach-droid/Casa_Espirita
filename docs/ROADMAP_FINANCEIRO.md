@@ -203,7 +203,7 @@ Observacao:
 
 ### Imediato
 - proxima frente funcional prioritaria do sistema: `permissoes/autenticacao` com configuracao hierarquica de perfis por `Modulo` > `Tela/Recurso` > `Acao`, em camada transversal do projeto e nao como ajuste isolado do `financeiro`
-- na abertura real da frente de `permissoes/autenticacao`, criar `docs/MATRIZ_PERMISSOES.md` como documento proprio de mapeamento de permissoes; este arquivo nao deve ser criado nesta microetapa documental
+- na abertura real da frente de `permissoes/autenticacao`, foi criada a primeira versao de `docs/MATRIZ_PERMISSOES.md` como documento proprio de mapeamento de permissoes; as proximas subetapas devem revisar essa matriz com auditoria humana, fechar a regra de exibicao de menus/botoes/endpoints por perfil e so depois iniciar a implementacao tecnica em codigo
 - auditoria de UX entre telas existentes e consolidacao de um padrao visual/funcional transversal em `docs/PADRAO_UX_SISTEMA.md`, com padronizacao progressiva das melhorias ja aprovadas no `financeiro` para outros modulos
 - refinamentos futuros do shell visual do `financeiro` e da sidebar ja implantada, guiados por uso real e sem reabrir troca estrutural ampla da navegacao
 - refinamento futuro do menu lateral para ficar mais leve, mais coerente com o tema, menos pesado visualmente e com item ativo mais elegante, reduzindo a sensacao de painel antigo sem trocar a sidebar como navegacao principal
