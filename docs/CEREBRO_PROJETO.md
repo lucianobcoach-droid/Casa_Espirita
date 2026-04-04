@@ -111,6 +111,8 @@ Estas regras devem ser respeitadas em qualquer etapa:
 - a autenticacao e o controle de acesso devem nascer como base transversal do sistema, preparados para convivio entre modulos atuais e futuros
 - deve existir separacao clara entre administracao global do sistema e administracoes ou cadastros especificos de cada modulo
 - o desenho futuro deve permitir permissoes por modulo, permissoes por acao e perfis/funcoes de acesso reutilizaveis
+- a proxima frente funcional prioritaria do sistema, apos a estabilizacao do `financeiro`, deve ser `permissoes/autenticacao`
+- a interface futura de configuracao de perfis deve ser hierarquica, organizando acesso em `Modulo` > `Tela/Recurso` > `Acao`
 - o desenho futuro tambem deve permitir centralizar cadastro de usuarios e controle de permissoes em camada comum do projeto
 - com a expansao para novos modulos, o projeto deve poder reorganizar o acesso administrativo global sem acoplar essa governanca a um modulo especifico
 - com a expansao para novos modulos, o projeto deve poder separar cadastros globais de cadastros especificos por modulo
@@ -172,10 +174,21 @@ Estas regras devem ser respeitadas em qualquer etapa:
 - essa frente nao deve ser tratada como aplicacao manual de cores soltas em telas isoladas
 - a partir de uma cor principal configurada, o sistema deve poder derivar uma paleta relacionada e coerente para elementos de apoio, contraste, estados e superficies
 - essa governanca futura da paleta deve ser transversal ao sistema, preservando consistencia entre shell, modulos, relatorios e demais superficies visuais
+- o cadastro da logo institucional deve evoluir futuramente para aceitar imagem opcional por URL ou upload local, com preview visual no formulario e regra clara de uso/fallback
 
 ### 5.4. Diretriz futura de log de acesso ao sistema
 - fica registrada como frente futura a trilha de acesso ao sistema em nivel de autenticacao e entrada de usuarios, separada da auditoria funcional do modulo `financeiro`
 - esse log de acesso deve nascer como camada estrutural do projeto e nao como ajuste isolado de uma tela especifica
+
+### 5.5. Governanca permanente de evolucao e checklist transversal
+- toda nova implementacao deve ser revisada contra uma checklist permanente de amarracao transversal antes de ser considerada pronta para auditoria ou commit
+- essa checklist deve cobrir, no minimo: navegacao/menu/atalhos, permissoes por modulo/tela/acao, impacto em listagens, impacto em formularios, impacto em importacao/exportacao, impacto em auditoria/log, impacto em ajuda/manual do usuario, aderencia ao padrao UX/layout do sistema e atualizacao obrigatoria dos documentos-base
+- em listagens, essa revisao deve observar filtros, ordenacao, colunas, truncamento, acoes em lote e exportacao
+- em formularios, essa revisao deve observar rotulos, obrigatoriedade, mensagens, preview e consistencia visual/operacional
+- a auditoria de UX entre telas existentes passa a ser uma frente oficial do sistema e deve alimentar um padrao visual/funcional transversal, sem reabrir regras de negocio ja consolidadas
+- `docs/PADRAO_UX_SISTEMA.md` passa a ser a referencia inicial enxuta desse padrao transversal, sem substituir `CEREBRO_PROJETO`, `STATE`, `CODEX_RESULTADO` ou `ROADMAP_FINANCEIRO`
+- a expansao para outros modulos deve ocorrer apenas depois da estabilizacao do `financeiro` e da amarracao desses padroes, reaproveitando as melhorias aprovadas no `financeiro` de forma transversal e controlada
+- a expansao futura de acoes em lote para outros cadastros permanece registrada como frente posterior de UX/operacao, sem ser tratada como regra de negocio estrutural
 
 ## 6. Estado funcional ja validado
 Ate o momento, esta validado que:
@@ -303,8 +316,11 @@ Os tipos validos de lancamento sao:
 - a revisao operacional de `data_pagamento` foi consolidada no formulario do modulo, tornando o campo obrigatorio no fluxo atual e com indicativo visual claro
 - o preenchimento de `data_competencia` a partir de `data_pagamento` foi reforcado no template para comportamento mais previsivel, sem sobrescrever indevidamente valores manuais ja existentes
 - a obrigatoriedade de `data_pagamento` agora tambem deve ser validada estruturalmente no `clean()` de `LancamentoFinanceiro`, mesmo sem migracao imediata do campo para `null=False` no banco
-- a listagem principal de lancamentos deve usar ordem oficial por `-data_competencia`, `-data_pagamento`, `-criado_em` e `-pk`, aplicada na view e sem alterar o `Meta.ordering` do model
+- a listagem principal de lancamentos deve usar ordenacao padrao mais intuitiva por data principal mais recente primeiro, priorizando `data_pagamento` quando existir e caindo para `data_competencia`, com desempate por `pk` mais recente; essa ordenacao e aplicada na view e nao altera o `Meta.ordering` do model
 - na listagem principal de lancamentos, rateios devem ser tratados como grupo visual unico por `grupo_rateio`, com linha-resumo expandivel e acoes/selecao da listagem mirando o grupo inteiro; essa e uma decisao de UX apenas da listagem e nao altera a modelagem fisica atual nem as demais telas nesta etapa
+- na mesma listagem, a coluna de acoes deve manter slots visuais fixos por funcao para preservar alinhamento horizontal entre linhas comuns e grupos rateados, `Recibo` deve ser tratado como acao contextual e nao universal, e a coluna `Descricao` pode usar truncamento com reticencias e tooltip para leitura rapida sem perder acesso ao texto completo
+- a listagem de lancamentos pode adotar iconografia compacta para acoes, tipo e status, desde que `title`, `aria-label` ou texto equivalente preservem compreensao e acessibilidade, sem reabrir regras de negocio nem a logica de agrupamento de rateio
+- quando houver ordenacao por coluna na listagem de lancamentos, ela deve preservar os filtros GET ativos, manter o agrupamento visual de rateio, usar indicador visual discreto no cabecalho e continuar respeitando a ordenacao padrao por data principal mais recente quando nenhum criterio manual estiver selecionado
 - no extrato, a ordem oficial deve ser crescente por `data_competencia`, com desempate por `criado_em` e `pk`
 - no extrato, lancamentos rateados devem ser lidos como documento consolidado por `grupo_rateio`, com exibicao do valor total do documento na linha exibida
 - a consolidacao do rateio no extrato deve ficar restrita a apresentacao da tela, preservando a modelagem atual do rateio e a base de calculo do saldo

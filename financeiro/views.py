@@ -16,6 +16,7 @@ from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Q
+from django.db.models.functions import Coalesce
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
@@ -44,6 +45,24 @@ from .models import (
     PessoaFinanceira,
     RegraLancamentoFinanceiro,
 )
+
+
+LANCAMENTO_ORDENACOES_LISTAGEM = {
+    'descricao': ('descricao', 'asc'),
+    '-descricao': ('descricao', 'desc'),
+    'pessoa': ('pessoa', 'asc'),
+    '-pessoa': ('pessoa', 'desc'),
+    'tipo': ('tipo', 'asc'),
+    '-tipo': ('tipo', 'desc'),
+    'status': ('status', 'asc'),
+    '-status': ('status', 'desc'),
+    'data': ('data', 'asc'),
+    '-data': ('data', 'desc'),
+    'valor': ('valor', 'asc'),
+    '-valor': ('valor', 'desc'),
+}
+LANCAMENTO_ORDENACAO_PADRAO = '-data'
+LANCAMENTO_COLUNAS_ORDENAVEIS = ('descricao', 'tipo', 'status', 'valor', 'pessoa', 'data')
 
 
 def _auditoria_usuario(request):
@@ -1203,7 +1222,7 @@ def _montar_lancamentos_visuais_listagem(lancamentos_queryset):
                 continue
 
             linhas_rateio = linhas_por_grupo.get(grupo_rateio) or [lancamento]
-            representante = linhas_rateio[0]
+            representante = lancamento
             lancamentos_visuais.append({
                 'eh_rateio': True,
                 'token_selecao': f'grupo:{grupo_rateio}',
@@ -1225,6 +1244,79 @@ def _montar_lancamentos_visuais_listagem(lancamentos_queryset):
         })
 
     return lancamentos_visuais
+
+
+def _resolver_ordenacao_lancamentos_listagem(ordenacao):
+    ordenacao = (ordenacao or '').strip()
+    if ordenacao in LANCAMENTO_ORDENACOES_LISTAGEM:
+        return ordenacao
+    return LANCAMENTO_ORDENACAO_PADRAO
+
+
+def _valor_ordenacao_lancamento_visual(lancamento_visual, campo_ordenacao):
+    lancamento = lancamento_visual['representante']
+
+    if campo_ordenacao == 'descricao':
+        return (lancamento.descricao or '').strip().lower()
+    if campo_ordenacao == 'pessoa':
+        return str(lancamento.pessoa or '').strip().lower()
+    if campo_ordenacao == 'tipo':
+        return (lancamento.get_tipo_display() or '').strip().lower()
+    if campo_ordenacao == 'status':
+        return (lancamento.get_status_display() or '').strip().lower()
+    if campo_ordenacao == 'valor':
+        return lancamento_visual['valor_total'] or Decimal('0.00')
+
+    return lancamento.data_pagamento or lancamento.data_competencia or date.min
+
+
+def _ordenar_lancamentos_visuais_listagem(lancamentos_visuais, ordenacao):
+    ordenacao = _resolver_ordenacao_lancamentos_listagem(ordenacao)
+    campo_ordenacao, direcao = LANCAMENTO_ORDENACOES_LISTAGEM[ordenacao]
+
+    lancamentos_visuais = list(lancamentos_visuais)
+    lancamentos_visuais.sort(
+        key=lambda lancamento_visual: lancamento_visual['representante'].pk or 0,
+        reverse=True,
+    )
+    lancamentos_visuais.sort(
+        key=lambda lancamento_visual: _valor_ordenacao_lancamento_visual(
+            lancamento_visual,
+            campo_ordenacao,
+        ),
+        reverse=(direcao == 'desc'),
+    )
+    return lancamentos_visuais
+
+
+def _montar_url_ordenacao_lancamentos_listagem(request, coluna, direcao):
+    query_params = request.GET.copy()
+    query_params['ordenacao'] = coluna if direcao == 'asc' else f'-{coluna}'
+    return f'?{query_params.urlencode()}'
+
+
+def _montar_contexto_ordenacao_lancamentos_listagem(request, ordenacao_atual):
+    ordenacao_atual = _resolver_ordenacao_lancamentos_listagem(ordenacao_atual)
+    coluna_atual, direcao_atual = LANCAMENTO_ORDENACOES_LISTAGEM[ordenacao_atual]
+    ordenacao_colunas = {}
+
+    for coluna in LANCAMENTO_COLUNAS_ORDENAVEIS:
+        esta_ativa = coluna == coluna_atual
+        proxima_direcao = 'desc' if esta_ativa and direcao_atual == 'asc' else 'asc'
+        ordenacao_colunas[coluna] = {
+            'ativa': esta_ativa,
+            'direcao': direcao_atual if esta_ativa else '',
+            'url': _montar_url_ordenacao_lancamentos_listagem(
+                request,
+                coluna,
+                proxima_direcao,
+            ),
+        }
+
+    return {
+        'ordenacao_atual': ordenacao_atual,
+        'ordenacao_colunas': ordenacao_colunas,
+    }
 
 
 def _resolver_lancamentos_para_acoes_em_lote(tokens_selecao):
@@ -2616,16 +2708,26 @@ class LancamentoFinanceiroListView(ListView):
             'categoria',
         )
         queryset = _filtrar_lancamentos_por_parametros(queryset, self.request.GET)
-        return queryset.order_by('-data_competencia', '-data_pagamento', '-criado_em', '-pk')
+        return queryset.annotate(
+            data_principal_ordenacao=Coalesce('data_pagamento', 'data_competencia')
+        ).order_by('-data_principal_ordenacao', '-pk')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        ordenacao_atual = _resolver_ordenacao_lancamentos_listagem(
+            self.request.GET.get('ordenacao')
+        )
         context['contas_disponiveis'] = ContaFinanceira.objects.order_by('nome')
         context['pessoas_disponiveis'] = PessoaFinanceira.objects.order_by('nome')
         context['categorias_disponiveis'] = CategoriaFinanceira.objects.order_by('tipo', 'nome')
-        context['lancamentos_visuais'] = _montar_lancamentos_visuais_listagem(
-            context['lancamentos']
+        context['lancamentos_visuais'] = _ordenar_lancamentos_visuais_listagem(
+            _montar_lancamentos_visuais_listagem(context['lancamentos']),
+            ordenacao_atual,
         )
+        context.update(_montar_contexto_ordenacao_lancamentos_listagem(
+            self.request,
+            ordenacao_atual,
+        ))
         exportacao_url = reverse('financeiro:lancamento-exportacao')
         filtros_ativos = self.request.GET.urlencode()
         if filtros_ativos:

@@ -89,6 +89,17 @@
         margin-bottom: 0;
     }
 
+    .financeiro-lancamento-table th:nth-child(2),
+    .financeiro-lancamento-table td:nth-child(2) {
+        width: 28%;
+        max-width: 28rem;
+    }
+
+    .financeiro-lancamento-table th:nth-child(8),
+    .financeiro-lancamento-table td:nth-child(8) {
+        min-width: 13rem;
+    }
+
     .financeiro-lancamento-bulk-bar {
         display: flex;
         flex-wrap: wrap;
@@ -186,6 +197,7 @@
         align-items: center;
         gap: 0.5rem;
         min-width: 0;
+        max-width: 100%;
     }
 
     .financeiro-lancamento-descricao-spacer {
@@ -200,6 +212,18 @@
         flex-direction: column;
         gap: 0.15rem;
         min-width: 0;
+        max-width: 100%;
+        flex: 1 1 auto;
+    }
+
+    .financeiro-lancamento-descricao-wrap > span:last-child,
+    .financeiro-rateio-summary-text > span:first-child,
+    .financeiro-lancamento-descricao-text {
+        display: block;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     .financeiro-rateio-summary-meta {
@@ -238,6 +262,144 @@
 
     .financeiro-lancamento-empty {
         color: #64748b;
+    }
+
+    .financeiro-lancamento-table th:last-child,
+    .financeiro-lancamento-table td.actions-cell {
+        width: 11rem;
+    }
+
+    .financeiro-lancamento-actions-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 2.25rem);
+        gap: 0.3rem;
+        align-items: center;
+        justify-content: end;
+    }
+
+    .financeiro-lancamento-action-slot {
+        min-width: 0;
+    }
+
+    .financeiro-lancamento-icon-button {
+        width: 2.25rem;
+        min-width: 2.25rem;
+        height: 2.25rem;
+        padding: 0;
+        border-radius: 0.7rem;
+    }
+
+    .financeiro-lancamento-icon-svg {
+        width: 1rem;
+        height: 1rem;
+        display: block;
+        stroke: currentColor;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        fill: none;
+    }
+
+    .financeiro-lancamento-action-placeholder {
+        display: block;
+        width: 2.25rem;
+        min-width: 2.25rem;
+        height: 2.25rem;
+        visibility: hidden;
+    }
+
+    .financeiro-lancamento-type-icon,
+    .financeiro-lancamento-status-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2rem;
+        height: 2rem;
+        border-radius: 999px;
+        border: 1px solid transparent;
+    }
+
+    .financeiro-lancamento-type-icon svg,
+    .financeiro-lancamento-status-icon svg {
+        width: 1rem;
+        height: 1rem;
+        display: block;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+
+    .financeiro-lancamento-type-icon.is-receita {
+        color: #15803d;
+        background: #ecfdf5;
+        border-color: #bbf7d0;
+    }
+
+    .financeiro-lancamento-type-icon.is-despesa {
+        color: #b91c1c;
+        background: #fef2f2;
+        border-color: #fecaca;
+    }
+
+    .financeiro-lancamento-type-icon.is-transferencia {
+        color: #1d4ed8;
+        background: #eff6ff;
+        border-color: #bfdbfe;
+    }
+
+    .financeiro-lancamento-status-icon.is-aberto {
+        color: #92400e;
+        background: #fffbeb;
+        border-color: #fef3c7;
+    }
+
+    .financeiro-lancamento-status-icon.is-quitado {
+        color: #166534;
+        background: #f0fdf4;
+        border-color: #bbf7d0;
+    }
+
+    .financeiro-lancamento-status-icon.is-cancelado {
+        color: #991b1b;
+        background: #fef2f2;
+        border-color: #fecaca;
+    }
+
+    .financeiro-lancamento-sort-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        color: inherit;
+    }
+
+    .financeiro-lancamento-sort-link:hover {
+        color: #2563eb;
+    }
+
+    .financeiro-lancamento-sort-icon {
+        width: 0.8rem;
+        height: 0.8rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #94a3b8;
+    }
+
+    .financeiro-lancamento-sort-icon svg {
+        width: 0.8rem;
+        height: 0.8rem;
+        display: block;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+
+    .financeiro-lancamento-sort-link.is-active .financeiro-lancamento-sort-icon {
+        color: #2563eb;
     }
 
     @media screen and (max-width: 1023px) {
@@ -422,16 +584,154 @@
                             >
                         </label>
                     </th>
-                    <th>Descrição</th>
-                    <th>Tipo</th>
-                    <th>Status</th>
-                    <th>Valor</th>
+                    <th>
+                        <a
+                            class="financeiro-lancamento-sort-link{% if ordenacao_colunas.descricao.ativa %} is-active{% endif %}"
+                            href="{{ ordenacao_colunas.descricao.url }}"
+                            title="Ordenar por Descrição"
+                            aria-label="Ordenar por Descrição"
+                        >
+                            <span>Descrição</span>
+                            <span class="financeiro-lancamento-sort-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" focusable="false">
+                                    {% if ordenacao_colunas.descricao.ativa and ordenacao_colunas.descricao.direcao == 'asc' %}
+                                        <path d="M12 5v14"></path>
+                                        <path d="M7.5 9.5 12 5l4.5 4.5"></path>
+                                    {% elif ordenacao_colunas.descricao.ativa and ordenacao_colunas.descricao.direcao == 'desc' %}
+                                        <path d="M12 5v14"></path>
+                                        <path d="M7.5 14.5 12 19l4.5-4.5"></path>
+                                    {% else %}
+                                        <path d="M8 10 12 6l4 4"></path>
+                                        <path d="M8 14l4 4 4-4"></path>
+                                    {% endif %}
+                                </svg>
+                            </span>
+                        </a>
+                    </th>
+                    <th>
+                        <a
+                            class="financeiro-lancamento-sort-link{% if ordenacao_colunas.tipo.ativa %} is-active{% endif %}"
+                            href="{{ ordenacao_colunas.tipo.url }}"
+                            title="Ordenar por Tipo"
+                            aria-label="Ordenar por Tipo"
+                        >
+                            <span>Tipo</span>
+                            <span class="financeiro-lancamento-sort-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" focusable="false">
+                                    {% if ordenacao_colunas.tipo.ativa and ordenacao_colunas.tipo.direcao == 'asc' %}
+                                        <path d="M12 5v14"></path>
+                                        <path d="M7.5 9.5 12 5l4.5 4.5"></path>
+                                    {% elif ordenacao_colunas.tipo.ativa and ordenacao_colunas.tipo.direcao == 'desc' %}
+                                        <path d="M12 5v14"></path>
+                                        <path d="M7.5 14.5 12 19l4.5-4.5"></path>
+                                    {% else %}
+                                        <path d="M8 10 12 6l4 4"></path>
+                                        <path d="M8 14l4 4 4-4"></path>
+                                    {% endif %}
+                                </svg>
+                            </span>
+                        </a>
+                    </th>
+                    <th>
+                        <a
+                            class="financeiro-lancamento-sort-link{% if ordenacao_colunas.status.ativa %} is-active{% endif %}"
+                            href="{{ ordenacao_colunas.status.url }}"
+                            title="Ordenar por Status"
+                            aria-label="Ordenar por Status"
+                        >
+                            <span>Status</span>
+                            <span class="financeiro-lancamento-sort-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" focusable="false">
+                                    {% if ordenacao_colunas.status.ativa and ordenacao_colunas.status.direcao == 'asc' %}
+                                        <path d="M12 5v14"></path>
+                                        <path d="M7.5 9.5 12 5l4.5 4.5"></path>
+                                    {% elif ordenacao_colunas.status.ativa and ordenacao_colunas.status.direcao == 'desc' %}
+                                        <path d="M12 5v14"></path>
+                                        <path d="M7.5 14.5 12 19l4.5-4.5"></path>
+                                    {% else %}
+                                        <path d="M8 10 12 6l4 4"></path>
+                                        <path d="M8 14l4 4 4-4"></path>
+                                    {% endif %}
+                                </svg>
+                            </span>
+                        </a>
+                    </th>
+                    <th>
+                        <a
+                            class="financeiro-lancamento-sort-link{% if ordenacao_colunas.valor.ativa %} is-active{% endif %}"
+                            href="{{ ordenacao_colunas.valor.url }}"
+                            title="Ordenar por Valor"
+                            aria-label="Ordenar por Valor"
+                        >
+                            <span>Valor</span>
+                            <span class="financeiro-lancamento-sort-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" focusable="false">
+                                    {% if ordenacao_colunas.valor.ativa and ordenacao_colunas.valor.direcao == 'asc' %}
+                                        <path d="M12 5v14"></path>
+                                        <path d="M7.5 9.5 12 5l4.5 4.5"></path>
+                                    {% elif ordenacao_colunas.valor.ativa and ordenacao_colunas.valor.direcao == 'desc' %}
+                                        <path d="M12 5v14"></path>
+                                        <path d="M7.5 14.5 12 19l4.5-4.5"></path>
+                                    {% else %}
+                                        <path d="M8 10 12 6l4 4"></path>
+                                        <path d="M8 14l4 4 4-4"></path>
+                                    {% endif %}
+                                </svg>
+                            </span>
+                        </a>
+                    </th>
                     <th>Conta</th>
                     <th>Conta destino</th>
-                    <th>Pessoa</th>
-                    <th>Data</th>
+                    <th>
+                        <a
+                            class="financeiro-lancamento-sort-link{% if ordenacao_colunas.pessoa.ativa %} is-active{% endif %}"
+                            href="{{ ordenacao_colunas.pessoa.url }}"
+                            title="Ordenar por Pessoa"
+                            aria-label="Ordenar por Pessoa"
+                        >
+                            <span>Pessoa</span>
+                            <span class="financeiro-lancamento-sort-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" focusable="false">
+                                    {% if ordenacao_colunas.pessoa.ativa and ordenacao_colunas.pessoa.direcao == 'asc' %}
+                                        <path d="M12 5v14"></path>
+                                        <path d="M7.5 9.5 12 5l4.5 4.5"></path>
+                                    {% elif ordenacao_colunas.pessoa.ativa and ordenacao_colunas.pessoa.direcao == 'desc' %}
+                                        <path d="M12 5v14"></path>
+                                        <path d="M7.5 14.5 12 19l4.5-4.5"></path>
+                                    {% else %}
+                                        <path d="M8 10 12 6l4 4"></path>
+                                        <path d="M8 14l4 4 4-4"></path>
+                                    {% endif %}
+                                </svg>
+                            </span>
+                        </a>
+                    </th>
+                    <th>
+                        <a
+                            class="financeiro-lancamento-sort-link{% if ordenacao_colunas.data.ativa %} is-active{% endif %}"
+                            href="{{ ordenacao_colunas.data.url }}"
+                            title="Ordenar por Data"
+                            aria-label="Ordenar por Data"
+                        >
+                            <span>Data</span>
+                            <span class="financeiro-lancamento-sort-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" focusable="false">
+                                    {% if ordenacao_colunas.data.ativa and ordenacao_colunas.data.direcao == 'asc' %}
+                                        <path d="M12 5v14"></path>
+                                        <path d="M7.5 9.5 12 5l4.5 4.5"></path>
+                                    {% elif ordenacao_colunas.data.ativa and ordenacao_colunas.data.direcao == 'desc' %}
+                                        <path d="M12 5v14"></path>
+                                        <path d="M7.5 14.5 12 19l4.5-4.5"></path>
+                                    {% else %}
+                                        <path d="M8 10 12 6l4 4"></path>
+                                        <path d="M8 14l4 4 4-4"></path>
+                                    {% endif %}
+                                </svg>
+                            </span>
+                        </a>
+                    </th>
                     <th>Documento</th>
-                    <th class="no-print">Acoes</th>
+                    <th class="no-print">Ações</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -452,7 +752,7 @@
                         <td>
                             {% if lancamento_visual.eh_rateio %}
                                 <details class="financeiro-rateio-details">
-                                    <summary>
+                                    <summary title="{{ lancamento.descricao }}">
                                         <span class="financeiro-lancamento-descricao-wrap">
                                             <span class="financeiro-rateio-toggle" aria-hidden="true">+</span>
                                             <span class="financeiro-rateio-summary-text">
@@ -492,7 +792,7 @@
                             {% else %}
                                 <span class="financeiro-lancamento-descricao-wrap">
                                     <span class="financeiro-lancamento-descricao-spacer" aria-hidden="true"></span>
-                                    <span>{{ lancamento.descricao }}</span>
+                                    <span title="{{ lancamento.descricao }}">{{ lancamento.descricao }}</span>
                                 </span>
                             {% endif %}
                             {% if not lancamento_visual.eh_rateio and lancamento.com_rateio and lancamento.grupo_rateio %}
@@ -509,13 +809,54 @@
                             {% endif %}
                         </td>
                         <td>
-                            <span class="tipo-badge {% if lancamento.tipo == 'receita' %}is-receita{% elif lancamento.tipo == 'despesa' %}is-despesa{% else %}is-transferencia{% endif %}">
-                                {{ lancamento.get_tipo_display }}
+                            <span
+                                class="financeiro-lancamento-type-icon {% if lancamento.tipo == 'receita' %}is-receita{% elif lancamento.tipo == 'despesa' %}is-despesa{% else %}is-transferencia{% endif %}"
+                                role="img"
+                                aria-label="{{ lancamento.get_tipo_display }}"
+                                title="{{ lancamento.get_tipo_display }}"
+                            >
+                                {% if lancamento.tipo == 'receita' %}
+                                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                        <path d="M12 19V5"></path>
+                                        <path d="M6.5 10.5 12 5l5.5 5.5"></path>
+                                    </svg>
+                                {% elif lancamento.tipo == 'despesa' %}
+                                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                        <path d="M12 5v14"></path>
+                                        <path d="M6.5 13.5 12 19l5.5-5.5"></path>
+                                    </svg>
+                                {% else %}
+                                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                        <path d="M7 8h11"></path>
+                                        <path d="M14.5 4.5 18 8l-3.5 3.5"></path>
+                                        <path d="M17 16H6"></path>
+                                        <path d="M9.5 12.5 6 16l3.5 3.5"></path>
+                                    </svg>
+                                {% endif %}
                             </span>
                         </td>
                         <td>
-                            <span class="status-badge {% if lancamento.status == 'quitado' %}is-quitado{% elif lancamento.status == 'aberto' %}is-aberto{% else %}is-cancelado{% endif %}">
-                                {{ lancamento.get_status_display }}
+                            <span
+                                class="financeiro-lancamento-status-icon {% if lancamento.status == 'quitado' %}is-quitado{% elif lancamento.status == 'aberto' %}is-aberto{% else %}is-cancelado{% endif %}"
+                                role="img"
+                                aria-label="{{ lancamento.get_status_display }}"
+                                title="{{ lancamento.get_status_display }}"
+                            >
+                                {% if lancamento.status == 'quitado' %}
+                                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                        <path d="M3.5 12.5 7.5 16.5 14.5 6.5"></path>
+                                        <path d="M10.5 12.5 14.5 16.5 21 7"></path>
+                                    </svg>
+                                {% elif lancamento.status == 'aberto' %}
+                                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                        <path d="M4.5 12.5 9 17 19.5 6.5"></path>
+                                    </svg>
+                                {% else %}
+                                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                        <path d="M7 7l10 10"></path>
+                                        <path d="M17 7 7 17"></path>
+                                    </svg>
+                                {% endif %}
                             </span>
                         </td>
                         <td>
@@ -537,15 +878,106 @@
                         <td>{{ lancamento.data_competencia|date:'d/m/Y' }}</td>
                         <td>{{ lancamento.numero_documento|default:'-' }}</td>
                         <td class="actions-cell no-print">
-                            {% if lancamento_visual.eh_rateio %}
-                                <a class="button is-small is-link is-light" href="{% url 'financeiro:lancamento-rateio-clone' lancamento.grupo_rateio %}">Clonar</a>
-                                <a class="button is-small is-link is-light" href="{% url 'financeiro:lancamento-rateio-update' lancamento.grupo_rateio %}">Editar</a>
-                            {% else %}
-                                <a class="button is-small is-info is-light" href="{% url 'financeiro:lancamento-recibo' lancamento.pk %}">Recibo</a>
-                                <a class="button is-small is-link is-light" href="{% url 'financeiro:lancamento-clone' lancamento.pk %}">Clonar</a>
-                                <a class="button is-small is-link is-light" href="{% url 'financeiro:lancamento-update' lancamento.pk %}">Editar</a>
-                                <a class="button is-small is-danger is-light" href="{% url 'financeiro:lancamento-delete' lancamento.pk %}">Excluir</a>
-                            {% endif %}
+                            <div class="financeiro-lancamento-actions-grid">
+                                <div class="financeiro-lancamento-action-slot">
+                                    {% if not lancamento_visual.eh_rateio and lancamento.tipo == 'receita' %}
+                                        <a
+                                            class="button is-small is-info is-light financeiro-lancamento-icon-button"
+                                            href="{% url 'financeiro:lancamento-recibo' lancamento.pk %}"
+                                            title="Recibo"
+                                            aria-label="Recibo"
+                                        >
+                                            <svg class="financeiro-lancamento-icon-svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                                <path d="M8 3h8l2 2v16l-2-1.5-2 1.5-2-1.5-2 1.5-2-1.5L6 21V5l2-2Z"></path>
+                                                <path d="M9 9h6"></path>
+                                                <path d="M9 13h6"></path>
+                                            </svg>
+                                            <span class="financeiro-sr-only">Recibo</span>
+                                        </a>
+                                    {% else %}
+                                        <span class="financeiro-lancamento-action-placeholder" aria-hidden="true"></span>
+                                    {% endif %}
+                                </div>
+                                <div class="financeiro-lancamento-action-slot">
+                                    {% if lancamento_visual.eh_rateio %}
+                                        <a
+                                            class="button is-small is-link is-light financeiro-lancamento-icon-button"
+                                            href="{% url 'financeiro:lancamento-rateio-clone' lancamento.grupo_rateio %}"
+                                            title="Clonar"
+                                            aria-label="Clonar"
+                                        >
+                                            <svg class="financeiro-lancamento-icon-svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                                <rect x="9" y="9" width="11" height="11" rx="2"></rect>
+                                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                            </svg>
+                                            <span class="financeiro-sr-only">Clonar</span>
+                                        </a>
+                                    {% else %}
+                                        <a
+                                            class="button is-small is-link is-light financeiro-lancamento-icon-button"
+                                            href="{% url 'financeiro:lancamento-clone' lancamento.pk %}"
+                                            title="Clonar"
+                                            aria-label="Clonar"
+                                        >
+                                            <svg class="financeiro-lancamento-icon-svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                                <rect x="9" y="9" width="11" height="11" rx="2"></rect>
+                                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                            </svg>
+                                            <span class="financeiro-sr-only">Clonar</span>
+                                        </a>
+                                    {% endif %}
+                                </div>
+                                <div class="financeiro-lancamento-action-slot">
+                                    {% if lancamento_visual.eh_rateio %}
+                                        <a
+                                            class="button is-small is-link is-light financeiro-lancamento-icon-button"
+                                            href="{% url 'financeiro:lancamento-rateio-update' lancamento.grupo_rateio %}"
+                                            title="Editar"
+                                            aria-label="Editar"
+                                        >
+                                            <svg class="financeiro-lancamento-icon-svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                                <path d="M12 20h9"></path>
+                                                <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4 11.5-11.5Z"></path>
+                                            </svg>
+                                            <span class="financeiro-sr-only">Editar</span>
+                                        </a>
+                                    {% else %}
+                                        <a
+                                            class="button is-small is-link is-light financeiro-lancamento-icon-button"
+                                            href="{% url 'financeiro:lancamento-update' lancamento.pk %}"
+                                            title="Editar"
+                                            aria-label="Editar"
+                                        >
+                                            <svg class="financeiro-lancamento-icon-svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                                <path d="M12 20h9"></path>
+                                                <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4 11.5-11.5Z"></path>
+                                            </svg>
+                                            <span class="financeiro-sr-only">Editar</span>
+                                        </a>
+                                    {% endif %}
+                                </div>
+                                <div class="financeiro-lancamento-action-slot">
+                                    {% if lancamento_visual.eh_rateio %}
+                                        <span class="financeiro-lancamento-action-placeholder" aria-hidden="true"></span>
+                                    {% else %}
+                                        <a
+                                            class="button is-small is-danger is-light financeiro-lancamento-icon-button"
+                                            href="{% url 'financeiro:lancamento-delete' lancamento.pk %}"
+                                            title="Excluir"
+                                            aria-label="Excluir"
+                                        >
+                                            <svg class="financeiro-lancamento-icon-svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                                <path d="M4 7h16"></path>
+                                                <path d="M10 11v6"></path>
+                                                <path d="M14 11v6"></path>
+                                                <path d="M5 7l1 13a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-13"></path>
+                                                <path d="M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3"></path>
+                                            </svg>
+                                            <span class="financeiro-sr-only">Excluir</span>
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
                         </td>
                     </tr>
                     {% endwith %}

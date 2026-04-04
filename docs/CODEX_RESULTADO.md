@@ -1391,6 +1391,13 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - `Status` passou a usar iconografia compacta (`aberto` com um check, `quitado` com dois checks e `cancelado` com X), mantendo cor, tooltip e `aria-label`
 - a largura visual da coluna de acoes foi reduzida e a coluna `Pessoa` ganhou `min-width`, liberando leitura mais confortavel sem alterar truncamento da descricao, rateio agrupado, filtros, edicao em lote ou regras de negocio
 
+## Ordenacao por coluna na listagem de lancamentos
+
+- a ordenacao padrao da listagem continua priorizando a data principal mais recente do lancamento/grupo, usando `data_pagamento` quando existir, `data_competencia` como fallback e `pk` mais recente como desempate
+- foi adicionada ordenacao manual por coluna no cabecalho para `Descricao`, `Tipo`, `Status`, `Valor`, `Pessoa` e `Data`, com icones discretos indicando estado neutro e direcao crescente/decrescente quando a coluna esta ativa
+- a ordenacao manual preserva os filtros GET ja aplicados, reordena a estrutura visual consolidada de lancamentos/rateios sem quebrar o agrupamento por `grupo_rateio` e usa o `valor_total` do grupo quando a ordenacao e por `Valor`
+- `Conta`, `Conta destino` e `Documento` ficaram fora da ordenacao manual nesta fase para manter a microetapa pequena e evitar poluir o cabecalho com criterios menos prioritarios
+
 ## Consolidacao documental de governanca e proximas prioridades estruturais
 
 - foi registrado que a proxima frente funcional prioritaria do sistema deve ser `permissoes/autenticacao`, com interface de perfis hierarquicos em `Modulo` > `Tela/Recurso` > `Acao`, depois da estabilizacao do `financeiro`
