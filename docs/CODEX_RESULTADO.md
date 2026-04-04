@@ -157,6 +157,12 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - o script da propria tela tambem reaplica esses atributos em `descricaoField` na inicializacao para manter o dropdown do sistema como unica sugestao visivel nesse campo
 - a microcorrecao nao alterou regras de negocio, endpoint de sugestoes, persistencia de `RegraLancamentoFinanceiro`, clone, rateio nem validacoes ja consolidadas
 
+## Acao Clonar nos ultimos lancamentos da pessoa
+
+- a secao `Ultimos lancamentos da pessoa` de `financeiro/templates/financeiro/lancamento_form.html` passou a exibir uma acao textual discreta `Clonar` em cada linha elegivel do historico carregado para a pessoa selecionada
+- `PessoaFinanceiraUltimosLancamentosView` passou a retornar `clone_url` no payload JSON de cada item, apontando para `financeiro:lancamento-clone` em lancamento comum sem rateio e para `financeiro:lancamento-rateio-clone` quando o item historico exibido pertence a um `grupo_rateio` valido
+- o template reaproveita diretamente essas URLs ja existentes, sem duplicar regra de clone no JavaScript e sem alterar o formulario atual, o autocomplete de regras, o rateio, a transferencia ou a listagem principal
+
 ## Regras aplicadas nesta etapa
 
 - `numero_documento` continua opcional para o usuario

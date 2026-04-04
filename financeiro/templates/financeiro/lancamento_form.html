@@ -141,6 +141,9 @@
     [data-financeiro-pessoa-historico="true"] { max-width: 1120px; margin: 0.9rem auto 0; padding: 0.9rem 1rem; border: 1px solid #edf2f7; border-radius: 12px; background: #fafcff; box-shadow: none; }
     [data-financeiro-pessoa-historico="true"] .title { margin-bottom: 0.5rem !important; color: #425466; font-size: 0.88rem; }
     [data-financeiro-pessoa-historico="true"] .help[data-historico-vazio="true"] { margin-bottom: 0 !important; color: #94a3b8; font-size: 0.72rem; }
+    .financeiro-historico-clone-link { color: #206bc4; font-size: 0.76rem; font-weight: 600; text-decoration: none; white-space: nowrap; }
+    .financeiro-historico-clone-link:hover,
+    .financeiro-historico-clone-link:focus { color: #184f90; text-decoration: underline; }
     .financeiro-tabler-card .help.is-danger, [data-financeiro-pessoa-historico="true"] .help.is-danger { margin-top: 0.3rem; font-size: 0.72rem; }
     @media (max-width: 1024px) { .financeiro-rateio-individual-grid { grid-template-columns: 1fr; } }
     @media (max-width: 768px) {
@@ -453,7 +456,7 @@
     <p class="help" data-historico-vazio="true">Selecione uma pessoa.</p>
     <div class="table-container" data-historico-tabela-wrapper="true" hidden>
         <table class="table is-fullwidth is-striped is-narrow">
-            <thead><tr><th>Data</th><th>Tipo</th><th>Descrição</th><th>Valor</th><th>Categoria</th><th>Documento</th></tr></thead>
+            <thead><tr><th>Data</th><th>Tipo</th><th>Descrição</th><th>Valor</th><th>Categoria</th><th>Documento</th><th class="text-end">Ação</th></tr></thead>
             <tbody data-historico-body="true"></tbody>
         </table>
     </div>
@@ -768,6 +771,18 @@
                     cell.textContent = value;
                     row.appendChild(cell);
                 });
+                const actionCell = document.createElement('td');
+                actionCell.className = 'text-end';
+                if (item.clone_url) {
+                    const cloneLink = document.createElement('a');
+                    cloneLink.href = item.clone_url;
+                    cloneLink.className = 'financeiro-historico-clone-link';
+                    cloneLink.textContent = 'Clonar';
+                    actionCell.appendChild(cloneLink);
+                } else {
+                    actionCell.textContent = '-';
+                }
+                row.appendChild(actionCell);
                 pessoaHistoricoBody.appendChild(row);
             });
         }

@@ -722,6 +722,19 @@ class PessoaFinanceiraAutocompleteView(FinanceiroAutocompleteView):
 class PessoaFinanceiraUltimosLancamentosView(View):
     limit = 5
 
+    def _get_clone_url(self, lancamento: LancamentoFinanceiro) -> str:
+        if lancamento.com_rateio and lancamento.grupo_rateio:
+            return reverse(
+                'financeiro:lancamento-rateio-clone',
+                kwargs={'grupo_rateio': lancamento.grupo_rateio},
+            )
+        if not lancamento.com_rateio and not lancamento.grupo_rateio:
+            return reverse(
+                'financeiro:lancamento-clone',
+                kwargs={'pk': lancamento.pk},
+            )
+        return ''
+
     def get(self, request, pessoa_id: int, *args, **kwargs):
         lancamentos = list(
             LancamentoFinanceiro.objects.filter(pessoa_id=pessoa_id)
@@ -736,6 +749,7 @@ class PessoaFinanceiraUltimosLancamentosView(View):
                 'valor': f'R$ {lancamento.valor:.2f}',
                 'categoria': str(lancamento.categoria) if lancamento.categoria else 'Sem categoria',
                 'numero_documento': lancamento.numero_documento or '',
+                'clone_url': self._get_clone_url(lancamento),
             }
             for lancamento in lancamentos
         ]
