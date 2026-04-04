@@ -37,7 +37,11 @@ Este documento e protegido e deve ser atualizado apenas em microetapas explicita
 Legenda de permissao inicial:
 - `S` = permitido na proposta inicial
 - `-` = nao previsto na proposta inicial
-- `R` = requer revisao explicita na proxima etapa antes de implementar
+
+Convencoes de leitura:
+- a ausencia de permissao na matriz deve ser tratada como negacao de acesso na V1
+- acoes de configuracao, exclusao, importacao, lote e auditoria sao consideradas sensiveis e ficam mais concentradas em `Administrador geral` e `Gestao administrativa`
+- endpoints auxiliares devem seguir a mesma decisao da tela/acao principal que os utiliza
 
 ### Modulo financeiro
 
@@ -47,54 +51,55 @@ Legenda de permissao inicial:
 | financeiro | Lancamentos | listar/visualizar | S | S | S | - | S | Base da navegacao do modulo financeiro |
 | financeiro | Lancamentos | criar | S | S | S | - | - | Inclui lancamento comum e lancamento com rateio |
 | financeiro | Lancamentos | editar | S | S | S | - | - | Inclui edicao individual e edicao coordenada de grupo rateado |
-| financeiro | Lancamentos | excluir | S | R | S | - | - | Acao destrutiva sensivel; confirmar se Gestao administrativa pode excluir na V1 |
+| financeiro | Lancamentos | excluir | S | S | - | - | - | Exclusao de lancamentos fica restrita a Administrador geral e Gestao administrativa; Operador financeiro permanece sem exclusao direta na V1 |
 | financeiro | Lancamentos | clonar | S | S | S | - | - | Inclui clone comum e clone por grupo rateado |
 | financeiro | Lancamentos | emitir recibo | S | S | S | - | S | Hoje a acao aparece apenas quando faz sentido no fluxo atual |
-| financeiro | Lancamentos | acoes em lote | S | R | S | - | - | Alterar status em lote e excluir selecionados |
-| financeiro | Lancamentos | importar | S | R | S | - | - | Importacao XLSX all-or-nothing, sem criacao automatica de cadastros auxiliares |
+| financeiro | Lancamentos | alterar status em lote | S | S | S | - | - | Operacao em lote sem exclusao; deve continuar transacional |
+| financeiro | Lancamentos | excluir em lote | S | S | - | - | - | Acao destrutiva sensivel; nao fica disponivel para Operador financeiro na V1 |
+| financeiro | Lancamentos | importar | S | S | S | - | - | Importacao XLSX all-or-nothing, sem criacao automatica de cadastros auxiliares |
 | financeiro | Lancamentos | exportar | S | S | S | - | S | Exportacao da listagem filtrada |
-| financeiro | Lancamentos | baixar modelo de importacao | S | S | S | - | R | Definir se perfil somente leitura pode baixar modelo sem poder importar |
+| financeiro | Lancamentos | baixar modelo de importacao | S | S | S | - | - | Modelo de importacao acompanha governanca da acao de importar |
 | financeiro | Lancamentos | baixar relatorio de inconsistencias | S | S | S | - | - | Associado ao fluxo de importacao |
-| financeiro | Lancamentos | acessar autocomplete/historico/sugestoes | S | S | S | - | R | Endpoints auxiliares do formulario de lancamento devem acompanhar permissao da tela/acao principal |
+| financeiro | Lancamentos | acessar autocomplete/historico/sugestoes | S | S | S | - | - | Endpoints auxiliares do formulario de lancamento seguem a permissao operacional de criacao/edicao |
 | financeiro | Extrato geral | visualizar/filtrar | S | S | S | - | S | `/financeiro/extratos/` |
 | financeiro | Extrato por conta | visualizar/filtrar | S | S | S | - | S | `/financeiro/contas/<pk>/extrato/` |
 | financeiro | Resumo financeiro | visualizar/filtrar | S | S | S | - | S | `/financeiro/resumo/` |
 | financeiro | Resumo financeiro | imprimir | S | S | S | - | S | Impressao deve continuar respeitando permissao de leitura |
 | financeiro | Prestacao de contas | visualizar/filtrar | S | S | S | - | S | `/financeiro/prestacao-contas/` |
 | financeiro | Prestacao de contas | imprimir | S | S | S | - | S | Impressao deve continuar respeitando permissao de leitura |
-| financeiro | Auditoria do Financeiro | ver auditoria | S | S | R | - | - | Definir se Operador financeiro pode ver auditoria ou se isso fica restrito a Gestao/Administrador |
+| financeiro | Auditoria do Financeiro | ver auditoria | S | S | - | - | - | Auditoria fica restrita a Administrador geral e Gestao administrativa na V1 |
 | financeiro | Contas | listar/visualizar | S | S | S | - | S | Cadastro operacional do financeiro |
 | financeiro | Contas | criar | S | S | S | - | - | Inclui dados de saldo inicial |
 | financeiro | Contas | editar | S | S | S | - | - | Alteracao pode afetar extratos e relatorios |
-| financeiro | Contas | excluir | S | R | R | - | - | Acao destrutiva sensivel; validar impacto operacional |
-| financeiro | Contas | acessar autocomplete | S | S | S | - | R | Endpoint auxiliar do formulario de lancamento |
+| financeiro | Contas | excluir | S | S | - | - | - | Exclusao de cadastro estrutural fica restrita a Administrador geral e Gestao administrativa |
+| financeiro | Contas | acessar autocomplete | S | S | S | - | - | Endpoint auxiliar do formulario de lancamento; Consulta/visualizacao nao precisa desse acesso na V1 |
 | financeiro | Pessoas | listar/visualizar | S | S | S | - | S | Cadastro operacional do financeiro |
 | financeiro | Pessoas | criar | S | S | S | - | - |  |
 | financeiro | Pessoas | editar | S | S | S | - | - |  |
-| financeiro | Pessoas | excluir | S | R | R | - | - | Acao destrutiva sensivel; validar impacto operacional |
-| financeiro | Pessoas | acessar autocomplete/historico | S | S | S | - | R | Endpoints auxiliares do formulario de lancamento |
+| financeiro | Pessoas | excluir | S | S | - | - | - | Exclusao de cadastro estrutural fica restrita a Administrador geral e Gestao administrativa |
+| financeiro | Pessoas | acessar autocomplete/historico | S | S | S | - | - | Endpoints auxiliares do formulario de lancamento seguem perfil operacional de escrita |
 | financeiro | Categorias | listar/visualizar | S | S | S | - | S | `Categoria` como agrupadora analitica |
 | financeiro | Categorias | criar | S | S | S | - | - | Cadastro de categoria pai |
 | financeiro | Categorias | editar | S | S | S | - | - |  |
-| financeiro | Categorias | excluir | S | R | R | - | - | Acao destrutiva sensivel |
+| financeiro | Categorias | excluir | S | S | - | - | - | Exclusao de estrutura analitica fica restrita a Administrador geral e Gestao administrativa |
 | financeiro | Subcategorias | listar/visualizar | S | S | S | - | S | `Subcategoria` como item operacional lancavel; mesma tela/modelo de categorias |
 | financeiro | Subcategorias | criar | S | S | S | - | - | Cadastro de categoria filha |
 | financeiro | Subcategorias | editar | S | S | S | - | - |  |
-| financeiro | Subcategorias | excluir | S | R | R | - | - | Acao destrutiva sensivel |
-| financeiro | Subcategorias | acessar autocomplete | S | S | S | - | R | Endpoint auxiliar do formulario de lancamento |
+| financeiro | Subcategorias | excluir | S | S | - | - | - | Exclusao de estrutura analitica fica restrita a Administrador geral e Gestao administrativa |
+| financeiro | Subcategorias | acessar autocomplete | S | S | S | - | - | Endpoint auxiliar do formulario de lancamento segue perfil operacional de escrita |
 | financeiro | Centros de custo | listar/visualizar | S | S | S | - | S | Cadastro operacional do financeiro |
 | financeiro | Centros de custo | criar | S | S | S | - | - |  |
 | financeiro | Centros de custo | editar | S | S | S | - | - |  |
-| financeiro | Centros de custo | excluir | S | R | R | - | - | Acao destrutiva sensivel |
-| financeiro | Centros de custo | acessar autocomplete | S | S | S | - | R | Endpoint auxiliar do formulario de lancamento |
+| financeiro | Centros de custo | excluir | S | S | - | - | - | Exclusao de cadastro estrutural fica restrita a Administrador geral e Gestao administrativa |
+| financeiro | Centros de custo | acessar autocomplete | S | S | S | - | - | Endpoint auxiliar do formulario de lancamento segue perfil operacional de escrita |
 | financeiro | Assinaturas institucionais | listar/visualizar | S | S | - | - | - | Configuracao funcional sensivel |
 | financeiro | Assinaturas institucionais | criar | S | S | - | - | - |  |
 | financeiro | Assinaturas institucionais | editar | S | S | - | - | - |  |
-| financeiro | Assinaturas institucionais | excluir | S | R | - | - | - | Acao destrutiva sensivel |
+| financeiro | Assinaturas institucionais | excluir | S | S | - | - | - | Administracao funcional sensivel, mas nao exige `/admin/` |
 | financeiro | Configuracoes institucionais | listar/visualizar | S | S | - | - | - | Configuracao funcional sensivel |
 | financeiro | Configuracoes institucionais | criar | S | S | - | - | - |  |
 | financeiro | Configuracoes institucionais | editar | S | S | - | - | - |  |
-| financeiro | Configuracoes institucionais | excluir | S | R | - | - | - | Acao destrutiva sensivel |
+| financeiro | Configuracoes institucionais | excluir | S | S | - | - | - | Administracao funcional sensivel, mas nao exige `/admin/` |
 
 ### Modulo biblioteca
 
@@ -113,7 +118,7 @@ Legenda de permissao inicial:
 
 | Modulo | Tela/Recurso | Acao | Administrador geral | Gestao administrativa | Operador financeiro | Operador biblioteca | Consulta/visualizacao | Observacoes |
 |---|---|---|---|---|---|---|---|---|
-| configuracoes | SiteConfig `/` | visualizar | S | S | R | R | S | Tela institucional na raiz do projeto; decidir na proxima etapa se operadores podem acessar leitura dessa pagina |
+| configuracoes | SiteConfig `/` | visualizar | S | S | S | S | S | Tela institucional de leitura na raiz do projeto; nao equivale a permissao de administracao tecnica/global |
 
 ### Administracao tecnica/global
 
@@ -130,12 +135,15 @@ Legenda de permissao inicial:
 - Em recursos com `Categoria` e `Subcategoria`, a matriz deve preservar a distincao conceitual mesmo quando a UI/modelo atual compartilha a mesma tela e tabela.
 - Em `Lancamentos`, a governanca deve considerar tambem operacoes de rateio, clone, recibo, regras automaticas e acoes em lote, nao apenas CRUD basico.
 - O desenho de UX da futura implementacao deve evitar esconder acoes sem explicar ausencia quando isso gerar confusao operacional, preservando o padrao visual consolidado no `financeiro`.
+- `Operador biblioteca` deve permanecer restrito ao modulo `biblioteca` e a leitura institucional de `SiteConfig /`, sem herdar atalhos nem endpoints do `financeiro`.
+- `Consulta/visualizacao` pode imprimir relatorios e exportar listagens quando ja tem leitura da tela correspondente, mas nao pode criar, editar, excluir, importar, usar acoes em lote nem acessar endpoints auxiliares de formulario.
 
 ## Itens futuros previstos, sem implementacao nesta etapa
 
 - Extras individuais por usuario alem do perfil base.
 - Bloqueios individuais por usuario mesmo quando o perfil base permitir a acao.
 - Formula conceitual futura: `permissao final = perfil base + extras individuais - bloqueios individuais`.
+- Criterios de excecao individual futura: toda permissao extra ou bloqueio individual deve ser motivado por necessidade operacional concreta, nao deve alterar o perfil compartilhado de origem, deve continuar visivel em auditoria/governanca e o bloqueio individual deve prevalecer sobre extra individual em caso de conflito.
 - Persistencia de preferencias de visualizacao por perfil/usuario, quando fizer sentido.
 - Log de acesso ao sistema em camada propria, separado da auditoria funcional do `financeiro`.
 - Refinamento da matriz apos auditoria humana, antes de qualquer implementacao de login, decorators, mixins, grupos ou telas de cadastro de perfis.

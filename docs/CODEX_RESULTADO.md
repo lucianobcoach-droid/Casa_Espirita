@@ -1437,3 +1437,14 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - a regra de governanca registrada foi que esconder menu nao basta: a permissao futura precisa valer tambem em tela, botao/acao e endpoint auxiliar, com maior restricao para operacoes destrutivas, configuracoes sensiveis e auditoria
 - a diretriz arquitetural registrada para a frente ficou assim: V1 com 1 perfil base por usuario; evolucao futura compativel com extras individuais e bloqueios individuais por usuario; formula conceitual futura `permissao final = perfil base + extras individuais - bloqueios individuais`; nada disso foi tratado como implementado em codigo nesta etapa
 - `docs/STATE.md` foi atualizado com a consolidacao da matriz, `docs/ROADMAP_FINANCEIRO.md` recebeu apenas ajuste cirurgico para refletir que a primeira versao de `docs/MATRIZ_PERMISSOES.md` ja foi criada e para orientar as proximas subetapas, e nenhum arquivo de codigo, login/logout, grupos Django, decorators, mixins ou templates de permissao foi alterado
+
+## Auditoria e fechamento das regras por perfil em `docs/MATRIZ_PERMISSOES.md`
+
+- a matriz foi revisada para reduzir ambiguidades sensiveis e fechar a diferenca entre leitura, operacao comum, operacao sensivel e administracao tecnica/global
+- o marcador `R` foi removido da proposta inicial e as permissoes pendentes foram resolvidas de forma explicita por perfil, preservando a legenda `S`/`-` e registrando que ausencia de permissao na matriz equivale a negacao na V1
+- `/admin/` ficou exclusivo do `Administrador geral`, enquanto `Gestao administrativa` permanece com administracao funcional ampla sem acesso tecnico/global ao Django admin
+- em `financeiro`, `Gestao administrativa` pode excluir, importar, operar configuracoes institucionais e ver auditoria; `Operador financeiro` pode criar/editar/clonar/importar/exportar e alterar status em lote, mas nao excluir lancamentos/cadastros, nao excluir em lote, nao ver auditoria e nao administrar configuracoes institucionais
+- `Consulta/visualizacao` ficou restrito a leitura, impressao e exportacao onde ja possui acesso de leitura, sem criar, editar, excluir, importar, executar lote ou consumir endpoints auxiliares de formulario
+- `Operador biblioteca` ficou restrito ao modulo `biblioteca` e a leitura institucional de `SiteConfig /`, sem herdar rotas, atalhos ou endpoints auxiliares do `financeiro`
+- foi adicionada ao proprio documento uma convencao de leitura da matriz, criterios para futuras excecoes individuais e uma observacao de governanca para que endpoints auxiliares sigam a permissao do recurso principal
+- esta microetapa nao alterou codigo, `docs/CEREBRO_PROJETO.md`, `docs/PADRAO_UX_SISTEMA.md` nem `docs/CHECKLIST_EVOLUCAO_SISTEMA.md`
