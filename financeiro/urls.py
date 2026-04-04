@@ -33,6 +33,7 @@ from .views import (
     FinanceiroHomeView,
     LancamentoFinanceiroCreateView,
     LancamentoFinanceiroCloneView,
+    LancamentoFinanceiroAcoesLoteView,
     LancamentoFinanceiroDeleteView,
     LancamentoFinanceiroExportacaoView,
     LancamentoFinanceiroGrupoRateioCloneView,
@@ -133,6 +134,11 @@ urlpatterns = [
         'lancamentos/exportacao/',
         LancamentoFinanceiroExportacaoView.as_view(),
         name='lancamento-exportacao',
+    ),
+    path(
+        'lancamentos/acoes-em-lote/',
+        LancamentoFinanceiroAcoesLoteView.as_view(),
+        name='lancamento-acoes-lote',
     ),
     path('lancamentos/novo/', LancamentoFinanceiroCreateView.as_view(), name='lancamento-create'),
     path(

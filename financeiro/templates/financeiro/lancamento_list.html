@@ -89,6 +89,33 @@
         margin-bottom: 0;
     }
 
+    .financeiro-lancamento-bulk-bar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        align-items: end;
+        justify-content: space-between;
+        padding: 0.85rem 0.95rem;
+        border-bottom: 1px solid #edf2f7;
+        background: #ffffff;
+    }
+
+    .financeiro-lancamento-bulk-fields {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.7rem;
+        align-items: end;
+    }
+
+    .financeiro-lancamento-bulk-select {
+        min-width: 11rem;
+    }
+
+    .financeiro-lancamento-select-col {
+        width: 2.75rem;
+        text-align: center;
+    }
+
     .financeiro-lancamento-table td,
     .financeiro-lancamento-table th {
         vertical-align: middle;
@@ -113,6 +140,87 @@
         width: 0.72rem;
         height: 0.72rem;
         display: block;
+    }
+
+    .financeiro-rateio-row {
+        background: #fbfdff;
+    }
+
+    .financeiro-rateio-details {
+        margin: 0;
+    }
+
+    .financeiro-rateio-details summary {
+        list-style: none;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+    }
+
+    .financeiro-rateio-details summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .financeiro-rateio-details summary .financeiro-rateio-list-hint,
+    .financeiro-rateio-details summary .financeiro-rateio-summary-meta {
+        display: none;
+    }
+
+    .financeiro-rateio-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.55rem;
+        height: 1.55rem;
+        border-radius: 999px;
+        border: 1px solid #d6e4fb;
+        background: #f6f9fe;
+        color: #1d4ed8;
+        font-size: 0.8rem;
+        font-weight: 700;
+        flex: 0 0 auto;
+    }
+
+    .financeiro-rateio-summary-text {
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+        min-width: 0;
+    }
+
+    .financeiro-rateio-summary-meta {
+        font-size: 0.78rem;
+        color: #64748b;
+    }
+
+    .financeiro-rateio-lines {
+        margin-top: 0.65rem;
+        display: grid;
+        gap: 0.4rem;
+        padding-left: 2.05rem;
+    }
+
+    .financeiro-rateio-lines-header {
+        font-size: 0.78rem;
+        color: #64748b;
+    }
+
+    .financeiro-rateio-line {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.8rem;
+        padding: 0.45rem 0.65rem;
+        border-radius: 0.8rem;
+        background: #f8fafc;
+        font-size: 0.82rem;
+        color: #475569;
+    }
+
+    .financeiro-rateio-line-valor {
+        font-weight: 700;
+        color: #0f172a;
+        white-space: nowrap;
     }
 
     .financeiro-lancamento-empty {
@@ -254,10 +362,53 @@
             </div>
         </form>
 
-        <div class="financeiro-lancamento-table-wrap">
+        <form
+            method="post"
+            action="{% url 'financeiro:lancamento-acoes-lote' %}"
+            id="financeiro-lancamento-lote-form"
+        >
+            {% csrf_token %}
+            <input type="hidden" name="filtros_retorno" value="{{ request.GET.urlencode }}">
+            <div class="financeiro-lancamento-bulk-bar no-print">
+                <div class="financeiro-lancamento-bulk-fields">
+                    <div class="field mb-0">
+                        <label class="label">Ação em lote</label>
+                        <div class="select financeiro-lancamento-bulk-select">
+                            <select name="acao_lote" id="financeiro-lancamento-acao-lote">
+                                <option value="">Escolha uma ação</option>
+                                <option value="alterar_status">Alterar status</option>
+                                <option value="excluir">Excluir selecionados</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="field mb-0">
+                        <label class="label">Novo status</label>
+                        <div class="select financeiro-lancamento-bulk-select">
+                            <select name="novo_status_lote" id="financeiro-lancamento-status-lote">
+                                <option value="">Selecione</option>
+                                <option value="aberto">Aberto</option>
+                                <option value="quitado">Quitado</option>
+                                <option value="cancelado">Cancelado</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <button class="button is-link is-light" type="submit">Aplicar</button>
+            </div>
+
+            <div class="financeiro-lancamento-table-wrap">
             <table class="table is-fullwidth is-hoverable financeiro-table financeiro-lancamento-table">
                 <thead>
                 <tr>
+                    <th class="financeiro-lancamento-select-col no-print">
+                        <label class="checkbox">
+                            <input
+                                type="checkbox"
+                                id="financeiro-lancamento-marcar-todos"
+                                aria-label="Selecionar todos os lançamentos visíveis"
+                            >
+                        </label>
+                    </th>
                     <th>Descrição</th>
                     <th>Tipo</th>
                     <th>Status</th>
@@ -271,11 +422,62 @@
                 </tr>
                 </thead>
                 <tbody>
-                {% for lancamento in lancamentos %}
-                    <tr{% if lancamento.status == 'aberto' %} class="is-unsettled"{% endif %}>
+                {% for lancamento_visual in lancamentos_visuais %}
+                    {% with lancamento=lancamento_visual.representante %}
+                    <tr{% if lancamento.status == 'aberto' %} class="is-unsettled{% if lancamento_visual.eh_rateio %} financeiro-rateio-row{% endif %}"{% elif lancamento_visual.eh_rateio %} class="financeiro-rateio-row"{% endif %}>
+                        <td class="financeiro-lancamento-select-col no-print">
+                            <label class="checkbox">
+                                <input
+                                    type="checkbox"
+                                    name="lancamentos_selecionados"
+                                    value="{{ lancamento_visual.token_selecao }}"
+                                    class="financeiro-lancamento-checkbox"
+                                    aria-label="Selecionar lançamento {{ lancamento.numero_documento|default:lancamento.pk }}"
+                                >
+                            </label>
+                        </td>
                         <td>
-                            {{ lancamento.descricao }}
-                            {% if lancamento.com_rateio and lancamento.grupo_rateio %}
+                            {% if lancamento_visual.eh_rateio %}
+                                <details class="financeiro-rateio-details">
+                                    <summary>
+                                        <span class="financeiro-rateio-toggle" aria-hidden="true">+</span>
+                                        <span class="financeiro-rateio-summary-text">
+                                            <span>
+                                                {{ lancamento.descricao }}
+                                                <span class="financeiro-rateio-list-hint" title="LanÃ§amento rateado" aria-label="LanÃ§amento rateado">
+                                                    <svg class="financeiro-rateio-list-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true" focusable="false">
+                                                        <path d="M4 3.25V6.5C4 7.6 4.9 8.5 6 8.5H10C11.1 8.5 12 9.4 12 10.5V12.75" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                                        <path d="M4 12.75V10.5C4 9.4 4.9 8.5 6 8.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                                        <circle cx="4" cy="3" r="1.4" fill="currentColor"/>
+                                                        <circle cx="4" cy="13" r="1.4" fill="currentColor"/>
+                                                        <circle cx="12" cy="13" r="1.4" fill="currentColor"/>
+                                                    </svg>
+                                                    <span class="financeiro-sr-only">LanÃ§amento rateado</span>
+                                                </span>
+                                            </span>
+                                            {% if lancamento_visual.resumo_rateio %}
+                                                <span class="financeiro-rateio-summary-meta">
+                                                    {{ lancamento_visual.linhas_rateio|length }} linha(s): {{ lancamento_visual.resumo_rateio }}
+                                                </span>
+                                            {% endif %}
+                                        </span>
+                                    </summary>
+                                    <div class="financeiro-rateio-lines">
+                                        <div class="financeiro-rateio-lines-header">
+                                            {{ lancamento_visual.linhas_rateio|length }} linha(s) neste rateio
+                                        </div>
+                                        {% for linha_rateio in lancamento_visual.linhas_rateio %}
+                                            <div class="financeiro-rateio-line">
+                                                <span>{{ linha_rateio.categoria|default:'Sem categoria' }}</span>
+                                                <span class="financeiro-rateio-line-valor">R$ {{ linha_rateio.valor }}</span>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </details>
+                            {% else %}
+                                {{ lancamento.descricao }}
+                            {% endif %}
+                            {% if not lancamento_visual.eh_rateio and lancamento.com_rateio and lancamento.grupo_rateio %}
                                 <span class="financeiro-rateio-list-hint" title="Lançamento rateado" aria-label="Lançamento rateado">
                                     <svg class="financeiro-rateio-list-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true" focusable="false">
                                         <path d="M4 3.25V6.5C4 7.6 4.9 8.5 6 8.5H10C11.1 8.5 12 9.4 12 10.5V12.75" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -300,7 +502,7 @@
                         </td>
                         <td>
                             <span class="valor-chip {% if lancamento.tipo == 'receita' %}is-receita{% elif lancamento.tipo == 'despesa' %}is-despesa{% else %}is-transferencia{% endif %}">
-                                R$ {{ lancamento.valor }}
+                                R$ {{ lancamento_visual.valor_total }}
                             </span>
                         </td>
                         <td>{{ lancamento.conta }}</td>
@@ -317,25 +519,92 @@
                         <td>{{ lancamento.data_competencia|date:'d/m/Y' }}</td>
                         <td>{{ lancamento.numero_documento|default:'-' }}</td>
                         <td class="actions-cell no-print">
-                            <a class="button is-small is-info is-light" href="{% url 'financeiro:lancamento-recibo' lancamento.pk %}">Recibo</a>
-                            {% if lancamento.com_rateio and lancamento.grupo_rateio %}
+                            {% if lancamento_visual.eh_rateio %}
                                 <a class="button is-small is-link is-light" href="{% url 'financeiro:lancamento-rateio-clone' lancamento.grupo_rateio %}">Clonar</a>
                                 <a class="button is-small is-link is-light" href="{% url 'financeiro:lancamento-rateio-update' lancamento.grupo_rateio %}">Editar</a>
                             {% else %}
+                                <a class="button is-small is-info is-light" href="{% url 'financeiro:lancamento-recibo' lancamento.pk %}">Recibo</a>
                                 <a class="button is-small is-link is-light" href="{% url 'financeiro:lancamento-clone' lancamento.pk %}">Clonar</a>
                                 <a class="button is-small is-link is-light" href="{% url 'financeiro:lancamento-update' lancamento.pk %}">Editar</a>
+                                <a class="button is-small is-danger is-light" href="{% url 'financeiro:lancamento-delete' lancamento.pk %}">Excluir</a>
                             {% endif %}
-                            <a class="button is-small is-danger is-light" href="{% url 'financeiro:lancamento-delete' lancamento.pk %}">Excluir</a>
                         </td>
                     </tr>
+                    {% endwith %}
                 {% empty %}
                     <tr>
-                        <td colspan="10" class="financeiro-lancamento-empty">Nenhum lançamento encontrado com os filtros atuais.</td>
+                        <td colspan="11" class="financeiro-lancamento-empty">Nenhum lançamento encontrado com os filtros atuais.</td>
                     </tr>
                 {% endfor %}
                 </tbody>
             </table>
-        </div>
+            </div>
+        </form>
     </section>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('financeiro-lancamento-lote-form');
+    const marcarTodos = document.getElementById('financeiro-lancamento-marcar-todos');
+    const checkboxes = Array.from(document.querySelectorAll('.financeiro-lancamento-checkbox'));
+    const acaoSelect = document.getElementById('financeiro-lancamento-acao-lote');
+    const statusSelect = document.getElementById('financeiro-lancamento-status-lote');
+
+    if (marcarTodos) {
+        marcarTodos.addEventListener('change', function () {
+            checkboxes.forEach(function (checkbox) {
+                checkbox.checked = marcarTodos.checked;
+            });
+        });
+    }
+
+    checkboxes.forEach(function (checkbox) {
+        checkbox.addEventListener('change', function () {
+            if (!marcarTodos) {
+                return;
+            }
+
+            marcarTodos.checked = checkboxes.length > 0 && checkboxes.every(function (item) {
+                return item.checked;
+            });
+        });
+    });
+
+    if (form) {
+        form.addEventListener('submit', function (event) {
+            const selecionados = checkboxes.filter(function (checkbox) {
+                return checkbox.checked;
+            });
+            const acao = acaoSelect ? acaoSelect.value : '';
+
+            if (!selecionados.length) {
+                event.preventDefault();
+                alert('Selecione pelo menos um lançamento para aplicar uma ação em lote.');
+                return;
+            }
+
+            if (acao === 'alterar_status') {
+                if (!statusSelect || !statusSelect.value) {
+                    event.preventDefault();
+                    alert('Selecione o novo status para aplicar aos lançamentos marcados.');
+                }
+                return;
+            }
+
+            if (acao === 'excluir') {
+                const confirmarExclusao = confirm(
+                    `Confirmar exclusão de ${selecionados.length} lançamento(s) selecionado(s)?`
+                );
+                if (!confirmarExclusao) {
+                    event.preventDefault();
+                }
+                return;
+            }
+
+            event.preventDefault();
+            alert('Escolha uma ação em lote para continuar.');
+        });
+    }
+});
+</script>
 {% endblock %}

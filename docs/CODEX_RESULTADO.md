@@ -1360,3 +1360,18 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - o relatorio XLSX de inconsistencias passou a incluir tambem a coluna `Valor informado`, preenchida com o valor da propria celula/campo lido da aba `Modelo` quando esse dado esta disponivel
 - essa coluna ajuda o usuario a localizar rapidamente o conteudo que precisa ser corrigido na planilha original, sem reescrever o arquivo enviado e sem alterar o fluxo atual de importacao
 - a aba `Inconsistencias`, as colunas `Linha`, `Campo`, `Mensagem` e `Como corrigir`, a validacao ja existente e a politica all-or-nothing permaneceram preservadas
+
+## Fase 1 de edicao em lote na listagem de lancamentos
+
+- `financeiro/templates/financeiro/lancamento_list.html` passou a exibir checkbox por linha, um checkbox de marcar todos os lancamentos visiveis e uma barra compacta de acoes em lote com `Alterar status` e `Excluir selecionados`
+- foi criada uma rota/view POST especifica para processar acoes em lote apenas em lancamentos, preservando os filtros GET ativos no retorno e sem expandir esta frente para outros cadastros nesta fase
+- a exclusao em lote exige confirmacao no navegador, executa a remocao dentro de `transaction.atomic()` e registra auditoria de exclusao para cada item selecionado
+- a alteracao de status em lote valida o novo status, aplica `full_clean()` em cada lancamento, grava tudo em `transaction.atomic()` e registra auditoria de update por item; se algum item falhar, nenhuma alteracao e efetivada
+- esta microetapa nao alterou regras de negocio da importacao, rateio, clone, transferencia, exportacao ou permissao; a expansao da edicao em lote para outros cadastros permanece apenas como roadmap futuro
+
+## Agrupamento visual de rateios na listagem de lancamentos
+
+- a listagem principal passou a montar uma estrutura visual propria na view para exibir lancamentos comuns como linhas normais e lancamentos rateados como uma unica linha-resumo por `grupo_rateio`, mantendo a ordenacao oficial da tela e sem alterar o modelo fisico dos dados
+- a linha-resumo de rateio ficou mais limpa e exibe apenas os dados principais do documento/grupo enquanto esta fechada; o icone extra de rateio e o resumo curto de categorias/valores foram removidos do estado fechado, e a expansao em `details/summary` passou a concentrar a leitura das linhas internas com categoria e valor de cada parte
+- o checkbox da linha-resumo de rateio passou a enviar um token de grupo para que a exclusao em lote e a alteracao de status em lote atuem sobre todas as linhas do `grupo_rateio`, enquanto lancamentos comuns continuam enviando o identificador individual
+- na linha-resumo de rateio, as acoes visiveis ficaram restritas as operacoes ja semanticamente de grupo (`Clonar` e `Editar` por `grupo_rateio`), evitando expor `Recibo` e `Excluir` diretos que ainda sao rotas por linha individual; essa e uma decisao de UX apenas da listagem, sem mudanca em extrato, prestacao, recibo, auditoria e demais telas nesta microetapa

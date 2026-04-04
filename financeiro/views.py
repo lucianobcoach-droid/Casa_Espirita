@@ -1158,6 +1158,112 @@ def _filtrar_lancamentos_por_parametros(queryset, parametros):
     return queryset
 
 
+def _montar_resumo_visual_rateio_lancamentos(linhas_rateio):
+    partes = []
+    for lancamento in linhas_rateio[:3]:
+        categoria_nome = str(lancamento.categoria) if lancamento.categoria else 'Sem categoria'
+        partes.append(f'{categoria_nome}: R$ {lancamento.valor}')
+
+    if len(linhas_rateio) > 3:
+        partes.append(f'+{len(linhas_rateio) - 3} linha(s)')
+
+    return ' | '.join(partes)
+
+
+def _montar_lancamentos_visuais_listagem(lancamentos_queryset):
+    lancamentos_filtrados = list(lancamentos_queryset)
+    grupos_rateio_visiveis = list(dict.fromkeys(
+        (lancamento.grupo_rateio or '').strip()
+        for lancamento in lancamentos_filtrados
+        if lancamento.com_rateio and (lancamento.grupo_rateio or '').strip()
+    ))
+
+    linhas_por_grupo = {}
+    if grupos_rateio_visiveis:
+        linhas_rateio = (
+            LancamentoFinanceiro.objects.filter(
+                com_rateio=True,
+                grupo_rateio__in=grupos_rateio_visiveis,
+            )
+            .select_related('conta', 'conta_destino', 'pessoa', 'categoria', 'centro_custo')
+            .order_by('pk')
+        )
+        for linha_rateio in linhas_rateio:
+            grupo_rateio = (linha_rateio.grupo_rateio or '').strip()
+            if grupo_rateio:
+                linhas_por_grupo.setdefault(grupo_rateio, []).append(linha_rateio)
+
+    grupos_renderizados = set()
+    lancamentos_visuais = []
+
+    for lancamento in lancamentos_filtrados:
+        grupo_rateio = (lancamento.grupo_rateio or '').strip()
+        if lancamento.com_rateio and grupo_rateio:
+            if grupo_rateio in grupos_renderizados:
+                continue
+
+            linhas_rateio = linhas_por_grupo.get(grupo_rateio) or [lancamento]
+            representante = linhas_rateio[0]
+            lancamentos_visuais.append({
+                'eh_rateio': True,
+                'token_selecao': f'grupo:{grupo_rateio}',
+                'representante': representante,
+                'linhas_rateio': linhas_rateio,
+                'valor_total': sum((linha.valor for linha in linhas_rateio), Decimal('0.00')),
+                'resumo_rateio': _montar_resumo_visual_rateio_lancamentos(linhas_rateio),
+            })
+            grupos_renderizados.add(grupo_rateio)
+            continue
+
+        lancamentos_visuais.append({
+            'eh_rateio': False,
+            'token_selecao': f'lancamento:{lancamento.pk}',
+            'representante': lancamento,
+            'linhas_rateio': [],
+            'valor_total': lancamento.valor,
+            'resumo_rateio': '',
+        })
+
+    return lancamentos_visuais
+
+
+def _resolver_lancamentos_para_acoes_em_lote(tokens_selecao):
+    lancamento_ids = set()
+    grupos_rateio = set()
+
+    for token in tokens_selecao:
+        token = (token or '').strip()
+        if not token:
+            continue
+        if token.isdigit():
+            lancamento_ids.add(int(token))
+            continue
+        if token.startswith('lancamento:'):
+            lancamento_id = token.split(':', 1)[1].strip()
+            if lancamento_id.isdigit():
+                lancamento_ids.add(int(lancamento_id))
+            continue
+        if token.startswith('grupo:'):
+            grupo_rateio = token.split(':', 1)[1].strip()
+            if grupo_rateio:
+                grupos_rateio.add(grupo_rateio)
+
+    if not lancamento_ids and not grupos_rateio:
+        return []
+
+    filtros = Q()
+    if lancamento_ids:
+        filtros |= Q(pk__in=lancamento_ids)
+    if grupos_rateio:
+        filtros |= Q(com_rateio=True, grupo_rateio__in=grupos_rateio)
+
+    return list(
+        LancamentoFinanceiro.objects.filter(filtros)
+        .select_related('conta', 'conta_destino', 'pessoa', 'categoria', 'centro_custo')
+        .order_by('pk')
+    )
+
+
 def _centena_por_extenso(numero: int) -> str:
     if numero == 0:
         return ''
@@ -2517,6 +2623,9 @@ class LancamentoFinanceiroListView(ListView):
         context['contas_disponiveis'] = ContaFinanceira.objects.order_by('nome')
         context['pessoas_disponiveis'] = PessoaFinanceira.objects.order_by('nome')
         context['categorias_disponiveis'] = CategoriaFinanceira.objects.order_by('tipo', 'nome')
+        context['lancamentos_visuais'] = _montar_lancamentos_visuais_listagem(
+            context['lancamentos']
+        )
         exportacao_url = reverse('financeiro:lancamento-exportacao')
         filtros_ativos = self.request.GET.urlencode()
         if filtros_ativos:
@@ -2663,6 +2772,97 @@ class LancamentoFinanceiroExportacaoView(View):
         response['Content-Disposition'] = 'attachment; filename="exportacao_lancamentos.xlsx"'
 
         return response
+
+
+class LancamentoFinanceiroAcoesLoteView(View):
+    def _redirect_listagem(self, request):
+        filtros_retorno = (request.POST.get('filtros_retorno') or '').strip()
+        url_listagem = reverse('financeiro:lancamento-list')
+        if filtros_retorno:
+            return redirect(f'{url_listagem}?{filtros_retorno}')
+        return redirect(url_listagem)
+
+    def post(self, request, *args, **kwargs):
+        acao_lote = (request.POST.get('acao_lote') or '').strip()
+        novo_status = (request.POST.get('novo_status_lote') or '').strip()
+        tokens_selecao = [
+            token
+            for token in request.POST.getlist('lancamentos_selecionados')
+            if (token or '').strip()
+        ]
+
+        if not tokens_selecao:
+            messages.warning(request, 'Selecione pelo menos um lançamento para aplicar uma ação em lote.')
+            return self._redirect_listagem(request)
+
+        lancamentos = _resolver_lancamentos_para_acoes_em_lote(tokens_selecao)
+        if not lancamentos:
+            messages.warning(request, 'Nenhum lançamento selecionado foi encontrado para ação em lote.')
+            return self._redirect_listagem(request)
+
+        if acao_lote == 'excluir':
+            with transaction.atomic():
+                for lancamento in lancamentos:
+                    antes = _snapshot_lancamento(lancamento)
+                    registro_id = lancamento.pk
+                    lancamento.delete()
+                    AuditoriaFinanceiro.objects.create(
+                        acao=AuditoriaFinanceiro.AcaoAuditoria.DELETE,
+                        modelo='LancamentoFinanceiro',
+                        registro_id=registro_id,
+                        usuario=_auditoria_usuario(request),
+                        campos_alterados=_build_auditoria_payload(antes, None),
+                    )
+
+            quantidade = len(lancamentos)
+            sufixo = '' if quantidade == 1 else 's'
+            messages.success(
+                request,
+                f'{quantidade} lançamento{sufixo} excluído{sufixo} com sucesso.',
+            )
+            return self._redirect_listagem(request)
+
+        if acao_lote == 'alterar_status':
+            status_validos = {
+                escolha
+                for escolha, _ in LancamentoFinanceiro.StatusLancamento.choices
+            }
+            if novo_status not in status_validos:
+                messages.warning(request, 'Selecione um status válido para aplicar aos lançamentos marcados.')
+                return self._redirect_listagem(request)
+
+            try:
+                with transaction.atomic():
+                    for lancamento in lancamentos:
+                        antes = _snapshot_lancamento(lancamento)
+                        lancamento.status = novo_status
+                        lancamento.full_clean()
+                        lancamento.save()
+                        _registrar_auditoria_lancamento(
+                            request=request,
+                            acao=AuditoriaFinanceiro.AcaoAuditoria.UPDATE,
+                            lancamento=lancamento,
+                            antes=antes,
+                            depois=_snapshot_lancamento(lancamento),
+                        )
+            except ValidationError:
+                messages.error(
+                    request,
+                    'Nenhum status foi alterado porque pelo menos um lançamento selecionado '
+                    'ficou inconsistente na validação. Revise os itens marcados e tente novamente.',
+                )
+                return self._redirect_listagem(request)
+
+            quantidade = len(lancamentos)
+            sufixo = '' if quantidade == 1 else 's'
+            messages.success(
+                request,
+                f'Status atualizado para {quantidade} lançamento{sufixo}.',
+            )
+            return self._redirect_listagem(request)
+
+        messages.warning(request, 'Escolha uma ação em lote válida para os lançamentos selecionados.')
+        return self._redirect_listagem(request)
 
 
 class LancamentoFinanceiroCreateView(FinanceiroFormMixin, CreateView):

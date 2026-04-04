@@ -304,6 +304,7 @@ Os tipos validos de lancamento sao:
 - o preenchimento de `data_competencia` a partir de `data_pagamento` foi reforcado no template para comportamento mais previsivel, sem sobrescrever indevidamente valores manuais ja existentes
 - a obrigatoriedade de `data_pagamento` agora tambem deve ser validada estruturalmente no `clean()` de `LancamentoFinanceiro`, mesmo sem migracao imediata do campo para `null=False` no banco
 - a listagem principal de lancamentos deve usar ordem oficial por `-data_competencia`, `-data_pagamento`, `-criado_em` e `-pk`, aplicada na view e sem alterar o `Meta.ordering` do model
+- na listagem principal de lancamentos, rateios devem ser tratados como grupo visual unico por `grupo_rateio`, com linha-resumo expandivel e acoes/selecao da listagem mirando o grupo inteiro; essa e uma decisao de UX apenas da listagem e nao altera a modelagem fisica atual nem as demais telas nesta etapa
 - no extrato, a ordem oficial deve ser crescente por `data_competencia`, com desempate por `criado_em` e `pk`
 - no extrato, lancamentos rateados devem ser lidos como documento consolidado por `grupo_rateio`, com exibicao do valor total do documento na linha exibida
 - a consolidacao do rateio no extrato deve ficar restrita a apresentacao da tela, preservando a modelagem atual do rateio e a base de calculo do saldo
