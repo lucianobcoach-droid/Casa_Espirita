@@ -613,3 +613,13 @@ Com filtro por periodo:
 - os models `PermissaoSistema`, `PerfilAcesso`, `PerfilPermissaoSistema` e `UsuarioPerfilAcesso` foram registrados no Django admin como caminho operacional temporario de consulta/manutencao ate existir uma UI funcional propria de perfis
 - a estrategia de bootstrap escolhida para o primeiro administrador funcional foi nao criar bypass automatico nesta V1: o vinculo entre um superusuario existente e o perfil `Administrador geral` deve ser feito manualmente via `/admin/`, preservando controle explicito e evitando permissao implicita baseada apenas em `is_superuser`
 - esta microetapa nao aplicou enforcement fino em rotas/views/templates do `financeiro`, nao ocultou sidebar/menu por permissao e nao implementou extras ou bloqueios individuais
+
+## Primeiro enforcement backend de permissoes no modulo financeiro
+
+- foi criada a camada reutilizavel `financeiro/permissoes.py` com `FinanceiroPermissaoMixin`, integrando `LoginRequiredMixin` e o helper central `usuario_possui_permissao()` do app `configuracoes`
+- o mixin exige usuario autenticado, valida a permissao funcional por codigo canonico em `get_permissao_requerida()` e responde com HTTP 403 e mensagem simples quando o usuario autenticado nao tem a permissao exigida ou nao possui perfil-base ativo
+- o enforcement backend foi aplicado nas views principais do `financeiro`, cobrindo home secundaria, listagens, cadastros, edicoes, exclusoes, extratos, resumo, prestacao de contas, auditoria, importacao/exportacao, download de modelo/inconsistencias, clone comum, clone/edicao de rateio, recibo, acoes em lote e endpoints auxiliares de autocomplete/historico/sugestoes
+- em `LancamentoFinanceiroAcoesLoteView`, a permissao exigida passa a variar conforme `acao_lote`: `financeiro.lancamentos.acoes_em_lote_excluir` para exclusao em lote e `financeiro.lancamentos.acoes_em_lote_status` para alteracao de status
+- o fluxo `/financeiro/` continua redirecionando para a listagem principal, e o bloqueio real acontece na view de destino, preservando a rota de entrada do modulo sem abrir ainda a etapa de ocultacao de menus/botoes
+- a regra deny-by-default foi validada em smoke tests: usuario anonimo e redirecionado para `/login/`, usuario autenticado sem `UsuarioPerfilAcesso` recebe 403, `Consulta/visualizacao` acessa a listagem mas nao abre cadastro, `Operador financeiro` cria lancamento mas nao acessa exclusao nem auditoria, e `Gestao administrativa` acessa auditoria
+- esta microetapa nao alterou sidebar/menu, nao condicionou botoes/templates, nao aplicou enforcement em `biblioteca`/`configuracoes`, nao implementou extras/bloqueios individuais e nao criou bypass funcional para superusuario

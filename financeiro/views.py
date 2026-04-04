@@ -45,6 +45,7 @@ from .models import (
     PessoaFinanceira,
     RegraLancamentoFinanceiro,
 )
+from .permissoes import FinanceiroPermissaoMixin
 
 
 LANCAMENTO_ORDENACOES_LISTAGEM = {
@@ -1437,7 +1438,7 @@ def _data_documental_por_extenso(data_referencia: date) -> str:
     return f'{data_referencia.day} de {MESES_EXTENSO[data_referencia.month - 1]} de {data_referencia.year}'
 
 
-class FinanceiroFormMixin:
+class FinanceiroFormMixin(FinanceiroPermissaoMixin):
     page_title = ''
     submit_label = 'Salvar'
     success_message = 'Registro salvo com sucesso.'
@@ -1454,7 +1455,7 @@ class FinanceiroFormMixin:
         return response
 
 
-class FinanceiroDeleteMixin(DeleteView):
+class FinanceiroDeleteMixin(FinanceiroPermissaoMixin, DeleteView):
     template_name = 'financeiro/confirm_delete.html'
     success_message = 'Registro excluido com sucesso.'
     page_title = 'Confirmar exclusao'
@@ -1472,11 +1473,12 @@ class FinanceiroDeleteMixin(DeleteView):
         return super().form_valid(form)
 
 
-class FinanceiroHomeView(TemplateView):
+class FinanceiroHomeView(FinanceiroPermissaoMixin, TemplateView):
+    permissao_requerida = 'financeiro.lancamentos.listar'
     template_name = 'financeiro/home.html'
 
 
-class FinanceiroPeriodoMixin:
+class FinanceiroPeriodoMixin(FinanceiroPermissaoMixin):
     def _periodo_padrao(self) -> tuple[date, date]:
         hoje = date.today()
         primeiro_dia = hoje.replace(day=1)
@@ -1722,6 +1724,7 @@ class FinanceiroPeriodoMixin:
 
 
 class ResumoFinanceiroView(FinanceiroPeriodoMixin, TemplateView):
+    permissao_requerida = 'financeiro.resumo_financeiro.visualizar'
     template_name = 'financeiro/resumo.html'
 
     def get_context_data(self, **kwargs):
@@ -1732,6 +1735,7 @@ class ResumoFinanceiroView(FinanceiroPeriodoMixin, TemplateView):
 
 
 class PrestacaoContasFinanceiroView(FinanceiroPeriodoMixin, TemplateView):
+    permissao_requerida = 'financeiro.prestacao_contas.visualizar'
     template_name = 'financeiro/prestacao_contas.html'
 
     def get_context_data(self, **kwargs):
@@ -1741,7 +1745,7 @@ class PrestacaoContasFinanceiroView(FinanceiroPeriodoMixin, TemplateView):
         return context
 
 
-class FinanceiroAutocompleteView(View):
+class FinanceiroAutocompleteView(FinanceiroPermissaoMixin, View):
     model = None
     search_fields: tuple[str, ...] = ()
     limit = 10
@@ -1764,11 +1768,13 @@ class FinanceiroAutocompleteView(View):
 
 
 class PessoaFinanceiraAutocompleteView(FinanceiroAutocompleteView):
+    permissao_requerida = 'financeiro.pessoas.acessar_endpoints_auxiliares'
     model = PessoaFinanceira
     search_fields = ('codigo', 'nome', 'documento', 'email')
 
 
-class PessoaFinanceiraUltimosLancamentosView(View):
+class PessoaFinanceiraUltimosLancamentosView(FinanceiroPermissaoMixin, View):
+    permissao_requerida = 'financeiro.pessoas.acessar_endpoints_auxiliares'
     limit = 5
 
     def _get_clone_url(self, lancamento: LancamentoFinanceiro) -> str:
@@ -1806,6 +1812,7 @@ class PessoaFinanceiraUltimosLancamentosView(View):
 
 
 class CategoriaFinanceiraAutocompleteView(FinanceiroAutocompleteView):
+    permissao_requerida = 'financeiro.subcategorias.acessar_endpoints_auxiliares'
     model = CategoriaFinanceira
     search_fields = ('nome',)
     limit = 1000
@@ -1822,16 +1829,19 @@ class CategoriaFinanceiraAutocompleteView(FinanceiroAutocompleteView):
 
 
 class ContaFinanceiraAutocompleteView(FinanceiroAutocompleteView):
+    permissao_requerida = 'financeiro.contas.acessar_endpoints_auxiliares'
     model = ContaFinanceira
     search_fields = ('nome', 'descricao')
 
 
 class CentroCustoAutocompleteView(FinanceiroAutocompleteView):
+    permissao_requerida = 'financeiro.centros_custo.acessar_endpoints_auxiliares'
     model = CentroCusto
     search_fields = ('codigo', 'nome')
 
 
-class RegraLancamentoFinanceiroSugestaoView(View):
+class RegraLancamentoFinanceiroSugestaoView(FinanceiroPermissaoMixin, View):
+    permissao_requerida = 'financeiro.lancamentos.acessar_endpoints_auxiliares'
     limit = 5
 
     def get(self, request, *args, **kwargs):
@@ -1897,7 +1907,8 @@ class RegraLancamentoFinanceiroSugestaoView(View):
         return JsonResponse({'results': results})
 
 
-class ContaFinanceiraListView(ListView):
+class ContaFinanceiraListView(FinanceiroPermissaoMixin, ListView):
+    permissao_requerida = 'financeiro.contas.listar'
     model = ContaFinanceira
     template_name = 'financeiro/conta_list.html'
     context_object_name = 'contas'
@@ -1950,6 +1961,7 @@ class ContaFinanceiraListView(ListView):
 
 
 class ContaFinanceiraCreateView(FinanceiroFormMixin, CreateView):
+    permissao_requerida = 'financeiro.contas.criar'
     model = ContaFinanceira
     form_class = ContaFinanceiraForm
     template_name = 'financeiro/conta_form.html'
@@ -1969,6 +1981,7 @@ class ContaFinanceiraCreateView(FinanceiroFormMixin, CreateView):
 
 
 class ContaFinanceiraUpdateView(FinanceiroFormMixin, UpdateView):
+    permissao_requerida = 'financeiro.contas.editar'
     model = ContaFinanceira
     form_class = ContaFinanceiraForm
     template_name = 'financeiro/conta_form.html'
@@ -1994,6 +2007,7 @@ class ContaFinanceiraUpdateView(FinanceiroFormMixin, UpdateView):
 
 
 class ContaFinanceiraDeleteView(FinanceiroDeleteMixin):
+    permissao_requerida = 'financeiro.contas.excluir'
     model = ContaFinanceira
     success_url = reverse_lazy('financeiro:conta-list')
     page_title = 'Excluir Conta Financeira'
@@ -2018,7 +2032,7 @@ class ContaFinanceiraDeleteView(FinanceiroDeleteMixin):
         return response
 
 
-class ExtratoContaMixin:
+class ExtratoContaMixin(FinanceiroPermissaoMixin):
     def _classificar_lancamento(self, conta: ContaFinanceira, lancamento: LancamentoFinanceiro) -> tuple[Decimal, Decimal]:
         entrada = Decimal('0.00')
         saida = Decimal('0.00')
@@ -2138,6 +2152,7 @@ class ExtratoContaMixin:
 
 
 class ContaFinanceiraExtratoView(ExtratoContaMixin, DetailView):
+    permissao_requerida = 'financeiro.extratos.visualizar'
     model = ContaFinanceira
     template_name = 'financeiro/conta_extrato.html'
     context_object_name = 'conta'
@@ -2156,6 +2171,7 @@ class ContaFinanceiraExtratoView(ExtratoContaMixin, DetailView):
 
 
 class ExtratoFinanceiroView(ExtratoContaMixin, TemplateView):
+    permissao_requerida = 'financeiro.extratos.visualizar'
     template_name = 'financeiro/conta_extrato.html'
 
     def get_context_data(self, **kwargs):
@@ -2183,7 +2199,8 @@ class ExtratoFinanceiroView(ExtratoContaMixin, TemplateView):
         return context
 
 
-class AuditoriaLancamentoFinanceiroListView(ListView):
+class AuditoriaLancamentoFinanceiroListView(FinanceiroPermissaoMixin, ListView):
+    permissao_requerida = 'financeiro.auditoria.listar'
     model = AuditoriaFinanceiro
     template_name = 'financeiro/auditoria_lancamento_list.html'
     context_object_name = 'auditorias'
@@ -2276,7 +2293,8 @@ class AuditoriaLancamentoFinanceiroListView(ListView):
         return context
 
 
-class CentroCustoListView(ListView):
+class CentroCustoListView(FinanceiroPermissaoMixin, ListView):
+    permissao_requerida = 'financeiro.centros_custo.listar'
     model = CentroCusto
     template_name = 'financeiro/centro_custo_list.html'
     context_object_name = 'centros_custo'
@@ -2293,6 +2311,7 @@ class CentroCustoListView(ListView):
 
 
 class CentroCustoCreateView(FinanceiroFormMixin, CreateView):
+    permissao_requerida = 'financeiro.centros_custo.criar'
     model = CentroCusto
     form_class = CentroCustoForm
     template_name = 'financeiro/centro_custo_form.html'
@@ -2312,6 +2331,7 @@ class CentroCustoCreateView(FinanceiroFormMixin, CreateView):
 
 
 class CentroCustoUpdateView(FinanceiroFormMixin, UpdateView):
+    permissao_requerida = 'financeiro.centros_custo.editar'
     model = CentroCusto
     form_class = CentroCustoForm
     template_name = 'financeiro/centro_custo_form.html'
@@ -2337,6 +2357,7 @@ class CentroCustoUpdateView(FinanceiroFormMixin, UpdateView):
 
 
 class CentroCustoDeleteView(FinanceiroDeleteMixin):
+    permissao_requerida = 'financeiro.centros_custo.excluir'
     model = CentroCusto
     success_url = reverse_lazy('financeiro:centro-custo-list')
     page_title = 'Excluir Centro de Custo'
@@ -2361,7 +2382,8 @@ class CentroCustoDeleteView(FinanceiroDeleteMixin):
         return response
 
 
-class PessoaFinanceiraListView(ListView):
+class PessoaFinanceiraListView(FinanceiroPermissaoMixin, ListView):
+    permissao_requerida = 'financeiro.pessoas.listar'
     model = PessoaFinanceira
     template_name = 'financeiro/pessoa_list.html'
     context_object_name = 'pessoas'
@@ -2378,6 +2400,7 @@ class PessoaFinanceiraListView(ListView):
 
 
 class PessoaFinanceiraCreateView(FinanceiroFormMixin, CreateView):
+    permissao_requerida = 'financeiro.pessoas.criar'
     model = PessoaFinanceira
     form_class = PessoaFinanceiraForm
     template_name = 'financeiro/pessoa_form.html'
@@ -2397,6 +2420,7 @@ class PessoaFinanceiraCreateView(FinanceiroFormMixin, CreateView):
 
 
 class PessoaFinanceiraUpdateView(FinanceiroFormMixin, UpdateView):
+    permissao_requerida = 'financeiro.pessoas.editar'
     model = PessoaFinanceira
     form_class = PessoaFinanceiraForm
     template_name = 'financeiro/pessoa_form.html'
@@ -2422,6 +2446,7 @@ class PessoaFinanceiraUpdateView(FinanceiroFormMixin, UpdateView):
 
 
 class PessoaFinanceiraDeleteView(FinanceiroDeleteMixin):
+    permissao_requerida = 'financeiro.pessoas.excluir'
     model = PessoaFinanceira
     success_url = reverse_lazy('financeiro:pessoa-list')
     page_title = 'Excluir Pessoa Financeira'
@@ -2446,7 +2471,8 @@ class PessoaFinanceiraDeleteView(FinanceiroDeleteMixin):
         return response
 
 
-class CategoriaFinanceiraListView(ListView):
+class CategoriaFinanceiraListView(FinanceiroPermissaoMixin, ListView):
+    permissao_requerida = 'financeiro.categorias.listar'
     model = CategoriaFinanceira
     template_name = 'financeiro/categoria_list.html'
     context_object_name = 'categorias'
@@ -2463,6 +2489,7 @@ class CategoriaFinanceiraListView(ListView):
 
 
 class CategoriaFinanceiraCreateView(FinanceiroFormMixin, CreateView):
+    permissao_requerida = 'financeiro.categorias.criar'
     model = CategoriaFinanceira
     form_class = CategoriaFinanceiraForm
     template_name = 'financeiro/categoria_form.html'
@@ -2482,6 +2509,7 @@ class CategoriaFinanceiraCreateView(FinanceiroFormMixin, CreateView):
 
 
 class CategoriaFinanceiraUpdateView(FinanceiroFormMixin, UpdateView):
+    permissao_requerida = 'financeiro.categorias.editar'
     model = CategoriaFinanceira
     form_class = CategoriaFinanceiraForm
     template_name = 'financeiro/categoria_form.html'
@@ -2507,6 +2535,7 @@ class CategoriaFinanceiraUpdateView(FinanceiroFormMixin, UpdateView):
 
 
 class CategoriaFinanceiraDeleteView(FinanceiroDeleteMixin):
+    permissao_requerida = 'financeiro.categorias.excluir'
     model = CategoriaFinanceira
     success_url = reverse_lazy('financeiro:categoria-list')
     page_title = 'Excluir Categoria Financeira'
@@ -2531,7 +2560,8 @@ class CategoriaFinanceiraDeleteView(FinanceiroDeleteMixin):
         return response
 
 
-class AssinaturaInstitucionalListView(ListView):
+class AssinaturaInstitucionalListView(FinanceiroPermissaoMixin, ListView):
+    permissao_requerida = 'financeiro.assinaturas.listar'
     model = AssinaturaInstitucional
     template_name = 'financeiro/assinatura_list.html'
     context_object_name = 'assinaturas'
@@ -2545,6 +2575,7 @@ class AssinaturaInstitucionalListView(ListView):
 
 
 class AssinaturaInstitucionalCreateView(FinanceiroFormMixin, CreateView):
+    permissao_requerida = 'financeiro.assinaturas.criar'
     model = AssinaturaInstitucional
     form_class = AssinaturaInstitucionalForm
     template_name = 'financeiro/assinatura_form.html'
@@ -2564,6 +2595,7 @@ class AssinaturaInstitucionalCreateView(FinanceiroFormMixin, CreateView):
 
 
 class AssinaturaInstitucionalUpdateView(FinanceiroFormMixin, UpdateView):
+    permissao_requerida = 'financeiro.assinaturas.editar'
     model = AssinaturaInstitucional
     form_class = AssinaturaInstitucionalForm
     template_name = 'financeiro/assinatura_form.html'
@@ -2589,6 +2621,7 @@ class AssinaturaInstitucionalUpdateView(FinanceiroFormMixin, UpdateView):
 
 
 class AssinaturaInstitucionalDeleteView(FinanceiroDeleteMixin):
+    permissao_requerida = 'financeiro.assinaturas.excluir'
     model = AssinaturaInstitucional
     success_url = reverse_lazy('financeiro:assinatura-list')
     page_title = 'Excluir Assinatura Institucional'
@@ -2613,7 +2646,8 @@ class AssinaturaInstitucionalDeleteView(FinanceiroDeleteMixin):
         return response
 
 
-class ConfiguracaoInstitucionalListView(ListView):
+class ConfiguracaoInstitucionalListView(FinanceiroPermissaoMixin, ListView):
+    permissao_requerida = 'financeiro.configuracoes_institucionais.visualizar'
     model = ConfiguracaoInstitucional
     template_name = 'financeiro/configuracao_institucional_list.html'
     context_object_name = 'configuracoes'
@@ -2627,6 +2661,7 @@ class ConfiguracaoInstitucionalListView(ListView):
 
 
 class ConfiguracaoInstitucionalCreateView(FinanceiroFormMixin, CreateView):
+    permissao_requerida = 'financeiro.configuracoes_institucionais.criar'
     model = ConfiguracaoInstitucional
     form_class = ConfiguracaoInstitucionalForm
     template_name = 'financeiro/configuracao_institucional_form.html'
@@ -2646,6 +2681,7 @@ class ConfiguracaoInstitucionalCreateView(FinanceiroFormMixin, CreateView):
 
 
 class ConfiguracaoInstitucionalUpdateView(FinanceiroFormMixin, UpdateView):
+    permissao_requerida = 'financeiro.configuracoes_institucionais.editar'
     model = ConfiguracaoInstitucional
     form_class = ConfiguracaoInstitucionalForm
     template_name = 'financeiro/configuracao_institucional_form.html'
@@ -2671,6 +2707,7 @@ class ConfiguracaoInstitucionalUpdateView(FinanceiroFormMixin, UpdateView):
 
 
 class ConfiguracaoInstitucionalDeleteView(FinanceiroDeleteMixin):
+    permissao_requerida = 'financeiro.configuracoes_institucionais.excluir'
     model = ConfiguracaoInstitucional
     success_url = reverse_lazy('financeiro:configuracao-institucional-list')
     page_title = 'Excluir Configuracao Institucional'
@@ -2695,7 +2732,8 @@ class ConfiguracaoInstitucionalDeleteView(FinanceiroDeleteMixin):
         return response
 
 
-class LancamentoFinanceiroListView(ListView):
+class LancamentoFinanceiroListView(FinanceiroPermissaoMixin, ListView):
+    permissao_requerida = 'financeiro.lancamentos.listar'
     model = LancamentoFinanceiro
     template_name = 'financeiro/lancamento_list.html'
     context_object_name = 'lancamentos'
@@ -2736,7 +2774,8 @@ class LancamentoFinanceiroListView(ListView):
         return context
 
 
-class LancamentoFinanceiroImportacaoExportacaoView(TemplateView):
+class LancamentoFinanceiroImportacaoExportacaoView(FinanceiroPermissaoMixin, TemplateView):
+    permissao_requerida = 'financeiro.lancamentos.importar'
     template_name = 'financeiro/lancamento_importacao_exportacao.html'
 
     def get_context_data(self, **kwargs):
@@ -2816,7 +2855,9 @@ class LancamentoFinanceiroImportacaoExportacaoView(TemplateView):
         )
 
 
-class LancamentoFinanceiroImportacaoInconsistenciasView(View):
+class LancamentoFinanceiroImportacaoInconsistenciasView(FinanceiroPermissaoMixin, View):
+    permissao_requerida = 'financeiro.lancamentos.baixar_inconsistencias'
+
     def post(self, request, *args, **kwargs):
         erros = _normalizar_erros_importacao_lancamentos_relatorio(
             request.POST.get('erros_importacao', '')
@@ -2841,7 +2882,9 @@ class LancamentoFinanceiroImportacaoInconsistenciasView(View):
         return response
 
 
-class LancamentoFinanceiroImportacaoModeloView(View):
+class LancamentoFinanceiroImportacaoModeloView(FinanceiroPermissaoMixin, View):
+    permissao_requerida = 'financeiro.lancamentos.baixar_modelo'
+
     def get(self, request, *args, **kwargs):
         response = HttpResponse(
             _gerar_planilha_modelo_lancamentos_xlsx(),
@@ -2852,7 +2895,9 @@ class LancamentoFinanceiroImportacaoModeloView(View):
         return response
 
 
-class LancamentoFinanceiroExportacaoView(View):
+class LancamentoFinanceiroExportacaoView(FinanceiroPermissaoMixin, View):
+    permissao_requerida = 'financeiro.lancamentos.exportar'
+
     def get(self, request, *args, **kwargs):
         lancamentos = (
             _filtrar_lancamentos_por_parametros(
@@ -2876,7 +2921,14 @@ class LancamentoFinanceiroExportacaoView(View):
         return response
 
 
-class LancamentoFinanceiroAcoesLoteView(View):
+class LancamentoFinanceiroAcoesLoteView(FinanceiroPermissaoMixin, View):
+    permissao_requerida = 'financeiro.lancamentos.acoes_em_lote_status'
+
+    def get_permissao_requerida(self) -> str:
+        if (self.request.POST.get('acao_lote') or '').strip() == 'excluir':
+            return 'financeiro.lancamentos.acoes_em_lote_excluir'
+        return self.permissao_requerida
+
     def _redirect_listagem(self, request):
         filtros_retorno = (request.POST.get('filtros_retorno') or '').strip()
         url_listagem = reverse('financeiro:lancamento-list')
@@ -2968,6 +3020,7 @@ class LancamentoFinanceiroAcoesLoteView(View):
 
 
 class LancamentoFinanceiroCreateView(FinanceiroFormMixin, CreateView):
+    permissao_requerida = 'financeiro.lancamentos.criar'
     model = LancamentoFinanceiro
     form_class = LancamentoFinanceiroForm
     template_name = 'financeiro/lancamento_form.html'
@@ -3049,6 +3102,7 @@ class LancamentoFinanceiroCreateView(FinanceiroFormMixin, CreateView):
 
 
 class LancamentoFinanceiroCloneView(LancamentoFinanceiroCreateView):
+    permissao_requerida = 'financeiro.lancamentos.clonar'
     page_title = 'Clonar Lancamento Financeiro'
     submit_label = 'Salvar clone'
     success_message = 'Lancamento financeiro clonado com sucesso.'
@@ -3102,6 +3156,7 @@ class LancamentoFinanceiroCloneView(LancamentoFinanceiroCreateView):
 
 
 class LancamentoFinanceiroGrupoRateioCloneView(LancamentoFinanceiroCreateView):
+    permissao_requerida = 'financeiro.lancamentos.clonar'
     page_title = 'Clonar Lancamento Financeiro com Rateio'
     submit_label = 'Salvar clone'
 
@@ -3212,6 +3267,7 @@ class LancamentoFinanceiroGrupoRateioCloneView(LancamentoFinanceiroCreateView):
 
 
 class LancamentoFinanceiroUpdateView(FinanceiroFormMixin, UpdateView):
+    permissao_requerida = 'financeiro.lancamentos.editar'
     model = LancamentoFinanceiro
     form_class = LancamentoFinanceiroForm
     template_name = 'financeiro/lancamento_form.html'
@@ -3245,6 +3301,7 @@ class LancamentoFinanceiroUpdateView(FinanceiroFormMixin, UpdateView):
 
 
 class LancamentoFinanceiroGrupoRateioUpdateView(FinanceiroFormMixin, UpdateView):
+    permissao_requerida = 'financeiro.lancamentos.editar_rateio'
     model = LancamentoFinanceiro
     form_class = LancamentoFinanceiroGrupoRateioForm
     template_name = 'financeiro/lancamento_rateio_grupo_form.html'
@@ -3444,7 +3501,8 @@ class LancamentoFinanceiroGrupoRateioUpdateView(FinanceiroFormMixin, UpdateView)
         return redirect(f"{reverse('financeiro:lancamento-list')}?{query_string}")
 
 
-class LancamentoFinanceiroReciboView(DetailView):
+class LancamentoFinanceiroReciboView(FinanceiroPermissaoMixin, DetailView):
+    permissao_requerida = 'financeiro.lancamentos.emitir_recibo'
     model = LancamentoFinanceiro
     template_name = 'financeiro/lancamento_recibo.html'
     context_object_name = 'lancamento'
@@ -3494,6 +3552,7 @@ class LancamentoFinanceiroReciboView(DetailView):
 
 
 class LancamentoFinanceiroDeleteView(FinanceiroDeleteMixin):
+    permissao_requerida = 'financeiro.lancamentos.excluir'
     model = LancamentoFinanceiro
     success_url = reverse_lazy('financeiro:lancamento-list')
     page_title = 'Excluir Lancamento Financeiro'

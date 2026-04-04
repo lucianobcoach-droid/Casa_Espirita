@@ -1477,3 +1477,12 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - a regra adotada para usuario autenticado sem `UsuarioPerfilAcesso` vinculado foi deny-by-default: nao ha permissao funcional implicita por estar logado nem por ser superusuario, enquanto o controle operacional do primeiro admin funcional deve ser feito por vinculo manual ao perfil `Administrador geral` via `/admin/`
 - `PermissaoSistema`, `PerfilAcesso`, `PerfilPermissaoSistema` e `UsuarioPerfilAcesso` foram registrados no Django admin como bootstrap temporario de operacao dessa base de acesso
 - esta microetapa nao aplicou enforcement fino no `financeiro`, nao condicionou sidebar/menu/templates por perfil, nao criou grupos Django e nao implementou extras individuais ou bloqueios individuais
+
+## Primeiro enforcement backend de permissoes no financeiro
+
+- foi criado `financeiro/permissoes.py` com o mixin `FinanceiroPermissaoMixin`, reaproveitando `usuario_possui_permissao()` da camada central de `configuracoes`
+- o mixin combina exigencia de usuario autenticado com validacao funcional por codigo canonico de permissao, mantendo deny-by-default e retornando HTTP 403 com mensagem simples quando o usuario nao possui perfil/permissao
+- `financeiro/views.py` passou a declarar `permissao_requerida` nas views de home secundaria, relatorios/consultas, CRUDs de cadastros, auditoria, lancamentos, clone, rateio, recibo, importacao/exportacao e endpoints auxiliares
+- a view de acoes em lote passou a resolver a permissao exigida de forma dinamica a partir de `acao_lote`, diferenciando `alterar status` de `excluir em lote`
+- smoke tests executados: `/financeiro/lancamentos/` redireciona anonimo para login, usuario autenticado sem perfil recebe 403, `Consulta/visualizacao` entra na listagem mas nao acessa create, `Operador financeiro` acessa create mas nao delete/auditoria, e `Gestao administrativa` acessa auditoria
+- esta microetapa nao alterou menus/sidebar/templates por perfil, nao abriu enforcement em outros modulos e nao introduziu bypass funcional para superusuario
