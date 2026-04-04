@@ -130,7 +130,7 @@ Data: 2026-03-26
 - historico simples com os ultimos 5 lancamentos do favorecido no formulario de lancamento
 - acao `Clonar` diretamente na secao de ultimos lancamentos da pessoa dentro do formulario de lancamento, reaproveitando o fluxo ja existente de clone comum e de clone por grupo rateado
 - filtro do campo `Categoria`/`Subcategoria` pelo `tipo` selecionado no lancamento, exibindo apenas subcategorias de despesa em `despesa` e apenas subcategorias de receita em `receita`, com preservacao do comportamento de `transferencia`
-- fase 1 da importacao/exportacao de lancamentos com pagina propria focada em upload preparado para fase futura e link de baixar planilha modelo XLSX com abas `Modelo` e `Instruções`, primeira exportacao real simples em XLSX acionada pela propria listagem de lancamentos com respeito aos filtros ativos e cabecalhos amigaveis ao usuario, e ajuda rapida operacional, ainda sem upload/importacao final, pre-validacao em massa, tratamento de duplicidades ou exportacao avancada com variacoes
+- fase 1 da importacao/exportacao de lancamentos com pagina propria focada em upload e link de baixar planilha modelo XLSX com abas `Modelo` e `Instruções`, validacao estrutural inicial do XLSX enviado por extensao/formato/abas/cabecalhos sem gravar dados, primeira exportacao real simples em XLSX acionada pela propria listagem de lancamentos com respeito aos filtros ativos, cabecalhos amigaveis ao usuario, datas em `dd/mm/aaaa` e valores com virgula decimal, e ajuda rapida operacional, ainda sem importacao final, pre-visualizacao de linhas, validacao de negocio em massa, tratamento de duplicidades ou exportacao avancada com variacoes
 - MVP de regras automaticas no cadastro de lancamento comum, com sugestoes por digitacao em `descricao`, `pessoa` apenas como refinador opcional, preenchimento automatico por selecao da sugestao e check explicito para salvar o lancamento atual como nova regra futura
 - recibo em HTML imprimivel a partir do lancamento, com refinamentos posteriores de conteudo, assinatura, configuracao institucional e impressao
 - mensagens de erro mais claras em campos obrigatorios
@@ -187,7 +187,10 @@ Data: 2026-03-26
 - balancete padrao
 - importacao de planilha historica
 - importacao/exportacao futura de lancamentos com validacao de estrutura e dados, pre-visualizacao antes de confirmar, tratamento de linhas invalidas e duplicidades, e respeito as regras de negocio existentes
-- evolucao da importacao futura para receber arquivo preenchido pelo usuario, validar colunas/tipos/dados, pre-visualizar antes de confirmar e tratar duplicidades, tomando como base a planilha modelo XLSX ja entregue
+- evolucao da importacao futura para validar conteudo linha a linha, pre-visualizar antes de confirmar, tratar duplicidades e so entao gravar os lancamentos, tomando como base a planilha modelo XLSX e a validacao estrutural inicial ja entregues
+- na primeira versao real da importacao de lancamentos, usar apenas cadastros ja existentes e nao criar automaticamente pessoas, categorias, contas ou centros de custo a partir do arquivo importado
+- na primeira versao real da importacao de lancamentos, nao permitir importacao parcial: se qualquer linha ou campo tiver erro, nenhum lancamento deve ser gravado
+- evolucao futura da importacao para devolver erros por linha/campo, oferecer preview/validacao detalhada antes de gravar, abrir importacao de pessoas e demais cadastros em frente propria e avaliar eventual importacao parcial apenas em fase posterior
 - cadastro rapido de pessoa dentro do lancamento
 - cadastro rapido de categoria dentro do lancamento
 - evolucoes futuras especificas do bloco de recibos ja entregue

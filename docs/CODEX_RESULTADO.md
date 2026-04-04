@@ -185,9 +185,19 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - foi criada a rota `lancamentos/exportacao/` para baixar uma planilha XLSX real com os lancamentos cadastrados e, em ajuste posterior desta mesma frente, essa exportacao passou a operar a partir da propria tela de listagem de lancamentos
 - a exportacao usa uma aba `Lancamentos` com cabecalhos amigaveis ao usuario na mesma ordem do modelo de importacao: `Tipo`, `Status`, `Descricao`, `Valor`, `Data de competencia`, `Data de pagamento`, `Pessoa`, `Categoria`, `Centro de custo`, `Conta`, `Conta de destino`, `Documento` e `Observacoes`
 - `LancamentoFinanceiroListView` passou a montar a URL de exportacao preservando a querystring ativa, e `LancamentoFinanceiroExportacaoView` passou a reaproveitar a mesma funcao de filtro da listagem para gerar exatamente o subconjunto filtrado
+- numa passada final desta frente, a exportacao operacional passou a serializar datas em `dd/mm/aaaa` e valores com virgula decimal, mantendo os cabecalhos amigaveis e sem alterar a planilha modelo tecnica da importacao
 - a pagina dedicada foi ajustada para ficar visualmente focada em importacao futura e download do modelo; a exportacao principal permanece na listagem de `Lancamentos`, e a pagina dedicada passou a evitar um bloco concorrente de exportacao
 - nesta mesma passada, rotulos visiveis dessa frente foram revisados para corrigir acentuacao e nomenclatura na listagem e na pagina dedicada de importacao
 - esta primeira versao permanece simples e nao abre novos filtros avancados, multiplas variacoes de layout, importacao real do arquivo enviado nem validacao em massa
+
+## Fase 1 da importacao de lancamentos: validacao estrutural do XLSX
+
+- a pagina de `Importacao` passou a aceitar envio de arquivo XLSX e a acao principal do card foi ajustada para `Validar planilha`
+- a validacao estrutural confere se o arquivo enviado tem extensao `.xlsx`, se pode ser lido como XLSX, se contem as abas `Modelo` e `Instruções` e se a primeira linha da aba `Modelo` bate exatamente com os cabecalhos oficiais esperados
+- quando a estrutura esta incorreta, o sistema retorna mensagens claras de erro sem gravar lancamentos; quando a estrutura esta correta, o sistema retorna mensagem de sucesso informando explicitamente que nenhum lancamento foi importado nesta fase
+- ficou registrado como direcao futura da primeira importacao real que o processamento deve depender apenas de cadastros ja existentes, sem criacao automatica de pessoas/categorias/contas/centros de custo, e que a gravacao deve ser integral: se qualquer linha/campo falhar, nada deve ser importado
+- tambem ficou registrado como fase posterior que o sistema deve evoluir para devolver erros por linha/campo, oferecer preview/validacao detalhada antes de gravar, tratar importacao de cadastros auxiliares em frente propria e avaliar eventual importacao parcial apenas no futuro
+- esta microetapa nao abriu leitura detalhada das linhas, validacao de negocio linha a linha, tratamento de duplicidades, pre-visualizacao de importacao nem gravacao em massa no banco
 
 ## Regras aplicadas nesta etapa
 

@@ -81,7 +81,7 @@
         <section class="financeiro-importacao-card">
             <h2 class="financeiro-importacao-card-title">Importar lançamentos</h2>
             <p class="financeiro-importacao-card-text">
-                Envie uma planilha XLSX preenchida no layout do sistema. Nesta fase, o envio ainda fica apenas preparado para a próxima etapa da importação.
+                Envie uma planilha XLSX preenchida no layout do sistema. Nesta fase, o sistema valida apenas a estrutura do arquivo e ainda não grava lançamentos.
             </p>
 
             <form method="post" enctype="multipart/form-data">
@@ -89,12 +89,12 @@
                 <div class="field">
                     <label class="label" for="arquivo_importacao">Arquivo de importação</label>
                     <div class="control">
-                        <input class="input financeiro-importacao-file" type="file" id="arquivo_importacao" name="arquivo_importacao" accept=".xlsx,.xls" disabled>
+                        <input class="input financeiro-importacao-file" type="file" id="arquivo_importacao" name="arquivo_importacao" accept=".xlsx" required>
                     </div>
                 </div>
 
                 <div class="financeiro-importacao-actions">
-                    <button class="button is-primary" type="button" disabled>Importar lançamentos</button>
+                    <button class="button is-primary" type="submit">Validar planilha</button>
                     <a class="button is-link is-light" href="{% url 'financeiro:lancamento-importacao-modelo' %}">Baixar planilha modelo</a>
                 </div>
             </form>
@@ -106,7 +106,7 @@
         <h2 class="financeiro-importacao-card-title">Ajuda rápida</h2>
         <ul class="financeiro-importacao-help-list">
             <li>Baixe a planilha modelo XLSX e preencha os campos na ordem esperada pelo sistema.</li>
-            <li>Use o bloco de importação para selecionar o arquivo quando a próxima fase de envio estiver liberada.</li>
+            <li>Use o bloco de importação para enviar o arquivo e validar se as abas e os cabeçalhos estão corretos.</li>
             <li>Use a tela de Lançamentos para exportar a listagem conforme os filtros aplicados.</li>
         </ul>
     </section>

@@ -158,6 +158,9 @@ Estas regras devem ser respeitadas em qualquer etapa:
 - na importacao, deve existir modelo de planilha/arquivo e validacao previa de colunas obrigatorias, tipos de dados e aderencia as regras de negocio ja existentes
 - a importacao futura tambem deve oferecer acao explicita para baixar uma planilha modelo no layout proprio do sistema, com colunas e ordem esperadas para preenchimento e posterior importacao
 - a importacao deve prever pre-visualizacao/validacao antes da confirmacao definitiva, comportamento claro para linhas invalidas e tratamento explicito de duplicidades
+- na primeira versao real da importacao de lancamentos, o arquivo deve ser conciliado apenas contra cadastros ja existentes do sistema, sem criacao automatica de pessoas, categorias, contas ou centros de custo
+- nessa primeira versao real, a gravacao deve ser integral e nao parcial: se houver qualquer erro de linha ou campo, nenhum lancamento deve ser importado
+- a devolucao detalhada de erros por linha/campo, o preview operacional antes de gravar, a importacao de cadastros auxiliares e uma eventual importacao parcial ficam registrados apenas como evolucoes futuras, sem entrar na primeira versao real
 - na exportacao, consultas e listagens relevantes devem respeitar os filtros aplicados e podem evoluir para CSV/Excel; PDF deve ser reservado apenas quando fizer sentido documental
 - essa frente continua futura, nao deve ser misturada com permissoes/acesso nem com regras reutilizaveis ou `Clonar lancamento`, embora possa se relacionar a elas depois
 - esta diretriz nao representa implementacao concluida no estado atual do repositorio

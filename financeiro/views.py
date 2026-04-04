@@ -6,8 +6,10 @@ from decimal import Decimal
 from io import BytesIO
 from urllib.parse import urlencode
 from uuid import uuid4
+from xml.etree import ElementTree
+from xml.etree.ElementTree import ParseError
 from xml.sax.saxutils import escape
-from zipfile import ZIP_DEFLATED, ZipFile
+from zipfile import ZIP_DEFLATED, BadZipFile, ZipFile
 
 from django.contrib import messages
 from django.db import transaction
@@ -326,6 +328,8 @@ LANCAMENTO_IMPORTACAO_MODELO_COLUNAS = [
     'observacoes',
 ]
 
+LANCAMENTO_IMPORTACAO_ABAS_OBRIGATORIAS = ['Modelo', 'Instruções']
+
 LANCAMENTO_EXPORTACAO_COLUNAS = [
     'Tipo',
     'Status',
@@ -475,9 +479,9 @@ def _linha_exportacao_lancamento(lancamento: LancamentoFinanceiro) -> list[str]:
         lancamento.tipo,
         lancamento.status,
         lancamento.descricao,
-        str(lancamento.valor),
-        lancamento.data_competencia.isoformat(),
-        lancamento.data_pagamento.isoformat() if lancamento.data_pagamento else '',
+        f'{lancamento.valor:.2f}'.replace('.', ','),
+        lancamento.data_competencia.strftime('%d/%m/%Y'),
+        lancamento.data_pagamento.strftime('%d/%m/%Y') if lancamento.data_pagamento else '',
         lancamento.pessoa.nome if lancamento.pessoa_id else '',
         lancamento.categoria.nome if lancamento.categoria_id else '',
         lancamento.centro_custo.nome if lancamento.centro_custo_id else '',
@@ -493,6 +497,121 @@ def _gerar_planilha_exportacao_lancamentos_xlsx(lancamentos) -> bytes:
     linhas.extend(_linha_exportacao_lancamento(lancamento) for lancamento in lancamentos)
 
     return _gerar_arquivo_xlsx([('Lancamentos', linhas)])
+
+
+def _xlsx_normalizar_target_relacao(target: str) -> str:
+    if target.startswith('/'):
+        return target.lstrip('/')
+    if target.startswith('xl/'):
+        return target
+    return f'xl/{target}'
+
+
+def _xlsx_ler_strings_compartilhadas(arquivo_xlsx: ZipFile) -> list[str]:
+    if 'xl/sharedStrings.xml' not in arquivo_xlsx.namelist():
+        return []
+
+    shared_strings_tree = ElementTree.fromstring(arquivo_xlsx.read('xl/sharedStrings.xml'))
+    namespace = {'main': 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'}
+    valores = []
+
+    for item in shared_strings_tree.findall('main:si', namespace):
+        partes = [
+            texto.text or ''
+            for texto in item.findall('.//main:t', namespace)
+        ]
+        valores.append(''.join(partes))
+
+    return valores
+
+
+def _xlsx_ler_valor_celula(celula, shared_strings: list[str], namespace: dict[str, str]) -> str:
+    tipo_celula = celula.get('t', '')
+
+    if tipo_celula == 'inlineStr':
+        texto = celula.find('main:is/main:t', namespace)
+        return (texto.text or '').strip() if texto is not None else ''
+
+    valor = celula.find('main:v', namespace)
+    if valor is None or not valor.text:
+        return ''
+
+    if tipo_celula == 's':
+        try:
+            return shared_strings[int(valor.text)].strip()
+        except (ValueError, IndexError):
+            return ''
+
+    return valor.text.strip()
+
+
+def _validar_estrutura_planilha_importacao_lancamentos_xlsx(arquivo_importacao) -> list[str]:
+    nome_arquivo = (arquivo_importacao.name or '').lower()
+    if not nome_arquivo.endswith('.xlsx'):
+        return ['Envie um arquivo XLSX com extensao .xlsx.']
+
+    try:
+        with ZipFile(arquivo_importacao) as arquivo_xlsx:
+            namespace = {
+                'main': 'http://schemas.openxmlformats.org/spreadsheetml/2006/main',
+                'rel': 'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
+                'pkg': 'http://schemas.openxmlformats.org/package/2006/relationships',
+            }
+
+            workbook_tree = ElementTree.fromstring(arquivo_xlsx.read('xl/workbook.xml'))
+            relacoes_tree = ElementTree.fromstring(arquivo_xlsx.read('xl/_rels/workbook.xml.rels'))
+            shared_strings = _xlsx_ler_strings_compartilhadas(arquivo_xlsx)
+
+            relacoes_planilhas = {
+                relacao.get('Id'): _xlsx_normalizar_target_relacao(relacao.get('Target', ''))
+                for relacao in relacoes_tree.findall('pkg:Relationship', namespace)
+            }
+            planilhas = {
+                planilha.get('name', ''): relacoes_planilhas.get(
+                    planilha.get('{http://schemas.openxmlformats.org/officeDocument/2006/relationships}id'),
+                    '',
+                )
+                for planilha in workbook_tree.findall('main:sheets/main:sheet', namespace)
+            }
+
+            abas_faltantes = [
+                nome_aba
+                for nome_aba in LANCAMENTO_IMPORTACAO_ABAS_OBRIGATORIAS
+                if nome_aba not in planilhas
+            ]
+            if abas_faltantes:
+                return [
+                    'A planilha enviada precisa conter as abas '
+                    f'{", ".join(LANCAMENTO_IMPORTACAO_ABAS_OBRIGATORIAS)}. '
+                    f'Abas ausentes: {", ".join(abas_faltantes)}.'
+                ]
+
+            caminho_modelo = planilhas.get('Modelo', '')
+            if not caminho_modelo or caminho_modelo not in arquivo_xlsx.namelist():
+                return ['Nao foi possivel localizar a aba Modelo dentro do arquivo XLSX.']
+
+            modelo_tree = ElementTree.fromstring(arquivo_xlsx.read(caminho_modelo))
+            primeira_linha = modelo_tree.find('main:sheetData/main:row', namespace)
+            cabecalhos = []
+
+            if primeira_linha is not None:
+                cabecalhos = [
+                    _xlsx_ler_valor_celula(celula, shared_strings, namespace)
+                    for celula in primeira_linha.findall('main:c', namespace)
+                ]
+
+            if cabecalhos != LANCAMENTO_IMPORTACAO_MODELO_COLUNAS:
+                return [
+                    'Os cabecalhos da aba Modelo estao diferentes do layout esperado. '
+                    'Mantenha exatamente esta ordem e nomenclatura: '
+                    f'{", ".join(LANCAMENTO_IMPORTACAO_MODELO_COLUNAS)}.'
+                ]
+    except (BadZipFile, KeyError, ParseError, OSError):
+        return ['Nao foi possivel ler o arquivo enviado como uma planilha XLSX valida.']
+    finally:
+        arquivo_importacao.seek(0)
+
+    return []
 
 
 def _filtrar_lancamentos_por_parametros(queryset, parametros):
@@ -1902,6 +2021,25 @@ class LancamentoFinanceiroImportacaoExportacaoView(TemplateView):
         context = super().get_context_data(**kwargs)
         context['page_title'] = 'Importação de Lançamentos'
         return context
+
+
+    def post(self, request, *args, **kwargs):
+        arquivo_importacao = request.FILES.get('arquivo_importacao')
+        if not arquivo_importacao:
+            messages.error(request, 'Selecione uma planilha XLSX antes de validar a importacao.')
+            return self.get(request, *args, **kwargs)
+
+        erros_estrutura = _validar_estrutura_planilha_importacao_lancamentos_xlsx(arquivo_importacao)
+        if erros_estrutura:
+            for erro in erros_estrutura:
+                messages.error(request, erro)
+            return self.get(request, *args, **kwargs)
+
+        messages.success(
+            request,
+            'Estrutura da planilha validada com sucesso. Nenhum lancamento foi importado nesta fase.',
+        )
+        return redirect('financeiro:lancamento-importacao-exportacao')
 
 
 class LancamentoFinanceiroImportacaoModeloView(View):
