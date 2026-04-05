@@ -45,6 +45,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'configuracoes.context_processors.navegacao_global',
                 'financeiro.context_processors.financeiro_shell_brand',
             ],
         },
@@ -89,7 +90,7 @@ MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 LOGIN_URL = '/login/'
-LOGIN_REDIRECT_URL = '/financeiro/'
+LOGIN_REDIRECT_URL = '/inicio/'
 LOGOUT_REDIRECT_URL = '/login/'
 EMAIL_BACKEND = os.getenv(
     'DJANGO_EMAIL_BACKEND',

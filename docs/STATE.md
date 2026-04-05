@@ -680,3 +680,14 @@ Com filtro por periodo:
 - o saneamento seguro adotado nesta microetapa foi desativar automaticamente, por migration de dados, usuarios funcionais ativos (nao `staff`, nao `superuser`) que estivessem sem e-mail ou sem perfil-base, evitando acesso inconsistente e sem criar e-mails ficticios
 - com isso, os usuarios `reset_flow_tmp` e `semperfil_cfg` ficaram inativos ate regularizacao manual no `/admin/`; o superusuario `Luciano` permaneceu ativo por ser administracao tecnica global e ja possuir e-mail valido, embora continue sem perfil funcional implicito
 - smoke tests confirmaram: criacao administrativa de usuario funcional ativo sem e-mail falha; criacao administrativa de usuario funcional ativo sem perfil falha; usuario `staff` tecnico com e-mail pode permanecer sem perfil; o reset por e-mail segue funcional para usuario regularizado com e-mail
+
+## Navegacao global autenticada e portal inicial por modulos
+
+- o sistema agora possui uma entrada autenticada central em `/inicio/`, tratada como portal inicial do sistema-mae apos login
+- o redirecionamento padrao de login deixou de apontar diretamente para `financeiro/lancamentos` e passou a levar o usuario para esse portal autenticado
+- a visibilidade dos cards de `Financeiro`, `Biblioteca` e `Configuracoes` passou a ser resolvida pela base central de permissoes ja implantada, usando permissao real do usuario para decidir quais modulos aparecem
+- usuario autenticado sem perfil funcional continua deny-by-default: consegue autenticar, mas o portal passa a mostrar estado sem modulos operacionais liberados, sem expor entrada funcional indevida
+- foi criada uma camada central de navegacao global em `configuracoes/context_processors.py`, combinando nome institucional, usuario autenticado, perfil-base atual e lista de modulos disponiveis para reutilizacao em templates
+- o shell autenticado minimo do sistema passa a exibir nome institucional, usuario autenticado, perfil base quando existir, atalho de `Inicio`, opcionalmente `Admin tecnico` para `staff` e botao global de `Sair`
+- `financeiro`, `biblioteca` e `configuracoes` passaram a refletir essa navegacao global sem reabrir grande refactor visual: os modulos continuam com seus shells proprios, mas agora exibem atalho de retorno ao `Inicio` do sistema e `Sair` visivel quando o usuario esta autenticado
+- smoke tests confirmaram: login bem-sucedido redireciona para `/inicio/`; `Operador financeiro` ve `Financeiro` e `Configuracoes`; `Operador biblioteca` ve `Biblioteca` e `Configuracoes`; `Consulta/visualizacao` ve os tres modulos; usuario sem perfil ve o portal sem cards operacionais; logout continua redirecionando para `/login/`

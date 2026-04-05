@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from django.conf import settings
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import (
     LoginView,
     LogoutView,
@@ -12,7 +13,7 @@ from django.contrib.auth.views import (
 )
 from django.http import HttpRequest, HttpResponse
 from django.urls import reverse_lazy
-from django.views.generic import DetailView
+from django.views.generic import DetailView, TemplateView
 
 from .forms import ConfiguracoesPasswordResetForm
 from .mixins import ConfiguracoesPermissaoMixin
@@ -125,3 +126,10 @@ class ConfiguracoesPasswordResetCompleteView(ConfiguracoesIdentidadeMixin, Passw
     """Confirma a conclusao da redefinicao de senha."""
 
     template_name = 'configuracoes/password_reset_complete.html'
+
+
+class SistemaInicioView(LoginRequiredMixin, ConfiguracoesIdentidadeMixin, TemplateView):
+    """Portal autenticado com os modulos liberados ao usuario."""
+
+    template_name = 'configuracoes/inicio.html'
+    login_url = reverse_lazy('configuracoes:login')

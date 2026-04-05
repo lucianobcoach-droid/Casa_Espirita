@@ -1,9 +1,46 @@
 """Servicos centrais de consulta de perfil e permissao funcional."""
 from __future__ import annotations
 
-from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponseForbidden
+
+MODULOS_SISTEMA = (
+    {
+        'codigo': 'financeiro',
+        'titulo': 'Financeiro',
+        'descricao': 'Lancamentos, relatorios, cadastros financeiros, importacao e exportacao.',
+        'url_name': 'financeiro:home',
+        'permissoes': (
+            'financeiro.home.visualizar',
+            'financeiro.lancamentos.listar',
+            'financeiro.extratos.visualizar',
+            'financeiro.resumo.visualizar',
+            'financeiro.prestacao_contas.visualizar',
+        ),
+    },
+    {
+        'codigo': 'biblioteca',
+        'titulo': 'Biblioteca',
+        'descricao': 'Autores, livros, vendas e emprestimos do acervo.',
+        'url_name': 'biblioteca:autor-list',
+        'permissoes': (
+            'biblioteca.autores.listar',
+            'biblioteca.livros.listar',
+            'biblioteca.vendas.listar',
+            'biblioteca.emprestimos.listar',
+        ),
+    },
+    {
+        'codigo': 'configuracoes',
+        'titulo': 'Configuracoes',
+        'descricao': 'Identidade institucional e acesso administrativo funcional.',
+        'url_name': 'configuracoes:site-config',
+        'permissoes': (
+            'configuracoes.siteconfig.visualizar',
+        ),
+    },
+)
 
 
 def obter_perfil_base_usuario(usuario):
@@ -52,6 +89,32 @@ def usuario_possui_permissao(usuario, codigo_permissao: str) -> bool:
         return False
 
     return codigo_permissao in obter_codigos_permissao_usuario(usuario)
+
+
+def usuario_possui_alguma_permissao(usuario, *codigos_permissao: str) -> bool:
+    """Retorna ``True`` quando o usuario possui ao menos uma permissao informada."""
+
+    return any(usuario_possui_permissao(usuario, codigo) for codigo in codigos_permissao if codigo)
+
+
+def obter_modulos_disponiveis(usuario) -> list[dict[str, str]]:
+    """Lista os modulos funcionais liberados ao usuario autenticado."""
+
+    if not usuario or not usuario.is_authenticated or not usuario.is_active:
+        return []
+
+    modulos = []
+    for modulo in MODULOS_SISTEMA:
+        if usuario_possui_alguma_permissao(usuario, *modulo['permissoes']):
+            modulos.append(
+                {
+                    'codigo': modulo['codigo'],
+                    'titulo': modulo['titulo'],
+                    'descricao': modulo['descricao'],
+                    'url_name': modulo['url_name'],
+                }
+            )
+    return modulos
 
 
 class PermissaoSistemaMixin(LoginRequiredMixin):

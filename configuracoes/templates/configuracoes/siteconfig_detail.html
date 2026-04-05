@@ -29,6 +29,11 @@
     <nav class="ce-site-topbar" aria-label="Acesso do sistema">
       {% if request.user.is_authenticated %}
         {% tem_permissao request.user 'configuracoes.admin_global.acessar' as pode_acessar_admin_global %}
+        <span class="ce-site-link">{{ sistema_usuario_nome|default:request.user.username }}</span>
+        {% if sistema_perfil_base_nome %}
+          <span class="ce-site-link">{{ sistema_perfil_base_nome }}</span>
+        {% endif %}
+        <a href="{{ sistema_inicio_url }}" class="ce-site-link">In&iacute;cio</a>
         {% if pode_acessar_admin_global %}
           <a href="{% url 'admin:index' %}" class="ce-site-link">Admin t&eacute;cnico</a>
         {% endif %}

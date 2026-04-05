@@ -1541,3 +1541,19 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - como `Luciano` e superusuario tecnico com e-mail valido, ele permaneceu ativo sem perfil funcional implicito; os usuarios funcionais ativos sem perfil (`reset_flow_tmp` e `semperfil_cfg`) foram saneados com a migration `configuracoes/migrations/0006_regularizar_usuarios_funcionais_sem_requisitos.py`, que os desativou ate regularizacao manual no `/admin/`
 - a estrategia de saneamento foi propositalmente conservadora: nao foram gerados e-mails ficticios, nao houve atribuicao automatica de perfil-base e nao foi criado bypass funcional para usuarios sem vinculo regular
 - smoke tests confirmaram: bloqueio de criacao administrativa para usuario funcional ativo sem e-mail, bloqueio para usuario funcional ativo sem perfil-base, permissao de `staff` tecnico com e-mail sem perfil funcional, reset por e-mail ainda valido para superusuario regularizado com e-mail e `py manage.py check` sem erros
+
+## Navegacao global autenticada com portal inicial por modulos
+
+- a microetapa criou uma navegacao global autenticada minima do sistema, sem abrir refactor amplo de layout nem UI propria de perfis
+- foi criada a camada central `configuracoes/context_processors.py`, que injeta no template o nome institucional, o usuario autenticado, o perfil-base atual, as URLs globais (`inicio`, `logout`, `admin tecnico`) e a lista de modulos liberados por permissao real
+- `configuracoes/permissoes.py` passou a concentrar tambem o catalogo de modulos visiveis (`Financeiro`, `Biblioteca`, `Configuracoes`) e a funcao `obter_modulos_disponiveis(usuario)`, evitando logica ad hoc espalhada pelos templates
+- foi criado o portal autenticado `/inicio/` com `SistemaInicioView` e os templates `configuracoes/sistema_base.html` e `configuracoes/inicio.html`, tratados como ponto de entrada do sistema-mae apos login
+- `LOGIN_REDIRECT_URL` deixou de apontar para `/financeiro/` e passou a apontar para `/inicio/`
+- o portal mostra apenas os modulos realmente liberados ao usuario:
+  - `Operador financeiro` ve `Financeiro` e `Configuracoes`
+  - `Operador biblioteca` ve `Biblioteca` e `Configuracoes`
+  - `Consulta/visualizacao` ve `Financeiro`, `Biblioteca` e `Configuracoes`
+  - usuario autenticado sem perfil funcional nao ganha modulo operacional e ve apenas o estado seguro sem cards
+- o shell autenticado minimo passou a expor `Sair` de forma visivel e consistente, alem de `Inicio` do sistema; no caso de usuario `staff`, o atalho para `Admin tecnico` continua separado como administracao tecnica/global
+- `financeiro/base.html`, `biblioteca/base.html` e `configuracoes/siteconfig_detail.html` foram ajustados apenas no necessario para refletir essa navegacao global, sem alterar o enforcement funcional ja aprovado no backend
+- smoke tests confirmaram redirecionamento pos-login para `/inicio/`, portal coerente por perfil, logout com retorno a `/login/` e comportamento deny-by-default preservado para usuario sem perfil
