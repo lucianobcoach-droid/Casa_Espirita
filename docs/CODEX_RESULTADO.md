@@ -2,6 +2,22 @@
 
 Data: 2026-04-05
 
+## Regularizacao do dado institucional do SiteConfig
+
+- a auditoria do repositorio e das migrations confirmou que `Lar de Teste` nao vinha de seed, fixture ou migration ativa do projeto; o valor estava salvo apenas no registro atual do banco local
+- o model `SiteConfig` ja tinha default estrutural proprio e as telas de login/shell ja liam o nome institucional dinamicamente; a correcao necessaria era de dado persistido e de endurecimento do default/fallback oficial do projeto
+- foi criada a migration `configuracoes/migrations/0008_regularizar_nome_institucional_siteconfig.py` com duas acoes:
+  - alterar o default de `SiteConfig.site_name` para `Casa Espírita Caminheiros da Luz`
+  - atualizar o banco apenas quando `site_name` estiver exatamente como `Lar de Teste`
+- essa estrategia evita sobrescrever ambientes que ja tenham nome institucional real diferente do local atual
+- `configuracoes/models.py` passou a centralizar a constante `SITE_NAME_PADRAO`
+- `configuracoes/views.py`, `configuracoes/context_processors.py` e o titulo de `configuracoes/templates/configuracoes/siteconfig_detail.html` foram alinhados para usar o mesmo nome institucional oficial como fallback
+- validacao prevista/execucao da etapa:
+  - `py manage.py check`
+  - `py manage.py migrate configuracoes`
+  - confirmacao do `site_name` final como `Casa Espírita Caminheiros da Luz`
+  - confirmacao de que login e shell continuam lendo `SiteConfig`, agora refletindo o nome institucional correto
+
 ## Entrega realizada
 
 Foi executada a etapa incremental para impedir repeticao de `numero_documento` em lancamentos financeiros, sem alterar as regras ja aprovadas de transferencia, extrato, resumo ou prestacao de contas.

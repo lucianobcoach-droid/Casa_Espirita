@@ -2,6 +2,14 @@
 
 Data de atualizacao: 2026-04-05
 
+## Regularizacao do nome institucional em SiteConfig
+
+- a auditoria do banco confirmou que havia apenas 1 registro em `SiteConfig` e que o valor `Lar de Teste` era dado salvo no ambiente, nao erro de leitura, duplicidade ou seed ativa do repositorio
+- a origem do placeholder nao estava em seed ou migration do projeto: o codigo atual ja trabalhava com fallback de `Casa Espirita` / `Casa Espírita`; o problema estava no dado institucional persistido localmente
+- foi criada a migration `configuracoes/migrations/0008_regularizar_nome_institucional_siteconfig.py`, que atualiza o `site_name` apenas quando ele estiver exatamente como `Lar de Teste`, evitando sobrescrever ambientes ja personalizados com outro nome real
+- o default estrutural de `SiteConfig.site_name` passou a ser `Casa Espírita Caminheiros da Luz`, e os fallbacks usados em `views`, `context_processors` e no titulo da tela de configuracoes foram alinhados ao mesmo nome institucional oficial
+- com isso, login, shell autenticado, portal `/inicio/` e telas que leem `SiteConfig` continuam usando a mesma fonte de verdade do projeto, mas agora com branding institucional correto no ambiente atual e em novos ambientes que nascerem sem configuracao manual
+
 ## Estado atual do modulo financeiro
 
 - O app `financeiro` foi criado e adicionado ao `INSTALLED_APPS`.

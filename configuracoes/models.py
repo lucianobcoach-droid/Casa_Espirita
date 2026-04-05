@@ -5,11 +5,13 @@ from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
+SITE_NAME_PADRAO = 'Casa Espírita Caminheiros da Luz'
+
 
 class SiteConfig(models.Model):
     """Configurações principais da Casa Espírita."""
 
-    site_name = models.CharField(_('Nome do site'), max_length=150, default='Casa Espírita')
+    site_name = models.CharField(_('Nome do site'), max_length=150, default=SITE_NAME_PADRAO)
     slogan = models.CharField(_('Slogan'), max_length=255, blank=True)
     descricao = models.TextField(_('Descrição'), blank=True)
     logo = models.ImageField(_('Logo'), upload_to='configuracoes/logo/', blank=True, null=True)

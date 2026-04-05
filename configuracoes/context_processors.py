@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from django.urls import reverse
 
-from .models import SiteConfig
+from .models import SITE_NAME_PADRAO, SiteConfig
 from .permissoes import obter_modulos_disponiveis, obter_perfil_base_usuario
 
 
@@ -35,7 +35,7 @@ def navegacao_global(request):
 
     return {
         'sistema_site_name': (
-            site_config.site_name if site_config and site_config.site_name else 'Casa Espirita'
+            site_config.site_name if site_config and site_config.site_name else SITE_NAME_PADRAO
         ),
         'sistema_site_slogan': site_config.slogan if site_config and site_config.slogan else '',
         'sistema_usuario_nome': _nome_usuario(request),

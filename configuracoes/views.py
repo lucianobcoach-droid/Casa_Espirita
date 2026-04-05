@@ -20,7 +20,7 @@ from django.views.generic import DetailView, FormView, ListView, TemplateView
 
 from .forms import ConfiguracoesPasswordResetForm, UsuarioPerfilBaseForm
 from .mixins import ConfiguracoesPermissaoMixin
-from .models import PerfilAcesso, SiteConfig, UsuarioPerfilAcesso
+from .models import PerfilAcesso, SITE_NAME_PADRAO, SiteConfig, UsuarioPerfilAcesso
 
 User = get_user_model()
 
@@ -35,14 +35,14 @@ class SiteConfigDetailView(ConfiguracoesPermissaoMixin, DetailView):
     def get_object(self, queryset=None):  # type: ignore[override]
         obj = SiteConfig.objects.first()
         if obj is None:
-            obj = SiteConfig(site_name='Casa Espirita')
+            obj = SiteConfig(site_name=SITE_NAME_PADRAO)
         return obj
 
 
 class ConfiguracoesIdentidadeMixin:
     """Contexto institucional minimo para as telas de autenticacao."""
 
-    fallback_site_name = 'Casa Espirita'
+    fallback_site_name = SITE_NAME_PADRAO
 
     def get_site_config(self):
         return SiteConfig.objects.first()
