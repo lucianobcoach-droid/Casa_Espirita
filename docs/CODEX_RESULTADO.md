@@ -1496,3 +1496,13 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - a tela de `importacao/exportacao` passou a esconder `baixar planilha modelo` e `baixar relatorio de inconsistencias` quando faltarem as permissoes especificas, preservando a politica funcional da importacao
 - o historico de ultimos lancamentos por pessoa deixou de expor link de clone quando o usuario nao possui `financeiro.lancamentos.clonar`, alinhando o atalho contextual ao enforcement visual
 - smoke tests visuais basicos confirmaram o comportamento esperado para `Consulta/visualizacao`, `Operador financeiro` e `Gestao administrativa`, com a UI refletindo o que o backend ja permite ou nega no `financeiro`
+
+## Expansao do enforcement backend para biblioteca e configuracoes
+
+- o enforcement backend deixou de ser uma particularidade do `financeiro` e passou a ter uma base generica em `configuracoes/permissoes.py`, por meio do novo `PermissaoSistemaMixin`
+- `financeiro/permissoes.py` foi simplificado para herdar desse mixin generico, preservando apenas a mensagem especifica do modulo e mantendo compatibilidade com o enforcement ja aprovado
+- `biblioteca/permissoes.py` e `configuracoes/mixins.py` foram criados para adaptar a mesma estrategia a cada modulo sem duplicar a regra de autenticacao + permissao + 403 funcional
+- `biblioteca/views.py` passou a proteger backend de `Autores`, `Livros`, `Vendas` e `Emprestimos` com os codigos canonicos semeados na V1, cobrindo as listagens e criacoes reais que existem hoje no app
+- `configuracoes/views.py` passou a proteger `SiteConfig /` com `configuracoes.siteconfig.visualizar`, mantendo `login/logout` livres dessa camada e deixando `/admin/` separado como administracao tecnica/global
+- a validacao tecnica revelou que a seed anterior ainda nao dava `configuracoes.siteconfig.visualizar` ao `Operador financeiro`, apesar de a matriz fechada ja prever essa leitura; isso foi corrigido com a migration de alinhamento `0005_alinhar_siteconfig_operador_financeiro.py`
+- smoke tests backend confirmaram o desenho final: anonimo `302` para login, autenticado sem perfil `403`, `Consulta/visualizacao` com leitura de `biblioteca` e `/`, `Operador financeiro` sem acesso a `biblioteca` mas com acesso a `/`, `Operador biblioteca` restrito a `biblioteca` + `/`, e `Gestao administrativa` com acesso amplo coerente com a matriz

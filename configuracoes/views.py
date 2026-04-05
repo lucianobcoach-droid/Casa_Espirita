@@ -1,23 +1,25 @@
-"""Views do aplicativo de configurações."""
+"""Views do aplicativo de configuracoes."""
 from __future__ import annotations
 
 from django.contrib.auth.views import LoginView, LogoutView
 from django.http import HttpRequest, HttpResponse
 from django.views.generic import DetailView
 
+from .mixins import ConfiguracoesPermissaoMixin
 from .models import SiteConfig
 
 
-class SiteConfigDetailView(DetailView):
-    """Exibe a configuração ativa do site."""
+class SiteConfigDetailView(ConfiguracoesPermissaoMixin, DetailView):
+    """Exibe a configuracao ativa do site."""
 
     template_name = 'configuracoes/siteconfig_detail.html'
     model = SiteConfig
+    permissao_requerida = 'configuracoes.siteconfig.visualizar'
 
     def get_object(self, queryset=None):  # type: ignore[override]
         obj = SiteConfig.objects.first()
         if obj is None:
-            obj = SiteConfig(site_name='Casa Espírita')
+            obj = SiteConfig(site_name='Casa Espirita')
         return obj
 
 

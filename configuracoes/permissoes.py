@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 from django.core.exceptions import ObjectDoesNotExist
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import HttpResponseForbidden
 
 
 def obter_perfil_base_usuario(usuario):
@@ -50,3 +52,26 @@ def usuario_possui_permissao(usuario, codigo_permissao: str) -> bool:
         return False
 
     return codigo_permissao in obter_codigos_permissao_usuario(usuario)
+
+
+class PermissaoSistemaMixin(LoginRequiredMixin):
+    """Mixin generico para exigir permissao funcional canonica no backend."""
+
+    permissao_requerida = ''
+    permission_denied_message = 'Voce nao tem permissao para acessar esta area do sistema.'
+
+    def get_permissao_requerida(self) -> str:
+        return self.permissao_requerida
+
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return self.handle_no_permission()
+
+        permissao_requerida = self.get_permissao_requerida()
+        if not permissao_requerida or not usuario_possui_permissao(
+            request.user,
+            permissao_requerida,
+        ):
+            return HttpResponseForbidden(self.get_permission_denied_message())
+
+        return super().dispatch(request, *args, **kwargs)
