@@ -1,192 +1,36 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Entrar | Casa Espírita</title>
-  <style>
-    :root {
-      color-scheme: light;
-      --ce-bg: #f6f7fb;
-      --ce-surface: #ffffff;
-      --ce-border: #d9deea;
-      --ce-text: #1f2937;
-      --ce-muted: #64748b;
-      --ce-primary: #f97316;
-      --ce-primary-strong: #ea580c;
-      --ce-ring: rgba(249, 115, 22, 0.24);
-    }
+{% extends 'configuracoes/auth_base.html' %}
+{% block auth_title %}Entrar no sistema{% endblock %}
+{% block auth_text %}Use seu usuario e senha para acessar as areas operacionais.{% endblock %}
+{% block auth_content %}
+  <form method="post" class="ce-login-form" novalidate>
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+      <div class="ce-login-error" role="alert">
+        {% for error in form.non_field_errors %}
+          <div>{{ error }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
 
-    * {
-      box-sizing: border-box;
-    }
+    <div class="ce-login-field">
+      <label for="{{ form.username.id_for_label }}" class="ce-login-label">Usuario</label>
+      {{ form.username }}
+    </div>
 
-    body {
-      margin: 0;
-      min-height: 100vh;
-      background: linear-gradient(180deg, #fff7ed 0%, var(--ce-bg) 38%, var(--ce-bg) 100%);
-      color: var(--ce-text);
-      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
+    <div class="ce-login-field">
+      <label for="{{ form.password.id_for_label }}" class="ce-login-label">Senha</label>
+      {{ form.password }}
+    </div>
 
-    .ce-login-shell {
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      padding: 24px;
-    }
+    <input type="hidden" name="next" value="{{ next }}">
 
-    .ce-login-card {
-      width: min(100%, 420px);
-      background: var(--ce-surface);
-      border: 1px solid var(--ce-border);
-      border-radius: 24px;
-      box-shadow: 0 22px 50px rgba(15, 23, 42, 0.10);
-      padding: 32px;
-    }
+    <div class="ce-login-links">
+      <a href="{% url 'configuracoes:password-reset' %}">Esqueci minha senha</a>
+      <a href="{% url 'configuracoes:site-config' %}">Voltar</a>
+    </div>
 
-    .ce-login-kicker {
-      margin: 0 0 8px;
-      color: var(--ce-primary-strong);
-      font-size: 0.76rem;
-      font-weight: 800;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-
-    .ce-login-title {
-      margin: 0;
-      font-size: 1.65rem;
-      line-height: 1.15;
-      font-weight: 800;
-    }
-
-    .ce-login-text {
-      margin: 10px 0 0;
-      color: var(--ce-muted);
-      font-size: 0.95rem;
-      line-height: 1.55;
-    }
-
-    .ce-login-form {
-      margin-top: 24px;
-      display: grid;
-      gap: 16px;
-    }
-
-    .ce-login-label {
-      display: block;
-      margin-bottom: 8px;
-      font-size: 0.82rem;
-      font-weight: 700;
-      color: var(--ce-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-
-    .ce-login-field input {
-      width: 100%;
-      border: 1px solid var(--ce-border);
-      border-radius: 14px;
-      padding: 14px 16px;
-      font-size: 1rem;
-      color: var(--ce-text);
-      background: #fff;
-      outline: none;
-      transition: border-color 0.16s ease, box-shadow 0.16s ease;
-    }
-
-    .ce-login-field input:focus {
-      border-color: var(--ce-primary);
-      box-shadow: 0 0 0 4px var(--ce-ring);
-    }
-
-    .ce-login-error {
-      border-radius: 14px;
-      padding: 12px 14px;
-      background: #fef2f2;
-      border: 1px solid #fecaca;
-      color: #b91c1c;
-      font-size: 0.92rem;
-      line-height: 1.45;
-    }
-
-    .ce-login-actions {
-      display: flex;
-      gap: 12px;
-      margin-top: 4px;
-      flex-wrap: wrap;
-    }
-
-    .ce-login-button,
-    .ce-login-link {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 14px;
-      min-height: 48px;
-      padding: 12px 18px;
-      font-weight: 700;
-      text-decoration: none;
-      border: 1px solid transparent;
-      cursor: pointer;
-      transition: background 0.16s ease, border-color 0.16s ease, color 0.16s ease;
-    }
-
-    .ce-login-button {
-      background: var(--ce-primary);
-      color: #fff;
-      flex: 1 1 140px;
-    }
-
-    .ce-login-button:hover {
-      background: var(--ce-primary-strong);
-    }
-
-    .ce-login-link {
-      color: var(--ce-text);
-      border-color: var(--ce-border);
-      background: #fff;
-      flex: 0 0 auto;
-    }
-  </style>
-</head>
-<body>
-  <main class="ce-login-shell">
-    <section class="ce-login-card" aria-label="Acesso ao sistema">
-      <p class="ce-login-kicker">Casa Espírita</p>
-      <h1 class="ce-login-title">Entrar no sistema</h1>
-      <p class="ce-login-text">Use seu usuário e senha para acessar as áreas operacionais.</p>
-
-      <form method="post" class="ce-login-form" novalidate>
-        {% csrf_token %}
-        {% if form.non_field_errors %}
-          <div class="ce-login-error" role="alert">
-            {% for error in form.non_field_errors %}
-              <div>{{ error }}</div>
-            {% endfor %}
-          </div>
-        {% endif %}
-
-        <div class="ce-login-field">
-          <label for="{{ form.username.id_for_label }}" class="ce-login-label">Usuário</label>
-          {{ form.username }}
-        </div>
-
-        <div class="ce-login-field">
-          <label for="{{ form.password.id_for_label }}" class="ce-login-label">Senha</label>
-          {{ form.password }}
-        </div>
-
-        <input type="hidden" name="next" value="{{ next }}">
-
-        <div class="ce-login-actions">
-          <button type="submit" class="ce-login-button">Entrar</button>
-          <a href="{% url 'configuracoes:site-config' %}" class="ce-login-link">Voltar</a>
-        </div>
-      </form>
-    </section>
-  </main>
-</body>
-</html>
+    <div class="ce-login-actions">
+      <button type="submit" class="ce-login-button">Entrar</button>
+    </div>
+  </form>
+{% endblock %}

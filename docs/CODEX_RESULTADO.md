@@ -1515,3 +1515,14 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - `configuracoes/templates/configuracoes/siteconfig_detail.html` ganhou barra utilitaria minima com `Entrar` para anonimos, `Sair` para autenticados e `Admin tecnico` apenas para quem possui `configuracoes.admin_global.acessar`
 - a protecao principal continua no backend; a UI passou apenas a refletir o que ja esta protegido, reduzindo menu, links e botoes que o perfil nao pode usar
 - smoke tests visuais basicos confirmaram coerencia com a matriz V1: `Consulta/visualizacao` ve as listagens da `biblioteca` sem botoes de criacao; `Operador biblioteca` e `Gestao administrativa` veem navegacao e criacao em `biblioteca`; `Operador financeiro` acessa `SiteConfig /` e nao recebe navegacao funcional da `biblioteca`
+
+## Recuperacao de senha V1 e alinhamento institucional do login
+
+- a auditoria inicial confirmou que o nome exibido no login estava hardcoded em `configuracoes/templates/configuracoes/login.html` como `Casa Espirita`, em vez de vir do cadastro institucional real
+- a tela de login passou a receber `site_name` dinamico a partir de `SiteConfig.site_name`, com fallback seguro, por meio do novo `ConfiguracoesIdentidadeMixin`
+- foi criada uma base minima compartilhada para autenticacao em `configuracoes/templates/configuracoes/auth_base.html`, mantendo o layout enxuto existente e adicionando o link `Esqueci minha senha`
+- o fluxo nativo do Django para reset de senha foi integrado com views/rotas/templates proprios: solicitacao, confirmacao de envio, definicao de nova senha e conclusao
+- `casa_espirita/urls.py` passou a expor `admin_password_reset` em `/admin/password_reset/`, sem misturar isso com permissao funcional nem com bypass de `/admin/`
+- foi criado `ConfiguracoesPasswordResetForm` para barrar e-mail sem usuario ativo/utilizavel correspondente e evitar promessa falsa de reset funcional
+- `settings.py` passou a aceitar configuracao real de e-mail por variaveis de ambiente, com fallback para `django.core.mail.backends.console.EmailBackend`; assim, em desenvolvimento o fluxo funciona sem quebrar e registra a mensagem no console do servidor
+- smoke tests confirmaram login `200`, nome institucional dinamico, link `Esqueci minha senha`, formulario de reset `200`, `admin_password_reset` `200`, geracao local do e-mail, link de redefinicao funcional, troca efetiva da senha e erro claro para e-mail inexistente

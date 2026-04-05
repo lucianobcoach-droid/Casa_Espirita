@@ -656,3 +656,15 @@ Com filtro por periodo:
 - em `configuracoes/templates/configuracoes/siteconfig_detail.html`, a interface passou a mostrar `Entrar` para anonimos, `Sair` para autenticados e `Admin tecnico` apenas para quem possui `configuracoes.admin_global.acessar`, preservando a separacao entre administracao funcional e administracao tecnica/global
 - smoke tests visuais basicos confirmaram coerencia com o backend ja protegido: `Consulta/visualizacao` ve navegacao de leitura em `biblioteca` sem botoes de criacao; `Operador biblioteca` e `Gestao administrativa` veem botoes de criacao no modulo; `Operador financeiro` acessa `SiteConfig /` sem ganhar navegacao funcional da `biblioteca`
 - esta microetapa nao expandiu enforcement visual para outros modulos, nao alterou o backend ja aprovado no `financeiro` e nao implementou extras ou bloqueios individuais
+
+## Recuperacao de senha V1 e identidade institucional do login
+
+- a tela de `login` deixou de usar o nome institucional hardcoded: o texto exibido agora vem do `SiteConfig.site_name`, com fallback seguro para `Casa Espirita` quando nao houver cadastro
+- foi criada uma base compartilhada minima para os templates de autenticacao em `configuracoes/templates/configuracoes/auth_base.html`, preservando a linguagem visual ja existente e adicionando o link `Esqueci minha senha`
+- o fluxo nativo do Django para recuperacao de senha passou a ficar exposto pelas rotas `/senha/esqueci/`, `/senha/esqueci/enviado/`, `/senha/redefinir/<uidb64>/<token>/` e `/senha/redefinir/concluido/`, com templates proprios minimos e coerentes com a tela de login
+- `casa_espirita/urls.py` passou a expor tambem `admin_password_reset` em `/admin/password_reset/`, mantendo `/admin/` separado como administracao tecnica/global
+- foi criado `ConfiguracoesPasswordResetForm` para evitar promessa falsa de reset a quem informa um e-mail sem usuario ativo/utilizavel correspondente; nesses casos, o formulario retorna erro claro em vez de seguir silenciosamente para a confirmacao
+- o projeto passou a ter configuracao de e-mail por ambiente em `settings.py`, com fallback seguro para `django.core.mail.backends.console.EmailBackend` quando nenhuma configuracao real e informada por variavel de ambiente
+- na pratica, isso deixa o fluxo funcional em desenvolvimento sem SMTP real: o e-mail de recuperacao e gerado e registrado no console do servidor; quando houver backend real configurado por ambiente, o mesmo fluxo pode enviar a mensagem de fato sem reabrir a arquitetura
+- smoke tests confirmaram: login `200`, nome institucional vindo do cadastro real, link `Esqueci minha senha` visivel, `/admin/password_reset/` `200`, envio local do reset funcionando com backend `locmem` em teste, redefinicao efetiva da senha e mensagem clara para e-mail inexistente
+- a regra deny-by-default das permissoes funcionais permaneceu intacta apos login/reset, sem abrir bypass automatico por superusuario
