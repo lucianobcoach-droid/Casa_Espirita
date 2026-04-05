@@ -1,4 +1,5 @@
 {% extends 'biblioteca/base.html' %}
+{% load permissoes_sistema %}
 {% block title %}Livros{% endblock %}
 {% block content %}
 <div class="level">
@@ -6,15 +7,18 @@
         <h1 class="title">Livros</h1>
     </div>
     <div class="level-right">
-        <a class="button is-primary" href="{% url 'biblioteca:livro-create' %}">Novo livro</a>
+        {% tem_permissao request.user 'biblioteca.livros.criar' as pode_criar_livro %}
+        {% if pode_criar_livro %}
+            <a class="button is-primary" href="{% url 'biblioteca:livro-create' %}">Novo livro</a>
+        {% endif %}
     </div>
 </div>
 <table class="table is-fullwidth">
     <thead>
     <tr>
-        <th>Título</th>
+        <th>T&iacute;tulo</th>
         <th>Autores</th>
-        <th>Preço</th>
+        <th>Pre&ccedil;o</th>
         <th>Estoque</th>
     </tr>
     </thead>

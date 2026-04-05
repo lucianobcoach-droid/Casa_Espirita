@@ -1506,3 +1506,12 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - `configuracoes/views.py` passou a proteger `SiteConfig /` com `configuracoes.siteconfig.visualizar`, mantendo `login/logout` livres dessa camada e deixando `/admin/` separado como administracao tecnica/global
 - a validacao tecnica revelou que a seed anterior ainda nao dava `configuracoes.siteconfig.visualizar` ao `Operador financeiro`, apesar de a matriz fechada ja prever essa leitura; isso foi corrigido com a migration de alinhamento `0005_alinhar_siteconfig_operador_financeiro.py`
 - smoke tests backend confirmaram o desenho final: anonimo `302` para login, autenticado sem perfil `403`, `Consulta/visualizacao` com leitura de `biblioteca` e `/`, `Operador financeiro` sem acesso a `biblioteca` mas com acesso a `/`, `Operador biblioteca` restrito a `biblioteca` + `/`, e `Gestao administrativa` com acesso amplo coerente com a matriz
+
+## Expansao do enforcement visual para biblioteca e configuracoes
+
+- foi criada a template tag generica `configuracoes/templatetags/permissoes_sistema.py`, reutilizando `usuario_possui_permissao()` para os templates de `biblioteca` e `configuracoes`
+- `biblioteca/templates/biblioteca/base.html` passou a condicionar a navegacao do modulo as permissoes `biblioteca.*.listar`, evitando expor links de leitura para perfis que nao deveriam usar o modulo
+- as listagens de `Autores`, `Livros`, `Vendas` e `Emprestimos` passaram a esconder os botoes de criacao quando faltam as permissoes `biblioteca.autores.criar`, `biblioteca.livros.criar`, `biblioteca.vendas.criar` e `biblioteca.emprestimos.criar`
+- `configuracoes/templates/configuracoes/siteconfig_detail.html` ganhou barra utilitaria minima com `Entrar` para anonimos, `Sair` para autenticados e `Admin tecnico` apenas para quem possui `configuracoes.admin_global.acessar`
+- a protecao principal continua no backend; a UI passou apenas a refletir o que ja esta protegido, reduzindo menu, links e botoes que o perfil nao pode usar
+- smoke tests visuais basicos confirmaram coerencia com a matriz V1: `Consulta/visualizacao` ve as listagens da `biblioteca` sem botoes de criacao; `Operador biblioteca` e `Gestao administrativa` veem navegacao e criacao em `biblioteca`; `Operador financeiro` acessa `SiteConfig /` e nao recebe navegacao funcional da `biblioteca`

@@ -1,3 +1,4 @@
+{% load permissoes_sistema %}
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -9,10 +10,22 @@
 <nav class="navbar is-light" role="navigation" aria-label="main navigation">
     <div class="navbar-menu is-active">
         <div class="navbar-start">
-            <a class="navbar-item" href="{% url 'biblioteca:autor-list' %}">Autores</a>
-            <a class="navbar-item" href="{% url 'biblioteca:livro-list' %}">Livros</a>
-            <a class="navbar-item" href="{% url 'biblioteca:venda-list' %}">Vendas</a>
-            <a class="navbar-item" href="{% url 'biblioteca:emprestimo-list' %}">Empréstimos</a>
+            {% tem_permissao request.user 'biblioteca.autores.listar' as pode_ver_autores %}
+            {% tem_permissao request.user 'biblioteca.livros.listar' as pode_ver_livros %}
+            {% tem_permissao request.user 'biblioteca.vendas.listar' as pode_ver_vendas %}
+            {% tem_permissao request.user 'biblioteca.emprestimos.listar' as pode_ver_emprestimos %}
+            {% if pode_ver_autores %}
+                <a class="navbar-item" href="{% url 'biblioteca:autor-list' %}">Autores</a>
+            {% endif %}
+            {% if pode_ver_livros %}
+                <a class="navbar-item" href="{% url 'biblioteca:livro-list' %}">Livros</a>
+            {% endif %}
+            {% if pode_ver_vendas %}
+                <a class="navbar-item" href="{% url 'biblioteca:venda-list' %}">Vendas</a>
+            {% endif %}
+            {% if pode_ver_emprestimos %}
+                <a class="navbar-item" href="{% url 'biblioteca:emprestimo-list' %}">Empr&eacute;stimos</a>
+            {% endif %}
         </div>
     </div>
 </nav>

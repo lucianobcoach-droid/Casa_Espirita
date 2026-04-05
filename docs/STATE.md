@@ -647,3 +647,12 @@ Com filtro por periodo:
 - durante a validacao apareceu uma divergencia objetiva entre a matriz funcional e a seed ja aplicada: `Operador financeiro` deveria visualizar `SiteConfig /`, mas ainda nao herdava `configuracoes.siteconfig.visualizar`; isso foi alinhado por meio da migration de dados `configuracoes/migrations/0005_alinhar_siteconfig_operador_financeiro.py`
 - smoke tests backend confirmaram o comportamento esperado apos o alinhamento: `Consulta/visualizacao` acessa listagens de `biblioteca` e `SiteConfig /`, mas recebe 403 nas telas de criacao; `Operador financeiro` continua barrado em `biblioteca`, mas passa a acessar `/`; `Operador biblioteca` e `Gestao administrativa` acessam `biblioteca` conforme a matriz; usuario autenticado sem perfil recebe 403 e anonimo recebe 302 para login
 - esta microetapa nao aplicou enforcement visual amplo em `biblioteca` ou `configuracoes`, nao mexeu em login/logout alem do que ja existia, nao implementou extras/bloqueios individuais e nao alterou `/admin/`
+
+## Expansao do enforcement visual para biblioteca e configuracoes
+
+- foi criada a template tag generica `configuracoes/templatetags/permissoes_sistema.py`, reaproveitando o resolvedor central de permissoes para evitar logica ad hoc espalhada nos templates fora do `financeiro`
+- em `biblioteca/templates/biblioteca/base.html`, os links de `Autores`, `Livros`, `Vendas` e `Emprestimos` passaram a aparecer apenas quando o usuario autenticado possui as permissoes de leitura correspondentes
+- as listagens de `Autores`, `Livros`, `Vendas` e `Emprestimos` passaram a esconder os botoes de criacao quando faltam as permissoes `biblioteca.*.criar`, mantendo o backend como protecao principal
+- em `configuracoes/templates/configuracoes/siteconfig_detail.html`, a interface passou a mostrar `Entrar` para anonimos, `Sair` para autenticados e `Admin tecnico` apenas para quem possui `configuracoes.admin_global.acessar`, preservando a separacao entre administracao funcional e administracao tecnica/global
+- smoke tests visuais basicos confirmaram coerencia com o backend ja protegido: `Consulta/visualizacao` ve navegacao de leitura em `biblioteca` sem botoes de criacao; `Operador biblioteca` e `Gestao administrativa` veem botoes de criacao no modulo; `Operador financeiro` acessa `SiteConfig /` sem ganhar navegacao funcional da `biblioteca`
+- esta microetapa nao expandiu enforcement visual para outros modulos, nao alterou o backend ja aprovado no `financeiro` e nao implementou extras ou bloqueios individuais

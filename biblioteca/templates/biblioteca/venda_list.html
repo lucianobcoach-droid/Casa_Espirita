@@ -1,4 +1,5 @@
 {% extends 'biblioteca/base.html' %}
+{% load permissoes_sistema %}
 {% block title %}Vendas{% endblock %}
 {% block content %}
 <div class="level">
@@ -6,7 +7,10 @@
         <h1 class="title">Vendas</h1>
     </div>
     <div class="level-right">
-        <a class="button is-primary" href="{% url 'biblioteca:venda-create' %}">Registrar venda</a>
+        {% tem_permissao request.user 'biblioteca.vendas.criar' as pode_criar_venda %}
+        {% if pode_criar_venda %}
+            <a class="button is-primary" href="{% url 'biblioteca:venda-create' %}">Registrar venda</a>
+        {% endif %}
     </div>
 </div>
 <table class="table is-fullwidth">
@@ -14,7 +18,7 @@
     <tr>
         <th>Livro</th>
         <th>Quantidade</th>
-        <th>Valor unitário</th>
+        <th>Valor unit&aacute;rio</th>
         <th>Data</th>
     </tr>
     </thead>

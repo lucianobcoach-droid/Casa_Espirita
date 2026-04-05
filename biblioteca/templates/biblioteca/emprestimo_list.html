@@ -1,12 +1,16 @@
 {% extends 'biblioteca/base.html' %}
-{% block title %}Empréstimos{% endblock %}
+{% load permissoes_sistema %}
+{% block title %}Empr&eacute;stimos{% endblock %}
 {% block content %}
 <div class="level">
     <div class="level-left">
-        <h1 class="title">Empréstimos</h1>
+        <h1 class="title">Empr&eacute;stimos</h1>
     </div>
     <div class="level-right">
-        <a class="button is-primary" href="{% url 'biblioteca:emprestimo-create' %}">Registrar empréstimo</a>
+        {% tem_permissao request.user 'biblioteca.emprestimos.criar' as pode_criar_emprestimo %}
+        {% if pode_criar_emprestimo %}
+            <a class="button is-primary" href="{% url 'biblioteca:emprestimo-create' %}">Registrar empr&eacute;stimo</a>
+        {% endif %}
     </div>
 </div>
 <table class="table is-fullwidth">
@@ -15,8 +19,8 @@
         <th>Livro</th>
         <th>Leitor</th>
         <th>Quantidade</th>
-        <th>Data empréstimo</th>
-        <th>Prevista devolução</th>
+        <th>Data empr&eacute;stimo</th>
+        <th>Prevista devolu&ccedil;&atilde;o</th>
         <th>Status</th>
     </tr>
     </thead>
@@ -31,7 +35,7 @@
             <td>{{ emprestimo.get_status_display }}</td>
         </tr>
     {% empty %}
-        <tr><td colspan="6">Nenhum empréstimo registrado.</td></tr>
+        <tr><td colspan="6">Nenhum empr&eacute;stimo registrado.</td></tr>
     {% endfor %}
     </tbody>
 </table>
