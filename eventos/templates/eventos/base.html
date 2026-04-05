@@ -1,0 +1,41 @@
+{% extends 'configuracoes/sistema_base.html' %}
+{% load permissoes_sistema %}
+
+{% block title %}{% block eventos_title %}Eventos{% endblock %} | {{ sistema_site_name }}{% endblock %}
+{% block app_subtitle %}{% block eventos_subtitle %}Planejamento e operacao do modulo de eventos.{% endblock %}{% endblock %}
+
+{% block extra_head %}
+  <style>
+    .ce-eventos-main {
+      width: min(1180px, 100%);
+    }
+
+    .ce-eventos-card {
+      border: 1px solid #d9deea;
+      border-radius: 24px;
+      background: #fff;
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+      padding: 24px;
+    }
+
+    .ce-eventos-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+  </style>
+{% endblock %}
+
+{% block before_main %}
+  {% tem_permissao request.user 'eventos.eventos.visualizar' as pode_ver_eventos %}
+  {% if pode_ver_eventos %}
+    <div class="ce-app-module-nav-wrap">
+      <nav class="ce-app-module-nav" aria-label="Navegacao local de eventos">
+        <span class="ce-app-module-nav-label">Eventos</span>
+        <a class="ce-app-link is-primary" href="{% url 'eventos:home' %}">Visao geral</a>
+      </nav>
+    </div>
+  {% endif %}
+{% endblock %}
+
+{% block main_class %}ce-eventos-main{% endblock %}

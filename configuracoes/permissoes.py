@@ -32,6 +32,17 @@ MODULOS_SISTEMA = (
         ),
     },
     {
+        'codigo': 'eventos',
+        'titulo': 'Eventos',
+        'descricao': 'Planejamento inicial do modulo de eventos e sua futura operacao.',
+        'url_name': 'eventos:home',
+        'permissoes': (
+            'eventos.eventos.visualizar',
+            'eventos.eventos.listar',
+            'eventos.eventos.criar',
+        ),
+    },
+    {
         'codigo': 'configuracoes',
         'titulo': 'Configuracoes',
         'descricao': 'Identidade institucional e acesso administrativo funcional.',

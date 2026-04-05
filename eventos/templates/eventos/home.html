@@ -1,0 +1,46 @@
+{% extends 'eventos/base.html' %}
+{% load permissoes_sistema %}
+
+{% block eventos_title %}Eventos{% endblock %}
+{% block eventos_subtitle %}Modulo em implantacao gradual, ja integrado ao shell e ao portal do sistema.{% endblock %}
+
+{% block content %}
+  <section class="ce-eventos-card">
+    <div style="display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; flex-wrap: wrap;">
+      <div style="max-width: 760px;">
+        <span class="ce-app-chip" style="margin-bottom: 12px;">Em implantacao</span>
+        <h2 style="margin: 0 0 10px; font-size: 1.6rem; line-height: 1.2;">Modulo de Eventos</h2>
+        <p style="margin: 0; color: #64748b; line-height: 1.7;">
+          Esta e a landing inicial do modulo. A base estrutural ja esta pronta para receber
+          agenda, organizacao operacional e futuras integrações, sem misturar ainda o dominio completo.
+        </p>
+      </div>
+      <div class="ce-eventos-grid" style="flex: 1 1 280px; min-width: 260px;">
+        <div class="ce-eventos-card" style="padding: 18px;">
+          <strong style="display: block; margin-bottom: 8px;">Entrada oficial</strong>
+          <span style="color: #64748b; line-height: 1.6;">A rota canonica do modulo agora e <code>/eventos/</code>.</span>
+        </div>
+        <div class="ce-eventos-card" style="padding: 18px;">
+          <strong style="display: block; margin-bottom: 8px;">Permissoes V1</strong>
+          <span style="color: #64748b; line-height: 1.6;">A visibilidade do modulo ja segue o mesmo enforcement do restante do sistema.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="ce-eventos-card" style="margin-top: 18px;">
+    <h3 style="margin: 0 0 12px;">Proximos passos esperados</h3>
+    <ul style="margin: 0; padding-left: 18px; color: #64748b; line-height: 1.8;">
+      <li>definir o recorte funcional inicial do dominio de eventos</li>
+      <li>evoluir a navegacao local do modulo conforme os primeiros recursos reais</li>
+      <li>preservar o portal, o shell e o controle de acesso ja consolidados</li>
+    </ul>
+    <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px;">
+      <a href="{{ sistema_inicio_url }}" class="ce-app-link is-primary">Voltar ao inicio</a>
+      {% tem_permissao request.user 'configuracoes.siteconfig.visualizar' as pode_ver_configuracoes %}
+      {% if pode_ver_configuracoes %}
+        <a href="{% url 'configuracoes-entrada' %}" class="ce-app-link">Configuracoes</a>
+      {% endif %}
+    </div>
+  </section>
+{% endblock %}

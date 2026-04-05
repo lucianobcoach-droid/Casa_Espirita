@@ -2,6 +2,19 @@
 
 Data de atualizacao: 2026-04-05
 
+## Estrutura inicial do modulo eventos
+
+- o app `eventos` foi criado e registrado no projeto como nova prova estrutural de modulo aderente ao padrao consolidado do sistema
+- a rota canonica `/eventos/` agora existe e funciona como landing inicial do modulo, sem 404 e sem depender de caminho interno adicional
+- a landing inicial do modulo foi ligada ao shell autenticado compartilhado, exibindo nome institucional, usuario/perfil, `Inicio` e `Sair`, sem abrir ainda o dominio completo de eventos
+- o portal autenticado `/inicio/` passou a considerar `Eventos` no catalogo central de modulos, com visibilidade controlada por permissao real
+- a base inicial de permissoes V1 do modulo foi criada com `eventos.eventos.visualizar`, `eventos.eventos.listar` e `eventos.eventos.criar`
+- essas permissoes foram semeadas para:
+  - `Administrador geral`: visualizar, listar e criar
+  - `Gestao administrativa`: visualizar, listar e criar
+  - `Consulta/visualizacao`: visualizar e listar
+- nesta fase, `Operador financeiro` e `Operador biblioteca` ficaram sem acesso inicial ao modulo para manter o nascimento de `eventos` isolado e sem ampliar escopo operacional sem demanda de negocio fechada
+
 ## Regularizacao do nome institucional em SiteConfig
 
 - a auditoria do banco confirmou que havia apenas 1 registro em `SiteConfig` e que o valor `Lar de Teste` era dado salvo no ambiente, nao erro de leitura, duplicidade ou seed ativa do repositorio

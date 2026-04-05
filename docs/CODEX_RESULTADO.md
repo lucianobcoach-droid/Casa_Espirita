@@ -2,6 +2,24 @@
 
 Data: 2026-04-05
 
+## Esqueleto inicial do modulo eventos
+
+- foi criado o app `eventos` como nova prova estrutural de modulo aderente ao shell compartilhado, ao portal `/inicio/` e a base central de permissoes
+- `casa_espirita/settings.py` passou a registrar o app no `INSTALLED_APPS`, e `casa_espirita/urls.py` passou a expor a entrada canonica `/eventos/`
+- o modulo ganhou `eventos/views.py`, `eventos/urls.py`, `eventos/permissoes.py` e templates proprios minimos (`eventos/base.html` e `eventos/home.html`)
+- a landing `/eventos/` ficou protegida por `eventos.eventos.visualizar`, reutilizando a mesma estrategia de enforcement backend dos modulos ja existentes
+- `configuracoes/permissoes.py` passou a incluir `Eventos` no catalogo de modulos do portal, apontando para `eventos:home`
+- a migration `configuracoes/migrations/0009_permissoes_iniciais_eventos.py` passou a semear as permissoes:
+  - `eventos.eventos.visualizar`
+  - `eventos.eventos.listar`
+  - `eventos.eventos.criar`
+- vinculacao inicial por perfil:
+  - `Administrador geral`: acesso completo inicial do modulo
+  - `Gestao administrativa`: acesso completo inicial do modulo
+  - `Consulta/visualizacao`: acesso de leitura (`visualizar` e `listar`)
+- `Operador financeiro` e `Operador biblioteca` ficaram sem acesso inicial ao modulo porque `eventos` ainda nao possui dominio operacional fechado; isso evita expandir escopo funcional por analogia indevida com modulos ja maduros
+- a landing inicial foi mantida propositalmente rasa: titulo do modulo, descricao breve de implantacao, indicacao visual de que o modulo esta em fase inicial e atalho de retorno ao portal, sem CRUD, sem agenda, sem inscricoes e sem estruturas profundas de negocio
+
 ## Regularizacao do dado institucional do SiteConfig
 
 - a auditoria do repositorio e das migrations confirmou que `Lar de Teste` nao vinha de seed, fixture ou migration ativa do projeto; o valor estava salvo apenas no registro atual do banco local

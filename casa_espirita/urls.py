@@ -12,5 +12,6 @@ urlpatterns = [
     path('configuracoes/', SiteConfigDetailView.as_view(), name='configuracoes-entrada'),
     path('', include('configuracoes.urls')),
     path('biblioteca/', include('biblioteca.urls')),
+    path('eventos/', include('eventos.urls')),
     path('financeiro/', include('financeiro.urls')),
 ]
