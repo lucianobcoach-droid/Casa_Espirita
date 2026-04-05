@@ -1584,3 +1584,21 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
   - `Gestao administrativa`: `200` em perfis, detalhe e usuarios
   - `Operador financeiro`: `403` nas rotas da area
   - alteracao de perfil base persistindo corretamente no banco
+
+## Polimento final de autenticacao/acesso
+
+- a tela de `login` recebeu controle de `Mostrar/Ocultar` senha no proprio campo, com rotulagem acessivel e sem alterar o backend de autenticacao
+- o fluxo de recuperacao de senha passou de validacao explicita de e-mail existente para resposta neutra: `ConfiguracoesPasswordResetForm` voltou a seguir o fluxo nativo do Django, reduzindo enumeracao de usuarios e mantendo a confirmacao em `password_reset_done`
+- a decisao adotada foi manter a mensagem de reset neutra daqui em diante, porque a frente de acesso ja saiu da fase de bootstrap e o endurecimento contra descoberta de usuarios passa a ser mais importante do que a mensagem explicita de erro
+- o texto do formulario de reset e da tela de confirmacao foi revisado para deixar essa neutralidade clara sem prometer envio real fora das configuracoes disponiveis no ambiente
+- o portal autenticado `/inicio/` passou a diferenciar melhor `usuario sem perfil funcional` de `usuario autenticado sem modulos liberados`, com chamada visual mais compreensivel e acoes de `Sair` e `Admin tecnico` quando aplicavel
+- as listagens da UI funcional minima de perfis e usuarios ganharam estados vazios explicitos, evitando tabela ou grade silenciosa quando nao houver dados
+- a verificacao do nome institucional confirmou que o login continua lendo `SiteConfig.site_name` em runtime; no ambiente local auditado, o valor atual (`Lar de Teste`) apareceu corretamente na tela
+- a avaliacao da unicidade do e-mail foi refeita: a base atual continua sem duplicados, mas a microetapa nao promoveu isso a constraint de banco porque o sistema ainda usa o `User` padrao do Django e a mudanca estrutural para endurecimento no nivel da tabela `auth_user` nao compensa o risco neste momento; a validacao administrativa forte permanece como guarda atual
+- smoke tests confirmaram:
+  - login `200` com botao de mostrar/ocultar senha presente
+  - reset com e-mail inexistente seguindo para a confirmacao neutra
+  - portal de usuario sem perfil com mensagem clara
+  - `Gestao administrativa` ainda com `200` na UI funcional de perfis
+  - `Operador financeiro` ainda com `403` nessa area
+  - logout retornando para `/login/`

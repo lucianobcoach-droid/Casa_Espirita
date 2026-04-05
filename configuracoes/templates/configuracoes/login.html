@@ -1,6 +1,6 @@
 {% extends 'configuracoes/auth_base.html' %}
 {% block auth_title %}Entrar no sistema{% endblock %}
-{% block auth_text %}Use seu usuario e senha para acessar as areas operacionais.{% endblock %}
+{% block auth_text %}Use seu usuario e senha para acessar os modulos liberados do sistema.{% endblock %}
 {% block auth_content %}
   <form method="post" class="ce-login-form" novalidate>
     {% csrf_token %}
@@ -19,7 +19,19 @@
 
     <div class="ce-login-field">
       <label for="{{ form.password.id_for_label }}" class="ce-login-label">Senha</label>
-      {{ form.password }}
+      <div class="ce-password-field">
+        {{ form.password }}
+        <button
+          type="button"
+          class="ce-password-toggle"
+          data-password-toggle
+          data-password-target="{{ form.password.id_for_label }}"
+          aria-pressed="false"
+          aria-label="Mostrar senha digitada"
+        >
+          Mostrar
+        </button>
+      </div>
     </div>
 
     <input type="hidden" name="next" value="{{ next }}">

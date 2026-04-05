@@ -34,6 +34,10 @@
           <a href="{% url 'configuracoes:perfil-detail' perfil.pk %}" class="ce-app-link is-primary">Ver detalhe do perfil</a>
         </div>
       </article>
+    {% empty %}
+      <article class="ce-app-card">
+        Nenhum perfil-base foi encontrado nesta instala&ccedil;&atilde;o.
+      </article>
     {% endfor %}
   </section>
 {% endblock %}

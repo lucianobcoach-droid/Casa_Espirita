@@ -40,6 +40,7 @@ def navegacao_global(request):
         'sistema_site_slogan': site_config.slogan if site_config and site_config.slogan else '',
         'sistema_usuario_nome': _nome_usuario(request),
         'sistema_perfil_base_nome': perfil.nome if perfil else '',
+        'sistema_usuario_sem_perfil': bool(usuario and usuario.is_authenticated and perfil is None),
         'sistema_modulos_disponiveis': modulos,
         'sistema_admin_tecnico_url': reverse('admin:index'),
         'sistema_inicio_url': reverse('configuracoes:inicio'),

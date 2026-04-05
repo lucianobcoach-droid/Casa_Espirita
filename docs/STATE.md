@@ -707,3 +707,14 @@ Com filtro por periodo:
 - a edicao funcional do vinculo `usuario -> perfil base` ficou restrita a um formulario simples, seguro e coerente com as regras endurecidas no `/admin/`: usuario funcional ativo continua exigindo perfil-base; usuario tecnico (`staff`/`superuser`) pode seguir sem perfil funcional; usuario funcional sem e-mail valido nao recebe perfil pela UI
 - a navegacao dessa area entra pelo modulo `Configuracoes`: a tela `SiteConfig /` passou a exibir links de `Perfis de acesso` e `Usuarios e perfis` apenas para quem possui permissao funcional de administracao dessa frente
 - smoke tests confirmaram: `Administrador geral` e `Gestao administrativa` acessam listagem de perfis, detalhe do perfil, listagem de usuarios e alteracao do vinculo; `Operador financeiro` recebe `403` nessas rotas; a alteracao funcional de perfil base persiste corretamente no banco
+
+## Polimento final da frente de autenticacao e acesso
+
+- a tela de login passou a oferecer controle explicito de `Mostrar/Ocultar` senha, sem alterar o backend de autenticacao nem o comportamento de permissao
+- o fluxo de recuperacao de senha foi endurecido contra enumeracao de usuarios: o formulario deixou de acusar explicitamente quando o e-mail nao pertence a um usuario ativo/utilizavel e passou a seguir com mensagem neutra no fluxo de confirmacao
+- a decisao consolidada nesta fase foi manter a mensagem de reset neutra, por ser mais segura para a operacao real do sistema agora que autenticacao/acesso ja estao ativos
+- o nome institucional do login continua vindo dinamicamente de `SiteConfig.site_name`, com fallback seguro para `Casa Espirita`; a apresentacao foi preservada sem tratar dado cadastrado provisoriamente como bug de codigo
+- o portal `/inicio/` passou a tratar melhor o caso de usuario autenticado sem perfil funcional ou sem modulos liberados, com mensagem mais clara e acoes de saida/admin tecnico quando fizer sentido
+- a UI funcional minima de perfis passou a ter estados vazios mais claros para lista de perfis e lista de usuarios, sem alterar as regras de acesso da area
+- a avaliacao da unicidade do e-mail foi refeita nesta microetapa: a base segue sem duplicados, mas ainda nao foi introduzida constraint de banco porque o projeto continua apoiado no `User` padrao do Django e a mudanca estrutural nesse nivel segue desproporcional para o risco atual; permanece valendo a validacao forte no fluxo administrativo
+- smoke tests confirmaram: login `200` com controle de senha visivel; reset de senha com e-mail inexistente segue fluxo neutro para a tela de confirmacao; usuario sem perfil recebe estado claro no portal; `Gestao administrativa` continua com acesso `200` a UI funcional de perfis; `Operador financeiro` continua barrado com `403`; logout segue retornando a `/login/`

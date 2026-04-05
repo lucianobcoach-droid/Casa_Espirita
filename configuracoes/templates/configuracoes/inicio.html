@@ -29,11 +29,24 @@
     </section>
   {% else %}
     <section class="ce-app-card" style="margin-top: 18px;">
-      <h2 style="margin: 0 0 10px; font-size: 1.15rem;">Nenhum m&oacute;dulo funcional liberado</h2>
-      <p style="margin: 0; color: #64748b; line-height: 1.6;">
-        Seu usu&aacute;rio est&aacute; autenticado, mas ainda n&atilde;o possui permiss&otilde;es funcionais ativas para operar m&oacute;dulos do sistema.
-        Se este acesso precisar ser liberado, regularize o perfil base no admin t&eacute;cnico.
-      </p>
+      {% if sistema_usuario_sem_perfil %}
+        <h2 style="margin: 0 0 10px; font-size: 1.15rem;">Seu acesso ainda n&atilde;o tem perfil funcional</h2>
+        <p style="margin: 0; color: #64748b; line-height: 1.6;">
+          Seu usu&aacute;rio est&aacute; autenticado, mas ainda n&atilde;o recebeu um perfil base para operar m&oacute;dulos do sistema.
+          Se este acesso precisar ser liberado, regularize o perfil base na administra&ccedil;&atilde;o apropriada.
+        </p>
+      {% else %}
+        <h2 style="margin: 0 0 10px; font-size: 1.15rem;">Nenhum m&oacute;dulo funcional liberado</h2>
+        <p style="margin: 0; color: #64748b; line-height: 1.6;">
+          Seu usu&aacute;rio est&aacute; autenticado, mas n&atilde;o possui m&oacute;dulos dispon&iacute;veis para esta combina&ccedil;&atilde;o atual de permiss&otilde;es.
+        </p>
+      {% endif %}
+      <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px;">
+        {% if request.user.is_staff %}
+          <a href="{{ sistema_admin_tecnico_url }}" class="ce-app-link">Admin t&eacute;cnico</a>
+        {% endif %}
+        <a href="{{ sistema_logout_url }}" class="ce-app-link">Sair</a>
+      </div>
     </section>
   {% endif %}
 {% endblock %}
