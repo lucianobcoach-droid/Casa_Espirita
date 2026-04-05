@@ -1,0 +1,57 @@
+{% extends 'configuracoes/sistema_base.html' %}
+
+{% block title %}Usu&aacute;rios e perfis | {{ sistema_site_name }}{% endblock %}
+{% block app_subtitle %}V&iacute;nculo funcional do usu&aacute;rio com o perfil-base da V1.{% endblock %}
+
+{% block content %}
+  <section class="ce-app-card">
+    <div style="display: flex; justify-content: space-between; gap: 16px; align-items: start; flex-wrap: wrap;">
+      <div>
+        <h2 style="margin: 0 0 10px; font-size: 1.45rem;">Usu&aacute;rios e perfil base</h2>
+        <p style="margin: 0; color: #64748b; line-height: 1.6;">
+          Esta tela reduz a depend&ecirc;ncia do admin t&eacute;cnico para a opera&ccedil;&atilde;o funcional de acesso.
+        </p>
+      </div>
+      <a href="{% url 'configuracoes:perfil-list' %}" class="ce-app-link">Ver perfis</a>
+    </div>
+  </section>
+
+  <section class="ce-app-card" style="margin-top: 18px; overflow-x: auto;">
+    <table style="width: 100%; border-collapse: collapse; min-width: 760px;">
+      <thead>
+        <tr>
+          <th style="text-align: left; padding: 12px; border-bottom: 1px solid #e5e7eb;">Usu&aacute;rio</th>
+          <th style="text-align: left; padding: 12px; border-bottom: 1px solid #e5e7eb;">E-mail</th>
+          <th style="text-align: left; padding: 12px; border-bottom: 1px solid #e5e7eb;">Status</th>
+          <th style="text-align: left; padding: 12px; border-bottom: 1px solid #e5e7eb;">Perfil base</th>
+          <th style="text-align: left; padding: 12px; border-bottom: 1px solid #e5e7eb;">A&ccedil;&atilde;o</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for usuario in usuarios %}
+          <tr>
+            <td style="padding: 12px; border-bottom: 1px solid #f1f5f9;">
+              <strong>{{ usuario.get_full_name|default:usuario.username }}</strong><br>
+              <small style="color: #64748b;">{{ usuario.username }}</small>
+            </td>
+            <td style="padding: 12px; border-bottom: 1px solid #f1f5f9;">{{ usuario.email|default:"Sem e-mail" }}</td>
+            <td style="padding: 12px; border-bottom: 1px solid #f1f5f9;">
+              {% if usuario.is_active %}Ativo{% else %}Inativo{% endif %}
+              {% if usuario.is_staff %}<br><small style="color: #64748b;">Admin t&eacute;cnico</small>{% endif %}
+            </td>
+            <td style="padding: 12px; border-bottom: 1px solid #f1f5f9;">
+              {% if usuario.vinculo_perfil_acesso %}
+                {{ usuario.vinculo_perfil_acesso.perfil.nome }}
+              {% else %}
+                <span style="color: #64748b;">Sem perfil</span>
+              {% endif %}
+            </td>
+            <td style="padding: 12px; border-bottom: 1px solid #f1f5f9;">
+              <a href="{% url 'configuracoes:usuario-perfil-update' usuario.pk %}" class="ce-app-link">Editar perfil</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+{% endblock %}

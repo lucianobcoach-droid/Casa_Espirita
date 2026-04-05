@@ -1,0 +1,39 @@
+{% extends 'configuracoes/sistema_base.html' %}
+
+{% block title %}Perfis de acesso | {{ sistema_site_name }}{% endblock %}
+{% block app_subtitle %}Administra&ccedil;&atilde;o funcional de perfis-base do sistema.{% endblock %}
+
+{% block content %}
+  <section class="ce-app-card">
+    <div style="display: flex; justify-content: space-between; gap: 16px; align-items: start; flex-wrap: wrap;">
+      <div>
+        <h2 style="margin: 0 0 10px; font-size: 1.45rem;">Perfis de acesso</h2>
+        <p style="margin: 0; color: #64748b; line-height: 1.6;">
+          Esta leitura mostra os perfis-base da V1 e suas permiss&otilde;es consolidadas, sem abrir edi&ccedil;&atilde;o granular da matriz.
+        </p>
+      </div>
+      <a href="{% url 'configuracoes:usuario-perfil-list' %}" class="ce-app-link">Usu&aacute;rios e perfis</a>
+    </div>
+  </section>
+
+  <section style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin-top: 18px;">
+    {% for perfil in perfis %}
+      <article class="ce-app-card" style="padding: 22px;">
+        <div style="display: flex; justify-content: space-between; gap: 12px; align-items: start;">
+          <div>
+            <h3 style="margin: 0 0 8px; font-size: 1.08rem; line-height: 1.35;">{{ perfil.nome }}</h3>
+            <p style="margin: 0; color: #64748b; line-height: 1.55;">{{ perfil.descricao|default:"Perfil base operacional do sistema." }}</p>
+          </div>
+          <span class="ce-app-chip">{% if perfil.ativo %}Ativo{% else %}Inativo{% endif %}</span>
+        </div>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px;">
+          <span class="ce-app-chip">{{ perfil.permissoes.count }} permiss&otilde;es</span>
+          <span class="ce-app-chip">{{ perfil.usuarios_vinculados.count }} usu&aacute;rios</span>
+        </div>
+        <div style="margin-top: 18px;">
+          <a href="{% url 'configuracoes:perfil-detail' perfil.pk %}" class="ce-app-link is-primary">Ver detalhe do perfil</a>
+        </div>
+      </article>
+    {% endfor %}
+  </section>
+{% endblock %}

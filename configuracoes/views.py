@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 from django.conf import settings
+from django.contrib import messages
+from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import (
     LoginView,
@@ -12,12 +14,15 @@ from django.contrib.auth.views import (
     PasswordResetView,
 )
 from django.http import HttpRequest, HttpResponse
+from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
-from django.views.generic import DetailView, TemplateView
+from django.views.generic import DetailView, FormView, ListView, TemplateView
 
-from .forms import ConfiguracoesPasswordResetForm
+from .forms import ConfiguracoesPasswordResetForm, UsuarioPerfilBaseForm
 from .mixins import ConfiguracoesPermissaoMixin
-from .models import SiteConfig
+from .models import PerfilAcesso, SiteConfig, UsuarioPerfilAcesso
+
+User = get_user_model()
 
 
 class SiteConfigDetailView(ConfiguracoesPermissaoMixin, DetailView):
@@ -133,3 +138,108 @@ class SistemaInicioView(LoginRequiredMixin, ConfiguracoesIdentidadeMixin, Templa
 
     template_name = 'configuracoes/inicio.html'
     login_url = reverse_lazy('configuracoes:login')
+
+
+class PerfilAcessoListView(ConfiguracoesPermissaoMixin, ConfiguracoesIdentidadeMixin, ListView):
+    """Lista funcional minima dos perfis-base existentes."""
+
+    model = PerfilAcesso
+    template_name = 'configuracoes/perfil_acesso_list.html'
+    context_object_name = 'perfis'
+    permissao_requerida = 'configuracoes.perfis_acesso.listar'
+
+    def get_queryset(self):
+        return (
+            PerfilAcesso.objects.order_by('nome')
+            .prefetch_related('permissoes', 'usuarios_vinculados')
+        )
+
+
+class PerfilAcessoDetailView(ConfiguracoesPermissaoMixin, ConfiguracoesIdentidadeMixin, DetailView):
+    """Detalhe legivel de um perfil, agrupando permissoes por modulo/recurso."""
+
+    model = PerfilAcesso
+    template_name = 'configuracoes/perfil_acesso_detail.html'
+    context_object_name = 'perfil'
+    permissao_requerida = 'configuracoes.perfis_acesso.visualizar'
+
+    def get_queryset(self):
+        return PerfilAcesso.objects.prefetch_related('permissoes', 'usuarios_vinculados').order_by('nome')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        grupos: dict[str, dict[str, list[dict[str, str]]]] = {}
+        for permissao in self.object.permissoes.filter(ativo=True).order_by('modulo', 'recurso', 'acao'):
+            grupos.setdefault(permissao.modulo, {}).setdefault(permissao.recurso, []).append(
+                {
+                    'codigo': permissao.codigo,
+                    'nome': permissao.nome,
+                    'acao': permissao.acao.replace('_', ' '),
+                }
+            )
+        context['permissoes_agrupadas'] = [
+            {
+                'modulo': modulo.replace('_', ' '),
+                'recursos': [
+                    {
+                        'recurso': recurso.replace('_', ' '),
+                        'acoes': acoes,
+                    }
+                    for recurso, acoes in recursos.items()
+                ],
+            }
+            for modulo, recursos in grupos.items()
+        ]
+        return context
+
+
+class UsuarioPerfilAcessoListView(ConfiguracoesPermissaoMixin, ConfiguracoesIdentidadeMixin, ListView):
+    """Lista usuarios com seu perfil-base atual para administracao funcional."""
+
+    model = User
+    template_name = 'configuracoes/usuario_perfil_list.html'
+    context_object_name = 'usuarios'
+    permissao_requerida = 'configuracoes.usuarios_acesso.listar'
+
+    def get_queryset(self):
+        return User.objects.order_by('username').select_related('vinculo_perfil_acesso__perfil')
+
+
+class UsuarioPerfilAcessoUpdateView(ConfiguracoesPermissaoMixin, ConfiguracoesIdentidadeMixin, FormView):
+    """Altera o vinculo funcional do usuario com um perfil-base."""
+
+    template_name = 'configuracoes/usuario_perfil_form.html'
+    form_class = UsuarioPerfilBaseForm
+    permissao_requerida = 'configuracoes.usuarios_acesso.editar_perfil'
+
+    def dispatch(self, request, *args, **kwargs):
+        self.usuario_obj = get_object_or_404(
+            User.objects.select_related('vinculo_perfil_acesso__perfil'),
+            pk=kwargs['pk'],
+        )
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['usuario'] = self.usuario_obj
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['usuario_obj'] = self.usuario_obj
+        return context
+
+    def form_valid(self, form):
+        perfil = form.cleaned_data.get('perfil_base')
+        if perfil is None:
+            UsuarioPerfilAcesso.objects.filter(usuario=self.usuario_obj).delete()
+        else:
+            UsuarioPerfilAcesso.objects.update_or_create(
+                usuario=self.usuario_obj,
+                defaults={'perfil': perfil},
+            )
+        messages.success(self.request, 'Perfil base atualizado com sucesso.')
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy('configuracoes:usuario-perfil-list')

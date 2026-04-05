@@ -1557,3 +1557,30 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - o shell autenticado minimo passou a expor `Sair` de forma visivel e consistente, alem de `Inicio` do sistema; no caso de usuario `staff`, o atalho para `Admin tecnico` continua separado como administracao tecnica/global
 - `financeiro/base.html`, `biblioteca/base.html` e `configuracoes/siteconfig_detail.html` foram ajustados apenas no necessario para refletir essa navegacao global, sem alterar o enforcement funcional ja aprovado no backend
 - smoke tests confirmaram redirecionamento pos-login para `/inicio/`, portal coerente por perfil, logout com retorno a `/login/` e comportamento deny-by-default preservado para usuario sem perfil
+
+## UI funcional minima de perfis e vinculo usuario -> perfil base
+
+- a microetapa abriu, dentro de `configuracoes`, a primeira UI funcional minima para administracao de acesso fora do `/admin/`, sem substituir o admin tecnico nem abrir editor completo da matriz
+- foram criadas as rotas e views:
+  - listagem de perfis-base
+  - detalhe do perfil
+  - listagem de usuarios com perfil atual
+  - edicao simples do vinculo `usuario -> perfil base`
+- a visualizacao do detalhe do perfil foi organizada por `modulo -> recurso -> acoes`, usando a propria base `PermissaoSistema`/`PerfilAcesso` ja implantada e priorizando leitura clara sobre edicao
+- a listagem de usuarios mostra identificacao, e-mail, status ativo/inativo, indicacao de administracao tecnica e perfil-base atual, com acao direta de edicao do vinculo
+- a edicao do vinculo passou a usar um formulario simples e seguro:
+  - usuario funcional ativo precisa de perfil-base
+  - usuario funcional sem e-mail valido nao recebe perfil pela UI
+  - `staff`/`superuser` tecnico podem seguir sem perfil funcional, preservando a separacao entre administracao tecnica/global e acesso funcional
+- foram criadas quatro novas permissoes funcionais canonicas para essa area:
+  - `configuracoes.perfis_acesso.listar`
+  - `configuracoes.perfis_acesso.visualizar`
+  - `configuracoes.usuarios_acesso.listar`
+  - `configuracoes.usuarios_acesso.editar_perfil`
+- essas permissoes foram semeadas por migration incremental e vinculadas apenas a `Administrador geral` e `Gestao administrativa`, mantendo a administracao funcional de acesso restrita a esses perfis na V1
+- a entrada visual da nova area ficou no modulo `Configuracoes`: `siteconfig_detail.html` passou a exibir `Perfis de acesso` e `Usuarios e perfis` apenas para quem possui permissao dessa frente
+- smoke tests confirmaram o desenho final:
+  - `Administrador geral`: `200` em perfis, detalhe, usuarios e alteracao de vinculo
+  - `Gestao administrativa`: `200` em perfis, detalhe e usuarios
+  - `Operador financeiro`: `403` nas rotas da area
+  - alteracao de perfil base persistindo corretamente no banco

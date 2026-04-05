@@ -691,3 +691,19 @@ Com filtro por periodo:
 - o shell autenticado minimo do sistema passa a exibir nome institucional, usuario autenticado, perfil base quando existir, atalho de `Inicio`, opcionalmente `Admin tecnico` para `staff` e botao global de `Sair`
 - `financeiro`, `biblioteca` e `configuracoes` passaram a refletir essa navegacao global sem reabrir grande refactor visual: os modulos continuam com seus shells proprios, mas agora exibem atalho de retorno ao `Inicio` do sistema e `Sair` visivel quando o usuario esta autenticado
 - smoke tests confirmaram: login bem-sucedido redireciona para `/inicio/`; `Operador financeiro` ve `Financeiro` e `Configuracoes`; `Operador biblioteca` ve `Biblioteca` e `Configuracoes`; `Consulta/visualizacao` ve os tres modulos; usuario sem perfil ve o portal sem cards operacionais; logout continua redirecionando para `/login/`
+
+## UI funcional minima de perfis e usuarios de acesso
+
+- a administracao funcional de acesso deixou de depender apenas do `/admin/`: foi aberta uma UI minima no app `configuracoes` para leitura de perfis-base e ajuste simples do vinculo `usuario -> perfil base`
+- foram criadas rotas protegidas para `perfis`, `detalhe do perfil`, `usuarios com perfil` e `edicao do perfil base do usuario`, sem abrir ainda editor granular da matriz nem extras/bloqueios individuais
+- a protecao backend dessa nova area usa a mesma base central de enforcement ja consolidada, com novas permissoes canonicas de `configuracoes`:
+  - `configuracoes.perfis_acesso.listar`
+  - `configuracoes.perfis_acesso.visualizar`
+  - `configuracoes.usuarios_acesso.listar`
+  - `configuracoes.usuarios_acesso.editar_perfil`
+- essas permissoes foram semeadas de forma incremental e vinculadas apenas a `Administrador geral` e `Gestao administrativa`, mantendo `Operador financeiro`, `Operador biblioteca` e `Consulta/visualizacao` fora da administracao funcional de acesso nesta etapa
+- o detalhe do perfil foi organizado por `modulo -> recurso -> acoes`, priorizando leitura clara e sem abrir checkboxes ou edicao granular de permissao
+- a listagem de usuarios passou a mostrar identificacao, e-mail, status ativo/inativo, indicacao de administracao tecnica e perfil-base atual
+- a edicao funcional do vinculo `usuario -> perfil base` ficou restrita a um formulario simples, seguro e coerente com as regras endurecidas no `/admin/`: usuario funcional ativo continua exigindo perfil-base; usuario tecnico (`staff`/`superuser`) pode seguir sem perfil funcional; usuario funcional sem e-mail valido nao recebe perfil pela UI
+- a navegacao dessa area entra pelo modulo `Configuracoes`: a tela `SiteConfig /` passou a exibir links de `Perfis de acesso` e `Usuarios e perfis` apenas para quem possui permissao funcional de administracao dessa frente
+- smoke tests confirmaram: `Administrador geral` e `Gestao administrativa` acessam listagem de perfis, detalhe do perfil, listagem de usuarios e alteracao do vinculo; `Operador financeiro` recebe `403` nessas rotas; a alteracao funcional de perfil base persiste corretamente no banco

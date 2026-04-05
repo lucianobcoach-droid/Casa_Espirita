@@ -1,0 +1,48 @@
+{% extends 'configuracoes/sistema_base.html' %}
+
+{% block title %}{{ perfil.nome }} | {{ sistema_site_name }}{% endblock %}
+{% block app_subtitle %}Leitura organizada das permiss&otilde;es do perfil-base.{% endblock %}
+
+{% block content %}
+  <section class="ce-app-card">
+    <div style="display: flex; justify-content: space-between; gap: 16px; align-items: start; flex-wrap: wrap;">
+      <div>
+        <p style="margin: 0 0 8px; color: #ea580c; font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">Perfil base</p>
+        <h2 style="margin: 0 0 10px; font-size: 1.5rem;">{{ perfil.nome }}</h2>
+        <p style="margin: 0; color: #64748b; line-height: 1.6;">{{ perfil.descricao|default:"Perfil operacional do sistema." }}</p>
+      </div>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <span class="ce-app-chip">{% if perfil.ativo %}Ativo{% else %}Inativo{% endif %}</span>
+        <span class="ce-app-chip">{{ perfil.usuarios_vinculados.count }} usu&aacute;rios vinculados</span>
+      </div>
+    </div>
+  </section>
+
+  <section style="margin-top: 18px; display: grid; gap: 16px;">
+    {% for grupo in permissoes_agrupadas %}
+      <article class="ce-app-card">
+        <h3 style="margin: 0 0 14px; font-size: 1.15rem; text-transform: capitalize;">{{ grupo.modulo }}</h3>
+        <div style="display: grid; gap: 14px;">
+          {% for recurso in grupo.recursos %}
+            <section style="border: 1px solid #e5e7eb; border-radius: 16px; padding: 16px;">
+              <h4 style="margin: 0 0 10px; font-size: 1rem; color: #334155;">{{ recurso.recurso|capfirst }}</h4>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                {% for acao in recurso.acoes %}
+                  <span class="ce-app-chip" title="{{ acao.codigo }}">{{ acao.acao|capfirst }}</span>
+                {% endfor %}
+              </div>
+            </section>
+          {% endfor %}
+        </div>
+      </article>
+    {% empty %}
+      <article class="ce-app-card">
+        Este perfil ainda n&atilde;o possui permiss&otilde;es ativas cadastradas.
+      </article>
+    {% endfor %}
+  </section>
+
+  <div style="margin-top: 18px;">
+    <a href="{% url 'configuracoes:perfil-list' %}" class="ce-app-link">Voltar para perfis</a>
+  </div>
+{% endblock %}

@@ -58,6 +58,23 @@
         <h2>Sobre</h2>
         <p>{{ object.descricao|default:"Configure a descri&ccedil;&atilde;o do site pelo Django admin." }}</p>
       </section>
+      {% tem_alguma_permissao request.user 'configuracoes.perfis_acesso.listar' 'configuracoes.usuarios_acesso.listar' as pode_administrar_acessos %}
+      {% if pode_administrar_acessos %}
+      <section>
+        <h2>Acesso funcional</h2>
+        <p>Use esta &aacute;rea para consultar perfis-base e ajustar o v&iacute;nculo funcional de usu&aacute;rios sem depender do admin t&eacute;cnico.</p>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 12px;">
+          {% tem_permissao request.user 'configuracoes.perfis_acesso.listar' as pode_listar_perfis %}
+          {% tem_permissao request.user 'configuracoes.usuarios_acesso.listar' as pode_listar_usuarios_perfis %}
+          {% if pode_listar_perfis %}
+            <a href="{% url 'configuracoes:perfil-list' %}" class="ce-site-link">Perfis de acesso</a>
+          {% endif %}
+          {% if pode_listar_usuarios_perfis %}
+            <a href="{% url 'configuracoes:usuario-perfil-list' %}" class="ce-site-link">Usu&aacute;rios e perfis</a>
+          {% endif %}
+        </div>
+      </section>
+      {% endif %}
     </main>
     <footer>
       <small>Atualizado em: {{ object.atualizado_em|date:"d/m/Y H:i" }}</small>

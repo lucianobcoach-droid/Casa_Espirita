@@ -115,3 +115,39 @@ class ConfiguracoesUserChangeForm(UsuarioAdminBaseFormMixin, UserChangeForm):
     class Meta(UserChangeForm.Meta):
         model = get_user_model()
         fields = '__all__'
+
+
+class UsuarioPerfilBaseForm(forms.Form):
+    """Edicao funcional minima do vinculo usuario -> perfil base."""
+
+    perfil_base = forms.ModelChoiceField(
+        label='Perfil base',
+        queryset=PerfilAcesso.objects.filter(ativo=True).order_by('nome'),
+        required=False,
+        empty_label='Sem perfil funcional',
+        help_text='Escolha o perfil funcional base deste usuario.',
+    )
+
+    def __init__(self, *args, usuario, **kwargs):
+        self.usuario = usuario
+        super().__init__(*args, **kwargs)
+        vinculo = getattr(getattr(self.usuario, 'vinculo_perfil_acesso', None), 'perfil', None)
+        if vinculo is not None:
+            self.fields['perfil_base'].initial = vinculo
+
+    def clean(self):
+        cleaned_data = super().clean()
+        perfil_base = cleaned_data.get('perfil_base')
+
+        if self.usuario.is_active and not self.usuario.is_staff and not self.usuario.is_superuser:
+            if not self.usuario.email:
+                raise forms.ValidationError(
+                    'Este usuario funcional precisa de e-mail valido antes de receber perfil base.'
+                )
+            if perfil_base is None:
+                self.add_error(
+                    'perfil_base',
+                    'Usuario funcional ativo precisa de um perfil base.',
+                )
+
+        return cleaned_data
