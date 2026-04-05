@@ -25,6 +25,23 @@ Data de atualizacao: 2026-04-05
   - `eventos` permanece fora do foco de homologacao do `financeiro`
   - `biblioteca` e demais modulos nao devem puxar novas correcoes agora, salvo se surgirem impactos diretos no shell compartilhado ou no portal do sistema
 
+## Pacote de hospedagem/homologacao preparado
+
+- foi criado `docs/GUIA_HOSPEDAGEM_FINANCEIRO.md` como guia pratico de deploy/homologacao do sistema atual, com foco no `financeiro`
+- foi criado `.env.example` com placeholders seguros para as variaveis de ambiente hoje necessarias na subida
+- `requirements.txt` passou a incluir `gunicorn` e `whitenoise` para reduzir atrito de hospedagem
+- `casa_espirita/settings.py` passou a servir estaticos com `WhiteNoise`, usar `STATIC_URL` e `MEDIA_URL` com barra inicial, aceitar `DJANGO_DB_PATH` para o SQLite em local persistente e aceitar `DJANGO_MEDIA_ROOT` por ambiente
+- a configuracao de seguranca HTTPS tambem passou a prever `DJANGO_SECURE_HSTS_SECONDS`, `DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS` e `DJANGO_SECURE_HSTS_PRELOAD`
+- validacao executada:
+  - `py manage.py check` OK
+  - `py manage.py check --deploy` executado com variaveis de teste e depois com simulacao mais proxima de producao
+  - na simulacao mais proxima de producao, os avisos remanescentes ficaram restritos a `SECURE_HSTS_INCLUDE_SUBDOMAINS` e `SECURE_HSTS_PRELOAD`, tratados como decisao do host/dominio e nao como bloqueio imediato da homologacao
+- pendencias ainda dependentes do provedor/ambiente real:
+  - SMTP real
+  - politica final de banco na hospedagem
+  - execucao de `migrate` e `collectstatic`
+  - proxy/HTTPS efetivos do host
+
 ## Estrutura inicial do modulo eventos
 
 - o app `eventos` foi criado e registrado no projeto como nova prova estrutural de modulo aderente ao padrao consolidado do sistema

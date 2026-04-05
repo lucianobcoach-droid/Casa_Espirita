@@ -31,6 +31,32 @@ Data: 2026-04-05
   - `py manage.py check` OK
   - comandos como `showmigrations`, `collectstatic --dry-run` e algumas chamadas `manage.py shell -c` seguiram bloqueados por `Acesso negado` neste ambiente local, entao a validacao final de hospedagem continua dependente do provedor real
 
+## Pacote pratico de deploy/homologacao
+
+- foi criado `docs/GUIA_HOSPEDAGEM_FINANCEIRO.md` para concentrar:
+  - variaveis de ambiente necessarias
+  - sequencia recomendada de deploy
+  - comandos de `migrate`, `collectstatic`, `check` e `check --deploy`
+  - checklist pos-subida
+  - pendencias que continuam dependentes do provedor
+- foi criado `.env.example` com placeholders seguros, sem segredos reais, para apoiar a configuracao do host
+- `requirements.txt` passou a incluir `gunicorn` e `whitenoise`, alinhando o projeto a uma subida WSGI simples com servico de estaticos no proprio app
+- `casa_espirita/settings.py` recebeu ajustes pequenos e diretos para hospedagem:
+  - `WhiteNoiseMiddleware`
+  - `STATICFILES_STORAGE` com `CompressedManifestStaticFilesStorage`
+  - `STATIC_URL` e `MEDIA_URL` normalizados com barra inicial
+  - `DJANGO_DB_PATH` para permitir SQLite em caminho persistente do host
+  - `DJANGO_MEDIA_ROOT` para media persistente
+  - configuracao de HSTS por ambiente
+- `.gitignore` passou a ignorar `.env`, preservando o modelo versionado apenas em `.env.example`
+- validacao tecnica desta microetapa:
+  - `py manage.py check` OK
+  - `py manage.py check --deploy` executado primeiro com variaveis minimas e depois com simulacao mais proxima de producao
+  - na simulacao mais proxima de producao, os avisos remanescentes ficaram apenas em:
+    - `SECURE_HSTS_INCLUDE_SUBDOMAINS`
+    - `SECURE_HSTS_PRELOAD`
+  - esses dois itens ficaram documentados como recomendados para o host, e nao como bloqueio imediato da homologacao
+
 ## Esqueleto inicial do modulo eventos
 
 - foi criado o app `eventos` como nova prova estrutural de modulo aderente ao shell compartilhado, ao portal `/inicio/` e a base central de permissoes
