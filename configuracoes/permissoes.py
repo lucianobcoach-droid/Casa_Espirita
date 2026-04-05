@@ -23,7 +23,7 @@ MODULOS_SISTEMA = (
         'codigo': 'biblioteca',
         'titulo': 'Biblioteca',
         'descricao': 'Autores, livros, vendas e emprestimos do acervo.',
-        'url_name': 'biblioteca:autor-list',
+        'url_name': 'biblioteca:home',
         'permissoes': (
             'biblioteca.autores.listar',
             'biblioteca.livros.listar',
@@ -35,7 +35,7 @@ MODULOS_SISTEMA = (
         'codigo': 'configuracoes',
         'titulo': 'Configuracoes',
         'descricao': 'Identidade institucional e acesso administrativo funcional.',
-        'url_name': 'configuracoes:site-config',
+        'url_name': 'configuracoes-entrada',
         'permissoes': (
             'configuracoes.siteconfig.visualizar',
         ),

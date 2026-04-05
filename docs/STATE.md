@@ -729,3 +729,16 @@ Com filtro por periodo:
 - a hierarquia consolidada desta etapa ficou assim: `configuracoes/sistema_base.html` como casca autenticada oficial do sistema; bases modulares derivadas quando necessario (`biblioteca/base.html`); shell especializado do `financeiro` preservado como caso especifico pela navegacao lateral, mas alinhado ao mesmo contrato visual global
 - com isso, o projeto deixa de depender de topbars autenticadas paralelas entre `biblioteca` e `configuracoes`, e passa a ter uma base pronta para receber modulos futuros como `eventos`, `doacoes` e `corporativo` sem reabrir a casca autenticada a cada novo app
 - `py manage.py check` permaneceu sem erros apos a consolidacao do shell compartilhado
+
+## Normalizacao das entradas canonicas dos modulos
+
+- as entradas oficiais dos modulos ficaram explicitamente fechadas como:
+  - `/financeiro/`
+  - `/biblioteca/`
+  - `/configuracoes/`
+- no `financeiro`, a decisao consolidada foi manter a raiz canonica do modulo em `/financeiro/` com redirecionamento controlado para a listagem principal de lancamentos, preservando o comportamento operacional ja amadurecido
+- na `biblioteca`, a raiz `/biblioteca/` deixou de retornar `404` e passou a resolver a primeira tela de leitura permitida ao usuario entre `Autores`, `Livros`, `Vendas` e `Emprestimos`, mantendo consistencia com a matriz de permissoes sem expor caminho interno como entrada oficial
+- em `configuracoes`, foi criada a entrada canonica explicita `/configuracoes/`, apontando para a mesma visualizacao funcional de `SiteConfig` ja usada na raiz; isso normaliza o contrato do modulo sem desmontar as rotas existentes de autenticacao e portal ja consolidadas em `/`, `/inicio/`, `/login/` e correlatas
+- o portal autenticado `/inicio/` passou a usar apenas essas entradas oficiais ao montar os cards dos modulos, eliminando links para caminhos internos demais (`biblioteca:autor-list`) ou implícitos na raiz (`configuracoes:site-config` em `/`)
+- a regra consolidada desta etapa ficou: o portal do sistema aponta para a rota canonica de cada modulo; cada modulo decide internamente se sua raiz entrega landing propria ou redireciona para a tela principal mais aderente ao estado atual do produto
+- validacao tecnica: `py manage.py check` OK e entradas `/inicio/`, `/financeiro/`, `/biblioteca/` e `/configuracoes/` deixando de depender de rotas quebradas ou implícitas

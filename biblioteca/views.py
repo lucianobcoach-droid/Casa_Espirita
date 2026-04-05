@@ -1,11 +1,36 @@
 from __future__ import annotations
 
+from django.http import HttpResponseForbidden, HttpResponseRedirect
 from django.urls import reverse_lazy
+from django.views import View
 from django.views.generic import CreateView, ListView
 
 from .forms import AutorForm, EmprestimoForm, LivroForm, VendaForm
 from .models import Autor, Emprestimo, Livro, Venda
 from .permissoes import BibliotecaPermissaoMixin
+from configuracoes.permissoes import usuario_possui_permissao
+
+
+class BibliotecaHomeRedirectView(BibliotecaPermissaoMixin, View):
+    """Resolve a entrada canonica do modulo para a primeira tela liberada."""
+
+    permissao_requerida = 'biblioteca.autores.listar'
+    entradas_canonicas = (
+        ('biblioteca.autores.listar', 'biblioteca:autor-list'),
+        ('biblioteca.livros.listar', 'biblioteca:livro-list'),
+        ('biblioteca.vendas.listar', 'biblioteca:venda-list'),
+        ('biblioteca.emprestimos.listar', 'biblioteca:emprestimo-list'),
+    )
+
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return self.handle_no_permission()
+
+        for codigo_permissao, url_name in self.entradas_canonicas:
+            if usuario_possui_permissao(request.user, codigo_permissao):
+                return HttpResponseRedirect(reverse_lazy(url_name))
+
+        return HttpResponseForbidden(self.get_permission_denied_message())
 
 
 class AutorListView(BibliotecaPermissaoMixin, ListView):

@@ -7,6 +7,7 @@ from . import views
 app_name = "biblioteca"
 
 urlpatterns = [
+    path("", views.BibliotecaHomeRedirectView.as_view(), name="home"),
     path("autores/", views.AutorListView.as_view(), name="autor-list"),
     path("autores/novo/", views.AutorCreateView.as_view(), name="autor-create"),
     path("livros/", views.LivroListView.as_view(), name="livro-list"),

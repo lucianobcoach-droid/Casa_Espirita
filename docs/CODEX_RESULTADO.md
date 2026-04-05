@@ -1613,3 +1613,21 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - a decisao tecnica desta etapa foi consolidar uma base autenticada oficial + derivacoes modulares quando necessario, em vez de forcar uma heranca unica abrupta sobre o `financeiro`; isso reduz duplicacao real agora e preserva estabilidade funcional
 - a hierarquia resultante ficou: `configuracoes/sistema_base.html` como shell global; `biblioteca/base.html` como derivacao leve; `siteconfig_detail.html` aderido ao mesmo shell; `financeiro/base.html` permanecendo especializado, mas ja conectado aos mesmos componentes globais reutilizaveis
 - validacao tecnica executada: `py manage.py check` OK
+
+## Normalizacao das entradas canonicas dos modulos
+
+- auditoria de rotas confirmou o estado real anterior:
+  - `financeiro/` existia e redirecionava para `lancamentos/`
+  - `biblioteca/` retornava `404` por falta de rota-raiz no app
+  - `configuracoes/` retornava `404` porque o modulo estava funcionalmente exposto apenas na raiz por `site-config`
+- a correcao foi mantida pequena e compatível com o shell global ja aprovado:
+  - `biblioteca/urls.py` ganhou a rota-raiz `biblioteca:home`
+  - `biblioteca/views.py` ganhou `BibliotecaHomeRedirectView`, que resolve a primeira tela liberada ao usuario conforme as permissoes reais do modulo
+  - `casa_espirita/urls.py` passou a expor `/configuracoes/` como entrada canonica explicita do modulo, reutilizando `SiteConfigDetailView`
+  - `configuracoes/permissoes.py` atualizou o catalogo central do portal para apontar `Biblioteca` para `biblioteca:home` e `Configuracoes` para `configuracoes-entrada`
+- decisao final por modulo:
+  - `financeiro`: manter `/financeiro/` como entrada canonica com redirect para a principal tela operacional atual
+  - `biblioteca`: usar `/biblioteca/` como entrada canonica com redirect seguro para a primeira area de leitura permitida
+  - `configuracoes`: usar `/configuracoes/` como entrada canonica explicita para `SiteConfig`, preservando as rotas de autenticacao e portal existentes na raiz
+- o portal `/inicio/` deixou de depender de conhecimento interno dos modulos e passou a apontar apenas para essas entradas oficiais
+- validacao tecnica executada: `py manage.py check` OK; a verificacao automatizada das entradas canonicas ficou alinhada ao contrato novo de URLs sem manter `404` indevido nas rotas-raiz dos modulos
