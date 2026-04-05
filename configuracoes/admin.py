@@ -2,8 +2,14 @@
 from __future__ import annotations
 
 from django.contrib import admin
+from django.contrib.auth import get_user_model
+from django.contrib.auth.admin import UserAdmin
 
+from .forms import ConfiguracoesUserChangeForm, ConfiguracoesUserCreationForm
 from .models import PerfilAcesso, PerfilPermissaoSistema, PermissaoSistema, SiteConfig, UsuarioPerfilAcesso
+
+User = get_user_model()
+admin.site.unregister(User)
 
 
 class PerfilPermissaoSistemaInline(admin.TabularInline):
@@ -80,3 +86,70 @@ class UsuarioPerfilAcessoAdmin(admin.ModelAdmin):
     search_fields = ('usuario__username', 'usuario__first_name', 'usuario__last_name', 'perfil__nome', 'perfil__codigo')
     autocomplete_fields = ('usuario', 'perfil')
     readonly_fields = ('criado_em', 'atualizado_em')
+
+
+@admin.register(User)
+class ConfiguracoesUserAdmin(UserAdmin):
+    """Endurece o cadastro tecnico de usuarios com e-mail e perfil-base da V1."""
+
+    add_form = ConfiguracoesUserCreationForm
+    form = ConfiguracoesUserChangeForm
+    list_display = (
+        'username',
+        'email',
+        'first_name',
+        'last_name',
+        'is_active',
+        'is_staff',
+        'is_superuser',
+        'perfil_base_display',
+    )
+    list_filter = UserAdmin.list_filter + ('vinculo_perfil_acesso__perfil',)
+    search_fields = ('username', 'first_name', 'last_name', 'email')
+    fieldsets = (
+        (None, {'fields': ('username', 'password')}),
+        ('Identificacao e acesso', {'fields': ('first_name', 'last_name', 'email', 'perfil_base')}),
+        ('Permissoes tecnicas', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
+        ('Datas importantes', {'fields': ('last_login', 'date_joined')}),
+    )
+    add_fieldsets = (
+        (
+            None,
+            {
+                'classes': ('wide',),
+                'fields': (
+                    'username',
+                    'first_name',
+                    'last_name',
+                    'email',
+                    'password1',
+                    'password2',
+                    'perfil_base',
+                    'is_active',
+                    'is_staff',
+                    'is_superuser',
+                ),
+            },
+        ),
+    )
+
+    @admin.display(description='Perfil base')
+    def perfil_base_display(self, obj):
+        vinculo = getattr(obj, 'vinculo_perfil_acesso', None)
+        if vinculo is None:
+            return 'Sem perfil'
+        return vinculo.perfil.nome
+
+    def save_related(self, request, form, formsets, change):
+        super().save_related(request, form, formsets, change)
+        perfil = form.cleaned_data.get('perfil_base')
+        usuario = form.instance
+
+        if perfil is None:
+            UsuarioPerfilAcesso.objects.filter(usuario=usuario).delete()
+            return
+
+        UsuarioPerfilAcesso.objects.update_or_create(
+            usuario=usuario,
+            defaults={'perfil': perfil},
+        )

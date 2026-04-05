@@ -1,6 +1,6 @@
 # CODEX_RESULTADO
 
-Data: 2026-04-04
+Data: 2026-04-05
 
 ## Entrega realizada
 
@@ -1526,3 +1526,18 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - foi criado `ConfiguracoesPasswordResetForm` para barrar e-mail sem usuario ativo/utilizavel correspondente e evitar promessa falsa de reset funcional
 - `settings.py` passou a aceitar configuracao real de e-mail por variaveis de ambiente, com fallback para `django.core.mail.backends.console.EmailBackend`; assim, em desenvolvimento o fluxo funciona sem quebrar e registra a mensagem no console do servidor
 - smoke tests confirmaram login `200`, nome institucional dinamico, link `Esqueci minha senha`, formulario de reset `200`, `admin_password_reset` `200`, geracao local do e-mail, link de redefinicao funcional, troca efetiva da senha e erro claro para e-mail inexistente
+
+## Regra minima de usuarios com e-mail obrigatorio e perfil-base operacional
+
+- a auditoria do repositorio confirmou que, nesta fase, o cadastro/edicao de usuarios do sistema continua acontecendo apenas pelo `/admin/` tecnico; nao existe ainda fluxo funcional proprio para gerenciar usuarios
+- `configuracoes/admin.py` passou a substituir o `UserAdmin` padrao por uma versao endurecida, com `perfil_base` exposto no mesmo formulario tecnico e persistencia sincronizada com `UsuarioPerfilAcesso`
+- a abordagem escolhida foi um endurecimento incremental do fluxo existente no admin tecnico, em vez de abrir nova UI funcional nesta microetapa
+- `configuracoes/forms.py` passou a concentrar as regras minimas da V1:
+  - e-mail obrigatorio para usuario ativo ou administrador tecnico
+  - e-mail unico no fluxo administrativo, validado de forma pratica no formulario
+  - perfil-base obrigatorio para usuario funcional ativo
+  - `staff`/`superuser` tecnico podem permanecer sem perfil funcional, preservando a separacao entre administracao tecnica/global e acesso funcional
+- a auditoria do banco mostrou que nao havia usuarios sem e-mail nem e-mails duplicados, mas havia tres usuarios sem perfil-base: `Luciano`, `reset_flow_tmp` e `semperfil_cfg`
+- como `Luciano` e superusuario tecnico com e-mail valido, ele permaneceu ativo sem perfil funcional implicito; os usuarios funcionais ativos sem perfil (`reset_flow_tmp` e `semperfil_cfg`) foram saneados com a migration `configuracoes/migrations/0006_regularizar_usuarios_funcionais_sem_requisitos.py`, que os desativou ate regularizacao manual no `/admin/`
+- a estrategia de saneamento foi propositalmente conservadora: nao foram gerados e-mails ficticios, nao houve atribuicao automatica de perfil-base e nao foi criado bypass funcional para usuarios sem vinculo regular
+- smoke tests confirmaram: bloqueio de criacao administrativa para usuario funcional ativo sem e-mail, bloqueio para usuario funcional ativo sem perfil-base, permissao de `staff` tecnico com e-mail sem perfil funcional, reset por e-mail ainda valido para superusuario regularizado com e-mail e `py manage.py check` sem erros

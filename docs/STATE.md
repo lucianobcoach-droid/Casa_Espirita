@@ -1,6 +1,6 @@
 # STATE
 
-Data de atualizacao: 2026-04-04
+Data de atualizacao: 2026-04-05
 
 ## Estado atual do modulo financeiro
 
@@ -668,3 +668,15 @@ Com filtro por periodo:
 - na pratica, isso deixa o fluxo funcional em desenvolvimento sem SMTP real: o e-mail de recuperacao e gerado e registrado no console do servidor; quando houver backend real configurado por ambiente, o mesmo fluxo pode enviar a mensagem de fato sem reabrir a arquitetura
 - smoke tests confirmaram: login `200`, nome institucional vindo do cadastro real, link `Esqueci minha senha` visivel, `/admin/password_reset/` `200`, envio local do reset funcionando com backend `locmem` em teste, redefinicao efetiva da senha e mensagem clara para e-mail inexistente
 - a regra deny-by-default das permissoes funcionais permaneceu intacta apos login/reset, sem abrir bypass automatico por superusuario
+
+## Endurecimento minimo do cadastro tecnico de usuarios para acesso funcional
+
+- nesta fase, o cadastro e a edicao de usuarios continuam concentrados no `/admin/` tecnico; nao foi aberta uma UI funcional propria de usuarios/perfis
+- o admin do `User` foi endurecido para operar junto com o vinculo `UsuarioPerfilAcesso`, exibindo e persistindo o `perfil base` no mesmo fluxo tecnico de criacao/edicao
+- a regra V1 consolidada passou a ser: usuario ativo ou administrador tecnico (`is_staff`/`is_superuser`) precisa ter e-mail valido; usuario funcional ativo (ativo, nao `is_staff` e nao `is_superuser`) precisa ter tambem `perfil base`
+- a separacao entre administracao tecnica/global e acesso funcional foi preservada: um superusuario ou `staff` tecnico pode permanecer sem perfil funcional, mas isso nao lhe concede acesso funcional implicito aos modulos protegidos
+- o fluxo administrativo passou a aplicar validacao pratica de e-mail unico no proprio formulario do admin, sem introduzir ainda constraint de unicidade no banco; a base atual foi auditada e nao apresentou e-mails duplicados
+- na auditoria do banco antes do saneamento, nao havia usuarios sem e-mail; os casos pendentes reais eram usuarios ativos sem `UsuarioPerfilAcesso`
+- o saneamento seguro adotado nesta microetapa foi desativar automaticamente, por migration de dados, usuarios funcionais ativos (nao `staff`, nao `superuser`) que estivessem sem e-mail ou sem perfil-base, evitando acesso inconsistente e sem criar e-mails ficticios
+- com isso, os usuarios `reset_flow_tmp` e `semperfil_cfg` ficaram inativos ate regularizacao manual no `/admin/`; o superusuario `Luciano` permaneceu ativo por ser administracao tecnica global e ja possuir e-mail valido, embora continue sem perfil funcional implicito
+- smoke tests confirmaram: criacao administrativa de usuario funcional ativo sem e-mail falha; criacao administrativa de usuario funcional ativo sem perfil falha; usuario `staff` tecnico com e-mail pode permanecer sem perfil; o reset por e-mail segue funcional para usuario regularizado com e-mail
