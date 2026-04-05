@@ -4,11 +4,30 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
+from django.core.exceptions import ImproperlyConfigured
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-troque-esta-chave')
+
+def _env_list(nome: str, padrao: str = '') -> list[str]:
+    return [item.strip() for item in os.getenv(nome, padrao).split(',') if item.strip()]
+
+
 DEBUG = os.getenv('DJANGO_DEBUG', '1') == '1'
-ALLOWED_HOSTS: list[str] = os.getenv('DJANGO_ALLOWED_HOSTS', '127.0.0.1,localhost').split(',')
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', '')
+if DEBUG:
+    SECRET_KEY = SECRET_KEY or 'django-insecure-troque-esta-chave'
+elif not SECRET_KEY:
+    raise ImproperlyConfigured('Defina DJANGO_SECRET_KEY com uma chave segura para producao.')
+
+ALLOWED_HOSTS: list[str] = _env_list(
+    'DJANGO_ALLOWED_HOSTS',
+    '127.0.0.1,localhost' if DEBUG else '',
+)
+if not DEBUG and not ALLOWED_HOSTS:
+    raise ImproperlyConfigured('Defina DJANGO_ALLOWED_HOSTS para executar com DEBUG desligado.')
+
+CSRF_TRUSTED_ORIGINS = _env_list('DJANGO_CSRF_TRUSTED_ORIGINS')
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -85,6 +104,7 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 MEDIA_URL = 'media/'
@@ -105,3 +125,8 @@ EMAIL_USE_TLS = os.getenv('DJANGO_EMAIL_USE_TLS', '0') == '1'
 EMAIL_USE_SSL = os.getenv('DJANGO_EMAIL_USE_SSL', '0') == '1'
 DEFAULT_FROM_EMAIL = os.getenv('DJANGO_DEFAULT_FROM_EMAIL', 'no-reply@localhost')
 SERVER_EMAIL = os.getenv('DJANGO_SERVER_EMAIL', DEFAULT_FROM_EMAIL)
+SESSION_COOKIE_SECURE = os.getenv('DJANGO_SESSION_COOKIE_SECURE', '0' if DEBUG else '1') == '1'
+CSRF_COOKIE_SECURE = os.getenv('DJANGO_CSRF_COOKIE_SECURE', '0' if DEBUG else '1') == '1'
+SECURE_SSL_REDIRECT = os.getenv('DJANGO_SECURE_SSL_REDIRECT', '0') == '1'
+if os.getenv('DJANGO_SECURE_PROXY_SSL_HEADER', '0') == '1':
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')

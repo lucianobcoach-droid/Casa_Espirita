@@ -2,6 +2,35 @@
 
 Data: 2026-04-05
 
+## Auditoria de fechamento do modulo financeiro para homologacao/hospedagem
+
+- a mudanca de foco desta etapa foi pausar a expansao estrutural do sistema e tratar o `financeiro` como frente prioritaria de fechamento para homologacao e teste em hospedagem
+- a auditoria cruzou o estado formal dos docs-base com o estado real do codigo em `financeiro`, `configuracoes` e `casa_espirita/settings.py`
+- no dominio do `financeiro`, a leitura do repositorio confirmou cobertura consolidada para:
+  - lancamentos, clone e rateio
+  - contas, pessoas, categorias/subcategorias e centros de custo
+  - assinaturas e configuracoes institucionais
+  - extrato, resumo, prestacao de contas e auditoria
+  - importacao/exportacao, acoes em lote e enforcement backend/visual por permissao
+- nao foi identificado bloqueante funcional novo diretamente no modulo `financeiro`; o principal conjunto de pendencias para homologacao estava na configuracao de deploy
+- ajustes tecnicos implementados nesta microetapa, por baixo risco e aderencia direta a hospedagem:
+  - `casa_espirita/settings.py` passou a exigir `DJANGO_SECRET_KEY` quando `DEBUG` estiver desligado
+  - `DJANGO_ALLOWED_HOSTS` passou a ser obrigatorio com `DEBUG` desligado
+  - `CSRF_TRUSTED_ORIGINS` passou a ser lido de variavel de ambiente
+  - `STATIC_ROOT` foi definido para preparar `collectstatic`
+  - cookies seguros e chaves de proxy/redirect SSL passaram a ter configuracao por ambiente
+- pendencias que permaneceram apenas registradas, sem implementacao precipitada:
+  - SMTP real para reset de senha em hospedagem
+  - decisao final sobre banco no provedor, porque o projeto segue em `sqlite3`
+  - execucao real de `migrate`/`collectstatic` no ambiente de hospedagem
+  - paginas de erro customizadas de producao como refinamento posterior
+- backlog externo apenas registrado:
+  - `eventos` fica explicitamente pausado
+  - qualquer refinamento em `biblioteca` ou outros modulos so deve voltar depois do fechamento operacional do `financeiro`
+- validacao tecnica executada:
+  - `py manage.py check` OK
+  - comandos como `showmigrations`, `collectstatic --dry-run` e algumas chamadas `manage.py shell -c` seguiram bloqueados por `Acesso negado` neste ambiente local, entao a validacao final de hospedagem continua dependente do provedor real
+
 ## Esqueleto inicial do modulo eventos
 
 - foi criado o app `eventos` como nova prova estrutural de modulo aderente ao shell compartilhado, ao portal `/inicio/` e a base central de permissoes

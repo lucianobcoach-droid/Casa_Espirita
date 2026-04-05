@@ -2,6 +2,29 @@
 
 Data de atualizacao: 2026-04-05
 
+## Auditoria de fechamento do financeiro para homologacao/hospedagem
+
+- o modulo `financeiro` foi auditado com foco em operacao real e prontidao para homologacao, cobrindo lancamentos, contas, pessoas, categorias/subcategorias, centros de custo, assinaturas, extrato, resumo, prestacao de contas, auditoria, clone, rateio, importacao, exportacao, acoes em lote, enforcement de permissoes e integracao ao shell compartilhado
+- pela auditoria objetiva do repositorio, nao apareceu bloqueante funcional novo dentro do dominio ja entregue do `financeiro`; o modulo segue como area mais madura do sistema para homologacao
+- o principal risco remanescente estava na configuracao de deploy do projeto, e nao na regra de negocio do `financeiro`
+- `casa_espirita/settings.py` passou a endurecer a execucao em producao:
+  - `DJANGO_SECRET_KEY` agora deixa de aceitar fallback inseguro quando `DEBUG` estiver desligado
+  - `DJANGO_ALLOWED_HOSTS` passa a ser obrigatorio quando `DEBUG` estiver desligado
+  - `CSRF_TRUSTED_ORIGINS` passou a aceitar configuracao por ambiente
+  - `STATIC_ROOT` foi definido em `staticfiles/`, preparando `collectstatic`
+  - `SESSION_COOKIE_SECURE`, `CSRF_COOKIE_SECURE`, `SECURE_SSL_REDIRECT` e `SECURE_PROXY_SSL_HEADER` passaram a ter chaves de ambiente proprias para homologacao/producao
+- pendencias tecnicas ainda abertas para hospedagem:
+  - configurar SMTP real para que a recuperacao de senha deixe de depender do backend de console
+  - validar a estrategia final de banco no provedor de hospedagem; hoje o projeto permanece em `sqlite3`, o que pode servir para homologacao simples, mas depende de armazenamento persistente no host
+  - executar `migrate` e `collectstatic` no ambiente de hospedagem real
+  - revisar, em etapa posterior, paginas de erro customizadas de producao (`403/404/500`) caso a hospedagem siga alem da homologacao interna
+- validacao automatizada local:
+  - `py manage.py check` OK
+  - comandos como `showmigrations`, `collectstatic --dry-run` e alguns `manage.py shell -c` seguiram limitados neste ambiente por `Acesso negado`, entao a confirmacao final de hospedagem continua dependendo do provedor/ambiente real
+- backlog externo apenas registrado, sem implementacao nesta etapa:
+  - `eventos` permanece fora do foco de homologacao do `financeiro`
+  - `biblioteca` e demais modulos nao devem puxar novas correcoes agora, salvo se surgirem impactos diretos no shell compartilhado ou no portal do sistema
+
 ## Estrutura inicial do modulo eventos
 
 - o app `eventos` foi criado e registrado no projeto como nova prova estrutural de modulo aderente ao padrao consolidado do sistema
