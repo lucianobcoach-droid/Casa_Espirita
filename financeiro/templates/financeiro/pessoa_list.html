@@ -1,4 +1,5 @@
 {% extends 'financeiro/base.html' %}
+{% load financeiro_permissoes %}
 {% block title %}Pessoas Financeiras{% endblock %}
 {% block financeiro_shell_header %}
     <header class="financeiro-app-utility-bar no-print">
@@ -150,12 +151,18 @@
 </style>
 
 <div class="financeiro-pessoa-page">
+    {% tem_permissao request.user 'financeiro.pessoas.criar' as pode_criar_pessoa %}
+    {% tem_permissao request.user 'financeiro.pessoas.editar' as pode_editar_pessoa %}
+    {% tem_permissao request.user 'financeiro.pessoas.excluir' as pode_excluir_pessoa %}
+    {% tem_alguma_permissao request.user 'financeiro.pessoas.editar' 'financeiro.pessoas.excluir' as mostrar_acoes_pessoa %}
     <div class="financeiro-page-header financeiro-page-head">
         <div class="financeiro-page-header-main">
             <h1 class="title financeiro-page-title">Pessoas financeiras</h1>
         </div>
         <div class="financeiro-page-header-actions no-print">
+            {% if pode_criar_pessoa %}
             <a class="button is-primary" href="{% url 'financeiro:pessoa-create' %}">Nova pessoa financeira</a>
+            {% endif %}
         </div>
     </div>
 
@@ -191,7 +198,9 @@
                     <th>Telefone</th>
                     <th>E-mail</th>
                     <th>Ativo</th>
-                    <th class="no-print">A&ccedil;&otilde;es</th>
+                    {% if mostrar_acoes_pessoa %}
+                        <th class="no-print">A&ccedil;&otilde;es</th>
+                    {% endif %}
                 </tr>
                 </thead>
                 <tbody>
@@ -232,14 +241,20 @@
                                 {% if pessoa.ativo %}Sim{% else %}N&atilde;o{% endif %}
                             </span>
                         </td>
+                        {% if mostrar_acoes_pessoa %}
                         <td class="actions-cell no-print">
+                            {% if pode_editar_pessoa %}
                             <a class="button is-small is-link is-light" href="{% url 'financeiro:pessoa-update' pessoa.pk %}">Editar</a>
+                            {% endif %}
+                            {% if pode_excluir_pessoa %}
                             <a class="button is-small is-danger is-light" href="{% url 'financeiro:pessoa-delete' pessoa.pk %}">Excluir</a>
+                            {% endif %}
                         </td>
+                        {% endif %}
                     </tr>
                 {% empty %}
                     <tr>
-                        <td colspan="8" class="financeiro-pessoa-empty">Nenhuma pessoa encontrada com os filtros atuais.</td>
+                        <td colspan="{% if mostrar_acoes_pessoa %}8{% else %}7{% endif %}" class="financeiro-pessoa-empty">Nenhuma pessoa encontrada com os filtros atuais.</td>
                     </tr>
                 {% endfor %}
                 </tbody>

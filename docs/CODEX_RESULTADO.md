@@ -1486,3 +1486,13 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - a view de acoes em lote passou a resolver a permissao exigida de forma dinamica a partir de `acao_lote`, diferenciando `alterar status` de `excluir em lote`
 - smoke tests executados: `/financeiro/lancamentos/` redireciona anonimo para login, usuario autenticado sem perfil recebe 403, `Consulta/visualizacao` entra na listagem mas nao acessa create, `Operador financeiro` acessa create mas nao delete/auditoria, e `Gestao administrativa` acessa auditoria
 - esta microetapa nao alterou menus/sidebar/templates por perfil, nao abriu enforcement em outros modulos e nao introduziu bypass funcional para superusuario
+
+## Primeiro enforcement visual de permissoes no financeiro
+
+- foi criada a strategy reutilizavel de template em `financeiro/templatetags/financeiro_permissoes.py`, com `tem_permissao` e `tem_alguma_permissao`, apoiada no cache de codigos ativos adicionado em `configuracoes/permissoes.py`
+- o shell lateral de `financeiro/base.html` e a `home` secundaria do modulo passaram a esconder grupos/atalhos quando o perfil autenticado nao possui a permissao de leitura correspondente do recurso
+- as listagens de `contas`, `pessoas`, `categorias`, `centros de custo`, `assinaturas institucionais`, `configuracoes institucionais` e `lancamentos` passaram a esconder acoes principais (`criar`, `editar`, `excluir`, `extrato`, `recibo`, `clonar`, `editar rateio`, `acoes em lote`) de forma coerente com a matriz V1, sem substituir a protecao backend
+- a listagem de `lancamentos` passou a ajustar dinamicamente os controles de `exportar`, `importar`, `novo lancamento`, `acoes em lote`, coluna de selecao e coluna de acoes conforme o perfil autenticado
+- a tela de `importacao/exportacao` passou a esconder `baixar planilha modelo` e `baixar relatorio de inconsistencias` quando faltarem as permissoes especificas, preservando a politica funcional da importacao
+- o historico de ultimos lancamentos por pessoa deixou de expor link de clone quando o usuario nao possui `financeiro.lancamentos.clonar`, alinhando o atalho contextual ao enforcement visual
+- smoke tests visuais basicos confirmaram o comportamento esperado para `Consulta/visualizacao`, `Operador financeiro` e `Gestao administrativa`, com a UI refletindo o que o backend ja permite ou nega no `financeiro`

@@ -1,4 +1,5 @@
 {% extends 'financeiro/base.html' %}
+{% load financeiro_permissoes %}
 
 {% block title %}Importação de Lançamentos{% endblock %}
 
@@ -187,6 +188,8 @@
 </style>
 
 <div class="financeiro-importacao-page">
+    {% tem_permissao request.user 'financeiro.lancamentos.baixar_modelo' as pode_baixar_modelo_importacao %}
+    {% tem_permissao request.user 'financeiro.lancamentos.baixar_inconsistencias' as pode_baixar_inconsistencias %}
     <div class="financeiro-page-header financeiro-page-head">
         <div class="financeiro-page-header-main">
             <h1 class="title financeiro-page-title">Importação de Lançamentos</h1>
@@ -214,7 +217,9 @@
 
                 <div class="financeiro-importacao-actions">
                     <button class="button is-primary" type="submit">Importar planilha</button>
+                    {% if pode_baixar_modelo_importacao %}
                     <a class="button is-link is-light" href="{% url 'financeiro:lancamento-importacao-modelo' %}">Baixar planilha modelo</a>
+                    {% endif %}
                 </div>
             </form>
         </section>
@@ -235,7 +240,7 @@
                     <p class="financeiro-importacao-resultado-banner-text">
                         Há ajustes pendentes na planilha. Veja o resumo e a lista por linha para corrigir os campos indicados.
                     </p>
-                    {% if resultado_importacao_erros_json %}
+                    {% if resultado_importacao_erros_json and pode_baixar_inconsistencias %}
                         <form
                             class="financeiro-importacao-resultado-banner-form"
                             method="post"

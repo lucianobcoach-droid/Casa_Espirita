@@ -21,14 +21,32 @@ def obter_perfil_base_usuario(usuario):
     return vinculo.perfil
 
 
-def usuario_possui_permissao(usuario, codigo_permissao: str) -> bool:
-    """Valida uma permissao funcional por codigo canonico sem fallback implicito."""
+def obter_codigos_permissao_usuario(usuario) -> frozenset[str]:
+    """Retorna os codigos de permissao ativos do perfil-base do usuario."""
+
+    if not usuario or not usuario.is_authenticated or not usuario.is_active:
+        return frozenset()
+
+    codigos_cache = getattr(usuario, '_codigos_permissao_sistema_cache', None)
+    if codigos_cache is not None:
+        return codigos_cache
 
     perfil = obter_perfil_base_usuario(usuario)
     if perfil is None:
+        codigos = frozenset()
+    else:
+        codigos = frozenset(
+            perfil.permissoes.filter(ativo=True).values_list('codigo', flat=True)
+        )
+
+    setattr(usuario, '_codigos_permissao_sistema_cache', codigos)
+    return codigos
+
+
+def usuario_possui_permissao(usuario, codigo_permissao: str) -> bool:
+    """Valida uma permissao funcional por codigo canonico sem fallback implicito."""
+
+    if not codigo_permissao:
         return False
 
-    return perfil.permissoes.filter(
-        codigo=codigo_permissao,
-        ativo=True,
-    ).exists()
+    return codigo_permissao in obter_codigos_permissao_usuario(usuario)

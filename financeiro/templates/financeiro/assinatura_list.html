@@ -1,12 +1,19 @@
 {% extends 'financeiro/base.html' %}
+{% load financeiro_permissoes %}
 {% block title %}Assinaturas Institucionais{% endblock %}
 {% block content %}
+{% tem_permissao request.user 'financeiro.assinaturas.criar' as pode_criar_assinatura %}
+{% tem_permissao request.user 'financeiro.assinaturas.editar' as pode_editar_assinatura %}
+{% tem_permissao request.user 'financeiro.assinaturas.excluir' as pode_excluir_assinatura %}
+{% tem_alguma_permissao request.user 'financeiro.assinaturas.editar' 'financeiro.assinaturas.excluir' as mostrar_acoes_assinatura %}
 <div class="level">
     <div class="level-left">
         <h1 class="title">Assinaturas Institucionais</h1>
     </div>
     <div class="level-right">
+        {% if pode_criar_assinatura %}
         <a class="button is-primary" href="{% url 'financeiro:assinatura-create' %}">Nova assinatura institucional</a>
+        {% endif %}
     </div>
 </div>
 <form method="get" class="filters-box">
@@ -34,7 +41,9 @@
             <th>Cargo</th>
             <th>Ativa</th>
             <th>Padrao</th>
-            <th>Acoes</th>
+            {% if mostrar_acoes_assinatura %}
+                <th>Acoes</th>
+            {% endif %}
         </tr>
         </thead>
         <tbody>
@@ -46,14 +55,20 @@
                 <td>{{ assinatura.cargo|default:'-' }}</td>
                 <td>{% if assinatura.ativo %}Sim{% else %}Nao{% endif %}</td>
                 <td>{% if assinatura.padrao %}Sim{% else %}Nao{% endif %}</td>
-                <td class="actions-cell">
-                    <a class="button is-small is-link is-light" href="{% url 'financeiro:assinatura-update' assinatura.pk %}">Editar</a>
-                    <a class="button is-small is-danger is-light" href="{% url 'financeiro:assinatura-delete' assinatura.pk %}">Excluir</a>
-                </td>
+                {% if mostrar_acoes_assinatura %}
+                    <td class="actions-cell">
+                        {% if pode_editar_assinatura %}
+                            <a class="button is-small is-link is-light" href="{% url 'financeiro:assinatura-update' assinatura.pk %}">Editar</a>
+                        {% endif %}
+                        {% if pode_excluir_assinatura %}
+                            <a class="button is-small is-danger is-light" href="{% url 'financeiro:assinatura-delete' assinatura.pk %}">Excluir</a>
+                        {% endif %}
+                    </td>
+                {% endif %}
             </tr>
         {% empty %}
             <tr>
-                <td colspan="7">Nenhuma assinatura institucional cadastrada.</td>
+                <td colspan="{% if mostrar_acoes_assinatura %}7{% else %}6{% endif %}">Nenhuma assinatura institucional cadastrada.</td>
             </tr>
         {% endfor %}
         </tbody>

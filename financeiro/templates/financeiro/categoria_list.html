@@ -1,4 +1,5 @@
 {% extends 'financeiro/base.html' %}
+{% load financeiro_permissoes %}
 {% block title %}Categorias Financeiras{% endblock %}
 {% block financeiro_shell_header %}
     <header class="financeiro-app-utility-bar no-print">
@@ -146,12 +147,18 @@
 </style>
 
 <div class="financeiro-categoria-page">
+    {% tem_permissao request.user 'financeiro.categorias.criar' as pode_criar_categoria %}
+    {% tem_permissao request.user 'financeiro.categorias.editar' as pode_editar_categoria %}
+    {% tem_permissao request.user 'financeiro.categorias.excluir' as pode_excluir_categoria %}
+    {% tem_alguma_permissao request.user 'financeiro.categorias.editar' 'financeiro.categorias.excluir' as mostrar_acoes_categoria %}
     <div class="financeiro-page-header financeiro-page-head">
         <div class="financeiro-page-header-main">
             <h1 class="title financeiro-page-title">Categorias financeiras</h1>
         </div>
         <div class="financeiro-page-header-actions no-print">
+            {% if pode_criar_categoria %}
             <a class="button is-primary" href="{% url 'financeiro:categoria-create' %}">Nova categoria financeira</a>
+            {% endif %}
         </div>
     </div>
 
@@ -190,7 +197,9 @@
                     <th>Tipo</th>
                     <th>Categoria pai</th>
                     <th>Ativo</th>
-                    <th class="no-print">A&ccedil;&otilde;es</th>
+                    {% if mostrar_acoes_categoria %}
+                        <th class="no-print">A&ccedil;&otilde;es</th>
+                    {% endif %}
                 </tr>
                 </thead>
                 <tbody>
@@ -210,14 +219,20 @@
                                 {% if categoria.ativo %}Sim{% else %}N&atilde;o{% endif %}
                             </span>
                         </td>
+                        {% if mostrar_acoes_categoria %}
                         <td class="actions-cell no-print">
+                            {% if pode_editar_categoria %}
                             <a class="button is-small is-link is-light" href="{% url 'financeiro:categoria-update' categoria.pk %}">Editar</a>
+                            {% endif %}
+                            {% if pode_excluir_categoria %}
                             <a class="button is-small is-danger is-light" href="{% url 'financeiro:categoria-delete' categoria.pk %}">Excluir</a>
+                            {% endif %}
                         </td>
+                        {% endif %}
                     </tr>
                 {% empty %}
                     <tr>
-                        <td colspan="5" class="financeiro-categoria-empty">Nenhuma categoria encontrada com os filtros atuais.</td>
+                        <td colspan="{% if mostrar_acoes_categoria %}5{% else %}4{% endif %}" class="financeiro-categoria-empty">Nenhuma categoria encontrada com os filtros atuais.</td>
                     </tr>
                 {% endfor %}
                 </tbody>

@@ -1,3 +1,4 @@
+{% load financeiro_permissoes %}
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -2187,6 +2188,18 @@
 </head>
 <body>
 {% with current_url_name=request.resolver_match.url_name %}
+{% tem_permissao request.user 'financeiro.lancamentos.listar' as pode_home_financeiro %}
+{% tem_permissao request.user 'financeiro.lancamentos.listar' as pode_listar_lancamentos %}
+{% tem_permissao request.user 'financeiro.extratos.visualizar' as pode_visualizar_extratos %}
+{% tem_permissao request.user 'financeiro.resumo_financeiro.visualizar' as pode_visualizar_resumo %}
+{% tem_permissao request.user 'financeiro.prestacao_contas.visualizar' as pode_visualizar_prestacao %}
+{% tem_permissao request.user 'financeiro.auditoria.listar' as pode_visualizar_auditoria %}
+{% tem_permissao request.user 'financeiro.contas.listar' as pode_listar_contas %}
+{% tem_permissao request.user 'financeiro.pessoas.listar' as pode_listar_pessoas %}
+{% tem_permissao request.user 'financeiro.categorias.listar' as pode_listar_categorias %}
+{% tem_permissao request.user 'financeiro.centros_custo.listar' as pode_listar_centros_custo %}
+{% tem_permissao request.user 'financeiro.assinaturas.listar' as pode_listar_assinaturas %}
+{% tem_permissao request.user 'financeiro.configuracoes_institucionais.visualizar' as pode_visualizar_configuracoes_institucionais %}
 <div class="financeiro-app-shell">
     {% block financeiro_shell_header %}
         <header class="financeiro-app-utility-bar no-print">
@@ -2214,7 +2227,9 @@
                     </a>
                 </div>
                 <div class="financeiro-topbar-desktop-actions">
-                    <a class="button is-light is-small" href="{% url 'financeiro:home' %}">Inicio do modulo</a>
+                    {% if pode_home_financeiro %}
+                        <a class="button is-light is-small" href="{% url 'financeiro:home' %}">Inicio do modulo</a>
+                    {% endif %}
                     <span class="financeiro-topbar-chip is-current">
                         {% if current_url_name == 'home' %}
                             Visao geral
@@ -2290,6 +2305,7 @@
                     </button>
                 </div>
                 <nav class="financeiro-sidebar-nav">
+                    {% if pode_home_financeiro %}
                     <section class="financeiro-sidebar-group{% if current_url_name == 'home' %} is-active is-expanded{% endif %}" data-sidebar-group>
                         <button
                             type="button"
@@ -2318,7 +2334,9 @@
                         </div>
                         </div>
                     </section>
+                    {% endif %}
 
+                    {% if pode_listar_lancamentos or pode_visualizar_extratos %}
                     <section class="financeiro-sidebar-group{% if current_url_name == 'lancamento-list' or current_url_name == 'lancamento-create' or current_url_name == 'lancamento-update' or current_url_name == 'lancamento-rateio-update' or current_url_name == 'lancamento-delete' or current_url_name == 'extrato-list' or current_url_name == 'conta-extrato' %} is-active is-expanded{% endif %}" data-sidebar-group>
                         <button
                             type="button"
@@ -2340,18 +2358,24 @@
                             {% if current_url_name != 'lancamento-list' and current_url_name != 'lancamento-create' and current_url_name != 'lancamento-update' and current_url_name != 'lancamento-rateio-update' and current_url_name != 'lancamento-delete' and current_url_name != 'extrato-list' and current_url_name != 'conta-extrato' %}hidden{% endif %}
                         >
                         <div class="financeiro-sidebar-links">
+                            {% if pode_listar_lancamentos %}
                             <a class="financeiro-sidebar-link{% if current_url_name == 'lancamento-list' or current_url_name == 'lancamento-create' or current_url_name == 'lancamento-update' or current_url_name == 'lancamento-rateio-update' or current_url_name == 'lancamento-delete' %} is-active{% endif %}" href="{% url 'financeiro:lancamento-list' %}" data-short="LA" title="Lancamentos" aria-label="Lancamentos">
                                 <span class="financeiro-sidebar-link-label">Lancamentos</span>
                                 <span class="financeiro-sidebar-link-note">Fluxo</span>
                             </a>
+                            {% endif %}
+                            {% if pode_visualizar_extratos %}
                             <a class="financeiro-sidebar-link{% if current_url_name == 'extrato-list' or current_url_name == 'conta-extrato' %} is-active{% endif %}" href="{% url 'financeiro:extrato-list' %}" data-short="EX" title="Extratos" aria-label="Extratos">
                                 <span class="financeiro-sidebar-link-label">Extratos</span>
                                 <span class="financeiro-sidebar-link-note">Conta</span>
                             </a>
+                            {% endif %}
                         </div>
                         </div>
                     </section>
+                    {% endif %}
 
+                    {% if pode_visualizar_resumo or pode_visualizar_prestacao or pode_visualizar_auditoria %}
                     <section class="financeiro-sidebar-group{% if current_url_name == 'resumo' or current_url_name == 'prestacao-contas' or current_url_name == 'auditoria-lancamento-list' %} is-active is-expanded{% endif %}" data-sidebar-group>
                         <button
                             type="button"
@@ -2373,19 +2397,27 @@
                             {% if current_url_name != 'resumo' and current_url_name != 'prestacao-contas' and current_url_name != 'auditoria-lancamento-list' %}hidden{% endif %}
                         >
                         <div class="financeiro-sidebar-links">
+                            {% if pode_visualizar_resumo %}
                             <a class="financeiro-sidebar-link{% if current_url_name == 'resumo' %} is-active{% endif %}" href="{% url 'financeiro:resumo' %}" data-short="RP" title="Resumo do Periodo" aria-label="Resumo do Periodo">
                                 <span class="financeiro-sidebar-link-label">Resumo do Periodo</span>
                             </a>
+                            {% endif %}
+                            {% if pode_visualizar_prestacao %}
                             <a class="financeiro-sidebar-link{% if current_url_name == 'prestacao-contas' %} is-active{% endif %}" href="{% url 'financeiro:prestacao-contas' %}" data-short="PC" title="Prestacao de Contas" aria-label="Prestacao de Contas">
                                 <span class="financeiro-sidebar-link-label">Prestacao de Contas</span>
                             </a>
+                            {% endif %}
+                            {% if pode_visualizar_auditoria %}
                             <a class="financeiro-sidebar-link{% if current_url_name == 'auditoria-lancamento-list' %} is-active{% endif %}" href="{% url 'financeiro:auditoria-lancamento-list' %}" data-short="AU" title="Auditoria do Financeiro" aria-label="Auditoria do Financeiro">
                                 <span class="financeiro-sidebar-link-label">Auditoria do Financeiro</span>
                             </a>
+                            {% endif %}
                         </div>
                         </div>
                     </section>
+                    {% endif %}
 
+                    {% if pode_listar_contas or pode_listar_pessoas or pode_listar_categorias or pode_listar_centros_custo %}
                     <section class="financeiro-sidebar-group{% if current_url_name == 'conta-list' or current_url_name == 'conta-create' or current_url_name == 'conta-update' or current_url_name == 'conta-delete' or current_url_name == 'pessoa-list' or current_url_name == 'pessoa-create' or current_url_name == 'pessoa-update' or current_url_name == 'pessoa-delete' or current_url_name == 'categoria-list' or current_url_name == 'categoria-create' or current_url_name == 'categoria-update' or current_url_name == 'categoria-delete' or current_url_name == 'centro-custo-list' or current_url_name == 'centro-custo-create' or current_url_name == 'centro-custo-update' or current_url_name == 'centro-custo-delete' %} is-active is-expanded{% endif %}" data-sidebar-group>
                         <button
                             type="button"
@@ -2407,22 +2439,32 @@
                             {% if current_url_name != 'conta-list' and current_url_name != 'conta-create' and current_url_name != 'conta-update' and current_url_name != 'conta-delete' and current_url_name != 'pessoa-list' and current_url_name != 'pessoa-create' and current_url_name != 'pessoa-update' and current_url_name != 'pessoa-delete' and current_url_name != 'categoria-list' and current_url_name != 'categoria-create' and current_url_name != 'categoria-update' and current_url_name != 'categoria-delete' and current_url_name != 'centro-custo-list' and current_url_name != 'centro-custo-create' and current_url_name != 'centro-custo-update' and current_url_name != 'centro-custo-delete' %}hidden{% endif %}
                         >
                         <div class="financeiro-sidebar-links">
+                            {% if pode_listar_contas %}
                             <a class="financeiro-sidebar-link{% if current_url_name == 'conta-list' or current_url_name == 'conta-create' or current_url_name == 'conta-update' or current_url_name == 'conta-delete' %} is-active{% endif %}" href="{% url 'financeiro:conta-list' %}" data-short="CO" title="Contas" aria-label="Contas">
                                 <span class="financeiro-sidebar-link-label">Contas</span>
                             </a>
+                            {% endif %}
+                            {% if pode_listar_pessoas %}
                             <a class="financeiro-sidebar-link{% if current_url_name == 'pessoa-list' or current_url_name == 'pessoa-create' or current_url_name == 'pessoa-update' or current_url_name == 'pessoa-delete' %} is-active{% endif %}" href="{% url 'financeiro:pessoa-list' %}" data-short="PE" title="Pessoas" aria-label="Pessoas">
                                 <span class="financeiro-sidebar-link-label">Pessoas</span>
                             </a>
+                            {% endif %}
+                            {% if pode_listar_categorias %}
                             <a class="financeiro-sidebar-link{% if current_url_name == 'categoria-list' or current_url_name == 'categoria-create' or current_url_name == 'categoria-update' or current_url_name == 'categoria-delete' %} is-active{% endif %}" href="{% url 'financeiro:categoria-list' %}" data-short="CA" title="Categorias" aria-label="Categorias">
                                 <span class="financeiro-sidebar-link-label">Categorias</span>
                             </a>
+                            {% endif %}
+                            {% if pode_listar_centros_custo %}
                             <a class="financeiro-sidebar-link{% if current_url_name == 'centro-custo-list' or current_url_name == 'centro-custo-create' or current_url_name == 'centro-custo-update' or current_url_name == 'centro-custo-delete' %} is-active{% endif %}" href="{% url 'financeiro:centro-custo-list' %}" data-short="CC" title="Centros de Custo" aria-label="Centros de Custo">
                                 <span class="financeiro-sidebar-link-label">Centros de Custo</span>
                             </a>
+                            {% endif %}
                         </div>
                         </div>
                     </section>
+                    {% endif %}
 
+                    {% if pode_listar_assinaturas or pode_visualizar_configuracoes_institucionais %}
                     <section class="financeiro-sidebar-group{% if current_url_name == 'assinatura-list' or current_url_name == 'assinatura-create' or current_url_name == 'assinatura-update' or current_url_name == 'assinatura-delete' or current_url_name == 'configuracao-institucional-list' or current_url_name == 'configuracao-institucional-create' or current_url_name == 'configuracao-institucional-update' or current_url_name == 'configuracao-institucional-delete' %} is-active is-expanded{% endif %}" data-sidebar-group>
                         <button
                             type="button"
@@ -2444,15 +2486,20 @@
                             {% if current_url_name != 'assinatura-list' and current_url_name != 'assinatura-create' and current_url_name != 'assinatura-update' and current_url_name != 'assinatura-delete' and current_url_name != 'configuracao-institucional-list' and current_url_name != 'configuracao-institucional-create' and current_url_name != 'configuracao-institucional-update' and current_url_name != 'configuracao-institucional-delete' %}hidden{% endif %}
                         >
                         <div class="financeiro-sidebar-links">
+                            {% if pode_listar_assinaturas %}
                             <a class="financeiro-sidebar-link{% if current_url_name == 'assinatura-list' or current_url_name == 'assinatura-create' or current_url_name == 'assinatura-update' or current_url_name == 'assinatura-delete' %} is-active{% endif %}" href="{% url 'financeiro:assinatura-list' %}" data-short="AS" title="Assinaturas Institucionais" aria-label="Assinaturas Institucionais">
                                 <span class="financeiro-sidebar-link-label">Assinaturas Institucionais</span>
                             </a>
+                            {% endif %}
+                            {% if pode_visualizar_configuracoes_institucionais %}
                             <a class="financeiro-sidebar-link{% if current_url_name == 'configuracao-institucional-list' or current_url_name == 'configuracao-institucional-create' or current_url_name == 'configuracao-institucional-update' or current_url_name == 'configuracao-institucional-delete' %} is-active{% endif %}" href="{% url 'financeiro:configuracao-institucional-list' %}" data-short="CI" title="Configuracoes Institucionais" aria-label="Configuracoes Institucionais">
                                 <span class="financeiro-sidebar-link-label">Configuracoes Institucionais</span>
                             </a>
+                            {% endif %}
                         </div>
                         </div>
                     </section>
+                    {% endif %}
                 </nav>
             </div>
         </aside>

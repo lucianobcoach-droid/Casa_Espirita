@@ -1,4 +1,5 @@
 {% extends 'financeiro/base.html' %}
+{% load financeiro_permissoes %}
 {% block title %}Centros de Custo{% endblock %}
 {% block financeiro_shell_header %}
     <header class="financeiro-app-utility-bar no-print">
@@ -19,7 +20,7 @@
                             <span></span>
                             <span></span>
                         </span>
-                        <span aria-hidden="true">Navegação</span>
+                        <span aria-hidden="true">Navegacao</span>
                         <span class="financeiro-sr-only" data-financeiro-sidebar-toggle-label>Recolher navegacao lateral</span>
                     </button>
                 </div>
@@ -137,13 +138,20 @@
     }
 </style>
 
+{% tem_permissao request.user 'financeiro.centros_custo.criar' as pode_criar_centro_custo %}
+{% tem_permissao request.user 'financeiro.centros_custo.editar' as pode_editar_centro_custo %}
+{% tem_permissao request.user 'financeiro.centros_custo.excluir' as pode_excluir_centro_custo %}
+{% tem_alguma_permissao request.user 'financeiro.centros_custo.editar' 'financeiro.centros_custo.excluir' as mostrar_acoes_centro_custo %}
+
 <div class="financeiro-centro-custo-page">
     <div class="financeiro-page-header financeiro-page-head">
         <div class="financeiro-page-header-main">
             <h1 class="title financeiro-page-title">Centros de custo</h1>
         </div>
         <div class="financeiro-page-header-actions no-print">
-            <a class="button is-primary" href="{% url 'financeiro:centro-custo-create' %}">Novo centro de custo</a>
+            {% if pode_criar_centro_custo %}
+                <a class="button is-primary" href="{% url 'financeiro:centro-custo-create' %}">Novo centro de custo</a>
+            {% endif %}
         </div>
     </div>
 
@@ -151,8 +159,8 @@
         <form method="get" class="filters-box no-print">
             <div class="columns is-multiline">
                 <div class="column is-12-mobile is-6-tablet is-5-desktop">
-                    <label class="label">Código</label>
-                    <input class="input" type="text" name="codigo" value="{{ request.GET.codigo }}" placeholder="Buscar por código">
+                    <label class="label">Codigo</label>
+                    <input class="input" type="text" name="codigo" value="{{ request.GET.codigo }}" placeholder="Buscar por codigo">
                 </div>
                 <div class="column is-12-mobile is-6-tablet is-5-desktop">
                     <label class="label">Nome</label>
@@ -172,10 +180,12 @@
             <table class="table is-fullwidth is-hoverable financeiro-table financeiro-centro-custo-table">
                 <thead>
                 <tr>
-                    <th>Código</th>
+                    <th>Codigo</th>
                     <th>Nome</th>
                     <th>Ativo</th>
-                    <th class="no-print">Ações</th>
+                    {% if mostrar_acoes_centro_custo %}
+                        <th class="no-print">Acoes</th>
+                    {% endif %}
                 </tr>
                 </thead>
                 <tbody>
@@ -185,17 +195,23 @@
                         <td>{{ centro.nome }}</td>
                         <td>
                             <span class="financeiro-centro-custo-status{% if centro.ativo %} is-active{% endif %}">
-                                {% if centro.ativo %}Sim{% else %}Não{% endif %}
+                                {% if centro.ativo %}Sim{% else %}Nao{% endif %}
                             </span>
                         </td>
-                        <td class="actions-cell no-print">
-                            <a class="button is-small is-link is-light" href="{% url 'financeiro:centro-custo-update' centro.pk %}">Editar</a>
-                            <a class="button is-small is-danger is-light" href="{% url 'financeiro:centro-custo-delete' centro.pk %}">Excluir</a>
-                        </td>
+                        {% if mostrar_acoes_centro_custo %}
+                            <td class="actions-cell no-print">
+                                {% if pode_editar_centro_custo %}
+                                    <a class="button is-small is-link is-light" href="{% url 'financeiro:centro-custo-update' centro.pk %}">Editar</a>
+                                {% endif %}
+                                {% if pode_excluir_centro_custo %}
+                                    <a class="button is-small is-danger is-light" href="{% url 'financeiro:centro-custo-delete' centro.pk %}">Excluir</a>
+                                {% endif %}
+                            </td>
+                        {% endif %}
                     </tr>
                 {% empty %}
                     <tr>
-                        <td colspan="4" class="financeiro-centro-custo-empty">Nenhum centro de custo encontrado com os filtros atuais.</td>
+                        <td colspan="{% if mostrar_acoes_centro_custo %}4{% else %}3{% endif %}" class="financeiro-centro-custo-empty">Nenhum centro de custo encontrado com os filtros atuais.</td>
                     </tr>
                 {% endfor %}
                 </tbody>

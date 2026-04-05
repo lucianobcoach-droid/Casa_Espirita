@@ -1,4 +1,5 @@
 {% extends 'financeiro/base.html' %}
+{% load financeiro_permissoes %}
 {% block title %}Financeiro{% endblock %}
 {% block content %}
 <style>
@@ -43,66 +44,112 @@
 
 <div class="financeiro-page-header financeiro-page-head">
     <div class="financeiro-page-header-main">
-        <h1 class="title financeiro-page-title">Módulo financeiro</h1>
+        <h1 class="title financeiro-page-title">Modulo financeiro</h1>
     </div>
 </div>
 
+{% tem_alguma_permissao request.user 'financeiro.lancamentos.listar' 'financeiro.extratos.visualizar' as mostrar_grupo_movimentacao %}
+{% tem_permissao request.user 'financeiro.lancamentos.listar' as pode_listar_lancamentos %}
+{% tem_permissao request.user 'financeiro.extratos.visualizar' as pode_visualizar_extratos %}
+{% tem_alguma_permissao request.user 'financeiro.resumo_financeiro.visualizar' 'financeiro.prestacao_contas.visualizar' as mostrar_grupo_relatorios %}
+{% tem_permissao request.user 'financeiro.resumo_financeiro.visualizar' as pode_visualizar_resumo %}
+{% tem_permissao request.user 'financeiro.prestacao_contas.visualizar' as pode_visualizar_prestacao %}
+{% tem_alguma_permissao request.user 'financeiro.contas.listar' 'financeiro.centros_custo.listar' 'financeiro.pessoas.listar' 'financeiro.categorias.listar' as mostrar_grupo_cadastros %}
+{% tem_permissao request.user 'financeiro.contas.listar' as pode_listar_contas %}
+{% tem_permissao request.user 'financeiro.centros_custo.listar' as pode_listar_centros %}
+{% tem_permissao request.user 'financeiro.pessoas.listar' as pode_listar_pessoas %}
+{% tem_permissao request.user 'financeiro.categorias.listar' as pode_listar_categorias %}
+{% tem_alguma_permissao request.user 'financeiro.auditoria.listar' 'financeiro.assinaturas.listar' 'financeiro.configuracoes_institucionais.visualizar' as mostrar_grupo_controle %}
+{% tem_permissao request.user 'financeiro.auditoria.listar' as pode_listar_auditoria %}
+{% tem_permissao request.user 'financeiro.assinaturas.listar' as pode_listar_assinaturas %}
+{% tem_permissao request.user 'financeiro.configuracoes_institucionais.visualizar' as pode_visualizar_configuracoes %}
+
 <div class="financeiro-home-grid">
-    <section class="financeiro-home-group">
-        <p class="financeiro-home-group-title">Movimentação</p>
-        <div class="financeiro-home-shortcuts">
-            <a class="financeiro-shortcut is-primary-shortcut" href="{% url 'financeiro:lancamento-list' %}">
-                <span class="financeiro-shortcut-label">Lançamentos</span>
-            </a>
-            <a class="financeiro-shortcut" href="{% url 'financeiro:extrato-list' %}">
-                <span class="financeiro-shortcut-label">Extratos por conta</span>
-            </a>
-        </div>
-    </section>
+    {% if mostrar_grupo_movimentacao %}
+        <section class="financeiro-home-group">
+            <p class="financeiro-home-group-title">Movimentacao</p>
+            <div class="financeiro-home-shortcuts">
+                {% if pode_listar_lancamentos %}
+                    <a class="financeiro-shortcut is-primary-shortcut" href="{% url 'financeiro:lancamento-list' %}">
+                        <span class="financeiro-shortcut-label">Lancamentos</span>
+                    </a>
+                {% endif %}
+                {% if pode_visualizar_extratos %}
+                    <a class="financeiro-shortcut" href="{% url 'financeiro:extrato-list' %}">
+                        <span class="financeiro-shortcut-label">Extratos por conta</span>
+                    </a>
+                {% endif %}
+            </div>
+        </section>
+    {% endif %}
 
-    <section class="financeiro-home-group">
-        <p class="financeiro-home-group-title">Relatórios</p>
-        <div class="financeiro-home-shortcuts">
-            <a class="financeiro-shortcut" href="{% url 'financeiro:resumo' %}">
-                <span class="financeiro-shortcut-label">Resumo do período</span>
-            </a>
-            <a class="financeiro-shortcut" href="{% url 'financeiro:prestacao-contas' %}">
-                <span class="financeiro-shortcut-label">Prestação de contas</span>
-            </a>
-        </div>
-    </section>
+    {% if mostrar_grupo_relatorios %}
+        <section class="financeiro-home-group">
+            <p class="financeiro-home-group-title">Relatorios</p>
+            <div class="financeiro-home-shortcuts">
+                {% if pode_visualizar_resumo %}
+                    <a class="financeiro-shortcut" href="{% url 'financeiro:resumo' %}">
+                        <span class="financeiro-shortcut-label">Resumo do periodo</span>
+                    </a>
+                {% endif %}
+                {% if pode_visualizar_prestacao %}
+                    <a class="financeiro-shortcut" href="{% url 'financeiro:prestacao-contas' %}">
+                        <span class="financeiro-shortcut-label">Prestacao de contas</span>
+                    </a>
+                {% endif %}
+            </div>
+        </section>
+    {% endif %}
 
-    <section class="financeiro-home-group">
-        <p class="financeiro-home-group-title">Cadastros</p>
-        <div class="financeiro-home-shortcuts">
-            <a class="financeiro-shortcut" href="{% url 'financeiro:conta-list' %}">
-                <span class="financeiro-shortcut-label">Contas</span>
-            </a>
-            <a class="financeiro-shortcut" href="{% url 'financeiro:centro-custo-list' %}">
-                <span class="financeiro-shortcut-label">Centros de custo</span>
-            </a>
-            <a class="financeiro-shortcut" href="{% url 'financeiro:pessoa-list' %}">
-                <span class="financeiro-shortcut-label">Pessoas</span>
-            </a>
-            <a class="financeiro-shortcut" href="{% url 'financeiro:categoria-list' %}">
-                <span class="financeiro-shortcut-label">Categorias</span>
-            </a>
-        </div>
-    </section>
+    {% if mostrar_grupo_cadastros %}
+        <section class="financeiro-home-group">
+            <p class="financeiro-home-group-title">Cadastros</p>
+            <div class="financeiro-home-shortcuts">
+                {% if pode_listar_contas %}
+                    <a class="financeiro-shortcut" href="{% url 'financeiro:conta-list' %}">
+                        <span class="financeiro-shortcut-label">Contas</span>
+                    </a>
+                {% endif %}
+                {% if pode_listar_centros %}
+                    <a class="financeiro-shortcut" href="{% url 'financeiro:centro-custo-list' %}">
+                        <span class="financeiro-shortcut-label">Centros de custo</span>
+                    </a>
+                {% endif %}
+                {% if pode_listar_pessoas %}
+                    <a class="financeiro-shortcut" href="{% url 'financeiro:pessoa-list' %}">
+                        <span class="financeiro-shortcut-label">Pessoas</span>
+                    </a>
+                {% endif %}
+                {% if pode_listar_categorias %}
+                    <a class="financeiro-shortcut" href="{% url 'financeiro:categoria-list' %}">
+                        <span class="financeiro-shortcut-label">Categorias</span>
+                    </a>
+                {% endif %}
+            </div>
+        </section>
+    {% endif %}
 
-    <section class="financeiro-home-group">
-        <p class="financeiro-home-group-title">Controle e configuração</p>
-        <div class="financeiro-home-shortcuts">
-            <a class="financeiro-shortcut" href="{% url 'financeiro:auditoria-lancamento-list' %}">
-                <span class="financeiro-shortcut-label">Auditoria do financeiro</span>
-            </a>
-            <a class="financeiro-shortcut" href="{% url 'financeiro:assinatura-list' %}">
-                <span class="financeiro-shortcut-label">Assinaturas institucionais</span>
-            </a>
-            <a class="financeiro-shortcut" href="{% url 'financeiro:configuracao-institucional-list' %}">
-                <span class="financeiro-shortcut-label">Configuração institucional</span>
-            </a>
-        </div>
-    </section>
+    {% if mostrar_grupo_controle %}
+        <section class="financeiro-home-group">
+            <p class="financeiro-home-group-title">Controle e configuracao</p>
+            <div class="financeiro-home-shortcuts">
+                {% if pode_listar_auditoria %}
+                    <a class="financeiro-shortcut" href="{% url 'financeiro:auditoria-lancamento-list' %}">
+                        <span class="financeiro-shortcut-label">Auditoria do financeiro</span>
+                    </a>
+                {% endif %}
+                {% if pode_listar_assinaturas %}
+                    <a class="financeiro-shortcut" href="{% url 'financeiro:assinatura-list' %}">
+                        <span class="financeiro-shortcut-label">Assinaturas institucionais</span>
+                    </a>
+                {% endif %}
+                {% if pode_visualizar_configuracoes %}
+                    <a class="financeiro-shortcut" href="{% url 'financeiro:configuracao-institucional-list' %}">
+                        <span class="financeiro-shortcut-label">Configuracao institucional</span>
+                    </a>
+                {% endif %}
+            </div>
+        </section>
+    {% endif %}
 </div>
 {% endblock %}

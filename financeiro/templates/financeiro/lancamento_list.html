@@ -1,4 +1,5 @@
 {% extends 'financeiro/base.html' %}
+{% load financeiro_permissoes %}
 {% block title %}Lançamentos Financeiros{% endblock %}
 {% block financeiro_shell_header %}
     <header class="financeiro-app-utility-bar no-print">
@@ -422,6 +423,18 @@
         }
     }
 </style>
+{% tem_permissao request.user 'financeiro.lancamentos.exportar' as pode_exportar_lancamentos %}
+{% tem_permissao request.user 'financeiro.lancamentos.importar' as pode_importar_lancamentos %}
+{% tem_permissao request.user 'financeiro.lancamentos.criar' as pode_criar_lancamento %}
+{% tem_permissao request.user 'financeiro.lancamentos.acoes_em_lote_status' as pode_acao_lote_status %}
+{% tem_permissao request.user 'financeiro.lancamentos.acoes_em_lote_excluir' as pode_acao_lote_excluir %}
+{% tem_alguma_permissao request.user 'financeiro.lancamentos.acoes_em_lote_status' 'financeiro.lancamentos.acoes_em_lote_excluir' as pode_acoes_em_lote %}
+{% tem_permissao request.user 'financeiro.lancamentos.emitir_recibo' as pode_emitir_recibo %}
+{% tem_permissao request.user 'financeiro.lancamentos.clonar' as pode_clonar_lancamento %}
+{% tem_permissao request.user 'financeiro.lancamentos.editar' as pode_editar_lancamento %}
+{% tem_permissao request.user 'financeiro.lancamentos.editar_rateio' as pode_editar_rateio %}
+{% tem_permissao request.user 'financeiro.lancamentos.excluir' as pode_excluir_lancamento %}
+{% tem_alguma_permissao request.user 'financeiro.lancamentos.emitir_recibo' 'financeiro.lancamentos.clonar' 'financeiro.lancamentos.editar' 'financeiro.lancamentos.editar_rateio' 'financeiro.lancamentos.excluir' as mostrar_coluna_acoes_lancamento %}
 {% if request.GET.origem_fluxo == 'rateio_coordenado_salvo' %}
     <div class="notification is-success is-light">
         Grupo rateado atualizado.
@@ -437,13 +450,13 @@
             <h1 class="title financeiro-page-title">Lançamentos financeiros</h1>
         </div>
         <div class="financeiro-page-header-actions no-print">
-            <a class="button is-link is-light" href="{{ exportacao_lancamentos_url }}">
+            {% if pode_exportar_lancamentos %}<a class="button is-link is-light" href="{{ exportacao_lancamentos_url }}">
                 Exportar
-            </a>
-            <a class="button is-link is-light" href="{% url 'financeiro:lancamento-importacao-exportacao' %}">
+            </a>{% endif %}
+            {% if pode_importar_lancamentos %}<a class="button is-link is-light" href="{% url 'financeiro:lancamento-importacao-exportacao' %}">
                 Importar
-            </a>
-            <a class="button is-primary" href="{% url 'financeiro:lancamento-create' %}">Novo lançamento financeiro</a>
+            </a>{% endif %}
+            {% if pode_criar_lancamento %}<a class="button is-primary" href="{% url 'financeiro:lancamento-create' %}">Novo lançamento financeiro</a>{% endif %}
         </div>
     </div>
 
@@ -544,6 +557,7 @@
         >
             {% csrf_token %}
             <input type="hidden" name="filtros_retorno" value="{{ request.GET.urlencode }}">
+            {% if pode_acoes_em_lote %}
             <div class="financeiro-lancamento-bulk-bar no-print">
                 <div class="financeiro-lancamento-bulk-fields">
                     <div class="field mb-0">
@@ -551,11 +565,16 @@
                         <div class="select financeiro-lancamento-bulk-select">
                             <select name="acao_lote" id="financeiro-lancamento-acao-lote">
                                 <option value="">Escolha uma ação</option>
+                                {% if pode_acao_lote_status %}
                                 <option value="alterar_status">Alterar status</option>
+                                {% endif %}
+                                {% if pode_acao_lote_excluir %}
                                 <option value="excluir">Excluir selecionados</option>
+                                {% endif %}
                             </select>
                         </div>
                     </div>
+                    {% if pode_acao_lote_status %}
                     <div class="field mb-0">
                         <label class="label">Novo status</label>
                         <div class="select financeiro-lancamento-bulk-select">
@@ -567,15 +586,17 @@
                             </select>
                         </div>
                     </div>
+                    {% endif %}
                 </div>
                 <button class="button is-link is-light" type="submit">Aplicar</button>
             </div>
+            {% endif %}
 
             <div class="financeiro-lancamento-table-wrap">
             <table class="table is-fullwidth is-hoverable financeiro-table financeiro-lancamento-table">
                 <thead>
                 <tr>
-                    <th class="financeiro-lancamento-select-col no-print">
+                    {% if pode_acoes_em_lote %}<th class="financeiro-lancamento-select-col no-print">
                         <label class="checkbox">
                             <input
                                 type="checkbox"
@@ -583,7 +604,7 @@
                                 aria-label="Selecionar todos os lançamentos visíveis"
                             >
                         </label>
-                    </th>
+                    </th>{% endif %}
                     <th>
                         <a
                             class="financeiro-lancamento-sort-link{% if ordenacao_colunas.descricao.ativa %} is-active{% endif %}"
@@ -731,13 +752,14 @@
                         </a>
                     </th>
                     <th>Documento</th>
-                    <th class="no-print">Ações</th>
+                    {% if mostrar_coluna_acoes_lancamento %}<th class="no-print">Ações</th>{% endif %}
                 </tr>
                 </thead>
                 <tbody>
                 {% for lancamento_visual in lancamentos_visuais %}
                     {% with lancamento=lancamento_visual.representante %}
                     <tr{% if lancamento.status == 'aberto' %} class="is-unsettled{% if lancamento_visual.eh_rateio %} financeiro-rateio-row{% endif %}"{% elif lancamento_visual.eh_rateio %} class="financeiro-rateio-row"{% endif %}>
+                        {% if pode_acoes_em_lote %}
                         <td class="financeiro-lancamento-select-col no-print">
                             <label class="checkbox">
                                 <input
@@ -749,6 +771,7 @@
                                 >
                             </label>
                         </td>
+                        {% endif %}
                         <td>
                             {% if lancamento_visual.eh_rateio %}
                                 <details class="financeiro-rateio-details">
@@ -877,10 +900,11 @@
                         </td>
                         <td>{{ lancamento.data_competencia|date:'d/m/Y' }}</td>
                         <td>{{ lancamento.numero_documento|default:'-' }}</td>
+                        {% if mostrar_coluna_acoes_lancamento %}
                         <td class="actions-cell no-print">
                             <div class="financeiro-lancamento-actions-grid">
                                 <div class="financeiro-lancamento-action-slot">
-                                    {% if not lancamento_visual.eh_rateio and lancamento.tipo == 'receita' %}
+                                    {% if pode_emitir_recibo and not lancamento_visual.eh_rateio and lancamento.tipo == 'receita' %}
                                         <a
                                             class="button is-small is-info is-light financeiro-lancamento-icon-button"
                                             href="{% url 'financeiro:lancamento-recibo' lancamento.pk %}"
@@ -899,7 +923,7 @@
                                     {% endif %}
                                 </div>
                                 <div class="financeiro-lancamento-action-slot">
-                                    {% if lancamento_visual.eh_rateio %}
+                                    {% if pode_clonar_lancamento and lancamento_visual.eh_rateio %}
                                         <a
                                             class="button is-small is-link is-light financeiro-lancamento-icon-button"
                                             href="{% url 'financeiro:lancamento-rateio-clone' lancamento.grupo_rateio %}"
@@ -912,7 +936,7 @@
                                             </svg>
                                             <span class="financeiro-sr-only">Clonar</span>
                                         </a>
-                                    {% else %}
+                                    {% elif pode_clonar_lancamento %}
                                         <a
                                             class="button is-small is-link is-light financeiro-lancamento-icon-button"
                                             href="{% url 'financeiro:lancamento-clone' lancamento.pk %}"
@@ -928,7 +952,7 @@
                                     {% endif %}
                                 </div>
                                 <div class="financeiro-lancamento-action-slot">
-                                    {% if lancamento_visual.eh_rateio %}
+                                    {% if pode_editar_rateio and lancamento_visual.eh_rateio %}
                                         <a
                                             class="button is-small is-link is-light financeiro-lancamento-icon-button"
                                             href="{% url 'financeiro:lancamento-rateio-update' lancamento.grupo_rateio %}"
@@ -941,7 +965,7 @@
                                             </svg>
                                             <span class="financeiro-sr-only">Editar</span>
                                         </a>
-                                    {% else %}
+                                    {% elif pode_editar_lancamento %}
                                         <a
                                             class="button is-small is-link is-light financeiro-lancamento-icon-button"
                                             href="{% url 'financeiro:lancamento-update' lancamento.pk %}"
@@ -957,7 +981,7 @@
                                     {% endif %}
                                 </div>
                                 <div class="financeiro-lancamento-action-slot">
-                                    {% if lancamento_visual.eh_rateio %}
+                                    {% if lancamento_visual.eh_rateio or not pode_excluir_lancamento %}
                                         <span class="financeiro-lancamento-action-placeholder" aria-hidden="true"></span>
                                     {% else %}
                                         <a
@@ -979,11 +1003,12 @@
                                 </div>
                             </div>
                         </td>
+                        {% endif %}
                     </tr>
                     {% endwith %}
                 {% empty %}
                     <tr>
-                        <td colspan="11" class="financeiro-lancamento-empty">Nenhum lançamento encontrado com os filtros atuais.</td>
+                        <td colspan="{% if pode_acoes_em_lote and mostrar_coluna_acoes_lancamento %}11{% elif pode_acoes_em_lote or mostrar_coluna_acoes_lancamento %}10{% else %}9{% endif %}" class="financeiro-lancamento-empty">Nenhum lançamento encontrado com os filtros atuais.</td>
                     </tr>
                 {% endfor %}
                 </tbody>

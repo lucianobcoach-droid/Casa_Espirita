@@ -45,7 +45,7 @@ from .models import (
     PessoaFinanceira,
     RegraLancamentoFinanceiro,
 )
-from .permissoes import FinanceiroPermissaoMixin
+from .permissoes import FinanceiroPermissaoMixin, usuario_possui_permissao
 
 
 LANCAMENTO_ORDENACOES_LISTAGEM = {
@@ -1777,7 +1777,9 @@ class PessoaFinanceiraUltimosLancamentosView(FinanceiroPermissaoMixin, View):
     permissao_requerida = 'financeiro.pessoas.acessar_endpoints_auxiliares'
     limit = 5
 
-    def _get_clone_url(self, lancamento: LancamentoFinanceiro) -> str:
+    def _get_clone_url(self, request, lancamento: LancamentoFinanceiro) -> str:
+        if not usuario_possui_permissao(request.user, 'financeiro.lancamentos.clonar'):
+            return ''
         if lancamento.com_rateio and lancamento.grupo_rateio:
             return reverse(
                 'financeiro:lancamento-rateio-clone',
@@ -1804,7 +1806,7 @@ class PessoaFinanceiraUltimosLancamentosView(FinanceiroPermissaoMixin, View):
                 'valor': f'R$ {lancamento.valor:.2f}',
                 'categoria': str(lancamento.categoria) if lancamento.categoria else 'Sem categoria',
                 'numero_documento': lancamento.numero_documento or '',
-                'clone_url': self._get_clone_url(lancamento),
+                'clone_url': self._get_clone_url(request, lancamento),
             }
             for lancamento in lancamentos
         ]
