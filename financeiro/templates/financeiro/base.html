@@ -2227,15 +2227,11 @@
                     </a>
                 </div>
                 <div class="financeiro-topbar-desktop-actions">
-                    <span class="financeiro-topbar-chip">{{ sistema_usuario_nome|default:request.user.username }}</span>
-                    {% if sistema_perfil_base_nome %}
-                        <span class="financeiro-topbar-chip">{{ sistema_perfil_base_nome }}</span>
-                    {% endif %}
-                    <a class="button is-light is-small" href="{{ sistema_inicio_url }}">Inicio do sistema</a>
+                    {% include 'configuracoes/_sistema_usuario_acoes.html' with show_user_name=True show_profile_name=True chip_class='financeiro-topbar-chip' include_inicio=True inicio_label='Inicio do sistema' inicio_primario=False include_admin_tecnico=True include_logout=False logout_label='Sair' link_class='button is-light is-small' %}
                     {% if pode_home_financeiro %}
                         <a class="button is-light is-small" href="{% url 'financeiro:home' %}">Inicio do modulo</a>
                     {% endif %}
-                    <a class="button is-light is-small" href="{{ sistema_logout_url }}">Sair</a>
+                    {% include 'configuracoes/_sistema_usuario_acoes.html' with show_user_name=False show_profile_name=False chip_class='financeiro-topbar-chip' include_inicio=False inicio_label='Inicio' inicio_primario=False include_admin_tecnico=False include_logout=True logout_label='Sair' link_class='button is-light is-small' %}
                     <span class="financeiro-topbar-chip is-current">
                         {% if current_url_name == 'home' %}
                             Visao geral
@@ -2265,8 +2261,7 @@
                         </div>
                         {% block financeiro_mobile_actions %}
                             <div class="financeiro-topbar-mobile-actions">
-                                <a class="button is-light is-small" href="{{ sistema_inicio_url }}">Inicio</a>
-                                <a class="button is-light is-small" href="{{ sistema_logout_url }}">Sair</a>
+                                {% include 'configuracoes/_sistema_usuario_acoes.html' with show_user_name=False show_profile_name=False chip_class='financeiro-topbar-chip' include_inicio=True inicio_label='Inicio' inicio_primario=False include_admin_tecnico=False include_logout=True logout_label='Sair' link_class='button is-light is-small' %}
                                 <button
                                     type="button"
                                     class="financeiro-drawer-toggle"

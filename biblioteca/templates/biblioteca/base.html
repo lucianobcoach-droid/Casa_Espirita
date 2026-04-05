@@ -1,48 +1,57 @@
+{% extends 'configuracoes/sistema_base.html' %}
 {% load permissoes_sistema %}
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <title>{% block title %}Biblioteca{% endblock %}</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
-</head>
-<body>
-<nav class="navbar is-light" role="navigation" aria-label="main navigation">
-    <div class="navbar-menu is-active">
-        <div class="navbar-start">
-            <a class="navbar-item" href="{{ sistema_inicio_url }}">In&iacute;cio</a>
-            {% tem_permissao request.user 'biblioteca.autores.listar' as pode_ver_autores %}
-            {% tem_permissao request.user 'biblioteca.livros.listar' as pode_ver_livros %}
-            {% tem_permissao request.user 'biblioteca.vendas.listar' as pode_ver_vendas %}
-            {% tem_permissao request.user 'biblioteca.emprestimos.listar' as pode_ver_emprestimos %}
-            {% if pode_ver_autores %}
-                <a class="navbar-item" href="{% url 'biblioteca:autor-list' %}">Autores</a>
-            {% endif %}
-            {% if pode_ver_livros %}
-                <a class="navbar-item" href="{% url 'biblioteca:livro-list' %}">Livros</a>
-            {% endif %}
-            {% if pode_ver_vendas %}
-                <a class="navbar-item" href="{% url 'biblioteca:venda-list' %}">Vendas</a>
-            {% endif %}
-            {% if pode_ver_emprestimos %}
-                <a class="navbar-item" href="{% url 'biblioteca:emprestimo-list' %}">Empr&eacute;stimos</a>
-            {% endif %}
-        </div>
-        <div class="navbar-end">
-            {% if sistema_usuario_nome %}
-                <span class="navbar-item">{{ sistema_usuario_nome }}</span>
-            {% endif %}
-            {% if sistema_perfil_base_nome %}
-                <span class="navbar-item">{{ sistema_perfil_base_nome }}</span>
-            {% endif %}
-            <a class="navbar-item" href="{{ sistema_logout_url }}">Sair</a>
-        </div>
-    </div>
-</nav>
-<section class="section">
-    <div class="container">
-        {% block content %}{% endblock %}
-    </div>
-</section>
-</body>
-</html>
+
+{% block title %}{% block biblioteca_title %}Biblioteca{% endblock %} | {{ sistema_site_name }}{% endblock %}
+{% block app_subtitle %}{% block biblioteca_subtitle %}Operacao do modulo biblioteca.{% endblock %}{% endblock %}
+
+{% block extra_head %}
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+  <style>
+    .ce-biblioteca-main {
+      width: min(1180px, 100%);
+    }
+
+    .ce-biblioteca-card {
+      border: 1px solid #d9deea;
+      border-radius: 24px;
+      background: #fff;
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+      padding: 24px;
+    }
+
+    .ce-biblioteca-card .table {
+      margin-bottom: 0;
+    }
+
+    .ce-biblioteca-card .field + .field,
+    .ce-biblioteca-card p + .field {
+      margin-top: 0.9rem;
+    }
+  </style>
+{% endblock %}
+
+{% block before_main %}
+  {% tem_permissao request.user 'biblioteca.autores.listar' as pode_ver_autores %}
+  {% tem_permissao request.user 'biblioteca.livros.listar' as pode_ver_livros %}
+  {% tem_permissao request.user 'biblioteca.vendas.listar' as pode_ver_vendas %}
+  {% tem_permissao request.user 'biblioteca.emprestimos.listar' as pode_ver_emprestimos %}
+  <div class="ce-app-module-nav-wrap">
+    <nav class="ce-app-module-nav" aria-label="Navegacao local da biblioteca">
+      <span class="ce-app-module-nav-label">Biblioteca</span>
+      {% if pode_ver_autores %}
+        <a class="ce-app-link{% if request.resolver_match.url_name == 'autor-list' or request.resolver_match.url_name == 'autor-create' %} is-primary{% endif %}" href="{% url 'biblioteca:autor-list' %}">Autores</a>
+      {% endif %}
+      {% if pode_ver_livros %}
+        <a class="ce-app-link{% if request.resolver_match.url_name == 'livro-list' or request.resolver_match.url_name == 'livro-create' %} is-primary{% endif %}" href="{% url 'biblioteca:livro-list' %}">Livros</a>
+      {% endif %}
+      {% if pode_ver_vendas %}
+        <a class="ce-app-link{% if request.resolver_match.url_name == 'venda-list' or request.resolver_match.url_name == 'venda-create' %} is-primary{% endif %}" href="{% url 'biblioteca:venda-list' %}">Vendas</a>
+      {% endif %}
+      {% if pode_ver_emprestimos %}
+        <a class="ce-app-link{% if request.resolver_match.url_name == 'emprestimo-list' or request.resolver_match.url_name == 'emprestimo-create' %} is-primary{% endif %}" href="{% url 'biblioteca:emprestimo-list' %}">Emprestimos</a>
+      {% endif %}
+    </nav>
+  </div>
+{% endblock %}
+
+{% block main_class %}ce-biblioteca-main{% endblock %}

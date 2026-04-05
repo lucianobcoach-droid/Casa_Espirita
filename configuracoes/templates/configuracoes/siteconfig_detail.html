@@ -1,83 +1,99 @@
+{% extends 'configuracoes/sistema_base.html' %}
 {% load static permissoes_sistema %}
-<!DOCTYPE html>
-<html lang="pt-br">
-  <head>
-    <meta charset="utf-8" />
-    <title>{{ object.site_name|default:"Casa Esp&iacute;rita" }}</title>
-    <link rel="stylesheet" href="/static/configuracoes/site.css" />
-    <style>
-      .ce-site-topbar {
-        display: flex;
-        justify-content: flex-end;
-        gap: 12px;
-        padding: 16px 24px 0;
-      }
 
-      .ce-site-link {
-        color: #1f2937;
-        text-decoration: none;
-        font-weight: 600;
-      }
+{% block title %}{{ object.site_name|default:"Casa Espirita" }} | {{ sistema_site_name }}{% endblock %}
+{% block app_subtitle %}Identidade institucional e administracao funcional do sistema.{% endblock %}
 
-      .ce-site-link:hover,
-      .ce-site-link:focus {
-        text-decoration: underline;
-      }
-    </style>
-  </head>
-  <body>
-    <nav class="ce-site-topbar" aria-label="Acesso do sistema">
-      {% if request.user.is_authenticated %}
-        {% tem_permissao request.user 'configuracoes.admin_global.acessar' as pode_acessar_admin_global %}
-        <span class="ce-site-link">{{ sistema_usuario_nome|default:request.user.username }}</span>
-        {% if sistema_perfil_base_nome %}
-          <span class="ce-site-link">{{ sistema_perfil_base_nome }}</span>
+{% block extra_head %}
+  <link rel="stylesheet" href="/static/configuracoes/site.css" />
+  <style>
+    .ce-config-main {
+      width: min(1180px, 100%);
+    }
+
+    .ce-config-stack {
+      display: grid;
+      gap: 18px;
+    }
+
+    .ce-config-card {
+      border: 1px solid #d9deea;
+      border-radius: 24px;
+      background: #fff;
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+      padding: 24px;
+    }
+
+    .ce-config-links {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    .ce-config-footer {
+      color: #64748b;
+      font-size: 0.92rem;
+    }
+  </style>
+{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{{ sistema_inicio_url }}" class="ce-app-link is-primary">In&iacute;cio</a>
+  {% tem_permissao request.user 'configuracoes.admin_global.acessar' as pode_acessar_admin_global %}
+  {% if pode_acessar_admin_global %}
+    <a href="{% url 'admin:index' %}" class="ce-app-link">Admin t&eacute;cnico</a>
+  {% endif %}
+  {% if request.user.is_authenticated %}
+    <a href="{% url 'configuracoes:logout' %}" class="ce-app-link">Sair</a>
+  {% else %}
+    <a href="{% url 'configuracoes:login' %}" class="ce-app-link">Entrar</a>
+  {% endif %}
+{% endblock %}
+
+{% block main_class %}ce-config-main{% endblock %}
+
+{% block content %}
+  <div class="ce-config-stack">
+    <section class="ce-config-card">
+      <header>
+        <img
+          src="{% if object.logo %}{{ object.logo.url }}{% else %}{% static 'configuracoes/logo.svg' %}{% endif %}"
+          alt="Logo"
+          class="logo"
+        />
+        <h2 style="margin-top: 16px;">{{ object.site_name }}</h2>
+        {% if object.slogan %}
+          <p class="slogan">{{ object.slogan }}</p>
         {% endif %}
-        <a href="{{ sistema_inicio_url }}" class="ce-site-link">In&iacute;cio</a>
-        {% if pode_acessar_admin_global %}
-          <a href="{% url 'admin:index' %}" class="ce-site-link">Admin t&eacute;cnico</a>
-        {% endif %}
-        <a href="{% url 'configuracoes:logout' %}" class="ce-site-link">Sair</a>
-      {% else %}
-        <a href="{% url 'configuracoes:login' %}" class="ce-site-link">Entrar</a>
-      {% endif %}
-    </nav>
-    <header>
-      <img
-        src="{% if object.logo %}{{ object.logo.url }}{% else %}{% static 'configuracoes/logo.svg' %}{% endif %}"
-        alt="Logo"
-        class="logo"
-      />
-      <h1>{{ object.site_name }}</h1>
-      {% if object.slogan %}
-        <p class="slogan">{{ object.slogan }}</p>
-      {% endif %}
-    </header>
-    <main>
-      <section>
-        <h2>Sobre</h2>
-        <p>{{ object.descricao|default:"Configure a descri&ccedil;&atilde;o do site pelo Django admin." }}</p>
-      </section>
-      {% tem_alguma_permissao request.user 'configuracoes.perfis_acesso.listar' 'configuracoes.usuarios_acesso.listar' as pode_administrar_acessos %}
-      {% if pode_administrar_acessos %}
-      <section>
-        <h2>Acesso funcional</h2>
+      </header>
+    </section>
+
+    <section class="ce-config-card">
+      <h3>Sobre</h3>
+      <p>{{ object.descricao|default:"Configure a descri&ccedil;&atilde;o do site pelo Django admin." }}</p>
+    </section>
+
+    {% tem_alguma_permissao request.user 'configuracoes.perfis_acesso.listar' 'configuracoes.usuarios_acesso.listar' as pode_administrar_acessos %}
+    {% if pode_administrar_acessos %}
+      <section class="ce-config-card">
+        <h3>Acesso funcional</h3>
         <p>Use esta &aacute;rea para consultar perfis-base e ajustar o v&iacute;nculo funcional de usu&aacute;rios sem depender do admin t&eacute;cnico.</p>
-        <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 12px;">
+        <div class="ce-config-links">
           {% tem_permissao request.user 'configuracoes.perfis_acesso.listar' as pode_listar_perfis %}
           {% tem_permissao request.user 'configuracoes.usuarios_acesso.listar' as pode_listar_usuarios_perfis %}
           {% if pode_listar_perfis %}
-            <a href="{% url 'configuracoes:perfil-list' %}" class="ce-site-link">Perfis de acesso</a>
+            <a href="{% url 'configuracoes:perfil-list' %}" class="ce-app-link">Perfis de acesso</a>
           {% endif %}
           {% if pode_listar_usuarios_perfis %}
-            <a href="{% url 'configuracoes:usuario-perfil-list' %}" class="ce-site-link">Usu&aacute;rios e perfis</a>
+            <a href="{% url 'configuracoes:usuario-perfil-list' %}" class="ce-app-link">Usu&aacute;rios e perfis</a>
           {% endif %}
         </div>
       </section>
-      {% endif %}
-    </main>
-    <footer>
+    {% endif %}
+
+    <footer class="ce-config-footer">
       <small>Atualizado em: {{ object.atualizado_em|date:"d/m/Y H:i" }}</small>
     </footer>
-  </body>
-</html>
+  </div>
+{% endblock %}

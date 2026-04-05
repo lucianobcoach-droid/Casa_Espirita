@@ -140,12 +140,43 @@
       flex: 1;
     }
 
+    .ce-app-module-nav-wrap {
+      width: min(1180px, 100%);
+      margin: 0 auto;
+      padding: 18px 20px 0;
+    }
+
+    .ce-app-module-nav {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding: 14px 16px;
+      border: 1px solid var(--ce-border);
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.84);
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.05);
+    }
+
+    .ce-app-module-nav-label {
+      color: var(--ce-muted);
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
     .ce-app-card {
       border: 1px solid var(--ce-border);
       border-radius: 24px;
       background: var(--ce-surface);
       box-shadow: var(--ce-shadow);
       padding: 28px;
+    }
+
+    .ce-app-empty {
+      color: var(--ce-muted);
+      line-height: 1.6;
     }
 
     @media (max-width: 768px) {
@@ -163,33 +194,37 @@
       }
     }
   </style>
+  {% block extra_head %}{% endblock %}
 </head>
-<body>
-  <div class="ce-app-shell">
-    <header class="ce-app-topbar">
-      <div class="ce-app-topbar-inner">
+<body class="{% block body_class %}{% endblock %}">
+  <div class="ce-app-shell {% block shell_class %}{% endblock %}">
+    {% block shell_topbar %}
+    <header class="ce-app-topbar {% block topbar_class %}{% endblock %}">
+      <div class="ce-app-topbar-inner {% block topbar_inner_class %}{% endblock %}">
         <div class="ce-app-brand">
+          {% block topbar_brand %}
           <p class="ce-app-kicker">Sistema</p>
           <h1 class="ce-app-title"><a href="{{ sistema_inicio_url }}">{{ sistema_site_name }}</a></h1>
           <p class="ce-app-subtitle">{% block app_subtitle %}Portal autenticado do sistema.{% endblock %}</p>
+          {% endblock %}
         </div>
         <div class="ce-app-actions">
-          {% if sistema_usuario_nome %}
-            <span class="ce-app-chip">{{ sistema_usuario_nome }}</span>
-          {% endif %}
-          {% if sistema_perfil_base_nome %}
-            <span class="ce-app-chip">{{ sistema_perfil_base_nome }}</span>
-          {% endif %}
-          <a href="{{ sistema_inicio_url }}" class="ce-app-link is-primary">In&iacute;cio</a>
-          {% if request.user.is_staff %}
-            <a href="{{ sistema_admin_tecnico_url }}" class="ce-app-link">Admin t&eacute;cnico</a>
-          {% endif %}
-          <a href="{{ sistema_logout_url }}" class="ce-app-link">Sair</a>
+          {% block topbar_actions %}
+          {% block topbar_user_context %}
+            {% include 'configuracoes/_sistema_usuario_acoes.html' with show_user_name=True show_profile_name=True chip_class='ce-app-chip' include_inicio=False inicio_label='In&iacute;cio' inicio_primario=False include_admin_tecnico=False include_logout=False logout_label='Sair' %}
+          {% endblock %}
+          {% include 'configuracoes/_sistema_usuario_acoes.html' with show_user_name=False show_profile_name=False chip_class='ce-app-chip' link_class='ce-app-link' include_inicio=True inicio_label='In&iacute;cio' inicio_primario=True include_admin_tecnico=True include_logout=True logout_label='Sair' %}
+          {% endblock %}
         </div>
       </div>
+      {% block topbar_secondary %}{% endblock %}
     </header>
+    {% endblock %}
 
-    <main class="ce-app-main">
+    {% block before_main %}{% endblock %}
+
+    <main class="ce-app-main {% block main_class %}{% endblock %}">
+      {% block global_messages %}
       {% if messages %}
         {% for message in messages %}
           <div class="ce-app-card" style="margin-bottom: 16px;">
@@ -197,8 +232,12 @@
           </div>
         {% endfor %}
       {% endif %}
+      {% endblock %}
       {% block content %}{% endblock %}
     </main>
+
+    {% block after_main %}{% endblock %}
   </div>
+  {% block extra_js %}{% endblock %}
 </body>
 </html>

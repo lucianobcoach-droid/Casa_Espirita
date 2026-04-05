@@ -1,0 +1,15 @@
+{% if show_user_name and sistema_usuario_nome %}
+  <span class="{{ chip_class }}">{{ sistema_usuario_nome }}</span>
+{% endif %}
+{% if show_profile_name and sistema_perfil_base_nome %}
+  <span class="{{ chip_class }}">{{ sistema_perfil_base_nome }}</span>
+{% endif %}
+{% if include_inicio %}
+  <a href="{{ sistema_inicio_url }}" class="{{ link_class }}{% if inicio_primario %} is-primary{% endif %}">{{ inicio_label }}</a>
+{% endif %}
+{% if include_admin_tecnico and request.user.is_staff %}
+  <a href="{{ sistema_admin_tecnico_url }}" class="{{ link_class }}">Admin t&eacute;cnico</a>
+{% endif %}
+{% if include_logout %}
+  <a href="{{ sistema_logout_url }}" class="{{ link_class }}">{{ logout_label }}</a>
+{% endif %}

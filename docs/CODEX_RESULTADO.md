@@ -1602,3 +1602,14 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
   - `Gestao administrativa` ainda com `200` na UI funcional de perfis
   - `Operador financeiro` ainda com `403` nessa area
   - logout retornando para `/login/`
+
+## Consolidacao do shell autenticado compartilhado
+
+- `configuracoes/templates/configuracoes/sistema_base.html` foi consolidado como shell autenticado oficial do sistema, recebendo slots reutilizaveis para topbar, navegacao local de modulo, area principal, mensagens e extensoes de cada app
+- foi criado o parcial `configuracoes/templates/configuracoes/_sistema_usuario_acoes.html` para centralizar a renderizacao de usuario, perfil-base e links globais (`Inicio`, `Admin tecnico`, `Sair`) sem duplicacao ad hoc
+- `biblioteca/templates/biblioteca/base.html` passou a derivar diretamente da base autenticada global, reduzindo markup repetido e mantendo no modulo apenas a navegacao local e ajustes visuais leves
+- `configuracoes/templates/configuracoes/siteconfig_detail.html` tambem passou a operar sobre essa base global, eliminando a topbar local duplicada e preservando o conteudo institucional e os atalhos funcionais da area
+- no `financeiro`, a base propria permaneceu por necessidade estrutural da sidebar, do drawer mobile e do JS ja consolidado, mas o topo do modulo passou a consumir o mesmo parcial compartilhado de identidade/acoes globais, alinhando a experiencia sem reabrir a arquitetura sensivel da lateral
+- a decisao tecnica desta etapa foi consolidar uma base autenticada oficial + derivacoes modulares quando necessario, em vez de forcar uma heranca unica abrupta sobre o `financeiro`; isso reduz duplicacao real agora e preserva estabilidade funcional
+- a hierarquia resultante ficou: `configuracoes/sistema_base.html` como shell global; `biblioteca/base.html` como derivacao leve; `siteconfig_detail.html` aderido ao mesmo shell; `financeiro/base.html` permanecendo especializado, mas ja conectado aos mesmos componentes globais reutilizaveis
+- validacao tecnica executada: `py manage.py check` OK
