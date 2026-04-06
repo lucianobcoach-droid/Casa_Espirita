@@ -13,6 +13,10 @@ Este arquivo nao substitui `docs/CEREBRO_PROJETO.md`, `docs/STATE.md`, `docs/COD
 - priorizar formularios com rotulos claros, obrigatoriedade bem sinalizada, mensagens compreensiveis, preview quando fizer sentido e bloco final de acoes previsivel
 - revisar impacto em importacao/exportacao, auditoria/log e ajuda/manual sempre que uma nova funcionalidade entrar
 - consolidar primeiro o padrao no `financeiro` e so depois expandir para outros modulos
+- paginas autenticadas nao devem adotar como padrao principal um topo minimo com apenas botao de navegacao quando o sistema ja possui shell contextual completo disponivel
+- no `financeiro`, o padrao oficial passa a ser `financeiro/base.html` com barra superior contextual + contexto institucional/usuario + navegacao lateral persistente
+- em modulos que usam `configuracoes/sistema_base.html`, o padrao oficial continua sendo topbar completa com acoes do usuario e navegacao local do modulo quando aplicavel
+- excecoes de shell precisam ser claras e justificadas, especialmente em autenticacao, impressao e recibos
 
 ## Checklist permanente
 - Navegacao/menu/atalhos foram revisados?

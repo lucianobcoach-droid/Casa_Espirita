@@ -1,59 +1,6 @@
 {% extends 'financeiro/base.html' %}
 {% load financeiro_permissoes %}
 {% block title %}Categorias Financeiras{% endblock %}
-{% block financeiro_shell_header %}
-    <header class="financeiro-app-utility-bar no-print">
-        <div class="container financeiro-topbar-desktop financeiro-categoria-shell-desktop">
-            <div class="financeiro-topbar-desktop-main">
-                <div class="financeiro-topbar-reopen-slot">
-                    <button
-                        type="button"
-                        class="financeiro-drawer-toggle no-print"
-                        data-financeiro-sidebar-toggle
-                        aria-expanded="true"
-                        aria-controls="financeiro-sidebar"
-                        aria-label="Recolher navega&ccedil;&atilde;o lateral"
-                        title="Recolher navega&ccedil;&atilde;o lateral"
-                    >
-                        <span class="financeiro-drawer-toggle-icon" aria-hidden="true">
-                            <span></span>
-                            <span></span>
-                            <span></span>
-                        </span>
-                        <span aria-hidden="true">Navega&ccedil;&atilde;o</span>
-                        <span class="financeiro-sr-only" data-financeiro-sidebar-toggle-label>Recolher navega&ccedil;&atilde;o lateral</span>
-                    </button>
-                </div>
-            </div>
-            <div class="financeiro-topbar-desktop-actions"></div>
-        </div>
-
-        <nav class="navbar is-light financeiro-topbar financeiro-topbar-mobile financeiro-categoria-shell-mobile" role="navigation" aria-label="controles mobile do financeiro">
-            <div class="container">
-                <div class="financeiro-topbar-mobile-inner">
-                    <div class="financeiro-topbar-mobile-main"></div>
-                    <div class="financeiro-topbar-mobile-actions">
-                        <button
-                            type="button"
-                            class="financeiro-drawer-toggle"
-                            data-financeiro-drawer-toggle
-                            aria-controls="financeiro-sidebar"
-                            aria-expanded="false"
-                            aria-label="Abrir navega&ccedil;&atilde;o do financeiro"
-                        >
-                            <span class="financeiro-drawer-toggle-icon" aria-hidden="true">
-                                <span></span>
-                                <span></span>
-                                <span></span>
-                            </span>
-                            <span>Menu</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </nav>
-    </header>
-{% endblock %}
 {% block content %}
 <style>
     .financeiro-categoria-shell-mobile {

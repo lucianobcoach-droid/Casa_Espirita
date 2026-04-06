@@ -1,6 +1,579 @@
 # STATE
 
-Data de atualizacao: 2026-04-05
+Data de atualizacao: 2026-04-06
+
+## Auditoria transversal do shell autenticado e normalizacao do topo/lateral
+
+- foi executada uma auditoria transversal das paginas autenticadas de `financeiro`, `configuracoes` e `biblioteca`
+- o mapeamento tecnico confirmou dois shells autenticos legitimos no repositorio:
+  - `financeiro/templates/financeiro/base.html`: shell completo do modulo financeiro, com barra superior contextual, contexto institucional/usuario e navegacao lateral persistente
+  - `configuracoes/templates/configuracoes/sistema_base.html`: shell autenticado geral do sistema, com barra superior completa e espaco para navegacao local por modulo
+- a divergencia real encontrada nao estava entre apps diferentes, e sim dentro do proprio `financeiro`
+- origem tecnica da divergencia:
+  - `10` templates do `financeiro` sobrescreviam o bloco `financeiro_shell_header`
+  - esse override removia a topbar contextual completa e deixava apenas a casca minima com toggle/menu
+  - com isso, paginas equivalentes do mesmo modulo exibiam comportamentos visuais diferentes no topo
+- paginas auditadas e normalizadas no `financeiro`:
+  - listagens: `lancamento_list`, `conta_list`, `pessoa_list`, `categoria_list`, `centro_custo_list`
+  - formularios: `lancamento_form`, `conta_form`, `pessoa_form`, `categoria_form`, `centro_custo_form`
+  - telas centrais/auxiliares confirmadas no shell completo sem ajuste estrutural novo: `lancamento_importacao_exportacao`, `resumo`, `prestacao_contas`, `auditoria_lancamento_list`, `configuracao_institucional_list`
+- paginas autenticadas auditadas nos demais apps:
+  - `configuracoes`: `siteconfig_detail`, `perfil_acesso_list`, `perfil_acesso_detail`, `usuario_perfil_list`, `usuario_perfil_form`, `inicio`
+  - `biblioteca`: `autor_list`, `autor_form`, `livro_list`, `livro_form`, `venda_list`, `venda_form`, `emprestimo_list`, `emprestimo_form`
+- padrao oficial consolidado:
+  - no `financeiro`, o padrao principal das paginas autenticadas passa a ser o shell completo de `financeiro/base.html`, com barra superior contextual + contexto institucional/usuario + navegacao lateral persistente
+  - em `configuracoes` e `biblioteca`, o padrao autenticado continua sendo `configuracoes/sistema_base.html`, com barra superior completa e navegacao local do modulo quando aplicavel
+  - o modelo de topo minimo com apenas toggle/menu deixa de ser padrao principal e nao deve ser reutilizado sem excecao explicitamente justificada
+- excecoes legitimas mantidas:
+  - paginas de autenticacao (`login`, `password reset`) continuam fora desse shell autenticado
+  - paginas de recibo/impressao continuam podendo isolar o shell por necessidade documental/print
+- validacao tecnica desta microetapa:
+  - `py manage.py check` OK
+  - smoke test autenticado com `Client` em `financeiro`, `configuracoes` e `biblioteca`:
+    - todas as telas auditadas responderam `200`
+    - telas normalizadas do `financeiro` voltaram a renderizar `financeiro-topbar-brand`, contexto de usuario e `financeiro-sidebar`
+    - telas de `configuracoes` e `biblioteca` permaneceram renderizando `ce-app-topbar` com contexto de usuario
+
+## Layout comum de importacao/exportacao de lancamentos com ate 5 rateios na mesma linha
+
+- a decisao consolidada mais recente substituiu o contrato intermediario por multiplas linhas e promoveu o modelo didatico como padrao principal do usuario:
+  - `1 linha = 1 documento`
+  - ate `5` blocos de rateio na mesma linha
+  - `valor_total_documento = soma dos blocos preenchidos`
+- a central de importacoes do `financeiro` continua sendo o ponto funcional de importacao de lancamentos
+- a exportacao continua saindo da listagem especifica de lancamentos para respeitar filtros, mas agora usa o mesmo contrato comum de planilha da importacao
+- layout consolidado da aba `Modelo`:
+  - campos gerais:
+    - `tipo`
+    - `status`
+    - `descricao`
+    - `valor_total_documento`
+    - `data_competencia`
+    - `data_pagamento`
+    - `pessoa_nome`
+    - `conta_nome`
+    - `conta_destino_nome`
+    - `numero_documento`
+    - `observacoes`
+  - blocos de rateio:
+    - `categoria_nome_1`, `centro_custo_nome_1`, `valor_1`
+    - `categoria_nome_2`, `centro_custo_nome_2`, `valor_2`
+    - `categoria_nome_3`, `centro_custo_nome_3`, `valor_3`
+    - `categoria_nome_4`, `centro_custo_nome_4`, `valor_4`
+    - `categoria_nome_5`, `centro_custo_nome_5`, `valor_5`
+- regra funcional consolidada:
+  - receita/despesa simples: apenas bloco `1` preenchido
+  - receita/despesa com rateio: `2` a `5` blocos preenchidos, sem buracos entre eles
+  - transferencia: continua sem suporte a rateio no fluxo comum e deve deixar todos os blocos em branco
+- validacoes consolidadas do fluxo comum:
+  - maximo de `5` blocos por documento
+  - nao permitir buracos entre blocos
+  - cada bloco usado exige subcategoria valida e valor positivo
+  - categoria pai continua proibida
+  - categoria precisa respeitar o tipo do lancamento
+  - `valor_total_documento` precisa bater com a soma dos blocos preenchidos
+  - importacao continua `all-or-nothing`
+- compatibilidade preservada:
+  - a importacao continua aceitando o layout simples legado de `13` colunas para nao quebrar arquivos antigos ja preparados
+  - o layout intermediario por multiplas linhas deixa de ser o contrato principal do usuario
+- exportacao consolidada:
+  - a exportacao XLSX da listagem de lancamentos passa a gerar `Modelo` + `Instrucoes`, no mesmo contrato usado pela importacao
+  - cada grupo rateado sai condensado em uma unica linha
+  - se algum grupo visivel tiver mais de `5` linhas rateadas, a exportacao comum e bloqueada com mensagem clara e o caminho tecnico permanece como excecao
+- validacao tecnica executada nesta microetapa:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - smoke test transacional com rollback:
+    - roundtrip comum de exportacao/importacao com `1` lancamento simples e `1` documento rateado de `2` blocos: OK
+    - compatibilidade do layout simples legado: OK
+    - transferencia no novo layout com blocos em branco: OK
+    - planilha invalida com buraco entre blocos: bloqueada com erro claro
+    - planilha invalida com soma divergente: bloqueada com erro claro
+    - exportacao comum de grupo com `6` linhas rateadas: bloqueada com mensagem clara
+- conclusao consolidada:
+  - o fluxo funcional comum do usuario agora cobre exportacao e importacao de lancamentos simples, transferencias simples e lancamentos rateados no modelo de `1 linha por documento`
+  - a trilha tecnica separada de backup/restauracao continua existindo como apoio operacional para contingencia e para casos fora do limite do fluxo comum
+
+## Reset final do financeiro sem reconstrucao
+
+- a base do modulo `financeiro` foi zerada de forma intencional nesta microetapa para preparar uso/teste do zero, sem executar reconstrucao depois do reset
+- antes da execucao real, o `dry-run` confirmou o escopo planejado de limpeza:
+  - `26` lancamentos financeiros
+  - `1` regra automatica de lancamento
+  - `47` auditorias do financeiro
+  - `5` contas financeiras
+  - `2` pessoas financeiras
+  - `11` categorias/subcategorias financeiras
+  - `2` centros de custo
+- o reset destrutivo real foi executado com:
+  - `py manage.py reset_financeiro_controlado --executar --confirmar RESETAR_FINANCEIRO`
+- o comportamento final confirmou a regra vigente do reset:
+  - `AssinaturaInstitucional` foi preservada
+  - `ConfiguracaoInstitucional` foi preservada
+  - nao houve reconstrucao de contas, pessoas, centros de custo, categorias, lancamentos, regras ou rateios nesta etapa
+- contagens finais validadas sem rollback:
+  - `1` assinatura institucional preservada
+  - `1` configuracao institucional preservada
+  - `0` regras automaticas
+  - `0` contas
+  - `0` pessoas
+  - `0` centros de custo
+  - `0` categorias/subcategorias
+  - `0` lancamentos simples
+  - `0` grupos de rateio
+  - `0` linhas rateadas
+  - `0` lancamentos totais no modulo
+- validacao tecnica complementar:
+  - `py manage.py check` OK apos o reset final
+- conclusao consolidada:
+  - a base transacional do `financeiro` ficou intencionalmente vazia
+  - o modulo ficou preparado para comecar/testar do zero a partir desta etapa
+
+## Validacao operacional final do financeiro reconstruido
+
+- foi executada a validacao operacional final do `financeiro` usando a base real reconstruida na microetapa anterior
+- a validacao foi feita pela stack HTTP real do Django com `Client`, cobrindo rotas, renderizacao, permissao, downloads e fluxos mutaveis com rollback controlado para nao sujar a base apenas por smoke test
+- resultado objetivo dos blocos principais:
+  - listagem de lancamentos: OK
+  - criacao de lancamento simples: OK
+  - edicao de lancamento simples: OK
+  - leitura/abertura da edicao coordenada de grupo rateado: OK
+  - importacao/exportacao nos pontos existentes: OK
+  - extrato: OK
+  - resumo: OK
+  - prestacao de contas: OK
+  - recibo: OK
+  - regras automaticas: OK
+  - permissoes principais: OK
+  - integridade visual minima das telas centrais: OK
+- validacoes de permissao executadas nesta microetapa:
+  - `Gestao administrativa` acessa a auditoria do financeiro com `200`
+  - `Operador financeiro` recebe `403` na auditoria do financeiro
+  - `Consulta/visualizacao` recebe `403` na central de importacao
+  - `Consulta/visualizacao` continua acessando a exportacao da listagem de lancamentos com `200`
+- validacoes funcionais executadas nesta microetapa:
+  - listagem principal de lancamentos abriu com `200`
+  - formulario de novo lancamento abriu com `200`
+  - criacao de lancamento simples por `Operador financeiro` passou com `302`
+  - edicao do mesmo lancamento passou com `302`
+  - recibo do lancamento criado/alterado abriu com `200`
+  - endpoint de sugestoes de regras respondeu `200` antes e depois da criacao com `salvar_como_regra_automatica`
+  - tela de edicao coordenada do grupo rateado abriu com `200`
+  - exportacao XLSX da listagem de lancamentos abriu com `200`
+  - download da planilha modelo de lancamentos abriu com `200`
+  - download da planilha-base auxiliar de `contas` abriu com `200`
+  - extrato por conta abriu com `200`
+  - resumo abriu com `200`
+  - prestacao de contas abriu com `200`
+- detalhe importante desta validacao:
+  - a primeira tentativa de smoke tinha marcado falha na criacao do lancamento simples, mas isso foi apenas erro do proprio teste
+  - a causa foi envio de `123,45` diretamente para `input type=\"number\"`, enquanto o formulario HTML trabalha com payload compativel de navegador (`123.45`)
+  - ao repetir a validacao com payload coerente com o campo HTML, criacao e edicao passaram normalmente
+  - tambem houve dois falsos negativos iniciais por URL de teste incorreta (`exportacao`, `modelos-cadastros` e rota do grupo rateado foram corrigidas para os caminhos reais do repositorio)
+- integridade visual minima confirmada:
+  - as telas centrais renderizaram sem erro com seus titulos principais esperados
+  - nao apareceu regressao funcional de shell, listagem, formulario, relatorios ou recibo
+  - na tela de `Importacoes do Financeiro`, a validacao textual final confirmou `200` e renderizacao correta; a unica diferenca era apenas o texto exato usado no teste, nao um bug visual do sistema
+- conclusao consolidada:
+  - nao apareceu bloqueio funcional novo
+  - o `financeiro` reconstruido passou na validacao operacional final desta etapa
+  - do ponto de vista tecnico e funcional, o modulo fica apto para fechamento de commit
+
+## Execucao real completa de reset e reconstrucao do financeiro
+
+- a operacao real completa de `backup/reset/reconstrucao` do `financeiro` foi finalmente executada sem rollback
+- o pacote operacional usado nesta execucao real foi:
+  - `tmp/operacao_reset_financeiro_20260406_081633/`
+- a integridade do pacote foi confirmada antes do passo destrutivo, com presenca de:
+  - `rateios_backup_definitivo.json`
+  - `regras_backup_definitivo.json`
+  - `01_contas_financeiras_importacao.xlsx`
+  - `02_pessoas_financeiras_importacao.xlsx`
+  - `03_centros_custo_importacao.xlsx`
+  - `04_categorias_importacao.xlsx`
+  - `05_lancamentos_simples_importacao.xlsx`
+  - `manifesto_pre_reset.json`
+- o reset destrutivo real foi executado com sucesso por:
+  - `py manage.py reset_financeiro_controlado --executar --confirmar RESETAR_FINANCEIRO`
+- o comportamento real do reset confirmou a regra final consolidada:
+  - `AssinaturaInstitucional` foi preservada
+  - `ConfiguracaoInstitucional` foi preservada
+  - `RegraLancamentoFinanceiro` foi apagada junto com o restante do dominio transacional do `financeiro`
+- a reconstrucao real foi executada na ordem operacional correta:
+  - `5` contas reimportadas
+  - `2` pessoas reimportadas
+  - `2` centros de custo reimportados
+  - `11` categorias/subcategorias reimportadas
+  - `14` lancamentos simples reimportados
+  - `1` regra automatica restaurada pelo comando tecnico
+  - `6` grupos de rateio e `12` linhas rateadas restaurados pelo comando tecnico
+- comandos tecnicos usados na operacao real:
+  - `py manage.py restaurar_regras_financeiro --arquivo "tmp/operacao_reset_financeiro_20260406_081633/regras_backup_definitivo.json" --executar --confirmar RESTAURAR_REGRAS_FINANCEIRO`
+  - `py manage.py restaurar_rateios_financeiro --arquivo "tmp/operacao_reset_financeiro_20260406_081633/rateios_backup_definitivo.json" --executar --confirmar RESTAURAR_RATEIOS_FINANCEIRO`
+- validacao final sem rollback:
+  - `1` assinatura institucional preservada
+  - `1` configuracao institucional preservada
+  - `1` regra automatica restaurada
+  - `5` contas
+  - `2` pessoas
+  - `2` centros de custo
+  - `11` categorias/subcategorias
+  - `14` lancamentos simples
+  - `12` lancamentos rateados
+  - `6` grupos de rateio
+  - `0` rateios sem `grupo_rateio`
+  - `0` lancamentos simples usando categoria-pai
+  - `0` lancamentos simples com tipo/categoria incompatíveis
+  - `0` regras operacionais apontando para categoria-pai
+- validacao tecnica complementar:
+  - `py manage.py check` OK apos a reconstrucao real
+- divergencia entre preflight e operacao real:
+  - nenhuma divergencia funcional de dados ou de contagem
+  - houve apenas um erro operacional inicial de quoting ao chamar os restores tecnicos pelo shell, corrigido na sequencia sem impacto nos dados
+- conclusao consolidada:
+  - a base local real do `financeiro` foi zerada e recomposta integralmente com sucesso
+  - o modulo volta a ficar apto para a etapa final de validacao operacional local
+
+## Ultimo bloqueio do reset real resolvido: assinaturas, configuracao institucional e regras automaticas
+
+- o reset destrutivo real do `financeiro` ainda estava bloqueado mesmo depois da resolucao dos `rateios` e dos `5` lancamentos simples legados, porque o pacote operacional de reconstrucao ainda nao cobria integralmente tudo o que o comando de reset apagava
+- o bloqueio objetivo remanescente estava em `3` itens do dominio:
+  - `AssinaturaInstitucional`
+  - `ConfiguracaoInstitucional`
+  - `RegraLancamentoFinanceiro`
+- o mapeamento final desta microetapa confirmou o papel de cada item:
+  - `AssinaturaInstitucional`: apoio documental para recibos/relatorios, sem dependencia estrutural do reset dos cadastros auxiliares
+  - `ConfiguracaoInstitucional`: configuracao institucional/documental do proprio modulo, tambem sem dependencia estrutural do reset transacional
+  - `RegraLancamentoFinanceiro`: ajuda operacional de sugestao automatica, mas com dependencias diretas de `conta`, `pessoa`, `categoria`, `centro de custo` e, em transferencia, `conta_destino`
+- decisao tecnica minima e segura adotada:
+  - `AssinaturaInstitucional` passa a ser preservada fora do reset
+  - `ConfiguracaoInstitucional` passa a ser preservada fora do reset
+  - `RegraLancamentoFinanceiro` continua entrando no reset, mas agora ganhou trilha tecnica propria de `backup/restauracao` em `JSON`
+- o motivo para nao preservar `RegraLancamentoFinanceiro` fora do reset ficou objetivo em validacao real:
+  - ao testar essa alternativa, o reset passou a falhar com `ProtectedError`
+  - isso acontece porque as regras automaticas referenciam cadastros que o reset precisa apagar
+  - preservar as regras fora do reset exigiria preservar tambem esses cadastros, o que descaracterizaria o reset operacional do modulo
+- implementacao tecnica consolidada:
+  - `financeiro/management/commands/reset_financeiro_controlado.py` foi ajustado para:
+    - preservar `AssinaturaInstitucional`
+    - preservar `ConfiguracaoInstitucional`
+    - continuar apagando `RegraLancamentoFinanceiro`
+  - foi criado `financeiro/regras_backup.py` como helper tecnico para serializacao/restauracao das regras
+  - foi criado `backup_regras_financeiro` para gerar `JSON` tecnico das regras
+  - foi criado `restaurar_regras_financeiro` para reconstituir as regras com `dry-run` por padrao e confirmacao explicita na execucao real
+- o formato tecnico adotado para regras ficou:
+  - `formato`: `financeiro.regras.backup.v1`
+  - referencias resolvidas por chave de negocio estavel, e nao por `pk`
+  - conta por `nome`
+  - pessoa por `codigo`
+  - centro de custo por `codigo`
+  - categoria por `tipo`, `nome` e `categoria_pai_nome`
+- o pacote operacional mais recente passou a ficar incompleto sem `regras_backup_definitivo.json`; por isso, o caminho correto de reconstrucao integral agora passa a ser:
+  - preservar `assinaturas`
+  - preservar `configuracao institucional`
+  - reimportar cadastros auxiliares
+  - reimportar lancamentos simples
+  - restaurar `rateios`
+  - restaurar `regras automaticas`
+- validacao executada nesta microetapa:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `py manage.py reset_financeiro_controlado` OK em `dry-run`, agora exibindo:
+    - `regras automaticas` no escopo de exclusao
+    - `assinaturas institucionais` no escopo preservado
+    - `configuracoes institucionais` no escopo preservado
+  - `py manage.py backup_regras_financeiro --saida tmp/operacao_reset_financeiro_20260406_081633/regras_backup_definitivo.json` OK
+  - `py manage.py restaurar_regras_financeiro --arquivo tmp/operacao_reset_financeiro_20260406_081633/regras_backup_definitivo.json` OK em `dry-run`
+  - validacao completa com rollback:
+    - reset tecnico executado dentro de transacao de teste
+    - `assinaturas` e `configuracoes institucionais` permaneceram apos o reset
+    - `regras automaticas` foram apagadas pelo reset
+    - reimportacao do pacote operacional + restore tecnico de `rateios` + restore tecnico de `regras` recompuseram integralmente o estado esperado
+    - contagem final validada no rollback:
+      - `1` assinatura institucional
+      - `1` configuracao institucional
+      - `1` regra automatica
+      - `5` contas
+      - `2` pessoas
+      - `2` centros de custo
+      - `11` categorias/subcategorias
+      - `14` lancamentos simples
+      - `12` lancamentos rateados
+      - `6` grupos de rateio
+- conclusao consolidada:
+  - o ultimo bloqueio conhecido do reset real foi removido
+  - o pacote operacional passa a cobrir integralmente tudo o que o reset apaga
+  - o reset destrutivo real fica novamente liberado do ponto de vista tecnico, embora nao tenha sido executado nesta microetapa
+
+## Saneamento dos 5 lancamentos simples legados e novo preflight
+
+- a base atual tinha `5` lancamentos simples legados que ainda bloqueavam o reset real, mesmo depois da resolucao tecnica dos `rateios`
+- os `5` bloqueadores identificados eram:
+  - `pk=1` (`Desc Teste`) em `despesa`, usando `Cantina` como categoria pai
+  - `pk=4` (`Desc Teste`) em `despesa`, usando `Cantina` como categoria pai
+  - `pk=2` (`Negocios Digitais`) em `despesa`, usando `Estrutura` como categoria pai
+  - `pk=12` (`Transf5666`) em `despesa`, usando `Estrutura` como categoria pai
+  - `pk=23` (`Teste regra aut`) em `despesa`, usando `Doacao`, categoria do tipo `receita`
+- diretriz aplicada nesta microetapa:
+  - saneamento dirigido da base atual
+  - sem afrouxar o contrato da importacao comum
+  - sem transformar a microetapa em refatoracao da importacao
+- correcoes aplicadas:
+  - foi criada a subcategoria `Operacao Cantina` sob a categoria pai `Cantina`
+  - os lancamentos `pk=1` e `pk=4` passaram de `Cantina` para `Operacao Cantina`
+  - foi criada a subcategoria `Operacao Estrutura` sob a categoria pai `Estrutura`
+  - os lancamentos `pk=2` e `pk=12` passaram de `Estrutura` para `Operacao Estrutura`
+  - o lancamento `pk=23` passou de `despesa` para `receita`, preservando a subcategoria `Doacao`
+  - a `RegraLancamentoFinanceiro pk=3`, ligada ao mesmo caso de `Teste regra aut`, tambem foi alinhada para `receita` com `Doacao`, evitando reintroduzir o legado invalido em uso futuro da regra
+- as criacoes/atualizacoes foram executadas em transacao com trilha de auditoria no proprio modulo
+- depois do saneamento:
+  - foi gerado um novo pacote real de reconstrucao em `tmp/operacao_reset_financeiro_20260406_081633/`
+  - esse pacote passou a refletir:
+    - `5` contas
+    - `2` pessoas
+    - `2` centros de custo
+    - `11` categorias no total
+    - `6` categorias pai
+    - `5` subcategorias
+    - `14` lancamentos simples
+    - `12` lancamentos rateados
+    - `6` grupos de rateio
+- o novo preflight completo foi executado com rollback:
+  - limpeza total do dominio `financeiro` apenas dentro da transacao
+  - reimportacao valida de `contas`
+  - reimportacao valida de `pessoas`
+  - reimportacao valida de `centros de custo`
+  - reimportacao valida de `categorias/subcategorias`
+  - reimportacao valida de `14` lancamentos simples
+  - restauracao tecnica valida de `6` grupos de rateio e `12` linhas rateadas
+  - rollback ao final, preservando a base real atual
+- conclusao consolidada:
+  - o bloqueio dos `5` lancamentos simples foi removido
+  - o reset destrutivo real fica tecnicamente liberado do ponto de vista da reconstrucao
+  - mesmo assim, o reset real ainda nao foi executado nesta microetapa
+- a frente futura continua registrada sem implementacao nesta etapa:
+  - exportacao comum de lancamentos com suporte a rateio por grupo em planilha
+  - importacao comum de lancamentos com suporte a reconstrucao de rateio por grupo em planilha
+
+## Procedimento real de backup/reset/reconstrucao do financeiro
+
+- a etapa operacional real de reconstruir a base do `financeiro` foi iniciada com geracao do pacote definitivo de reconstrucao, mas o reset destrutivo real **nao** foi executado ao final desta microetapa
+- o pacote real foi gerado em:
+  - `tmp/operacao_reset_financeiro_20260406_074817/`
+- conteudo principal do pacote:
+  - `rateios_backup_definitivo.json`
+  - `01_contas_financeiras_importacao.xlsx`
+  - `02_pessoas_financeiras_importacao.xlsx`
+  - `03_centros_custo_importacao.xlsx`
+  - `04_categorias_importacao.xlsx`
+  - `05_lancamentos_simples_importacao.xlsx`
+  - `manifesto_pre_reset.json`
+- o preflight operacional da reconstrucao foi executado em transacao com rollback antes do reset real:
+  - limpeza total do dominio `financeiro` apenas dentro da transacao de teste
+  - reimportacao valida de `contas`
+  - reimportacao valida de `pessoas`
+  - reimportacao valida de `centros de custo`
+  - reimportacao valida de `categorias/subcategorias`
+  - tentativa de reimportacao dos `lancamentos simples` pelo fluxo comum
+  - rollback ao final, preservando a base real atual
+- o preflight mostrou que o reset real ainda nao pode ser disparado com seguranca:
+  - `14` lancamentos simples avaliados
+  - apenas `9` linhas validas no fluxo comum
+  - `5` linhas invalidas
+- bloqueios objetivos encontrados na reconstrucao comum dos lancamentos simples:
+  - linhas `2` e `15`: despesas usando `Cantina`, hoje tratada como `Categoria` pai e nao como `Subcategoria`
+  - linhas `3` e `12`: despesas usando `Estrutura`, hoje tratada como `Categoria` pai e nao como `Subcategoria`
+  - linha `13`: despesa usando `Doacao`, que pertence ao tipo `receita`
+- isso cria um novo bloqueio estrutural anterior ao reset:
+  - o caminho tecnico de rateio ja resolveu a preservacao dos grupos rateados
+  - mas a importacao comum atual dos lancamentos simples nao recompõe integralmente a base real por causa desses legados fora do contrato atual
+- decisao operacional desta microetapa:
+  - `backup` definitivo gerado e guardado
+  - `reset` destrutivo real adiado
+  - nenhuma alteracao destrutiva aplicada na base local
+- permanece registrada como frente futura explicita:
+  - evoluir a exportacao comum de lancamentos para suportar rateio por grupo em planilha
+  - evoluir a importacao comum de lancamentos para reconstruir rateio por grupo em planilha
+- essa frente futura nao foi implementada nesta microetapa
+
+## Backup/restauracao tecnica de rateios antes do reset real
+
+- o reset destrutivo real do `financeiro` continuou bloqueado enquanto a base local dependia apenas da importacao comum de lancamentos para ser recomposta
+- o bloqueio ficou objetivo no repositorio e na base atual:
+  - existem `12` lancamentos com `com_rateio=True`
+  - esses lancamentos estao distribuidos em `6` grupos de rateio
+  - a importacao comum atual de lancamentos nao recompõe `grupo_rateio`, nem trata rateio como documento agrupado
+- para destravar o reset futuro sem abrir uma nova frente na importacao funcional comum, foi adotada uma trilha tecnica separada:
+  - novo helper tecnico `financeiro/rateio_backup.py`
+  - novo comando `backup_rateios_financeiro`
+  - novo comando `restaurar_rateios_financeiro`
+- a estrategia final adotada nesta microetapa foi:
+  - backup em `JSON` tecnico, separado do fluxo de importacao comum
+  - serializacao por `grupo_rateio`, com `numero_documento`, total do grupo e linhas internas
+  - cada linha preserva os campos operacionais do lancamento rateado e referencia os cadastros auxiliares por chave de negocio estavel, e nao por `pk`
+  - contas: por `nome`
+  - pessoas: por `codigo`
+  - centros de custo: por `codigo`
+  - categorias: por `tipo`, `nome` e `categoria_pai_nome`
+  - restauracao transacional e explicita, com `dry-run` por padrao e confirmacao obrigatoria para gravacao real
+- o restore tecnico ficou propositalmente fora da importacao funcional comum do usuario:
+  - ele existe para reconstruir base apos reset, nao para operacao cotidiana
+  - isso permite preservar fidelidade estrutural do rateio sem afrouxar a UX nem o contrato da importacao comum
+- a validacao da restauracao revelou e passou a tratar residuos legados ja existentes na base atual:
+  - ha linhas rateadas antigas apontando para `categoria pai`, hoje invalida no fluxo comum
+  - ha `2` grupos legados com apenas `1` linha, embora o rateio atual de negocio trabalhe com `2+` linhas
+  - o restore tecnico agora recompõe esses residuos com fidelidade, apenas no caminho tecnico, sem liberar essa excecao no cadastro/importacao funcional comum
+- validacao executada nesta microetapa:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `py manage.py backup_rateios_financeiro --saida tmp/rateios_validacao.json` OK
+  - `py manage.py restaurar_rateios_financeiro --arquivo tmp/rateios_validacao.json` OK em `dry-run`
+  - roundtrip controlado com rollback em subconjunto de `2` grupos:
+    - grupos apagados temporariamente dentro de transacao de teste
+    - restauracao tecnica executada em memoria logica
+    - `roundtrip_idem=True`
+    - `2` grupos restaurados
+    - `4` linhas restauradas
+    - `3` linhas legadas restauradas
+    - `4` auditorias `create` tecnicas geradas no teste
+    - rollback aplicado ao final para nao alterar a base local definitiva
+- resultado pratico:
+  - agora existe estrategia concreta e implementada para preservar/restaurar rateios antes do reset
+  - o reset real deixa de ficar bloqueado pela ausencia de trilha tecnica para grupos rateados
+  - ainda assim, o reset destrutivo real nao foi executado nesta microetapa
+- comandos tecnicos consolidados:
+  - backup: `py manage.py backup_rateios_financeiro --saida tmp/meu_backup_rateios.json`
+  - restore em simulacao: `py manage.py restaurar_rateios_financeiro --arquivo tmp/meu_backup_rateios.json`
+  - restore real: `py manage.py restaurar_rateios_financeiro --arquivo tmp/meu_backup_rateios.json --executar --confirmar RESTAURAR_RATEIOS_FINANCEIRO`
+- limitacoes remanescentes:
+  - o backup/restauracao tecnica cobre apenas os lancamentos `com_rateio=True` e seus grupos
+  - ele nao substitui nem amplia a importacao funcional comum de lancamentos
+  - ele tambem nao preserva o historico anterior de auditoria apagado pelo reset; na restauracao, novas auditorias tecnicas de criacao sao geradas para rastreabilidade minima
+
+## Validacao controlada dos 4 fluxos de importacao auxiliar
+
+- foi executada validacao funcional controlada dos 4 fluxos auxiliares de importacao do `financeiro`, cobrindo:
+  - `contas`
+  - `pessoas`
+  - `centros de custo`
+  - `categorias/subcategorias`
+- a validacao foi feita pelo fluxo HTTP do proprio Django com `Client`, porque este ambiente nao expôs automacao de navegador confiavel e o `manage.py shell` precisou de execucao fora do sandbox para funcionar
+- o roteiro executado cobriu:
+  - caso de sucesso para cada fluxo
+  - caso invalido para cada fluxo
+  - mensagens de sucesso/erro
+  - politica `all-or-nothing` por arquivo
+  - permissoes exigidas
+  - geracao de auditoria
+  - regra de dependencia entre categoria pai e subcategoria
+- resultado funcional consolidado:
+  - `Operador financeiro` acessa a central e consegue importar os 4 cadastros
+  - `Consulta/visualizacao` recebe `403` ao tentar acessar a central
+  - um perfil temporario com apenas `financeiro.lancamentos.importar` e `financeiro.lancamentos.baixar_modelo`, sem permissao de criacao do cadastro alvo, acessa a central mas nao recebe os formularios auxiliares e recebe `403` em download/post direto de `contas`
+  - nos 4 fluxos, o caso de sucesso importou 2 registros, gerou 2 auditorias `create` e exibiu mensagem de sucesso coerente
+  - nos 4 fluxos, o caso invalido manteve `0` registros importados e `0` auditorias novas, confirmando `all-or-nothing`
+  - em `categorias/subcategorias`, a importacao valida preservou a vinculacao `categoria pai -> subcategoria`, e o caso invalido bloqueou a carga quando a categoria pai nao existia ou nao vinha antes
+- bug real encontrado e corrigido nesta microetapa:
+  - as planilhas-base auxiliares eram geradas com a aba `Instrucoes`, mas a validacao estrutural aceitava apenas `Instruções`
+  - isso fazia a importacao auxiliar falhar antes de ler qualquer linha, mesmo usando a planilha gerada pelo proprio sistema
+  - a validacao passou a aceitar a nomenclatura sem acento, compatibilizando o upload com o layout atualmente baixado pelo usuario
+- validacao tecnica executada apos a correcao:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+- limitacao remanescente desta etapa:
+  - a validacao funcional ficou forte o suficiente para fechar comportamento, permissao, mensagens e auditoria, mas a checagem visual humana literal no navegador ainda continua opcional como ultima confirmacao de acabamento antes do reset destrutivo real
+
+## Importacoes auxiliares centralizadas do financeiro
+
+- a decisao consolidada mais recente desta frente passou a ser:
+  - importacoes auxiliares ficam centralizadas no financeiro geral
+  - exportacoes permanecem nas telas/listagens especificas para respeitar filtros
+  - `assinaturas` ficaram fora do escopo desta frente
+- com isso, a camada anterior de planilhas-base foi ajustada de forma cirurgica:
+  - `AssinaturaInstitucional` saiu da central de planilhas-base/importacoes auxiliares
+  - a central passou a cobrir apenas `ContaFinanceira`, `PessoaFinanceira`, `CentroCusto` e `CategoriaFinanceira`/subcategorias
+- a tela central de importacoes do modulo foi consolidada como ponto unico para:
+  - importacao de lancamentos
+  - download das planilhas-base dos cadastros auxiliares
+  - importacao real de contas
+  - importacao real de pessoas
+  - importacao real de centros de custo
+  - importacao real de categorias/subcategorias
+- a ordem operacional de carga ficou fechada assim:
+  - contas
+  - pessoas
+  - centros de custo
+  - categorias pai e depois subcategorias
+  - lancamentos
+- as regras finais adotadas para a importacao auxiliar ficaram:
+  - reaproveitar exatamente os layouts-base ja definidos
+  - fluxo centralizado no financeiro geral, sem espalhar a importacao como fluxo principal em cada cadastro
+  - validacao estrutural do XLSX por abas e cabecalhos
+  - validacao de conteudo linha a linha com mensagens claras por campo
+  - gravacao transacional por arquivo, sem importacao parcial
+  - auditoria de criacao para contas, pessoas, centros de custo e categorias importadas
+  - permissao base da tela continua em `financeiro.lancamentos.importar`, e cada importacao auxiliar tambem respeita a permissao de criacao do cadastro correspondente
+- os layouts ativos desta frente passam a ser:
+  - contas: `nome`, `descricao`, `saldo_inicial`, `data_saldo_inicial`, `ativa`
+  - pessoas: `codigo`, `nome`, `tipo_pessoa`, `documento`, `telefone`, `email`, `observacoes`, `ativo`
+  - centros de custo: `codigo`, `nome`, `ativo`
+  - categorias/subcategorias: `nome`, `tipo`, `categoria_pai_nome`, `mensagem_recibo`, `ativo`
+- validacao local executada nesta microetapa:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - houve tentativa de smoke test transacional por script para exercitar a importacao em memoria, mas o ambiente bloqueou execucoes via `manage.py shell` com `Acesso negado`; a validacao funcional fina no navegador continua recomendada antes do reset destrutivo real
+
+## Planilhas-base reutilizaveis dos cadastros auxiliares do financeiro
+
+- foi consolidada a camada de planilhas-base reutilizaveis para reconstruir a base local do `financeiro` apos o reset controlado, sem executar ainda a importacao auxiliar em si
+- a geracao dos modelos XLSX passou a ficar disponivel no proprio fluxo existente de `Importacao de Lancamentos`, em coerencia com o padrao ja usado para a planilha modelo de lancamentos
+- os cadastros auxiliares contemplados nesta microetapa foram:
+  - `ContaFinanceira`
+  - `PessoaFinanceira`
+  - `CentroCusto`
+  - `CategoriaFinanceira` e subcategorias
+  - `AssinaturaInstitucional`
+- a ordem operacional recomendada de carga ficou explicita na tela e no contrato tecnico:
+  - contas
+  - pessoas
+  - centros de custo
+  - categorias pai e depois subcategorias
+  - assinaturas institucionais
+  - somente depois, lancamentos
+- os layouts-base gerados nesta etapa ficaram assim:
+  - contas: `nome`, `descricao`, `saldo_inicial`, `data_saldo_inicial`, `ativa`
+  - pessoas: `codigo`, `nome`, `tipo_pessoa`, `documento`, `telefone`, `email`, `observacoes`, `ativo`
+  - centros de custo: `codigo`, `nome`, `ativo`
+  - categorias/subcategorias: `nome`, `tipo`, `categoria_pai_nome`, `mensagem_recibo`, `ativo`
+  - assinaturas: `nome`, `assinatura_texto`, `nome_exibicao`, `cargo`, `ativo`, `padrao`
+- cada arquivo segue o contrato minimamente padronizado ja adotado no modulo:
+  - aba `Modelo` com apenas os cabecalhos oficiais
+  - aba `Instrucoes` com orientacoes praticas de preenchimento
+  - nomenclatura explicita como `planilha-base`, para nao confundir o usuario com importacao auxiliar pronta
+- esta microetapa nao implementou:
+  - importacao auxiliar real dos cadastros
+  - reset destrutivo
+  - logo local
+  - deploy/hospedagem
+- validacao tecnica minima prevista para esta etapa:
+  - `py manage.py check`
+  - abertura da tela de importacao/exportacao com os downloads auxiliares expostos
+  - download dos modelos XLSX pelo sistema, sem gravacao de dados
+
+## Reset controlado do financeiro
+
+- foi criado o management command `reset_financeiro_controlado` em `financeiro/management/commands/reset_financeiro_controlado.py` como fluxo tecnico dedicado para reiniciar apenas os dados do modulo `financeiro`
+- a regra final desta microetapa ficou explicita e conservadora:
+  - o comando apaga `LancamentoFinanceiro`, `RegraLancamentoFinanceiro`, `AuditoriaFinanceiro`, `ContaFinanceira`, `PessoaFinanceira`, `CategoriaFinanceira`/subcategorias, `CentroCusto`, `AssinaturaInstitucional` e `ConfiguracaoInstitucional`
+  - o comando preserva `User`, autenticacao, `PerfilAcesso`, `PermissaoSistema`, `UsuarioPerfilAcesso`, `SiteConfig`, configuracoes sistemicas e modulos fora do `financeiro`
+- o reset nao e silencioso:
+  - por padrao, o comando roda em `dry-run` e apenas mostra o que seria apagado e o que sera preservado
+  - a execucao real so acontece com `--executar --confirmar RESETAR_FINANCEIRO`
+- a ordem de exclusao foi implementada de forma segura para respeitar dependencias do dominio: regras e auditorias antes, lancamentos antes dos cadastros protegidos por `PROTECT`, subcategorias antes de categorias pai
+- validacao pratica minima local desta microetapa:
+  - `py manage.py check` OK
+  - `py manage.py reset_financeiro_controlado` OK em modo simulacao, exibindo escopo de exclusao e preservacao sem alterar dados
+  - a execucao destrutiva real nao foi rodada nesta validacao para evitar apagar a base local fora de uma acao operacional consciente do usuario
 
 ## Auditoria de fechamento do financeiro para homologacao/hospedagem
 

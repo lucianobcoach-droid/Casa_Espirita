@@ -4,6 +4,7 @@ Objetivo: servir como checklist operacional permanente e curta para revisar toda
 
 ## Checklist permanente
 - Navegacao, menu e atalhos foram revisados e continuam coerentes?
+- O shell autenticado da tela segue o padrao oficial do modulo, sem topo minimo divergente?
 - Permissoes por modulo, tela/recurso e acao foram consideradas ou registradas como pendencia?
 - Listagens impactadas foram revisadas em filtros, ordenacao, colunas, truncamento, acoes em lote e exportacao?
 - Formularios impactados foram revisados em rotulos, obrigatoriedade, mensagens, preview e consistencia visual?
