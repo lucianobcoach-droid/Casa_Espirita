@@ -1,6 +1,110 @@
 # ROADMAP FINANCEIRO
 
-Data: 2026-03-26
+Data: 2026-04-06
+
+## 0.5. Execucao atual da frente de planilha comum com ate 5 rateios na mesma linha
+
+- a frente antes mantida como futura de `exportacao/importacao comum de lancamentos com suporte a rateio em planilha` deixou de ser backlog e entrou em execucao real
+- a decisao mais recente do usuario substituiu o contrato intermediario por multiplas linhas pelo novo contrato principal:
+  - `1 linha = 1 documento`
+  - ate `5` blocos de rateio na mesma linha
+  - `valor_total_documento = soma dos blocos preenchidos`
+- o contrato comum atual da planilha de lancamentos passou a cobrir:
+  - lancamentos simples
+  - transferencias simples
+  - lancamentos com rateio em ate `5` blocos por documento
+- a exportacao comum da listagem continua respeitando filtros, mas agora sai no mesmo contrato de `Modelo` + `Instrucoes` usado pela importacao
+- a importacao comum continua transacional e sem criacao automatica de cadastros auxiliares, mas agora reconstroi lancamentos rateados diretamente no fluxo funcional do usuario
+- compatibilidade preservada:
+  - o layout simples legado continua aceito na importacao para nao quebrar arquivos antigos ja preparados
+- limite conhecido e deliberado do fluxo comum:
+  - grupos com mais de `5` linhas rateadas passam a ser bloqueados com mensagem clara na exportacao/importacao comum
+  - nesses casos, o caminho tecnico de `backup/restauracao` continua sendo a excecao operacional segura
+- backlog remanescente relacionado a esta frente:
+  - preview mais rico antes de gravar
+  - tratamento avancado de duplicidades
+  - importacao parcial continua fora de escopo
+  - refinamentos futuros de UX/mensagens da central conforme uso real
+
+## 0.4. Ultimo bloqueio do reset real: assinaturas, configuracao institucional e regras automaticas
+
+- depois de resolver `rateios` e `lancamentos simples` legados, o reset real ainda ficou bloqueado por uma ultima lacuna do pacote operacional
+- o bloqueio era objetivo:
+  - o comando de reset apagava `AssinaturaInstitucional`
+  - o comando de reset apagava `ConfiguracaoInstitucional`
+  - o comando de reset apagava `RegraLancamentoFinanceiro`
+  - o pacote de reconstrucao ainda nao tinha trilha propria para esses itens
+- a estrategia minima e segura adotada foi mista:
+  - `AssinaturaInstitucional` passa a ser preservada fora do reset
+  - `ConfiguracaoInstitucional` passa a ser preservada fora do reset
+  - `RegraLancamentoFinanceiro` continua entrando no reset, mas passa a contar com backup/restauracao tecnica separados em `JSON`
+- motivo da decisao:
+  - `assinaturas` e `configuracao institucional` sao suporte documental e nao precisam ser zeradas para reiniciar a base transacional
+  - `regras automaticas` dependem de cadastros que o reset precisa apagar; preserva-las fora do reset gera conflito estrutural e invalida a limpeza do dominio
+- implicacao pratica:
+  - o pacote operacional agora precisa incluir tambem o backup tecnico das `regras`
+  - com isso, o reset real volta a ficar tecnicamente liberado
+- a frente futura continua separada e visivel:
+  - evolucao do layout comum de exportacao/importacao de lancamentos com suporte a `rateio` por grupo em planilha
+  - essa evolucao futura nao substitui a trilha tecnica hoje adotada para restauracao de `rateios` e `regras`
+
+## 0.1. Bloqueio real do reset e estrategia tecnica para rateios
+
+- o reset destrutivo real do `financeiro` ficou bloqueado quando a auditoria pratica confirmou que a base local possui lancamentos `com_rateio=True` e grupos de rateio que nao podem ser recompostos pela importacao comum ja entregue
+- isso nao invalida a importacao comum atual; apenas registra seu limite atual:
+  - ela importa lancamentos simples
+  - ela nao recompõe `grupo_rateio` como documento agrupado
+- para nao abrir uma grande nova frente na importacao funcional, foi adotada a menor trilha segura e reversivel:
+  - backup tecnico separado dos rateios em `JSON`
+  - restauracao tecnica separada dos rateios, transacional e com confirmacao explicita
+- essa solucao passa a ser a ponte operacional para permitir reset futuro sem perda estrutural dos grupos rateados
+- importante:
+  - isso nao significa que a importacao funcional comum de lancamentos tenha ganho suporte a rateio
+  - esse suporte continua fora do fluxo comum do usuario e deve seguir visivel como limite conhecido do roadmap ate decisao futura
+- em decisao posterior, essa limitacao passou a ficar registrada como frente futura explicita do backlog:
+  - exportacao comum de lancamentos com suporte a rateio por grupo em planilha
+  - importacao comum de lancamentos com suporte a reconstrucao de rateio por grupo em planilha
+- essa frente continua futura mesmo com a existencia do backup/restauracao tecnica separado; o caminho tecnico resolve reconstrucao operacional da base, mas nao substitui a evolucao funcional do layout comum
+
+## 0.2. Novo bloqueio real encontrado no preflight do reset
+
+- ao preparar a execucao operacional real do reset, o projeto gerou o pacote definitivo de reconstrucao e rodou um preflight com rollback
+- esse preflight confirmou que os cadastros auxiliares atuais recompõem normalmente, mas revelou legado invalido tambem entre `lancamentos simples`
+- o bloqueio objetivo ficou:
+  - `5` linhas de lancamentos simples nao passam pelo contrato atual da importacao comum
+  - parte dessas linhas usa `Categoria` pai (`Cantina`, `Estrutura`) em despesa
+  - ao menos uma linha usa categoria de `receita` (`Doacao`) em um lancamento do tipo `despesa`
+- consequencia pratica:
+  - o reset destrutivo real permanece adiado ate existir estrategia fechada para esses legados de lancamento simples
+  - essa estrategia pode passar por saneamento de dados, trilha tecnica especifica ou outra decisao controlada em microetapa propria
+
+## 0.3. Bloqueio dos lancamentos simples saneado
+
+- em microetapa posterior, o projeto optou por saneamento dirigido da base atual, preservando o contrato da importacao comum
+- resultado:
+  - os `5` lancamentos simples bloqueadores foram corrigidos
+  - um novo pacote de reconstrucao foi gerado
+  - o novo preflight completo com rollback passou com sucesso
+- implicacao pratica:
+  - o reset destrutivo real deixa de ficar bloqueado por `rateios` e tambem deixa de ficar bloqueado por `lancamentos simples` legados
+  - a proxima microetapa operacional volta a ser a execucao real do procedimento de backup/reset/reconstrucao
+- a frente futura continua visivel e separada:
+  - evoluir exportacao comum de lancamentos para suportar `rateio` por grupo em planilha
+  - evoluir importacao comum de lancamentos para reconstruir `rateio` por grupo em planilha
+
+## 0. Reajuste recente de escopo operacional
+
+- a decisao consolidada mais recente desta frente e:
+  - importacoes auxiliares ficam centralizadas no financeiro geral
+  - exportacoes permanecem nas telas/listagens especificas para respeitar filtros
+  - `assinaturas` ficam fora da frente atual de importacoes auxiliares
+- no estado atual do repositorio, a central de importacoes do financeiro ja cobre:
+  - importacao de lancamentos
+  - importacao auxiliar de contas
+  - importacao auxiliar de pessoas
+  - importacao auxiliar de centros de custo
+  - importacao auxiliar de categorias/subcategorias
+- backlog remanescente desta frente deve continuar visivel neste roadmap, sem rebaixar o que ja foi entregue no repositorio
 
 ## 1. Escopo inicial mapeado
 
@@ -134,6 +238,7 @@ Data: 2026-03-26
 - agrupamento visual de rateios na listagem de lancamentos como uma unica linha-resumo expandivel por `grupo_rateio`, com leitura das linhas internas sob demanda, valor total consolidado no resumo e selecao em lote mirando o grupo inteiro, sem alterar o modelo fisico nem outras telas nesta etapa
 - padronizacao visual da coluna de acoes na listagem de lancamentos por slots fixos, com `Recibo` contextual apenas quando aplicavel, descricoes truncadas com reticencias e tooltip para leitura rapida, e ordenacao padrao por data principal mais recente primeiro
 - fases 1, 2 e 3 da importacao/exportacao de lancamentos com pagina propria focada em upload e link de baixar planilha modelo XLSX com abas `Modelo` e `Instruções`, validacao estrutural do XLSX enviado por extensao/formato/abas/cabecalhos, validacao de conteudo linha a linha da aba `Modelo` contra cadastros ja existentes, importacao orientada prioritariamente a datas em `dd/mm/aaaa` com tolerancia interna tambem a `AAAA-MM-DD`, mensagens com rotulos amigaveis, resumo de linhas lidas/validas/importadas/com erro, download de relatorio XLSX de inconsistencias quando ha erros e importacao real all-or-nothing quando todas as linhas estao validas, primeira exportacao real simples em XLSX acionada pela propria listagem de lancamentos com respeito aos filtros ativos, cabecalhos amigaveis ao usuario, datas em `dd/mm/aaaa` e valores com virgula decimal, e ajuda rapida operacional, ainda sem preview avancado de linhas, criacao automatica de cadastros auxiliares, importacao parcial, tratamento avancado de duplicidades ou exportacao avancada com variacoes
+- a mesma central do financeiro agora tambem cobre a importacao auxiliar real de `contas`, `pessoas`, `centros de custo` e `categorias/subcategorias`, reaproveitando planilhas-base XLSX com abas `Modelo` e `Instrucoes`, mantendo gravacao transacional por arquivo e deixando `assinaturas` fora desta frente
 - MVP de regras automaticas no cadastro de lancamento comum, com sugestoes por digitacao em `descricao`, `pessoa` apenas como refinador opcional, preenchimento automatico por selecao da sugestao e check explicito para salvar o lancamento atual como nova regra futura
 - recibo em HTML imprimivel a partir do lancamento, com refinamentos posteriores de conteudo, assinatura, configuracao institucional e impressao
 - mensagens de erro mais claras em campos obrigatorios
@@ -190,7 +295,7 @@ Data: 2026-03-26
 ### Media prioridade
 - balancete padrao
 - importacao de planilha historica
-- evolucao futura da importacao para oferecer preview/validacao detalhada antes de gravar, tratar duplicidades de forma mais rica, abrir importacao de pessoas e demais cadastros auxiliares em frente propria e avaliar eventual importacao parcial apenas em fase posterior
+- evolucao futura da importacao para oferecer preview/validacao detalhada antes de gravar, tratar duplicidades de forma mais rica, refinar a importacao auxiliar centralizada ja entregue e avaliar eventual importacao parcial apenas em fase posterior
 - cadastro rapido de pessoa dentro do lancamento
 - cadastro rapido de categoria dentro do lancamento
 - evolucoes futuras especificas do bloco de recibos ja entregue
@@ -237,7 +342,7 @@ Observacao:
 - relatorio anual por favorecido
 - cadastro rapido de pessoa dentro do lancamento
 - cadastro rapido de categoria dentro do lancamento
-- importacao/exportacao futura de lancamentos, com importacao em massa validada por pre-visualizacao e exportacao tabular de consultas filtradas
+- evolucao futura da central de importacoes do financeiro, com preview mais rico, tratamento avancado de duplicidades e possivel importacao historica em etapa propria, preservando as exportacoes nas listagens filtradas
 - evolucao futura da exportacao de lancamentos para oferecer variacoes controladas de saida e refinar o layout conforme uso real
 - na importacao/exportacao futura, o fluxo de importacao deve oferecer download de planilha modelo no layout proprio do sistema, preservando a ordem e as colunas esperadas pelo backend de importacao
 - refinamentos futuros do MVP de regras automaticas ja aberto no lancamento, preservando `descricao` como gatilho principal por digitacao, `pessoa` apenas como refinador opcional, preenchimento automatico por selecao de uma sugestao e check explicito para salvar nova regra a partir de lancamento comum; melhorias futuras podem incluir curadoria, edicao e governanca dessas regras em tela propria

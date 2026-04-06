@@ -1,6 +1,7 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import json
+import unicodedata
 from calendar import monthrange
 from datetime import date, datetime, timedelta
 from decimal import Decimal
@@ -13,7 +14,7 @@ from xml.sax.saxutils import escape
 from zipfile import ZIP_DEFLATED, BadZipFile, ZipFile
 
 from django.contrib import messages
-from django.core.exceptions import ValidationError
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.db.models import Q
 from django.db.models.functions import Coalesce
@@ -334,7 +335,9 @@ MESES_EXTENSO = (
     'dezembro',
 )
 
-LANCAMENTO_IMPORTACAO_MODELO_COLUNAS = [
+LANCAMENTO_IMPORTACAO_MODELO_MAX_RATEIOS = 5
+
+LANCAMENTO_IMPORTACAO_MODELO_COLUNAS_LEGADO = [
     'tipo',
     'status',
     'descricao',
@@ -350,12 +353,45 @@ LANCAMENTO_IMPORTACAO_MODELO_COLUNAS = [
     'observacoes',
 ]
 
+LANCAMENTO_IMPORTACAO_MODELO_COLUNAS_GERAIS = [
+    'tipo',
+    'status',
+    'descricao',
+    'valor_total_documento',
+    'data_competencia',
+    'data_pagamento',
+    'pessoa_nome',
+    'conta_nome',
+    'conta_destino_nome',
+    'numero_documento',
+    'observacoes',
+]
+
+LANCAMENTO_IMPORTACAO_MODELO_BLOCOS_RATEIO = [
+    (
+        f'categoria_nome_{indice}',
+        f'centro_custo_nome_{indice}',
+        f'valor_{indice}',
+    )
+    for indice in range(1, LANCAMENTO_IMPORTACAO_MODELO_MAX_RATEIOS + 1)
+]
+
+LANCAMENTO_IMPORTACAO_MODELO_COLUNAS = [
+    *LANCAMENTO_IMPORTACAO_MODELO_COLUNAS_GERAIS,
+    *[
+        coluna
+        for bloco in LANCAMENTO_IMPORTACAO_MODELO_BLOCOS_RATEIO
+        for coluna in bloco
+    ],
+]
+
 LANCAMENTO_IMPORTACAO_MODELO_ROTULOS = {
+    'valor_total_documento': 'Valor total do documento',
     'tipo': 'Tipo',
     'status': 'Status',
-    'descricao': 'Descrição',
+    'descricao': 'DescriÃ§Ã£o',
     'valor': 'Valor',
-    'data_competencia': 'Data de competência',
+    'data_competencia': 'Data de competÃªncia',
     'data_pagamento': 'Data de pagamento',
     'pessoa_nome': 'Pessoa',
     'categoria_nome': 'Categoria',
@@ -363,75 +399,233 @@ LANCAMENTO_IMPORTACAO_MODELO_ROTULOS = {
     'conta_nome': 'Conta',
     'conta_destino_nome': 'Conta de destino',
     'numero_documento': 'Documento',
-    'observacoes': 'Observações',
+    'observacoes': 'ObservaÃ§Ãµes',
+    **{
+        f'categoria_nome_{indice}': f'Categoria {indice}'
+        for indice in range(1, LANCAMENTO_IMPORTACAO_MODELO_MAX_RATEIOS + 1)
+    },
+    **{
+        f'centro_custo_nome_{indice}': f'Centro de custo {indice}'
+        for indice in range(1, LANCAMENTO_IMPORTACAO_MODELO_MAX_RATEIOS + 1)
+    },
+    **{
+        f'valor_{indice}': f'Valor {indice}'
+        for indice in range(1, LANCAMENTO_IMPORTACAO_MODELO_MAX_RATEIOS + 1)
+    },
 }
 
 LANCAMENTO_IMPORTACAO_ORIENTACOES = {
+    'valor_total_documento': 'Informe o valor total do documento. Em receita/despesa, ele precisa bater com a soma dos blocos preenchidos.',
     'tipo': 'Use receita, despesa ou transferencia.',
     'status': 'Use aberto, quitado ou cancelado.',
-    'descricao': 'Preencha uma descrição para identificar o lançamento.',
-    'valor': 'Informe um número maior que zero, com vírgula ou ponto decimal.',
+    'descricao': 'Preencha uma descriÃ§Ã£o para identificar o lanÃ§amento.',
     'data_competencia': 'Use o formato dd/mm/aaaa.',
     'data_pagamento': 'Use o formato dd/mm/aaaa.',
-    'pessoa_nome': 'Revise o nome exatamente como está cadastrado.',
-    'categoria_nome': 'Revise Tipo e Categoria e use uma subcategoria já cadastrada.',
-    'centro_custo_nome': 'Revise o nome exatamente como está cadastrado.',
-    'conta_nome': 'Revise o nome da conta ou preencha uma conta já cadastrada.',
-    'conta_destino_nome': 'Preencha uma conta de destino já cadastrada quando o tipo for transferência.',
-    'numero_documento': 'Revise duplicidade ou deixe em branco para geração automática.',
+    'pessoa_nome': 'Revise o nome exatamente como estÃ¡ cadastrado.',
+    'conta_nome': 'Revise o nome da conta ou preencha uma conta jÃ¡ cadastrada.',
+    'conta_destino_nome': 'Preencha uma conta de destino jÃ¡ cadastrada quando o tipo for transferÃªncia.',
+    'numero_documento': 'Revise duplicidade ou deixe em branco para geraÃ§Ã£o automÃ¡tica.',
+    **{
+        f'categoria_nome_{indice}': 'Use uma subcategoria jÃ¡ cadastrada e compatÃ­vel com o tipo do lanÃ§amento.'
+        for indice in range(1, LANCAMENTO_IMPORTACAO_MODELO_MAX_RATEIOS + 1)
+    },
+    **{
+        f'centro_custo_nome_{indice}': 'Revise o nome exatamente como estÃ¡ cadastrado ou deixe em branco quando nÃ£o se aplicar.'
+        for indice in range(1, LANCAMENTO_IMPORTACAO_MODELO_MAX_RATEIOS + 1)
+    },
+    **{
+        f'valor_{indice}': 'Informe um nÃºmero maior que zero, com vÃ­rgula ou ponto decimal, para cada bloco usado.'
+        for indice in range(1, LANCAMENTO_IMPORTACAO_MODELO_MAX_RATEIOS + 1)
+    },
 }
 
 LANCAMENTO_IMPORTACAO_CAMPOS_MODELO = {
     'pessoa': 'pessoa_nome',
-    'categoria': 'categoria_nome',
-    'centro_custo': 'centro_custo_nome',
     'conta': 'conta_nome',
     'conta_destino': 'conta_destino_nome',
 }
 
-LANCAMENTO_IMPORTACAO_ABAS_OBRIGATORIAS = ['Modelo', 'Instruções']
+LANCAMENTO_IMPORTACAO_ABAS_OBRIGATORIAS = ['Modelo', 'InstruÃ§Ãµes']
 
 LANCAMENTO_EXPORTACAO_COLUNAS = [
-    'Tipo',
-    'Status',
-    'Descrição',
-    'Valor',
-    'Data de competência',
-    'Data de pagamento',
-    'Pessoa',
-    'Categoria',
-    'Centro de custo',
-    'Conta',
-    'Conta de destino',
-    'Documento',
-    'Observações',
+    *LANCAMENTO_IMPORTACAO_MODELO_COLUNAS,
 ]
 
 LANCAMENTO_IMPORTACAO_MODELO_INSTRUCOES = [
     [
         'Finalidade',
-        'Use esta planilha como base para preparar lançamentos que serão importados em uma próxima etapa do sistema.',
+        'Use esta planilha como base para preparar e reimportar lancamentos simples e lancamentos com ate 5 blocos de rateio na mesma linha.',
     ],
     [
-        'Cabeçalhos',
-        'Mantenha os nomes das colunas da aba Modelo exatamente como estão e preencha uma linha por lançamento.',
+        'CabeÃ§alhos',
+        'Mantenha os nomes das colunas da aba Modelo exatamente como estao. O mesmo contrato vale para exportacao e importacao.',
+    ],
+    [
+        'Lancamento simples',
+        'Para receita ou despesa simples, preencha apenas categoria_nome_1, valor_1 e, se quiser, centro_custo_nome_1. Deixe os demais blocos em branco.',
+    ],
+    [
+        'Lancamento com rateio',
+        'Use uma unica linha por documento e distribua o rateio entre os blocos 1 a 5, sem deixar buracos entre eles.',
+    ],
+    [
+        'Validacao central',
+        'Em receita ou despesa, a soma dos valores dos blocos preenchidos precisa fechar exatamente com valor_total_documento.',
+    ],
+    [
+        'Transferencia',
+        'Transferencias continuam sem suporte a rateio. Nelas, deixe todos os blocos de rateio em branco e informe apenas valor_total_documento.',
+    ],
+    [
+        'Limite do fluxo comum',
+        'O fluxo comum aceita no maximo 5 blocos de rateio por documento. Grupos maiores continuam exigindo o caminho tecnico de backup e restauracao.',
     ],
     [
         'Datas e valores',
-        'Use datas no formato dd/mm/aaaa. Se necessário, o sistema também aceita AAAA-MM-DD. Para valores, use número com vírgula ou ponto decimal.',
+        'Use datas no formato dd/mm/aaaa. Se necessario, o sistema tambem aceita AAAA-MM-DD. Para valores, use numero com virgula ou ponto decimal.',
     ],
     [
         'Campos opcionais',
-        'Deixe em branco os campos que não se aplicarem ao lançamento, como centro_custo_nome, numero_documento e observacoes.',
+        'Deixe em branco os campos que nao se aplicarem ao lancamento, como centro_custo_nome, numero_documento, observacoes e conta_destino_nome fora de transferencias.',
     ],
-    [
-        'Transferências',
-        'Preencha conta_destino_nome apenas quando o lançamento for uma transferência entre contas.',
-    ],
-    [
-        'Layout do sistema',
-        'Preencha os dados seguindo a ordem e a estrutura da aba Modelo para facilitar a futura importação.',
-    ],
+]
+
+CADASTRO_AUXILIAR_PLANILHAS_BASE = {
+    'contas': {
+        'titulo': 'Contas financeiras',
+        'arquivo': 'planilha_base_contas_financeiras.xlsx',
+        'permissao': 'financeiro.contas.criar',
+        'colunas': ['nome', 'descricao', 'saldo_inicial', 'data_saldo_inicial', 'ativa'],
+        'rotulos': {
+            'nome': 'Nome',
+            'descricao': 'Descricao',
+            'saldo_inicial': 'Saldo inicial',
+            'data_saldo_inicial': 'Data do saldo inicial',
+            'ativa': 'Ativa',
+        },
+        'orientacoes': {
+            'nome': 'Use um nome unico e facil de reconhecer no modulo financeiro.',
+            'saldo_inicial': 'Informe um valor numerico com virgula ou ponto decimal.',
+            'data_saldo_inicial': 'Use uma data valida no formato dd/mm/aaaa.',
+            'ativa': 'Use true/false, sim/nao, 1/0 ou deixe em branco para considerar ativo.',
+        },
+        'instrucoes': [
+            ['Finalidade', 'Use esta planilha-base para preparar as contas financeiras antes da carga de lancamentos.'],
+            ['Cabecalhos', 'Mantenha os nomes das colunas da aba Modelo exatamente como estao.'],
+            ['Saldo inicial', 'Informe o saldo inicial com virgula ou ponto decimal.'],
+            ['Data do saldo', 'Use dd/mm/aaaa. Se necessario, o sistema tambem pode ler AAAA-MM-DD.'],
+            ['Ativa', 'Use true/false, sim/nao, 1/0 ou deixe em branco para considerar ativo.'],
+        ],
+        'descricao': 'Base de contas para vinculos financeiros e saldo inicial do ambiente.',
+        'sucesso': 'contas financeiras',
+    },
+    'pessoas': {
+        'titulo': 'Pessoas financeiras',
+        'arquivo': 'planilha_base_pessoas_financeiras.xlsx',
+        'permissao': 'financeiro.pessoas.criar',
+        'colunas': ['codigo', 'nome', 'tipo_pessoa', 'documento', 'telefone', 'email', 'observacoes', 'ativo'],
+        'rotulos': {
+            'codigo': 'Codigo',
+            'nome': 'Nome',
+            'tipo_pessoa': 'Tipo de pessoa',
+            'documento': 'Documento',
+            'telefone': 'Telefone',
+            'email': 'E-mail',
+            'observacoes': 'Observacoes',
+            'ativo': 'Ativo',
+        },
+        'orientacoes': {
+            'codigo': 'Use um codigo unico e estavel para cada pessoa.',
+            'nome': 'Use um nome unico para evitar ambiguidade na importacao de lancamentos.',
+            'tipo_pessoa': 'Use fisica ou juridica. O campo pode ficar em branco quando nao se aplicar.',
+            'email': 'Preencha um e-mail valido ou deixe em branco.',
+            'ativo': 'Use true/false, sim/nao, 1/0 ou deixe em branco para considerar ativo.',
+        },
+        'instrucoes': [
+            ['Finalidade', 'Use esta planilha-base para preparar favorecidos e demais pessoas usadas nos lancamentos.'],
+            ['Codigo', 'Preencha um codigo unico e estavel para cada pessoa.'],
+            ['Tipo de pessoa', 'Use fisica ou juridica. O campo pode ficar em branco quando nao se aplicar.'],
+            ['Contato', 'Documento, telefone e email sao opcionais e podem ficar em branco.'],
+            ['Ativo', 'Use true/false, sim/nao, 1/0 ou deixe em branco para considerar ativo.'],
+        ],
+        'descricao': 'Favorecidos e contrapartes usados por receitas e despesas.',
+        'sucesso': 'pessoas financeiras',
+    },
+    'centros-custo': {
+        'titulo': 'Centros de custo',
+        'arquivo': 'planilha_base_centros_custo_financeiro.xlsx',
+        'permissao': 'financeiro.centros_custo.criar',
+        'colunas': ['codigo', 'nome', 'ativo'],
+        'rotulos': {
+            'codigo': 'Codigo',
+            'nome': 'Nome',
+            'ativo': 'Ativo',
+        },
+        'orientacoes': {
+            'codigo': 'Use um codigo unico para cada centro de custo.',
+            'nome': 'Use um nome unico e consistente com a operacao local.',
+            'ativo': 'Use true/false, sim/nao, 1/0 ou deixe em branco para considerar ativo.',
+        },
+        'instrucoes': [
+            ['Finalidade', 'Use esta planilha-base para preparar os centros de custo antes da carga de lancamentos.'],
+            ['Codigo', 'Preencha um codigo unico para cada centro de custo.'],
+            ['Nome', 'Use um nome claro e consistente com a operacao local.'],
+            ['Ativo', 'Use true/false, sim/nao, 1/0 ou deixe em branco para considerar ativo.'],
+        ],
+        'descricao': 'Centros usados nos filtros e relatorios operacionais.',
+        'sucesso': 'centros de custo',
+    },
+    'categorias': {
+        'titulo': 'Categorias e subcategorias',
+        'arquivo': 'planilha_base_categorias_financeiras.xlsx',
+        'permissao': 'financeiro.categorias.criar',
+        'colunas': ['nome', 'tipo', 'categoria_pai_nome', 'mensagem_recibo', 'ativo'],
+        'rotulos': {
+            'nome': 'Nome',
+            'tipo': 'Tipo',
+            'categoria_pai_nome': 'Categoria pai',
+            'mensagem_recibo': 'Mensagem de recibo',
+            'ativo': 'Ativo',
+        },
+        'orientacoes': {
+            'nome': 'Use nomes unicos por tipo para evitar ambiguidade nos lancamentos.',
+            'tipo': 'Use receita ou despesa.',
+            'categoria_pai_nome': 'Deixe em branco nas categorias pai e preencha o nome exato da categoria pai nas subcategorias.',
+            'ativo': 'Use true/false, sim/nao, 1/0 ou deixe em branco para considerar ativo.',
+        },
+        'instrucoes': [
+            ['Finalidade', 'Use esta planilha-base para preparar categorias pai e subcategorias do financeiro.'],
+            ['Tipo', 'Use receita ou despesa.'],
+            ['Hierarquia', 'Deixe categoria_pai_nome em branco nas categorias pai e preencha o nome exato da categoria pai nas subcategorias.'],
+            ['Ordem interna', 'Liste primeiro as categorias pai e depois as subcategorias para facilitar a futura carga sequencial.'],
+            ['Mensagem de recibo', 'Preencha apenas quando quiser uma mensagem final especifica para recibos dessa categoria.'],
+        ],
+        'descricao': 'Categorias pai primeiro e subcategorias depois, antes da carga de lancamentos.',
+        'sucesso': 'categorias e subcategorias',
+    },
+}
+
+CADASTRO_AUXILIAR_PLANILHAS_BASE_ORDEM = [
+    {
+        'slug': 'contas',
+        'titulo': CADASTRO_AUXILIAR_PLANILHAS_BASE['contas']['titulo'],
+        'dependencia': 'base de contas para vinculos financeiros e saldo inicial do ambiente',
+    },
+    {
+        'slug': 'pessoas',
+        'titulo': CADASTRO_AUXILIAR_PLANILHAS_BASE['pessoas']['titulo'],
+        'dependencia': 'favorecidos e contrapartes usados por receitas e despesas',
+    },
+    {
+        'slug': 'centros-custo',
+        'titulo': CADASTRO_AUXILIAR_PLANILHAS_BASE['centros-custo']['titulo'],
+        'dependencia': 'centros usados nos filtros e relatorios operacionais',
+    },
+    {
+        'slug': 'categorias',
+        'titulo': CADASTRO_AUXILIAR_PLANILHAS_BASE['categorias']['titulo'],
+        'dependencia': 'categorias pai primeiro e subcategorias depois, antes da carga de lancamentos',
+    },
 ]
 
 
@@ -530,34 +724,131 @@ def _gerar_planilha_modelo_lancamentos_xlsx() -> bytes:
     return _gerar_arquivo_xlsx(
         [
             ('Modelo', [LANCAMENTO_IMPORTACAO_MODELO_COLUNAS]),
-            ('Instruções', [['Item', 'Orientação'], *LANCAMENTO_IMPORTACAO_MODELO_INSTRUCOES]),
+            ('InstruÃ§Ãµes', [['Item', 'OrientaÃ§Ã£o'], *LANCAMENTO_IMPORTACAO_MODELO_INSTRUCOES]),
         ]
     )
 
 
-def _linha_exportacao_lancamento(lancamento: LancamentoFinanceiro) -> list[str]:
+def _gerar_planilha_base_cadastro_auxiliar_xlsx(slug: str) -> bytes:
+    configuracao = CADASTRO_AUXILIAR_PLANILHAS_BASE[slug]
+    return _gerar_arquivo_xlsx(
+        [
+            ('Modelo', [configuracao['colunas']]),
+            ('Instrucoes', [['Item', 'Orientacao'], *configuracao['instrucoes']]),
+        ]
+    )
+
+
+def _linha_exportacao_lancamento(
+    lancamentos_documento: list[LancamentoFinanceiro],
+) -> list[str]:
+    principal = lancamentos_documento[0]
+    valor_total_documento = sum(
+        (item.valor for item in lancamentos_documento),
+        Decimal('0.00'),
+    )
+    linha = [
+        principal.tipo,
+        principal.status,
+        principal.descricao,
+        f'{valor_total_documento:.2f}'.replace('.', ','),
+        principal.data_competencia.strftime('%d/%m/%Y'),
+        principal.data_pagamento.strftime('%d/%m/%Y') if principal.data_pagamento else '',
+        principal.pessoa.nome if principal.pessoa_id else '',
+        principal.conta.nome if principal.conta_id else '',
+        principal.conta_destino.nome if principal.conta_destino_id else '',
+        principal.numero_documento,
+        principal.observacoes,
+    ]
+
+    for indice_bloco in range(LANCAMENTO_IMPORTACAO_MODELO_MAX_RATEIOS):
+        if indice_bloco < len(lancamentos_documento):
+            lancamento = lancamentos_documento[indice_bloco]
+            linha.extend([
+                lancamento.categoria.nome if lancamento.categoria_id else '',
+                lancamento.centro_custo.nome if lancamento.centro_custo_id else '',
+                f'{lancamento.valor:.2f}'.replace('.', ','),
+            ])
+        else:
+            linha.extend(['', '', ''])
+
+    return linha
+
+
+def _ordenar_linhas_grupo_rateio(linhas_grupo: list[LancamentoFinanceiro]) -> list[LancamentoFinanceiro]:
+    return sorted(
+        linhas_grupo,
+        key=lambda item: (
+            item.data_competencia,
+            item.data_pagamento or item.data_competencia,
+            item.pk,
+        ),
+    )
+
+
+def _grupo_rateio_ultrapassa_layout_comum(linhas_grupo: list[LancamentoFinanceiro]) -> bool:
+    return len(linhas_grupo) > LANCAMENTO_IMPORTACAO_MODELO_MAX_RATEIOS
+
+
+def _grupos_rateio_fora_do_layout_comum(
+    lancamentos: list[LancamentoFinanceiro],
+) -> list[tuple[str, int]]:
+    grupos: dict[str, list[LancamentoFinanceiro]] = {}
+    for lancamento in lancamentos:
+        grupo_rateio = (lancamento.grupo_rateio or '').strip()
+        if lancamento.com_rateio and grupo_rateio:
+            grupos.setdefault(grupo_rateio, []).append(lancamento)
+
     return [
-        lancamento.tipo,
-        lancamento.status,
-        lancamento.descricao,
-        f'{lancamento.valor:.2f}'.replace('.', ','),
-        lancamento.data_competencia.strftime('%d/%m/%Y'),
-        lancamento.data_pagamento.strftime('%d/%m/%Y') if lancamento.data_pagamento else '',
-        lancamento.pessoa.nome if lancamento.pessoa_id else '',
-        lancamento.categoria.nome if lancamento.categoria_id else '',
-        lancamento.centro_custo.nome if lancamento.centro_custo_id else '',
-        lancamento.conta.nome if lancamento.conta_id else '',
-        lancamento.conta_destino.nome if lancamento.conta_destino_id else '',
-        lancamento.numero_documento,
-        lancamento.observacoes,
+        (grupo, len(linhas_grupo))
+        for grupo, linhas_grupo in sorted(grupos.items())
+        if _grupo_rateio_ultrapassa_layout_comum(linhas_grupo)
     ]
 
 
-def _gerar_planilha_exportacao_lancamentos_xlsx(lancamentos) -> bytes:
-    linhas = [LANCAMENTO_EXPORTACAO_COLUNAS]
-    linhas.extend(_linha_exportacao_lancamento(lancamento) for lancamento in lancamentos)
+def _mensagem_grupos_rateio_fora_do_layout_comum(grupos: list[tuple[str, int]]) -> str:
+    grupos_texto = ', '.join(
+        f'{grupo} ({quantidade} linhas)'
+        for grupo, quantidade in grupos
+    )
+    return (
+        'A exportacao comum de lancamentos aceita no maximo '
+        f'{LANCAMENTO_IMPORTACAO_MODELO_MAX_RATEIOS} rateios por documento. '
+        'Os seguintes grupos ultrapassam esse limite: '
+        f'{grupos_texto}. Use o caminho tecnico para esses casos.'
+    )
 
-    return _gerar_arquivo_xlsx([('Lancamentos', linhas)])
+
+def _gerar_planilha_exportacao_lancamentos_xlsx(lancamentos) -> bytes:
+    lancamentos_lista = list(lancamentos)
+    grupos_fora_layout = _grupos_rateio_fora_do_layout_comum(lancamentos_lista)
+    if grupos_fora_layout:
+        raise ValidationError(_mensagem_grupos_rateio_fora_do_layout_comum(grupos_fora_layout))
+
+    linhas = [LANCAMENTO_IMPORTACAO_MODELO_COLUNAS]
+    grupos_processados: set[str] = set()
+
+    for lancamento in lancamentos_lista:
+        grupo_rateio = (lancamento.grupo_rateio or '').strip()
+        if lancamento.com_rateio and grupo_rateio:
+            if grupo_rateio in grupos_processados:
+                continue
+
+            linhas_grupo = _ordenar_linhas_grupo_rateio(
+                [item for item in lancamentos_lista if (item.grupo_rateio or '').strip() == grupo_rateio]
+            )
+            linhas.append(_linha_exportacao_lancamento(linhas_grupo))
+            grupos_processados.add(grupo_rateio)
+            continue
+
+        linhas.append(_linha_exportacao_lancamento([lancamento]))
+
+    return _gerar_arquivo_xlsx(
+        [
+            ('Modelo', linhas),
+            ('Instrucoes', [['Item', 'Orientacao'], *LANCAMENTO_IMPORTACAO_MODELO_INSTRUCOES]),
+        ]
+    )
 
 
 def _xlsx_normalizar_target_relacao(target: str) -> str:
@@ -622,6 +913,7 @@ def _xlsx_ler_linhas_planilha(
     caminho_planilha: str,
     shared_strings: list[str],
     namespace: dict[str, str],
+    quantidade_colunas: int,
 ) -> list[tuple[int, list[str]]]:
     planilha_tree = ElementTree.fromstring(arquivo_xlsx.read(caminho_planilha))
     linhas = []
@@ -631,11 +923,11 @@ def _xlsx_ler_linhas_planilha(
         start=1,
     ):
         numero_linha = int(linha_xml.get('r') or indice_padrao)
-        valores_linha = [''] * len(LANCAMENTO_IMPORTACAO_MODELO_COLUNAS)
+        valores_linha = [''] * quantidade_colunas
 
         for indice_celula, celula in enumerate(linha_xml.findall('main:c', namespace), start=1):
             indice_coluna = _xlsx_indice_coluna_celula(celula.get('r', '')) or indice_celula
-            if 1 <= indice_coluna <= len(LANCAMENTO_IMPORTACAO_MODELO_COLUNAS):
+            if 1 <= indice_coluna <= quantidade_colunas:
                 valores_linha[indice_coluna - 1] = _xlsx_ler_valor_celula(
                     celula,
                     shared_strings,
@@ -686,7 +978,36 @@ def _normalizar_nome_importacao_lancamento(valor: str) -> str:
     return (valor or '').strip().lower()
 
 
-def _validar_estrutura_planilha_importacao_lancamentos_xlsx(arquivo_importacao) -> list[str]:
+def _normalizar_codigo_importacao(valor: str) -> str:
+    return (valor or '').strip().lower()
+
+
+def _normalizar_nome_aba_planilha_xlsx(valor: str) -> str:
+    valor_normalizado = unicodedata.normalize('NFKD', valor or '')
+    valor_sem_acento = ''.join(
+        caractere
+        for caractere in valor_normalizado
+        if not unicodedata.combining(caractere)
+    )
+    return valor_sem_acento.strip().lower()
+
+
+def _parse_booleano_importacao(valor: str) -> bool | None:
+    valor_normalizado = (valor or '').strip().lower()
+    if not valor_normalizado:
+        return True
+
+    if valor_normalizado in {'true', '1', 'sim', 's', 'ativo'}:
+        return True
+    if valor_normalizado in {'false', '0', 'nao', 'nÃ£o', 'n', 'inativo'}:
+        return False
+    return None
+
+
+def _validar_estrutura_planilha_modelo_xlsx(
+    arquivo_importacao,
+    colunas_esperadas: list[str],
+) -> list[str]:
     nome_arquivo = (arquivo_importacao.name or '').lower()
     if not nome_arquivo.endswith('.xlsx'):
         return ['Envie um arquivo XLSX com extensao .xlsx.']
@@ -714,16 +1035,15 @@ def _validar_estrutura_planilha_importacao_lancamentos_xlsx(arquivo_importacao) 
                 )
                 for planilha in workbook_tree.findall('main:sheets/main:sheet', namespace)
             }
+            if 'Instrucoes' in planilhas and 'InstruÃ§Ãµes' not in planilhas:
+                planilhas['InstruÃ§Ãµes'] = planilhas['Instrucoes']
 
-            abas_faltantes = [
-                nome_aba
-                for nome_aba in LANCAMENTO_IMPORTACAO_ABAS_OBRIGATORIAS
-                if nome_aba not in planilhas
-            ]
+            abas_obrigatorias = ['Modelo', 'InstruÃ§Ãµes']
+            abas_faltantes = [nome_aba for nome_aba in abas_obrigatorias if nome_aba not in planilhas]
             if abas_faltantes:
                 return [
                     'A planilha enviada precisa conter as abas '
-                    f'{", ".join(LANCAMENTO_IMPORTACAO_ABAS_OBRIGATORIAS)}. '
+                    f'{", ".join(abas_obrigatorias)}. '
                     f'Abas ausentes: {", ".join(abas_faltantes)}.'
                 ]
 
@@ -741,11 +1061,11 @@ def _validar_estrutura_planilha_importacao_lancamentos_xlsx(arquivo_importacao) 
                     for celula in primeira_linha.findall('main:c', namespace)
                 ]
 
-            if cabecalhos != LANCAMENTO_IMPORTACAO_MODELO_COLUNAS:
+            if cabecalhos != colunas_esperadas:
                 return [
                     'Os cabecalhos da aba Modelo estao diferentes do layout esperado. '
                     'Mantenha exatamente esta ordem e nomenclatura: '
-                    f'{", ".join(LANCAMENTO_IMPORTACAO_MODELO_COLUNAS)}.'
+                    f'{", ".join(colunas_esperadas)}.'
                 ]
     except (BadZipFile, KeyError, ParseError, OSError):
         return ['Nao foi possivel ler o arquivo enviado como uma planilha XLSX valida.']
@@ -755,7 +1075,73 @@ def _validar_estrutura_planilha_importacao_lancamentos_xlsx(arquivo_importacao) 
     return []
 
 
-def _xlsx_ler_dados_modelo_importacao_lancamentos_xlsx(arquivo_importacao) -> list[tuple[int, list[str]]]:
+def _obter_cabecalhos_planilha_modelo_xlsx(arquivo_importacao) -> tuple[list[str], list[str]]:
+    nome_arquivo = (arquivo_importacao.name or '').lower()
+    if not nome_arquivo.endswith('.xlsx'):
+        return [], ['Envie um arquivo XLSX com extensao .xlsx.']
+
+    try:
+        with ZipFile(arquivo_importacao) as arquivo_xlsx:
+            namespace = {
+                'main': 'http://schemas.openxmlformats.org/spreadsheetml/2006/main',
+                'rel': 'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
+                'pkg': 'http://schemas.openxmlformats.org/package/2006/relationships',
+            }
+
+            workbook_tree = ElementTree.fromstring(arquivo_xlsx.read('xl/workbook.xml'))
+            relacoes_tree = ElementTree.fromstring(arquivo_xlsx.read('xl/_rels/workbook.xml.rels'))
+            shared_strings = _xlsx_ler_strings_compartilhadas(arquivo_xlsx)
+
+            relacoes_planilhas = {
+                relacao.get('Id'): _xlsx_normalizar_target_relacao(relacao.get('Target', ''))
+                for relacao in relacoes_tree.findall('pkg:Relationship', namespace)
+            }
+            planilhas = {
+                planilha.get('name', ''): relacoes_planilhas.get(
+                    planilha.get('{http://schemas.openxmlformats.org/officeDocument/2006/relationships}id'),
+                    '',
+                )
+                for planilha in workbook_tree.findall('main:sheets/main:sheet', namespace)
+            }
+            if 'Instrucoes' in planilhas and 'InstruÃ§Ãµes' not in planilhas:
+                planilhas['InstruÃ§Ãµes'] = planilhas['Instrucoes']
+
+            abas_faltantes = [
+                nome_aba
+                for nome_aba in LANCAMENTO_IMPORTACAO_ABAS_OBRIGATORIAS
+                if nome_aba not in planilhas
+            ]
+            if abas_faltantes:
+                return [], [
+                    'A planilha enviada precisa conter as abas '
+                    f'{", ".join(LANCAMENTO_IMPORTACAO_ABAS_OBRIGATORIAS)}. '
+                    f'Abas ausentes: {", ".join(abas_faltantes)}.'
+                ]
+
+            caminho_modelo = planilhas.get('Modelo', '')
+            if not caminho_modelo or caminho_modelo not in arquivo_xlsx.namelist():
+                return [], ['Nao foi possivel localizar a aba Modelo dentro do arquivo XLSX.']
+
+            modelo_tree = ElementTree.fromstring(arquivo_xlsx.read(caminho_modelo))
+            primeira_linha = modelo_tree.find('main:sheetData/main:row', namespace)
+            if primeira_linha is None:
+                return [], ['Nao foi possivel localizar os cabecalhos da aba Modelo.']
+
+            cabecalhos = [
+                _xlsx_ler_valor_celula(celula, shared_strings, namespace)
+                for celula in primeira_linha.findall('main:c', namespace)
+            ]
+            return cabecalhos, []
+    except (BadZipFile, KeyError, ParseError, OSError):
+        return [], ['Nao foi possivel ler o arquivo enviado como uma planilha XLSX valida.']
+    finally:
+        arquivo_importacao.seek(0)
+
+
+def _xlsx_ler_dados_modelo_importacao_xlsx(
+    arquivo_importacao,
+    colunas_esperadas: list[str],
+) -> list[tuple[int, list[str]]]:
     try:
         with ZipFile(arquivo_importacao) as arquivo_xlsx:
             namespace = {
@@ -790,11 +1176,45 @@ def _xlsx_ler_dados_modelo_importacao_lancamentos_xlsx(arquivo_importacao) -> li
                 caminho_modelo,
                 shared_strings,
                 namespace,
+                len(colunas_esperadas),
             )
     except (BadZipFile, KeyError, ParseError, OSError):
         return []
     finally:
         arquivo_importacao.seek(0)
+
+
+def _validar_estrutura_planilha_importacao_lancamentos_xlsx(arquivo_importacao) -> list[str]:
+    cabecalhos, erros = _obter_cabecalhos_planilha_modelo_xlsx(arquivo_importacao)
+    if erros:
+        return erros
+
+    if cabecalhos == LANCAMENTO_IMPORTACAO_MODELO_COLUNAS:
+        return []
+
+    if cabecalhos == LANCAMENTO_IMPORTACAO_MODELO_COLUNAS_LEGADO:
+        return []
+
+    return [
+        'Os cabecalhos da aba Modelo estao diferentes do layout esperado. '
+        'Use o layout comum atual de 1 linha por documento, com ate 5 blocos de rateio, '
+        'ou, para compatibilidade, o layout simples legado. '
+        'Layout atual: '
+        f'{", ".join(LANCAMENTO_IMPORTACAO_MODELO_COLUNAS)}.'
+    ]
+
+
+def _xlsx_ler_dados_modelo_importacao_lancamentos_xlsx(
+    arquivo_importacao,
+) -> tuple[list[str], list[tuple[int, list[str]]]]:
+    cabecalhos, erros = _obter_cabecalhos_planilha_modelo_xlsx(arquivo_importacao)
+    if erros or not cabecalhos:
+        return [], []
+
+    return cabecalhos, _xlsx_ler_dados_modelo_importacao_xlsx(
+        arquivo_importacao,
+        cabecalhos,
+    )
 
 
 def _montar_indice_importacao_por_nome(queryset):
@@ -819,7 +1239,9 @@ def _montar_indice_categoria_importacao_por_tipo():
 
 
 def _adicionar_erro_importacao(erros_por_campo: dict[str, list[str]], campo: str, mensagem: str) -> None:
-    erros_por_campo.setdefault(campo, []).append(mensagem)
+    mensagens = erros_por_campo.setdefault(campo, [])
+    if mensagem not in mensagens:
+        mensagens.append(mensagem)
 
 
 def _rotulo_campo_importacao_lancamento(campo: str) -> str:
@@ -860,31 +1282,31 @@ def _validar_linha_importacao_lancamento(
     status_validos = {escolha for escolha, _ in LancamentoFinanceiro.StatusLancamento.choices}
 
     if not tipo:
-        _adicionar_erro_importacao(erros_por_campo, 'tipo', 'Informe o tipo do lançamento.')
+        _adicionar_erro_importacao(erros_por_campo, 'tipo', 'Informe o tipo do lanÃ§amento.')
     elif tipo not in tipos_validos:
         _adicionar_erro_importacao(
             erros_por_campo,
             'tipo',
-            'Use um tipo válido: receita, despesa ou transferencia.',
+            'Use um tipo vÃ¡lido: receita, despesa ou transferencia.',
         )
 
     if not status:
-        _adicionar_erro_importacao(erros_por_campo, 'status', 'Informe o status do lançamento.')
+        _adicionar_erro_importacao(erros_por_campo, 'status', 'Informe o status do lanÃ§amento.')
     elif status not in status_validos:
         _adicionar_erro_importacao(
             erros_por_campo,
             'status',
-            'Use um status válido: aberto, quitado ou cancelado.',
+            'Use um status vÃ¡lido: aberto, quitado ou cancelado.',
         )
 
     if not descricao:
-        _adicionar_erro_importacao(erros_por_campo, 'descricao', 'Informe a descrição.')
+        _adicionar_erro_importacao(erros_por_campo, 'descricao', 'Informe a descriÃ§Ã£o.')
 
     valor = _parse_decimal_importacao_lancamento(valor_texto)
     if not valor_texto:
         _adicionar_erro_importacao(erros_por_campo, 'valor', 'Informe o valor.')
     elif valor is None:
-        _adicionar_erro_importacao(erros_por_campo, 'valor', 'Informe um valor numérico válido.')
+        _adicionar_erro_importacao(erros_por_campo, 'valor', 'Informe um valor numÃ©rico vÃ¡lido.')
     elif valor <= 0:
         _adicionar_erro_importacao(erros_por_campo, 'valor', 'Informe um valor maior que zero.')
 
@@ -893,13 +1315,13 @@ def _validar_linha_importacao_lancamento(
         _adicionar_erro_importacao(
             erros_por_campo,
             'data_competencia',
-            'Informe a data de competência.',
+            'Informe a data de competÃªncia.',
         )
     elif data_competencia is None:
         _adicionar_erro_importacao(
             erros_por_campo,
             'data_competencia',
-            'Use uma data de competência válida no formato dd/mm/aaaa.',
+            'Use uma data de competÃªncia vÃ¡lida no formato dd/mm/aaaa.',
         )
 
     data_pagamento = _parse_data_importacao_lancamento(data_pagamento_texto)
@@ -913,7 +1335,7 @@ def _validar_linha_importacao_lancamento(
         _adicionar_erro_importacao(
             erros_por_campo,
             'data_pagamento',
-            'Use uma data de pagamento válida no formato dd/mm/aaaa.',
+            'Use uma data de pagamento vÃ¡lida no formato dd/mm/aaaa.',
         )
 
     pessoa = None
@@ -923,7 +1345,7 @@ def _validar_linha_importacao_lancamento(
             _adicionar_erro_importacao(
                 erros_por_campo,
                 'pessoa_nome',
-                'Pessoa não encontrada no cadastro.',
+                'Pessoa nÃ£o encontrada no cadastro.',
             )
 
     categoria = None
@@ -935,7 +1357,7 @@ def _validar_linha_importacao_lancamento(
             _adicionar_erro_importacao(
                 erros_por_campo,
                 'categoria_nome',
-                'Subcategoria não encontrada para o tipo informado.',
+                'Subcategoria nÃ£o encontrada para o tipo informado.',
             )
 
     centro_custo = None
@@ -947,7 +1369,7 @@ def _validar_linha_importacao_lancamento(
             _adicionar_erro_importacao(
                 erros_por_campo,
                 'centro_custo_nome',
-                'Centro de custo não encontrado no cadastro.',
+                'Centro de custo nÃ£o encontrado no cadastro.',
             )
 
     conta = None
@@ -957,7 +1379,7 @@ def _validar_linha_importacao_lancamento(
             _adicionar_erro_importacao(
                 erros_por_campo,
                 'conta_nome',
-                'Conta não encontrada no cadastro.',
+                'Conta nÃ£o encontrada no cadastro.',
             )
     else:
         _adicionar_erro_importacao(erros_por_campo, 'conta_nome', 'Informe a conta.')
@@ -971,7 +1393,7 @@ def _validar_linha_importacao_lancamento(
             _adicionar_erro_importacao(
                 erros_por_campo,
                 'conta_destino_nome',
-                'Conta de destino não encontrada no cadastro.',
+                'Conta de destino nÃ£o encontrada no cadastro.',
             )
 
     lancamento = LancamentoFinanceiro(
@@ -1003,6 +1425,209 @@ def _validar_linha_importacao_lancamento(
     return (None if erros_por_campo else lancamento), erros_por_campo
 
 
+def _normalizar_dados_linha_importacao_lancamento(
+    dados_linha: dict[str, str],
+    cabecalhos_planilha: list[str],
+) -> dict[str, str]:
+    dados_normalizados = {coluna: '' for coluna in LANCAMENTO_IMPORTACAO_MODELO_COLUNAS}
+    for coluna in cabecalhos_planilha:
+        if coluna in dados_normalizados:
+            dados_normalizados[coluna] = str(dados_linha.get(coluna, '') or '').strip()
+
+    if cabecalhos_planilha == LANCAMENTO_IMPORTACAO_MODELO_COLUNAS_LEGADO:
+        dados_normalizados['valor_total_documento'] = str(dados_linha.get('valor', '') or '').strip()
+        tipo = str(dados_linha.get('tipo', '') or '').strip()
+        if tipo != LancamentoFinanceiro.TipoLancamento.TRANSFERENCIA:
+            dados_normalizados['categoria_nome_1'] = str(
+                dados_linha.get('categoria_nome', '') or ''
+            ).strip()
+            dados_normalizados['centro_custo_nome_1'] = str(
+                dados_linha.get('centro_custo_nome', '') or ''
+            ).strip()
+            dados_normalizados['valor_1'] = str(dados_linha.get('valor', '') or '').strip()
+
+    return dados_normalizados
+
+
+def _registrar_erros_importacao_lancamento(
+    resultado: dict[str, object],
+    *,
+    linha: int,
+    erros_linha: dict[str, list[str]],
+    dados_linha: dict[str, str],
+) -> None:
+    resultado['linhas_invalidas'] += 1
+    resultado['erros'].append({
+        'linha': linha,
+        'campos': [
+            {
+                'campo': campo,
+                'rotulo': _rotulo_campo_importacao_lancamento(campo),
+                'mensagem': mensagem,
+                'orientacao': _orientacao_campo_importacao_lancamento(campo, mensagem),
+                'valor_informado': (dados_linha.get(campo) or '').strip(),
+            }
+            for campo, mensagens in erros_linha.items()
+            for mensagem in mensagens
+        ],
+    })
+
+
+def _campos_bloco_rateio_importacao(indice: int) -> tuple[str, str, str]:
+    return (
+        f'categoria_nome_{indice}',
+        f'centro_custo_nome_{indice}',
+        f'valor_{indice}',
+    )
+
+
+def _extrair_blocos_rateio_importacao(
+    dados_linha: dict[str, str],
+) -> tuple[list[dict[str, str]], list[tuple[int, tuple[str, str, str]]]]:
+    blocos: list[dict[str, str]] = []
+    buracos: list[tuple[int, tuple[str, str, str]]] = []
+    encontrou_bloco_vazio = False
+
+    for indice in range(1, LANCAMENTO_IMPORTACAO_MODELO_MAX_RATEIOS + 1):
+        campo_categoria, campo_centro_custo, campo_valor = _campos_bloco_rateio_importacao(indice)
+        categoria_nome = (dados_linha.get(campo_categoria) or '').strip()
+        centro_custo_nome = (dados_linha.get(campo_centro_custo) or '').strip()
+        valor = (dados_linha.get(campo_valor) or '').strip()
+
+        if not categoria_nome and not centro_custo_nome and not valor:
+            encontrou_bloco_vazio = True
+            continue
+
+        if encontrou_bloco_vazio:
+            buracos.append((indice, (campo_categoria, campo_centro_custo, campo_valor)))
+
+        blocos.append(
+            {
+                'indice': indice,
+                'categoria_nome': categoria_nome,
+                'centro_custo_nome': centro_custo_nome,
+                'valor': valor,
+            }
+        )
+
+    return blocos, buracos
+
+
+def _montar_dados_bloco_importacao_lancamento(
+    dados_linha: dict[str, str],
+    bloco: dict[str, str],
+) -> dict[str, str]:
+    return {
+        'tipo': (dados_linha.get('tipo') or '').strip(),
+        'status': (dados_linha.get('status') or '').strip(),
+        'descricao': (dados_linha.get('descricao') or '').strip(),
+        'valor': (bloco.get('valor') or '').strip(),
+        'data_competencia': (dados_linha.get('data_competencia') or '').strip(),
+        'data_pagamento': (dados_linha.get('data_pagamento') or '').strip(),
+        'pessoa_nome': (dados_linha.get('pessoa_nome') or '').strip(),
+        'categoria_nome': (bloco.get('categoria_nome') or '').strip(),
+        'centro_custo_nome': (bloco.get('centro_custo_nome') or '').strip(),
+        'conta_nome': (dados_linha.get('conta_nome') or '').strip(),
+        'conta_destino_nome': (dados_linha.get('conta_destino_nome') or '').strip(),
+        'numero_documento': (dados_linha.get('numero_documento') or '').strip(),
+        'observacoes': (dados_linha.get('observacoes') or '').strip(),
+    }
+
+
+def _construir_lancamentos_rateados_para_importacao(
+    lancamentos_base: list[LancamentoFinanceiro],
+    numero_documento: str,
+) -> list[LancamentoFinanceiro]:
+    token_grupo = uuid4().hex
+    lancamentos_grupo: list[LancamentoFinanceiro] = []
+
+    for base in lancamentos_base:
+        lancamento = LancamentoFinanceiro(
+            descricao=base.descricao,
+            tipo=base.tipo,
+            status=base.status,
+            valor=base.valor,
+            data_competencia=base.data_competencia,
+            data_pagamento=base.data_pagamento,
+            pessoa=base.pessoa,
+            categoria=base.categoria,
+            centro_custo=base.centro_custo,
+            conta=base.conta,
+            conta_destino=base.conta_destino,
+            numero_documento=numero_documento,
+            observacoes=base.observacoes,
+            com_rateio=True,
+            grupo_rateio=token_grupo,
+        )
+        if not lancamento.numero_documento:
+            lancamento.numero_documento = lancamento._gerar_numero_documento()
+            numero_documento = lancamento.numero_documento
+        lancamentos_grupo.append(lancamento)
+
+    for lancamento in lancamentos_grupo:
+        lancamento.numero_documento = numero_documento
+
+    return lancamentos_grupo
+
+
+def _validar_grupo_rateio_importacao_lancamentos(
+    *,
+    linha: int,
+    dados_linha: dict[str, str],
+    blocos_rateio: list[dict[str, str]],
+    valor_total_documento: Decimal,
+    lancamentos_validos: list[LancamentoFinanceiro],
+    resultado: dict[str, object],
+    documentos_planilha: dict[str, int],
+) -> list[LancamentoFinanceiro]:
+    erros_linha: dict[str, list[str]] = {}
+
+    if len(blocos_rateio) < 2:
+        _adicionar_erro_importacao(
+            erros_linha,
+            'categoria_nome_2',
+            'Lancamentos com rateio precisam usar pelo menos 2 blocos preenchidos.',
+        )
+
+    if lancamentos_validos and lancamentos_validos[0].tipo == LancamentoFinanceiro.TipoLancamento.TRANSFERENCIA:
+        _adicionar_erro_importacao(
+            erros_linha,
+            'tipo',
+            'Lancamentos do tipo transferencia nao aceitam rateio no fluxo comum.',
+        )
+
+    soma_blocos = sum((lancamento.valor for lancamento in lancamentos_validos), Decimal('0.00'))
+    if soma_blocos != valor_total_documento:
+        _adicionar_erro_importacao(
+            erros_linha,
+            'valor_total_documento',
+            'A soma dos blocos preenchidos precisa ser igual ao valor total do documento.',
+        )
+
+    numero_documento = (dados_linha.get('numero_documento') or '').strip()
+    if numero_documento:
+        dono_documento = documentos_planilha.get(numero_documento)
+        if dono_documento and dono_documento != linha:
+            _adicionar_erro_importacao(
+                erros_linha,
+                'numero_documento',
+                f'Documento repetido na linha {dono_documento} desta planilha.',
+            )
+        else:
+            documentos_planilha[numero_documento] = linha
+
+    if erros_linha:
+        _registrar_erros_importacao_lancamento(
+            resultado,
+            linha=linha,
+            erros_linha=erros_linha,
+            dados_linha=dados_linha,
+        )
+        return []
+
+    return _construir_lancamentos_rateados_para_importacao(lancamentos_validos, numero_documento)
+
+
 def _validar_conteudo_planilha_importacao_lancamentos_xlsx(arquivo_importacao) -> dict[str, object]:
     resultado = {
         'linhas_lidas': 0,
@@ -1010,10 +1635,12 @@ def _validar_conteudo_planilha_importacao_lancamentos_xlsx(arquivo_importacao) -
         'linhas_importadas': 0,
         'linhas_invalidas': 0,
         'erros': [],
-        'lancamentos_validos': [],
+        'operacoes_validas': [],
     }
 
-    linhas_planilha = _xlsx_ler_dados_modelo_importacao_lancamentos_xlsx(arquivo_importacao)
+    cabecalhos_planilha, linhas_planilha = _xlsx_ler_dados_modelo_importacao_lancamentos_xlsx(
+        arquivo_importacao
+    )
     linhas_dados = linhas_planilha[1:] if linhas_planilha else []
 
     pessoas_por_nome = _montar_indice_importacao_por_nome(
@@ -1029,51 +1656,208 @@ def _validar_conteudo_planilha_importacao_lancamentos_xlsx(arquivo_importacao) -
     documentos_importacao: dict[str, int] = {}
 
     for numero_linha, valores_linha in linhas_dados:
-        dados_linha = dict(zip(LANCAMENTO_IMPORTACAO_MODELO_COLUNAS, valores_linha))
+        dados_linha = _normalizar_dados_linha_importacao_lancamento(
+            dict(zip(cabecalhos_planilha, valores_linha)),
+            cabecalhos_planilha,
+        )
         if not any((valor or '').strip() for valor in dados_linha.values()):
             continue
 
         resultado['linhas_lidas'] += 1
-        lancamento_validado, erros_linha = _validar_linha_importacao_lancamento(
-            dados_linha,
-            pessoas_por_nome,
-            categorias_por_tipo_nome,
-            centros_custo_por_nome,
-            contas_por_nome,
-        )
+        erros_linha: dict[str, list[str]] = {}
+        blocos_rateio, buracos_rateio = _extrair_blocos_rateio_importacao(dados_linha)
+        valor_total_texto = (dados_linha.get('valor_total_documento') or '').strip()
+        valor_total_documento = _parse_decimal_importacao_lancamento(valor_total_texto)
+        tipo = (dados_linha.get('tipo') or '').strip()
 
-        numero_documento = (dados_linha.get('numero_documento') or '').strip()
-        if numero_documento and numero_documento in documentos_importacao:
+        if not valor_total_texto:
             _adicionar_erro_importacao(
                 erros_linha,
-                'numero_documento',
-                f'Documento repetido na linha {documentos_importacao[numero_documento]} desta planilha.',
+                'valor_total_documento',
+                'Informe o valor total do documento.',
             )
-        elif numero_documento and lancamento_validado:
-            documentos_importacao[numero_documento] = numero_linha
+        elif valor_total_documento is None:
+            _adicionar_erro_importacao(
+                erros_linha,
+                'valor_total_documento',
+                'Informe um valor total do documento valido.',
+            )
+        elif valor_total_documento <= 0:
+            _adicionar_erro_importacao(
+                erros_linha,
+                'valor_total_documento',
+                'Informe um valor total do documento maior que zero.',
+            )
+
+        for indice_bloco, campos_bloco in buracos_rateio:
+            campo_categoria, campo_centro_custo, campo_valor = campos_bloco
+            mensagem = (
+                'Nao deixe buracos entre os blocos de rateio. '
+                'Preencha os blocos em sequencia, sem pular posicoes.'
+            )
+            _adicionar_erro_importacao(erros_linha, campo_categoria, mensagem)
+            _adicionar_erro_importacao(erros_linha, campo_centro_custo, mensagem)
+            _adicionar_erro_importacao(erros_linha, campo_valor, mensagem)
+
+        if tipo == LancamentoFinanceiro.TipoLancamento.TRANSFERENCIA and blocos_rateio:
+            _adicionar_erro_importacao(
+                erros_linha,
+                'tipo',
+                'Lancamentos do tipo transferencia devem deixar todos os blocos de rateio em branco.',
+            )
+
+        if tipo != LancamentoFinanceiro.TipoLancamento.TRANSFERENCIA and not blocos_rateio:
+            _adicionar_erro_importacao(
+                erros_linha,
+                'categoria_nome_1',
+                'Preencha pelo menos o bloco 1 para receita ou despesa.',
+            )
+            _adicionar_erro_importacao(
+                erros_linha,
+                'valor_1',
+                'Preencha pelo menos o valor do bloco 1 para receita ou despesa.',
+            )
+
+        lancamentos_validos: list[LancamentoFinanceiro] = []
+        for bloco in blocos_rateio:
+            dados_bloco = _montar_dados_bloco_importacao_lancamento(dados_linha, bloco)
+            lancamento_validado, erros_bloco = _validar_linha_importacao_lancamento(
+                dados_bloco,
+                pessoas_por_nome,
+                categorias_por_tipo_nome,
+                centros_custo_por_nome,
+                contas_por_nome,
+            )
+            for campo, mensagens in erros_bloco.items():
+                campo_destino = campo
+                if campo == 'categoria_nome':
+                    campo_destino = f'categoria_nome_{bloco["indice"]}'
+                elif campo == 'centro_custo_nome':
+                    campo_destino = f'centro_custo_nome_{bloco["indice"]}'
+                elif campo == 'valor':
+                    campo_destino = f'valor_{bloco["indice"]}'
+                for mensagem in mensagens:
+                    _adicionar_erro_importacao(erros_linha, campo_destino, mensagem)
+            if lancamento_validado is not None:
+                lancamentos_validos.append(lancamento_validado)
+
+        if tipo == LancamentoFinanceiro.TipoLancamento.TRANSFERENCIA:
+            dados_transferencia = {
+                'tipo': (dados_linha.get('tipo') or '').strip(),
+                'status': (dados_linha.get('status') or '').strip(),
+                'descricao': (dados_linha.get('descricao') or '').strip(),
+                'valor': valor_total_texto,
+                'data_competencia': (dados_linha.get('data_competencia') or '').strip(),
+                'data_pagamento': (dados_linha.get('data_pagamento') or '').strip(),
+                'pessoa_nome': (dados_linha.get('pessoa_nome') or '').strip(),
+                'categoria_nome': '',
+                'centro_custo_nome': '',
+                'conta_nome': (dados_linha.get('conta_nome') or '').strip(),
+                'conta_destino_nome': (dados_linha.get('conta_destino_nome') or '').strip(),
+                'numero_documento': (dados_linha.get('numero_documento') or '').strip(),
+                'observacoes': (dados_linha.get('observacoes') or '').strip(),
+            }
+            lancamento_transferencia, erros_transferencia = _validar_linha_importacao_lancamento(
+                dados_transferencia,
+                pessoas_por_nome,
+                categorias_por_tipo_nome,
+                centros_custo_por_nome,
+                contas_por_nome,
+            )
+            for campo, mensagens in erros_transferencia.items():
+                for mensagem in mensagens:
+                    _adicionar_erro_importacao(erros_linha, campo, mensagem)
+            if lancamento_transferencia is not None:
+                lancamentos_validos = [lancamento_transferencia]
+
+        if (
+            tipo != LancamentoFinanceiro.TipoLancamento.TRANSFERENCIA
+            and len(lancamentos_validos) == 1
+            and valor_total_documento is not None
+            and lancamentos_validos[0].valor != valor_total_documento
+        ):
+            _adicionar_erro_importacao(
+                erros_linha,
+                'valor_total_documento',
+                'O valor total do documento precisa ser igual ao valor do bloco 1 no lancamento simples.',
+            )
 
         if erros_linha:
-            resultado['linhas_invalidas'] += 1
-            resultado['erros'].append({
-                'linha': numero_linha,
-                'campos': [
-                    {
-                        'campo': campo,
-                        'rotulo': _rotulo_campo_importacao_lancamento(campo),
-                        'mensagem': mensagem,
-                        'orientacao': _orientacao_campo_importacao_lancamento(
-                            campo,
-                            mensagem,
-                        ),
-                        'valor_informado': (dados_linha.get(campo) or '').strip(),
-                    }
-                    for campo, mensagens in erros_linha.items()
-                    for mensagem in mensagens
-                ],
-            })
-        else:
+            _registrar_erros_importacao_lancamento(
+                resultado,
+                linha=numero_linha,
+                erros_linha=erros_linha,
+                dados_linha=dados_linha,
+            )
+            continue
+
+        numero_documento = (dados_linha.get('numero_documento') or '').strip()
+        if tipo == LancamentoFinanceiro.TipoLancamento.TRANSFERENCIA:
+            if numero_documento:
+                dono_documento = documentos_importacao.get(numero_documento)
+                if dono_documento:
+                    _registrar_erros_importacao_lancamento(
+                        resultado,
+                        linha=numero_linha,
+                        erros_linha={
+                            'numero_documento': [
+                                f'Documento repetido na linha {dono_documento} desta planilha.'
+                            ]
+                        },
+                        dados_linha=dados_linha,
+                    )
+                    continue
+                documentos_importacao[numero_documento] = numero_linha
+
             resultado['linhas_validas'] += 1
-            resultado['lancamentos_validos'].append(lancamento_validado)
+            resultado['operacoes_validas'].append({
+                'tipo': 'transferencia',
+                'linha': numero_linha,
+                'lancamentos': lancamentos_validos,
+            })
+            continue
+
+        if len(lancamentos_validos) == 1:
+            if numero_documento:
+                dono_documento = documentos_importacao.get(numero_documento)
+                if dono_documento:
+                    _registrar_erros_importacao_lancamento(
+                        resultado,
+                        linha=numero_linha,
+                        erros_linha={
+                            'numero_documento': [
+                                f'Documento repetido na linha {dono_documento} desta planilha.'
+                            ]
+                        },
+                        dados_linha=dados_linha,
+                    )
+                    continue
+                documentos_importacao[numero_documento] = numero_linha
+
+            resultado['linhas_validas'] += 1
+            resultado['operacoes_validas'].append({
+                'tipo': 'simples',
+                'linha': numero_linha,
+                'lancamentos': lancamentos_validos,
+            })
+            continue
+
+        lancamentos_grupo = _validar_grupo_rateio_importacao_lancamentos(
+            linha=numero_linha,
+            dados_linha=dados_linha,
+            blocos_rateio=blocos_rateio,
+            valor_total_documento=valor_total_documento or Decimal('0.00'),
+            lancamentos_validos=lancamentos_validos,
+            resultado=resultado,
+            documentos_planilha=documentos_importacao,
+        )
+        if lancamentos_grupo:
+            resultado['linhas_validas'] += 1
+            resultado['operacoes_validas'].append({
+                'tipo': 'rateio',
+                'linha': numero_linha,
+                'lancamentos': lancamentos_grupo,
+            })
 
     return resultado
 
@@ -1142,7 +1926,464 @@ def _gerar_relatorio_inconsistencias_importacao_lancamentos_xlsx(
                 erro_campo.get('valor_informado', ''),
             ])
 
-    return _gerar_arquivo_xlsx([('Inconsistências', linhas)])
+    return _gerar_arquivo_xlsx([('InconsistÃªncias', linhas)])
+
+
+def _resultado_importacao_auxiliar_vazio(slug: str) -> dict[str, object]:
+    return {
+        'linhas_lidas': 0,
+        'linhas_validas': 0,
+        'linhas_importadas': 0,
+        'linhas_invalidas': 0,
+        'erros': [],
+        'registros_validos': [],
+        'slug': slug,
+        'titulo': CADASTRO_AUXILIAR_PLANILHAS_BASE[slug]['titulo'],
+    }
+
+
+def _rotulo_campo_importacao_auxiliar(slug: str, campo: str) -> str:
+    return CADASTRO_AUXILIAR_PLANILHAS_BASE[slug]['rotulos'].get(campo, campo)
+
+
+def _orientacao_campo_importacao_auxiliar(slug: str, campo: str) -> str:
+    return CADASTRO_AUXILIAR_PLANILHAS_BASE[slug]['orientacoes'].get(campo, '')
+
+
+def _registrar_erro_resultado_importacao_auxiliar(
+    resultado: dict[str, object],
+    *,
+    linha: int,
+    erros_linha: dict[str, list[str]],
+    dados_linha: dict[str, str],
+) -> None:
+    resultado['linhas_invalidas'] += 1
+    resultado['erros'].append({
+        'linha': linha,
+        'campos': [
+            {
+                'campo': campo,
+                'rotulo': _rotulo_campo_importacao_auxiliar(resultado['slug'], campo),
+                'mensagem': mensagem,
+                'orientacao': _orientacao_campo_importacao_auxiliar(resultado['slug'], campo),
+                'valor_informado': (dados_linha.get(campo) or '').strip(),
+            }
+            for campo, mensagens in erros_linha.items()
+            for mensagem in mensagens
+        ],
+    })
+
+
+def _validar_conteudo_planilha_importacao_contas_xlsx(arquivo_importacao) -> dict[str, object]:
+    slug = 'contas'
+    resultado = _resultado_importacao_auxiliar_vazio(slug)
+    colunas = CADASTRO_AUXILIAR_PLANILHAS_BASE[slug]['colunas']
+    linhas_planilha = _xlsx_ler_dados_modelo_importacao_xlsx(arquivo_importacao, colunas)
+    linhas_dados = linhas_planilha[1:] if linhas_planilha else []
+
+    nomes_existentes = {
+        _normalizar_nome_importacao_lancamento(item.nome)
+        for item in ContaFinanceira.objects.all().only('nome')
+    }
+    nomes_arquivo: set[str] = set()
+
+    for linha, valores_linha in linhas_dados:
+        dados_linha = dict(zip(colunas, valores_linha))
+        if not any((valor or '').strip() for valor in valores_linha):
+            continue
+
+        resultado['linhas_lidas'] += 1
+        erros_linha: dict[str, list[str]] = {}
+
+        nome = (dados_linha.get('nome') or '').strip()
+        descricao = (dados_linha.get('descricao') or '').strip()
+        saldo_inicial_texto = (dados_linha.get('saldo_inicial') or '').strip()
+        data_saldo_texto = (dados_linha.get('data_saldo_inicial') or '').strip()
+        ativa_texto = (dados_linha.get('ativa') or '').strip()
+
+        nome_normalizado = _normalizar_nome_importacao_lancamento(nome)
+        saldo_inicial = _parse_decimal_importacao_lancamento(saldo_inicial_texto or '0')
+        data_saldo_inicial = _parse_data_importacao_lancamento(data_saldo_texto)
+        ativa = _parse_booleano_importacao(ativa_texto)
+
+        if not nome:
+            _adicionar_erro_importacao(erros_linha, 'nome', 'Informe o nome da conta.')
+        elif nome_normalizado in nomes_existentes:
+            _adicionar_erro_importacao(erros_linha, 'nome', 'Ja existe uma conta com este nome no cadastro.')
+        elif nome_normalizado in nomes_arquivo:
+            _adicionar_erro_importacao(erros_linha, 'nome', 'Este nome de conta esta repetido na planilha.')
+
+        if saldo_inicial is None:
+            _adicionar_erro_importacao(erros_linha, 'saldo_inicial', 'Informe um saldo inicial numerico valido.')
+
+        if not data_saldo_texto:
+            _adicionar_erro_importacao(erros_linha, 'data_saldo_inicial', 'Informe a data do saldo inicial.')
+        elif data_saldo_inicial is None:
+            _adicionar_erro_importacao(erros_linha, 'data_saldo_inicial', 'Use uma data valida no formato dd/mm/aaaa.')
+
+        if ativa is None:
+            _adicionar_erro_importacao(erros_linha, 'ativa', 'Use true/false, sim/nao, 1/0 ou deixe em branco.')
+
+        if erros_linha:
+            _registrar_erro_resultado_importacao_auxiliar(resultado, linha=linha, erros_linha=erros_linha, dados_linha=dados_linha)
+            continue
+
+        resultado['linhas_validas'] += 1
+        nomes_arquivo.add(nome_normalizado)
+        resultado['registros_validos'].append({
+            'nome': nome,
+            'descricao': descricao,
+            'saldo_inicial': saldo_inicial or Decimal('0.00'),
+            'data_saldo_inicial': data_saldo_inicial,
+            'ativa': ativa,
+        })
+
+    return resultado
+
+
+def _validar_conteudo_planilha_importacao_pessoas_xlsx(arquivo_importacao) -> dict[str, object]:
+    slug = 'pessoas'
+    resultado = _resultado_importacao_auxiliar_vazio(slug)
+    colunas = CADASTRO_AUXILIAR_PLANILHAS_BASE[slug]['colunas']
+    linhas_planilha = _xlsx_ler_dados_modelo_importacao_xlsx(arquivo_importacao, colunas)
+    linhas_dados = linhas_planilha[1:] if linhas_planilha else []
+
+    codigos_existentes = {
+        _normalizar_codigo_importacao(item.codigo)
+        for item in PessoaFinanceira.objects.all().only('codigo')
+    }
+    nomes_existentes = {
+        _normalizar_nome_importacao_lancamento(item.nome)
+        for item in PessoaFinanceira.objects.all().only('nome')
+    }
+    codigos_arquivo: set[str] = set()
+    nomes_arquivo: set[str] = set()
+    tipos_validos = {escolha for escolha, _ in PessoaFinanceira.TipoPessoa.choices}
+
+    for linha, valores_linha in linhas_dados:
+        dados_linha = dict(zip(colunas, valores_linha))
+        if not any((valor or '').strip() for valor in valores_linha):
+            continue
+
+        resultado['linhas_lidas'] += 1
+        erros_linha: dict[str, list[str]] = {}
+
+        codigo = (dados_linha.get('codigo') or '').strip()
+        nome = (dados_linha.get('nome') or '').strip()
+        tipo_pessoa = (dados_linha.get('tipo_pessoa') or '').strip().lower()
+        documento = (dados_linha.get('documento') or '').strip()
+        telefone = (dados_linha.get('telefone') or '').strip()
+        email = (dados_linha.get('email') or '').strip()
+        observacoes = (dados_linha.get('observacoes') or '').strip()
+        ativo_texto = (dados_linha.get('ativo') or '').strip()
+
+        codigo_normalizado = _normalizar_codigo_importacao(codigo)
+        nome_normalizado = _normalizar_nome_importacao_lancamento(nome)
+        ativo = _parse_booleano_importacao(ativo_texto)
+
+        if not codigo:
+            _adicionar_erro_importacao(erros_linha, 'codigo', 'Informe o codigo da pessoa.')
+        elif codigo_normalizado in codigos_existentes:
+            _adicionar_erro_importacao(erros_linha, 'codigo', 'Ja existe uma pessoa com este codigo no cadastro.')
+        elif codigo_normalizado in codigos_arquivo:
+            _adicionar_erro_importacao(erros_linha, 'codigo', 'Este codigo de pessoa esta repetido na planilha.')
+
+        if not nome:
+            _adicionar_erro_importacao(erros_linha, 'nome', 'Informe o nome da pessoa.')
+        elif nome_normalizado in nomes_existentes:
+            _adicionar_erro_importacao(erros_linha, 'nome', 'Ja existe uma pessoa com este nome no cadastro.')
+        elif nome_normalizado in nomes_arquivo:
+            _adicionar_erro_importacao(erros_linha, 'nome', 'Este nome de pessoa esta repetido na planilha.')
+
+        if tipo_pessoa and tipo_pessoa not in tipos_validos:
+            _adicionar_erro_importacao(erros_linha, 'tipo_pessoa', 'Use fisica ou juridica.')
+
+        if ativo is None:
+            _adicionar_erro_importacao(erros_linha, 'ativo', 'Use true/false, sim/nao, 1/0 ou deixe em branco.')
+
+        pessoa = PessoaFinanceira(
+            codigo=codigo,
+            nome=nome,
+            tipo_pessoa=tipo_pessoa,
+            documento=documento,
+            telefone=telefone,
+            email=email,
+            observacoes=observacoes,
+            ativo=True if ativo is None else ativo,
+        )
+        try:
+            pessoa.full_clean()
+        except ValidationError as error:
+            for campo, mensagens in error.message_dict.items():
+                for mensagem in mensagens:
+                    _adicionar_erro_importacao(erros_linha, campo, mensagem)
+
+        if erros_linha:
+            _registrar_erro_resultado_importacao_auxiliar(resultado, linha=linha, erros_linha=erros_linha, dados_linha=dados_linha)
+            continue
+
+        resultado['linhas_validas'] += 1
+        codigos_arquivo.add(codigo_normalizado)
+        nomes_arquivo.add(nome_normalizado)
+        resultado['registros_validos'].append({
+            'codigo': codigo,
+            'nome': nome,
+            'tipo_pessoa': tipo_pessoa,
+            'documento': documento,
+            'telefone': telefone,
+            'email': email,
+            'observacoes': observacoes,
+            'ativo': ativo,
+        })
+
+    return resultado
+
+
+def _validar_conteudo_planilha_importacao_centros_custo_xlsx(arquivo_importacao) -> dict[str, object]:
+    slug = 'centros-custo'
+    resultado = _resultado_importacao_auxiliar_vazio(slug)
+    colunas = CADASTRO_AUXILIAR_PLANILHAS_BASE[slug]['colunas']
+    linhas_planilha = _xlsx_ler_dados_modelo_importacao_xlsx(arquivo_importacao, colunas)
+    linhas_dados = linhas_planilha[1:] if linhas_planilha else []
+
+    codigos_existentes = {
+        _normalizar_codigo_importacao(item.codigo)
+        for item in CentroCusto.objects.all().only('codigo')
+    }
+    nomes_existentes = {
+        _normalizar_nome_importacao_lancamento(item.nome)
+        for item in CentroCusto.objects.all().only('nome')
+    }
+    codigos_arquivo: set[str] = set()
+    nomes_arquivo: set[str] = set()
+
+    for linha, valores_linha in linhas_dados:
+        dados_linha = dict(zip(colunas, valores_linha))
+        if not any((valor or '').strip() for valor in valores_linha):
+            continue
+
+        resultado['linhas_lidas'] += 1
+        erros_linha: dict[str, list[str]] = {}
+
+        codigo = (dados_linha.get('codigo') or '').strip()
+        nome = (dados_linha.get('nome') or '').strip()
+        ativo_texto = (dados_linha.get('ativo') or '').strip()
+
+        codigo_normalizado = _normalizar_codigo_importacao(codigo)
+        nome_normalizado = _normalizar_nome_importacao_lancamento(nome)
+        ativo = _parse_booleano_importacao(ativo_texto)
+
+        if not codigo:
+            _adicionar_erro_importacao(erros_linha, 'codigo', 'Informe o codigo do centro de custo.')
+        elif codigo_normalizado in codigos_existentes:
+            _adicionar_erro_importacao(erros_linha, 'codigo', 'Ja existe um centro de custo com este codigo no cadastro.')
+        elif codigo_normalizado in codigos_arquivo:
+            _adicionar_erro_importacao(erros_linha, 'codigo', 'Este codigo de centro de custo esta repetido na planilha.')
+
+        if not nome:
+            _adicionar_erro_importacao(erros_linha, 'nome', 'Informe o nome do centro de custo.')
+        elif nome_normalizado in nomes_existentes:
+            _adicionar_erro_importacao(erros_linha, 'nome', 'Ja existe um centro de custo com este nome no cadastro.')
+        elif nome_normalizado in nomes_arquivo:
+            _adicionar_erro_importacao(erros_linha, 'nome', 'Este nome de centro de custo esta repetido na planilha.')
+
+        if ativo is None:
+            _adicionar_erro_importacao(erros_linha, 'ativo', 'Use true/false, sim/nao, 1/0 ou deixe em branco.')
+
+        centro_custo = CentroCusto(
+            codigo=codigo,
+            nome=nome,
+            ativo=True if ativo is None else ativo,
+        )
+        try:
+            centro_custo.full_clean()
+        except ValidationError as error:
+            for campo, mensagens in error.message_dict.items():
+                for mensagem in mensagens:
+                    _adicionar_erro_importacao(erros_linha, campo, mensagem)
+
+        if erros_linha:
+            _registrar_erro_resultado_importacao_auxiliar(resultado, linha=linha, erros_linha=erros_linha, dados_linha=dados_linha)
+            continue
+
+        resultado['linhas_validas'] += 1
+        codigos_arquivo.add(codigo_normalizado)
+        nomes_arquivo.add(nome_normalizado)
+        resultado['registros_validos'].append({
+            'codigo': codigo,
+            'nome': nome,
+            'ativo': ativo,
+        })
+
+    return resultado
+
+
+def _validar_conteudo_planilha_importacao_categorias_xlsx(arquivo_importacao) -> dict[str, object]:
+    slug = 'categorias'
+    resultado = _resultado_importacao_auxiliar_vazio(slug)
+    colunas = CADASTRO_AUXILIAR_PLANILHAS_BASE[slug]['colunas']
+    linhas_planilha = _xlsx_ler_dados_modelo_importacao_xlsx(arquivo_importacao, colunas)
+    linhas_dados = linhas_planilha[1:] if linhas_planilha else []
+
+    tipos_validos = {escolha for escolha, _ in CategoriaFinanceira.TipoCategoria.choices}
+    categorias_existentes_por_chave = {
+        (item.tipo, _normalizar_nome_importacao_lancamento(item.nome)): item
+        for item in CategoriaFinanceira.objects.all().only('tipo', 'nome')
+    }
+    categorias_pai_disponiveis = {
+        (item.tipo, _normalizar_nome_importacao_lancamento(item.nome))
+        for item in CategoriaFinanceira.objects.filter(categoria_pai__isnull=True).only('tipo', 'nome')
+    }
+    categorias_arquivo: set[tuple[str, str]] = set()
+
+    for linha, valores_linha in linhas_dados:
+        dados_linha = dict(zip(colunas, valores_linha))
+        if not any((valor or '').strip() for valor in valores_linha):
+            continue
+
+        resultado['linhas_lidas'] += 1
+        erros_linha: dict[str, list[str]] = {}
+
+        nome = (dados_linha.get('nome') or '').strip()
+        tipo = (dados_linha.get('tipo') or '').strip().lower()
+        categoria_pai_nome = (dados_linha.get('categoria_pai_nome') or '').strip()
+        mensagem_recibo = (dados_linha.get('mensagem_recibo') or '').strip()
+        ativo_texto = (dados_linha.get('ativo') or '').strip()
+
+        nome_normalizado = _normalizar_nome_importacao_lancamento(nome)
+        categoria_pai_normalizada = _normalizar_nome_importacao_lancamento(categoria_pai_nome)
+        ativo = _parse_booleano_importacao(ativo_texto)
+        chave_categoria = (tipo, nome_normalizado)
+
+        if not nome:
+            _adicionar_erro_importacao(erros_linha, 'nome', 'Informe o nome da categoria ou subcategoria.')
+
+        if not tipo:
+            _adicionar_erro_importacao(erros_linha, 'tipo', 'Informe o tipo da categoria.')
+        elif tipo not in tipos_validos:
+            _adicionar_erro_importacao(erros_linha, 'tipo', 'Use receita ou despesa.')
+
+        if ativo is None:
+            _adicionar_erro_importacao(erros_linha, 'ativo', 'Use true/false, sim/nao, 1/0 ou deixe em branco.')
+
+        if nome and tipo in tipos_validos:
+            if chave_categoria in categorias_existentes_por_chave:
+                _adicionar_erro_importacao(erros_linha, 'nome', 'Ja existe uma categoria ou subcategoria com este nome para o tipo informado.')
+            elif chave_categoria in categorias_arquivo:
+                _adicionar_erro_importacao(erros_linha, 'nome', 'Este nome esta repetido na planilha para o tipo informado.')
+
+        if categoria_pai_nome and tipo in tipos_validos:
+            chave_pai = (tipo, categoria_pai_normalizada)
+            if chave_pai not in categorias_pai_disponiveis:
+                _adicionar_erro_importacao(
+                    erros_linha,
+                    'categoria_pai_nome',
+                    'Categoria pai nao encontrada. Liste a categoria pai antes da subcategoria ou use uma categoria pai ja existente.',
+                )
+            elif chave_pai == chave_categoria:
+                _adicionar_erro_importacao(erros_linha, 'categoria_pai_nome', 'A categoria pai precisa ser diferente do proprio nome da linha.')
+
+        if erros_linha:
+            _registrar_erro_resultado_importacao_auxiliar(resultado, linha=linha, erros_linha=erros_linha, dados_linha=dados_linha)
+            continue
+
+        resultado['linhas_validas'] += 1
+        categorias_arquivo.add(chave_categoria)
+        if not categoria_pai_nome:
+            categorias_pai_disponiveis.add(chave_categoria)
+        resultado['registros_validos'].append({
+            'nome': nome,
+            'tipo': tipo,
+            'categoria_pai_nome': categoria_pai_nome,
+            'mensagem_recibo': mensagem_recibo,
+            'ativo': ativo,
+        })
+
+    return resultado
+
+
+def _importar_contas_validadas(registros: list[dict[str, object]], request) -> int:
+    total = 0
+    with transaction.atomic():
+        for registro in registros:
+            conta = ContaFinanceira(**registro)
+            conta.full_clean()
+            conta.save()
+            _registrar_auditoria_conta(request=request, acao=AuditoriaFinanceiro.AcaoAuditoria.CREATE, conta=conta, depois=_snapshot_conta(conta))
+            total += 1
+    return total
+
+
+def _importar_pessoas_validadas(registros: list[dict[str, object]], request) -> int:
+    total = 0
+    with transaction.atomic():
+        for registro in registros:
+            pessoa = PessoaFinanceira(**registro)
+            pessoa.full_clean()
+            pessoa.save()
+            _registrar_auditoria_pessoa(request=request, acao=AuditoriaFinanceiro.AcaoAuditoria.CREATE, pessoa=pessoa, depois=_snapshot_pessoa(pessoa))
+            total += 1
+    return total
+
+
+def _importar_centros_custo_validados(registros: list[dict[str, object]], request) -> int:
+    total = 0
+    with transaction.atomic():
+        for registro in registros:
+            centro_custo = CentroCusto(**registro)
+            centro_custo.full_clean()
+            centro_custo.save()
+            _registrar_auditoria_centro_custo(request=request, acao=AuditoriaFinanceiro.AcaoAuditoria.CREATE, centro_custo=centro_custo, depois=_snapshot_centro_custo(centro_custo))
+            total += 1
+    return total
+
+
+def _importar_categorias_validadas(registros: list[dict[str, object]], request) -> int:
+    total = 0
+    categorias_pai_por_chave = {
+        (item.tipo, _normalizar_nome_importacao_lancamento(item.nome)): item
+        for item in CategoriaFinanceira.objects.filter(categoria_pai__isnull=True)
+    }
+
+    with transaction.atomic():
+        for registro in registros:
+            categoria_pai = None
+            categoria_pai_nome = (registro.get('categoria_pai_nome') or '').strip()
+            if categoria_pai_nome:
+                categoria_pai = categorias_pai_por_chave.get((registro['tipo'], _normalizar_nome_importacao_lancamento(categoria_pai_nome)))
+
+            categoria = CategoriaFinanceira(
+                nome=registro['nome'],
+                tipo=registro['tipo'],
+                categoria_pai=categoria_pai,
+                mensagem_recibo=registro['mensagem_recibo'],
+                ativo=registro['ativo'],
+            )
+            categoria.full_clean()
+            categoria.save()
+
+            if categoria.categoria_pai_id is None:
+                categorias_pai_por_chave[(categoria.tipo, _normalizar_nome_importacao_lancamento(categoria.nome))] = categoria
+
+            _registrar_auditoria_categoria(request=request, acao=AuditoriaFinanceiro.AcaoAuditoria.CREATE, categoria=categoria, depois=_snapshot_categoria(categoria))
+            total += 1
+
+    return total
+
+
+def _usuario_pode_importar_cadastro_auxiliar(usuario, slug: str) -> bool:
+    configuracao = CADASTRO_AUXILIAR_PLANILHAS_BASE.get(slug)
+    if not configuracao:
+        return False
+    return usuario_possui_permissao(usuario, configuracao['permissao'])
+
+
+AUXILIAR_IMPORTACAO_PROCESSADORES = {
+    'contas': {'validar': _validar_conteudo_planilha_importacao_contas_xlsx, 'executar': _importar_contas_validadas},
+    'pessoas': {'validar': _validar_conteudo_planilha_importacao_pessoas_xlsx, 'executar': _importar_pessoas_validadas},
+    'centros-custo': {'validar': _validar_conteudo_planilha_importacao_centros_custo_xlsx, 'executar': _importar_centros_custo_validados},
+    'categorias': {'validar': _validar_conteudo_planilha_importacao_categorias_xlsx, 'executar': _importar_categorias_validadas},
+}
 
 
 def _filtrar_lancamentos_por_parametros(queryset, parametros):
@@ -2782,12 +4023,171 @@ class LancamentoFinanceiroImportacaoExportacaoView(FinanceiroPermissaoMixin, Tem
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['page_title'] = 'Importação de Lançamentos'
+        context['page_title'] = 'Importacoes do Financeiro'
         context['resultado_importacao_validacao'] = kwargs.get('resultado_importacao_validacao')
         context['resultado_importacao_erros_json'] = kwargs.get('resultado_importacao_erros_json', '')
+        context['resultado_importacao_titulo'] = kwargs.get('resultado_importacao_titulo', '')
+        context['resultado_importacao_slug'] = kwargs.get('resultado_importacao_slug', '')
+        context['cadastro_auxiliar_planilhas_base'] = [
+            {
+                **item,
+                'descricao': CADASTRO_AUXILIAR_PLANILHAS_BASE[item['slug']]['descricao'],
+                'pode_importar': _usuario_pode_importar_cadastro_auxiliar(self.request.user, item['slug']),
+                'download_url': reverse(
+                    'financeiro:lancamento-importacao-modelo-cadastro-auxiliar',
+                    kwargs={'slug': item['slug']},
+                ),
+            }
+            for item in CADASTRO_AUXILIAR_PLANILHAS_BASE_ORDEM
+        ]
         return context
 
+    def _render_resultado_importacao(self, *, resultado_importacao_validacao, titulo, slug=''):
+        return self.render_to_response(
+            self.get_context_data(
+                resultado_importacao_validacao=resultado_importacao_validacao,
+                resultado_importacao_erros_json=(
+                    _serializar_erros_importacao_lancamentos(resultado_importacao_validacao['erros'])
+                    if resultado_importacao_validacao['erros']
+                    else ''
+                ),
+                resultado_importacao_titulo=titulo,
+                resultado_importacao_slug=slug,
+            )
+        )
+
+    def _processar_importacao_lancamentos(self, request, arquivo_importacao):
+        erros_estrutura = _validar_estrutura_planilha_importacao_lancamentos_xlsx(arquivo_importacao)
+        if erros_estrutura:
+            for erro in erros_estrutura:
+                messages.error(request, erro)
+            return self.get(request)
+
+        resultado_importacao_validacao = _validar_conteudo_planilha_importacao_lancamentos_xlsx(
+            arquivo_importacao
+        )
+
+        if resultado_importacao_validacao['linhas_lidas'] == 0:
+            messages.warning(
+                request,
+                'A estrutura da planilha esta correta, mas nao ha linhas preenchidas na aba Modelo.',
+            )
+        elif resultado_importacao_validacao['linhas_invalidas']:
+            messages.error(
+                request,
+                'Nenhuma linha foi importada porque a planilha ainda tem erros. '
+                'Ajuste os campos abaixo e envie novamente.',
+            )
+        else:
+            try:
+                with transaction.atomic():
+                    total_importado = 0
+                    for operacao in resultado_importacao_validacao['operacoes_validas']:
+                        for lancamento in operacao['lancamentos']:
+                            lancamento.save()
+                            _registrar_auditoria_lancamento(
+                                request=request,
+                                acao=AuditoriaFinanceiro.AcaoAuditoria.CREATE,
+                                lancamento=lancamento,
+                                antes=None,
+                                depois=_snapshot_lancamento(lancamento),
+                            )
+                            total_importado += 1
+                resultado_importacao_validacao['linhas_importadas'] = resultado_importacao_validacao['linhas_validas']
+                messages.success(
+                    request,
+                    'Importacao concluida com sucesso. '
+                    f'{resultado_importacao_validacao["linhas_importadas"]} linhas importadas, gerando {total_importado} lancamentos.',
+                )
+            except ValidationError:
+                resultado_importacao_validacao['linhas_importadas'] = 0
+                messages.error(
+                    request,
+                    'Nenhuma linha foi importada porque a planilha ficou inconsistente durante '
+                    'a gravacao. Revise o arquivo e envie novamente.',
+                )
+
+        return self._render_resultado_importacao(
+            resultado_importacao_validacao=resultado_importacao_validacao,
+            titulo='Importacao de lancamentos',
+            slug='lancamentos',
+        )
+
+    def _processar_importacao_cadastro_auxiliar(self, request, arquivo_importacao, slug: str):
+        if slug not in AUXILIAR_IMPORTACAO_PROCESSADORES:
+            messages.error(request, 'Tipo de importacao auxiliar invalido.')
+            return self.get(request)
+
+        if not _usuario_pode_importar_cadastro_auxiliar(request.user, slug):
+            raise PermissionDenied
+
+        configuracao = CADASTRO_AUXILIAR_PLANILHAS_BASE[slug]
+        erros_estrutura = _validar_estrutura_planilha_modelo_xlsx(
+            arquivo_importacao,
+            configuracao['colunas'],
+        )
+        if erros_estrutura:
+            for erro in erros_estrutura:
+                messages.error(request, erro)
+            return self.get(request)
+
+        resultado_importacao_validacao = AUXILIAR_IMPORTACAO_PROCESSADORES[slug]['validar'](
+            arquivo_importacao
+        )
+
+        if resultado_importacao_validacao['linhas_lidas'] == 0:
+            messages.warning(
+                request,
+                'A estrutura da planilha esta correta, mas nao ha linhas preenchidas na aba Modelo.',
+            )
+        elif resultado_importacao_validacao['linhas_invalidas']:
+            messages.error(
+                request,
+                'Nenhuma linha foi importada porque a planilha ainda tem erros. '
+                'Ajuste os campos abaixo e envie novamente.',
+            )
+        else:
+            try:
+                total_importado = AUXILIAR_IMPORTACAO_PROCESSADORES[slug]['executar'](
+                    resultado_importacao_validacao['registros_validos'],
+                    request,
+                )
+                resultado_importacao_validacao['linhas_importadas'] = total_importado
+                messages.success(
+                    request,
+                    'Importacao concluida com sucesso. '
+                    f'{total_importado} registros de {configuracao["titulo"].lower()} importados.',
+                )
+            except ValidationError:
+                resultado_importacao_validacao['linhas_importadas'] = 0
+                messages.error(
+                    request,
+                    'Nenhuma linha foi importada porque a planilha ficou inconsistente durante '
+                    'a gravacao. Revise o arquivo e envie novamente.',
+                )
+
+        return self._render_resultado_importacao(
+            resultado_importacao_validacao=resultado_importacao_validacao,
+            titulo=f'Importacao de {configuracao["titulo"].lower()}',
+            slug=slug,
+        )
+
     def post(self, request, *args, **kwargs):
+        tipo_importacao = (request.POST.get('tipo_importacao') or 'lancamentos').strip()
+        arquivo_importacao = request.FILES.get('arquivo_importacao')
+        if not arquivo_importacao:
+            messages.error(request, 'Selecione uma planilha XLSX antes de importar.')
+            return self.get(request, *args, **kwargs)
+
+        if tipo_importacao == 'lancamentos':
+            return self._processar_importacao_lancamentos(request, arquivo_importacao)
+
+        return self._processar_importacao_cadastro_auxiliar(
+            request,
+            arquivo_importacao,
+            tipo_importacao,
+        )
+
         arquivo_importacao = request.FILES.get('arquivo_importacao')
         if not arquivo_importacao:
             messages.error(request, 'Selecione uma planilha XLSX antes de importar.')
@@ -2806,7 +4206,7 @@ class LancamentoFinanceiroImportacaoExportacaoView(FinanceiroPermissaoMixin, Tem
         if resultado_importacao_validacao['linhas_lidas'] == 0:
             messages.warning(
                 request,
-                'A estrutura da planilha está correta, mas não há linhas preenchidas na aba Modelo.',
+                'A estrutura da planilha estÃ¡ correta, mas nÃ£o hÃ¡ linhas preenchidas na aba Modelo.',
             )
         elif resultado_importacao_validacao['linhas_invalidas']:
             messages.error(
@@ -2831,16 +4231,16 @@ class LancamentoFinanceiroImportacaoExportacaoView(FinanceiroPermissaoMixin, Tem
                 )
                 messages.success(
                     request,
-                    'Importação concluída com sucesso. '
+                    'ImportaÃ§Ã£o concluÃ­da com sucesso. '
                     f'{resultado_importacao_validacao["linhas_importadas"]} '
-                    'lançamentos importados.',
+                    'lanÃ§amentos importados.',
                 )
             except ValidationError:
                 resultado_importacao_validacao['linhas_importadas'] = 0
                 messages.error(
                     request,
                     'Nenhuma linha foi importada porque a planilha ficou inconsistente durante '
-                    'a gravação. Revise o arquivo e envie novamente.',
+                    'a gravaÃ§Ã£o. Revise o arquivo e envie novamente.',
                 )
 
         return self.render_to_response(
@@ -2868,8 +4268,8 @@ class LancamentoFinanceiroImportacaoInconsistenciasView(FinanceiroPermissaoMixin
         if not erros:
             messages.warning(
                 request,
-                'Não há inconsistências disponíveis para baixar neste momento. '
-                'Envie a planilha novamente para gerar o relatório.',
+                'NÃ£o hÃ¡ inconsistÃªncias disponÃ­veis para baixar neste momento. '
+                'Envie a planilha novamente para gerar o relatÃ³rio.',
             )
             return redirect('financeiro:lancamento-importacao-exportacao')
 
@@ -2878,7 +4278,7 @@ class LancamentoFinanceiroImportacaoInconsistenciasView(FinanceiroPermissaoMixin
             content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         )
         response['Content-Disposition'] = (
-            'attachment; filename="relatorio_inconsistencias_importacao_lancamentos.xlsx"'
+            'attachment; filename="relatorio_inconsistencias_importacao_financeiro.xlsx"'
         )
 
         return response
@@ -2897,11 +4297,30 @@ class LancamentoFinanceiroImportacaoModeloView(FinanceiroPermissaoMixin, View):
         return response
 
 
+class CadastroAuxiliarPlanilhaBaseView(FinanceiroPermissaoMixin, View):
+    permissao_requerida = 'financeiro.lancamentos.baixar_modelo'
+
+    def get(self, request, *args, **kwargs):
+        slug = kwargs.get('slug')
+        if slug not in CADASTRO_AUXILIAR_PLANILHAS_BASE:
+            return redirect('financeiro:lancamento-importacao-exportacao')
+        if not _usuario_pode_importar_cadastro_auxiliar(request.user, slug):
+            raise PermissionDenied
+
+        configuracao = CADASTRO_AUXILIAR_PLANILHAS_BASE[slug]
+        response = HttpResponse(
+            _gerar_planilha_base_cadastro_auxiliar_xlsx(slug),
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        )
+        response['Content-Disposition'] = f'attachment; filename="{configuracao["arquivo"]}"'
+        return response
+
+
 class LancamentoFinanceiroExportacaoView(FinanceiroPermissaoMixin, View):
     permissao_requerida = 'financeiro.lancamentos.exportar'
 
     def get(self, request, *args, **kwargs):
-        lancamentos = (
+        lancamentos_filtrados = list(
             _filtrar_lancamentos_por_parametros(
                 LancamentoFinanceiro.objects.select_related(
                     'pessoa',
@@ -2914,8 +4333,45 @@ class LancamentoFinanceiroExportacaoView(FinanceiroPermissaoMixin, View):
             )
             .order_by('-data_competencia', '-data_pagamento', '-criado_em', '-pk')
         )
+        grupos_rateio = sorted({
+            (lancamento.grupo_rateio or '').strip()
+            for lancamento in lancamentos_filtrados
+            if lancamento.com_rateio and (lancamento.grupo_rateio or '').strip()
+        })
+        if grupos_rateio:
+            linhas_grupo = list(
+                LancamentoFinanceiro.objects.select_related(
+                    'pessoa',
+                    'categoria',
+                    'centro_custo',
+                    'conta',
+                    'conta_destino',
+                )
+                .filter(com_rateio=True, grupo_rateio__in=grupos_rateio)
+                .order_by('-data_competencia', '-data_pagamento', '-criado_em', '-pk')
+            )
+            lancamentos_sem_rateio = [
+                lancamento
+                for lancamento in lancamentos_filtrados
+                if not lancamento.com_rateio or not (lancamento.grupo_rateio or '').strip()
+            ]
+            lancamentos = lancamentos_sem_rateio + linhas_grupo
+        else:
+            lancamentos = lancamentos_filtrados
+
+        try:
+            arquivo_exportacao = _gerar_planilha_exportacao_lancamentos_xlsx(lancamentos)
+        except ValidationError as error:
+            for mensagem in error.messages:
+                messages.error(request, mensagem)
+            url_listagem = reverse('financeiro:lancamento-list')
+            filtros = request.GET.urlencode()
+            if filtros:
+                return redirect(f'{url_listagem}?{filtros}')
+            return redirect(url_listagem)
+
         response = HttpResponse(
-            _gerar_planilha_exportacao_lancamentos_xlsx(lancamentos),
+            arquivo_exportacao,
             content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         )
         response['Content-Disposition'] = 'attachment; filename="exportacao_lancamentos.xlsx"'
@@ -2948,12 +4404,12 @@ class LancamentoFinanceiroAcoesLoteView(FinanceiroPermissaoMixin, View):
         ]
 
         if not tokens_selecao:
-            messages.warning(request, 'Selecione pelo menos um lançamento para aplicar uma ação em lote.')
+            messages.warning(request, 'Selecione pelo menos um lanÃ§amento para aplicar uma aÃ§Ã£o em lote.')
             return self._redirect_listagem(request)
 
         lancamentos = _resolver_lancamentos_para_acoes_em_lote(tokens_selecao)
         if not lancamentos:
-            messages.warning(request, 'Nenhum lançamento selecionado foi encontrado para ação em lote.')
+            messages.warning(request, 'Nenhum lanÃ§amento selecionado foi encontrado para aÃ§Ã£o em lote.')
             return self._redirect_listagem(request)
 
         if acao_lote == 'excluir':
@@ -2974,7 +4430,7 @@ class LancamentoFinanceiroAcoesLoteView(FinanceiroPermissaoMixin, View):
             sufixo = '' if quantidade == 1 else 's'
             messages.success(
                 request,
-                f'{quantidade} lançamento{sufixo} excluído{sufixo} com sucesso.',
+                f'{quantidade} lanÃ§amento{sufixo} excluÃ­do{sufixo} com sucesso.',
             )
             return self._redirect_listagem(request)
 
@@ -2984,7 +4440,7 @@ class LancamentoFinanceiroAcoesLoteView(FinanceiroPermissaoMixin, View):
                 for escolha, _ in LancamentoFinanceiro.StatusLancamento.choices
             }
             if novo_status not in status_validos:
-                messages.warning(request, 'Selecione um status válido para aplicar aos lançamentos marcados.')
+                messages.warning(request, 'Selecione um status vÃ¡lido para aplicar aos lanÃ§amentos marcados.')
                 return self._redirect_listagem(request)
 
             try:
@@ -3004,8 +4460,8 @@ class LancamentoFinanceiroAcoesLoteView(FinanceiroPermissaoMixin, View):
             except ValidationError:
                 messages.error(
                     request,
-                    'Nenhum status foi alterado porque pelo menos um lançamento selecionado '
-                    'ficou inconsistente na validação. Revise os itens marcados e tente novamente.',
+                    'Nenhum status foi alterado porque pelo menos um lanÃ§amento selecionado '
+                    'ficou inconsistente na validaÃ§Ã£o. Revise os itens marcados e tente novamente.',
                 )
                 return self._redirect_listagem(request)
 
@@ -3013,11 +4469,11 @@ class LancamentoFinanceiroAcoesLoteView(FinanceiroPermissaoMixin, View):
             sufixo = '' if quantidade == 1 else 's'
             messages.success(
                 request,
-                f'Status atualizado para {quantidade} lançamento{sufixo}.',
+                f'Status atualizado para {quantidade} lanÃ§amento{sufixo}.',
             )
             return self._redirect_listagem(request)
 
-        messages.warning(request, 'Escolha uma ação em lote válida para os lançamentos selecionados.')
+        messages.warning(request, 'Escolha uma aÃ§Ã£o em lote vÃ¡lida para os lanÃ§amentos selecionados.')
         return self._redirect_listagem(request)
 
 
@@ -3577,3 +5033,4 @@ class LancamentoFinanceiroDeleteView(FinanceiroDeleteMixin):
             )
 
         return response
+

@@ -9,6 +9,7 @@ from .views import (
     AssinaturaInstitucionalListView,
     AssinaturaInstitucionalUpdateView,
     AuditoriaLancamentoFinanceiroListView,
+    CadastroAuxiliarPlanilhaBaseView,
     CategoriaFinanceiraAutocompleteView,
     CategoriaFinanceiraCreateView,
     CategoriaFinanceiraDeleteView,
@@ -124,6 +125,11 @@ urlpatterns = [
         'lancamentos/importacao/modelo/',
         LancamentoFinanceiroImportacaoModeloView.as_view(),
         name='lancamento-importacao-modelo',
+    ),
+    path(
+        'lancamentos/importacao/modelos-cadastros/<slug:slug>/',
+        CadastroAuxiliarPlanilhaBaseView.as_view(),
+        name='lancamento-importacao-modelo-cadastro-auxiliar',
     ),
     path(
         'lancamentos/importacao/inconsistencias/',

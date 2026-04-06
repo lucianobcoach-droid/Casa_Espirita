@@ -1,7 +1,7 @@
 {% extends 'financeiro/base.html' %}
 {% load financeiro_permissoes %}
 
-{% block title %}Importação de Lançamentos{% endblock %}
+{% block title %}Importacoes do Financeiro{% endblock %}
 
 {% block content %}
 <style>
@@ -50,15 +50,44 @@
         max-width: 100%;
     }
 
-    .financeiro-importacao-help-list {
+    .financeiro-importacao-base-grid {
+        display: grid;
+        gap: 0.75rem;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .financeiro-importacao-base-item {
+        border-radius: 0.85rem;
+        border: 1px solid rgba(203, 213, 225, 0.9);
+        background: #f8fafc;
+        padding: 0.9rem 1rem;
+    }
+
+    .financeiro-importacao-base-item h3 {
+        margin-bottom: 0.3rem;
+        color: #0f172a;
+        font-size: 0.95rem;
+        font-weight: 800;
+    }
+
+    .financeiro-importacao-base-item p {
+        margin-bottom: 0.75rem;
+        color: #475569;
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+
+    .financeiro-importacao-help-list,
+    .financeiro-importacao-ordem-lista {
         margin-left: 1rem;
         color: #475569;
         font-size: 0.92rem;
         line-height: 1.6;
     }
 
-    .financeiro-importacao-help-list li + li {
-        margin-top: 0.45rem;
+    .financeiro-importacao-help-list li + li,
+    .financeiro-importacao-ordem-lista li + li {
+        margin-top: 0.35rem;
     }
 
     .financeiro-importacao-resultado-grid {
@@ -177,7 +206,8 @@
     }
 
     @media screen and (max-width: 768px) {
-        .financeiro-importacao-grid {
+        .financeiro-importacao-grid,
+        .financeiro-importacao-base-grid {
             grid-template-columns: minmax(0, 1fr);
         }
 
@@ -192,53 +222,87 @@
     {% tem_permissao request.user 'financeiro.lancamentos.baixar_inconsistencias' as pode_baixar_inconsistencias %}
     <div class="financeiro-page-header financeiro-page-head">
         <div class="financeiro-page-header-main">
-            <h1 class="title financeiro-page-title">Importação de Lançamentos</h1>
+            <h1 class="title financeiro-page-title">Importacoes do Financeiro</h1>
         </div>
         <div class="financeiro-page-header-actions no-print">
-            <a class="button is-light" href="{% url 'financeiro:lancamento-list' %}">Voltar para lançamentos</a>
+            <a class="button is-light" href="{% url 'financeiro:lancamento-list' %}">Voltar para lancamentos</a>
         </div>
     </div>
 
-    <div class="financeiro-importacao-grid">
-        <section class="financeiro-importacao-card">
-            <h2 class="financeiro-importacao-card-title">Importar lançamentos</h2>
-            <p class="financeiro-importacao-card-text">
-                Envie uma planilha XLSX preenchida no layout do sistema. Se todas as linhas estiverem válidas, o sistema importa tudo; se houver qualquer erro, nenhuma linha é gravada.
-            </p>
+    <section class="financeiro-importacao-card">
+        <h2 class="financeiro-importacao-card-title">Importacao de lancamentos</h2>
+        <p class="financeiro-importacao-card-text">
+            Use esta area para importar lancamentos em massa no layout comum do sistema. Agora o contrato principal e didatico: 1 linha representa 1 documento, com ate 5 blocos de rateio na mesma linha. As exportacoes continuam nas listagens especificas para respeitar filtros ativos.
+        </p>
 
-            <form method="post" enctype="multipart/form-data">
-                {% csrf_token %}
-                <div class="field">
-                    <label class="label" for="arquivo_importacao">Arquivo de importação</label>
-                    <div class="control">
-                        <input class="input financeiro-importacao-file" type="file" id="arquivo_importacao" name="arquivo_importacao" accept=".xlsx" required>
-                    </div>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="hidden" name="tipo_importacao" value="lancamentos">
+            <div class="field">
+                <label class="label" for="arquivo_importacao_lancamentos">Arquivo de importacao</label>
+                <div class="control">
+                    <input class="input financeiro-importacao-file" type="file" id="arquivo_importacao_lancamentos" name="arquivo_importacao" accept=".xlsx" required>
                 </div>
+            </div>
 
-                <div class="financeiro-importacao-actions">
-                    <button class="button is-primary" type="submit">Importar planilha</button>
-                    {% if pode_baixar_modelo_importacao %}
+            <div class="financeiro-importacao-actions">
+                <button class="button is-primary" type="submit">Importar lancamentos</button>
+                {% if pode_baixar_modelo_importacao %}
                     <a class="button is-link is-light" href="{% url 'financeiro:lancamento-importacao-modelo' %}">Baixar planilha modelo</a>
-                    {% endif %}
-                </div>
-            </form>
-        </section>
+                {% endif %}
+            </div>
+        </form>
+    </section>
 
-    </div>
+    <section class="financeiro-importacao-card">
+        <h2 class="financeiro-importacao-card-title">Importacoes auxiliares centralizadas</h2>
+        <p class="financeiro-importacao-card-text">
+            As importacoes auxiliares ficam centralizadas aqui no financeiro geral. Esta frente cobre contas, pessoas, centros de custo e categorias/subcategorias. Assinaturas ficaram fora deste escopo.
+        </p>
+
+        <div class="financeiro-importacao-base-grid">
+            {% for item in cadastro_auxiliar_planilhas_base %}
+                {% if item.pode_importar %}
+                    <article class="financeiro-importacao-base-item">
+                        <h3>{{ item.titulo }}</h3>
+                        <p>{{ item.descricao }}</p>
+                        <form method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <input type="hidden" name="tipo_importacao" value="{{ item.slug }}">
+                            <div class="field">
+                                <label class="label" for="arquivo_importacao_{{ item.slug }}">Arquivo de importacao</label>
+                                <div class="control">
+                                    <input class="input financeiro-importacao-file" type="file" id="arquivo_importacao_{{ item.slug }}" name="arquivo_importacao" accept=".xlsx" required>
+                                </div>
+                            </div>
+                            <div class="financeiro-importacao-actions">
+                                <button class="button is-primary is-light" type="submit">Importar {{ item.titulo|lower }}</button>
+                                {% if pode_baixar_modelo_importacao %}
+                                    <a class="button is-link is-light" href="{{ item.download_url }}">Baixar planilha-base</a>
+                                {% endif %}
+                            </div>
+                        </form>
+                    </article>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </section>
 
     {% if resultado_importacao_validacao %}
         <section class="financeiro-importacao-card">
-            <h2 class="financeiro-importacao-card-title">Resultado da importação</h2>
+            <h2 class="financeiro-importacao-card-title">
+                {% if resultado_importacao_titulo %}Resultado da {{ resultado_importacao_titulo|lower }}{% else %}Resultado da importacao{% endif %}
+            </h2>
             <div class="financeiro-importacao-resultado-banner {% if resultado_importacao_validacao.linhas_invalidas %}is-error{% else %}is-success{% endif %}">
                 {% if resultado_importacao_validacao.linhas_importadas %}
-                    <h3 class="financeiro-importacao-resultado-banner-title">Importação concluída com sucesso</h3>
+                    <h3 class="financeiro-importacao-resultado-banner-title">Importacao concluida com sucesso</h3>
                     <p class="financeiro-importacao-resultado-banner-text">
-                        Todas as linhas válidas foram gravadas. Confira abaixo o total lido, importado e sem erros.
+                        Todas as linhas validas foram gravadas. Confira abaixo o total lido, importado e sem erros.
                     </p>
                 {% else %}
                     <h3 class="financeiro-importacao-resultado-banner-title">Nenhuma linha foi importada</h3>
                     <p class="financeiro-importacao-resultado-banner-text">
-                        Há ajustes pendentes na planilha. Veja o resumo e a lista por linha para corrigir os campos indicados.
+                        Ha ajustes pendentes na planilha. Veja o resumo e a lista por linha para corrigir os campos indicados.
                     </p>
                     {% if resultado_importacao_erros_json and pode_baixar_inconsistencias %}
                         <form
@@ -249,7 +313,7 @@
                             {% csrf_token %}
                             <textarea hidden name="erros_importacao">{{ resultado_importacao_erros_json }}</textarea>
                             <button class="button is-danger is-light" type="submit">
-                                Baixar relatório de inconsistências
+                                Baixar relatorio de inconsistencias
                             </button>
                         </form>
                     {% endif %}
@@ -262,7 +326,7 @@
                     <div class="financeiro-importacao-resultado-valor">{{ resultado_importacao_validacao.linhas_lidas }}</div>
                 </div>
                 <div class="financeiro-importacao-resultado-item">
-                    <div class="financeiro-importacao-resultado-label">Linhas válidas</div>
+                    <div class="financeiro-importacao-resultado-label">Linhas validas</div>
                     <div class="financeiro-importacao-resultado-valor">{{ resultado_importacao_validacao.linhas_validas }}</div>
                 </div>
                 <div class="financeiro-importacao-resultado-item">
@@ -296,12 +360,26 @@
     {% endif %}
 
     <section class="financeiro-importacao-card">
-        <h2 class="financeiro-importacao-card-title">Ajuda rápida</h2>
+        <h2 class="financeiro-importacao-card-title">Ajuda rapida</h2>
         <ul class="financeiro-importacao-help-list">
-            <li>Baixe a planilha modelo XLSX e preencha os campos na ordem esperada pelo sistema.</li>
-            <li>Use o bloco de importação para enviar o arquivo, validar abas, cabeçalhos e conteúdo, e concluir a importação quando tudo estiver correto.</li>
-            <li>Use apenas pessoas, categorias, centros de custo e contas que já existam no sistema. Se houver qualquer erro, nenhuma linha é importada.</li>
+            <li>As importacoes auxiliares ficam centralizadas nesta tela do financeiro geral.</li>
+            <li>As exportacoes continuam nas listagens especificas para respeitar filtros e contexto operacional de cada tela.</li>
+            <li>As planilhas-base usam sempre as abas `Modelo` e `Instrucoes`; mantenha os cabecalhos exatamente como o sistema gera.</li>
+            <li>Na planilha comum de lancamentos, cada linha representa 1 documento. Para receita ou despesa simples, preencha apenas o bloco 1.</li>
+            <li>Se preencher o bloco 2 ou mais, o sistema trata a linha como rateio. Nao deixe buracos entre os blocos preenchidos.</li>
+            <li>Em receita ou despesa, a soma dos `valor_1` a `valor_5` preenchidos precisa fechar exatamente com `valor_total_documento`.</li>
+            <li>Cada bloco usado exige subcategoria valida e valor positivo. Categoria pai continua proibida.</li>
+            <li>`transferencia` continua sem suporte a rateio no fluxo comum: deixe todos os blocos em branco e use apenas `valor_total_documento`.</li>
+            <li>O fluxo comum aceita no maximo 5 rateios por documento. Casos maiores continuam dependendo do caminho tecnico de backup e restauracao.</li>
+            <li>Assinaturas institucionais ficaram fora desta frente e nao entram nesta central de importacoes auxiliares.</li>
         </ul>
+        <h3 class="financeiro-importacao-card-title">Ordem recomendada de carga apos reset</h3>
+        <ol class="financeiro-importacao-ordem-lista">
+            {% for item in cadastro_auxiliar_planilhas_base %}
+                <li><strong>{{ item.titulo }}</strong>: {{ item.dependencia }}.</li>
+            {% endfor %}
+            <li><strong>Planilha comum de lancamentos</strong>: use apenas depois de concluir e revisar os cadastros auxiliares necessarios, inclusive para grupos rateados.</li>
+        </ol>
     </section>
 </div>
 {% endblock %}
