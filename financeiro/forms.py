@@ -70,6 +70,9 @@ class PessoaFinanceiraForm(forms.ModelForm):
             'observacoes',
             'ativo',
         ]
+        labels = {
+            'tipo_pessoa': 'Tipo favorecido',
+        }
 
 
 class CategoriaFinanceiraForm(forms.ModelForm):
@@ -184,6 +187,7 @@ class LancamentoFinanceiroForm(forms.ModelForm):
         self.fields['conta_destino'].widget.attrs.update({'data-financeiro-conta-destino': 'true'})
         self.fields['conta'].error_messages['required'] = 'Informe a conta de origem.'
         self.fields['pessoa'].required = False
+        self.fields['pessoa'].label = 'Favorecido'
         self.fields['categoria'].required = False
         self.fields['valor'].required = False
         self.fields['data_pagamento'].required = True
@@ -356,7 +360,7 @@ class LancamentoFinanceiroForm(forms.ModelForm):
             LancamentoFinanceiro.TipoLancamento.DESPESA,
         }:
             if not cleaned_data.get('pessoa'):
-                self.add_error('pessoa', 'Informe a pessoa para receita e despesa.')
+                self.add_error('pessoa', 'Informe o favorecido para receita e despesa.')
             if not cleaned_data.get('categoria') and not lancamento_com_rateio:
                 self.add_error('categoria', 'Informe a categoria para receita e despesa.')
             elif cleaned_data.get('categoria') and not cleaned_data['categoria'].permite_vinculo_em_lancamento:
@@ -463,6 +467,7 @@ class LancamentoFinanceiroGrupoRateioForm(forms.ModelForm):
         self.fields['tipo'].widget.attrs.update({'data-financeiro-tipo': 'true'})
         self.fields['conta_destino'].widget.attrs.update({'data-financeiro-conta-destino': 'true'})
         self.fields['pessoa'].required = False
+        self.fields['pessoa'].label = 'Favorecido'
         self.fields['data_pagamento'].required = True
         self.fields['data_pagamento'].error_messages['required'] = 'Informe a data de pagamento.'
         self.fields['tipo'].choices = [choice for choice in self.fields['tipo'].choices if choice[0] != '']
@@ -536,7 +541,7 @@ class LancamentoFinanceiroGrupoRateioForm(forms.ModelForm):
             LancamentoFinanceiro.TipoLancamento.RECEITA,
             LancamentoFinanceiro.TipoLancamento.DESPESA,
         } and not cleaned_data.get('pessoa'):
-            self.add_error('pessoa', 'Informe a pessoa para receita e despesa.')
+            self.add_error('pessoa', 'Informe o favorecido para receita e despesa.')
 
         if valor_total is None:
             self.add_error('valor_total_documento', 'Informe o valor total do documento para validar o rateio.')

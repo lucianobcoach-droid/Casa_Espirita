@@ -17,6 +17,12 @@ Este arquivo nao substitui `docs/CEREBRO_PROJETO.md`, `docs/STATE.md`, `docs/COD
 - no `financeiro`, o padrao oficial passa a ser `financeiro/base.html` com barra superior contextual + contexto institucional/usuario + navegacao lateral persistente
 - em modulos que usam `configuracoes/sistema_base.html`, o padrao oficial continua sendo topbar completa com acoes do usuario e navegacao local do modulo quando aplicavel
 - excecoes de shell precisam ser claras e justificadas, especialmente em autenticacao, impressao e recibos
+- recibos devem ser tratados como documentos finais: controles de navegacao ou impressao, quando existirem, devem ficar fora da area documental e ocultos no modo de impressao
+- no contexto financeiro, `PessoaFinanceira` deve ser exibida ao usuario como `Favorecido`, preservando nomes tecnicos internos quando a mudanca for apenas de rotulo/UX
+- listagens extensas podem oferecer selecao de quantidade por pagina quando isso melhorar o uso real; em tabelas largas, scroll horizontal deve permanecer confinado ao wrapper da tabela, podendo ter controle superior sincronizado quando a usabilidade exigir
+- listagens operacionais com muitas colunas podem oferecer configuracao de colunas visiveis, ordem manual simples e restauracao de padrao; o conjunto inicial deve priorizar leitura diaria enxuta, mantendo campos complementares como opcionais quando couber
+- na listagem principal de lancamentos do `financeiro`, o conjunto essencial deve manter `Data pagamento`, `Tipo`, `Descricao` e `Valor`, alem de selecao e acoes quando as permissoes aplicarem
+- totalizadores em listagens devem deixar claro o escopo do calculo, por exemplo pagina atual exibida ou resultado filtrado; totalizadores de selecao devem reagir dinamicamente quando houver acoes em lote
 
 ## Checklist permanente
 - Navegacao/menu/atalhos foram revisados?

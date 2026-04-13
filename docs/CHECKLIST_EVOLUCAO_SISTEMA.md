@@ -7,6 +7,7 @@ Objetivo: servir como checklist operacional permanente e curta para revisar toda
 - O shell autenticado da tela segue o padrao oficial do modulo, sem topo minimo divergente?
 - Permissoes por modulo, tela/recurso e acao foram consideradas ou registradas como pendencia?
 - Listagens impactadas foram revisadas em filtros, ordenacao, colunas, truncamento, acoes em lote e exportacao?
+- Se a listagem tiver muitas colunas, foi avaliado se precisa de colunas configuraveis, ordem manual, totalizadores e restauracao de padrao?
 - Formularios impactados foram revisados em rotulos, obrigatoriedade, mensagens, preview e consistencia visual?
 - Existe impacto em importacao/exportacao?
 - Existe impacto em auditoria/log?

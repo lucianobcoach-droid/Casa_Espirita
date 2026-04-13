@@ -400,8 +400,8 @@
 </div>
 
 <section class="box" data-financeiro-pessoa-historico="true" data-history-url-template="{% url 'financeiro:pessoa-ultimos-lancamentos' 0 %}" hidden>
-    <h2 class="title is-6">Últimos lançamentos da pessoa</h2>
-    <p class="help" data-historico-vazio="true">Selecione uma pessoa.</p>
+    <h2 class="title is-6">Últimos lançamentos do favorecido</h2>
+    <p class="help" data-historico-vazio="true">Selecione um favorecido.</p>
     <div class="table-container" data-historico-tabela-wrapper="true" hidden>
         <table class="table is-fullwidth is-striped is-narrow">
             <thead><tr><th>Data</th><th>Tipo</th><th>Descrição</th><th>Valor</th><th>Categoria</th><th>Documento</th><th class="text-end">Ação</th></tr></thead>
@@ -777,7 +777,7 @@
                 return;
             }
             if (!pessoaField.value) {
-                clearHistorico('Selecione uma pessoa.');
+                clearHistorico('Selecione um favorecido.');
                 return;
             }
             const urlTemplate = pessoaHistoricoBox.dataset.historyUrlTemplate;
@@ -787,12 +787,12 @@
                 .then((data) => {
                     const items = data.results || [];
                     if (!items.length) {
-                        clearHistorico('Nenhum lançamento encontrado para esta pessoa.');
+                        clearHistorico('Nenhum lançamento encontrado para este favorecido.');
                         return;
                     }
                     renderHistoricoState('', items);
                 })
-                .catch(() => { clearHistorico('Não foi possível carregar o histórico desta pessoa agora.'); });
+                .catch(() => { clearHistorico('Não foi possível carregar o histórico deste favorecido agora.'); });
         }
 
         function serializeRateioRows() {

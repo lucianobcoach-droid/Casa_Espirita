@@ -26,6 +26,16 @@ Data: 2026-04-06
   - importacao parcial continua fora de escopo
   - refinamentos futuros de UX/mensagens da central conforme uso real
 
+## 0.6. Refinamento de usabilidade da listagem principal de lancamentos
+
+- a `lancamento_list` ganhou configuracao inicial de colunas para melhorar o uso real com a sidebar expandida, sem depender apenas de ajustes de largura em CSS
+- o padrao inicial ficou enxuto, com `Data pagamento`, `Descricao` e `Valor` como colunas essenciais da grade, alem de selecao/acoes quando as permissoes aplicarem
+- campos complementares como `Favorecido`, `Conta origem`, `Conta destino`, `Status`, `Categoria`, `Centro de custo`, `Data competencia`, `Documento` e `Observacoes` passaram a poder ser exibidos/ocultados e ordenados manualmente
+- a preferencia atual fica preservada em sessao, por ser a menor solucao segura sem criar estrutura nova de banco nesta etapa
+- backlog futuro relacionado:
+  - avaliar persistencia permanente por usuario em banco caso a configuracao de colunas precise sobreviver de forma mais robusta entre sessoes/navegadores
+  - avaliar UI mais rica de ordenacao, como drag-and-drop, apenas se o uso real justificar
+
 ## 0.4. Ultimo bloqueio do reset real: assinaturas, configuracao institucional e regras automaticas
 
 - depois de resolver `rateios` e `lancamentos simples` legados, o reset real ainda ficou bloqueado por uma ultima lacuna do pacote operacional

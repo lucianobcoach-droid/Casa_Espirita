@@ -283,6 +283,7 @@
             grid-template-columns: minmax(0, var(--financeiro-sidebar-width)) minmax(0, 1fr);
             gap: 0.9rem;
             align-items: start;
+            min-width: 0;
             width: min(var(--financeiro-shell-max), 100%);
             max-width: 100%;
             margin: 0 auto;
@@ -476,7 +477,6 @@
             min-width: 0;
             width: 100%;
             max-width: 100%;
-            overflow-x: auto;
         }
 
         .financeiro-app-main .section {
@@ -487,11 +487,15 @@
         .financeiro-app-main .section > .container {
             width: min(var(--financeiro-container-max), 100%);
             max-width: 100% !important;
+            min-width: 0;
             padding: 0 var(--financeiro-screen-content-gap) 0.3rem;
         }
 
         .table-wrapper {
+            width: 100%;
+            max-width: 100%;
             overflow-x: auto;
+            overflow-y: hidden;
         }
 
         .financeiro-hero {
@@ -773,6 +777,8 @@
             align-items: flex-start;
             justify-content: space-between;
             gap: 0.8rem 1rem;
+            min-width: 0;
+            max-width: 100%;
             margin-bottom: 0.7rem !important;
         }
 
@@ -788,6 +794,8 @@
             flex-wrap: wrap;
             gap: 0.45rem;
             margin-left: auto;
+            min-width: 0;
+            max-width: 100%;
         }
 
         .financeiro-page-title,
@@ -2448,8 +2456,8 @@
                             </a>
                             {% endif %}
                             {% if pode_listar_pessoas %}
-                            <a class="financeiro-sidebar-link{% if current_url_name == 'pessoa-list' or current_url_name == 'pessoa-create' or current_url_name == 'pessoa-update' or current_url_name == 'pessoa-delete' %} is-active{% endif %}" href="{% url 'financeiro:pessoa-list' %}" data-short="PE" title="Pessoas" aria-label="Pessoas">
-                                <span class="financeiro-sidebar-link-label">Pessoas</span>
+                            <a class="financeiro-sidebar-link{% if current_url_name == 'pessoa-list' or current_url_name == 'pessoa-create' or current_url_name == 'pessoa-update' or current_url_name == 'pessoa-delete' %} is-active{% endif %}" href="{% url 'financeiro:pessoa-list' %}" data-short="FA" title="Favorecidos" aria-label="Favorecidos">
+                                <span class="financeiro-sidebar-link-label">Favorecidos</span>
                             </a>
                             {% endif %}
                             {% if pode_listar_categorias %}

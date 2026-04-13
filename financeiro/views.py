@@ -15,6 +15,7 @@ from zipfile import ZIP_DEFLATED, BadZipFile, ZipFile
 
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db import transaction
 from django.db.models import Q
 from django.db.models.functions import Coalesce
@@ -65,6 +66,37 @@ LANCAMENTO_ORDENACOES_LISTAGEM = {
 }
 LANCAMENTO_ORDENACAO_PADRAO = '-data'
 LANCAMENTO_COLUNAS_ORDENAVEIS = ('descricao', 'tipo', 'status', 'valor', 'pessoa', 'data')
+LANCAMENTO_LISTAGEM_POR_PAGINA_OPCOES = (25, 50, 100, 200)
+LANCAMENTO_LISTAGEM_POR_PAGINA_PADRAO = 50
+LANCAMENTO_LISTAGEM_COLUNAS_SESSAO = 'financeiro_lancamentos_colunas_configuraveis'
+LANCAMENTO_LISTAGEM_COLUNAS_ESSENCIAIS = ('data_pagamento', 'tipo', 'descricao', 'valor')
+LANCAMENTO_LISTAGEM_COLUNAS_CONFIGURAVEIS = (
+    'favorecido',
+    'conta_origem',
+    'conta_destino',
+    'status',
+    'categoria',
+    'centro_custo',
+    'data_competencia',
+    'numero_documento',
+    'observacoes',
+)
+LANCAMENTO_LISTAGEM_COLUNAS_CONFIGURAVEIS_PADRAO = ()
+LANCAMENTO_LISTAGEM_COLUNAS_META = {
+    'data_pagamento': {'rotulo': 'Data pagamento', 'ordenacao': 'data', 'essencial': True},
+    'tipo': {'rotulo': 'Tipo', 'ordenacao': 'tipo', 'essencial': True},
+    'descricao': {'rotulo': 'Descricao', 'ordenacao': 'descricao', 'essencial': True},
+    'valor': {'rotulo': 'Valor', 'ordenacao': 'valor', 'essencial': True},
+    'favorecido': {'rotulo': 'Favorecido', 'ordenacao': 'pessoa', 'essencial': False},
+    'conta_origem': {'rotulo': 'Conta origem', 'ordenacao': '', 'essencial': False},
+    'conta_destino': {'rotulo': 'Conta destino', 'ordenacao': '', 'essencial': False},
+    'status': {'rotulo': 'Status', 'ordenacao': 'status', 'essencial': False},
+    'categoria': {'rotulo': 'Categoria', 'ordenacao': '', 'essencial': False},
+    'centro_custo': {'rotulo': 'Centro de custo', 'ordenacao': '', 'essencial': False},
+    'data_competencia': {'rotulo': 'Data competencia', 'ordenacao': '', 'essencial': False},
+    'numero_documento': {'rotulo': 'Documento', 'ordenacao': '', 'essencial': False},
+    'observacoes': {'rotulo': 'Observacoes', 'ordenacao': '', 'essencial': False},
+}
 
 
 def _auditoria_usuario(request):
@@ -323,7 +355,7 @@ CENTENAS_EXTENSO = (
 MESES_EXTENSO = (
     'janeiro',
     'fevereiro',
-    'marco',
+    'março',
     'abril',
     'maio',
     'junho',
@@ -393,11 +425,11 @@ LANCAMENTO_IMPORTACAO_MODELO_ROTULOS = {
     'valor': 'Valor',
     'data_competencia': 'Data de competÃªncia',
     'data_pagamento': 'Data de pagamento',
-    'pessoa_nome': 'Pessoa',
+    'pessoa_nome': 'Favorecido',
     'categoria_nome': 'Categoria',
     'centro_custo_nome': 'Centro de custo',
-    'conta_nome': 'Conta',
-    'conta_destino_nome': 'Conta de destino',
+    'conta_nome': 'Conta origem',
+    'conta_destino_nome': 'Conta destino',
     'numero_documento': 'Documento',
     'observacoes': 'ObservaÃ§Ãµes',
     **{
@@ -421,9 +453,9 @@ LANCAMENTO_IMPORTACAO_ORIENTACOES = {
     'descricao': 'Preencha uma descriÃ§Ã£o para identificar o lanÃ§amento.',
     'data_competencia': 'Use o formato dd/mm/aaaa.',
     'data_pagamento': 'Use o formato dd/mm/aaaa.',
-    'pessoa_nome': 'Revise o nome exatamente como estÃ¡ cadastrado.',
-    'conta_nome': 'Revise o nome da conta ou preencha uma conta jÃ¡ cadastrada.',
-    'conta_destino_nome': 'Preencha uma conta de destino jÃ¡ cadastrada quando o tipo for transferÃªncia.',
+    'pessoa_nome': 'Revise o nome do favorecido exatamente como esta cadastrado.',
+    'conta_nome': 'Revise a conta origem ou preencha uma conta ja cadastrada.',
+    'conta_destino_nome': 'Preencha uma conta destino ja cadastrada quando o tipo for transferencia.',
     'numero_documento': 'Revise duplicidade ou deixe em branco para geraÃ§Ã£o automÃ¡tica.',
     **{
         f'categoria_nome_{indice}': 'Use uma subcategoria jÃ¡ cadastrada e compatÃ­vel com o tipo do lanÃ§amento.'
@@ -520,14 +552,14 @@ CADASTRO_AUXILIAR_PLANILHAS_BASE = {
         'sucesso': 'contas financeiras',
     },
     'pessoas': {
-        'titulo': 'Pessoas financeiras',
+        'titulo': 'Favorecidos financeiros',
         'arquivo': 'planilha_base_pessoas_financeiras.xlsx',
         'permissao': 'financeiro.pessoas.criar',
         'colunas': ['codigo', 'nome', 'tipo_pessoa', 'documento', 'telefone', 'email', 'observacoes', 'ativo'],
         'rotulos': {
             'codigo': 'Codigo',
             'nome': 'Nome',
-            'tipo_pessoa': 'Tipo de pessoa',
+            'tipo_pessoa': 'Tipo de favorecido',
             'documento': 'Documento',
             'telefone': 'Telefone',
             'email': 'E-mail',
@@ -535,21 +567,21 @@ CADASTRO_AUXILIAR_PLANILHAS_BASE = {
             'ativo': 'Ativo',
         },
         'orientacoes': {
-            'codigo': 'Use um codigo unico e estavel para cada pessoa.',
+            'codigo': 'Use um codigo unico e estavel para cada favorecido.',
             'nome': 'Use um nome unico para evitar ambiguidade na importacao de lancamentos.',
             'tipo_pessoa': 'Use fisica ou juridica. O campo pode ficar em branco quando nao se aplicar.',
             'email': 'Preencha um e-mail valido ou deixe em branco.',
             'ativo': 'Use true/false, sim/nao, 1/0 ou deixe em branco para considerar ativo.',
         },
         'instrucoes': [
-            ['Finalidade', 'Use esta planilha-base para preparar favorecidos e demais pessoas usadas nos lancamentos.'],
-            ['Codigo', 'Preencha um codigo unico e estavel para cada pessoa.'],
-            ['Tipo de pessoa', 'Use fisica ou juridica. O campo pode ficar em branco quando nao se aplicar.'],
+            ['Finalidade', 'Use esta planilha-base para preparar favorecidos usados nos lancamentos.'],
+            ['Codigo', 'Preencha um codigo unico e estavel para cada favorecido.'],
+            ['Tipo de favorecido', 'Use fisica ou juridica. O campo pode ficar em branco quando nao se aplicar.'],
             ['Contato', 'Documento, telefone e email sao opcionais e podem ficar em branco.'],
             ['Ativo', 'Use true/false, sim/nao, 1/0 ou deixe em branco para considerar ativo.'],
         ],
         'descricao': 'Favorecidos e contrapartes usados por receitas e despesas.',
-        'sucesso': 'pessoas financeiras',
+        'sucesso': 'favorecidos financeiros',
     },
     'centros-custo': {
         'titulo': 'Centros de custo',
@@ -779,8 +811,8 @@ def _ordenar_linhas_grupo_rateio(linhas_grupo: list[LancamentoFinanceiro]) -> li
     return sorted(
         linhas_grupo,
         key=lambda item: (
-            item.data_competencia,
             item.data_pagamento or item.data_competencia,
+            item.data_competencia,
             item.pk,
         ),
     )
@@ -1345,7 +1377,7 @@ def _validar_linha_importacao_lancamento(
             _adicionar_erro_importacao(
                 erros_por_campo,
                 'pessoa_nome',
-                'Pessoa nÃ£o encontrada no cadastro.',
+                'Favorecido nao encontrado no cadastro.',
             )
 
     categoria = None
@@ -2082,18 +2114,18 @@ def _validar_conteudo_planilha_importacao_pessoas_xlsx(arquivo_importacao) -> di
         ativo = _parse_booleano_importacao(ativo_texto)
 
         if not codigo:
-            _adicionar_erro_importacao(erros_linha, 'codigo', 'Informe o codigo da pessoa.')
+            _adicionar_erro_importacao(erros_linha, 'codigo', 'Informe o codigo do favorecido.')
         elif codigo_normalizado in codigos_existentes:
-            _adicionar_erro_importacao(erros_linha, 'codigo', 'Ja existe uma pessoa com este codigo no cadastro.')
+            _adicionar_erro_importacao(erros_linha, 'codigo', 'Ja existe um favorecido com este codigo no cadastro.')
         elif codigo_normalizado in codigos_arquivo:
-            _adicionar_erro_importacao(erros_linha, 'codigo', 'Este codigo de pessoa esta repetido na planilha.')
+            _adicionar_erro_importacao(erros_linha, 'codigo', 'Este codigo de favorecido esta repetido na planilha.')
 
         if not nome:
-            _adicionar_erro_importacao(erros_linha, 'nome', 'Informe o nome da pessoa.')
+            _adicionar_erro_importacao(erros_linha, 'nome', 'Informe o nome do favorecido.')
         elif nome_normalizado in nomes_existentes:
-            _adicionar_erro_importacao(erros_linha, 'nome', 'Ja existe uma pessoa com este nome no cadastro.')
+            _adicionar_erro_importacao(erros_linha, 'nome', 'Ja existe um favorecido com este nome no cadastro.')
         elif nome_normalizado in nomes_arquivo:
-            _adicionar_erro_importacao(erros_linha, 'nome', 'Este nome de pessoa esta repetido na planilha.')
+            _adicionar_erro_importacao(erros_linha, 'nome', 'Este nome de favorecido esta repetido na planilha.')
 
         if tipo_pessoa and tipo_pessoa not in tipos_validos:
             _adicionar_erro_importacao(erros_linha, 'tipo_pessoa', 'Use fisica ou juridica.')
@@ -2406,9 +2438,9 @@ def _filtrar_lancamentos_por_parametros(queryset, parametros):
     if status:
         queryset = queryset.filter(status=status)
     if data_inicial:
-        queryset = queryset.filter(data_competencia__gte=data_inicial)
+        queryset = queryset.filter(data_pagamento__gte=data_inicial)
     if data_final:
-        queryset = queryset.filter(data_competencia__lte=data_final)
+        queryset = queryset.filter(data_pagamento__lte=data_final)
     if conta:
         queryset = queryset.filter(Q(conta_id=conta) | Q(conta_destino_id=conta))
     if pessoa:
@@ -2447,7 +2479,7 @@ def _montar_lancamentos_visuais_listagem(lancamentos_queryset):
                 grupo_rateio__in=grupos_rateio_visiveis,
             )
             .select_related('conta', 'conta_destino', 'pessoa', 'categoria', 'centro_custo')
-            .order_by('pk')
+            .order_by('data_pagamento', 'data_competencia', 'pk')
         )
         for linha_rateio in linhas_rateio:
             grupo_rateio = (linha_rateio.grupo_rateio or '').strip()
@@ -2534,6 +2566,7 @@ def _ordenar_lancamentos_visuais_listagem(lancamentos_visuais, ordenacao):
 def _montar_url_ordenacao_lancamentos_listagem(request, coluna, direcao):
     query_params = request.GET.copy()
     query_params['ordenacao'] = coluna if direcao == 'asc' else f'-{coluna}'
+    query_params.pop('page', None)
     return f'?{query_params.urlencode()}'
 
 
@@ -2559,6 +2592,129 @@ def _montar_contexto_ordenacao_lancamentos_listagem(request, ordenacao_atual):
         'ordenacao_atual': ordenacao_atual,
         'ordenacao_colunas': ordenacao_colunas,
     }
+
+
+def _formatar_moeda_brl(valor) -> str:
+    valor = (valor or Decimal('0.00')).quantize(Decimal('0.01'))
+    return f'{valor:.2f}'.replace('.', ',')
+
+
+def _normalizar_colunas_configuraveis_lancamentos(colunas):
+    colunas_validas = []
+    for coluna in colunas or []:
+        coluna = (coluna or '').strip()
+        if coluna in LANCAMENTO_LISTAGEM_COLUNAS_CONFIGURAVEIS and coluna not in colunas_validas:
+            colunas_validas.append(coluna)
+    return tuple(colunas_validas)
+
+
+def _resolver_colunas_configuraveis_lancamentos(request):
+    if request.GET.get('restaurar_colunas') == '1':
+        request.session.pop(LANCAMENTO_LISTAGEM_COLUNAS_SESSAO, None)
+        return LANCAMENTO_LISTAGEM_COLUNAS_CONFIGURAVEIS_PADRAO
+
+    if request.GET.get('config_colunas') == '1':
+        selecionadas = _normalizar_colunas_configuraveis_lancamentos(
+            request.GET.getlist('colunas_lancamento')
+        )
+        ordenadas = sorted(
+            selecionadas,
+            key=lambda coluna: (
+                _resolver_ordem_coluna_lancamento(request, coluna),
+                LANCAMENTO_LISTAGEM_COLUNAS_CONFIGURAVEIS.index(coluna),
+            ),
+        )
+        request.session[LANCAMENTO_LISTAGEM_COLUNAS_SESSAO] = list(ordenadas)
+        return tuple(ordenadas)
+
+    return _normalizar_colunas_configuraveis_lancamentos(
+        request.session.get(
+            LANCAMENTO_LISTAGEM_COLUNAS_SESSAO,
+            LANCAMENTO_LISTAGEM_COLUNAS_CONFIGURAVEIS_PADRAO,
+        )
+    )
+
+
+def _resolver_ordem_coluna_lancamento(request, coluna):
+    try:
+        return int(request.GET.get(f'ordem_coluna_{coluna}', '') or 999)
+    except (TypeError, ValueError):
+        return 999
+
+
+def _montar_coluna_lancamento_contexto(coluna, *, selecionada=True, ordem=None):
+    meta = LANCAMENTO_LISTAGEM_COLUNAS_META[coluna]
+    return {
+        'id': coluna,
+        'rotulo': meta['rotulo'],
+        'ordenacao': meta['ordenacao'],
+        'essencial': meta['essencial'],
+        'selecionada': selecionada,
+        'ordem': ordem,
+    }
+
+
+def _montar_contexto_colunas_lancamentos(request):
+    colunas_configuraveis = _resolver_colunas_configuraveis_lancamentos(request)
+    colunas_visiveis = [
+        _montar_coluna_lancamento_contexto(coluna)
+        for coluna in LANCAMENTO_LISTAGEM_COLUNAS_ESSENCIAIS
+    ]
+    colunas_visiveis.extend(
+        _montar_coluna_lancamento_contexto(coluna)
+        for coluna in colunas_configuraveis
+    )
+    colunas_configuraveis_contexto = []
+    for indice, coluna in enumerate(LANCAMENTO_LISTAGEM_COLUNAS_CONFIGURAVEIS, start=1):
+        ordem = (
+            colunas_configuraveis.index(coluna) + 1
+            if coluna in colunas_configuraveis
+            else indice
+        )
+        colunas_configuraveis_contexto.append(
+            _montar_coluna_lancamento_contexto(
+                coluna,
+                selecionada=coluna in colunas_configuraveis,
+                ordem=ordem,
+            )
+        )
+
+    return {
+        'colunas_lancamento_visiveis': colunas_visiveis,
+        'colunas_lancamento_configuraveis': colunas_configuraveis_contexto,
+        'colunas_lancamento_configuraveis_selecionadas': colunas_configuraveis,
+        'colunas_lancamento_limite_ordem': range(
+            1,
+            len(LANCAMENTO_LISTAGEM_COLUNAS_CONFIGURAVEIS) + 1,
+        ),
+    }
+
+
+def _resolver_lancamentos_por_pagina(request) -> int:
+    valor_raw = (request.GET.get('por_pagina') or '').strip()
+    if valor_raw:
+        try:
+            valor = int(valor_raw)
+        except (TypeError, ValueError):
+            valor = LANCAMENTO_LISTAGEM_POR_PAGINA_PADRAO
+        if valor in LANCAMENTO_LISTAGEM_POR_PAGINA_OPCOES:
+            request.session['financeiro_lancamentos_por_pagina'] = valor
+            return valor
+
+    valor_sessao = request.session.get('financeiro_lancamentos_por_pagina')
+    if valor_sessao in LANCAMENTO_LISTAGEM_POR_PAGINA_OPCOES:
+        return valor_sessao
+    return LANCAMENTO_LISTAGEM_POR_PAGINA_PADRAO
+
+
+def _montar_url_lancamentos_com_query(request, **substituicoes):
+    query_params = request.GET.copy()
+    for chave, valor in substituicoes.items():
+        if valor in (None, ''):
+            query_params.pop(chave, None)
+        else:
+            query_params[chave] = valor
+    return f'?{query_params.urlencode()}'
 
 
 def _resolver_lancamentos_para_acoes_em_lote(tokens_selecao):
@@ -3037,11 +3193,11 @@ class PessoaFinanceiraUltimosLancamentosView(FinanceiroPermissaoMixin, View):
         lancamentos = list(
             LancamentoFinanceiro.objects.filter(pessoa_id=pessoa_id)
             .select_related('categoria')
-            .order_by('-data_competencia', '-criado_em', '-pk')[: self.limit]
+            .order_by('-data_pagamento', '-data_competencia', '-criado_em', '-pk')[: self.limit]
         )
         results = [
             {
-                'data': lancamento.data_competencia.strftime('%d/%m/%Y'),
+                'data': (lancamento.data_pagamento or lancamento.data_competencia).strftime('%d/%m/%Y'),
                 'tipo': lancamento.get_tipo_display(),
                 'descricao': lancamento.descricao,
                 'valor': f'R$ {lancamento.valor:.2f}',
@@ -3648,8 +3804,8 @@ class PessoaFinanceiraCreateView(FinanceiroFormMixin, CreateView):
     form_class = PessoaFinanceiraForm
     template_name = 'financeiro/pessoa_form.html'
     success_url = reverse_lazy('financeiro:pessoa-list')
-    page_title = 'Nova Pessoa Financeira'
-    success_message = 'Pessoa financeira cadastrada com sucesso.'
+    page_title = 'Novo Favorecido Financeiro'
+    success_message = 'Favorecido financeiro cadastrado com sucesso.'
 
     def form_valid(self, form):
         response = super().form_valid(form)
@@ -3668,9 +3824,9 @@ class PessoaFinanceiraUpdateView(FinanceiroFormMixin, UpdateView):
     form_class = PessoaFinanceiraForm
     template_name = 'financeiro/pessoa_form.html'
     success_url = reverse_lazy('financeiro:pessoa-list')
-    page_title = 'Editar Pessoa Financeira'
+    page_title = 'Editar Favorecido Financeiro'
     submit_label = 'Atualizar'
-    success_message = 'Pessoa financeira atualizada com sucesso.'
+    success_message = 'Favorecido financeiro atualizado com sucesso.'
 
     def form_valid(self, form):
         antes = _snapshot_pessoa(
@@ -3692,9 +3848,9 @@ class PessoaFinanceiraDeleteView(FinanceiroDeleteMixin):
     permissao_requerida = 'financeiro.pessoas.excluir'
     model = PessoaFinanceira
     success_url = reverse_lazy('financeiro:pessoa-list')
-    page_title = 'Excluir Pessoa Financeira'
+    page_title = 'Excluir Favorecido Financeiro'
     cancel_url = reverse_lazy('financeiro:pessoa-list')
-    success_message = 'Pessoa financeira excluida com sucesso.'
+    success_message = 'Favorecido financeiro excluido com sucesso.'
 
     def form_valid(self, form):
         pessoa = self.object
@@ -3987,6 +4143,7 @@ class LancamentoFinanceiroListView(FinanceiroPermissaoMixin, ListView):
             'conta_destino',
             'pessoa',
             'categoria',
+            'centro_custo',
         )
         queryset = _filtrar_lancamentos_por_parametros(queryset, self.request.GET)
         return queryset.annotate(
@@ -3998,17 +4155,50 @@ class LancamentoFinanceiroListView(FinanceiroPermissaoMixin, ListView):
         ordenacao_atual = _resolver_ordenacao_lancamentos_listagem(
             self.request.GET.get('ordenacao')
         )
+        por_pagina = _resolver_lancamentos_por_pagina(self.request)
         context['contas_disponiveis'] = ContaFinanceira.objects.order_by('nome')
         context['pessoas_disponiveis'] = PessoaFinanceira.objects.order_by('nome')
         context['categorias_disponiveis'] = CategoriaFinanceira.objects.order_by('tipo', 'nome')
-        context['lancamentos_visuais'] = _ordenar_lancamentos_visuais_listagem(
+        lancamentos_visuais = _ordenar_lancamentos_visuais_listagem(
             _montar_lancamentos_visuais_listagem(context['lancamentos']),
             ordenacao_atual,
         )
+        paginator = Paginator(lancamentos_visuais, por_pagina)
+        pagina_atual = self.request.GET.get('page') or 1
+        try:
+            page_obj = paginator.page(pagina_atual)
+        except PageNotAnInteger:
+            page_obj = paginator.page(1)
+        except EmptyPage:
+            page_obj = paginator.page(paginator.num_pages)
+        lancamentos_visuais_pagina = list(page_obj.object_list)
+        total_pagina = sum(
+            (lancamento_visual['valor_total'] for lancamento_visual in lancamentos_visuais_pagina),
+            Decimal('0.00'),
+        )
+        context['lancamentos_visuais'] = lancamentos_visuais_pagina
+        context['totalizadores_lancamentos'] = {
+            'escopo': 'pagina_atual',
+            'quantidade_exibida': len(lancamentos_visuais_pagina),
+            'valor_exibido': total_pagina,
+            'valor_exibido_formatado': _formatar_moeda_brl(total_pagina),
+        }
+        context['paginator'] = paginator
+        context['page_obj'] = page_obj
+        context['is_paginated'] = page_obj.has_other_pages()
+        context['por_pagina'] = por_pagina
+        context['por_pagina_opcoes'] = LANCAMENTO_LISTAGEM_POR_PAGINA_OPCOES
+        context['paginacao_lancamentos_urls'] = {
+            'primeira': _montar_url_lancamentos_com_query(self.request, page=1),
+            'anterior': _montar_url_lancamentos_com_query(self.request, page=page_obj.previous_page_number()) if page_obj.has_previous() else '',
+            'proxima': _montar_url_lancamentos_com_query(self.request, page=page_obj.next_page_number()) if page_obj.has_next() else '',
+            'ultima': _montar_url_lancamentos_com_query(self.request, page=paginator.num_pages),
+        }
         context.update(_montar_contexto_ordenacao_lancamentos_listagem(
             self.request,
             ordenacao_atual,
         ))
+        context.update(_montar_contexto_colunas_lancamentos(self.request))
         exportacao_url = reverse('financeiro:lancamento-exportacao')
         filtros_ativos = self.request.GET.urlencode()
         if filtros_ativos:
@@ -4331,7 +4521,7 @@ class LancamentoFinanceiroExportacaoView(FinanceiroPermissaoMixin, View):
                 ),
                 request.GET,
             )
-            .order_by('-data_competencia', '-data_pagamento', '-criado_em', '-pk')
+            .order_by('-data_pagamento', '-data_competencia', '-criado_em', '-pk')
         )
         grupos_rateio = sorted({
             (lancamento.grupo_rateio or '').strip()
@@ -4348,7 +4538,7 @@ class LancamentoFinanceiroExportacaoView(FinanceiroPermissaoMixin, View):
                     'conta_destino',
                 )
                 .filter(com_rateio=True, grupo_rateio__in=grupos_rateio)
-                .order_by('-data_competencia', '-data_pagamento', '-criado_em', '-pk')
+                .order_by('-data_pagamento', '-data_competencia', '-criado_em', '-pk')
             )
             lancamentos_sem_rateio = [
                 lancamento

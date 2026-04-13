@@ -10,6 +10,7 @@
     .financeiro-lancamento-page {
         display: grid;
         gap: 0.9rem;
+        min-width: 0;
     }
 
     .financeiro-lancamento-card {
@@ -17,6 +18,8 @@
         border-radius: 1rem;
         background: #fff;
         box-shadow: 0 12px 30px rgba(15, 23, 42, 0.045);
+        min-width: 0;
+        max-width: 100%;
         overflow: hidden;
     }
 
@@ -30,22 +33,71 @@
     }
 
     .financeiro-lancamento-table-wrap {
-        overflow: visible;
+        width: 100%;
+        max-width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+    }
+
+    .financeiro-lancamento-table-scroll-top {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+        border-bottom: 1px solid #eef3f8;
+        background: #fff;
+    }
+
+    .financeiro-lancamento-table-scroll-top[hidden] {
+        display: none;
+    }
+
+    .financeiro-lancamento-table-scroll-top > div {
+        height: 1px;
     }
 
     .financeiro-lancamento-table {
         margin-bottom: 0;
     }
 
-    .financeiro-lancamento-table th:nth-child(2),
-    .financeiro-lancamento-table td:nth-child(2) {
-        width: 28%;
-        max-width: 28rem;
+    .financeiro-lancamento-descricao-col {
+        width: 18rem;
+        min-width: 14rem;
+        max-width: 18rem;
     }
 
-    .financeiro-lancamento-table th:nth-child(8),
-    .financeiro-lancamento-table td:nth-child(8) {
-        min-width: 13rem;
+    .financeiro-lancamento-descricao-col .financeiro-lancamento-sort-link {
+        max-width: 100%;
+    }
+
+    .financeiro-lancamento-descricao-col .financeiro-lancamento-sort-link > span:first-child {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .financeiro-lancamento-favorecido-col {
+        min-width: 12rem;
+    }
+
+    .financeiro-lancamento-col-status {
+        width: 5.25rem;
+    }
+
+    .financeiro-lancamento-col-valor {
+        width: 8.25rem;
+        white-space: nowrap;
+    }
+
+    .financeiro-lancamento-col-data_pagamento,
+    .financeiro-lancamento-col-data_competencia {
+        width: 8.75rem;
+        white-space: nowrap;
+    }
+
+    .financeiro-lancamento-col-numero_documento {
+        width: 8rem;
     }
 
     .financeiro-lancamento-bulk-bar {
@@ -68,6 +120,65 @@
 
     .financeiro-lancamento-bulk-select {
         min-width: 11rem;
+    }
+
+    .financeiro-lancamento-columns-panel {
+        margin-top: 0.85rem;
+        padding: 0.85rem;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.9rem;
+        background: #fff;
+    }
+
+    .financeiro-lancamento-columns-panel summary {
+        cursor: pointer;
+        color: #1e293b;
+        font-weight: 700;
+    }
+
+    .financeiro-lancamento-columns-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+        gap: 0.75rem;
+        margin-top: 0.85rem;
+    }
+
+    .financeiro-lancamento-column-option {
+        display: grid;
+        grid-template-columns: 1fr 5rem;
+        gap: 0.5rem;
+        align-items: center;
+        padding: 0.65rem;
+        border: 1px solid #edf2f7;
+        border-radius: 0.75rem;
+        background: #fbfdff;
+    }
+
+    .financeiro-lancamento-column-option .checkbox {
+        font-weight: 600;
+    }
+
+    .financeiro-lancamento-columns-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 0.8rem;
+    }
+
+    .financeiro-lancamento-totals {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 0.65rem;
+        padding: 0.75rem 0.95rem;
+        border-bottom: 1px solid #edf2f7;
+        background: #f8fafc;
+        color: #334155;
+        font-size: 0.9rem;
+    }
+
+    .financeiro-lancamento-totals strong {
+        color: #0f172a;
     }
 
     .financeiro-lancamento-select-col {
@@ -210,6 +321,28 @@
 
     .financeiro-lancamento-empty {
         color: #64748b;
+    }
+
+    .financeiro-lancamento-pagination {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        padding: 0.75rem 0.95rem;
+        border-top: 1px solid #edf2f7;
+        background: #fff;
+    }
+
+    .financeiro-lancamento-pagination-summary {
+        color: #64748b;
+        font-size: 0.85rem;
+    }
+
+    .financeiro-lancamento-pagination-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
     }
 
     .financeiro-lancamento-table th:last-child,
@@ -409,6 +542,9 @@
 
     <section class="financeiro-lancamento-card">
         <form method="get" class="filters-box no-print">
+            {% if request.GET.ordenacao %}
+                <input type="hidden" name="ordenacao" value="{{ request.GET.ordenacao }}">
+            {% endif %}
             <div class="columns is-multiline">
                 <div class="column is-12-mobile is-6-tablet is-3-desktop">
                     <label class="label">Descrição</label>
@@ -441,15 +577,15 @@
                     </div>
                 </div>
                 <div class="column is-6-mobile is-3-tablet is-2-desktop">
-                    <label class="label">Data inicial</label>
+                    <label class="label">Pagamento inicial</label>
                     <input class="input" type="date" name="data_inicial" value="{{ request.GET.data_inicial }}">
                 </div>
                 <div class="column is-6-mobile is-3-tablet is-2-desktop">
-                    <label class="label">Data final</label>
+                    <label class="label">Pagamento final</label>
                     <input class="input" type="date" name="data_final" value="{{ request.GET.data_final }}">
                 </div>
                 <div class="column is-12-mobile is-6-tablet is-4-desktop">
-                    <label class="label">Conta</label>
+                    <label class="label">Conta origem/destino</label>
                     <div class="select is-fullwidth">
                         <select name="conta">
                             <option value="">Todas</option>
@@ -462,7 +598,7 @@
                     </div>
                 </div>
                 <div class="column is-12-mobile is-6-tablet is-4-desktop">
-                    <label class="label">Pessoa</label>
+                    <label class="label">Favorecido</label>
                     <div class="select is-fullwidth">
                         <select name="pessoa">
                             <option value="">Todas</option>
@@ -487,6 +623,18 @@
                         </select>
                     </div>
                 </div>
+                <div class="column is-12-mobile is-6-tablet is-2-desktop">
+                    <label class="label">Exibir</label>
+                    <div class="select is-fullwidth">
+                        <select name="por_pagina" onchange="this.form.submit()">
+                            {% for opcao_por_pagina in por_pagina_opcoes %}
+                                <option value="{{ opcao_por_pagina }}" {% if por_pagina == opcao_por_pagina %}selected{% endif %}>
+                                    {{ opcao_por_pagina }} por vez
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
                 <div class="column is-12-mobile is-6-tablet is-3-desktop">
                     <label class="label">&nbsp;</label>
                     <div class="buttons">
@@ -495,6 +643,45 @@
                     </div>
                 </div>
             </div>
+            <details class="financeiro-lancamento-columns-panel">
+                <summary>Configurar colunas da listagem</summary>
+                <p class="help">
+                    Colunas essenciais ficam sempre visiveis: selecao, data de pagamento, tipo, descricao, valor e acoes disponiveis.
+                    Escolha as colunas complementares e defina a ordem delas na grade.
+                </p>
+                <div class="financeiro-lancamento-columns-grid">
+                    {% for coluna in colunas_lancamento_configuraveis %}
+                        <div class="financeiro-lancamento-column-option">
+                            <label class="checkbox">
+                                <input
+                                    type="checkbox"
+                                    name="colunas_lancamento"
+                                    value="{{ coluna.id }}"
+                                    {% if coluna.selecionada %}checked{% endif %}
+                                >
+                                {{ coluna.rotulo }}
+                            </label>
+                            <div class="select is-small is-fullwidth">
+                                <select name="ordem_coluna_{{ coluna.id }}" aria-label="Ordem de {{ coluna.rotulo }}">
+                                    {% for ordem_coluna in colunas_lancamento_limite_ordem %}
+                                        <option value="{{ ordem_coluna }}" {% if coluna.ordem == ordem_coluna %}selected{% endif %}>
+                                            {{ ordem_coluna }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                <div class="financeiro-lancamento-columns-actions">
+                    <button class="button is-link is-light" type="submit" name="config_colunas" value="1">
+                        Aplicar colunas
+                    </button>
+                    <button class="button is-light" type="submit" name="restaurar_colunas" value="1">
+                        Restaurar padrao
+                    </button>
+                </div>
+            </details>
         </form>
 
         <form
@@ -539,8 +726,25 @@
             </div>
             {% endif %}
 
-            <div class="financeiro-lancamento-table-wrap">
-            <table class="table is-fullwidth is-hoverable financeiro-table financeiro-lancamento-table">
+            <div class="financeiro-lancamento-totals no-print">
+                <div>
+                    Total da pagina atual:
+                    <strong>{{ totalizadores_lancamentos.quantidade_exibida }}</strong>
+                    lancamento(s) exibido(s) ·
+                    <strong>R$ {{ totalizadores_lancamentos.valor_exibido_formatado }}</strong>
+                </div>
+                {% if pode_acoes_em_lote %}
+                    <div data-lancamento-total-selecionados>
+                        Selecionados: <strong>0</strong> lancamento(s) · <strong>R$ 0,00</strong>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="financeiro-lancamento-table-scroll-top no-print" data-lancamento-scroll-top aria-hidden="true">
+                <div data-lancamento-scroll-top-inner></div>
+            </div>
+            <div class="financeiro-lancamento-table-wrap" data-lancamento-table-wrap>
+            <table class="table is-fullwidth is-hoverable financeiro-table financeiro-lancamento-table" data-lancamento-table>
                 <thead>
                 <tr>
                     {% if pode_acoes_em_lote %}<th class="financeiro-lancamento-select-col no-print">
@@ -552,7 +756,7 @@
                             >
                         </label>
                     </th>{% endif %}
-                    <th>
+                    <th class="financeiro-lancamento-descricao-col" data-lancamento-col="descricao">
                         <a
                             class="financeiro-lancamento-sort-link{% if ordenacao_colunas.descricao.ativa %} is-active{% endif %}"
                             href="{{ ordenacao_colunas.descricao.url }}"
@@ -576,7 +780,7 @@
                             </span>
                         </a>
                     </th>
-                    <th>
+                    <th class="financeiro-lancamento-favorecido-col" data-lancamento-col="tipo">
                         <a
                             class="financeiro-lancamento-sort-link{% if ordenacao_colunas.tipo.ativa %} is-active{% endif %}"
                             href="{{ ordenacao_colunas.tipo.url }}"
@@ -600,7 +804,7 @@
                             </span>
                         </a>
                     </th>
-                    <th>
+                    <th class="financeiro-lancamento-col-status" data-lancamento-col="status">
                         <a
                             class="financeiro-lancamento-sort-link{% if ordenacao_colunas.status.ativa %} is-active{% endif %}"
                             href="{{ ordenacao_colunas.status.url }}"
@@ -624,7 +828,7 @@
                             </span>
                         </a>
                     </th>
-                    <th>
+                    <th class="financeiro-lancamento-col-valor" data-lancamento-col="valor">
                         <a
                             class="financeiro-lancamento-sort-link{% if ordenacao_colunas.valor.ativa %} is-active{% endif %}"
                             href="{{ ordenacao_colunas.valor.url }}"
@@ -648,16 +852,16 @@
                             </span>
                         </a>
                     </th>
-                    <th>Conta</th>
-                    <th>Conta destino</th>
-                    <th>
+                    <th data-lancamento-col="conta_origem">Conta origem</th>
+                    <th data-lancamento-col="conta_destino">Conta destino</th>
+                    <th class="financeiro-lancamento-favorecido-col" data-lancamento-col="favorecido">
                         <a
                             class="financeiro-lancamento-sort-link{% if ordenacao_colunas.pessoa.ativa %} is-active{% endif %}"
                             href="{{ ordenacao_colunas.pessoa.url }}"
-                            title="Ordenar por Pessoa"
-                            aria-label="Ordenar por Pessoa"
+                            title="Ordenar por Favorecido"
+                            aria-label="Ordenar por Favorecido"
                         >
-                            <span>Pessoa</span>
+                            <span>Favorecido</span>
                             <span class="financeiro-lancamento-sort-icon" aria-hidden="true">
                                 <svg viewBox="0 0 24 24" focusable="false">
                                     {% if ordenacao_colunas.pessoa.ativa and ordenacao_colunas.pessoa.direcao == 'asc' %}
@@ -674,14 +878,14 @@
                             </span>
                         </a>
                     </th>
-                    <th>
+                    <th class="financeiro-lancamento-col-data_pagamento" data-lancamento-col="data_pagamento">
                         <a
                             class="financeiro-lancamento-sort-link{% if ordenacao_colunas.data.ativa %} is-active{% endif %}"
                             href="{{ ordenacao_colunas.data.url }}"
-                            title="Ordenar por Data"
-                            aria-label="Ordenar por Data"
+                            title="Ordenar por Data de pagamento"
+                            aria-label="Ordenar por Data de pagamento"
                         >
-                            <span>Data</span>
+                            <span>Data pagamento</span>
                             <span class="financeiro-lancamento-sort-icon" aria-hidden="true">
                                 <svg viewBox="0 0 24 24" focusable="false">
                                     {% if ordenacao_colunas.data.ativa and ordenacao_colunas.data.direcao == 'asc' %}
@@ -698,8 +902,12 @@
                             </span>
                         </a>
                     </th>
-                    <th>Documento</th>
-                    {% if mostrar_coluna_acoes_lancamento %}<th class="no-print">Ações</th>{% endif %}
+                    <th data-lancamento-col="categoria">Categoria</th>
+                    <th data-lancamento-col="centro_custo">Centro de custo</th>
+                    <th class="financeiro-lancamento-col-data_competencia" data-lancamento-col="data_competencia">Data competência</th>
+                    <th class="financeiro-lancamento-col-numero_documento" data-lancamento-col="numero_documento">Documento</th>
+                    <th data-lancamento-col="observacoes">Observações</th>
+                    {% if mostrar_coluna_acoes_lancamento %}<th class="no-print" data-lancamento-actions-col>Ações</th>{% endif %}
                 </tr>
                 </thead>
                 <tbody>
@@ -714,12 +922,13 @@
                                     name="lancamentos_selecionados"
                                     value="{{ lancamento_visual.token_selecao }}"
                                     class="financeiro-lancamento-checkbox"
+                                    data-valor-selecao="{{ lancamento_visual.valor_total }}"
                                     aria-label="Selecionar lançamento {{ lancamento.numero_documento|default:lancamento.pk }}"
                                 >
                             </label>
                         </td>
                         {% endif %}
-                        <td>
+                        <td class="financeiro-lancamento-descricao-col" data-lancamento-col="descricao">
                             {% if lancamento_visual.eh_rateio %}
                                 <details class="financeiro-rateio-details">
                                     <summary title="{{ lancamento.descricao }}">
@@ -778,7 +987,7 @@
                                 </span>
                             {% endif %}
                         </td>
-                        <td>
+                        <td data-lancamento-col="tipo">
                             <span
                                 class="financeiro-lancamento-type-icon {% if lancamento.tipo == 'receita' %}is-receita{% elif lancamento.tipo == 'despesa' %}is-despesa{% else %}is-transferencia{% endif %}"
                                 role="img"
@@ -805,7 +1014,7 @@
                                 {% endif %}
                             </span>
                         </td>
-                        <td>
+                        <td data-lancamento-col="status">
                             <span
                                 class="financeiro-lancamento-status-icon {% if lancamento.status == 'quitado' %}is-quitado{% elif lancamento.status == 'aberto' %}is-aberto{% else %}is-cancelado{% endif %}"
                                 role="img"
@@ -829,14 +1038,14 @@
                                 {% endif %}
                             </span>
                         </td>
-                        <td>
+                        <td data-lancamento-col="valor">
                             <span class="valor-chip {% if lancamento.tipo == 'receita' %}is-receita{% elif lancamento.tipo == 'despesa' %}is-despesa{% else %}is-transferencia{% endif %}">
                                 R$ {{ lancamento_visual.valor_total }}
                             </span>
                         </td>
-                        <td>{{ lancamento.conta }}</td>
-                        <td>{{ lancamento.conta_destino|default:'-' }}</td>
-                        <td>
+                        <td data-lancamento-col="conta_origem">{{ lancamento.conta|default:'-' }}</td>
+                        <td data-lancamento-col="conta_destino">{{ lancamento.conta_destino|default:'-' }}</td>
+                        <td data-lancamento-col="favorecido">
                             {% if lancamento.pessoa %}
                                 {{ lancamento.pessoa }}
                             {% elif lancamento.tipo == 'transferencia' %}
@@ -845,10 +1054,24 @@
                                 -
                             {% endif %}
                         </td>
-                        <td>{{ lancamento.data_competencia|date:'d/m/Y' }}</td>
-                        <td>{{ lancamento.numero_documento|default:'-' }}</td>
+                        <td data-lancamento-col="categoria">
+                            {% if lancamento_visual.eh_rateio and lancamento_visual.resumo_rateio %}
+                                {{ lancamento_visual.resumo_rateio }}
+                            {% else %}
+                                {{ lancamento.categoria|default:'-' }}
+                            {% endif %}
+                        </td>
+                        <td data-lancamento-col="centro_custo">{{ lancamento.centro_custo|default:'-' }}</td>
+                        <td data-lancamento-col="data_pagamento">{{ lancamento.data_pagamento|date:'d/m/Y'|default:'-' }}</td>
+                        <td data-lancamento-col="data_competencia">{{ lancamento.data_competencia|date:'d/m/Y' }}</td>
+                        <td data-lancamento-col="numero_documento">{{ lancamento.numero_documento|default:'-' }}</td>
+                        <td data-lancamento-col="observacoes">
+                            <span class="financeiro-lancamento-descricao-text" title="{{ lancamento.observacoes|default:'' }}">
+                                {{ lancamento.observacoes|default:'-' }}
+                            </span>
+                        </td>
                         {% if mostrar_coluna_acoes_lancamento %}
-                        <td class="actions-cell no-print">
+                        <td class="actions-cell no-print" data-lancamento-actions-col>
                             <div class="financeiro-lancamento-actions-grid">
                                 <div class="financeiro-lancamento-action-slot">
                                     {% if pode_emitir_recibo and not lancamento_visual.eh_rateio and lancamento.tipo == 'receita' %}
@@ -955,11 +1178,39 @@
                     {% endwith %}
                 {% empty %}
                     <tr>
-                        <td colspan="{% if pode_acoes_em_lote and mostrar_coluna_acoes_lancamento %}11{% elif pode_acoes_em_lote or mostrar_coluna_acoes_lancamento %}10{% else %}9{% endif %}" class="financeiro-lancamento-empty">Nenhum lançamento encontrado com os filtros atuais.</td>
+                        <td colspan="99" class="financeiro-lancamento-empty">Nenhum lançamento encontrado com os filtros atuais.</td>
                     </tr>
                 {% endfor %}
                 </tbody>
             </table>
+            </div>
+            <div class="financeiro-lancamento-pagination no-print">
+                <div class="financeiro-lancamento-pagination-summary">
+                    {% if page_obj.paginator.count %}
+                        Exibindo {{ page_obj.start_index }}-{{ page_obj.end_index }} de {{ page_obj.paginator.count }} lançamento(s).
+                    {% else %}
+                        Nenhum lançamento para exibir.
+                    {% endif %}
+                </div>
+                {% if is_paginated %}
+                    <div class="financeiro-lancamento-pagination-actions" aria-label="Paginação de lançamentos">
+                        {% if page_obj.has_previous %}
+                            <a class="button is-small is-light" href="{{ paginacao_lancamentos_urls.primeira }}">Primeira</a>
+                            <a class="button is-small is-light" href="{{ paginacao_lancamentos_urls.anterior }}">Anterior</a>
+                        {% else %}
+                            <button class="button is-small is-light" type="button" disabled>Primeira</button>
+                            <button class="button is-small is-light" type="button" disabled>Anterior</button>
+                        {% endif %}
+                        <span class="button is-small is-static">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+                        {% if page_obj.has_next %}
+                            <a class="button is-small is-light" href="{{ paginacao_lancamentos_urls.proxima }}">Próxima</a>
+                            <a class="button is-small is-light" href="{{ paginacao_lancamentos_urls.ultima }}">Última</a>
+                        {% else %}
+                            <button class="button is-small is-light" type="button" disabled>Próxima</button>
+                            <button class="button is-small is-light" type="button" disabled>Última</button>
+                        {% endif %}
+                    </div>
+                {% endif %}
             </div>
         </form>
     </section>
@@ -971,12 +1222,111 @@ document.addEventListener('DOMContentLoaded', function () {
     const checkboxes = Array.from(document.querySelectorAll('.financeiro-lancamento-checkbox'));
     const acaoSelect = document.getElementById('financeiro-lancamento-acao-lote');
     const statusSelect = document.getElementById('financeiro-lancamento-status-lote');
+    const tableWrap = document.querySelector('[data-lancamento-table-wrap]');
+    const table = document.querySelector('[data-lancamento-table]');
+    const topScroll = document.querySelector('[data-lancamento-scroll-top]');
+    const topScrollInner = document.querySelector('[data-lancamento-scroll-top-inner]');
+    const totalSelecionados = document.querySelector('[data-lancamento-total-selecionados]');
+    const colunasVisiveis = [
+        'data_pagamento',
+        'tipo',
+        'descricao',
+        'valor'{% for coluna in colunas_lancamento_configuraveis_selecionadas %},
+        '{{ coluna }}'{% endfor %}
+    ];
+    let syncingHorizontalScroll = false;
+
+    function formatarMoeda(valor) {
+        return valor.toLocaleString('pt-BR', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    }
+
+    function aplicarPreferenciaColunas() {
+        if (!table) {
+            return;
+        }
+        const colunasPermitidas = new Set(colunasVisiveis);
+        const linhas = Array.from(table.querySelectorAll('tr'));
+
+        linhas.forEach(function (linha) {
+            const colunaAcoes = linha.querySelector('[data-lancamento-actions-col]');
+            const celulasConfiguradas = Array.from(linha.querySelectorAll('[data-lancamento-col]'));
+            const celulasPorColuna = new Map();
+
+            celulasConfiguradas.forEach(function (celula) {
+                celulasPorColuna.set(celula.dataset.lancamentoCol, celula);
+                celula.hidden = !colunasPermitidas.has(celula.dataset.lancamentoCol);
+            });
+
+            colunasVisiveis.forEach(function (coluna) {
+                const celula = celulasPorColuna.get(coluna);
+                if (celula) {
+                    celula.hidden = false;
+                    linha.insertBefore(celula, colunaAcoes || null);
+                }
+            });
+        });
+    }
+
+    function atualizarTotalSelecionados() {
+        if (!totalSelecionados) {
+            return;
+        }
+        const selecionados = checkboxes.filter(function (checkbox) {
+            return checkbox.checked;
+        });
+        const soma = selecionados.reduce(function (total, checkbox) {
+            const valor = parseFloat(String(checkbox.dataset.valorSelecao || '0').replace(',', '.'));
+            return total + (Number.isNaN(valor) ? 0 : valor);
+        }, 0);
+
+        totalSelecionados.innerHTML = `Selecionados: <strong>${selecionados.length}</strong> lancamento(s) · <strong>R$ ${formatarMoeda(soma)}</strong>`;
+    }
+
+    function syncHorizontalScroll(source, target) {
+        if (!source || !target || syncingHorizontalScroll) {
+            return;
+        }
+        syncingHorizontalScroll = true;
+        target.scrollLeft = source.scrollLeft;
+        syncingHorizontalScroll = false;
+    }
+
+    function updateTopScrollWidth() {
+        if (!tableWrap || !table || !topScroll || !topScrollInner) {
+            return;
+        }
+        topScrollInner.style.width = `${table.scrollWidth}px`;
+        topScroll.hidden = table.scrollWidth <= tableWrap.clientWidth;
+        topScroll.scrollLeft = tableWrap.scrollLeft;
+    }
+
+    aplicarPreferenciaColunas();
+
+    if (tableWrap && topScroll) {
+        tableWrap.addEventListener('scroll', function () {
+            syncHorizontalScroll(tableWrap, topScroll);
+        });
+        topScroll.addEventListener('scroll', function () {
+            syncHorizontalScroll(topScroll, tableWrap);
+        });
+        updateTopScrollWidth();
+        window.addEventListener('resize', updateTopScrollWidth);
+        if (window.ResizeObserver && table) {
+            const lancamentoTableResizeObserver = new ResizeObserver(updateTopScrollWidth);
+            lancamentoTableResizeObserver.observe(table);
+            lancamentoTableResizeObserver.observe(tableWrap);
+        }
+    }
 
     if (marcarTodos) {
         marcarTodos.addEventListener('change', function () {
             checkboxes.forEach(function (checkbox) {
                 checkbox.checked = marcarTodos.checked;
             });
+            atualizarTotalSelecionados();
         });
     }
 
@@ -989,8 +1339,10 @@ document.addEventListener('DOMContentLoaded', function () {
             marcarTodos.checked = checkboxes.length > 0 && checkboxes.every(function (item) {
                 return item.checked;
             });
+            atualizarTotalSelecionados();
         });
     });
+    atualizarTotalSelecionados();
 
     if (form) {
         form.addEventListener('submit', function (event) {

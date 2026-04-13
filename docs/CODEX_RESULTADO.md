@@ -1,6 +1,204 @@
 # CODEX_RESULTADO
 
-Data: 2026-04-06
+Data: 2026-04-13
+
+## Ajuste do conjunto padrao da `lancamento_list`: `Tipo` essencial
+
+- ajustei o conjunto essencial da listagem principal de lancamentos para incluir `Tipo` por padrao
+- o padrao revisado ficou: selecao quando aplicavel, `Data pagamento`, `Tipo`, `Descricao`, `Valor` e `Acoes` quando aplicavel
+- as colunas opcionais permaneceram as mesmas: `Favorecido`, `Conta origem`, `Conta destino`, `Status`, `Categoria`, `Centro de custo`, `Data competencia`, `Documento` e `Observacoes`
+- a mudanca preserva o painel de configuracao, a ordem manual simples, a persistencia por sessao e os totalizadores ja implementados
+
+## Colunas configuraveis, ordem manual e totalizadores na `lancamento_list`
+
+- implementei um painel `Configurar colunas da listagem` na tela principal de lancamentos
+- o padrao inicial ficou mais enxuto:
+  - essenciais: selecao quando aplicavel, `Data pagamento`, `Tipo`, `Descricao`, `Valor` e `Acoes` quando aplicavel
+  - opcionais: `Favorecido`, `Conta origem`, `Conta destino`, `Status`, `Categoria`, `Centro de custo`, `Data competencia`, `Documento` e `Observacoes`
+- o usuario pode marcar/desmarcar colunas complementares e definir a ordem delas por seletores numericos simples
+- a preferencia fica salva em sessao, sem criar estrutura nova de banco nesta etapa; isso evita migration e mantem a solucao reversivel
+- foi adicionada acao `Restaurar padrao`
+- a listagem ganhou totalizador da pagina atual exibida, mostrando quantidade de lancamentos e soma dos valores visiveis
+- a selecao em lote ganhou totalizador dinamico no navegador, mostrando quantidade e soma dos lancamentos selecionados
+- a grade continua respeitando o shell autenticado, a paginacao, os filtros, as acoes em lote e o agrupamento visual de rateios
+- validacao executada:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - smoke autenticado de `/financeiro/lancamentos/` OK
+  - smoke autenticado com configuracao de colunas via querystring OK
+  - smoke autenticado com restauracao do padrao OK
+- limitacao consciente:
+  - a persistencia ainda e por sessao; se o uso real exigir preferencia permanente entre navegadores/sessoes longas, a evolucao correta sera criar armazenamento proprio por usuario
+
+## Melhoria de usabilidade da `lancamento_list`
+
+- reduzi a pressao horizontal da coluna `Descricao` na tabela principal de lancamentos: a coluna ganhou classe propria, largura controlada e continua usando truncamento com reticencias para nao dominar a tabela
+- adicionei uma barra de rolagem horizontal superior na tabela de lancamentos, sincronizada por JavaScript com o wrapper inferior ja existente
+- a rolagem horizontal continua confinada ao wrapper local da tabela, sem voltar a empurrar ou cortar a pagina inteira
+- implementei escolha de quantidade exibida por pagina na listagem, com opcoes `25`, `50`, `100` e `200`
+- a escolha usa querystring `por_pagina` e, quando valida, tambem fica guardada na sessao para reutilizacao nas proximas aberturas da listagem
+- a paginacao foi feita sobre `lancamentos_visuais`, depois do agrupamento visual de rateios, para evitar que um grupo rateado seja quebrado entre paginas por causa das linhas fisicas do banco
+- validacao executada:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - smoke renderizado com usuario autenticado em `/financeiro/lancamentos/`, `/financeiro/lancamentos/?por_pagina=25` e `/financeiro/lancamentos/?por_pagina=100&page=1&ordenacao=descricao`, todos com `200`
+
+## Ajuste fino de data principal, contas e favorecido no financeiro
+
+- ajustei a listagem principal de lancamentos para assumir `data_pagamento` como referencia principal: filtros de periodo, ordenacao visual e exportacao comum agora usam pagamento antes de competencia
+- mantive `data_competencia` como coluna complementar na tabela, para preservar a informacao sem comandar a leitura principal
+- restaurei a coluna `Conta destino` e renomeei a leitura da tabela para `Conta origem` e `Conta destino`, mantendo `conta_destino` visivel especialmente para transferencias
+- troquei os rotulos visiveis de `Pessoa` para `Favorecido` no contexto financeiro, sem renomear model/campos internos: filtros e cabecalhos da listagem de lancamentos, formularios de lancamento/rateio, historico de ultimos lancamentos, cadastro exibido como `Favorecidos financeiros`, central de importacao/exportacao e rotulos/instrucoes das planilhas
+- a correcao foi mantida cirurgica: slugs, permissoes e nomes tecnicos como `pessoa`, `pessoas` e `PessoaFinanceira` foram preservados para nao abrir migracao/refatoracao estrutural
+- validacao executada:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - smoke renderizado com usuario autenticado em `/financeiro/lancamentos/`, `/financeiro/lancamentos/novo/`, `/financeiro/pessoas/`, `/financeiro/pessoas/nova/` e `/financeiro/lancamentos/importacao-exportacao/`, todos com `200`
+  - modelo XLSX comum conferido no contrato estrutural atual, mantendo os cabecalhos tecnicos `pessoa_nome`, `conta_nome` e `conta_destino_nome` para compatibilidade
+
+## Correcoes de mes, datas e conta na exibicao de lancamentos
+
+- corrigi a lista manual de meses em `financeiro/views.py`, trocando `marco` por `março` para a data documental do recibo
+- em `financeiro/templates/financeiro/lancamento_list.html`, a coluna generica `Data` foi renomeada para `Data competencia`
+- a listagem de lancamentos passou a exibir tambem a coluna `Data pagamento`, usando `-` quando nao houver valor
+- a coluna independente `Conta destino` foi removida da tabela principal de lancamentos para evitar que a leitura de origem misture `conta` e `conta_destino`
+- `conta_destino` segue preservada onde e regra de negocio real: transferencia, formulario, importacao/exportacao e calculos de extrato/saldo
+- validacao executada:
+  - `py manage.py check` OK
+  - render autenticado de `/financeiro/lancamentos/` com `200`
+  - render autenticado de recibo com `200`, sem `marco` sem cedilha e com `março`
+  - render autenticado de `/financeiro/resumo/`, `/financeiro/prestacao-contas/`, `/financeiro/extratos/` e extrato por conta com `200`
+- observacao de validacao:
+  - uma tentativa inicial em `/financeiro/extrato/` retornou `404` porque a rota real do repositorio e `/financeiro/extratos/`; a validacao foi repetida na rota correta e passou
+
+## Limpeza do recibo e retirada de acoes da area documental
+
+- a tela `financeiro/templates/financeiro/lancamento_recibo.html` foi ajustada de forma cirurgica para manter o recibo como documento limpo
+- saiu do corpo do recibo a frase `Para fins de comprovacao documental`
+- os botoes `Imprimir` e `Voltar` deixaram de ficar dentro da area documental do recibo
+- foi criada uma faixa de acoes externa ao documento, no nivel da pagina, com `Imprimir` e `Voltar`
+- essa faixa externa usa `no-print`, entao nao aparece na impressao
+- a area impressa fica restrita ao recibo em si, preservando identidade, dados do documento, mensagem e assinatura, sem controles visuais
+
+## Diagnostico real do elemento que estourava a largura em `lancamento_list`
+
+- a correcao anterior nao resolveu de forma suficiente porque usava `overflow-x: hidden` no shell principal
+- isso mascarava o problema: a pagina deixava de crescer, mas o elemento largo continuava existindo
+- nesta microetapa, o diagnostico foi feito em render real:
+  - HTML autenticado gerado pelo proprio Django
+  - medicao via Chrome headless em viewport desktop com sidebar expandida
+- medi os seguintes pontos da cadeia:
+  - shell principal
+  - `main`
+  - `container` interno
+  - `header` da pagina
+  - grid de filtros
+  - barra de acoes em lote
+  - wrapper da tabela
+  - tabela
+- achado objetivo:
+  - `shellBody`, `main`, `sectionContainer`, `pageHeader`, `filtersGrid` e `bulkBar` ficaram dentro da largura util
+  - o primeiro elemento efetivamente mais largo foi a propria `table` de `lancamento_list`
+  - no render desktop medido:
+    - `tableWrap` com cerca de `1033px`
+    - `table` com cerca de `1375px`
+    - `bodyWidth` igual ao `viewport`
+  - isso confirmou que a largura excedente pode existir com seguranca desde que fique confinada ao wrapper local da tabela
+- correcao final aplicada:
+  - remocao de `overflow-x: hidden` do shell principal em `financeiro/base.html`
+  - manutencao do scroll horizontal apenas nos wrappers locais das tabelas
+- por que a correcao anterior nao resolveu:
+  - ela escondia o overflow no shell, mas nao demonstrava se a origem estava corrigida
+  - ao retirar o clipping e repetir a medicao real, ficou provado que o shell nao precisava esconder nada; o comportamento correto depende do wrapper local da tabela
+- validacao concluida:
+  - captura desktop real de `lancamento_list` com sidebar expandida
+  - sem clipping do shell
+  - pagina principal dentro da largura util
+  - overflow restrito ao wrapper da tabela
+  - smoke test autenticado `200` em:
+    - `lancamento_list`
+    - `conta_list`
+    - `pessoa_list`
+    - `categoria_list`
+    - `centro_custo_list`
+    - `lancamento_importacao_exportacao`
+- conclusao objetiva:
+  - a regressao ficou resolvida no ponto certo
+  - o shell nao mascara mais o problema
+  - a tabela larga rola no wrapper local, sem cortar a pagina inteira
+
+## Correcao inicial da regressao de overflow horizontal com sidebar expandida
+
+- depois da normalizacao do shell autenticado do `financeiro`, foi identificado corte da tela `lancamento_list` à direita quando a sidebar ficava expandida
+- a causa tecnica encontrada nao foi de regra de negocio:
+  - o shell principal ainda precisava reforcar contencao horizontal em `financeiro-app-shell-body`, `financeiro-app-main` e no `container` interno da `section`
+  - as listagens principais estavam com wrappers de tabela em `overflow: visible`, deixando a tabela escapar do card e alargar a pagina inteira
+- correcao aplicada:
+  - em `financeiro/base.html`, reforcei `min-width: 0` e `overflow-x: hidden` no shell principal e no container de conteudo
+  - padronizei `table-wrapper` para scroll horizontal interno
+  - nas listagens `lancamento`, `conta`, `pessoa`, `categoria` e `centro de custo`, troquei os wrappers locais de tabela para `overflow-x: auto` / `overflow-y: hidden` com `width/max-width: 100%`
+- telas validadas:
+  - `lancamento_list`
+  - `conta_list`
+  - `pessoa_list`
+  - `categoria_list`
+  - `centro_custo_list`
+  - `lancamento_importacao_exportacao`
+- validacao executada:
+  - `py manage.py check` OK
+  - smoke test autenticado com `Client`: todas as telas do escopo responderam `200`
+- observacao metodologica:
+  - nao havia navegador/headless disponivel no ambiente para captura visual automatizada
+  - a validacao desta microetapa ficou apoiada em inspecao estrutural do HTML/CSS e smoke test autenticado das telas afetadas
+- conclusao objetiva:
+  - a regressao visual ficou corrigida no nivel estrutural esperado
+  - tabelas largas passam a rolar dentro do wrapper correto, sem empurrar a pagina inteira para a direita
+
+## Validacao de carga real pequena no novo layout comum do financeiro
+
+- foi executada uma carga real pequena e controlada usando a central de importacao do `financeiro`, sem abrir nova frente funcional
+- o estado real encontrado antes da carga nao era mais `base totalmente vazia`:
+  - `1` conta (`Conta Teste`)
+  - `1` pessoa (`Pessoa Teste`)
+  - `1` centro de custo (`Centro Teste`)
+  - `5` categorias/subcategorias
+  - `0` lancamentos
+- para viabilizar uma transferencia real no lote pequeno, foi importada primeiro uma planilha auxiliar minima de `contas`, criando:
+  - `Conta Destino 20260406_112727`
+- em seguida, foi importado no layout comum um lote real pequeno contendo:
+  - `1` lancamento simples de receita
+  - `1` transferencia
+  - `1` documento com rateio de `2` blocos
+- arquivos usados:
+  - `tmp/validacao_carga_real_pequena/contas_complementares_20260406_112727.xlsx`
+  - `tmp/validacao_carga_real_pequena/lote_real_pequeno_20260406_112727.xlsx`
+- validacao objetiva da importacao:
+  - importacao auxiliar de conta: `200` e banner de sucesso
+  - importacao de lancamentos: `200` e banner de sucesso
+  - persistencia final:
+    - `4` lancamentos
+    - `1` grupo de rateio
+    - `2` linhas rateadas
+  - integridade:
+    - transferencia com `conta` de origem e `conta_destino` corretas
+    - rateio reconstruido em `2` linhas com categorias `Material` e `Servico`
+- validacao das telas operacionais apos a carga:
+  - listagem `200`
+  - extrato `200`
+  - resumo `200`
+  - prestacao de contas `200`
+  - recibo `200`
+- checks de conteudo confirmados:
+  - as tres descricoes do lote apareceram na listagem
+  - as tres descricoes apareceram no extrato da conta de origem
+  - `Doacoes`, `Material` e `Servico` apareceram no resumo e na prestacao
+  - o recibo do lancamento simples trouxe `Pessoa Teste` e a descricao esperada
+- validacao tecnica complementar:
+  - `py manage.py check` OK depois da carga
+- conclusao objetiva:
+  - o contrato atual da planilha comum passou em carga real pequena
+  - nao apareceu bug novo nem divergencia de contrato que bloqueie ampliacao da carga
+  - o modulo esta pronto para avancar para lote real maior de forma controlada
 
 ## Auditoria das paginas autenticadas e normalizacao do shell superior/lateral
 

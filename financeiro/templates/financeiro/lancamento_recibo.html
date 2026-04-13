@@ -14,6 +14,14 @@
         width: 100%;
     }
 
+    .recibo-page-actions {
+        max-width: 860px;
+        margin: 0 auto 1rem;
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.5rem;
+    }
+
     .recibo-header {
         padding: 2rem 2.15rem 1.3rem;
         border-bottom: 1.4px solid #d8d1c4;
@@ -236,15 +244,12 @@
         height: 1rem;
     }
 
-    .recibo-assinatura-fecho {
-        margin: 0 0 0.4rem;
-        font-size: 0.84rem;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        color: #776d61;
-    }
-
     @media (max-width: 768px) {
+        .recibo-page-actions {
+            justify-content: stretch;
+            flex-direction: column;
+        }
+
         .recibo-header,
         .recibo-corpo,
         .recibo-rodape {
@@ -372,6 +377,11 @@
     }
 </style>
 
+<div class="recibo-page-actions no-print" aria-label="Acoes do recibo">
+    <button class="button is-light" type="button" onclick="window.print()">Imprimir</button>
+    <a class="button" href="{% url 'financeiro:lancamento-list' %}">Voltar</a>
+</div>
+
 <section class="recibo-documento">
     <header class="recibo-header">
         <div class="recibo-identidade">
@@ -395,10 +405,6 @@
                 {% elif not recibo_logo_url %}
                     <div class="recibo-identidade-faixa"></div>
                 {% endif %}
-            </div>
-            <div class="buttons no-print">
-                <button class="button is-light" type="button" onclick="window.print()">Imprimir</button>
-                <a class="button" href="{% url 'financeiro:lancamento-list' %}">Voltar</a>
             </div>
         </div>
 
@@ -453,7 +459,6 @@
             <p{% if recibo_mensagem_personalizada %} class="has-text-weight-semibold"{% endif %}>{{ recibo_mensagem_final }}</p>
         </div>
         <div class="recibo-assinatura">
-            <p class="recibo-assinatura-fecho">Para fins de comprovacao documental</p>
             {% if recibo_assinatura_padrao %}
                 <p class="recibo-assinatura-texto">{{ recibo_assinatura_padrao.assinatura_texto }}</p>
             {% endif %}
