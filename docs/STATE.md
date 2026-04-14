@@ -41,8 +41,7 @@ Data de atualizacao: 2026-04-13
   - favorecidos
   - categorias
   - centros de custo
-- limpeza de legado executada nesta etapa: o JavaScript ativo antigo de sidebar/drawer foi removido do `base.html`; o bloco de sidebar/drawer no template permanece apenas comentado como legado transicional e nao renderiza no HTML entregue ao navegador
-- legado remanescente documentado: ainda existem CSS e bloco HTML comentado da antiga sidebar/drawer no `base.html`; eles nao competem visualmente nem executam, mas podem ser removidos em uma limpeza posterior quando a topbar estiver aprovada visualmente no navegador
+- limpeza de legado concluida: o HTML comentado da sidebar/drawer foi removido do `financeiro/base.html`, o CSS legado associado saiu do arquivo e nao resta JS morto do shell antigo
 
 ## Migracao controlada do shell do financeiro para topbar com menu suspenso
 

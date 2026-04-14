@@ -15,6 +15,7 @@ Este arquivo nao substitui `docs/CEREBRO_PROJETO.md`, `docs/STATE.md`, `docs/COD
 - consolidar primeiro o padrao no `financeiro` e so depois expandir para outros modulos
 - paginas autenticadas nao devem adotar como padrao principal um topo minimo com apenas botao de navegacao quando o sistema ja possui shell contextual completo disponivel
 - no `financeiro`, o padrao oficial implementado apos auditoria passa a ser shell unico com barra superior contextual e navegacao principal em menu suspenso agrupado no topo; sidebar/drawer nao deve atuar como camada principal concorrente
+- no `financeiro`, o legado antigo de sidebar/drawer foi removido do template base; a topbar com menu suspenso e a arquitetura ativa unica
 - telas autenticadas devem evitar concorrencia simultanea entre topbar global, topbar local, botao de menu, sidebar persistente expandida e atalhos redundantes de pagina
 - menus suspensos da navegacao devem abrir acima do conteudo da pagina, sem clipping por wrappers, `overflow` ou stacking contexts de cards/formularios
 - no `financeiro`, importacoes devem ficar centralizadas no menu principal; nas listagens de cadastro, o atalho correto e `Exportar`, respeitando os filtros locais

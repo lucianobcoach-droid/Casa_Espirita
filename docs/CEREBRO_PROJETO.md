@@ -72,7 +72,10 @@ Estas regras devem ser respeitadas em qualquer etapa:
 - a adocao desse padrao deve acontecer de forma progressiva, guiada por componentes reutilizaveis e por reorganizacao controlada do layout-base
 - a base inicial dessa padronizacao e o app `financeiro`, por concentrar hoje a camada visual mais madura do projeto
 - no app `financeiro`, a navegacao lateral padronizada ja foi autorizada e implementada de forma incremental no shell compartilhado, sem tornar essa mesma adocao automaticamente obrigatoria para os demais apps
-- no `financeiro`, a navegacao principal do modulo deve permanecer lateral; o topo do shell nao deve competir com essa navegacao nem repetir contexto do modulo quando a propria sidebar ja cumpre esse papel
+- no `financeiro`, a navegacao principal do modulo foi migrada apos auditoria estrutural para topbar/shell unico com navegacao principal em menu suspenso no topo; sidebar/drawer nao deve concorrer como camada principal persistente
+- o topo do shell nao deve competir com outra camada persistente de navegacao; evitar repetir ao mesmo tempo topbar global, topbar local, botao de menu, sidebar expandida e atalhos redundantes da tela
+- menus suspensos da topbar devem abrir em camada acima do conteudo operacional, sem ficar presos a stacking contexts de formularios, cards ou wrappers visuais do shell
+- no `financeiro`, a central de `Importacoes` deve ser tratada como pagina central do modulo e aparecer na navegacao principal; exportacoes devem permanecer nas listagens/telas especificas quando dependerem dos filtros locais
 - paginas de impressao, PDF e recibo ficam fora da logica normal de navegacao e nao devem ser tratadas como alvo inicial da mesma padronizacao estrutural
 - no `financeiro`, relatorios e impressos operacionais devem manter margens explicitas de folha e isolamento do shell visual para nao herdarem sidebar, topbar ou wrappers de overflow no modo print
 - quando a natureza `receita` / `despesa` ja estiver clara pelo contexto da tela, pelo agrupamento ou por indicador de tipo, a exibicao visivel da categoria deve preferir nome curto, sem prefixos textuais redundantes
@@ -119,11 +122,12 @@ Estas regras devem ser respeitadas em qualquer etapa:
 - tambem fica registrada como diretriz estrutural futura a possibilidade de unificacao de entidades compartilhadas, incluindo base comum de pessoas quando isso fizer sentido para o sistema como um todo
 - essa frente continua futura e nao deve ser misturada com microetapas locais de formulários, listagens, extratos ou refinamentos visuais isolados do `financeiro`
 
-### 5.1.3. Diretriz futura de leveza e refinamento do menu lateral do financeiro
-- a navegacao lateral do `financeiro` continua sendo a camada principal de navegacao do modulo
-- como evolucao futura de UX, essa lateral deve ficar mais leve, mais coerente com o tema-base adotado e menos carregada visualmente
-- o item ativo deve evoluir para leitura mais elegante e menos pesada, reduzindo a sensacao de painel antigo sem perder clareza operacional
-- essa diretriz representa backlog de refinamento visual do shell e nao alteracao imediata da estrutura atual
+### 5.1.3. Diretriz consolidada de simplificacao da navegacao do financeiro
+- a navegacao lateral persistente do `financeiro` deixou de ser a direcao principal do modulo
+- o padrao consolidado para o shell ativo do `financeiro` passa a ser navegacao principal no topo por menu suspenso agrupado, reduzindo a necessidade de expandir/recolher sidebar no uso diario
+- a sidebar/drawer pode existir apenas como legado transicional, apoio responsivo futuro ou referencia tecnica, mas nao deve concorrer visualmente com a topbar nem duplicar o mesmo menu como camada principal persistente
+- essa regra deve preservar permissoes, links existentes, agrupamentos funcionais e acessibilidade em evolucoes futuras do shell financeiro
+- a limpeza final do legado de sidebar/drawer foi concluida no `financeiro/base.html`, mantendo apenas topbar e menu suspenso como arquitetura ativa
 
 ### 5.1.4. Diretriz futura de assistencia por regras no lancamento
 - fica registrada como frente funcional futura a possibilidade de sugerir regras existentes durante o preenchimento de novos lancamentos, a partir de campo-chave como nome ou descricao

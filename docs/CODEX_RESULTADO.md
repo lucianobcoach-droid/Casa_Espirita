@@ -57,7 +57,13 @@ Data: 2026-04-13
 - removi o botao `Voltar para lancamentos` da pagina central de importacoes, porque o menu superior passa a ser o acesso principal
 - substitui `Importar` por `Exportar` nas listagens de contas, favorecidos, categorias e centros de custo, agora apontando para exportacao local de cada listagem com os filtros ativos preservados
 - avancei a limpeza de legado removendo o JavaScript ativo antigo de sidebar/drawer
-- legado remanescente: o bloco HTML antigo de sidebar/drawer permanece apenas comentado e o CSS legado ainda existe no `base.html`; eles nao renderizam/nao executam, mas ficam registrados para limpeza posterior quando a topbar for aprovada visualmente
+- legado remanescente: foi removido nesta etapa de limpeza final
+
+## Limpeza final do legado de sidebar/drawer no `financeiro`
+
+- removi definitivamente o bloco HTML comentado da sidebar/drawer no `financeiro/base.html`
+- removi o CSS legado associado (sidebar, drawer, overlay, toggle)
+- o shell ativo do `financeiro` fica apenas com topbar + menu suspenso
 
 ## Migracao controlada do financeiro para topbar com menu suspenso
 
