@@ -190,6 +190,32 @@
         padding: 0 2.15rem 1.15rem;
     }
 
+    .recibo-itens {
+        margin: 0.75rem 0 0;
+        padding-left: 0;
+        list-style: none;
+        color: #3b362e;
+        font-size: 0.98rem;
+        line-height: 1.5;
+    }
+
+    .recibo-itens li {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 0.4rem 0.6rem;
+    }
+
+    .recibo-itens li + li {
+        margin-top: 0.45rem;
+    }
+
+    .recibo-item-valor {
+        font-weight: 600;
+        color: #2d2a24;
+        margin-left: 0.35rem;
+    }
+
     .recibo-mensagem {
         border-top: 1.4px solid #ddd4c5;
         border-bottom: 1.4px solid #ddd4c5;
@@ -413,16 +439,25 @@
                 <h1 class="recibo-titulo">RECIBO</h1>
                 <p class="recibo-meta">
                     <span class="recibo-meta-numero">
-                        <strong>Numero</strong>
-                        <span>{{ lancamento.numero_documento|default:'-' }}</span>
+                        {% if recibo_lote %}
+                            <strong>Lote</strong>
+                            {% if recibo_numero_documento and recibo_numero_documento|lower != 'lote' %}
+                                <span>{{ recibo_numero_documento }}</span>
+                            {% endif %}
+                        {% else %}
+                            <strong>Numero</strong>
+                            <span>{{ lancamento.numero_documento|default:'-' }}</span>
+                        {% endif %}
                     </span>
                 </p>
-            </div>
-            <div class="recibo-valor-box">
-                <span class="recibo-valor-label">Valor recebido</span>
-                <p class="recibo-valor">R$ {{ lancamento.valor|br_money }}</p>
-            </div>
         </div>
+        <div class="recibo-valor-box">
+            <span class="recibo-valor-label">Valor recebido</span>
+            <p class="recibo-valor">
+                R$ {% if recibo_lote %}{{ recibo_valor_total|br_money }}{% else %}{{ lancamento.valor|br_money }}{% endif %}
+            </p>
+        </div>
+    </div>
     </header>
 
     <section class="recibo-corpo">
@@ -435,10 +470,29 @@
                 <span class="recibo-campo">A importancia de</span>
                 <span class="recibo-valor-texto">{{ recibo_valor_extenso }}</span>.
             </p>
-            <p class="recibo-linha">
-                <span class="recibo-campo">Referente a</span>
-                <span class="recibo-valor-texto">{{ recibo_referente }}</span>.
-            </p>
+            {% if recibo_lote %}
+                <p class="recibo-linha">
+                    <span class="recibo-campo">Referente aos</span>
+                    <span class="recibo-valor-texto">lançamentos listados abaixo</span>.
+                </p>
+                {% if recibo_itens %}
+                    <ul class="recibo-itens">
+                        {% for item in recibo_itens %}
+                            <li>
+                                <strong>{{ item.data|date:'d/m/Y' }}</strong>
+                                &mdash;
+                                {{ item.descricao }}
+                                <span class="recibo-item-valor">R$ {{ item.valor|br_money }}</span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            {% else %}
+                <p class="recibo-linha">
+                    <span class="recibo-campo">Referente a</span>
+                    <span class="recibo-valor-texto">{{ recibo_referente }}</span>.
+                </p>
+            {% endif %}
             {% if recibo_data_fallback %}
                 <p class="recibo-aviso">
                     A data de recebimento nao foi informada. Este recibo usa a data documental disponivel no lancamento.

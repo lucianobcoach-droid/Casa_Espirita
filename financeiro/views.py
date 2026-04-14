@@ -4955,6 +4955,8 @@ class LancamentoFinanceiroAcoesLoteView(FinanceiroPermissaoMixin, View):
     def get_permissao_requerida(self) -> str:
         if (self.request.POST.get('acao_lote') or '').strip() == 'excluir':
             return 'financeiro.lancamentos.acoes_em_lote_excluir'
+        if (self.request.POST.get('acao_lote') or '').strip() == 'recibo_lote':
+            return 'financeiro.lancamentos.emitir_recibo'
         return self.permissao_requerida
 
     def _redirect_listagem(self, request):
@@ -5042,6 +5044,37 @@ class LancamentoFinanceiroAcoesLoteView(FinanceiroPermissaoMixin, View):
                 f'Status atualizado para {quantidade} lanÃ§amento{sufixo}.',
             )
             return self._redirect_listagem(request)
+
+        if acao_lote == 'recibo_lote':
+            pessoas_ids = {lancamento.pessoa_id for lancamento in lancamentos}
+            if None in pessoas_ids:
+                messages.warning(
+                    request,
+                    'Selecione apenas lancamentos com favorecido para emitir recibo em lote.',
+                )
+                return self._redirect_listagem(request)
+            if len(pessoas_ids) != 1:
+                messages.warning(
+                    request,
+                    'Recibo em lote so pode ser emitido quando todos os lancamentos forem do mesmo favorecido.',
+                )
+                return self._redirect_listagem(request)
+            if any(lancamento.tipo != LancamentoFinanceiro.TipoLancamento.RECEITA for lancamento in lancamentos):
+                messages.warning(
+                    request,
+                    'Recibo em lote so pode ser emitido para lancamentos do tipo receita.',
+                )
+                return self._redirect_listagem(request)
+            if any(lancamento.com_rateio or (lancamento.grupo_rateio or '').strip() for lancamento in lancamentos):
+                messages.warning(
+                    request,
+                    'Recibo em lote nao suporta lancamentos com rateio. Selecione apenas documentos simples.',
+                )
+                return self._redirect_listagem(request)
+
+            ids_param = ','.join(str(lancamento.pk) for lancamento in lancamentos)
+            url_recibo_lote = reverse('financeiro:lancamento-recibo-lote')
+            return redirect(f'{url_recibo_lote}?{urlencode({"ids": ids_param})}')
 
         messages.warning(request, 'Escolha uma aÃ§Ã£o em lote vÃ¡lida para os lanÃ§amentos selecionados.')
         return self._redirect_listagem(request)
@@ -5584,6 +5617,91 @@ class LancamentoFinanceiroReciboView(FinanceiroPermissaoMixin, DetailView):
         context['recibo_logo_url'] = (configuracao_padrao.logo_url or '').strip() if configuracao_padrao else ''
         context['recibo_cidade'] = (configuracao_padrao.cidade or '').strip() if configuracao_padrao else ''
         return context
+
+
+class LancamentoFinanceiroReciboLoteView(FinanceiroPermissaoMixin, TemplateView):
+    permissao_requerida = 'financeiro.lancamentos.emitir_recibo'
+    template_name = 'financeiro/lancamento_recibo.html'
+
+    def _redirect_listagem(self, mensagem: str):
+        if mensagem:
+            messages.warning(self.request, mensagem)
+        return redirect(reverse('financeiro:lancamento-list'))
+
+    def _build_context(self):
+        ids_raw = (self.request.GET.get('ids') or '').strip()
+        ids = [int(valor) for valor in ids_raw.split(',') if valor.strip().isdigit()]
+        if not ids:
+            return None, 'Selecione lancamentos validos para emitir recibo em lote.'
+
+        lancamentos = list(
+            LancamentoFinanceiro.objects.filter(pk__in=ids)
+            .select_related('pessoa', 'categoria')
+            .order_by('data_pagamento', 'data_competencia', 'pk')
+        )
+        if not lancamentos:
+            return None, 'Nenhum lancamento encontrado para emitir recibo em lote.'
+
+        pessoas_ids = {lancamento.pessoa_id for lancamento in lancamentos}
+        if None in pessoas_ids or len(pessoas_ids) != 1:
+            return None, 'Recibo em lote so pode ser emitido quando todos os lancamentos forem do mesmo favorecido.'
+
+        if any(lancamento.tipo != LancamentoFinanceiro.TipoLancamento.RECEITA for lancamento in lancamentos):
+            return None, 'Recibo em lote so pode ser emitido para lancamentos do tipo receita.'
+
+        if any(lancamento.com_rateio or (lancamento.grupo_rateio or '').strip() for lancamento in lancamentos):
+            return None, 'Recibo em lote nao suporta lancamentos com rateio.'
+
+        pessoa = lancamentos[0].pessoa
+        total_valor = sum((lancamento.valor for lancamento in lancamentos), Decimal('0.00'))
+        datas = [l.data_pagamento or l.data_competencia for l in lancamentos if (l.data_pagamento or l.data_competencia)]
+        data_recibo = max(datas) if datas else timezone.localdate()
+        assinatura_padrao = AssinaturaInstitucional.objects.filter(ativo=True, padrao=True).first()
+        configuracao_padrao = ConfiguracaoInstitucional.objects.filter(ativo=True, padrao=True).first()
+
+        itens = [
+            {
+                'descricao': lancamento.descricao,
+                'valor': lancamento.valor,
+                'documento': lancamento.numero_documento or '-',
+                'data': (lancamento.data_pagamento or lancamento.data_competencia),
+            }
+            for lancamento in lancamentos
+        ]
+
+        context = {
+            'page_title': f'Recibo em lote - {pessoa.nome if pessoa else ""}',
+            'recibo_lote': True,
+            'recibo_numero_documento': 'Lote',
+            'recibo_valor_total': total_valor,
+            'recibo_itens': itens,
+            'recibo_pessoa_nome': pessoa.nome if pessoa else '-',
+            'recibo_referente': 'os lancamentos listados abaixo',
+            'recibo_data_principal': data_recibo,
+            'recibo_data_humana': _data_documental_por_extenso(data_recibo),
+            'recibo_valor_extenso': _valor_por_extenso(total_valor),
+            'recibo_data_fallback': any(l.data_pagamento is None for l in lancamentos),
+            'recibo_mensagem_final': (
+                (configuracao_padrao.mensagem_padrao_recibo or '').strip()
+                if configuracao_padrao
+                else ''
+            ) or 'Recibo emitido com base nos lancamentos registrados no sistema.',
+            'recibo_mensagem_personalizada': False,
+            'recibo_assinatura_padrao': assinatura_padrao,
+            'recibo_configuracao_institucional': configuracao_padrao,
+            'recibo_nome_instituicao': (
+                (configuracao_padrao.nome_instituicao or '').strip() if configuracao_padrao else ''
+            ),
+            'recibo_logo_url': (configuracao_padrao.logo_url or '').strip() if configuracao_padrao else '',
+            'recibo_cidade': (configuracao_padrao.cidade or '').strip() if configuracao_padrao else '',
+        }
+        return context, ''
+
+    def get(self, request, *args, **kwargs):
+        context, erro = self._build_context()
+        if erro:
+            return self._redirect_listagem(erro)
+        return self.render_to_response(context)
 
 
 class LancamentoFinanceiroDeleteView(FinanceiroDeleteMixin):

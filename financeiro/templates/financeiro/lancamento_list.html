@@ -122,6 +122,24 @@
         min-width: 11rem;
     }
 
+    .financeiro-lancamento-bulk-select.select::after {
+        display: none;
+    }
+
+    .financeiro-lancamento-bulk-select.select select {
+        min-height: 2.35rem;
+        border-color: #dbe5f0;
+        border-radius: 0.8rem;
+        background-color: #fff;
+        color: #1f2937;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+    }
+
+    .financeiro-lancamento-bulk-select.select select:focus {
+        border-color: #8bb8f3;
+        box-shadow: 0 0 0 0.16rem rgba(32, 107, 196, 0.14);
+    }
+
     .financeiro-lancamento-columns-panel {
         margin-top: 0.85rem;
         padding: 0.85rem;
@@ -166,15 +184,60 @@
     }
 
     .financeiro-lancamento-totals {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(13.5rem, 1fr));
+        gap: 0.7rem;
+        align-items: stretch;
+        padding: 0.85rem 0.95rem;
+        border-bottom: 1px solid #edf2f7;
+        background: linear-gradient(135deg, #f8fbff 0%, #f3f7fb 100%);
+        color: #334155;
+    }
+
+    .financeiro-lancamento-total-card {
+        display: grid;
+        gap: 0.18rem;
+        min-width: 0;
+        padding: 0.72rem 0.82rem;
+        border: 1px solid #dfe9f5;
+        border-radius: 0.95rem;
+        background: rgba(255, 255, 255, 0.86);
+        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.045);
+    }
+
+    .financeiro-lancamento-total-label {
+        color: #64748b;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+    }
+
+    .financeiro-lancamento-total-value {
+        color: #0f172a;
+        font-size: 1.05rem;
+        font-weight: 800;
+        line-height: 1.2;
+    }
+
+    .financeiro-lancamento-total-meta {
+        color: #64748b;
+        font-size: 0.78rem;
+        font-weight: 600;
+    }
+
+    .financeiro-lancamento-total-split {
         display: flex;
         flex-wrap: wrap;
-        justify-content: space-between;
-        gap: 0.65rem;
-        padding: 0.75rem 0.95rem;
-        border-bottom: 1px solid #edf2f7;
-        background: #f8fafc;
-        color: #334155;
-        font-size: 0.9rem;
+        gap: 0.45rem 0.75rem;
+        align-items: baseline;
+    }
+
+    .financeiro-lancamento-total-pill {
+        display: inline-flex;
+        gap: 0.32rem;
+        align-items: baseline;
+        white-space: nowrap;
     }
 
     .financeiro-lancamento-totals strong {
@@ -504,11 +567,10 @@
     }
 </style>
 {% tem_permissao request.user 'financeiro.lancamentos.exportar' as pode_exportar_lancamentos %}
-{% tem_permissao request.user 'financeiro.lancamentos.importar' as pode_importar_lancamentos %}
 {% tem_permissao request.user 'financeiro.lancamentos.criar' as pode_criar_lancamento %}
 {% tem_permissao request.user 'financeiro.lancamentos.acoes_em_lote_status' as pode_acao_lote_status %}
 {% tem_permissao request.user 'financeiro.lancamentos.acoes_em_lote_excluir' as pode_acao_lote_excluir %}
-{% tem_alguma_permissao request.user 'financeiro.lancamentos.acoes_em_lote_status' 'financeiro.lancamentos.acoes_em_lote_excluir' as pode_acoes_em_lote %}
+{% tem_alguma_permissao request.user 'financeiro.lancamentos.acoes_em_lote_status' 'financeiro.lancamentos.acoes_em_lote_excluir' 'financeiro.lancamentos.emitir_recibo' as pode_acoes_em_lote %}
 {% tem_permissao request.user 'financeiro.lancamentos.emitir_recibo' as pode_emitir_recibo %}
 {% tem_permissao request.user 'financeiro.lancamentos.clonar' as pode_clonar_lancamento %}
 {% tem_permissao request.user 'financeiro.lancamentos.editar' as pode_editar_lancamento %}
@@ -533,10 +595,7 @@
             {% if pode_exportar_lancamentos %}<a class="button is-link is-light" href="{{ exportacao_lancamentos_url }}">
                 Exportar
             </a>{% endif %}
-            {% if pode_importar_lancamentos %}<a class="button is-link is-light" href="{% url 'financeiro:lancamento-importacao-exportacao' %}">
-                Importar
-            </a>{% endif %}
-            {% if pode_criar_lancamento %}<a class="button is-primary" href="{% url 'financeiro:lancamento-create' %}">Novo lançamento financeiro</a>{% endif %}
+            {% if pode_criar_lancamento %}<a class="button is-primary" href="{% url 'financeiro:lancamento-create' %}?return_to={{ request.get_full_path|urlencode }}">Novo lançamento financeiro</a>{% endif %}
         </div>
     </div>
 
@@ -702,6 +761,9 @@
                                 {% if pode_acao_lote_status %}
                                 <option value="alterar_status">Alterar status</option>
                                 {% endif %}
+                                {% if pode_emitir_recibo %}
+                                <option value="recibo_lote">Recibo em lote (mesmo favorecido)</option>
+                                {% endif %}
                                 {% if pode_acao_lote_excluir %}
                                 <option value="excluir">Excluir selecionados</option>
                                 {% endif %}
@@ -727,15 +789,23 @@
             {% endif %}
 
             <div class="financeiro-lancamento-totals no-print">
-                <div>
-                    Total da pagina atual:
-                    <strong>{{ totalizadores_lancamentos.quantidade_exibida }}</strong>
-                    lancamento(s) exibido(s) ·
-                    <strong>R$ {{ totalizadores_lancamentos.valor_exibido_formatado }}</strong>
+                <div class="financeiro-lancamento-total-card">
+                    <span class="financeiro-lancamento-total-label">Página atual</span>
+                    <span class="financeiro-lancamento-total-value">R$ {{ totalizadores_lancamentos.valor_exibido_formatado }}</span>
+                    <span class="financeiro-lancamento-total-meta">{{ totalizadores_lancamentos.quantidade_exibida }} lançamento(s) exibido(s)</span>
+                </div>
+                <div class="financeiro-lancamento-total-card">
+                    <span class="financeiro-lancamento-total-label">Status na página</span>
+                    <span class="financeiro-lancamento-total-split">
+                        <span class="financeiro-lancamento-total-pill">Quitado <strong>R$ {{ totalizadores_lancamentos.valor_quitado_formatado }}</strong></span>
+                        <span class="financeiro-lancamento-total-pill">Em aberto <strong>R$ {{ totalizadores_lancamentos.valor_aberto_formatado }}</strong></span>
+                    </span>
                 </div>
                 {% if pode_acoes_em_lote %}
-                    <div data-lancamento-total-selecionados>
-                        Selecionados: <strong>0</strong> lancamento(s) · <strong>R$ 0,00</strong>
+                    <div class="financeiro-lancamento-total-card" data-lancamento-total-selecionados>
+                        <span class="financeiro-lancamento-total-label">Selecionados</span>
+                        <span class="financeiro-lancamento-total-value">R$ 0,00</span>
+                        <span class="financeiro-lancamento-total-meta">0 lançamento(s)</span>
                     </div>
                 {% endif %}
             </div>
@@ -1040,7 +1110,7 @@
                         </td>
                         <td data-lancamento-col="valor">
                             <span class="valor-chip {% if lancamento.tipo == 'receita' %}is-receita{% elif lancamento.tipo == 'despesa' %}is-despesa{% else %}is-transferencia{% endif %}">
-                                R$ {{ lancamento_visual.valor_total }}
+                                R$ {{ lancamento_visual.valor_total_formatado }}
                             </span>
                         </td>
                         <td data-lancamento-col="conta_origem">{{ lancamento.conta|default:'-' }}</td>
@@ -1096,7 +1166,7 @@
                                     {% if pode_clonar_lancamento and lancamento_visual.eh_rateio %}
                                         <a
                                             class="button is-small is-link is-light financeiro-lancamento-icon-button"
-                                            href="{% url 'financeiro:lancamento-rateio-clone' lancamento.grupo_rateio %}"
+                                            href="{% url 'financeiro:lancamento-rateio-clone' lancamento.grupo_rateio %}?return_to={{ request.get_full_path|urlencode }}"
                                             title="Clonar"
                                             aria-label="Clonar"
                                         >
@@ -1109,7 +1179,7 @@
                                     {% elif pode_clonar_lancamento %}
                                         <a
                                             class="button is-small is-link is-light financeiro-lancamento-icon-button"
-                                            href="{% url 'financeiro:lancamento-clone' lancamento.pk %}"
+                                            href="{% url 'financeiro:lancamento-clone' lancamento.pk %}?return_to={{ request.get_full_path|urlencode }}"
                                             title="Clonar"
                                             aria-label="Clonar"
                                         >
@@ -1125,7 +1195,7 @@
                                     {% if pode_editar_rateio and lancamento_visual.eh_rateio %}
                                         <a
                                             class="button is-small is-link is-light financeiro-lancamento-icon-button"
-                                            href="{% url 'financeiro:lancamento-rateio-update' lancamento.grupo_rateio %}"
+                                            href="{% url 'financeiro:lancamento-rateio-update' lancamento.grupo_rateio %}?return_to={{ request.get_full_path|urlencode }}"
                                             title="Editar"
                                             aria-label="Editar"
                                         >
@@ -1138,7 +1208,7 @@
                                     {% elif pode_editar_lancamento %}
                                         <a
                                             class="button is-small is-link is-light financeiro-lancamento-icon-button"
-                                            href="{% url 'financeiro:lancamento-update' lancamento.pk %}"
+                                            href="{% url 'financeiro:lancamento-update' lancamento.pk %}?return_to={{ request.get_full_path|urlencode }}"
                                             title="Editar"
                                             aria-label="Editar"
                                         >
@@ -1156,7 +1226,7 @@
                                     {% else %}
                                         <a
                                             class="button is-small is-danger is-light financeiro-lancamento-icon-button"
-                                            href="{% url 'financeiro:lancamento-delete' lancamento.pk %}"
+                                            href="{% url 'financeiro:lancamento-delete' lancamento.pk %}?return_to={{ request.get_full_path|urlencode }}"
                                             title="Excluir"
                                             aria-label="Excluir"
                                         >
@@ -1282,7 +1352,11 @@ document.addEventListener('DOMContentLoaded', function () {
             return total + (Number.isNaN(valor) ? 0 : valor);
         }, 0);
 
-        totalSelecionados.innerHTML = `Selecionados: <strong>${selecionados.length}</strong> lancamento(s) · <strong>R$ ${formatarMoeda(soma)}</strong>`;
+        totalSelecionados.innerHTML = `
+            <span class="financeiro-lancamento-total-label">Selecionados</span>
+            <span class="financeiro-lancamento-total-value">R$ ${formatarMoeda(soma)}</span>
+            <span class="financeiro-lancamento-total-meta">${selecionados.length} lançamento(s)</span>
+        `;
     }
 
     function syncHorizontalScroll(source, target) {
@@ -1362,6 +1436,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     event.preventDefault();
                     alert('Selecione o novo status para aplicar aos lançamentos marcados.');
                 }
+                return;
+            }
+
+            if (acao === 'recibo_lote') {
                 return;
             }
 

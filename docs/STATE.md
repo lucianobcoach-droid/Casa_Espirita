@@ -18,6 +18,13 @@ Data de atualizacao: 2026-04-13
 - ajuste de UX: os botoes textuais foram substituidos por `+` ao lado de `Favorecido`, `Categoria` e `Centro de custo`, mantendo o mesmo comportamento de retorno com dados restaurados e item criado selecionado
 - ajuste de UX complementar: os botoes `+` agora ficam fora do input, alinhados a direita do campo, sem sobreposicao
 
+## Novo bloco operacional do financeiro (Lote 3 executado)
+
+- foi adicionada acao de recibo em lote na listagem de lancamentos
+- regra consolidada: recibo em lote so funciona quando todos os lancamentos selecionados forem do mesmo favorecido, do tipo receita e sem rateio
+- o recibo em lote gera documento unico com lista de descricoes e valor total consolidado
+- ajuste de estabilidade: template do recibo em lote passou a usar apenas variaveis `recibo_*` e o corpo do lote agora mostra data, descricao e valor por item
+
 ## Correcao do menu suspenso e centralizacao de importacoes no financeiro
 
 - a migracao para topbar com menu suspenso ainda nao estava aprovada visualmente porque, no uso real, o dropdown do `Menu` abria atras do conteudo da pagina

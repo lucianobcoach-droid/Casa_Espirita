@@ -53,11 +53,16 @@ Itens levantados:
 Lotes definidos:
 - Lote 1 (prioritario): itens 1, 3, 6 e 7
 - Lote 2: itens 2 e 4 (executado)
-- Lote 3: item 5
+- Lote 3: item 5 (executado)
 
 Entrega no Lote 2:
 - geracao automatica de codigo quando vazio para `Favorecidos` e `Centros de custo`, preservando codigo manual
 - fluxo rapido de `Novo favorecido` no lancamento preservando dados e retornando com o favorecido criado selecionado
+
+Entrega no Lote 3:
+- acao de recibo em lote na listagem de lancamentos
+- validacao obrigatoria de mesmo favorecido, sem rateio e apenas receitas
+- recibo unico consolidando descricoes e valor total
 
 Observacao:
 - `Exportacao` segue contextual nas listagens; `Importacao` permanece centralizada na pagina de importacoes do modulo

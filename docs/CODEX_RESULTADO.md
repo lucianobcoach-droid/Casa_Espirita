@@ -25,6 +25,25 @@ Data: 2026-04-13
 - corrigi o posicionamento do `+`: agora ele fica ao lado do campo, fora do input, alinhado a direita sem sobreposicao
 - validacao tecnica executada: `py manage.py check` OK e `py -m compileall financeiro` OK
 
+## Lote 3 do novo bloco operacional (recibo em lote por favorecido)
+
+- adicionei a acao `Recibo em lote (mesmo favorecido)` nas acoes em lote da listagem de lancamentos
+- regra consolidada:
+  - todos os lancamentos selecionados precisam ter o mesmo favorecido
+  - apenas lancamentos do tipo receita
+  - sem rateio (documentos simples)
+- quando valido, o sistema gera um unico recibo consolidado:
+  - favorecido identificado no topo
+  - lista de descricoes com valores
+  - valor total consolidado
+- validacao tecnica executada: `py manage.py check` OK e `py -m compileall financeiro` OK
+
+## Ajuste do recibo em lote (erro de template + corpo detalhado)
+
+- causa confirmada: o template do recibo em lote ainda referenciava `lancamento.*`, o que quebra o render quando so existem variaveis `recibo_*`
+- ajuste aplicado: separacao explicita entre recibo individual e lote, usando apenas `recibo_*` no lote
+- o corpo do lote passou a listar data, descricao e valor por item
+
 ## Correcao do menu suspenso, importacoes no menu e limpeza de legado
 
 - reabri a correcao visual porque o uso real mostrou que o menu suspenso do `financeiro` ainda podia abrir atras do conteudo
