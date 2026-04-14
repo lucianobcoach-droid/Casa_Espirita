@@ -49,6 +49,9 @@
     .financeiro-tabler-mode { background: linear-gradient(180deg, #f8fbff 0%, #f3f7fc 100%); }
     .financeiro-tabler-mode-head,
     .financeiro-tabler-subhead { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem 0.75rem; }
+    .financeiro-tabler-field-with-action { display: flex; align-items: flex-start; gap: 0.5rem; }
+    .financeiro-tabler-field-with-action .control { flex: 1; }
+    .financeiro-tabler-action-btn { flex: 0 0 2.25rem; height: 2.25rem; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
     .financeiro-tabler-subhead { margin-bottom: 0.75rem; }
     .financeiro-tabler-mode-title,
     .financeiro-tabler-subtitle { margin: 0; color: #182433; font-size: 0.86rem; font-weight: 700; line-height: 1.2; }
@@ -89,6 +92,9 @@
     [data-financeiro-pessoa-historico="true"] { max-width: 1120px; margin: 0.9rem auto 0; padding: 0.9rem 1rem; border: 1px solid #edf2f7; border-radius: 12px; background: #fafcff; box-shadow: none; }
     [data-financeiro-pessoa-historico="true"] .title { margin-bottom: 0.5rem !important; color: #425466; font-size: 0.88rem; }
     [data-financeiro-pessoa-historico="true"] .help[data-historico-vazio="true"] { margin-bottom: 0 !important; color: #94a3b8; font-size: 0.72rem; }
+    .financeiro-historico-totais { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.2rem 0 0.75rem; }
+    .financeiro-historico-total { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.35rem 0.55rem; border: 1px solid #dce7f5; border-radius: 999px; background: #fff; color: #536273; font-size: 0.76rem; font-weight: 600; }
+    .financeiro-historico-total strong { color: #182433; font-weight: 700; }
     .financeiro-historico-clone-link { color: #206bc4; font-size: 0.76rem; font-weight: 600; text-decoration: none; white-space: nowrap; }
     .financeiro-historico-clone-link:hover,
     .financeiro-historico-clone-link:focus { color: #184f90; text-decoration: underline; }
@@ -118,7 +124,7 @@
             <h1 class="title is-4 financeiro-page-title">{{ page_title }}</h1>
         </div>
         <div class="financeiro-page-header-actions">
-            <a class="btn btn-outline-secondary btn-sm" href="{% url 'financeiro:lancamento-list' %}">Voltar para lançamentos</a>
+            <a class="btn btn-outline-secondary btn-sm" href="{{ cancel_url }}">Voltar para lançamentos</a>
         </div>
     </div>
     {% if form.non_field_errors %}
@@ -127,6 +133,7 @@
 
     <form method="post" class="financeiro-lancamento-form-shell" autocomplete="off">
         {% csrf_token %}
+        {% if return_to %}<input type="hidden" name="return_to" value="{{ return_to }}">{% endif %}
         {% for hidden_field in form.hidden_fields %}{{ hidden_field }}{% endfor %}
         {% for hidden_field in form.hidden_fields %}
             {% for error in hidden_field.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
@@ -306,14 +313,24 @@
                         <div class="financeiro-col-7" data-financeiro-pessoa-wrapper="true">
                             <div class="field financeiro-tabler-field">
                                 <label class="label" for="{{ form.pessoa.id_for_label }}">{{ form.pessoa.label }}<span data-financeiro-required-marker="true"> *</span></label>
-                                <div class="control">{{ form.pessoa }}</div>
+                                <div class="financeiro-tabler-field-with-action">
+                                    <div class="control">{{ form.pessoa }}</div>
+                                    {% if not form.instance.pk %}
+                                        <button class="btn btn-outline-secondary btn-sm financeiro-tabler-action-btn" type="button" data-financeiro-quick-create="pessoa" title="Novo favorecido" aria-label="Novo favorecido">+</button>
+                                    {% endif %}
+                                </div>
                                 {% for error in form.pessoa.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
                             </div>
                         </div>
                         <div class="financeiro-col-5" data-financeiro-categoria-wrapper="true">
                             <div class="field financeiro-tabler-field">
                                 <label class="label" for="{{ form.categoria.id_for_label }}">{{ form.categoria.label }}<span data-financeiro-required-marker="true"> *</span></label>
-                                <div class="control">{{ form.categoria }}</div>
+                                <div class="financeiro-tabler-field-with-action">
+                                    <div class="control">{{ form.categoria }}</div>
+                                    {% if not form.instance.pk %}
+                                        <button class="btn btn-outline-secondary btn-sm financeiro-tabler-action-btn" type="button" data-financeiro-quick-create="categoria" title="Nova categoria" aria-label="Nova categoria">+</button>
+                                    {% endif %}
+                                </div>
                                 {% for error in form.categoria.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
                             </div>
                         </div>
@@ -325,7 +342,12 @@
                         <div class="financeiro-col-4" data-financeiro-centro-custo-wrapper="true">
                             <div class="field financeiro-tabler-field">
                                 <label class="label" for="{{ form.centro_custo.id_for_label }}">{{ form.centro_custo.label }}</label>
-                                <div class="control">{{ form.centro_custo }}</div>
+                                <div class="financeiro-tabler-field-with-action">
+                                    <div class="control">{{ form.centro_custo }}</div>
+                                    {% if not form.instance.pk %}
+                                        <button class="btn btn-outline-secondary btn-sm financeiro-tabler-action-btn" type="button" data-financeiro-quick-create="centro_custo" title="Novo centro de custo" aria-label="Novo centro de custo">+</button>
+                                    {% endif %}
+                                </div>
                                 {% for error in form.centro_custo.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
                             </div>
                         </div>
@@ -389,8 +411,11 @@
                             </label>
                         {% endif %}
                         <div class="financeiro-tabler-actions-buttons">
-                            <a class="btn btn-outline-secondary" href="{% url 'financeiro:lancamento-list' %}">Voltar</a>
+                            <a class="btn btn-outline-secondary" href="{{ cancel_url }}">Voltar</a>
                             <button class="btn btn-primary" type="submit">{{ submit_label }}</button>
+                            {% if allow_save_and_stay %}
+                                <button class="btn btn-outline-primary" type="submit" name="{{ save_and_stay_param }}" value="1" title="Salvar e cadastrar outro" aria-label="Salvar e cadastrar outro">+</button>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -399,12 +424,16 @@
     </form>
 </div>
 
-<section class="box" data-financeiro-pessoa-historico="true" data-history-url-template="{% url 'financeiro:pessoa-ultimos-lancamentos' 0 %}" hidden>
+<section class="box" data-financeiro-pessoa-historico="true" data-history-url-template="{% url 'financeiro:pessoa-ultimos-lancamentos' 0 %}{% if return_to %}?return_to={{ return_to|urlencode }}{% endif %}" hidden>
     <h2 class="title is-6">Últimos lançamentos do favorecido</h2>
     <p class="help" data-historico-vazio="true">Selecione um favorecido.</p>
+    <div class="financeiro-historico-totais" data-historico-totais="true" hidden>
+        <span class="financeiro-historico-total">Quitado <strong data-historico-total-quitado="true">R$ 0,00</strong></span>
+        <span class="financeiro-historico-total">Aberto <strong data-historico-total-aberto="true">R$ 0,00</strong></span>
+    </div>
     <div class="table-container" data-historico-tabela-wrapper="true" hidden>
         <table class="table is-fullwidth is-striped is-narrow">
-            <thead><tr><th>Data</th><th>Tipo</th><th>Descrição</th><th>Valor</th><th>Categoria</th><th>Documento</th><th class="text-end">Ação</th></tr></thead>
+            <thead><tr><th>Data</th><th>Tipo</th><th>Status</th><th>Descrição</th><th>Valor</th><th>Categoria</th><th>Documento</th><th class="text-end">Ação</th></tr></thead>
             <tbody data-historico-body="true"></tbody>
         </table>
     </div>
@@ -437,6 +466,9 @@
         const autocompleteFields = Array.from(document.querySelectorAll('[data-financeiro-autocomplete="true"]'));
         const pessoaHistoricoBox = document.querySelector('[data-financeiro-pessoa-historico="true"]');
         const pessoaHistoricoEmpty = document.querySelector('[data-historico-vazio="true"]');
+        const pessoaHistoricoTotais = document.querySelector('[data-historico-totais="true"]');
+        const pessoaHistoricoTotalQuitado = document.querySelector('[data-historico-total-quitado="true"]');
+        const pessoaHistoricoTotalAberto = document.querySelector('[data-historico-total-aberto="true"]');
         const pessoaHistoricoTableWrapper = document.querySelector('[data-historico-tabela-wrapper="true"]');
         const pessoaHistoricoBody = document.querySelector('[data-historico-body="true"]');
         const regraSugestoesBox = document.querySelector('[data-financeiro-regra-sugestoes="true"]');
@@ -445,12 +477,132 @@
         const salvarRegraField = document.querySelector('[name="salvar_como_regra_automatica"]');
         const rateioCategoriasNode = document.getElementById('financeiro-rateio-categorias');
         const rateioInicialNode = document.getElementById('financeiro-rateio-inicial');
+        const quickCreateButtons = Array.from(document.querySelectorAll('[data-financeiro-quick-create]'));
         const rateioCategorias = rateioCategoriasNode ? JSON.parse(rateioCategoriasNode.textContent) : [];
         const rateioInicial = rateioInicialNode ? JSON.parse(rateioInicialNode.textContent) : [];
         let rateioRows = Array.isArray(rateioInicial) ? rateioInicial.slice() : [];
         let regraSugestaoRequestId = 0;
         let regraSugestaoAtivadaPorUsuario = false;
         let regraSugestaoAplicacaoEmAndamento = false;
+        const draftKey = 'financeiro:lancamento:draft';
+
+        function salvarDraftLancamento() {
+            if (!lancamentoForm) return;
+            const dados = {};
+            const campos = Array.from(lancamentoForm.querySelectorAll('input[name], select[name], textarea[name]'));
+            campos.forEach(function (field) {
+                const name = field.name;
+                if (!name || field.disabled) return;
+                if (['csrfmiddlewaretoken', 'return_to', 'salvar_permanecer'].includes(name)) return;
+                if (field.type === 'checkbox') {
+                    dados[name] = { type: 'checkbox', checked: field.checked };
+                    return;
+                }
+                if (field.type === 'radio') {
+                    if (field.checked) dados[name] = { type: 'radio', value: field.value };
+                    return;
+                }
+                if (field.tagName === 'SELECT') {
+                    const selected = field.options[field.selectedIndex];
+                    const label = field._autocompleteInput ? field._autocompleteInput.value : (selected ? selected.text : '');
+                    dados[name] = { type: 'select', value: field.value, label: label };
+                    return;
+                }
+                dados[name] = { type: 'input', value: field.value };
+            });
+            sessionStorage.setItem(draftKey, JSON.stringify(dados));
+        }
+
+        function restaurarDraftLancamento() {
+            if (!lancamentoForm) return;
+            const raw = sessionStorage.getItem(draftKey);
+            if (!raw) return;
+            let dados = null;
+            try {
+                dados = JSON.parse(raw);
+            } catch (error) {
+                sessionStorage.removeItem(draftKey);
+                return;
+            }
+            if (!dados || typeof dados !== 'object') {
+                sessionStorage.removeItem(draftKey);
+                return;
+            }
+            const campos = Array.from(lancamentoForm.querySelectorAll('input[name], select[name], textarea[name]'));
+            campos.forEach(function (field) {
+                const name = field.name;
+                const payload = dados[name];
+                if (!payload) return;
+                if (payload.type === 'checkbox') {
+                    field.checked = !!payload.checked;
+                    return;
+                }
+                if (payload.type === 'radio') {
+                    if (field.type === 'radio' && field.value === payload.value) {
+                        field.checked = true;
+                    }
+                    return;
+                }
+                if (payload.type === 'select') {
+                    if (payload.value) {
+                        setSelectValueFromSugestao(field, { id: payload.value, label: payload.label || '' });
+                    } else {
+                        field.value = '';
+                    }
+                    return;
+                }
+                if (payload.type === 'input') {
+                    field.value = payload.value || '';
+                }
+            });
+            sessionStorage.removeItem(draftKey);
+            if (rateioPayloadField && rateioPayloadField.value) {
+                try {
+                    const parsed = JSON.parse(rateioPayloadField.value);
+                    if (Array.isArray(parsed)) {
+                        rateioRows = parsed;
+                        renderRateioRows();
+                    }
+                } catch (error) {
+                    // ignore
+                }
+            }
+        }
+
+        function formatarMoedaPtBr(digitos) {
+            if (!digitos) return '';
+            const normalizado = digitos.replace(/\D/g, '');
+            if (!normalizado) return '';
+            const centavos = normalizado.slice(-2).padStart(2, '0');
+            const inteiro = normalizado.length > 2 ? normalizado.slice(0, -2) : '0';
+            const inteiroFormatado = inteiro.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            return `${inteiroFormatado},${centavos}`;
+        }
+
+        function normalizarMoedaParaDecimal(digitos) {
+            if (!digitos) return '';
+            const normalizado = digitos.replace(/\D/g, '');
+            if (!normalizado) return '';
+            const centavos = normalizado.slice(-2).padStart(2, '0');
+            const inteiro = normalizado.length > 2 ? normalizado.slice(0, -2) : '0';
+            return `${inteiro}.${centavos}`;
+        }
+
+        function aplicarMascaraMoeda(input) {
+            if (!input) return;
+            input.type = 'text';
+            input.inputMode = 'numeric';
+            input.autocomplete = 'off';
+            input.dataset.financeiroMoeda = 'true';
+            const valorInicial = input.value || '';
+            const digitos = valorInicial.replace(/\D/g, '');
+            input.value = formatarMoedaPtBr(digitos);
+
+            input.addEventListener('input', function () {
+                const digitosAtualizados = input.value.replace(/\D/g, '');
+                input.value = formatarMoedaPtBr(digitosAtualizados);
+            });
+        }
 
         function createAutocomplete(select) {
             const control = select.parentElement;
@@ -703,10 +855,15 @@
             loadRegraSugestoes();
         }
 
-        function renderHistoricoState(message, items) {
+        function renderHistoricoState(message, items, totais) {
             if (!pessoaHistoricoBox || !pessoaHistoricoEmpty || !pessoaHistoricoTableWrapper || !pessoaHistoricoBody) return;
             pessoaHistoricoBody.innerHTML = '';
             pessoaHistoricoBox.hidden = false;
+            if (pessoaHistoricoTotais && pessoaHistoricoTotalQuitado && pessoaHistoricoTotalAberto) {
+                pessoaHistoricoTotalQuitado.textContent = (totais && totais.quitado) || 'R$ 0,00';
+                pessoaHistoricoTotalAberto.textContent = (totais && totais.aberto) || 'R$ 0,00';
+                pessoaHistoricoTotais.hidden = false;
+            }
             if (!items.length) {
                 pessoaHistoricoEmpty.textContent = message;
                 pessoaHistoricoEmpty.hidden = false;
@@ -717,7 +874,7 @@
             pessoaHistoricoTableWrapper.hidden = false;
             items.forEach(function (item) {
                 const row = document.createElement('tr');
-                [item.data, item.tipo, item.descricao, item.valor, item.categoria, item.numero_documento || '-'].forEach(function (value) {
+                [item.data, item.tipo, item.status, item.descricao, item.valor, item.categoria, item.numero_documento || '-'].forEach(function (value) {
                     const cell = document.createElement('td');
                     cell.textContent = value;
                     row.appendChild(cell);
@@ -738,7 +895,7 @@
             });
         }
 
-        function clearHistorico(message) { renderHistoricoState(message, []); }
+        function clearHistorico(message) { renderHistoricoState(message, [], { quitado: 'R$ 0,00', aberto: 'R$ 0,00' }); }
 
         function getRateioCategoriasFiltradas() {
             const tipoAtual = tipoField ? tipoField.value : '';
@@ -787,10 +944,10 @@
                 .then((data) => {
                     const items = data.results || [];
                     if (!items.length) {
-                        clearHistorico('Nenhum lançamento encontrado para este favorecido.');
+                        renderHistoricoState('Nenhum lançamento encontrado para este favorecido.', [], data.totais || {});
                         return;
                     }
-                    renderHistoricoState('', items);
+                    renderHistoricoState('', items, data.totais || {});
                 })
                 .catch(() => { clearHistorico('Não foi possível carregar o histórico deste favorecido agora.'); });
         }
@@ -829,14 +986,18 @@
 
         function createRateioValorInput(selectedValue, rowIndex) {
             const input = document.createElement('input');
-            input.type = 'number';
-            input.step = '0.01';
-            input.min = '0.01';
+            input.type = 'text';
+            input.inputMode = 'numeric';
+            input.autocomplete = 'off';
             input.className = 'form-control';
-            input.value = selectedValue || '';
             input.dataset.rateioValor = String(rowIndex);
+            const digitos = (selectedValue || '').toString().replace(/\D/g, '');
+            input.value = formatarMoedaPtBr(digitos);
+            rateioRows[rowIndex].valor = normalizarMoedaParaDecimal(digitos);
             input.addEventListener('input', function () {
-                rateioRows[rowIndex].valor = input.value;
+                const digitosAtualizados = input.value.replace(/\D/g, '');
+                input.value = formatarMoedaPtBr(digitosAtualizados);
+                rateioRows[rowIndex].valor = normalizarMoedaParaDecimal(digitosAtualizados);
                 serializeRateioRows();
             });
             return input;
@@ -919,6 +1080,8 @@
         }
 
         autocompleteFields.forEach(createAutocomplete);
+        aplicarMascaraMoeda(valorField);
+        aplicarMascaraMoeda(valorTotalField);
         if (descricaoField) {
             descricaoField.setAttribute('autocomplete', 'off');
             descricaoField.setAttribute('autocorrect', 'off');
@@ -960,6 +1123,20 @@
                 syncRateioState();
             });
         }
+
+        const lancamentoForm = document.querySelector('.financeiro-lancamento-form-shell');
+        if (lancamentoForm) {
+            lancamentoForm.addEventListener('submit', function () {
+                const camposMoeda = Array.from(lancamentoForm.querySelectorAll('[data-financeiro-moeda="true"]'));
+                camposMoeda.forEach(function (input) {
+                    const digitos = (input.value || '').replace(/\D/g, '');
+                    input.value = normalizarMoedaParaDecimal(digitos);
+                });
+                if (rateioRows.length) {
+                    serializeRateioRows();
+                }
+            });
+        }
         if (rateioToggle) rateioToggle.addEventListener('change', syncRateioState);
         if (dataCompetenciaField) {
             dataCompetenciaField.dataset.autoFilledCompetencia = dataCompetenciaField.value ? 'false' : 'true';
@@ -977,8 +1154,48 @@
         const formElement = document.querySelector('form');
         if (formElement) formElement.addEventListener('submit', serializeRateioRows);
         syncDataCompetenciaFromPagamento();
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('restaurar_lancamento') === '1') {
+            restaurarDraftLancamento();
+        }
+        const pessoaCriada = params.get('pessoa_criada');
+        if (pessoaCriada && pessoaField) {
+            const pessoaLabel = params.get('pessoa_label') || '';
+            setSelectValueFromSugestao(pessoaField, { id: pessoaCriada, label: pessoaLabel });
+        }
+        const categoriaCriada = params.get('categoria_criada');
+        if (categoriaCriada && categoriaField) {
+            const categoriaLabel = params.get('categoria_label') || '';
+            setSelectValueFromSugestao(categoriaField, { id: categoriaCriada, label: categoriaLabel });
+        }
+        const centroCustoCriado = params.get('centro_custo_criado');
+        if (centroCustoCriado && centroCustoField) {
+            const centroCustoLabel = params.get('centro_custo_label') || '';
+            setSelectValueFromSugestao(centroCustoField, { id: centroCustoCriado, label: centroCustoLabel });
+        }
         loadPessoaHistorico();
         syncRateioState();
+
+        const quickCreateRoutes = {
+            pessoa: '{% url "financeiro:pessoa-create" %}',
+            categoria: '{% url "financeiro:categoria-create" %}',
+            centro_custo: '{% url "financeiro:centro-custo-create" %}',
+        };
+
+        quickCreateButtons.forEach(function (button) {
+            button.addEventListener('click', function () {
+                const alvo = button.dataset.financeiroQuickCreate;
+                const destinoBase = quickCreateRoutes[alvo];
+                if (!destinoBase) return;
+                salvarDraftLancamento();
+                const origem = new URL(window.location.href);
+                origem.searchParams.set('restaurar_lancamento', '1');
+                const returnTo = origem.pathname + origem.search;
+                const destino = new URL(destinoBase, window.location.origin);
+                destino.searchParams.set('return_to', returnTo);
+                window.location.href = destino.toString();
+            });
+        });
     }());
 </script>
 {% endblock %}

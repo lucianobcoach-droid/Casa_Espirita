@@ -36,6 +36,32 @@ Data: 2026-04-06
   - avaliar persistencia permanente por usuario em banco caso a configuracao de colunas precise sobreviver de forma mais robusta entre sessoes/navegadores
   - avaliar UI mais rica de ordenacao, como drag-and-drop, apenas se o uso real justificar
 
+## 0.7. Novo bloco operacional: cadastros, lancamentos e extrato (lotes)
+
+Diretriz geral:
+- registrar itens de uso real em lotes coerentes, sem misturar tudo no mesmo patch
+
+Itens levantados:
+1. remover `Importar` da tela de lancamentos (importacao fica centralizada no menu)
+2. gerar codigo automatico tambem nos demais cadastros, sem repetir codigo existente
+3. permitir digitacao de valores monetarios sem virgula, com mascara pt-BR
+4. cadastrar novo favorecido direto na tela de lancamentos, mantendo dados ja preenchidos
+5. recibo em lote por favorecido, consolidando descricoes no mesmo recibo
+6. checkbox `Exibir observacao` no extrato
+7. corrigir protecao indevida ao excluir favorecido/pessoa apos desvinculo
+
+Lotes definidos:
+- Lote 1 (prioritario): itens 1, 3, 6 e 7
+- Lote 2: itens 2 e 4 (executado)
+- Lote 3: item 5
+
+Entrega no Lote 2:
+- geracao automatica de codigo quando vazio para `Favorecidos` e `Centros de custo`, preservando codigo manual
+- fluxo rapido de `Novo favorecido` no lancamento preservando dados e retornando com o favorecido criado selecionado
+
+Observacao:
+- `Exportacao` segue contextual nas listagens; `Importacao` permanece centralizada na pagina de importacoes do modulo
+
 ## 0.4. Ultimo bloqueio do reset real: assinaturas, configuracao institucional e regras automaticas
 
 - depois de resolver `rateios` e `lancamentos simples` legados, o reset real ainda ficou bloqueado por uma ultima lacuna do pacote operacional

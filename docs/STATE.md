@@ -2,6 +2,110 @@
 
 Data de atualizacao: 2026-04-13
 
+## Novo bloco operacional do financeiro (Lote 1 em execucao)
+
+- foi registrado um novo pacote de trabalho por lotes para o uso real do financeiro, com 7 itens levantados e distribuicao em Lote 1, Lote 2 e Lote 3
+- itens registrados: remover `Importar` da listagem de lancamentos, mascara monetaria inteligente, checkbox `Exibir observacao` no extrato, correcao de exclusao de favorecido, geracao automatica de codigo nos demais cadastros, cadastro rapido de favorecido na tela de lancamentos e recibo em lote por favorecido
+- Lote 1 executado: `Importar` removido da `lancamento_list`, mantendo a importacao centralizada no menu superior
+- Lote 1 executado: mascara monetaria pt-BR aplicada nos campos de valor do lancamento, com normalizacao para decimal no envio do formulario
+- Lote 1 executado: extrato ganhou checkbox `Exibir observacao` para controlar a coluna de observacoes
+- Lote 1 executado: exclusao de favorecido bloqueia quando houver lancamentos vinculados e desvincula regras automaticas quando essa for a unica amarra restante
+
+## Novo bloco operacional do financeiro (Lote 2 em execucao)
+
+- Lote 2 executado: geracao automatica de codigo quando vazio para `Favorecidos` e `Centros de custo`, preservando o codigo manual quando informado
+- Lote 2 executado: fluxo rapido de `Novo favorecido` no lancamento preserva os dados preenchidos e retorna com o favorecido recem-criado selecionado
+- ajuste de UX: os botoes textuais foram substituidos por `+` ao lado de `Favorecido`, `Categoria` e `Centro de custo`, mantendo o mesmo comportamento de retorno com dados restaurados e item criado selecionado
+- ajuste de UX complementar: os botoes `+` agora ficam fora do input, alinhados a direita do campo, sem sobreposicao
+
+## Correcao do menu suspenso e centralizacao de importacoes no financeiro
+
+- a migracao para topbar com menu suspenso ainda nao estava aprovada visualmente porque, no uso real, o dropdown do `Menu` abria atras do conteudo da pagina
+- causa tecnica identificada: a barra superior do financeiro usa `backdrop-filter`, criando stacking context proprio; enquanto o painel do menu ficava como descendente absoluto dessa topbar, ele ainda podia ficar preso abaixo de cards/formularios do conteudo em render real
+- correcao reforcada em `financeiro/templates/financeiro/base.html`:
+  - `.financeiro-app-utility-bar` preserva camada/overflow explicitos
+  - `.financeiro-menu-panel` passou a ser camada `position: fixed` com `z-index` global alto
+  - o JavaScript do menu move o painel para `document.body` no carregamento e calcula a posicao pelo botao `Menu` ao abrir, evitando ficar preso ao stacking context da topbar
+- a pagina central de `Importacoes` entrou no menu superior em `Movimentacao > Importacoes`, mantendo a ideia de central do modulo para importacao de lancamentos e cadastros auxiliares
+- a regra de arquitetura fica mantida: importacoes ficam centralizadas na pagina de importacoes do financeiro; exportacoes permanecem locais nas listagens/telas especificas para respeitar filtros aplicados
+- o botao `Voltar para lancamentos` foi removido da pagina central de importacoes, porque a navegacao principal agora fica no menu superior
+- atalhos de listagem foram ajustados para `Exportar`, respeitando filtros ativos da tela, nas listagens principais de cadastros auxiliares:
+  - contas
+  - favorecidos
+  - categorias
+  - centros de custo
+- limpeza de legado executada nesta etapa: o JavaScript ativo antigo de sidebar/drawer foi removido do `base.html`; o bloco de sidebar/drawer no template permanece apenas comentado como legado transicional e nao renderiza no HTML entregue ao navegador
+- legado remanescente documentado: ainda existem CSS e bloco HTML comentado da antiga sidebar/drawer no `base.html`; eles nao competem visualmente nem executam, mas podem ser removidos em uma limpeza posterior quando a topbar estiver aprovada visualmente no navegador
+
+## Migracao controlada do shell do financeiro para topbar com menu suspenso
+
+- a migracao recomendada na auditoria estrutural foi implementada no `financeiro/templates/financeiro/base.html`
+- o shell ativo do `financeiro` passa a usar topbar unica com identidade do modulo, usuario/perfil, `Inicio do sistema`, `Admin tecnico` quando aplicavel e `Sair`
+- a navegacao principal do modulo agora fica no botao `Menu`, com dropdown agrupado por:
+  - `Visao geral`
+  - `Movimentacao`
+  - `Relatorios`
+  - `Cadastros`
+  - `Institucional`
+- o dropdown reaproveita as permissoes ja existentes do modulo para exibir apenas links liberados ao usuario autenticado
+- a sidebar persistente, o drawer mobile, o overlay e o botao de recolher/expandir foram desativados da renderizacao do shell ativo, eliminando a competicao visual entre camadas de navegacao
+- o bloco antigo de sidebar/drawer ficou apenas como comentario de template transicional e nao renderiza no HTML entregue ao navegador
+- a area principal do shell deixou de depender da coluna lateral e passou a usar a largura util disponivel em bloco unico
+- validacao executada: `py manage.py check` OK, `py -m compileall financeiro` OK e smoke autenticado `200` para `lancamento_list`, `lancamento_form`, `conta_list`, `pessoa_list`, `categoria_list`, `centro_custo_list`, central de importacao/exportacao, extratos, resumo e prestacao de contas
+- smoke estrutural confirmou presenca do novo menu suspenso e ausencia de controles renderizados da sidebar/drawer antigos na `lancamento_list`
+- pendencia de polimento possivel, sem bloquear a arquitetura ativa: remover CSS/JS legado de sidebar/drawer que ficou inerte como transicao reversivel
+
+## Auditoria estrutural da navegacao/menu do sistema
+
+- foi executada auditoria estrutural da navegacao antes de qualquer implementacao de menu novo
+- camadas atuais identificadas:
+  - `configuracoes/templates/configuracoes/sistema_base.html`: shell autenticado geral com topbar global, contexto de usuario/perfil e acoes de inicio/admin/sair
+  - `biblioteca/templates/biblioteca/base.html`: herda o shell geral e acrescenta navegacao local horizontal simples em `before_main`
+  - `eventos/templates/eventos/base.html`: herda o shell geral e acrescenta navegacao local horizontal simples em `before_main`
+  - `financeiro/templates/financeiro/base.html`: shell proprio do financeiro, separado do shell geral, com topbar desktop, topbar mobile, botao de recolher sidebar, drawer mobile, overlay, sidebar lateral persistente e grupos colapsaveis
+  - `configuracoes/templates/configuracoes/_sistema_usuario_acoes.html`: include comum de usuario/perfil/inicio/admin/logout usado pelo shell geral e reaproveitado no shell financeiro
+- achado principal: a sujeira percebida no uso real nao vem de multiplas herancas simultaneas na mesma pagina, e sim do acumulo de camadas dentro do shell do `financeiro`
+- no `financeiro`, todas as telas autenticadas principais herdam `financeiro/base.html`; a auditoria atual nao encontrou overrides ativos de `financeiro_shell_header` fora do proprio `base.html`
+- duplicacoes/sobreposicoes encontradas no financeiro:
+  - topbar propria do financeiro + include de usuario/perfil/acoes do sistema
+  - link `Inicio do sistema` + link `Inicio do modulo` + chip de contexto atual
+  - botao de recolher/expandir sidebar no desktop
+  - sidebar lateral persistente com grupos colapsaveis
+  - topbar mobile separada + botao `Menu` + drawer/overlay reaproveitando a sidebar
+  - headers locais das paginas com titulos e botoes de retorno/atalhos, reforcando a sensacao de varias camadas de navegacao
+  - pagina `financeiro/home.html` ainda funciona como camada de atalhos do modulo, apesar da raiz `/financeiro/` ja redirecionar para a listagem principal
+- paginas afetadas: todas as telas autenticadas do `financeiro` que herdam `financeiro/base.html`, com maior impacto percebido em telas operacionais largas como `lancamento_list`, `lancamento_form`, cadastros auxiliares, relatorios e central de importacao/exportacao
+- padrao oficial recomendado para proxima implementacao: um unico shell/topbar do financeiro com navegacao principal em menu suspenso agrupado no topo, preservando contexto institucional/usuario e removendo a sidebar persistente como camada principal
+- recomendacao arquitetural: preferir menu suspenso no topo; evitar sidebar recolhida por padrao como solucao principal, porque ela mantem o padrao de expandir/recolher que motivou a insatisfacao; usar solucao hibrida apenas se a sidebar/drawer permanecer como apoio responsivo ou transicional
+- implementacao nao executada nesta microetapa; a proxima etapa deve ser a migracao controlada do menu do financeiro para topbar/dropdown unico, preservando permissoes, links, agrupamentos funcionais e acessibilidade
+
+## Refinamento visual dos totalizadores e acoes em lote da `lancamento_list`
+
+- a area de acoes em lote e totalizadores da `lancamento_list` recebeu acabamento visual local, sem alterar a logica funcional ja aprovada
+- o select de `Novo status` foi ajustado para evitar aparencia de seta duplicada/quebrada, mantendo uma unica leitura visual do controle
+- a faixa de totalizadores foi reorganizada em cards compactos para melhorar hierarquia entre `Pagina atual`, `Status na pagina` e `Selecionados`
+- a formatacao monetaria usada pelos totalizadores e valores da listagem passou a usar padrao pt-BR com separador de milhar e duas casas decimais, por exemplo `1.234,50`
+- o totalizador dinamico de selecionados preserva a atualizacao em JavaScript e agora usa a mesma hierarquia visual dos demais cards
+- validacao executada: `py manage.py check` OK, `py -m compileall financeiro` OK e smoke de renderizacao da `lancamento_list` confirmando formatacao monetaria pt-BR, cards de totalizadores e ajuste visual do select de acoes em lote
+
+## Ajuste dos totalizadores da `lancamento_list` e clone dos ultimos lancamentos
+
+- correcao de direcao consolidada: a separacao `Quitado`/`Aberto` nao deve ficar apenas no painel de `Ultimos lancamentos do favorecido`; ela tambem passou a aparecer na `lancamento_list`, junto dos totalizadores principais da listagem
+- a `lancamento_list` agora mostra, na area de totalizacao da pagina atual: quantidade exibida, soma total exibida, soma quitada e soma em aberto
+- os totais `Quitado` e `Aberto` no painel de `Ultimos lancamentos do favorecido` foram preservados, porque a leitura ficou util no formulario de lancamento
+- o clone aberto a partir dos ultimos lancamentos foi corrigido para funcionar com e sem `return_to`: o fallback de cancelamento/sucesso agora usa a `success_url` configurada quando existir e nao depende de `self.object` durante GET de `CreateView`
+- o endpoint de ultimos lancamentos passa a propagar `return_to` para os links de clone quando houver contexto de retorno seguro
+- validacao executada: `py manage.py check` OK, `py -m compileall financeiro` OK e smoke test transacional com rollback confirmando totalizadores da `lancamento_list`, clone sem `return_to`, clone com `return_to` e propagacao de `return_to` no painel de ultimos lancamentos
+
+## Correcoes de transferencia, totais por status e extrato por pagamento
+
+- foi corrigida a lacuna de mensagem funcional na regra de transferencia entre a mesma conta: o model segue bloqueando a operacao e agora a mensagem exibida ao usuario passa a ser clara, `A conta de destino precisa ser diferente da conta de origem.`
+- a regra continua valendo para cadastro, edicao e importacao, porque a importacao comum valida os lancamentos com `full_clean()` antes de gravar
+- na tela de cadastro de lancamento, o painel de `Ultimos lancamentos do favorecido` passou a mostrar totais separados de `Quitado` e `Aberto`, alem de exibir a coluna `Status` na tabela do historico
+- esses totais do favorecido sao calculados no endpoint auxiliar de ultimos lancamentos e ignoram `Cancelado` como status operacional de soma principal
+- o extrato passou a usar `data_pagamento` como referencia principal de filtro, classificacao e ordenacao, com fallback tecnico para `data_competencia` apenas em registros legados sem pagamento
+- validacao executada: `py manage.py check` OK, `py -m compileall financeiro` OK e smoke test transacional com rollback confirmando bloqueio de transferencia mesma conta, totais por status e ordenacao do extrato por pagamento
+
 ## Ajuste do conjunto padrao da `lancamento_list`: coluna `Tipo`
 
 - apos uso real da configuracao de colunas, ficou consolidado que `Tipo` precisa fazer parte do conjunto essencial da listagem principal de lancamentos
@@ -1553,3 +1657,13 @@ Com filtro por periodo:
 - o portal autenticado `/inicio/` passou a usar apenas essas entradas oficiais ao montar os cards dos modulos, eliminando links para caminhos internos demais (`biblioteca:autor-list`) ou implícitos na raiz (`configuracoes:site-config` em `/`)
 - a regra consolidada desta etapa ficou: o portal do sistema aponta para a rota canonica de cada modulo; cada modulo decide internamente se sua raiz entrega landing propria ou redireciona para a tela principal mais aderente ao estado atual do produto
 - validacao tecnica: `py manage.py check` OK e entradas `/inicio/`, `/financeiro/`, `/biblioteca/` e `/configuracoes/` deixando de depender de rotas quebradas ou implícitas
+## Fluxo contextual dos cadastros financeiros
+
+- a microetapa atual consolidou retorno contextual nos principais formularios do `financeiro`, evitando que cadastros auxiliares voltem indevidamente para `lancamentos` quando a origem real foi a propria listagem do cadastro
+- foi adotado o parametro seguro `return_to` para carregar a URL completa da listagem de origem, preservando filtros, ordenacao, pagina, `por_pagina` e preferencias ja presentes na querystring
+- os links de criar, editar e excluir em `lancamento_list`, `conta_list`, `pessoa_list`, `categoria_list` e `centro_custo_list` passaram a incluir `return_to` com `request.get_full_path`
+- os formularios de `conta`, `favorecido`, `categoria`, `centro de custo`, `lancamento` e edicao coordenada de rateio passaram a usar `cancel_url` contextual, em vez de sempre apontar para uma listagem fixa
+- a acao principal `Salvar` salva e retorna conforme o contexto; a acao compacta `+`, sem texto longo, salva e permanece no fluxo de criacao para permitir cadastro em sequencia
+- a acao `+` foi habilitada nos cadastros de `conta`, `favorecido`, `categoria`, `centro de custo` e `lancamento`; clones de lancamento nao usam essa acao para evitar ambiguidades operacionais
+- exclusoes feitas a partir de listagens preservam o retorno contextual tambem no cancelamento e apos confirmacao
+- validacao tecnica executada: `py manage.py check` OK, `py -m compileall financeiro` OK e smoke test com Django `Client` confirmando link com `return_to`, formulario com campo oculto de retorno, botao `+` e cancelamento contextual

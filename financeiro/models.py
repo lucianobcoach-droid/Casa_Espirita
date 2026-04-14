@@ -28,6 +28,17 @@ class ContaFinanceira(models.Model):
         return self.nome
 
 
+def _proximo_codigo_sequencial(modelo, min_width: int = 4) -> str:
+    max_codigo = 0
+    for codigo in modelo.objects.values_list('codigo', flat=True):
+        codigo_str = (codigo or '').strip()
+        if codigo_str.isdigit():
+            max_codigo = max(max_codigo, int(codigo_str))
+    proximo = max_codigo + 1
+    width = max(min_width, len(str(proximo)))
+    return str(proximo).zfill(width)
+
+
 class CentroCusto(models.Model):
     codigo = models.CharField(max_length=30, unique=True)
     nome = models.CharField(max_length=150)
@@ -42,6 +53,20 @@ class CentroCusto(models.Model):
 
     def __str__(self) -> str:
         return f'{self.codigo} - {self.nome}'
+
+    def save(self, *args, **kwargs) -> None:
+        if not (self.codigo or '').strip():
+            if self.pk:
+                codigo_atual = (
+                    type(self).objects.filter(pk=self.pk).values_list('codigo', flat=True).first()
+                )
+                if codigo_atual:
+                    self.codigo = codigo_atual
+                else:
+                    self.codigo = _proximo_codigo_sequencial(type(self))
+            else:
+                self.codigo = _proximo_codigo_sequencial(type(self))
+        super().save(*args, **kwargs)
 
 
 class PessoaFinanceira(models.Model):
@@ -71,6 +96,20 @@ class PessoaFinanceira(models.Model):
 
     def __str__(self) -> str:
         return f'{self.codigo} - {self.nome}'
+
+    def save(self, *args, **kwargs) -> None:
+        if not (self.codigo or '').strip():
+            if self.pk:
+                codigo_atual = (
+                    type(self).objects.filter(pk=self.pk).values_list('codigo', flat=True).first()
+                )
+                if codigo_atual:
+                    self.codigo = codigo_atual
+                else:
+                    self.codigo = _proximo_codigo_sequencial(type(self))
+            else:
+                self.codigo = _proximo_codigo_sequencial(type(self))
+        super().save(*args, **kwargs)
 
 
 class CategoriaFinanceira(models.Model):
@@ -311,7 +350,7 @@ class LancamentoFinanceiro(models.Model):
             errors['conta_destino'] = 'conta_destino so pode ser usada em transferencia.'
 
         if self.conta_id and self.conta_destino_id and self.conta_id == self.conta_destino_id:
-            errors['conta_destino'] = 'conta e conta_destino nao podem ser iguais.'
+            errors['conta_destino'] = 'A conta de destino precisa ser diferente da conta de origem.'
 
         if lancamento_operacional and not self.pessoa_id:
             errors['pessoa'] = 'Pessoa e obrigatoria para receita e despesa.'
@@ -447,7 +486,7 @@ class RegraLancamentoFinanceiro(models.Model):
             errors['conta_destino'] = 'conta_destino so pode ser usada em transferencia.'
 
         if self.conta_id and self.conta_destino_id and self.conta_id == self.conta_destino_id:
-            errors['conta_destino'] = 'conta e conta_destino nao podem ser iguais.'
+            errors['conta_destino'] = 'A conta de destino precisa ser diferente da conta de origem.'
 
         if lancamento_operacional and not self.pessoa_id:
             errors['pessoa'] = 'Pessoa e obrigatoria para receita e despesa.'

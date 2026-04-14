@@ -6,7 +6,7 @@ from calendar import monthrange
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from io import BytesIO
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlsplit, urlunsplit, parse_qsl
 from uuid import uuid4
 from xml.etree import ElementTree
 from xml.etree.ElementTree import ParseError
@@ -17,11 +17,12 @@ from django.contrib import messages
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, Sum
 from django.db.models.functions import Coalesce
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views import View
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, TemplateView, UpdateView
 
@@ -769,6 +770,70 @@ def _gerar_planilha_base_cadastro_auxiliar_xlsx(slug: str) -> bytes:
             ('Instrucoes', [['Item', 'Orientacao'], *configuracao['instrucoes']]),
         ]
     )
+
+
+def _formatar_data_exportacao_auxiliar(valor) -> str:
+    if not valor:
+        return ''
+    return valor.strftime('%d/%m/%Y')
+
+
+def _formatar_decimal_exportacao_auxiliar(valor) -> str:
+    if valor is None:
+        return ''
+    return f'{valor:.2f}'.replace('.', ',')
+
+
+def _formatar_booleano_exportacao_auxiliar(valor) -> str:
+    if valor is None:
+        return ''
+    return 'true' if valor else 'false'
+
+
+def _linha_exportacao_cadastro_auxiliar(slug: str, registro) -> list[str]:
+    if slug == 'contas':
+        return [
+            registro.nome,
+            registro.descricao or '',
+            _formatar_decimal_exportacao_auxiliar(registro.saldo_inicial),
+            _formatar_data_exportacao_auxiliar(registro.data_saldo_inicial),
+            _formatar_booleano_exportacao_auxiliar(registro.ativa),
+        ]
+    if slug == 'pessoas':
+        return [
+            registro.codigo or '',
+            registro.nome,
+            (registro.tipo_pessoa or '').lower(),
+            registro.documento or '',
+            registro.telefone or '',
+            registro.email or '',
+            registro.observacoes or '',
+            _formatar_booleano_exportacao_auxiliar(registro.ativo),
+        ]
+    if slug == 'centros-custo':
+        return [
+            registro.codigo or '',
+            registro.nome,
+            _formatar_booleano_exportacao_auxiliar(registro.ativo),
+        ]
+    if slug == 'categorias':
+        return [
+            registro.nome,
+            (registro.tipo or '').lower(),
+            registro.categoria_pai.nome if registro.categoria_pai_id else '',
+            registro.mensagem_recibo or '',
+            _formatar_booleano_exportacao_auxiliar(registro.ativo),
+        ]
+    return []
+
+
+def _gerar_planilha_exportacao_cadastro_auxiliar_xlsx(slug: str, registros) -> bytes:
+    configuracao = CADASTRO_AUXILIAR_PLANILHAS_BASE[slug]
+    colunas = configuracao['colunas']
+    linhas = [colunas]
+    for registro in registros:
+        linhas.append(_linha_exportacao_cadastro_auxiliar(slug, registro))
+    return _gerar_arquivo_xlsx([('Exportacao', linhas)])
 
 
 def _linha_exportacao_lancamento(
@@ -2505,6 +2570,9 @@ def _montar_lancamentos_visuais_listagem(lancamentos_queryset):
                 'valor_total': sum((linha.valor for linha in linhas_rateio), Decimal('0.00')),
                 'resumo_rateio': _montar_resumo_visual_rateio_lancamentos(linhas_rateio),
             })
+            lancamentos_visuais[-1]['valor_total_formatado'] = _formatar_moeda_brl(
+                lancamentos_visuais[-1]['valor_total']
+            )
             grupos_renderizados.add(grupo_rateio)
             continue
 
@@ -2514,6 +2582,7 @@ def _montar_lancamentos_visuais_listagem(lancamentos_queryset):
             'representante': lancamento,
             'linhas_rateio': [],
             'valor_total': lancamento.valor,
+            'valor_total_formatado': _formatar_moeda_brl(lancamento.valor),
             'resumo_rateio': '',
         })
 
@@ -2596,7 +2665,8 @@ def _montar_contexto_ordenacao_lancamentos_listagem(request, ordenacao_atual):
 
 def _formatar_moeda_brl(valor) -> str:
     valor = (valor or Decimal('0.00')).quantize(Decimal('0.01'))
-    return f'{valor:.2f}'.replace('.', ',')
+    valor_formatado = f'{valor:,.2f}'
+    return valor_formatado.replace(',', 'X').replace('.', ',').replace('X', '.')
 
 
 def _normalizar_colunas_configuraveis_lancamentos(colunas):
@@ -2835,24 +2905,82 @@ def _data_documental_por_extenso(data_referencia: date) -> str:
     return f'{data_referencia.day} de {MESES_EXTENSO[data_referencia.month - 1]} de {data_referencia.year}'
 
 
-class FinanceiroFormMixin(FinanceiroPermissaoMixin):
+def _append_query_params(url: str, params: dict[str, str]) -> str:
+    if not url:
+        return url
+    partes = urlsplit(url)
+    query = dict(parse_qsl(partes.query, keep_blank_values=True))
+    query.update({k: v for k, v in params.items() if v is not None})
+    return urlunsplit((partes.scheme, partes.netloc, partes.path, urlencode(query), partes.fragment))
+
+
+class FinanceiroReturnToMixin:
+    return_to_param = 'return_to'
+
+    def _get_return_to_url(self) -> str:
+        return_to = (
+            self.request.POST.get(self.return_to_param)
+            or self.request.GET.get(self.return_to_param)
+            or ''
+        ).strip()
+        if not return_to:
+            return ''
+        if not url_has_allowed_host_and_scheme(
+            return_to,
+            allowed_hosts={self.request.get_host()},
+            require_https=self.request.is_secure(),
+        ):
+            return ''
+        return return_to
+
+    def _get_configured_success_url(self) -> str:
+        success_url = getattr(self, 'success_url', '')
+        if success_url:
+            return str(success_url)
+        return super().get_success_url()
+
+    def get_success_url(self):
+        return self._get_return_to_url() or self._get_configured_success_url()
+
+    def get_cancel_url(self):
+        return self._get_return_to_url() or self._get_configured_success_url()
+
+
+class FinanceiroFormMixin(FinanceiroReturnToMixin, FinanceiroPermissaoMixin):
     page_title = ''
     submit_label = 'Salvar'
     success_message = 'Registro salvo com sucesso.'
+    allow_save_and_stay = False
+    save_and_stay_param = 'salvar_permanecer'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['page_title'] = self.page_title
         context['submit_label'] = self.submit_label
+        context['cancel_url'] = self.get_cancel_url()
+        context['return_to'] = self._get_return_to_url()
+        context['allow_save_and_stay'] = self.allow_save_and_stay
+        context['save_and_stay_param'] = self.save_and_stay_param
         return context
+
+    def _should_save_and_stay(self) -> bool:
+        return self.allow_save_and_stay and self.save_and_stay_param in self.request.POST
+
+    def get_save_and_stay_url(self) -> str:
+        return_to = self._get_return_to_url()
+        if not return_to:
+            return self.request.path
+        return f'{self.request.path}?{urlencode({self.return_to_param: return_to})}'
 
     def form_valid(self, form):
         response = super().form_valid(form)
         messages.success(self.request, self.success_message)
+        if self._should_save_and_stay():
+            return redirect(self.get_save_and_stay_url())
         return response
 
 
-class FinanceiroDeleteMixin(FinanceiroPermissaoMixin, DeleteView):
+class FinanceiroDeleteMixin(FinanceiroReturnToMixin, FinanceiroPermissaoMixin, DeleteView):
     template_name = 'financeiro/confirm_delete.html'
     success_message = 'Registro excluido com sucesso.'
     page_title = 'Confirmar exclusao'
@@ -2861,7 +2989,8 @@ class FinanceiroDeleteMixin(FinanceiroPermissaoMixin, DeleteView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['page_title'] = self.page_title
-        context['cancel_url'] = self.cancel_url
+        context['cancel_url'] = self.get_cancel_url()
+        context['return_to'] = self._get_return_to_url()
         context['object_label'] = str(self.object)
         return context
 
@@ -3178,27 +3307,49 @@ class PessoaFinanceiraUltimosLancamentosView(FinanceiroPermissaoMixin, View):
         if not usuario_possui_permissao(request.user, 'financeiro.lancamentos.clonar'):
             return ''
         if lancamento.com_rateio and lancamento.grupo_rateio:
-            return reverse(
+            clone_url = reverse(
                 'financeiro:lancamento-rateio-clone',
                 kwargs={'grupo_rateio': lancamento.grupo_rateio},
             )
-        if not lancamento.com_rateio and not lancamento.grupo_rateio:
-            return reverse(
+        elif not lancamento.com_rateio and not lancamento.grupo_rateio:
+            clone_url = reverse(
                 'financeiro:lancamento-clone',
                 kwargs={'pk': lancamento.pk},
             )
-        return ''
+        else:
+            return ''
+
+        return_to = (request.GET.get('return_to') or '').strip()
+        if return_to and url_has_allowed_host_and_scheme(
+            return_to,
+            allowed_hosts={request.get_host()},
+            require_https=request.is_secure(),
+        ):
+            return f'{clone_url}?{urlencode({"return_to": return_to})}'
+        return clone_url
 
     def get(self, request, pessoa_id: int, *args, **kwargs):
+        queryset_base = LancamentoFinanceiro.objects.filter(pessoa_id=pessoa_id)
         lancamentos = list(
-            LancamentoFinanceiro.objects.filter(pessoa_id=pessoa_id)
+            queryset_base
             .select_related('categoria')
             .order_by('-data_pagamento', '-data_competencia', '-criado_em', '-pk')[: self.limit]
+        )
+        total_quitado = (
+            queryset_base
+            .filter(status=LancamentoFinanceiro.StatusLancamento.QUITADO)
+            .aggregate(total=Sum('valor', default=Decimal('0.00')))['total']
+        )
+        total_aberto = (
+            queryset_base
+            .filter(status=LancamentoFinanceiro.StatusLancamento.ABERTO)
+            .aggregate(total=Sum('valor', default=Decimal('0.00')))['total']
         )
         results = [
             {
                 'data': (lancamento.data_pagamento or lancamento.data_competencia).strftime('%d/%m/%Y'),
                 'tipo': lancamento.get_tipo_display(),
+                'status': lancamento.get_status_display(),
                 'descricao': lancamento.descricao,
                 'valor': f'R$ {lancamento.valor:.2f}',
                 'categoria': str(lancamento.categoria) if lancamento.categoria else 'Sem categoria',
@@ -3207,7 +3358,15 @@ class PessoaFinanceiraUltimosLancamentosView(FinanceiroPermissaoMixin, View):
             }
             for lancamento in lancamentos
         ]
-        return JsonResponse({'results': results})
+        return JsonResponse(
+            {
+                'results': results,
+                'totais': {
+                    'quitado': f"R$ {_formatar_moeda_brl(total_quitado or Decimal('0.00'))}",
+                    'aberto': f"R$ {_formatar_moeda_brl(total_aberto or Decimal('0.00'))}",
+                },
+            }
+        )
 
 
 class CategoriaFinanceiraAutocompleteView(FinanceiroAutocompleteView):
@@ -3356,6 +3515,11 @@ class ContaFinanceiraListView(FinanceiroPermissaoMixin, ListView):
                         contas_por_id[lancamento.conta_destino_id].saldo_atual += lancamento.valor
 
         context['contas'] = contas
+        exportacao_url = reverse('financeiro:conta-exportacao')
+        filtros = self.request.GET.urlencode()
+        if filtros:
+            exportacao_url = f'{exportacao_url}?{filtros}'
+        context['exportacao_contas_url'] = exportacao_url
         return context
 
 
@@ -3367,6 +3531,7 @@ class ContaFinanceiraCreateView(FinanceiroFormMixin, CreateView):
     success_url = reverse_lazy('financeiro:conta-list')
     page_title = 'Nova Conta Financeira'
     success_message = 'Conta financeira cadastrada com sucesso.'
+    allow_save_and_stay = True
 
     def form_valid(self, form):
         response = super().form_valid(form)
@@ -3432,6 +3597,18 @@ class ContaFinanceiraDeleteView(FinanceiroDeleteMixin):
 
 
 class ExtratoContaMixin(FinanceiroPermissaoMixin):
+    def _parse_checkbox(self, param_name: str) -> bool:
+        valores = [valor.strip().lower() for valor in self.request.GET.getlist(param_name)]
+        if not valores:
+            return False
+
+        for valor in reversed(valores):
+            if valor in {'1', 'true', 'on', 'yes'}:
+                return True
+            if valor in {'0', 'false', 'off', 'no', ''}:
+                return False
+        return False
+
     def _classificar_lancamento(self, conta: ContaFinanceira, lancamento: LancamentoFinanceiro) -> tuple[Decimal, Decimal]:
         entrada = Decimal('0.00')
         saida = Decimal('0.00')
@@ -3510,6 +3687,7 @@ class ExtratoContaMixin(FinanceiroPermissaoMixin):
         conta: ContaFinanceira,
         data_inicial: str = '',
         data_final: str = '',
+        mostrar_observacao: bool = False,
     ) -> dict[str, object]:
         queryset_base = (
             LancamentoFinanceiro.objects.filter(
@@ -3517,21 +3695,22 @@ class ExtratoContaMixin(FinanceiroPermissaoMixin):
                 status=LancamentoFinanceiro.StatusLancamento.QUITADO,
             )
             .select_related('conta', 'conta_destino', 'pessoa', 'categoria')
-            .order_by('data_competencia', 'criado_em', 'pk')
+            .annotate(data_extrato=Coalesce('data_pagamento', 'data_competencia'))
+            .order_by('data_extrato', 'pk')
         )
 
         saldo_anterior = conta.saldo_inicial or Decimal('0.00')
         if data_inicial:
-            lancamentos_anteriores = queryset_base.filter(data_competencia__lt=data_inicial)
+            lancamentos_anteriores = queryset_base.filter(data_extrato__lt=data_inicial)
             for lancamento in lancamentos_anteriores:
                 entrada, saida = self._classificar_lancamento(conta, lancamento)
                 saldo_anterior += entrada - saida
 
         lancamentos = queryset_base
         if data_inicial:
-            lancamentos = lancamentos.filter(data_competencia__gte=data_inicial)
+            lancamentos = lancamentos.filter(data_extrato__gte=data_inicial)
         if data_final:
-            lancamentos = lancamentos.filter(data_competencia__lte=data_final)
+            lancamentos = lancamentos.filter(data_extrato__lte=data_final)
 
         saldo_base = saldo_anterior if data_inicial else (conta.saldo_inicial or Decimal('0.00'))
         itens_extrato, saldo_acumulado = self._montar_itens_extrato(conta, list(lancamentos), saldo_base)
@@ -3547,6 +3726,7 @@ class ExtratoContaMixin(FinanceiroPermissaoMixin):
             'itens_extrato': itens_extrato,
             'saldo_final': saldo_acumulado,
             'saldo_atual': saldo_acumulado,
+            'mostrar_observacao': mostrar_observacao,
         }
 
 
@@ -3561,11 +3741,13 @@ class ContaFinanceiraExtratoView(ExtratoContaMixin, DetailView):
         conta = self.object
         data_inicial = self.request.GET.get('data_inicial', '').strip()
         data_final = self.request.GET.get('data_final', '').strip()
+        mostrar_observacao = self._parse_checkbox('exibir_observacao')
 
-        context.update(self._get_extrato_context(conta, data_inicial, data_final))
+        context.update(self._get_extrato_context(conta, data_inicial, data_final, mostrar_observacao))
         context['page_title'] = f'Extrato da Conta: {conta.nome}'
         context['show_conta_filter'] = False
         context['clear_extrato_url'] = reverse_lazy('financeiro:conta-extrato', kwargs={'pk': conta.pk})
+        context['mostrar_observacao'] = mostrar_observacao
         return context
 
 
@@ -3578,6 +3760,7 @@ class ExtratoFinanceiroView(ExtratoContaMixin, TemplateView):
         conta_id = self.request.GET.get('conta', '').strip()
         data_inicial = self.request.GET.get('data_inicial', '').strip()
         data_final = self.request.GET.get('data_final', '').strip()
+        mostrar_observacao = self._parse_checkbox('exibir_observacao')
         contas = ContaFinanceira.objects.order_by('nome')
 
         context['page_title'] = 'Extratos'
@@ -3585,6 +3768,7 @@ class ExtratoFinanceiroView(ExtratoContaMixin, TemplateView):
         context['conta_selecionada_id'] = conta_id
         context['show_conta_filter'] = True
         context['clear_extrato_url'] = reverse_lazy('financeiro:extrato-list')
+        context['mostrar_observacao'] = mostrar_observacao
 
         if conta_id:
             try:
@@ -3592,7 +3776,7 @@ class ExtratoFinanceiroView(ExtratoContaMixin, TemplateView):
             except ContaFinanceira.DoesNotExist:
                 context['extrato_error'] = 'Conta financeira nao encontrada.'
             else:
-                context.update(self._get_extrato_context(conta, data_inicial, data_final))
+                context.update(self._get_extrato_context(conta, data_inicial, data_final, mostrar_observacao))
                 context['page_title'] = f'Extratos - {conta.nome}'
 
         return context
@@ -3708,6 +3892,15 @@ class CentroCustoListView(FinanceiroPermissaoMixin, ListView):
             queryset = queryset.filter(nome__icontains=nome)
         return queryset
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        exportacao_url = reverse('financeiro:centro-custo-exportacao')
+        filtros = self.request.GET.urlencode()
+        if filtros:
+            exportacao_url = f'{exportacao_url}?{filtros}'
+        context['exportacao_centros_custo_url'] = exportacao_url
+        return context
+
 
 class CentroCustoCreateView(FinanceiroFormMixin, CreateView):
     permissao_requerida = 'financeiro.centros_custo.criar'
@@ -3717,6 +3910,7 @@ class CentroCustoCreateView(FinanceiroFormMixin, CreateView):
     success_url = reverse_lazy('financeiro:centro-custo-list')
     page_title = 'Novo Centro de Custo'
     success_message = 'Centro de custo cadastrado com sucesso.'
+    allow_save_and_stay = True
 
     def form_valid(self, form):
         response = super().form_valid(form)
@@ -3727,6 +3921,19 @@ class CentroCustoCreateView(FinanceiroFormMixin, CreateView):
             depois=_snapshot_centro_custo(self.object),
         )
         return response
+
+    def get_success_url(self):
+        return_to = self._get_return_to_url()
+        if return_to and getattr(self, 'object', None):
+            return _append_query_params(
+                return_to,
+                {
+                    'centro_custo_criado': str(self.object.pk),
+                    'centro_custo_label': str(self.object),
+                    'restaurar_lancamento': '1',
+                },
+            )
+        return super().get_success_url()
 
 
 class CentroCustoUpdateView(FinanceiroFormMixin, UpdateView):
@@ -3797,6 +4004,15 @@ class PessoaFinanceiraListView(FinanceiroPermissaoMixin, ListView):
             queryset = queryset.filter(codigo__icontains=codigo)
         return queryset
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        exportacao_url = reverse('financeiro:pessoa-exportacao')
+        filtros = self.request.GET.urlencode()
+        if filtros:
+            exportacao_url = f'{exportacao_url}?{filtros}'
+        context['exportacao_pessoas_url'] = exportacao_url
+        return context
+
 
 class PessoaFinanceiraCreateView(FinanceiroFormMixin, CreateView):
     permissao_requerida = 'financeiro.pessoas.criar'
@@ -3806,6 +4022,7 @@ class PessoaFinanceiraCreateView(FinanceiroFormMixin, CreateView):
     success_url = reverse_lazy('financeiro:pessoa-list')
     page_title = 'Novo Favorecido Financeiro'
     success_message = 'Favorecido financeiro cadastrado com sucesso.'
+    allow_save_and_stay = True
 
     def form_valid(self, form):
         response = super().form_valid(form)
@@ -3816,6 +4033,19 @@ class PessoaFinanceiraCreateView(FinanceiroFormMixin, CreateView):
             depois=_snapshot_pessoa(self.object),
         )
         return response
+
+    def get_success_url(self):
+        return_to = self._get_return_to_url()
+        if return_to and getattr(self, 'object', None):
+            return _append_query_params(
+                return_to,
+                {
+                    'pessoa_criada': str(self.object.pk),
+                    'pessoa_label': str(self.object),
+                    'restaurar_lancamento': '1',
+                },
+            )
+        return super().get_success_url()
 
 
 class PessoaFinanceiraUpdateView(FinanceiroFormMixin, UpdateView):
@@ -3856,6 +4086,15 @@ class PessoaFinanceiraDeleteView(FinanceiroDeleteMixin):
         pessoa = self.object
         antes = _snapshot_pessoa(pessoa)
         registro_id = pessoa.pk
+        lancamentos_vinculados = LancamentoFinanceiro.objects.filter(pessoa=pessoa).exists()
+        if lancamentos_vinculados:
+            messages.error(
+                self.request,
+                'Este favorecido ainda possui lancamentos vinculados. Remova o vinculo antes de excluir.',
+            )
+            return redirect(self.get_cancel_url())
+
+        RegraLancamentoFinanceiro.objects.filter(pessoa=pessoa).update(pessoa=None)
 
         with transaction.atomic():
             response = super().form_valid(form)
@@ -3886,6 +4125,15 @@ class CategoriaFinanceiraListView(FinanceiroPermissaoMixin, ListView):
             queryset = queryset.filter(tipo=tipo)
         return queryset
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        exportacao_url = reverse('financeiro:categoria-exportacao')
+        filtros = self.request.GET.urlencode()
+        if filtros:
+            exportacao_url = f'{exportacao_url}?{filtros}'
+        context['exportacao_categorias_url'] = exportacao_url
+        return context
+
 
 class CategoriaFinanceiraCreateView(FinanceiroFormMixin, CreateView):
     permissao_requerida = 'financeiro.categorias.criar'
@@ -3895,6 +4143,7 @@ class CategoriaFinanceiraCreateView(FinanceiroFormMixin, CreateView):
     success_url = reverse_lazy('financeiro:categoria-list')
     page_title = 'Nova Categoria Financeira'
     success_message = 'Categoria financeira cadastrada com sucesso.'
+    allow_save_and_stay = True
 
     def form_valid(self, form):
         response = super().form_valid(form)
@@ -3905,6 +4154,19 @@ class CategoriaFinanceiraCreateView(FinanceiroFormMixin, CreateView):
             depois=_snapshot_categoria(self.object),
         )
         return response
+
+    def get_success_url(self):
+        return_to = self._get_return_to_url()
+        if return_to and getattr(self, 'object', None):
+            return _append_query_params(
+                return_to,
+                {
+                    'categoria_criada': str(self.object.pk),
+                    'categoria_label': str(self.object),
+                    'restaurar_lancamento': '1',
+                },
+            )
+        return super().get_success_url()
 
 
 class CategoriaFinanceiraUpdateView(FinanceiroFormMixin, UpdateView):
@@ -4176,12 +4438,32 @@ class LancamentoFinanceiroListView(FinanceiroPermissaoMixin, ListView):
             (lancamento_visual['valor_total'] for lancamento_visual in lancamentos_visuais_pagina),
             Decimal('0.00'),
         )
+        total_pagina_quitado = sum(
+            (
+                lancamento_visual['valor_total']
+                for lancamento_visual in lancamentos_visuais_pagina
+                if lancamento_visual['representante'].status == LancamentoFinanceiro.StatusLancamento.QUITADO
+            ),
+            Decimal('0.00'),
+        )
+        total_pagina_aberto = sum(
+            (
+                lancamento_visual['valor_total']
+                for lancamento_visual in lancamentos_visuais_pagina
+                if lancamento_visual['representante'].status == LancamentoFinanceiro.StatusLancamento.ABERTO
+            ),
+            Decimal('0.00'),
+        )
         context['lancamentos_visuais'] = lancamentos_visuais_pagina
         context['totalizadores_lancamentos'] = {
             'escopo': 'pagina_atual',
             'quantidade_exibida': len(lancamentos_visuais_pagina),
             'valor_exibido': total_pagina,
             'valor_exibido_formatado': _formatar_moeda_brl(total_pagina),
+            'valor_quitado': total_pagina_quitado,
+            'valor_quitado_formatado': _formatar_moeda_brl(total_pagina_quitado),
+            'valor_aberto': total_pagina_aberto,
+            'valor_aberto_formatado': _formatar_moeda_brl(total_pagina_aberto),
         }
         context['paginator'] = paginator
         context['page_obj'] = page_obj
@@ -4506,6 +4788,104 @@ class CadastroAuxiliarPlanilhaBaseView(FinanceiroPermissaoMixin, View):
         return response
 
 
+class ContaFinanceiraExportacaoView(FinanceiroPermissaoMixin, View):
+    permissao_requerida = 'financeiro.contas.listar'
+
+    def get(self, request, *args, **kwargs):
+        queryset = ContaFinanceira.objects.all()
+        nome = request.GET.get('nome', '').strip()
+        ativa = request.GET.get('ativa', '').strip()
+        if nome:
+            queryset = queryset.filter(nome__icontains=nome)
+        if ativa == 'ativas':
+            queryset = queryset.filter(ativa=True)
+        elif ativa == 'inativas':
+            queryset = queryset.filter(ativa=False)
+
+        arquivo_exportacao = _gerar_planilha_exportacao_cadastro_auxiliar_xlsx(
+            'contas',
+            queryset.order_by('nome', 'pk'),
+        )
+        response = HttpResponse(
+            arquivo_exportacao,
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        )
+        response['Content-Disposition'] = 'attachment; filename="exportacao_contas_financeiras.xlsx"'
+        return response
+
+
+class PessoaFinanceiraExportacaoView(FinanceiroPermissaoMixin, View):
+    permissao_requerida = 'financeiro.pessoas.listar'
+
+    def get(self, request, *args, **kwargs):
+        queryset = PessoaFinanceira.objects.all()
+        nome = request.GET.get('nome', '').strip()
+        codigo = request.GET.get('codigo', '').strip()
+        if nome:
+            queryset = queryset.filter(nome__icontains=nome)
+        if codigo:
+            queryset = queryset.filter(codigo__icontains=codigo)
+
+        arquivo_exportacao = _gerar_planilha_exportacao_cadastro_auxiliar_xlsx(
+            'pessoas',
+            queryset.order_by('nome', 'pk'),
+        )
+        response = HttpResponse(
+            arquivo_exportacao,
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        )
+        response['Content-Disposition'] = 'attachment; filename="exportacao_favorecidos_financeiros.xlsx"'
+        return response
+
+
+class CentroCustoExportacaoView(FinanceiroPermissaoMixin, View):
+    permissao_requerida = 'financeiro.centros_custo.listar'
+
+    def get(self, request, *args, **kwargs):
+        queryset = CentroCusto.objects.all()
+        codigo = request.GET.get('codigo', '').strip()
+        nome = request.GET.get('nome', '').strip()
+        if codigo:
+            queryset = queryset.filter(codigo__icontains=codigo)
+        if nome:
+            queryset = queryset.filter(nome__icontains=nome)
+
+        arquivo_exportacao = _gerar_planilha_exportacao_cadastro_auxiliar_xlsx(
+            'centros-custo',
+            queryset.order_by('nome', 'pk'),
+        )
+        response = HttpResponse(
+            arquivo_exportacao,
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        )
+        response['Content-Disposition'] = 'attachment; filename="exportacao_centros_custo.xlsx"'
+        return response
+
+
+class CategoriaFinanceiraExportacaoView(FinanceiroPermissaoMixin, View):
+    permissao_requerida = 'financeiro.categorias.listar'
+
+    def get(self, request, *args, **kwargs):
+        queryset = CategoriaFinanceira.objects.select_related('categoria_pai')
+        nome = request.GET.get('nome', '').strip()
+        tipo = request.GET.get('tipo', '').strip()
+        if nome:
+            queryset = queryset.filter(nome__icontains=nome)
+        if tipo:
+            queryset = queryset.filter(tipo=tipo)
+
+        arquivo_exportacao = _gerar_planilha_exportacao_cadastro_auxiliar_xlsx(
+            'categorias',
+            queryset.order_by('tipo', 'nome', 'pk'),
+        )
+        response = HttpResponse(
+            arquivo_exportacao,
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        )
+        response['Content-Disposition'] = 'attachment; filename="exportacao_categorias_financeiras.xlsx"'
+        return response
+
+
 class LancamentoFinanceiroExportacaoView(FinanceiroPermissaoMixin, View):
     permissao_requerida = 'financeiro.lancamentos.exportar'
 
@@ -4675,6 +5055,7 @@ class LancamentoFinanceiroCreateView(FinanceiroFormMixin, CreateView):
     success_url = reverse_lazy('financeiro:lancamento-list')
     page_title = 'Novo Lancamento Financeiro'
     success_message = 'Lancamento financeiro cadastrado com sucesso.'
+    allow_save_and_stay = True
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -4746,7 +5127,9 @@ class LancamentoFinanceiroCreateView(FinanceiroFormMixin, CreateView):
             self.request,
             f'Lancamento com rateio cadastrado com sucesso em {len(lancamentos_criados)} linhas.',
         )
-        return redirect(self.success_url)
+        if self._should_save_and_stay():
+            return redirect(self.get_save_and_stay_url())
+        return redirect(self.get_success_url())
 
 
 class LancamentoFinanceiroCloneView(LancamentoFinanceiroCreateView):
@@ -4754,6 +5137,7 @@ class LancamentoFinanceiroCloneView(LancamentoFinanceiroCreateView):
     page_title = 'Clonar Lancamento Financeiro'
     submit_label = 'Salvar clone'
     success_message = 'Lancamento financeiro clonado com sucesso.'
+    allow_save_and_stay = False
 
     def dispatch(self, request, *args, **kwargs):
         self.lancamento_origem = get_object_or_404(
@@ -4771,7 +5155,7 @@ class LancamentoFinanceiroCloneView(LancamentoFinanceiroCreateView):
                 request,
                 'Lancamentos com rateio ainda nao podem ser clonados nesta etapa. O registro original permaneceu inalterado.',
             )
-            return redirect(self.success_url)
+            return redirect(self.get_success_url())
         return super().dispatch(request, *args, **kwargs)
 
     def get_initial(self):
@@ -4807,6 +5191,7 @@ class LancamentoFinanceiroGrupoRateioCloneView(LancamentoFinanceiroCreateView):
     permissao_requerida = 'financeiro.lancamentos.clonar'
     page_title = 'Clonar Lancamento Financeiro com Rateio'
     submit_label = 'Salvar clone'
+    allow_save_and_stay = False
 
     def _get_grupo_origem_info(self) -> dict[str, object]:
         if hasattr(self, '_grupo_origem_info_cache'):
@@ -4859,7 +5244,7 @@ class LancamentoFinanceiroGrupoRateioCloneView(LancamentoFinanceiroCreateView):
                 request,
                 f"{grupo_info['erro']} O clone do grupo nao foi aberto e o documento original permaneceu inalterado.",
             )
-            return redirect(self.success_url)
+            return redirect(self.get_success_url())
         return super().dispatch(request, *args, **kwargs)
 
     def get_initial(self):
@@ -5017,18 +5402,20 @@ class LancamentoFinanceiroGrupoRateioUpdateView(FinanceiroFormMixin, UpdateView)
             )
             representante = grupo_info['representante']
             if representante:
-                query_string = urlencode(
-                    {
-                        'origem_fluxo': 'rateio_coordenado',
-                        'motivo_fluxo': erro_codigo,
-                    }
-                )
+                query_params = {
+                    'origem_fluxo': 'rateio_coordenado',
+                    'motivo_fluxo': erro_codigo,
+                }
+                return_to = self._get_return_to_url()
+                if return_to:
+                    query_params[self.return_to_param] = return_to
+                query_string = urlencode(query_params)
                 return redirect(f"{reverse('financeiro:lancamento-update', kwargs={'pk': representante.pk})}?{query_string}")
             messages.warning(
                 request,
                 'Nao foi possivel abrir uma linha representativa para este grupo. Voce foi redirecionado para a listagem principal de lancamentos.',
             )
-            return redirect(self.success_url)
+            return redirect(self.get_success_url())
         return super().dispatch(request, *args, **kwargs)
 
     def get_object(self, queryset=None):
@@ -5146,7 +5533,7 @@ class LancamentoFinanceiroGrupoRateioUpdateView(FinanceiroFormMixin, UpdateView)
                 'grupo_rateio': grupo_lancamentos[0].grupo_rateio,
             }
         )
-        return redirect(f"{reverse('financeiro:lancamento-list')}?{query_string}")
+        return redirect(self._get_return_to_url() or f"{reverse('financeiro:lancamento-list')}?{query_string}")
 
 
 class LancamentoFinanceiroReciboView(FinanceiroPermissaoMixin, DetailView):

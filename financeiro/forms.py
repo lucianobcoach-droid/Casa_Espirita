@@ -48,6 +48,11 @@ class ContaFinanceiraForm(forms.ModelForm):
 
 
 class CentroCustoForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['codigo'].required = False
+        self.fields['codigo'].help_text = 'Opcional. Se vazio, sera gerado automaticamente.'
+
     class Meta:
         model = CentroCusto
         fields = [
@@ -58,6 +63,11 @@ class CentroCustoForm(forms.ModelForm):
 
 
 class PessoaFinanceiraForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['codigo'].required = False
+        self.fields['codigo'].help_text = 'Opcional. Se vazio, sera gerado automaticamente.'
+
     class Meta:
         model = PessoaFinanceira
         fields = [
