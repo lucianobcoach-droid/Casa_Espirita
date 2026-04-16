@@ -1,6 +1,21 @@
 # CODEX_RESULTADO
 
-Data: 2026-04-13
+Data: 2026-04-16
+
+## Consolidacao final do working tree do ciclo recente do financeiro
+
+- auditei o working tree pendente e separei os blocos em: reconciliacao documental, fluxo contextual/`return_to`, importacao/exportacao/listagens auxiliares, extrato/mascara/recibo/refinamentos finais e artefatos `tmp/`
+- criei o commit funcional `8912cb7d500a6a2e3dc862a629445919a9ae04fd` com a mensagem `fix(financeiro): consolida fluxo contextual e ajustes finais`
+- o commit funcional consolidou:
+  - `return_to` nas listagens, formularios, cancelamentos e exclusoes dos cadastros principais do financeiro
+  - botao compacto `+` para salvar e permanecer nos formularios auxiliares onde aplicavel
+  - `Exportar` contextual em contas, favorecidos, categorias e centros de custo
+  - remocao do botao redundante `Voltar para lancamentos` da central de importacoes
+  - checkbox `Exibir observacao` no extrato
+  - ajuste fino da mascara monetaria para evitar formatacao duplicada com zeros a esquerda
+- `tmp/` foi mantido como artefato local fora de commit e adicionado ao `.gitignore`, preservando pacotes/validacoes locais sem poluir o versionamento
+- validacoes executadas: `py manage.py check` OK, `py -m compileall financeiro` OK, smoke autenticado com rollback das telas afetadas OK e `git diff --check` OK
+- pendencias que continuam fora deste fechamento: `historico por favorecido` e decisao de produto sobre expandir codigo automatico para `contas`/`categorias`
 
 ## Lote 1 do novo bloco operacional (importar removido, mascara monetaria, extrato e exclusao de favorecido)
 
@@ -12,6 +27,12 @@ Data: 2026-04-13
   - bloquear com mensagem clara quando ainda existirem lancamentos vinculados
   - desvincular regras automaticas antes da exclusao quando elas forem a unica amarra restante
 - validacao executada: `py manage.py check` OK e `py -m compileall financeiro` OK
+
+## Ajuste fino da mascara monetaria do lancamento
+
+- causa confirmada: a mascara estava preservando zeros a esquerda do valor anterior (`0,00`), o que gerava casos como `0.001.000,00` ao digitar `100000`
+- ajuste aplicado: a rotina de formatacao agora remove zeros a esquerda antes de separar centavos, mantendo a regra dos 2 ultimos digitos como centavos
+- validacao executada na consolidacao final com exemplos `1 -> 0,01`, `10 -> 0,10`, `100 -> 1,00`, `1000 -> 10,00` e `100000 -> 1.000,00`
 
 ## Lote 2 do novo bloco operacional (codigo automatico e favorecido rapido no lancamento)
 
@@ -43,6 +64,8 @@ Data: 2026-04-13
 - causa confirmada: o template do recibo em lote ainda referenciava `lancamento.*`, o que quebra o render quando so existem variaveis `recibo_*`
 - ajuste aplicado: separacao explicita entre recibo individual e lote, usando apenas `recibo_*` no lote
 - o corpo do lote passou a listar data, descricao e valor por item
+- no lote, o rotulo `Numero` foi substituido por `Lote` e a frase passou a ser `Referente aos lancamentos listados abaixo.`
+- quando nao houver identificador real, o lote nao deve repetir o texto `Lote` como valor (evita `Lote Lote`)
 
 ## Correcao do menu suspenso, importacoes no menu e limpeza de legado
 

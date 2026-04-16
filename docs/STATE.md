@@ -1,6 +1,21 @@
 # STATE
 
-Data de atualizacao: 2026-04-13
+Data de atualizacao: 2026-04-16
+
+## Consolidacao do working tree do ciclo recente do financeiro
+
+- working tree auditado na branch `feat/reinicio-financeiro`, separando alteracoes funcionais, documentais e artefatos locais antes do fechamento do ciclo
+- bloco funcional consolidado no commit `8912cb7d500a6a2e3dc862a629445919a9ae04fd` (`fix(financeiro): consolida fluxo contextual e ajustes finais`)
+- escopo funcional consolidado:
+  - retorno contextual nas listagens e formularios principais do financeiro, preservando filtros, pagina, ordenacao, `por_pagina` e demais parametros por `return_to`
+  - acoes `Salvar`, `+`, `Cancelar` e exclusoes mantendo retorno contextual seguro
+  - listagens auxiliares com `Exportar` contextual, respeitando filtros locais, e importacoes permanecendo centralizadas no menu superior
+  - central de importacoes sem botao redundante `Voltar para lancamentos`
+  - extrato com checkbox `Exibir observacao`
+  - mascara monetaria ajustada para remover zeros a esquerda antes da formatacao pt-BR
+- `tmp/` foi tratado como artefato local de operacao/validacao e passou a ficar ignorado pelo Git; os arquivos locais nao foram apagados nem incluidos em commit
+- validacoes executadas nesta consolidacao: `py manage.py check` OK, `py -m compileall financeiro` OK, smoke autenticado com rollback das telas afetadas OK e `git diff --check` OK
+- pendencias reais que permanecem abertas apos este fechamento: `historico por favorecido` e decisao de produto sobre eventual ampliacao de codigo automatico para `contas`/`categorias`
 
 ## Novo bloco operacional do financeiro (Lote 1 em execucao)
 
@@ -8,6 +23,7 @@ Data de atualizacao: 2026-04-13
 - itens registrados: remover `Importar` da listagem de lancamentos, mascara monetaria inteligente, checkbox `Exibir observacao` no extrato, correcao de exclusao de favorecido, geracao automatica de codigo nos demais cadastros, cadastro rapido de favorecido na tela de lancamentos e recibo em lote por favorecido
 - Lote 1 executado: `Importar` removido da `lancamento_list`, mantendo a importacao centralizada no menu superior
 - Lote 1 executado: mascara monetaria pt-BR aplicada nos campos de valor do lancamento, com normalizacao para decimal no envio do formulario
+- ajuste fino aplicado: a mascara monetaria agora remove zeros a esquerda antes de formatar, evitando casos como `0.001.000,00` ao digitar `100000`; exemplos `1`, `10`, `100`, `1000` e `100000` validados na consolidacao final
 - Lote 1 executado: extrato ganhou checkbox `Exibir observacao` para controlar a coluna de observacoes
 - Lote 1 executado: exclusao de favorecido bloqueia quando houver lancamentos vinculados e desvincula regras automaticas quando essa for a unica amarra restante
 
@@ -24,6 +40,7 @@ Data de atualizacao: 2026-04-13
 - regra consolidada: recibo em lote so funciona quando todos os lancamentos selecionados forem do mesmo favorecido, do tipo receita e sem rateio
 - o recibo em lote gera documento unico com lista de descricoes e valor total consolidado
 - ajuste de estabilidade: template do recibo em lote passou a usar apenas variaveis `recibo_*` e o corpo do lote agora mostra data, descricao e valor por item
+- ajuste de conteudo: no lote, o rotulo passa a ser `Lote`, a frase padrao passou para `Referente aos lancamentos listados abaixo.` e o valor nao deve repetir `Lote` quando nao houver identificador real
 
 ## Correcao do menu suspenso e centralizacao de importacoes no financeiro
 
@@ -55,7 +72,7 @@ Data de atualizacao: 2026-04-13
   - `Institucional`
 - o dropdown reaproveita as permissoes ja existentes do modulo para exibir apenas links liberados ao usuario autenticado
 - a sidebar persistente, o drawer mobile, o overlay e o botao de recolher/expandir foram desativados da renderizacao do shell ativo, eliminando a competicao visual entre camadas de navegacao
-- o bloco antigo de sidebar/drawer ficou apenas como comentario de template transicional e nao renderiza no HTML entregue ao navegador
+- o bloco antigo de sidebar/drawer foi removido do template base; nao resta HTML comentado nem CSS morto relacionado ao shell antigo
 - a area principal do shell deixou de depender da coluna lateral e passou a usar a largura util disponivel em bloco unico
 - validacao executada: `py manage.py check` OK, `py -m compileall financeiro` OK e smoke autenticado `200` para `lancamento_list`, `lancamento_form`, `conta_list`, `pessoa_list`, `categoria_list`, `centro_custo_list`, central de importacao/exportacao, extratos, resumo e prestacao de contas
 - smoke estrutural confirmou presenca do novo menu suspenso e ausencia de controles renderizados da sidebar/drawer antigos na `lancamento_list`

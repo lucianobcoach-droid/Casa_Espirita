@@ -325,7 +325,7 @@ Os tipos validos de lancamento sao:
 - na mesma listagem, a coluna de acoes deve manter slots visuais fixos por funcao para preservar alinhamento horizontal entre linhas comuns e grupos rateados, `Recibo` deve ser tratado como acao contextual e nao universal, e a coluna `Descricao` pode usar truncamento com reticencias e tooltip para leitura rapida sem perder acesso ao texto completo
 - a listagem de lancamentos pode adotar iconografia compacta para acoes, tipo e status, desde que `title`, `aria-label` ou texto equivalente preservem compreensao e acessibilidade, sem reabrir regras de negocio nem a logica de agrupamento de rateio
 - quando houver ordenacao por coluna na listagem de lancamentos, ela deve preservar os filtros GET ativos, manter o agrupamento visual de rateio, usar indicador visual discreto no cabecalho e continuar respeitando a ordenacao padrao por data principal mais recente quando nenhum criterio manual estiver selecionado
-- no extrato, a ordem oficial deve ser crescente por `data_competencia`, com desempate por `criado_em` e `pk`
+- no extrato, a ordem oficial deve ser crescente por `data_pagamento`, com fallback para `data_competencia` quando faltar pagamento, e desempate por `criado_em` e `pk`
 - no extrato, lancamentos rateados devem ser lidos como documento consolidado por `grupo_rateio`, com exibicao do valor total do documento na linha exibida
 - a consolidacao do rateio no extrato deve ficar restrita a apresentacao da tela, preservando a modelagem atual do rateio e a base de calculo do saldo
 - linhas antigas ou inconsistentes sem `grupo_rateio` valido podem continuar aparecendo de forma individual no extrato ate regularizacao manual

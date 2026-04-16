@@ -1,6 +1,6 @@
 # ROADMAP FINANCEIRO
 
-Data: 2026-04-06
+Data: 2026-04-16
 
 ## 0.5. Execucao atual da frente de planilha comum com ate 5 rateios na mesma linha
 
@@ -29,7 +29,7 @@ Data: 2026-04-06
 ## 0.6. Refinamento de usabilidade da listagem principal de lancamentos
 
 - a `lancamento_list` ganhou configuracao inicial de colunas para melhorar o uso real com a sidebar expandida, sem depender apenas de ajustes de largura em CSS
-- o padrao inicial ficou enxuto, com `Data pagamento`, `Descricao` e `Valor` como colunas essenciais da grade, alem de selecao/acoes quando as permissoes aplicarem
+- o padrao inicial ficou enxuto, com `Data pagamento`, `Tipo`, `Descricao` e `Valor` como colunas essenciais da grade, alem de selecao/acoes quando as permissoes aplicarem
 - campos complementares como `Favorecido`, `Conta origem`, `Conta destino`, `Status`, `Categoria`, `Centro de custo`, `Data competencia`, `Documento` e `Observacoes` passaram a poder ser exibidos/ocultados e ordenados manualmente
 - a preferencia atual fica preservada em sessao, por ser a menor solucao segura sem criar estrutura nova de banco nesta etapa
 - backlog futuro relacionado:
@@ -51,7 +51,7 @@ Itens levantados:
 7. corrigir protecao indevida ao excluir favorecido/pessoa apos desvinculo
 
 Lotes definidos:
-- Lote 1 (prioritario): itens 1, 3, 6 e 7
+- Lote 1 (prioritario): itens 1, 3, 6 e 7 (executado)
 - Lote 2: itens 2 e 4 (executado)
 - Lote 3: item 5 (executado)
 
@@ -337,8 +337,6 @@ Observacao:
 - balancete padrao
 - importacao de planilha historica
 - evolucao futura da importacao para oferecer preview/validacao detalhada antes de gravar, tratar duplicidades de forma mais rica, refinar a importacao auxiliar centralizada ja entregue e avaliar eventual importacao parcial apenas em fase posterior
-- cadastro rapido de pessoa dentro do lancamento
-- cadastro rapido de categoria dentro do lancamento
 - evolucoes futuras especificas do bloco de recibos ja entregue
 
 ## 5. Fila restante reorganizada por prioridade pratica
@@ -351,8 +349,8 @@ Observacao:
 - proxima frente funcional prioritaria do sistema: `permissoes/autenticacao` com configuracao hierarquica de perfis por `Modulo` > `Tela/Recurso` > `Acao`, em camada transversal do projeto e nao como ajuste isolado do `financeiro`
 - na abertura real da frente de `permissoes/autenticacao`, foi criada a primeira versao de `docs/MATRIZ_PERMISSOES.md` como documento proprio de mapeamento de permissoes; as proximas subetapas devem revisar essa matriz com auditoria humana, fechar a regra de exibicao de menus/botoes/endpoints por perfil e so depois iniciar a implementacao tecnica em codigo
 - auditoria de UX entre telas existentes e consolidacao de um padrao visual/funcional transversal em `docs/PADRAO_UX_SISTEMA.md`, com padronizacao progressiva das melhorias ja aprovadas no `financeiro` para outros modulos
-- refinamentos futuros do shell visual do `financeiro` e da sidebar ja implantada, guiados por uso real e sem reabrir troca estrutural ampla da navegacao
-- refinamento futuro do menu lateral para ficar mais leve, mais coerente com o tema, menos pesado visualmente e com item ativo mais elegante, reduzindo a sensacao de painel antigo sem trocar a sidebar como navegacao principal
+- refinamentos futuros do shell visual do `financeiro` e do menu superior atual, guiados por uso real e sem reabrir troca estrutural ampla da navegacao
+- refinamento futuro do menu superior para ficar mais leve, mais coerente com o tema e menos pesado visualmente, evitando a sensacao de duplicacao de camadas
 - consolidacao futura de componentes visuais compartilhados do modulo, como cabecalho de pagina, bloco de filtros, card padrao, KPI, tabela e formulario
 - refinamento visual transversal do modulo financeiro para melhorar largura de campos, distribuicao de colunas, densidade de filtros, quantidade de informacao visivel por tela, melhor aproveitamento horizontal em zoom 100% e consistencia visual entre telas, agora oficialmente iniciado pela base compartilhada e pelas telas de listagem/formulario de lancamentos
 - auditoria e aplicacao incremental do novo padrao transversal de UX/comunicacao operacional no restante das telas do `financeiro`, com foco em fluxo continuo, texto fixo minimo, padronizacao de linguagem e uso raro do `i`
@@ -381,8 +379,6 @@ Observacao:
 - item informativo futuro na tela de lancamentos, com simbolo `i` e historico de cadastro/alteracoes do documento ou lancamento quando houver ganho operacional real
 - historico por favorecido
 - relatorio anual por favorecido
-- cadastro rapido de pessoa dentro do lancamento
-- cadastro rapido de categoria dentro do lancamento
 - evolucao futura da central de importacoes do financeiro, com preview mais rico, tratamento avancado de duplicidades e possivel importacao historica em etapa propria, preservando as exportacoes nas listagens filtradas
 - evolucao futura da exportacao de lancamentos para oferecer variacoes controladas de saida e refinar o layout conforme uso real
 - na importacao/exportacao futura, o fluxo de importacao deve oferecer download de planilha modelo no layout proprio do sistema, preservando a ordem e as colunas esperadas pelo backend de importacao
