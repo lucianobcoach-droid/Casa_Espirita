@@ -99,8 +99,9 @@
             <h1 class="title financeiro-page-title">Centros de custo</h1>
         </div>
         <div class="financeiro-page-header-actions no-print">
+                <a class="button is-link is-light" href="{{ exportacao_centros_custo_url }}">Exportar</a>
             {% if pode_criar_centro_custo %}
-                <a class="button is-primary" href="{% url 'financeiro:centro-custo-create' %}">Novo centro de custo</a>
+                <a class="button is-primary" href="{% url 'financeiro:centro-custo-create' %}?return_to={{ request.get_full_path|urlencode }}">Novo centro de custo</a>
             {% endif %}
         </div>
     </div>
@@ -151,10 +152,10 @@
                         {% if mostrar_acoes_centro_custo %}
                             <td class="actions-cell no-print">
                                 {% if pode_editar_centro_custo %}
-                                    <a class="button is-small is-link is-light" href="{% url 'financeiro:centro-custo-update' centro.pk %}">Editar</a>
+                                    <a class="button is-small is-link is-light" href="{% url 'financeiro:centro-custo-update' centro.pk %}?return_to={{ request.get_full_path|urlencode }}">Editar</a>
                                 {% endif %}
                                 {% if pode_excluir_centro_custo %}
-                                    <a class="button is-small is-danger is-light" href="{% url 'financeiro:centro-custo-delete' centro.pk %}">Excluir</a>
+                                    <a class="button is-small is-danger is-light" href="{% url 'financeiro:centro-custo-delete' centro.pk %}?return_to={{ request.get_full_path|urlencode }}">Excluir</a>
                                 {% endif %}
                             </td>
                         {% endif %}

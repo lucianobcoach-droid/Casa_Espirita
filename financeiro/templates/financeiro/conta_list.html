@@ -127,8 +127,9 @@
             <h1 class="title financeiro-page-title">Contas financeiras</h1>
         </div>
         <div class="financeiro-page-header-actions no-print">
+            <a class="button is-link is-light" href="{{ exportacao_contas_url }}">Exportar</a>
             {% if pode_criar_conta %}
-            <a class="button is-primary" href="{% url 'financeiro:conta-create' %}">Nova conta financeira</a>
+            <a class="button is-primary" href="{% url 'financeiro:conta-create' %}?return_to={{ request.get_full_path|urlencode }}">Nova conta financeira</a>
             {% endif %}
         </div>
     </div>
@@ -209,10 +210,10 @@
                             <a class="button is-small is-info is-light" href="{% url 'financeiro:conta-extrato' conta.pk %}">Extrato</a>
                             {% endif %}
                             {% if pode_editar_conta %}
-                            <a class="button is-small is-link is-light" href="{% url 'financeiro:conta-update' conta.pk %}">Editar</a>
+                            <a class="button is-small is-link is-light" href="{% url 'financeiro:conta-update' conta.pk %}?return_to={{ request.get_full_path|urlencode }}">Editar</a>
                             {% endif %}
                             {% if pode_excluir_conta %}
-                            <a class="button is-small is-danger is-light" href="{% url 'financeiro:conta-delete' conta.pk %}">Excluir</a>
+                            <a class="button is-small is-danger is-light" href="{% url 'financeiro:conta-delete' conta.pk %}?return_to={{ request.get_full_path|urlencode }}">Excluir</a>
                             {% endif %}
                         </td>
                         {% endif %}

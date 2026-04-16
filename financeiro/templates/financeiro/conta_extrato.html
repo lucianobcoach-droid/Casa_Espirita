@@ -401,6 +401,13 @@
             <input class="input" type="date" name="data_final" value="{{ data_final }}">
         </div>
         <div class="column is-12-mobile is-6-tablet {% if show_conta_filter %}is-2-desktop{% else %}is-4-desktop{% endif %}">
+            <label class="label">Exibir observação</label>
+            <label class="checkbox">
+                <input type="checkbox" name="exibir_observacao" value="1" {% if mostrar_observacao %}checked{% endif %}>
+                Mostrar observações no extrato
+            </label>
+        </div>
+        <div class="column is-12-mobile is-6-tablet {% if show_conta_filter %}is-2-desktop{% else %}is-4-desktop{% endif %}">
             <label class="label">&nbsp;</label>
             <div class="buttons financeiro-extrato-filter-actions">
                 <button class="button is-link is-fullwidth" type="submit">Aplicar</button>
@@ -447,7 +454,7 @@
                         <col class="financeiro-extrato-col-in">
                         <col class="financeiro-extrato-col-out">
                         <col class="financeiro-extrato-col-balance">
-                        <col class="financeiro-extrato-col-obs">
+                        {% if mostrar_observacao %}<col class="financeiro-extrato-col-obs">{% endif %}
                     </colgroup>
                     <thead>
                     {% if exibe_linha_saldo_inicial %}
@@ -460,7 +467,7 @@
                         <th></th>
                         <th></th>
                         <th><strong><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_anterior|default:saldo_inicial|br_money }}</span></span></strong></th>
-                        <th></th>
+                        {% if mostrar_observacao %}<th></th>{% endif %}
                     </tr>
                     {% endif %}
                     <tr>
@@ -472,7 +479,7 @@
                         <th>Entrada</th>
                         <th>Sa&iacute;da</th>
                         <th><span class="no-print">Saldo acumulado</span><span class="only-print">Saldo</span></th>
-                        <th><span class="no-print">Observa&ccedil;&otilde;es</span><span class="only-print">Obs.</span></th>
+                        {% if mostrar_observacao %}<th><span class="no-print">Observa&ccedil;&otilde;es</span><span class="only-print">Obs.</span></th>{% endif %}
                     </tr>
                     </thead>
                     <tbody>
@@ -506,17 +513,19 @@
                                     <span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ item.saldo_acumulado|br_money }}</span></span>
                                 </span>
                             </td>
-                            <td>
-                                {% if item.observacoes_exibicao != '-' %}
-                                    {{ item.observacoes_exibicao }}
-                                {% else %}
-                                    <span class="has-text-grey">-</span>
-                                {% endif %}
-                            </td>
+                            {% if mostrar_observacao %}
+                                <td>
+                                    {% if item.observacoes_exibicao != '-' %}
+                                        {{ item.observacoes_exibicao }}
+                                    {% else %}
+                                        <span class="has-text-grey">-</span>
+                                    {% endif %}
+                                </td>
+                            {% endif %}
                         </tr>
                     {% empty %}
                         <tr class="financeiro-extrato-empty-row">
-                            <td colspan="9">Nenhum lan&ccedil;amento quitado encontrado para os filtros atuais.</td>
+                            <td colspan="{% if mostrar_observacao %}9{% else %}8{% endif %}">Nenhum lan&ccedil;amento quitado encontrado para os filtros atuais.</td>
                         </tr>
                     {% endfor %}
                         <tr class="is-closing-balance">

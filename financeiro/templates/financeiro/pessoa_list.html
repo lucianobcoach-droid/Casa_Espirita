@@ -110,8 +110,9 @@
             <h1 class="title financeiro-page-title">Favorecidos financeiros</h1>
         </div>
         <div class="financeiro-page-header-actions no-print">
+            <a class="button is-link is-light" href="{{ exportacao_pessoas_url }}">Exportar</a>
             {% if pode_criar_pessoa %}
-            <a class="button is-primary" href="{% url 'financeiro:pessoa-create' %}">Novo favorecido financeiro</a>
+            <a class="button is-primary" href="{% url 'financeiro:pessoa-create' %}?return_to={{ request.get_full_path|urlencode }}">Novo favorecido financeiro</a>
             {% endif %}
         </div>
     </div>
@@ -194,10 +195,10 @@
                         {% if mostrar_acoes_pessoa %}
                         <td class="actions-cell no-print">
                             {% if pode_editar_pessoa %}
-                            <a class="button is-small is-link is-light" href="{% url 'financeiro:pessoa-update' pessoa.pk %}">Editar</a>
+                            <a class="button is-small is-link is-light" href="{% url 'financeiro:pessoa-update' pessoa.pk %}?return_to={{ request.get_full_path|urlencode }}">Editar</a>
                             {% endif %}
                             {% if pode_excluir_pessoa %}
-                            <a class="button is-small is-danger is-light" href="{% url 'financeiro:pessoa-delete' pessoa.pk %}">Excluir</a>
+                            <a class="button is-small is-danger is-light" href="{% url 'financeiro:pessoa-delete' pessoa.pk %}?return_to={{ request.get_full_path|urlencode }}">Excluir</a>
                             {% endif %}
                         </td>
                         {% endif %}

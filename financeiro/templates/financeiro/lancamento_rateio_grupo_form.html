@@ -198,8 +198,8 @@
         <p class="financeiro-page-subtitle">Edicao coordenada do grupo rateado em um unico fluxo, preservando os dados comuns do documento e as linhas do rateio.</p>
     </div>
     <div class="financeiro-page-header-actions no-print">
-        <a class="button" href="{% url 'financeiro:lancamento-list' %}">Listagem</a>
-        <a class="button is-light" href="{% url 'financeiro:lancamento-update' grupo_rateio_linha_representativa.pk %}?origem_fluxo=rateio_coordenado_retorno&grupo_rateio={{ grupo_rateio }}">Linha representativa</a>
+        <a class="button" href="{{ cancel_url }}">Listagem</a>
+        <a class="button is-light" href="{% url 'financeiro:lancamento-update' grupo_rateio_linha_representativa.pk %}?origem_fluxo=rateio_coordenado_retorno&grupo_rateio={{ grupo_rateio }}{% if return_to %}&return_to={{ return_to|urlencode }}{% endif %}">Linha representativa</a>
     </div>
 </div>
 {% if form.non_field_errors %}
@@ -235,6 +235,7 @@
 
 <form method="post">
     {% csrf_token %}
+    {% if return_to %}<input type="hidden" name="return_to" value="{{ return_to }}">{% endif %}
     {% for hidden_field in form.hidden_fields %}{{ hidden_field }}{% endfor %}
     {% for hidden_field in form.hidden_fields %}
         {% for error in hidden_field.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
@@ -397,14 +398,14 @@
                                 <p class="financeiro-rateio-action-row-title">Voltar para a listagem</p>
                                 <p class="financeiro-rateio-action-row-text">Sai do fluxo coordenado sem gravar e retorna para a revisao geral dos lancamentos.</p>
                             </div>
-                            <a class="button" href="{% url 'financeiro:lancamento-list' %}?origem_fluxo=rateio_coordenado_cancelado&grupo_rateio={{ grupo_rateio }}">Listagem</a>
+                            <a class="button" href="{{ cancel_url }}">Listagem</a>
                         </div>
                         <div class="financeiro-rateio-action-row">
                             <div class="financeiro-rateio-action-row-copy">
                                 <p class="financeiro-rateio-action-row-title">Voltar para a linha representativa</p>
                                 <p class="financeiro-rateio-action-row-text">Sai do fluxo coordenado sem gravar e reabre apenas a linha principal do grupo.</p>
                             </div>
-                            <a class="button is-light" href="{% url 'financeiro:lancamento-update' grupo_rateio_linha_representativa.pk %}?origem_fluxo=rateio_coordenado_retorno&grupo_rateio={{ grupo_rateio }}">Linha representativa</a>
+                            <a class="button is-light" href="{% url 'financeiro:lancamento-update' grupo_rateio_linha_representativa.pk %}?origem_fluxo=rateio_coordenado_retorno&grupo_rateio={{ grupo_rateio }}{% if return_to %}&return_to={{ return_to|urlencode }}{% endif %}">Linha representativa</a>
                         </div>
                     </div>
                 </div>

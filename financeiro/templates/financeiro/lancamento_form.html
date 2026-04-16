@@ -571,8 +571,9 @@
 
         function formatarMoedaPtBr(digitos) {
             if (!digitos) return '';
-            const normalizado = digitos.replace(/\D/g, '');
+            let normalizado = digitos.replace(/\D/g, '');
             if (!normalizado) return '';
+            normalizado = normalizado.replace(/^0+(?!$)/, '');
             const centavos = normalizado.slice(-2).padStart(2, '0');
             const inteiro = normalizado.length > 2 ? normalizado.slice(0, -2) : '0';
             const inteiroFormatado = inteiro.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
@@ -581,8 +582,9 @@
 
         function normalizarMoedaParaDecimal(digitos) {
             if (!digitos) return '';
-            const normalizado = digitos.replace(/\D/g, '');
+            let normalizado = digitos.replace(/\D/g, '');
             if (!normalizado) return '';
+            normalizado = normalizado.replace(/^0+(?!$)/, '');
             const centavos = normalizado.slice(-2).padStart(2, '0');
             const inteiro = normalizado.length > 2 ? normalizado.slice(0, -2) : '0';
             return `${inteiro}.${centavos}`;

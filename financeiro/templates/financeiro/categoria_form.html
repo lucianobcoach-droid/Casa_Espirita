@@ -223,6 +223,7 @@
 
             <form method="post">
                 {% csrf_token %}
+                {% if return_to %}<input type="hidden" name="return_to" value="{{ return_to }}">{% endif %}
                 <div class="financeiro-categoria-form-grid">
                     <div class="financeiro-categoria-form-mode" aria-labelledby="financeiro-categoria-form-mode-label">
                         <p class="financeiro-categoria-form-mode-label" id="financeiro-categoria-form-mode-label">Tipo de cadastro</p>
@@ -280,7 +281,10 @@
 
                 <div class="financeiro-categoria-form-actions">
                     <button class="button is-primary" type="submit">{{ submit_label }}</button>
-                    <a class="button" href="{% url 'financeiro:categoria-list' %}">Voltar</a>
+                    {% if allow_save_and_stay %}
+                        <button class="button is-primary is-light" type="submit" name="{{ save_and_stay_param }}" value="1" title="Salvar e cadastrar outro" aria-label="Salvar e cadastrar outro">+</button>
+                    {% endif %}
+                    <a class="button" href="{{ cancel_url }}">Voltar</a>
                 </div>
             </form>
         </div>
