@@ -2,6 +2,16 @@
 
 Data: 2026-04-17
 
+## Ajuste final dos quadros-resumo da listagem de lancamentos
+
+- substitui a leitura principal antiga da `lancamento_list`, baseada em `Pagina atual`, `Status na pagina` e `Selecionados` com valor unico
+- implementei um quadro-resumo financeiro do resultado filtrado completo, independente da paginacao, com receitas, despesas, transferencias de entrada, transferencias de saida e saldo liquido operacional
+- a formula usada na listagem ficou: `saldo liquido = receitas + transferencias_entrada - despesas - transferencias_saida`
+- deixei a paginacao como informacao auxiliar (`Mostrando X de Y lancamento(s)`)
+- o quadro de selecionados passou a repetir a mesma estrutura do resumo principal, para selecoes mistas deixarem claro o que e receita, despesa, entrada, saida e saldo liquido
+- mantive `Quitado` e `Em aberto` como leitura secundaria do resultado filtrado, sem competir com o resumo financeiro principal
+- validacoes executadas: smoke autenticado com rollback confirmando resultado filtrado completo acima da pagina visivel e selecao mista, `py manage.py check` OK, `py -m compileall financeiro` OK e `git diff --check` OK
+
 ## Correcao de totalizadores liquidos e paineis recolhidos por padrao
 
 - corrigi os totalizadores da `lancamento_list` para usarem o sinal operacional do movimento, em vez de somarem apenas valores absolutos

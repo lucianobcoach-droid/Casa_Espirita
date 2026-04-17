@@ -2680,29 +2680,90 @@ def _resolver_conta_referencia_lancamentos_listagem(request) -> int | None:
         return None
 
 
-def _valor_liquido_lancamento_visual_listagem(
+def _componentes_resumo_lancamento_visual_listagem(
     lancamento_visual: dict[str, object],
     *,
     conta_referencia_id: int | None = None,
-) -> Decimal:
+) -> dict[str, Decimal]:
     lancamento = lancamento_visual['representante']
     valor = lancamento_visual.get('valor_total') or Decimal('0.00')
+    componentes = {
+        'receitas': Decimal('0.00'),
+        'despesas': Decimal('0.00'),
+        'transferencias_entrada': Decimal('0.00'),
+        'transferencias_saida': Decimal('0.00'),
+    }
 
     if lancamento.tipo == LancamentoFinanceiro.TipoLancamento.RECEITA:
-        return valor
-    if lancamento.tipo == LancamentoFinanceiro.TipoLancamento.DESPESA:
-        return -valor
-    if (
-        lancamento.tipo == LancamentoFinanceiro.TipoLancamento.TRANSFERENCIA
-        and conta_referencia_id
-        and lancamento.conta_destino_id == conta_referencia_id
-        and lancamento.conta_id != conta_referencia_id
-    ):
-        return valor
-    if lancamento.tipo == LancamentoFinanceiro.TipoLancamento.TRANSFERENCIA:
-        return -valor
+        componentes['receitas'] = valor
+    elif lancamento.tipo == LancamentoFinanceiro.TipoLancamento.DESPESA:
+        componentes['despesas'] = valor
+    elif lancamento.tipo == LancamentoFinanceiro.TipoLancamento.TRANSFERENCIA:
+        if not conta_referencia_id:
+            componentes['transferencias_entrada'] = valor
+            componentes['transferencias_saida'] = valor
+        elif lancamento.conta_destino_id == conta_referencia_id and lancamento.conta_id != conta_referencia_id:
+            componentes['transferencias_entrada'] = valor
+        else:
+            componentes['transferencias_saida'] = valor
 
-    return valor
+    componentes['saldo_liquido'] = (
+        componentes['receitas']
+        + componentes['transferencias_entrada']
+        - componentes['despesas']
+        - componentes['transferencias_saida']
+    )
+    return componentes
+
+
+def _montar_resumo_financeiro_lancamentos_visuais(
+    lancamentos_visuais: list[dict[str, object]],
+    *,
+    conta_referencia_id: int | None = None,
+) -> dict[str, object]:
+    resumo = {
+        'quantidade': len(lancamentos_visuais),
+        'receitas': Decimal('0.00'),
+        'despesas': Decimal('0.00'),
+        'transferencias_entrada': Decimal('0.00'),
+        'transferencias_saida': Decimal('0.00'),
+        'saldo_liquido': Decimal('0.00'),
+        'valor_quitado': Decimal('0.00'),
+        'valor_aberto': Decimal('0.00'),
+    }
+
+    for lancamento_visual in lancamentos_visuais:
+        componentes = _componentes_resumo_lancamento_visual_listagem(
+            lancamento_visual,
+            conta_referencia_id=conta_referencia_id,
+        )
+        for chave in (
+            'receitas',
+            'despesas',
+            'transferencias_entrada',
+            'transferencias_saida',
+            'saldo_liquido',
+        ):
+            resumo[chave] += componentes[chave]
+
+        lancamento = lancamento_visual['representante']
+        if lancamento.status == LancamentoFinanceiro.StatusLancamento.QUITADO:
+            resumo['valor_quitado'] += componentes['saldo_liquido']
+        elif lancamento.status == LancamentoFinanceiro.StatusLancamento.ABERTO:
+            resumo['valor_aberto'] += componentes['saldo_liquido']
+
+    for chave in (
+        'receitas',
+        'despesas',
+        'transferencias_entrada',
+        'transferencias_saida',
+        'saldo_liquido',
+        'valor_quitado',
+        'valor_aberto',
+    ):
+        resumo[f'{chave}_formatado'] = _formatar_moeda_brl(resumo[chave])
+
+    return resumo
 
 
 def _normalizar_colunas_configuraveis_lancamentos(colunas):
@@ -4651,6 +4712,17 @@ class LancamentoFinanceiroListView(FinanceiroPermissaoMixin, ListView):
             _montar_lancamentos_visuais_listagem(context['lancamentos']),
             ordenacao_atual,
         )
+        conta_referencia_id = _resolver_conta_referencia_lancamentos_listagem(self.request)
+        for lancamento_visual in lancamentos_visuais:
+            componentes_resumo = _componentes_resumo_lancamento_visual_listagem(
+                lancamento_visual,
+                conta_referencia_id=conta_referencia_id,
+            )
+            lancamento_visual['resumo_componentes'] = componentes_resumo
+            lancamento_visual['valor_liquido'] = componentes_resumo['saldo_liquido']
+            lancamento_visual['valor_liquido_formatado'] = _formatar_moeda_brl(
+                componentes_resumo['saldo_liquido']
+            )
         paginator = Paginator(lancamentos_visuais, por_pagina)
         pagina_atual = self.request.GET.get('page') or 1
         try:
@@ -4660,45 +4732,12 @@ class LancamentoFinanceiroListView(FinanceiroPermissaoMixin, ListView):
         except EmptyPage:
             page_obj = paginator.page(paginator.num_pages)
         lancamentos_visuais_pagina = list(page_obj.object_list)
-        conta_referencia_id = _resolver_conta_referencia_lancamentos_listagem(self.request)
-        for lancamento_visual in lancamentos_visuais_pagina:
-            valor_liquido = _valor_liquido_lancamento_visual_listagem(
-                lancamento_visual,
-                conta_referencia_id=conta_referencia_id,
-            )
-            lancamento_visual['valor_liquido'] = valor_liquido
-            lancamento_visual['valor_liquido_formatado'] = _formatar_moeda_brl(valor_liquido)
-        total_pagina = sum(
-            (lancamento_visual['valor_liquido'] for lancamento_visual in lancamentos_visuais_pagina),
-            Decimal('0.00'),
-        )
-        total_pagina_quitado = sum(
-            (
-                lancamento_visual['valor_liquido']
-                for lancamento_visual in lancamentos_visuais_pagina
-                if lancamento_visual['representante'].status == LancamentoFinanceiro.StatusLancamento.QUITADO
-            ),
-            Decimal('0.00'),
-        )
-        total_pagina_aberto = sum(
-            (
-                lancamento_visual['valor_liquido']
-                for lancamento_visual in lancamentos_visuais_pagina
-                if lancamento_visual['representante'].status == LancamentoFinanceiro.StatusLancamento.ABERTO
-            ),
-            Decimal('0.00'),
-        )
         context['lancamentos_visuais'] = lancamentos_visuais_pagina
-        context['totalizadores_lancamentos'] = {
-            'escopo': 'pagina_atual',
-            'quantidade_exibida': len(lancamentos_visuais_pagina),
-            'valor_exibido': total_pagina,
-            'valor_exibido_formatado': _formatar_moeda_brl(total_pagina),
-            'valor_quitado': total_pagina_quitado,
-            'valor_quitado_formatado': _formatar_moeda_brl(total_pagina_quitado),
-            'valor_aberto': total_pagina_aberto,
-            'valor_aberto_formatado': _formatar_moeda_brl(total_pagina_aberto),
-        }
+        context['totalizadores_lancamentos'] = _montar_resumo_financeiro_lancamentos_visuais(
+            lancamentos_visuais,
+            conta_referencia_id=conta_referencia_id,
+        )
+        context['quantidade_lancamentos_pagina'] = len(lancamentos_visuais_pagina)
         context['paginator'] = paginator
         context['page_obj'] = page_obj
         context['is_paginated'] = page_obj.has_other_pages()

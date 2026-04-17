@@ -199,15 +199,41 @@
         margin-top: 0.8rem;
     }
 
+    .financeiro-lancamento-summary-section {
+        padding: 0.85rem 0.95rem;
+        border-bottom: 1px solid #edf2f7;
+        background: linear-gradient(135deg, #f8fbff 0%, #f3f7fb 100%);
+        color: #334155;
+    }
+
+    .financeiro-lancamento-summary-header {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem 0.85rem;
+        align-items: baseline;
+        justify-content: space-between;
+        margin-bottom: 0.65rem;
+    }
+
+    .financeiro-lancamento-summary-title {
+        color: #1e293b;
+        font-size: 0.82rem;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+    }
+
+    .financeiro-lancamento-summary-note {
+        color: #64748b;
+        font-size: 0.78rem;
+        font-weight: 600;
+    }
+
     .financeiro-lancamento-totals {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(13.5rem, 1fr));
         gap: 0.7rem;
         align-items: stretch;
-        padding: 0.85rem 0.95rem;
-        border-bottom: 1px solid #edf2f7;
-        background: linear-gradient(135deg, #f8fbff 0%, #f3f7fb 100%);
-        color: #334155;
     }
 
     .financeiro-lancamento-total-card {
@@ -219,6 +245,11 @@
         border-radius: 0.95rem;
         background: rgba(255, 255, 255, 0.86);
         box-shadow: 0 8px 20px rgba(15, 23, 42, 0.045);
+    }
+
+    .financeiro-lancamento-total-card.is-balance {
+        border-color: #b9d7f3;
+        background: #eef7ff;
     }
 
     .financeiro-lancamento-total-label {
@@ -239,6 +270,17 @@
     .financeiro-lancamento-total-meta {
         color: #64748b;
         font-size: 0.78rem;
+        font-weight: 600;
+    }
+
+    .financeiro-lancamento-status-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.45rem 0.75rem;
+        align-items: center;
+        margin-top: 0.65rem;
+        color: #64748b;
+        font-size: 0.8rem;
         font-weight: 600;
     }
 
@@ -823,27 +865,72 @@
             </div>
             {% endif %}
 
-            <div class="financeiro-lancamento-totals no-print">
-                <div class="financeiro-lancamento-total-card">
-                    <span class="financeiro-lancamento-total-label">Página atual</span>
-                    <span class="financeiro-lancamento-total-value">R$ {{ totalizadores_lancamentos.valor_exibido_formatado }}</span>
-                    <span class="financeiro-lancamento-total-meta">{{ totalizadores_lancamentos.quantidade_exibida }} lançamento(s) exibido(s)</span>
-                </div>
-                <div class="financeiro-lancamento-total-card">
-                    <span class="financeiro-lancamento-total-label">Status na página</span>
-                    <span class="financeiro-lancamento-total-split">
-                        <span class="financeiro-lancamento-total-pill">Quitado <strong>R$ {{ totalizadores_lancamentos.valor_quitado_formatado }}</strong></span>
-                        <span class="financeiro-lancamento-total-pill">Em aberto <strong>R$ {{ totalizadores_lancamentos.valor_aberto_formatado }}</strong></span>
+            <div class="financeiro-lancamento-summary-section no-print">
+                <div class="financeiro-lancamento-summary-header">
+                    <span class="financeiro-lancamento-summary-title">Resumo financeiro do resultado filtrado</span>
+                    <span class="financeiro-lancamento-summary-note">
+                        Mostrando {{ quantidade_lancamentos_pagina }} de {{ totalizadores_lancamentos.quantidade }} lançamento(s)
                     </span>
                 </div>
-                {% if pode_acoes_em_lote %}
-                    <div class="financeiro-lancamento-total-card" data-lancamento-total-selecionados>
-                        <span class="financeiro-lancamento-total-label">Selecionados</span>
-                        <span class="financeiro-lancamento-total-value">R$ 0,00</span>
-                        <span class="financeiro-lancamento-total-meta">0 lançamento(s)</span>
+                <div class="financeiro-lancamento-totals">
+                    <div class="financeiro-lancamento-total-card">
+                        <span class="financeiro-lancamento-total-label">Receitas</span>
+                        <span class="financeiro-lancamento-total-value">R$ {{ totalizadores_lancamentos.receitas_formatado }}</span>
                     </div>
-                {% endif %}
+                    <div class="financeiro-lancamento-total-card">
+                        <span class="financeiro-lancamento-total-label">Despesas</span>
+                        <span class="financeiro-lancamento-total-value">R$ {{ totalizadores_lancamentos.despesas_formatado }}</span>
+                    </div>
+                    <div class="financeiro-lancamento-total-card">
+                        <span class="financeiro-lancamento-total-label">Transferências de entrada</span>
+                        <span class="financeiro-lancamento-total-value">R$ {{ totalizadores_lancamentos.transferencias_entrada_formatado }}</span>
+                    </div>
+                    <div class="financeiro-lancamento-total-card">
+                        <span class="financeiro-lancamento-total-label">Transferências de saída</span>
+                        <span class="financeiro-lancamento-total-value">R$ {{ totalizadores_lancamentos.transferencias_saida_formatado }}</span>
+                    </div>
+                    <div class="financeiro-lancamento-total-card is-balance">
+                        <span class="financeiro-lancamento-total-label">Saldo líquido operacional</span>
+                        <span class="financeiro-lancamento-total-value">R$ {{ totalizadores_lancamentos.saldo_liquido_formatado }}</span>
+                        <span class="financeiro-lancamento-total-meta">Receitas + entradas - despesas - saídas</span>
+                    </div>
+                </div>
+                <div class="financeiro-lancamento-status-row">
+                    <span>Status do resultado:</span>
+                    <span class="financeiro-lancamento-total-pill">Quitado <strong>R$ {{ totalizadores_lancamentos.valor_quitado_formatado }}</strong></span>
+                    <span class="financeiro-lancamento-total-pill">Em aberto <strong>R$ {{ totalizadores_lancamentos.valor_aberto_formatado }}</strong></span>
+                </div>
             </div>
+            {% if pode_acoes_em_lote %}
+            <div class="financeiro-lancamento-summary-section no-print" data-lancamento-total-selecionados>
+                <div class="financeiro-lancamento-summary-header">
+                    <span class="financeiro-lancamento-summary-title">Resumo dos selecionados</span>
+                    <span class="financeiro-lancamento-summary-note" data-selecionados-quantidade>0 lançamento(s) selecionado(s)</span>
+                </div>
+                <div class="financeiro-lancamento-totals">
+                    <div class="financeiro-lancamento-total-card">
+                        <span class="financeiro-lancamento-total-label">Receitas</span>
+                        <span class="financeiro-lancamento-total-value" data-selecionados-receitas>R$ 0,00</span>
+                    </div>
+                    <div class="financeiro-lancamento-total-card">
+                        <span class="financeiro-lancamento-total-label">Despesas</span>
+                        <span class="financeiro-lancamento-total-value" data-selecionados-despesas>R$ 0,00</span>
+                    </div>
+                    <div class="financeiro-lancamento-total-card">
+                        <span class="financeiro-lancamento-total-label">Transferências de entrada</span>
+                        <span class="financeiro-lancamento-total-value" data-selecionados-transferencias-entrada>R$ 0,00</span>
+                    </div>
+                    <div class="financeiro-lancamento-total-card">
+                        <span class="financeiro-lancamento-total-label">Transferências de saída</span>
+                        <span class="financeiro-lancamento-total-value" data-selecionados-transferencias-saida>R$ 0,00</span>
+                    </div>
+                    <div class="financeiro-lancamento-total-card is-balance">
+                        <span class="financeiro-lancamento-total-label">Saldo líquido operacional</span>
+                        <span class="financeiro-lancamento-total-value" data-selecionados-saldo-liquido>R$ 0,00</span>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
 
             <div class="financeiro-lancamento-table-scroll-top no-print" data-lancamento-scroll-top aria-hidden="true">
                 <div data-lancamento-scroll-top-inner></div>
@@ -1028,6 +1115,11 @@
                                     value="{{ lancamento_visual.token_selecao }}"
                                     class="financeiro-lancamento-checkbox"
                                     data-valor-selecao="{{ lancamento_visual.valor_liquido|unlocalize }}"
+                                    data-resumo-receitas="{{ lancamento_visual.resumo_componentes.receitas|unlocalize }}"
+                                    data-resumo-despesas="{{ lancamento_visual.resumo_componentes.despesas|unlocalize }}"
+                                    data-resumo-transferencias-entrada="{{ lancamento_visual.resumo_componentes.transferencias_entrada|unlocalize }}"
+                                    data-resumo-transferencias-saida="{{ lancamento_visual.resumo_componentes.transferencias_saida|unlocalize }}"
+                                    data-resumo-saldo-liquido="{{ lancamento_visual.resumo_componentes.saldo_liquido|unlocalize }}"
                                     aria-label="Selecionar lançamento {{ lancamento.numero_documento|default:lancamento.pk }}"
                                 >
                             </label>
@@ -1332,6 +1424,12 @@ document.addEventListener('DOMContentLoaded', function () {
     const topScroll = document.querySelector('[data-lancamento-scroll-top]');
     const topScrollInner = document.querySelector('[data-lancamento-scroll-top-inner]');
     const totalSelecionados = document.querySelector('[data-lancamento-total-selecionados]');
+    const selecionadosQuantidade = document.querySelector('[data-selecionados-quantidade]');
+    const selecionadosReceitas = document.querySelector('[data-selecionados-receitas]');
+    const selecionadosDespesas = document.querySelector('[data-selecionados-despesas]');
+    const selecionadosTransferenciasEntrada = document.querySelector('[data-selecionados-transferencias-entrada]');
+    const selecionadosTransferenciasSaida = document.querySelector('[data-selecionados-transferencias-saida]');
+    const selecionadosSaldoLiquido = document.querySelector('[data-selecionados-saldo-liquido]');
     const colunasVisiveis = [
         'data_pagamento',
         'tipo',
@@ -1382,16 +1480,43 @@ document.addEventListener('DOMContentLoaded', function () {
         const selecionados = checkboxes.filter(function (checkbox) {
             return checkbox.checked;
         });
-        const soma = selecionados.reduce(function (total, checkbox) {
-            const valor = parseFloat(String(checkbox.dataset.valorSelecao || '0').replace(',', '.'));
-            return total + (Number.isNaN(valor) ? 0 : valor);
-        }, 0);
+        const resumo = selecionados.reduce(function (total, checkbox) {
+            const lerValor = function (nome) {
+                const valor = parseFloat(String(checkbox.dataset[nome] || '0').replace(',', '.'));
+                return Number.isNaN(valor) ? 0 : valor;
+            };
+            total.receitas += lerValor('resumoReceitas');
+            total.despesas += lerValor('resumoDespesas');
+            total.transferenciasEntrada += lerValor('resumoTransferenciasEntrada');
+            total.transferenciasSaida += lerValor('resumoTransferenciasSaida');
+            total.saldoLiquido += lerValor('resumoSaldoLiquido');
+            return total;
+        }, {
+            receitas: 0,
+            despesas: 0,
+            transferenciasEntrada: 0,
+            transferenciasSaida: 0,
+            saldoLiquido: 0
+        });
 
-        totalSelecionados.innerHTML = `
-            <span class="financeiro-lancamento-total-label">Selecionados</span>
-            <span class="financeiro-lancamento-total-value">R$ ${formatarMoeda(soma)}</span>
-            <span class="financeiro-lancamento-total-meta">${selecionados.length} lançamento(s)</span>
-        `;
+        if (selecionadosQuantidade) {
+            selecionadosQuantidade.textContent = `${selecionados.length} lançamento(s) selecionado(s)`;
+        }
+        if (selecionadosReceitas) {
+            selecionadosReceitas.textContent = `R$ ${formatarMoeda(resumo.receitas)}`;
+        }
+        if (selecionadosDespesas) {
+            selecionadosDespesas.textContent = `R$ ${formatarMoeda(resumo.despesas)}`;
+        }
+        if (selecionadosTransferenciasEntrada) {
+            selecionadosTransferenciasEntrada.textContent = `R$ ${formatarMoeda(resumo.transferenciasEntrada)}`;
+        }
+        if (selecionadosTransferenciasSaida) {
+            selecionadosTransferenciasSaida.textContent = `R$ ${formatarMoeda(resumo.transferenciasSaida)}`;
+        }
+        if (selecionadosSaldoLiquido) {
+            selecionadosSaldoLiquido.textContent = `R$ ${formatarMoeda(resumo.saldoLiquido)}`;
+        }
     }
 
     function syncHorizontalScroll(source, target) {
