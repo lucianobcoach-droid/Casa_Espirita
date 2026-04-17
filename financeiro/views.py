@@ -2669,6 +2669,42 @@ def _formatar_moeda_brl(valor) -> str:
     return valor_formatado.replace(',', 'X').replace('.', ',').replace('X', '.')
 
 
+def _resolver_conta_referencia_lancamentos_listagem(request) -> int | None:
+    conta_raw = (request.GET.get('conta') or '').strip()
+    if not conta_raw:
+        return None
+
+    try:
+        return int(conta_raw)
+    except (TypeError, ValueError):
+        return None
+
+
+def _valor_liquido_lancamento_visual_listagem(
+    lancamento_visual: dict[str, object],
+    *,
+    conta_referencia_id: int | None = None,
+) -> Decimal:
+    lancamento = lancamento_visual['representante']
+    valor = lancamento_visual.get('valor_total') or Decimal('0.00')
+
+    if lancamento.tipo == LancamentoFinanceiro.TipoLancamento.RECEITA:
+        return valor
+    if lancamento.tipo == LancamentoFinanceiro.TipoLancamento.DESPESA:
+        return -valor
+    if (
+        lancamento.tipo == LancamentoFinanceiro.TipoLancamento.TRANSFERENCIA
+        and conta_referencia_id
+        and lancamento.conta_destino_id == conta_referencia_id
+        and lancamento.conta_id != conta_referencia_id
+    ):
+        return valor
+    if lancamento.tipo == LancamentoFinanceiro.TipoLancamento.TRANSFERENCIA:
+        return -valor
+
+    return valor
+
+
 def _normalizar_colunas_configuraveis_lancamentos(colunas):
     colunas_validas = []
     for coluna in colunas or []:
@@ -4624,13 +4660,21 @@ class LancamentoFinanceiroListView(FinanceiroPermissaoMixin, ListView):
         except EmptyPage:
             page_obj = paginator.page(paginator.num_pages)
         lancamentos_visuais_pagina = list(page_obj.object_list)
+        conta_referencia_id = _resolver_conta_referencia_lancamentos_listagem(self.request)
+        for lancamento_visual in lancamentos_visuais_pagina:
+            valor_liquido = _valor_liquido_lancamento_visual_listagem(
+                lancamento_visual,
+                conta_referencia_id=conta_referencia_id,
+            )
+            lancamento_visual['valor_liquido'] = valor_liquido
+            lancamento_visual['valor_liquido_formatado'] = _formatar_moeda_brl(valor_liquido)
         total_pagina = sum(
-            (lancamento_visual['valor_total'] for lancamento_visual in lancamentos_visuais_pagina),
+            (lancamento_visual['valor_liquido'] for lancamento_visual in lancamentos_visuais_pagina),
             Decimal('0.00'),
         )
         total_pagina_quitado = sum(
             (
-                lancamento_visual['valor_total']
+                lancamento_visual['valor_liquido']
                 for lancamento_visual in lancamentos_visuais_pagina
                 if lancamento_visual['representante'].status == LancamentoFinanceiro.StatusLancamento.QUITADO
             ),
@@ -4638,7 +4682,7 @@ class LancamentoFinanceiroListView(FinanceiroPermissaoMixin, ListView):
         )
         total_pagina_aberto = sum(
             (
-                lancamento_visual['valor_total']
+                lancamento_visual['valor_liquido']
                 for lancamento_visual in lancamentos_visuais_pagina
                 if lancamento_visual['representante'].status == LancamentoFinanceiro.StatusLancamento.ABERTO
             ),

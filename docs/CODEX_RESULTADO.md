@@ -1,6 +1,16 @@
 # CODEX_RESULTADO
 
-Data: 2026-04-16
+Data: 2026-04-17
+
+## Correcao de totalizadores liquidos e paineis recolhidos por padrao
+
+- corrigi os totalizadores da `lancamento_list` para usarem o sinal operacional do movimento, em vez de somarem apenas valores absolutos
+- a regra aplicada foi: receita positiva, despesa negativa, transferencia de saida negativa e transferencia de entrada positiva quando a tela esta filtrada pela conta destino
+- o ajuste cobre total da pagina, totais da pagina separados por `Quitado`/`Em aberto` e total dinamico dos selecionados
+- mantive a coluna `Valor` como valor nominal do documento, preservando a leitura da linha, enquanto os cards agregados passaram a representar saldo liquido
+- ajustei os paineis compactos de filtros/configuracoes/opcoes secundarias para iniciarem recolhidos em `lancamento_list`, `pessoa_historico`, `resumo` e `prestacao_contas`
+- os indicadores discretos de filtros ou opcoes ativas foram preservados, para nao esconder estado operacional importante
+- validacoes executadas: smoke autenticado com rollback para totalizadores com receita/despesa/transferencia e selecao mista, `pessoa_historico`, `resumo` com/sem transferencias e `prestacao_contas` com/sem transferencias; `py manage.py check` OK; `py -m compileall financeiro` OK; `git diff --check` OK
 
 ## Refinamentos de observacoes e transferencias nos relatorios financeiros
 

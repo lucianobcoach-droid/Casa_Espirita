@@ -20,7 +20,7 @@
 
 <form method="get" class="filters-box no-print">
     <div class="financeiro-secondary-toolbar">
-        <details class="financeiro-secondary-panel" {% if filtros_relatorio_ativos %}open{% endif %}>
+        <details class="financeiro-secondary-panel">
             <summary class="financeiro-secondary-summary">
                 <span class="financeiro-secondary-summary-label">Filtros do resumo</span>
                 {% if filtros_relatorio_ativos %}<span class="financeiro-secondary-badge">ativos</span>{% endif %}
@@ -84,7 +84,7 @@
                 </div>
             </div>
         </details>
-        <details class="financeiro-secondary-panel" {% if opcoes_relatorio_ativas %}open{% endif %}>
+        <details class="financeiro-secondary-panel">
             <summary class="financeiro-secondary-summary">
                 <span class="financeiro-secondary-summary-label">Opcoes do relatorio</span>
                 {% if opcoes_relatorio_ativas %}<span class="financeiro-secondary-badge">ativas</span>{% endif %}

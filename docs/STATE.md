@@ -1,6 +1,15 @@
 # STATE
 
-Data de atualizacao: 2026-04-16
+Data de atualizacao: 2026-04-17
+
+## Correcao de totalizadores liquidos e paineis compactos recolhidos
+
+- a `lancamento_list` passou a calcular os totalizadores agregados da propria tela com sinal operacional, deixando de tratar a soma como valor bruto absoluto
+- regra aplicada nos totalizadores da listagem: receita soma positivo, despesa soma negativo, transferencia de saida soma negativo e transferencia de entrada soma positivo quando a conta filtrada for a conta destino
+- a correcao foi aplicada ao total da pagina, aos totais da pagina por status (`Quitado` e `Em aberto`) e ao total dinamico dos selecionados
+- os valores exibidos na coluna `Valor` continuam mostrando o valor nominal do documento; a diferenca e que os cards agregados agora representam saldo liquido operacional
+- os paineis compactos de filtros/configuracao/opcoes secundarias passaram a vir recolhidos por padrao em `lancamento_list`, `pessoa_historico`, `resumo` e `prestacao_contas`, mantendo indicadores discretos quando ha filtros ou opcoes ativas
+- validacoes executadas: smoke autenticado com rollback para `lancamento_list` com sinais mistos e selecao, `pessoa_historico`, `resumo` com/sem transferencias e `prestacao_contas` com/sem transferencias; `py manage.py check` OK; `py -m compileall financeiro` OK; `git diff --check` OK
 
 ## Refinamentos operacionais do historico e relatorios financeiros
 

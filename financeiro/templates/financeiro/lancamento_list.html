@@ -1,5 +1,6 @@
 {% extends 'financeiro/base.html' %}
 {% load financeiro_permissoes %}
+{% load l10n %}
 {% block title %}Lançamentos Financeiros{% endblock %}
 {% block content %}
 <style>
@@ -620,7 +621,7 @@
                 <input type="hidden" name="ordenacao" value="{{ request.GET.ordenacao }}">
             {% endif %}
             <div class="financeiro-secondary-toolbar">
-                <details class="financeiro-secondary-panel" {% if filtros_lancamento_ativos %}open{% endif %}>
+                <details class="financeiro-secondary-panel">
                     <summary class="financeiro-secondary-summary">
                         <span class="financeiro-secondary-summary-label">
                             Filtros
@@ -728,7 +729,7 @@
                         </div>
                     </div>
                 </details>
-                <details class="financeiro-secondary-panel" {% if colunas_lancamento_configuracao_ativa %}open{% endif %}>
+                <details class="financeiro-secondary-panel">
                     <summary class="financeiro-secondary-summary">
                         <span class="financeiro-secondary-summary-label">
                             Colunas
@@ -1026,7 +1027,7 @@
                                     name="lancamentos_selecionados"
                                     value="{{ lancamento_visual.token_selecao }}"
                                     class="financeiro-lancamento-checkbox"
-                                    data-valor-selecao="{{ lancamento_visual.valor_total }}"
+                                    data-valor-selecao="{{ lancamento_visual.valor_liquido|unlocalize }}"
                                     aria-label="Selecionar lançamento {{ lancamento.numero_documento|default:lancamento.pk }}"
                                 >
                             </label>
