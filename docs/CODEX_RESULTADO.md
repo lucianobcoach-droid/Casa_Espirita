@@ -4,6 +4,7 @@ Data: 2026-04-17
 
 ## Relatorio anual por favorecido no modulo financeiro
 
+- correcao curta posterior: confirmei que a rota, a view e os atalhos por favorecido/historico existiam; o problema pratico era a ausencia da entrada no menu principal de `Relatorios`, entao inclui `Relatorio anual por favorecido` na topbar do `financeiro` usando a permissao ja adotada (`financeiro.lancamentos.listar`)
 - implementei a pagina propria `Relatorio anual por favorecido`, separada do historico detalhado
 - a tela permite selecionar favorecido e ano em painel compacto recolhido por padrao
 - a solucao reaproveita padroes ja existentes do modulo: shell/topbar do financeiro, permissao `financeiro.lancamentos.listar`, data operacional por `data_pagamento` com fallback para `data_competencia` e formatacao monetaria pt-BR

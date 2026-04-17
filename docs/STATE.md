@@ -4,6 +4,7 @@ Data de atualizacao: 2026-04-17
 
 ## Relatorio anual por favorecido no financeiro
 
+- correcao posterior de acesso/renderizacao: a rota e a pagina do relatorio anual ja existiam, mas faltava expor a entrada tambem no menu superior do `financeiro`; o item agora aparece em `Relatorios > Relatorio anual por favorecido`, usando a mesma permissao `financeiro.lancamentos.listar`
 - foi implementada uma pagina propria de `Relatorio anual por favorecido`, separada do historico detalhado
 - a tela funciona como visao consolidada anual, com selecao de `Favorecido` e `Ano` em painel compacto recolhido por padrao
 - o acesso natural foi criado a partir da listagem de `Favorecidos financeiros`, com acao `Relatorio anual`
