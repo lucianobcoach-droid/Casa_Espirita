@@ -25,6 +25,7 @@ Este arquivo nao substitui `docs/CEREBRO_PROJETO.md`, `docs/STATE.md`, `docs/COD
 - no contexto financeiro, `PessoaFinanceira` deve ser exibida ao usuario como `Favorecido`, preservando nomes tecnicos internos quando a mudanca for apenas de rotulo/UX
 - listagens extensas podem oferecer selecao de quantidade por pagina quando isso melhorar o uso real; em tabelas largas, scroll horizontal deve permanecer confinado ao wrapper da tabela, podendo ter controle superior sincronizado quando a usabilidade exigir
 - listagens operacionais com muitas colunas podem oferecer configuracao de colunas visiveis, ordem manual simples e restauracao de padrao; o conjunto inicial deve priorizar leitura diaria enxuta, mantendo campos complementares como opcionais quando couber
+- filtros, configuracoes de colunas e opcoes visuais secundarias podem ficar em paineis compactos/recolhiveis quando a tela ficaria pesada demais; quando houver filtros ou opcoes ativas, a tela deve sinalizar isso de forma discreta sem esconder acoes essenciais
 - na listagem principal de lancamentos do `financeiro`, o conjunto essencial deve manter `Data pagamento`, `Tipo`, `Descricao` e `Valor`, alem de selecao e acoes quando as permissoes aplicarem
 - totalizadores em listagens devem deixar claro o escopo do calculo, por exemplo pagina atual exibida ou resultado filtrado; totalizadores de selecao devem reagir dinamicamente quando houver acoes em lote
 - formularios abertos a partir de uma listagem devem preservar a origem por URL contextual segura, para que salvar, cancelar ou excluir retorne ao mesmo estado de filtros/paginacao/ordenacao quando aplicavel
@@ -40,6 +41,7 @@ Este arquivo nao substitui `docs/CEREBRO_PROJETO.md`, `docs/STATE.md`, `docs/COD
 - No `financeiro`, a tela continua usando a topbar unica com menu suspenso agrupado, sem reintroduzir sidebar/drawer persistente como navegacao principal?
 - Permissoes por modulo/tela/acao foram consideradas?
 - A listagem relacionada foi revisada em filtros, ordenacao, colunas, truncamento, acoes em lote e exportacao?
+- Filtros, configuracoes de colunas e opcoes secundarias foram avaliados para ficarem compactos quando a exposicao permanente poluir a tela?
 - O formulario relacionado foi revisado em rotulos, obrigatoriedade, mensagens, preview e consistencia visual?
 - O formulario preserva retorno contextual quando veio de uma listagem filtrada?
 - Quando houver cadastro sequencial, a acao compacta `+` foi avaliada sem substituir o significado principal de `Salvar`?

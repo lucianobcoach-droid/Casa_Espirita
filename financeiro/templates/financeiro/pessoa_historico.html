@@ -1,0 +1,272 @@
+{% extends 'financeiro/base.html' %}
+{% load financeiro_format %}
+{% block title %}Histórico do favorecido{% endblock %}
+{% block content %}
+<style>
+    .financeiro-historico-page {
+        display: grid;
+        gap: 0.9rem;
+        min-width: 0;
+    }
+
+    .financeiro-historico-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.45rem;
+        margin-top: 0.35rem;
+    }
+
+    .financeiro-historico-meta-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.28rem 0.55rem;
+        border: 1px solid #e2e8f0;
+        border-radius: 999px;
+        background: #fff;
+        color: #475569;
+        font-size: 0.8rem;
+    }
+
+    .financeiro-historico-card {
+        border: 1px solid rgba(203, 213, 225, 0.85);
+        border-radius: 1rem;
+        background: #fff;
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.045);
+        overflow: hidden;
+    }
+
+    .financeiro-historico-card .filters-box {
+        margin-bottom: 0;
+        padding: 0.8rem 0.95rem 0.9rem;
+        border: 0;
+        border-bottom: 1px solid #edf2f7;
+        border-radius: 0;
+        background: linear-gradient(180deg, #fbfcfe 0%, #f8fafc 100%);
+    }
+
+    .financeiro-historico-totals {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+        gap: 0.7rem;
+        padding: 0.85rem 0.95rem;
+        border-bottom: 1px solid #edf2f7;
+        background: linear-gradient(135deg, #f8fbff 0%, #f3f7fb 100%);
+    }
+
+    .financeiro-historico-total-card {
+        display: grid;
+        gap: 0.15rem;
+        padding: 0.72rem 0.82rem;
+        border: 1px solid #dfe9f5;
+        border-radius: 0.95rem;
+        background: rgba(255, 255, 255, 0.9);
+        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.045);
+    }
+
+    .financeiro-historico-total-label {
+        color: #64748b;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+    }
+
+    .financeiro-historico-total-value {
+        color: #0f172a;
+        font-size: 1.05rem;
+        font-weight: 800;
+        line-height: 1.2;
+    }
+
+    .financeiro-historico-total-value.is-receita {
+        color: #236746;
+    }
+
+    .financeiro-historico-total-value.is-despesa {
+        color: #b42318;
+    }
+
+    .financeiro-historico-table-wrap {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+    }
+
+    .financeiro-historico-table {
+        margin-bottom: 0;
+    }
+
+    .financeiro-historico-table td,
+    .financeiro-historico-table th {
+        vertical-align: middle;
+    }
+
+    .financeiro-historico-col-date,
+    .financeiro-historico-col-value,
+    .financeiro-historico-col-doc {
+        white-space: nowrap;
+    }
+
+    .financeiro-historico-description {
+        min-width: 15rem;
+    }
+
+    .financeiro-historico-empty {
+        color: #64748b;
+    }
+</style>
+
+<div class="financeiro-historico-page">
+    <div class="financeiro-page-header financeiro-page-head">
+        <div class="financeiro-page-header-main">
+            <h1 class="title financeiro-page-title">Histórico do favorecido</h1>
+            <p class="financeiro-page-subtitle">Consulta operacional dos lançamentos vinculados a {{ pessoa.nome }}.</p>
+            <div class="financeiro-historico-meta">
+                <span class="financeiro-historico-meta-item"><strong>Código:</strong> {{ pessoa.codigo }}</span>
+                {% if pessoa.documento %}<span class="financeiro-historico-meta-item"><strong>Documento:</strong> {{ pessoa.documento }}</span>{% endif %}
+                <span class="financeiro-historico-meta-item"><strong>Registros:</strong> {{ totais_historico.quantidade }}</span>
+            </div>
+        </div>
+        <div class="financeiro-page-header-actions no-print">
+            <a class="button is-light" href="{% url 'financeiro:pessoa-list' %}">Voltar para favorecidos</a>
+        </div>
+    </div>
+
+    <section class="financeiro-historico-card">
+        <form method="get" class="filters-box no-print">
+            <div class="financeiro-secondary-toolbar">
+                <details class="financeiro-secondary-panel" {% if filtros_historico_ativos %}open{% endif %}>
+                    <summary class="financeiro-secondary-summary">
+                        <span class="financeiro-secondary-summary-label">Filtros do historico</span>
+                        {% if filtros_historico_ativos %}<span class="financeiro-secondary-badge">ativos</span>{% endif %}
+                    </summary>
+                    <div class="financeiro-secondary-body">
+                        <div class="columns is-multiline">
+                            <div class="column is-6-mobile is-3-tablet is-2-desktop">
+                                <label class="label">Data inicial</label>
+                                <input class="input" type="date" name="data_inicial" value="{{ request.GET.data_inicial }}">
+                            </div>
+                            <div class="column is-6-mobile is-3-tablet is-2-desktop">
+                                <label class="label">Data final</label>
+                                <input class="input" type="date" name="data_final" value="{{ request.GET.data_final }}">
+                            </div>
+                            <div class="column is-6-mobile is-3-tablet is-2-desktop">
+                                <label class="label">Tipo</label>
+                                <div class="select is-fullwidth">
+                                    <select name="tipo">
+                                        <option value="">Todos</option>
+                                        {% for valor, rotulo in tipo_choices %}
+                                            <option value="{{ valor }}" {% if request.GET.tipo == valor %}selected{% endif %}>{{ rotulo }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="column is-6-mobile is-3-tablet is-2-desktop">
+                                <label class="label">Status</label>
+                                <div class="select is-fullwidth">
+                                    <select name="status">
+                                        <option value="">Todos</option>
+                                        {% for valor, rotulo in status_choices %}
+                                            <option value="{{ valor }}" {% if request.GET.status == valor %}selected{% endif %}>{{ rotulo }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="column is-12-mobile is-6-tablet is-2-desktop">
+                                <label class="label">Conta</label>
+                                <div class="select is-fullwidth">
+                                    <select name="conta">
+                                        <option value="">Todas</option>
+                                        {% for conta in contas_disponiveis %}
+                                            <option value="{{ conta.pk }}" {% if request.GET.conta == conta.pk|stringformat:'s' %}selected{% endif %}>{{ conta.nome }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="column is-12-mobile is-6-tablet is-2-desktop">
+                                <label class="label">Busca</label>
+                                <input class="input" type="text" name="q" value="{{ request.GET.q }}" placeholder="Descricao ou documento">
+                            </div>
+                            <div class="column is-12-mobile is-6-tablet is-3-desktop">
+                                <label class="label">&nbsp;</label>
+                                <div class="buttons">
+                                    <button class="button is-link is-fullwidth" type="submit">Filtrar</button>
+                                    <a class="button is-light is-fullwidth" href="{% url 'financeiro:pessoa-historico' pessoa.pk %}">Limpar</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </details>
+            </div>
+        </form>
+
+        <div class="financeiro-historico-totals no-print">
+            <div class="financeiro-historico-total-card">
+                <span class="financeiro-historico-total-label">Total geral</span>
+                <span class="financeiro-historico-total-value">R$ {{ totais_historico.total_geral_formatado }}</span>
+            </div>
+            <div class="financeiro-historico-total-card">
+                <span class="financeiro-historico-total-label">Receitas</span>
+                <span class="financeiro-historico-total-value is-receita">R$ {{ totais_historico.total_receitas_formatado }}</span>
+            </div>
+            <div class="financeiro-historico-total-card">
+                <span class="financeiro-historico-total-label">Despesas</span>
+                <span class="financeiro-historico-total-value is-despesa">R$ {{ totais_historico.total_despesas_formatado }}</span>
+            </div>
+            <div class="financeiro-historico-total-card">
+                <span class="financeiro-historico-total-label">Quitado</span>
+                <span class="financeiro-historico-total-value">R$ {{ totais_historico.total_quitado_formatado }}</span>
+            </div>
+            <div class="financeiro-historico-total-card">
+                <span class="financeiro-historico-total-label">Em aberto</span>
+                <span class="financeiro-historico-total-value">R$ {{ totais_historico.total_aberto_formatado }}</span>
+            </div>
+        </div>
+
+        <div class="financeiro-historico-table-wrap">
+            <table class="table is-fullwidth is-hoverable financeiro-table financeiro-historico-table">
+                <thead>
+                <tr>
+                    <th class="financeiro-historico-col-date">Data</th>
+                    <th>Tipo</th>
+                    <th>Status</th>
+                    <th class="financeiro-historico-description">Descrição</th>
+                    <th>Conta origem</th>
+                    <th>Conta destino</th>
+                    <th>Categoria</th>
+                    <th>Centro de custo</th>
+                    <th class="financeiro-historico-col-doc">Documento</th>
+                    <th class="financeiro-historico-col-value">Valor</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for lancamento in lancamentos_historico %}
+                    <tr>
+                        <td class="financeiro-historico-col-date">{{ lancamento.data_operacional|date:'d/m/Y' }}</td>
+                        <td>{{ lancamento.get_tipo_display }}</td>
+                        <td>{{ lancamento.get_status_display }}</td>
+                        <td class="financeiro-historico-description">{{ lancamento.descricao }}</td>
+                        <td>{{ lancamento.conta|default:'-' }}</td>
+                        <td>{{ lancamento.conta_destino|default:'-' }}</td>
+                        <td>{{ lancamento.categoria|default:'-' }}</td>
+                        <td>{{ lancamento.centro_custo|default:'-' }}</td>
+                        <td class="financeiro-historico-col-doc">{{ lancamento.numero_documento|default:'-' }}</td>
+                        <td class="financeiro-historico-col-value">
+                            <span class="valor-chip {% if lancamento.tipo == 'receita' %}is-receita{% elif lancamento.tipo == 'despesa' %}is-despesa{% else %}is-transferencia{% endif %}">
+                                R$ {{ lancamento.valor|br_money }}
+                            </span>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="10" class="financeiro-historico-empty">Nenhum lançamento encontrado para este favorecido com os filtros atuais.</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+{% endblock %}

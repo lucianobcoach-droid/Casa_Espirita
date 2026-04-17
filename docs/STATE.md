@@ -2,6 +2,30 @@
 
 Data de atualizacao: 2026-04-16
 
+## Refinamentos operacionais do historico e relatorios financeiros
+
+- a coluna `Observacoes` da `lancamento_list` foi ajustada para ter largura util controlada, quebra de linha e quebra de palavras longas, evitando que observacoes extensas alarguem demais a tabela
+- `Resumo` e `Prestacao de Contas` ganharam a opcao `Exibir transferencias`
+- com `Exibir transferencias` desligado, os relatorios preservam o comportamento anterior: transferencias seguem fora da leitura principal
+- com `Exibir transferencias` ligado, as transferencias quitadas do periodo aparecem em bloco proprio para conferencia operacional
+- quando exibidas, as transferencias mostram total movimentado e totalizadores separados de entrada e saida
+- regra funcional mantida: transferencias nao entram como receitas nem despesas e nao contaminam os totais principais dos relatorios
+- o filtro de contas considera transferencias que envolvem as contas selecionadas, seja como conta origem ou conta destino
+- filtros, configuracao de colunas e opcoes secundarias das telas tocadas neste bloco foram reorganizados em paineis compactos/recolhiveis, com indicacao discreta quando existem filtros ou opcoes ativas
+- validacoes executadas: `py manage.py check` OK, `py -m compileall financeiro` OK, `git diff --check` sem erros bloqueadores e smoke autenticado com rollback confirmando `lancamento_list` com observacao longa, `Resumo` com/sem transferencias, `Prestacao de Contas` com/sem transferencias e historico por favorecido `200`
+
+## Historico por favorecido no financeiro
+
+- foi implementada uma pagina propria de historico por favorecido no modulo `financeiro`
+- acesso natural criado a partir da listagem de `Favorecidos financeiros`, com acao `Historico`
+- a tela usa a data operacional consolidada do financeiro: `data_pagamento` com fallback para `data_competencia`
+- filtros disponiveis: data inicial, data final, tipo, status, conta e busca textual por descricao ou numero de documento
+- totalizadores do resultado filtrado: total geral, receitas, despesas, quitado e em aberto
+- tabela entregue com data, tipo, status, descricao, conta origem, conta destino, categoria, centro de custo, numero do documento e valor
+- a implementacao reaproveita permissao existente de `financeiro.lancamentos.listar`, sem criar nova permissao nem alterar a matriz
+- nao foram abertas nesta etapa as frentes de relatorio anual por favorecido, termo anual de quitacao, contratos, anexos, exportacao especifica ou codigo automatico para contas/categorias
+- validacoes executadas: `py manage.py check` OK, `py -m compileall financeiro` OK e smoke autenticado com rollback confirmando listagem de favorecidos, historico, totais, colunas e filtros
+
 ## Consolidacao do working tree do ciclo recente do financeiro
 
 - working tree auditado na branch `feat/reinicio-financeiro`, separando alteracoes funcionais, documentais e artefatos locais antes do fechamento do ciclo
@@ -15,7 +39,7 @@ Data de atualizacao: 2026-04-16
   - mascara monetaria ajustada para remover zeros a esquerda antes da formatacao pt-BR
 - `tmp/` foi tratado como artefato local de operacao/validacao e passou a ficar ignorado pelo Git; os arquivos locais nao foram apagados nem incluidos em commit
 - validacoes executadas nesta consolidacao: `py manage.py check` OK, `py -m compileall financeiro` OK, smoke autenticado com rollback das telas afetadas OK e `git diff --check` OK
-- pendencias reais que permanecem abertas apos este fechamento: `historico por favorecido` e decisao de produto sobre eventual ampliacao de codigo automatico para `contas`/`categorias`
+- pendencias reais que permanecem abertas apos este fechamento: decisao de produto sobre eventual ampliacao de codigo automatico para `contas`/`categorias`
 
 ## Novo bloco operacional do financeiro (Lote 1 em execucao)
 

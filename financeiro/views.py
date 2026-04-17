@@ -2753,6 +2753,9 @@ def _montar_contexto_colunas_lancamentos(request):
         'colunas_lancamento_visiveis': colunas_visiveis,
         'colunas_lancamento_configuraveis': colunas_configuraveis_contexto,
         'colunas_lancamento_configuraveis_selecionadas': colunas_configuraveis,
+        'colunas_lancamento_configuracao_ativa': (
+            colunas_configuraveis != LANCAMENTO_LISTAGEM_COLUNAS_CONFIGURAVEIS_PADRAO
+        ),
         'colunas_lancamento_limite_ordem': range(
             1,
             len(LANCAMENTO_LISTAGEM_COLUNAS_CONFIGURAVEIS) + 1,
@@ -2785,6 +2788,13 @@ def _montar_url_lancamentos_com_query(request, **substituicoes):
         else:
             query_params[chave] = valor
     return f'?{query_params.urlencode()}'
+
+
+def _request_possui_parametros_get(request, parametros: tuple[str, ...]) -> bool:
+    for parametro in parametros:
+        if any((valor or '').strip() for valor in request.GET.getlist(parametro)):
+            return True
+    return False
 
 
 def _resolver_lancamentos_para_acoes_em_lote(tokens_selecao):
@@ -3146,6 +3156,49 @@ class FinanceiroPeriodoMixin(FinanceiroPermissaoMixin):
         total_despesas = sum((lancamento.valor for lancamento in despesas), Decimal('0.00'))
         return receitas, despesas, total_receitas, total_despesas
 
+    def _lancamentos_transferencias(
+        self,
+        data_inicial: date,
+        data_final: date,
+        selected_ids: list[int],
+    ) -> tuple[list[LancamentoFinanceiro], Decimal, Decimal, Decimal]:
+        transferencias = list(
+            LancamentoFinanceiro.objects.filter(
+                Q(conta_id__in=selected_ids) | Q(conta_destino_id__in=selected_ids),
+                status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+                tipo=LancamentoFinanceiro.TipoLancamento.TRANSFERENCIA,
+                data_competencia__gte=data_inicial,
+                data_competencia__lte=data_final,
+            )
+            .select_related('conta', 'conta_destino')
+            .distinct()
+            .order_by('data_competencia', 'criado_em', 'pk')
+        )
+        total_transferencias = sum((lancamento.valor for lancamento in transferencias), Decimal('0.00'))
+        selected_ids_set = set(selected_ids)
+        total_transferencias_saida = sum(
+            (
+                lancamento.valor
+                for lancamento in transferencias
+                if lancamento.conta_id in selected_ids_set
+            ),
+            Decimal('0.00'),
+        )
+        total_transferencias_entrada = sum(
+            (
+                lancamento.valor
+                for lancamento in transferencias
+                if lancamento.conta_destino_id in selected_ids_set
+            ),
+            Decimal('0.00'),
+        )
+        return (
+            transferencias,
+            total_transferencias,
+            total_transferencias_entrada,
+            total_transferencias_saida,
+        )
+
     def _agrupar_por_campo(
         self,
         lancamentos: list[LancamentoFinanceiro],
@@ -3170,6 +3223,12 @@ class FinanceiroPeriodoMixin(FinanceiroPermissaoMixin):
         contas_disponiveis, selected_ids_raw, selected_ids = self._parse_contas()
         data_inicial_raw, data_final_raw, data_inicial, data_final, periodo_error = self._parse_periodo()
         mostrar_centro_custo = self._parse_checkbox('mostrar_centro_custo')
+        exibir_transferencias = self._parse_checkbox('exibir_transferencias')
+        filtros_relatorio_ativos = _request_possui_parametros_get(
+            self.request,
+            ('contas', 'data_inicial', 'data_final'),
+        )
+        opcoes_relatorio_ativas = mostrar_centro_custo or exibir_transferencias
         contas_selecionadas = [conta for conta in contas_disponiveis if conta.id in selected_ids]
         context: dict[str, object] = {
             'data_inicial': data_inicial_raw,
@@ -3185,6 +3244,9 @@ class FinanceiroPeriodoMixin(FinanceiroPermissaoMixin):
             ),
             'quantidade_contas_selecionadas': len(contas_selecionadas),
             'mostrar_centro_custo': mostrar_centro_custo,
+            'exibir_transferencias': exibir_transferencias,
+            'filtros_relatorio_ativos': filtros_relatorio_ativos,
+            'opcoes_relatorio_ativas': opcoes_relatorio_ativas,
         }
 
         if not data_inicial or not data_final:
@@ -3198,6 +3260,16 @@ class FinanceiroPeriodoMixin(FinanceiroPermissaoMixin):
             data_final,
             selected_ids,
         )
+        (
+            transferencias,
+            total_transferencias,
+            total_transferencias_entrada,
+            total_transferencias_saida,
+        ) = (
+            self._lancamentos_transferencias(data_inicial, data_final, selected_ids)
+            if exibir_transferencias
+            else ([], Decimal('0.00'), Decimal('0.00'), Decimal('0.00'))
+        )
         context.update(
             {
                 'periodo_label': f'{data_inicial.strftime("%d/%m/%Y")} a {data_final.strftime("%d/%m/%Y")}',
@@ -3210,6 +3282,10 @@ class FinanceiroPeriodoMixin(FinanceiroPermissaoMixin):
                 'composicao_final': composicao_final,
                 'receitas_periodo': receitas,
                 'despesas_periodo': despesas,
+                'transferencias_periodo': transferencias,
+                'total_transferencias_periodo': total_transferencias,
+                'total_transferencias_entrada': total_transferencias_entrada,
+                'total_transferencias_saida': total_transferencias_saida,
             }
         )
 
@@ -3367,6 +3443,16 @@ class PessoaFinanceiraUltimosLancamentosView(FinanceiroPermissaoMixin, View):
                 },
             }
         )
+
+
+def _parse_data_iso(valor: str):
+    valor = (valor or '').strip()
+    if not valor:
+        return None
+    try:
+        return date.fromisoformat(valor)
+    except ValueError:
+        return None
 
 
 class CategoriaFinanceiraAutocompleteView(FinanceiroAutocompleteView):
@@ -4014,6 +4100,110 @@ class PessoaFinanceiraListView(FinanceiroPermissaoMixin, ListView):
         return context
 
 
+class PessoaFinanceiraHistoricoView(FinanceiroPermissaoMixin, DetailView):
+    permissao_requerida = 'financeiro.lancamentos.listar'
+    model = PessoaFinanceira
+    template_name = 'financeiro/pessoa_historico.html'
+    context_object_name = 'pessoa'
+
+    def _get_lancamentos_queryset(self):
+        queryset = (
+            LancamentoFinanceiro.objects
+            .filter(pessoa=self.object)
+            .select_related('conta', 'conta_destino', 'categoria', 'centro_custo')
+            .annotate(data_operacional=Coalesce('data_pagamento', 'data_competencia'))
+        )
+
+        data_inicial = _parse_data_iso(self.request.GET.get('data_inicial', ''))
+        data_final = _parse_data_iso(self.request.GET.get('data_final', ''))
+        tipo = (self.request.GET.get('tipo') or '').strip()
+        status = (self.request.GET.get('status') or '').strip()
+        conta = (self.request.GET.get('conta') or '').strip()
+        busca = (self.request.GET.get('q') or '').strip()
+
+        if data_inicial:
+            queryset = queryset.filter(data_operacional__gte=data_inicial)
+        if data_final:
+            queryset = queryset.filter(data_operacional__lte=data_final)
+        if tipo in dict(LancamentoFinanceiro.TipoLancamento.choices):
+            queryset = queryset.filter(tipo=tipo)
+        if status in dict(LancamentoFinanceiro.StatusLancamento.choices):
+            queryset = queryset.filter(status=status)
+        if conta:
+            queryset = queryset.filter(Q(conta_id=conta) | Q(conta_destino_id=conta))
+        if busca:
+            queryset = queryset.filter(
+                Q(descricao__icontains=busca)
+                | Q(numero_documento__icontains=busca)
+            )
+
+        return queryset.order_by('-data_operacional', '-pk')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        lancamentos = list(self._get_lancamentos_queryset())
+        total_geral = sum((lancamento.valor for lancamento in lancamentos), Decimal('0.00'))
+        total_receitas = sum(
+            (
+                lancamento.valor
+                for lancamento in lancamentos
+                if lancamento.tipo == LancamentoFinanceiro.TipoLancamento.RECEITA
+            ),
+            Decimal('0.00'),
+        )
+        total_despesas = sum(
+            (
+                lancamento.valor
+                for lancamento in lancamentos
+                if lancamento.tipo == LancamentoFinanceiro.TipoLancamento.DESPESA
+            ),
+            Decimal('0.00'),
+        )
+        total_quitado = sum(
+            (
+                lancamento.valor
+                for lancamento in lancamentos
+                if lancamento.status == LancamentoFinanceiro.StatusLancamento.QUITADO
+            ),
+            Decimal('0.00'),
+        )
+        total_aberto = sum(
+            (
+                lancamento.valor
+                for lancamento in lancamentos
+                if lancamento.status == LancamentoFinanceiro.StatusLancamento.ABERTO
+            ),
+            Decimal('0.00'),
+        )
+        context.update(
+            {
+                'page_title': f'Historico do favorecido - {self.object.nome}',
+                'lancamentos_historico': lancamentos,
+                'contas_disponiveis': ContaFinanceira.objects.order_by('nome'),
+                'tipo_choices': LancamentoFinanceiro.TipoLancamento.choices,
+                'status_choices': LancamentoFinanceiro.StatusLancamento.choices,
+                'filtros_historico_ativos': _request_possui_parametros_get(
+                    self.request,
+                    ('data_inicial', 'data_final', 'tipo', 'status', 'conta', 'q'),
+                ),
+                'totais_historico': {
+                    'quantidade': len(lancamentos),
+                    'total_geral': total_geral,
+                    'total_receitas': total_receitas,
+                    'total_despesas': total_despesas,
+                    'total_quitado': total_quitado,
+                    'total_aberto': total_aberto,
+                    'total_geral_formatado': _formatar_moeda_brl(total_geral),
+                    'total_receitas_formatado': _formatar_moeda_brl(total_receitas),
+                    'total_despesas_formatado': _formatar_moeda_brl(total_despesas),
+                    'total_quitado_formatado': _formatar_moeda_brl(total_quitado),
+                    'total_aberto_formatado': _formatar_moeda_brl(total_aberto),
+                },
+            }
+        )
+        return context
+
+
 class PessoaFinanceiraCreateView(FinanceiroFormMixin, CreateView):
     permissao_requerida = 'financeiro.pessoas.criar'
     model = PessoaFinanceira
@@ -4481,6 +4671,20 @@ class LancamentoFinanceiroListView(FinanceiroPermissaoMixin, ListView):
             ordenacao_atual,
         ))
         context.update(_montar_contexto_colunas_lancamentos(self.request))
+        context['filtros_lancamento_ativos'] = _request_possui_parametros_get(
+            self.request,
+            (
+                'descricao',
+                'numero_documento',
+                'tipo',
+                'status',
+                'data_inicial',
+                'data_final',
+                'conta',
+                'pessoa',
+                'categoria',
+            ),
+        )
         exportacao_url = reverse('financeiro:lancamento-exportacao')
         filtros_ativos = self.request.GET.urlencode()
         if filtros_ativos:

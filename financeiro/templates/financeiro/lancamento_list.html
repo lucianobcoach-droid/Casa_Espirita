@@ -100,6 +100,21 @@
         width: 8rem;
     }
 
+    .financeiro-lancamento-col-observacoes {
+        width: 14rem;
+        min-width: 12rem;
+        max-width: 16rem;
+    }
+
+    .financeiro-lancamento-observacoes-text {
+        display: block;
+        max-width: 16rem;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+        line-height: 1.25;
+    }
+
     .financeiro-lancamento-bulk-bar {
         display: flex;
         flex-wrap: wrap;
@@ -604,143 +619,162 @@
             {% if request.GET.ordenacao %}
                 <input type="hidden" name="ordenacao" value="{{ request.GET.ordenacao }}">
             {% endif %}
-            <div class="columns is-multiline">
-                <div class="column is-12-mobile is-6-tablet is-3-desktop">
-                    <label class="label">Descrição</label>
-                    <input class="input" type="text" name="descricao" value="{{ request.GET.descricao }}" placeholder="Buscar por descrição">
-                </div>
-                <div class="column is-12-mobile is-6-tablet is-3-desktop">
-                    <label class="label">Documento</label>
-                    <input class="input" type="text" name="numero_documento" value="{{ request.GET.numero_documento }}" placeholder="Buscar por documento">
-                </div>
-                <div class="column is-6-mobile is-3-tablet is-2-desktop">
-                    <label class="label">Tipo</label>
-                    <div class="select is-fullwidth">
-                        <select name="tipo">
-                            <option value="">Todos</option>
-                            <option value="receita" {% if request.GET.tipo == 'receita' %}selected{% endif %}>Receita</option>
-                            <option value="despesa" {% if request.GET.tipo == 'despesa' %}selected{% endif %}>Despesa</option>
-                            <option value="transferencia" {% if request.GET.tipo == 'transferencia' %}selected{% endif %}>Transferência</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="column is-6-mobile is-3-tablet is-2-desktop">
-                    <label class="label">Status</label>
-                    <div class="select is-fullwidth">
-                        <select name="status">
-                            <option value="">Todos</option>
-                            <option value="aberto" {% if request.GET.status == 'aberto' %}selected{% endif %}>Aberto</option>
-                            <option value="quitado" {% if request.GET.status == 'quitado' %}selected{% endif %}>Quitado</option>
-                            <option value="cancelado" {% if request.GET.status == 'cancelado' %}selected{% endif %}>Cancelado</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="column is-6-mobile is-3-tablet is-2-desktop">
-                    <label class="label">Pagamento inicial</label>
-                    <input class="input" type="date" name="data_inicial" value="{{ request.GET.data_inicial }}">
-                </div>
-                <div class="column is-6-mobile is-3-tablet is-2-desktop">
-                    <label class="label">Pagamento final</label>
-                    <input class="input" type="date" name="data_final" value="{{ request.GET.data_final }}">
-                </div>
-                <div class="column is-12-mobile is-6-tablet is-4-desktop">
-                    <label class="label">Conta origem/destino</label>
-                    <div class="select is-fullwidth">
-                        <select name="conta">
-                            <option value="">Todas</option>
-                            {% for conta in contas_disponiveis %}
-                                <option value="{{ conta.pk }}" {% if request.GET.conta == conta.pk|stringformat:'s' %}selected{% endif %}>
-                                    {{ conta.nome }}
-                                </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
-                <div class="column is-12-mobile is-6-tablet is-4-desktop">
-                    <label class="label">Favorecido</label>
-                    <div class="select is-fullwidth">
-                        <select name="pessoa">
-                            <option value="">Todas</option>
-                            {% for pessoa in pessoas_disponiveis %}
-                                <option value="{{ pessoa.pk }}" {% if request.GET.pessoa == pessoa.pk|stringformat:'s' %}selected{% endif %}>
-                                    {{ pessoa.nome }}
-                                </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
-                <div class="column is-12-mobile is-6-tablet is-4-desktop">
-                    <label class="label">Categoria</label>
-                    <div class="select is-fullwidth">
-                        <select name="categoria">
-                            <option value="">Todas</option>
-                            {% for categoria in categorias_disponiveis %}
-                                <option value="{{ categoria.pk }}" {% if request.GET.categoria == categoria.pk|stringformat:'s' %}selected{% endif %}>
-                                    {{ categoria.nome }}
-                                </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
-                <div class="column is-12-mobile is-6-tablet is-2-desktop">
-                    <label class="label">Exibir</label>
-                    <div class="select is-fullwidth">
-                        <select name="por_pagina" onchange="this.form.submit()">
-                            {% for opcao_por_pagina in por_pagina_opcoes %}
-                                <option value="{{ opcao_por_pagina }}" {% if por_pagina == opcao_por_pagina %}selected{% endif %}>
-                                    {{ opcao_por_pagina }} por vez
-                                </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
-                <div class="column is-12-mobile is-6-tablet is-3-desktop">
-                    <label class="label">&nbsp;</label>
-                    <div class="buttons">
-                        <button class="button is-link is-fullwidth" type="submit">Filtrar</button>
-                        <a class="button is-light is-fullwidth" href="{% url 'financeiro:lancamento-list' %}">Limpar</a>
-                    </div>
-                </div>
-            </div>
-            <details class="financeiro-lancamento-columns-panel">
-                <summary>Configurar colunas da listagem</summary>
-                <p class="help">
-                    Colunas essenciais ficam sempre visiveis: selecao, data de pagamento, tipo, descricao, valor e acoes disponiveis.
-                    Escolha as colunas complementares e defina a ordem delas na grade.
-                </p>
-                <div class="financeiro-lancamento-columns-grid">
-                    {% for coluna in colunas_lancamento_configuraveis %}
-                        <div class="financeiro-lancamento-column-option">
-                            <label class="checkbox">
-                                <input
-                                    type="checkbox"
-                                    name="colunas_lancamento"
-                                    value="{{ coluna.id }}"
-                                    {% if coluna.selecionada %}checked{% endif %}
-                                >
-                                {{ coluna.rotulo }}
-                            </label>
-                            <div class="select is-small is-fullwidth">
-                                <select name="ordem_coluna_{{ coluna.id }}" aria-label="Ordem de {{ coluna.rotulo }}">
-                                    {% for ordem_coluna in colunas_lancamento_limite_ordem %}
-                                        <option value="{{ ordem_coluna }}" {% if coluna.ordem == ordem_coluna %}selected{% endif %}>
-                                            {{ ordem_coluna }}
-                                        </option>
-                                    {% endfor %}
-                                </select>
+            <div class="financeiro-secondary-toolbar">
+                <details class="financeiro-secondary-panel" {% if filtros_lancamento_ativos %}open{% endif %}>
+                    <summary class="financeiro-secondary-summary">
+                        <span class="financeiro-secondary-summary-label">
+                            Filtros
+                        </span>
+                        {% if filtros_lancamento_ativos %}<span class="financeiro-secondary-badge">ativos</span>{% endif %}
+                    </summary>
+                    <div class="financeiro-secondary-body">
+                        <div class="columns is-multiline">
+                            <div class="column is-12-mobile is-6-tablet is-3-desktop">
+                                <label class="label">Descrição</label>
+                                <input class="input" type="text" name="descricao" value="{{ request.GET.descricao }}" placeholder="Buscar por descrição">
+                            </div>
+                            <div class="column is-12-mobile is-6-tablet is-3-desktop">
+                                <label class="label">Documento</label>
+                                <input class="input" type="text" name="numero_documento" value="{{ request.GET.numero_documento }}" placeholder="Buscar por documento">
+                            </div>
+                            <div class="column is-6-mobile is-3-tablet is-2-desktop">
+                                <label class="label">Tipo</label>
+                                <div class="select is-fullwidth">
+                                    <select name="tipo">
+                                        <option value="">Todos</option>
+                                        <option value="receita" {% if request.GET.tipo == 'receita' %}selected{% endif %}>Receita</option>
+                                        <option value="despesa" {% if request.GET.tipo == 'despesa' %}selected{% endif %}>Despesa</option>
+                                        <option value="transferencia" {% if request.GET.tipo == 'transferencia' %}selected{% endif %}>Transferência</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="column is-6-mobile is-3-tablet is-2-desktop">
+                                <label class="label">Status</label>
+                                <div class="select is-fullwidth">
+                                    <select name="status">
+                                        <option value="">Todos</option>
+                                        <option value="aberto" {% if request.GET.status == 'aberto' %}selected{% endif %}>Aberto</option>
+                                        <option value="quitado" {% if request.GET.status == 'quitado' %}selected{% endif %}>Quitado</option>
+                                        <option value="cancelado" {% if request.GET.status == 'cancelado' %}selected{% endif %}>Cancelado</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="column is-6-mobile is-3-tablet is-2-desktop">
+                                <label class="label">Pagamento inicial</label>
+                                <input class="input" type="date" name="data_inicial" value="{{ request.GET.data_inicial }}">
+                            </div>
+                            <div class="column is-6-mobile is-3-tablet is-2-desktop">
+                                <label class="label">Pagamento final</label>
+                                <input class="input" type="date" name="data_final" value="{{ request.GET.data_final }}">
+                            </div>
+                            <div class="column is-12-mobile is-6-tablet is-4-desktop">
+                                <label class="label">Conta origem/destino</label>
+                                <div class="select is-fullwidth">
+                                    <select name="conta">
+                                        <option value="">Todas</option>
+                                        {% for conta in contas_disponiveis %}
+                                            <option value="{{ conta.pk }}" {% if request.GET.conta == conta.pk|stringformat:'s' %}selected{% endif %}>
+                                                {{ conta.nome }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="column is-12-mobile is-6-tablet is-4-desktop">
+                                <label class="label">Favorecido</label>
+                                <div class="select is-fullwidth">
+                                    <select name="pessoa">
+                                        <option value="">Todas</option>
+                                        {% for pessoa in pessoas_disponiveis %}
+                                            <option value="{{ pessoa.pk }}" {% if request.GET.pessoa == pessoa.pk|stringformat:'s' %}selected{% endif %}>
+                                                {{ pessoa.nome }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="column is-12-mobile is-6-tablet is-4-desktop">
+                                <label class="label">Categoria</label>
+                                <div class="select is-fullwidth">
+                                    <select name="categoria">
+                                        <option value="">Todas</option>
+                                        {% for categoria in categorias_disponiveis %}
+                                            <option value="{{ categoria.pk }}" {% if request.GET.categoria == categoria.pk|stringformat:'s' %}selected{% endif %}>
+                                                {{ categoria.nome }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="column is-12-mobile is-6-tablet is-2-desktop">
+                                <label class="label">Exibir</label>
+                                <div class="select is-fullwidth">
+                                    <select name="por_pagina" onchange="this.form.submit()">
+                                        {% for opcao_por_pagina in por_pagina_opcoes %}
+                                            <option value="{{ opcao_por_pagina }}" {% if por_pagina == opcao_por_pagina %}selected{% endif %}>
+                                                {{ opcao_por_pagina }} por vez
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="column is-12-mobile is-6-tablet is-3-desktop">
+                                <label class="label">&nbsp;</label>
+                                <div class="buttons">
+                                    <button class="button is-link is-fullwidth" type="submit">Filtrar</button>
+                                    <a class="button is-light is-fullwidth" href="{% url 'financeiro:lancamento-list' %}">Limpar</a>
+                                </div>
                             </div>
                         </div>
-                    {% endfor %}
-                </div>
-                <div class="financeiro-lancamento-columns-actions">
-                    <button class="button is-link is-light" type="submit" name="config_colunas" value="1">
-                        Aplicar colunas
-                    </button>
-                    <button class="button is-light" type="submit" name="restaurar_colunas" value="1">
-                        Restaurar padrao
-                    </button>
-                </div>
-            </details>
+                    </div>
+                </details>
+                <details class="financeiro-secondary-panel" {% if colunas_lancamento_configuracao_ativa %}open{% endif %}>
+                    <summary class="financeiro-secondary-summary">
+                        <span class="financeiro-secondary-summary-label">
+                            Colunas
+                        </span>
+                        {% if colunas_lancamento_configuracao_ativa %}<span class="financeiro-secondary-badge">personalizadas</span>{% endif %}
+                    </summary>
+                    <div class="financeiro-secondary-body">
+                        <p class="help">
+                            Colunas essenciais ficam sempre visiveis: selecao, data de pagamento, tipo, descricao, valor e acoes disponiveis.
+                            Escolha as colunas complementares e defina a ordem delas na grade.
+                        </p>
+                        <div class="financeiro-lancamento-columns-grid">
+                            {% for coluna in colunas_lancamento_configuraveis %}
+                                <div class="financeiro-lancamento-column-option">
+                                    <label class="checkbox">
+                                        <input
+                                            type="checkbox"
+                                            name="colunas_lancamento"
+                                            value="{{ coluna.id }}"
+                                            {% if coluna.selecionada %}checked{% endif %}
+                                        >
+                                        {{ coluna.rotulo }}
+                                    </label>
+                                    <div class="select is-small is-fullwidth">
+                                        <select name="ordem_coluna_{{ coluna.id }}" aria-label="Ordem de {{ coluna.rotulo }}">
+                                            {% for ordem_coluna in colunas_lancamento_limite_ordem %}
+                                                <option value="{{ ordem_coluna }}" {% if coluna.ordem == ordem_coluna %}selected{% endif %}>
+                                                    {{ ordem_coluna }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <div class="financeiro-lancamento-columns-actions">
+                            <button class="button is-link is-light" type="submit" name="config_colunas" value="1">
+                                Aplicar colunas
+                            </button>
+                            <button class="button is-light" type="submit" name="restaurar_colunas" value="1">
+                                Restaurar padrao
+                            </button>
+                        </div>
+                    </div>
+                </details>
+            </div>
         </form>
 
         <form
@@ -976,7 +1010,7 @@
                     <th data-lancamento-col="centro_custo">Centro de custo</th>
                     <th class="financeiro-lancamento-col-data_competencia" data-lancamento-col="data_competencia">Data competência</th>
                     <th class="financeiro-lancamento-col-numero_documento" data-lancamento-col="numero_documento">Documento</th>
-                    <th data-lancamento-col="observacoes">Observações</th>
+                    <th class="financeiro-lancamento-col-observacoes" data-lancamento-col="observacoes">Observações</th>
                     {% if mostrar_coluna_acoes_lancamento %}<th class="no-print" data-lancamento-actions-col>Ações</th>{% endif %}
                 </tr>
                 </thead>
@@ -1135,8 +1169,8 @@
                         <td data-lancamento-col="data_pagamento">{{ lancamento.data_pagamento|date:'d/m/Y'|default:'-' }}</td>
                         <td data-lancamento-col="data_competencia">{{ lancamento.data_competencia|date:'d/m/Y' }}</td>
                         <td data-lancamento-col="numero_documento">{{ lancamento.numero_documento|default:'-' }}</td>
-                        <td data-lancamento-col="observacoes">
-                            <span class="financeiro-lancamento-descricao-text" title="{{ lancamento.observacoes|default:'' }}">
+                        <td class="financeiro-lancamento-col-observacoes" data-lancamento-col="observacoes">
+                            <span class="financeiro-lancamento-observacoes-text" title="{{ lancamento.observacoes|default:'' }}">
                                 {{ lancamento.observacoes|default:'-' }}
                             </span>
                         </td>

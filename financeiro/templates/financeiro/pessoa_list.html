@@ -104,7 +104,8 @@
     {% tem_permissao request.user 'financeiro.pessoas.criar' as pode_criar_pessoa %}
     {% tem_permissao request.user 'financeiro.pessoas.editar' as pode_editar_pessoa %}
     {% tem_permissao request.user 'financeiro.pessoas.excluir' as pode_excluir_pessoa %}
-    {% tem_alguma_permissao request.user 'financeiro.pessoas.editar' 'financeiro.pessoas.excluir' as mostrar_acoes_pessoa %}
+    {% tem_permissao request.user 'financeiro.lancamentos.listar' as pode_ver_historico_pessoa %}
+    {% tem_alguma_permissao request.user 'financeiro.lancamentos.listar' 'financeiro.pessoas.editar' 'financeiro.pessoas.excluir' as mostrar_acoes_pessoa %}
     <div class="financeiro-page-header financeiro-page-head">
         <div class="financeiro-page-header-main">
             <h1 class="title financeiro-page-title">Favorecidos financeiros</h1>
@@ -194,6 +195,9 @@
                         </td>
                         {% if mostrar_acoes_pessoa %}
                         <td class="actions-cell no-print">
+                            {% if pode_ver_historico_pessoa %}
+                            <a class="button is-small is-info is-light" href="{% url 'financeiro:pessoa-historico' pessoa.pk %}">Hist&oacute;rico</a>
+                            {% endif %}
                             {% if pode_editar_pessoa %}
                             <a class="button is-small is-link is-light" href="{% url 'financeiro:pessoa-update' pessoa.pk %}?return_to={{ request.get_full_path|urlencode }}">Editar</a>
                             {% endif %}

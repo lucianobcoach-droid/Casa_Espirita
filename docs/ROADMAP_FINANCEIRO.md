@@ -67,6 +67,25 @@ Entrega no Lote 3:
 Observacao:
 - `Exportacao` segue contextual nas listagens; `Importacao` permanece centralizada na pagina de importacoes do modulo
 
+## 0.8. Historico por favorecido
+
+- a frente de `historico por favorecido` foi executada como pagina operacional propria dentro do modulo `financeiro`
+- a tela permite consultar os lancamentos vinculados a um favorecido, usando `data_pagamento` como data operacional principal e fallback para `data_competencia`
+- filtros entregues: data inicial, data final, tipo, status, conta e busca textual por descricao ou documento
+- totalizadores entregues: total geral, receitas, despesas, quitado e em aberto, sempre sobre o resultado filtrado
+- acesso natural: acao `Historico` na listagem de `Favorecidos financeiros`
+- nao foram incluidos nesta etapa: exportacao especifica do historico, relatorio anual por favorecido nem termo anual de quitacao
+
+## 0.9. Refinamento operacional de transferencias em relatorios
+
+- `Resumo` e `Prestacao de Contas` passaram a oferecer opcao `Exibir transferencias`
+- comportamento padrao preservado: transferencias continuam ocultas da leitura principal quando a opcao esta desligada
+- quando a opcao esta ligada, transferencias quitadas do periodo aparecem em bloco proprio para conferencia operacional
+- o bloco de transferencias inclui total movimentado e totalizadores separados de entrada e saida para leitura de aplicacoes/resgates entre contas
+- regra mantida: transferencias nao entram como receitas nem despesas e nao alteram os totais principais desses relatorios
+- o filtro de contas considera transferencias em que a conta selecionada aparece como origem ou destino
+- backlog remanescente: revisar, por uso real, se outros relatorios futuros devem adotar o mesmo padrao opcional de exibicao de transferencias
+
 ## 0.4. Ultimo bloqueio do reset real: assinaturas, configuracao institucional e regras automaticas
 
 - depois de resolver `rateios` e `lancamentos simples` legados, o reset real ainda ficou bloqueado por uma ultima lacuna do pacote operacional
@@ -325,7 +344,6 @@ Observacao:
 ## 4. O que ainda falta implementar
 
 ### Alta prioridade
-- historico por favorecido
 - relatorio anual por favorecido
 - termo anual de quitacao
 - contratos a pagar e a receber
@@ -377,7 +395,6 @@ Observacao:
 - modelagem documental mais rica do rateio, se necessario em etapa posterior
 - regularizacao eventual de bases antigas de rateio sem `grupo_rateio` valido, caso precisem entrar na leitura consolidada do extrato
 - item informativo futuro na tela de lancamentos, com simbolo `i` e historico de cadastro/alteracoes do documento ou lancamento quando houver ganho operacional real
-- historico por favorecido
 - relatorio anual por favorecido
 - evolucao futura da central de importacoes do financeiro, com preview mais rico, tratamento avancado de duplicidades e possivel importacao historica em etapa propria, preservando as exportacoes nas listagens filtradas
 - evolucao futura da exportacao de lancamentos para oferecer variacoes controladas de saida e refinar o layout conforme uso real
@@ -487,14 +504,13 @@ Observacao:
 - so depois de validada essa POC na tela piloto o projeto pode decidir por continuidade, abandono da base ou customizacoes pontuais por cima dela
 
 ### Sequencia linear anteriormente sugerida
-1. consulta historica por favorecido
-2. relatorio anual por favorecido
-3. contratos previstos a pagar e a receber
-4. parcelas e recorrencia
-5. anexos de comprovantes
-6. balancete padrao
-7. importacao historica
-8. evolucoes futuras especificas do bloco de recibos ja entregue
+1. relatorio anual por favorecido
+2. contratos previstos a pagar e a receber
+3. parcelas e recorrencia
+4. anexos de comprovantes
+5. balancete padrao
+6. importacao historica
+7. evolucoes futuras especificas do bloco de recibos ja entregue
 
 Observacao semantica do backlog:
 - os itens da secao `3. O que ja existe, mas ainda pode ser refinado` representam base ja entregue com espaco para refinamento futuro

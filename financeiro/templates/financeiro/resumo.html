@@ -19,71 +19,105 @@
 </div>
 
 <form method="get" class="filters-box no-print">
-    <div class="columns is-multiline">
-        <div class="column is-12-mobile is-6-tablet is-4-desktop">
-            <label class="label">Contas incluidas</label>
-            <div class="financeiro-contas-dropdown" data-contas-dropdown>
-                <button
-                    class="button is-light financeiro-contas-trigger"
-                    type="button"
-                    data-contas-dropdown-toggle
-                    aria-expanded="false"
-                >
-                    <span class="financeiro-contas-trigger-label" data-contas-dropdown-summary>
-                        {% if quantidade_contas_selecionadas == contas_disponiveis|length %}
-                            Contas: Todas
-                        {% elif quantidade_contas_selecionadas == 1 %}
-                            Contas: 1 selecionada
-                        {% else %}
-                            Contas: {{ quantidade_contas_selecionadas }} selecionadas
-                        {% endif %}
-                    </span>
-                    <span class="financeiro-contas-trigger-icon">▼</span>
-                </button>
-                <div class="financeiro-contas-panel" data-contas-dropdown-panel hidden>
-                    <div class="financeiro-contas-checklist">
-                        <div class="financeiro-contas-actions">
-                            <button class="button is-small is-light" type="button" data-contas-checklist-action="all">Marcar todas</button>
-                            <button class="button is-small is-light" type="button" data-contas-checklist-action="none">Limpar selecao</button>
+    <div class="financeiro-secondary-toolbar">
+        <details class="financeiro-secondary-panel" {% if filtros_relatorio_ativos %}open{% endif %}>
+            <summary class="financeiro-secondary-summary">
+                <span class="financeiro-secondary-summary-label">Filtros do resumo</span>
+                {% if filtros_relatorio_ativos %}<span class="financeiro-secondary-badge">ativos</span>{% endif %}
+            </summary>
+            <div class="financeiro-secondary-body">
+                <div class="columns is-multiline">
+                    <div class="column is-12-mobile is-6-tablet is-4-desktop">
+                        <label class="label">Contas incluidas</label>
+                        <div class="financeiro-contas-dropdown" data-contas-dropdown>
+                            <button
+                                class="button is-light financeiro-contas-trigger"
+                                type="button"
+                                data-contas-dropdown-toggle
+                                aria-expanded="false"
+                            >
+                                <span class="financeiro-contas-trigger-label" data-contas-dropdown-summary>
+                                    {% if quantidade_contas_selecionadas == contas_disponiveis|length %}
+                                        Contas: Todas
+                                    {% elif quantidade_contas_selecionadas == 1 %}
+                                        Contas: 1 selecionada
+                                    {% else %}
+                                        Contas: {{ quantidade_contas_selecionadas }} selecionadas
+                                    {% endif %}
+                                </span>
+                                <span class="financeiro-contas-trigger-icon">▼</span>
+                            </button>
+                            <div class="financeiro-contas-panel" data-contas-dropdown-panel hidden>
+                                <div class="financeiro-contas-checklist">
+                                    <div class="financeiro-contas-actions">
+                                        <button class="button is-small is-light" type="button" data-contas-checklist-action="all">Marcar todas</button>
+                                        <button class="button is-small is-light" type="button" data-contas-checklist-action="none">Limpar selecao</button>
+                                    </div>
+                                    <div class="financeiro-contas-grid">
+                                        {% for conta in contas_disponiveis %}
+                                            <label class="checkbox financeiro-conta-option">
+                                                <input type="checkbox" name="contas" value="{{ conta.pk }}" {% if conta.pk|stringformat:'s' in contas_selecionadas_ids %}checked{% endif %}>
+                                                <span>{{ conta.nome }}</span>
+                                            </label>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="financeiro-contas-grid">
-                            {% for conta in contas_disponiveis %}
-                                <label class="checkbox financeiro-conta-option">
-                                    <input type="checkbox" name="contas" value="{{ conta.pk }}" {% if conta.pk|stringformat:'s' in contas_selecionadas_ids %}checked{% endif %}>
-                                    <span>{{ conta.nome }}</span>
-                                </label>
-                            {% endfor %}
+                        <p class="help">Sem selecao explicita, o resumo considera todas as contas.</p>
+                    </div>
+                    <div class="column is-6-mobile is-3-tablet is-2-desktop">
+                        <label class="label">Data inicial</label>
+                        <input class="input" type="date" name="data_inicial" value="{{ data_inicial }}">
+                    </div>
+                    <div class="column is-6-mobile is-3-tablet is-2-desktop">
+                        <label class="label">Data final</label>
+                        <input class="input" type="date" name="data_final" value="{{ data_final }}">
+                    </div>
+                    <div class="column is-12-mobile is-6-tablet is-2-desktop">
+                        <label class="label">&nbsp;</label>
+                        <div class="buttons">
+                            <button class="button is-link" type="submit">Atualizar resumo</button>
+                            <a class="button is-light" href="{% url 'financeiro:resumo' %}">Limpar</a>
                         </div>
                     </div>
                 </div>
             </div>
-            <p class="help">Sem selecao explicita, o resumo considera todas as contas.</p>
-        </div>
-        <div class="column is-6-mobile is-3-tablet is-2-desktop">
-            <label class="label">Data inicial</label>
-            <input class="input" type="date" name="data_inicial" value="{{ data_inicial }}">
-        </div>
-        <div class="column is-6-mobile is-3-tablet is-2-desktop">
-            <label class="label">Data final</label>
-            <input class="input" type="date" name="data_final" value="{{ data_final }}">
-        </div>
-        <div class="column is-12-mobile is-6-tablet is-2-desktop">
-            <label class="label">Centro de custo no relatorio</label>
-            <div class="field">
-                <label class="checkbox">
-                    <input type="hidden" name="mostrar_centro_custo" value="0">
-                    <input type="checkbox" name="mostrar_centro_custo" value="1" {% if mostrar_centro_custo %}checked{% endif %}>
-                    Mostrar centro de custo
-                </label>
+        </details>
+        <details class="financeiro-secondary-panel" {% if opcoes_relatorio_ativas %}open{% endif %}>
+            <summary class="financeiro-secondary-summary">
+                <span class="financeiro-secondary-summary-label">Opcoes do relatorio</span>
+                {% if opcoes_relatorio_ativas %}<span class="financeiro-secondary-badge">ativas</span>{% endif %}
+            </summary>
+            <div class="financeiro-secondary-body">
+                <div class="columns is-multiline">
+                    <div class="column is-12-mobile is-6-tablet is-3-desktop">
+                        <label class="label">Centro de custo no relatorio</label>
+                        <div class="field">
+                            <label class="checkbox">
+                                <input type="hidden" name="mostrar_centro_custo" value="0">
+                                <input type="checkbox" name="mostrar_centro_custo" value="1" {% if mostrar_centro_custo %}checked{% endif %}>
+                                Mostrar centro de custo
+                            </label>
+                        </div>
+                    </div>
+                    <div class="column is-12-mobile is-6-tablet is-3-desktop">
+                        <label class="label">Transferencias</label>
+                        <div class="field">
+                            <label class="checkbox">
+                                <input type="hidden" name="exibir_transferencias" value="0">
+                                <input type="checkbox" name="exibir_transferencias" value="1" {% if exibir_transferencias %}checked{% endif %}>
+                                Exibir transferencias
+                            </label>
+                        </div>
+                    </div>
+                    <div class="column is-12-mobile is-6-tablet is-2-desktop">
+                        <label class="label">&nbsp;</label>
+                        <button class="button is-link is-light" type="submit">Aplicar opcoes</button>
+                    </div>
+                </div>
             </div>
-        </div>
-        <div class="column is-12-mobile is-6-tablet is-2-desktop">
-            <label class="label">&nbsp;</label>
-            <div class="buttons">
-                <button class="button is-link" type="submit">Atualizar resumo</button>
-                <a class="button is-light" href="{% url 'financeiro:resumo' %}">Limpar</a>
-            </div>
-        </div>
+        </details>
     </div>
 </form>
 
@@ -181,6 +215,54 @@
                     </div>
                 </div>
             </div>
+
+            {% if exibir_transferencias %}
+                <div class="financeiro-report-block">
+                    <div class="financeiro-report-header">
+                        <div>
+                            <h2 class="financeiro-report-title">Transferencias do periodo</h2>
+                            <p class="table-caption">Exibidas para conferencia operacional; nao entram como receita nem despesa.</p>
+                        </div>
+                        <div class="tags">
+                            <span class="tag is-light">Movimentado: R$ {{ total_transferencias_periodo|br_money }}</span>
+                            <span class="tag is-success is-light">Entradas: R$ {{ total_transferencias_entrada|br_money }}</span>
+                            <span class="tag is-warning is-light">Saidas: R$ {{ total_transferencias_saida|br_money }}</span>
+                        </div>
+                    </div>
+                    <div class="financeiro-report-body">
+                        <div class="table-wrapper">
+                            <table class="table is-fullwidth financeiro-table">
+                                <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Descricao</th>
+                                    <th>Conta origem</th>
+                                    <th>Conta destino</th>
+                                    <th>Documento</th>
+                                    <th>Valor</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for transferencia in transferencias_periodo %}
+                                    <tr>
+                                        <td>{{ transferencia.data_competencia|date:'d/m/Y' }}</td>
+                                        <td>{{ transferencia.descricao }}</td>
+                                        <td>{{ transferencia.conta|default:'-' }}</td>
+                                        <td>{{ transferencia.conta_destino|default:'-' }}</td>
+                                        <td>{{ transferencia.numero_documento|default:'-' }}</td>
+                                        <td><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ transferencia.valor|br_money }}</span></span></td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="6">Nao houve transferencias no periodo selecionado.</td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
 
             <div class="columns is-multiline">
                 <div class="column is-12-tablet is-6-desktop">
