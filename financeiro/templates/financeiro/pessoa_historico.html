@@ -130,6 +130,7 @@
             </div>
         </div>
         <div class="financeiro-page-header-actions no-print">
+            <a class="button is-link is-light" href="{% url 'financeiro:pessoa-relatorio-anual' %}?pessoa={{ pessoa.pk }}">Relat&oacute;rio anual</a>
             <a class="button is-light" href="{% url 'financeiro:pessoa-list' %}">Voltar para favorecidos</a>
         </div>
     </div>

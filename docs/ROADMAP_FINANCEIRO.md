@@ -74,7 +74,7 @@ Observacao:
 - filtros entregues: data inicial, data final, tipo, status, conta e busca textual por descricao ou documento
 - totalizadores entregues: total geral, receitas, despesas, quitado e em aberto, sempre sobre o resultado filtrado
 - acesso natural: acao `Historico` na listagem de `Favorecidos financeiros`
-- nao foram incluidos nesta etapa: exportacao especifica do historico, relatorio anual por favorecido nem termo anual de quitacao
+- nao foram incluidos nesta etapa: exportacao especifica do historico nem termo anual de quitacao
 
 ## 0.9. Refinamento operacional de transferencias em relatorios
 
@@ -85,6 +85,29 @@ Observacao:
 - regra mantida: transferencias nao entram como receitas nem despesas e nao alteram os totais principais desses relatorios
 - o filtro de contas considera transferencias em que a conta selecionada aparece como origem ou destino
 - backlog remanescente: revisar, por uso real, se outros relatorios futuros devem adotar o mesmo padrao opcional de exibicao de transferencias
+
+## 0.10. Relatorio anual por favorecido
+
+- a frente de `relatorio anual por favorecido` foi executada como pagina consolidada propria, separada do historico detalhado
+- a tela permite selecionar `Favorecido` e `Ano` em painel compacto recolhido por padrao
+- acesso natural criado a partir da listagem de `Favorecidos financeiros`
+- acesso complementar criado a partir do `Historico do favorecido`
+- resumo anual entregue:
+  - receitas
+  - despesas
+  - quitado
+  - em aberto
+  - quantidade de lancamentos
+  - saldo liquido anual
+- quadro mensal entregue:
+  - mes
+  - receitas
+  - despesas
+  - quitado
+  - em aberto
+  - quantidade de lancamentos
+- regra da primeira versao: foco em receitas, despesas, status e quantidade, usando data operacional por `data_pagamento` com fallback para `data_competencia`
+- nao foram incluidos nesta etapa: termo anual de quitacao, exportacao especifica, anexos, contratos, parcelas, recorrencia ou protagonismo de transferencias
 
 ## 0.4. Ultimo bloqueio do reset real: assinaturas, configuracao institucional e regras automaticas
 

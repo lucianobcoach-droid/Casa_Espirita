@@ -2,6 +2,19 @@
 
 Data: 2026-04-17
 
+## Relatorio anual por favorecido no modulo financeiro
+
+- implementei a pagina propria `Relatorio anual por favorecido`, separada do historico detalhado
+- a tela permite selecionar favorecido e ano em painel compacto recolhido por padrao
+- a solucao reaproveita padroes ja existentes do modulo: shell/topbar do financeiro, permissao `financeiro.lancamentos.listar`, data operacional por `data_pagamento` com fallback para `data_competencia` e formatacao monetaria pt-BR
+- adicionei acesso natural pela listagem de `Favorecidos financeiros`
+- adicionei tambem atalho na tela de `Historico do favorecido`, apontando para o relatorio anual do mesmo favorecido
+- o resumo anual entregue mostra receitas, despesas, quitado, em aberto, quantidade de lancamentos e saldo liquido anual
+- o quadro mensal entregue mostra os 12 meses com receitas, despesas, quitado, em aberto e quantidade de lancamentos
+- mantive a primeira versao focada em receitas/despesas/status/quantidade; transferencias nao foram colocadas como eixo principal deste relatorio
+- nao implementei termo anual de quitacao, exportacao especifica, anexos, contratos, parcelas ou recorrencia
+- validacoes executadas: smoke autenticado com rollback para listagem de favorecidos, relatorio anual, troca de ano, troca de favorecido, totais anuais e tabela mensal; `py manage.py check` OK; `py -m compileall financeiro` OK; `git diff --check` OK
+
 ## Ajuste final dos quadros-resumo da listagem de lancamentos
 
 - substitui a leitura principal antiga da `lancamento_list`, baseada em `Pagina atual`, `Status na pagina` e `Selecionados` com valor unico

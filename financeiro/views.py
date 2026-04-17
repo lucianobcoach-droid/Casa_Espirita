@@ -98,6 +98,20 @@ LANCAMENTO_LISTAGEM_COLUNAS_META = {
     'numero_documento': {'rotulo': 'Documento', 'ordenacao': '', 'essencial': False},
     'observacoes': {'rotulo': 'Observacoes', 'ordenacao': '', 'essencial': False},
 }
+MESES_PT_BR = (
+    'Janeiro',
+    'Fevereiro',
+    'Março',
+    'Abril',
+    'Maio',
+    'Junho',
+    'Julho',
+    'Agosto',
+    'Setembro',
+    'Outubro',
+    'Novembro',
+    'Dezembro',
+)
 
 
 def _auditoria_usuario(request):
@@ -4296,6 +4310,139 @@ class PessoaFinanceiraHistoricoView(FinanceiroPermissaoMixin, DetailView):
                     'total_quitado_formatado': _formatar_moeda_brl(total_quitado),
                     'total_aberto_formatado': _formatar_moeda_brl(total_aberto),
                 },
+            }
+        )
+        return context
+
+
+class PessoaFinanceiraRelatorioAnualView(FinanceiroPermissaoMixin, TemplateView):
+    permissao_requerida = 'financeiro.lancamentos.listar'
+    template_name = 'financeiro/pessoa_relatorio_anual.html'
+
+    def _resolver_ano(self) -> int:
+        ano_raw = (self.request.GET.get('ano') or '').strip()
+        if ano_raw.isdigit():
+            ano = int(ano_raw)
+            if 1900 <= ano <= 2100:
+                return ano
+        return date.today().year
+
+    def _resolver_pessoa(self) -> PessoaFinanceira | None:
+        pessoa_raw = (self.request.GET.get('pessoa') or '').strip()
+        if not pessoa_raw:
+            return None
+        try:
+            pessoa_id = int(pessoa_raw)
+        except (TypeError, ValueError):
+            return None
+        return PessoaFinanceira.objects.filter(pk=pessoa_id).first()
+
+    def _lancamentos_anuais(self, pessoa: PessoaFinanceira, ano: int) -> list[LancamentoFinanceiro]:
+        data_inicial = date(ano, 1, 1)
+        data_final = date(ano, 12, 31)
+        return list(
+            LancamentoFinanceiro.objects
+            .filter(
+                pessoa=pessoa,
+                tipo__in=(
+                    LancamentoFinanceiro.TipoLancamento.RECEITA,
+                    LancamentoFinanceiro.TipoLancamento.DESPESA,
+                ),
+            )
+            .annotate(data_operacional=Coalesce('data_pagamento', 'data_competencia'))
+            .filter(data_operacional__gte=data_inicial, data_operacional__lte=data_final)
+            .order_by('data_operacional', 'pk')
+        )
+
+    def _montar_totais(self, lancamentos: list[LancamentoFinanceiro]) -> dict[str, object]:
+        total_receitas = sum(
+            (
+                lancamento.valor
+                for lancamento in lancamentos
+                if lancamento.tipo == LancamentoFinanceiro.TipoLancamento.RECEITA
+            ),
+            Decimal('0.00'),
+        )
+        total_despesas = sum(
+            (
+                lancamento.valor
+                for lancamento in lancamentos
+                if lancamento.tipo == LancamentoFinanceiro.TipoLancamento.DESPESA
+            ),
+            Decimal('0.00'),
+        )
+        total_quitado = sum(
+            (
+                lancamento.valor
+                for lancamento in lancamentos
+                if lancamento.status == LancamentoFinanceiro.StatusLancamento.QUITADO
+            ),
+            Decimal('0.00'),
+        )
+        total_aberto = sum(
+            (
+                lancamento.valor
+                for lancamento in lancamentos
+                if lancamento.status == LancamentoFinanceiro.StatusLancamento.ABERTO
+            ),
+            Decimal('0.00'),
+        )
+        saldo_liquido = total_receitas - total_despesas
+        return {
+            'quantidade': len(lancamentos),
+            'total_receitas': total_receitas,
+            'total_despesas': total_despesas,
+            'total_quitado': total_quitado,
+            'total_aberto': total_aberto,
+            'saldo_liquido': saldo_liquido,
+            'total_receitas_formatado': _formatar_moeda_brl(total_receitas),
+            'total_despesas_formatado': _formatar_moeda_brl(total_despesas),
+            'total_quitado_formatado': _formatar_moeda_brl(total_quitado),
+            'total_aberto_formatado': _formatar_moeda_brl(total_aberto),
+            'saldo_liquido_formatado': _formatar_moeda_brl(saldo_liquido),
+        }
+
+    def _montar_meses(self, lancamentos: list[LancamentoFinanceiro]) -> list[dict[str, object]]:
+        meses = []
+        for indice, nome_mes in enumerate(MESES_PT_BR, start=1):
+            lancamentos_mes = [
+                lancamento
+                for lancamento in lancamentos
+                if getattr(lancamento, 'data_operacional', None)
+                and lancamento.data_operacional.month == indice
+            ]
+            totais_mes = self._montar_totais(lancamentos_mes)
+            meses.append(
+                {
+                    'numero': indice,
+                    'nome': nome_mes,
+                    **totais_mes,
+                }
+            )
+        return meses
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        ano = self._resolver_ano()
+        pessoa = self._resolver_pessoa()
+        lancamentos = self._lancamentos_anuais(pessoa, ano) if pessoa else []
+        ano_atual = date.today().year
+        anos_disponiveis = list(range(ano_atual + 1, ano_atual - 9, -1))
+        if ano not in anos_disponiveis:
+            anos_disponiveis.append(ano)
+            anos_disponiveis = sorted(anos_disponiveis, reverse=True)
+
+        context.update(
+            {
+                'page_title': 'Relatorio anual por favorecido',
+                'pessoa_selecionada': pessoa,
+                'pessoas_disponiveis': PessoaFinanceira.objects.order_by('nome'),
+                'ano_selecionado': ano,
+                'anos_disponiveis': anos_disponiveis,
+                'lancamentos_anuais': lancamentos,
+                'totais_anuais': self._montar_totais(lancamentos),
+                'meses_relatorio': self._montar_meses(lancamentos),
+                'filtros_relatorio_ativos': bool(pessoa or self.request.GET.get('ano')),
             }
         )
         return context
