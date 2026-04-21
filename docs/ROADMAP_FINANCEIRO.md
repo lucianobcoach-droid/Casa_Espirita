@@ -1,6 +1,6 @@
 # ROADMAP FINANCEIRO
 
-Data: 2026-04-16
+Data: 2026-04-21
 
 ## 0.5. Execucao atual da frente de planilha comum com ate 5 rateios na mesma linha
 
@@ -74,7 +74,7 @@ Observacao:
 - filtros entregues: data inicial, data final, tipo, status, conta e busca textual por descricao ou documento
 - totalizadores entregues: total geral, receitas, despesas, quitado e em aberto, sempre sobre o resultado filtrado
 - acesso natural: acao `Historico` na listagem de `Favorecidos financeiros`
-- nao foram incluidos nesta etapa: exportacao especifica do historico nem termo anual de quitacao
+- nao foram incluidos nesta etapa: exportacao especifica do historico
 
 ## 0.9. Refinamento operacional de transferencias em relatorios
 
@@ -84,30 +84,27 @@ Observacao:
 - o bloco de transferencias inclui total movimentado e totalizadores separados de entrada e saida para leitura de aplicacoes/resgates entre contas
 - regra mantida: transferencias nao entram como receitas nem despesas e nao alteram os totais principais desses relatorios
 - o filtro de contas considera transferencias em que a conta selecionada aparece como origem ou destino
+- na `Prestacao de Contas`, a leitura do universo de contas foi explicitada: o saldo consolidado considera apenas as contas selecionadas no relatorio; transferencias entre esse universo e contas fora dele, como integralizacao ou outras contas nao operacionais, alteram o saldo das contas exibidas sem virar receita ou despesa
+- reconciliacao consolidada da `Prestacao de Contas`:
+  - `Saldo final consolidado = saldo inicial consolidado + receitas do periodo - despesas do periodo + entradas de outras contas da instituicao - saidas para outras contas da instituicao`
+  - essa reconciliacao vale tanto para saida de conta selecionada para conta nao selecionada quanto para entrada vinda de conta nao selecionada para conta selecionada
 - backlog remanescente: revisar, por uso real, se outros relatorios futuros devem adotar o mesmo padrao opcional de exibicao de transferencias
 
-## 0.10. Relatorio anual por favorecido
+## 0.10. Documentos por favorecido a partir da listagem de lancamentos
 
-- a frente de `relatorio anual por favorecido` foi executada como pagina consolidada propria, separada do historico detalhado
-- a tela permite selecionar `Favorecido` e `Ano` em painel compacto recolhido por padrao
-- acesso natural criado a partir da listagem de `Favorecidos financeiros`
-- acesso complementar criado a partir do `Historico do favorecido`
-- resumo anual entregue:
-  - receitas
-  - despesas
-  - quitado
-  - em aberto
-  - quantidade de lancamentos
-  - saldo liquido anual
-- quadro mensal entregue:
-  - mes
-  - receitas
-  - despesas
-  - quitado
-  - em aberto
-  - quantidade de lancamentos
-- regra da primeira versao: foco em receitas, despesas, status e quantidade, usando data operacional por `data_pagamento` com fallback para `data_competencia`
-- nao foram incluidos nesta etapa: termo anual de quitacao, exportacao especifica, anexos, contratos, parcelas, recorrencia ou protagonismo de transferencias
+- a direcao anterior de `relatorio anual por favorecido` como tela principal foi substituida por acoes documentais centralizadas na `lancamento_list`
+- o relatorio anual deixou de ser fluxo exposto em menu/listagens/historico; rota, view e template foram removidos para evitar redundancia operacional
+- acoes documentais consolidadas na listagem:
+  - `Recibos em lote`: acao baseada na selecao manual atual da listagem, agrupando automaticamente por favorecido e gerando um bloco/pagina por favorecido quando necessario
+  - `Termo anual de quitacao`: acao baseada no resultado filtrado atual da listagem, agrupando automaticamente por favorecido e gerando um ou varios termos no mesmo documento continuo
+- regra atual dos recibos em lote: categoria deixou de ser elemento relevante de leitura do recibo, nao aparece no documento e nao bloqueia a emissao quando houver categorias diferentes
+- regra atual dos recibos em lote: itens com a mesma descricao exata dentro do mesmo favorecido, inclusive oriundos de rateio, podem ser consolidados em uma unica linha documental com soma apenas dos valores dos lancamentos selecionados naquele grupo
+- quando a consolidacao reunir datas ou documentos diferentes, o recibo sinaliza isso de forma compacta no proprio item (`Datas diversas`, `Doc. diversos`)
+- os recibos em lote reaproveitam a mesma peca documental do recibo oficial ja existente e usam fallback institucional comum, sem depender de mensagem especifica por categoria
+- regra do termo anual nesta primeira versao: exige filtro de periodo com data inicial e final dentro do mesmo ano e, internamente, considera apenas receitas quitadas com favorecido e sem rateio, ignorando automaticamente despesas, transferencias, receitas em aberto e demais itens incompativeis
+- o termo anual em uso atual prioriza leitura documental para o usuario, com subtitulo mais claro, identificacao simples do favorecido, texto introdutorio institucional, tabela com `Data`, `Descricao`, `Documento` e `Valor` e fechamento com assinatura institucional
+- na `Prestacao de Contas`, a leitura operacional das movimentacoes entre universos passou a usar linguagem mais humana: `Entradas de outras contas da instituicao` e `Saidas para outras contas da instituicao`
+- permanecem futuros: PDF, anexos, assinatura final juridica, texto formal completo do termo anual, contratos, parcelas, recorrencia e refinamentos documentais apos validacao visual real
 
 ## 0.4. Ultimo bloqueio do reset real: assinaturas, configuracao institucional e regras automaticas
 
@@ -367,8 +364,6 @@ Observacao:
 ## 4. O que ainda falta implementar
 
 ### Alta prioridade
-- relatorio anual por favorecido
-- termo anual de quitacao
 - contratos a pagar e a receber
 - parcelas
 - recorrencia
@@ -418,7 +413,6 @@ Observacao:
 - modelagem documental mais rica do rateio, se necessario em etapa posterior
 - regularizacao eventual de bases antigas de rateio sem `grupo_rateio` valido, caso precisem entrar na leitura consolidada do extrato
 - item informativo futuro na tela de lancamentos, com simbolo `i` e historico de cadastro/alteracoes do documento ou lancamento quando houver ganho operacional real
-- relatorio anual por favorecido
 - evolucao futura da central de importacoes do financeiro, com preview mais rico, tratamento avancado de duplicidades e possivel importacao historica em etapa propria, preservando as exportacoes nas listagens filtradas
 - evolucao futura da exportacao de lancamentos para oferecer variacoes controladas de saida e refinar o layout conforme uso real
 - na importacao/exportacao futura, o fluxo de importacao deve oferecer download de planilha modelo no layout proprio do sistema, preservando a ordem e as colunas esperadas pelo backend de importacao
@@ -430,7 +424,6 @@ Observacao:
 - estudo futuro de checkboxes para definir exibicao de `centro de custo`, `categoria` e `subcategoria` em relatorios e visoes agrupadas
 
 ### Posterior
-- termo anual de quitacao
 - contratos a pagar e a receber
 - parcelas
 - recorrencia
@@ -527,13 +520,12 @@ Observacao:
 - so depois de validada essa POC na tela piloto o projeto pode decidir por continuidade, abandono da base ou customizacoes pontuais por cima dela
 
 ### Sequencia linear anteriormente sugerida
-1. relatorio anual por favorecido
-2. contratos previstos a pagar e a receber
-3. parcelas e recorrencia
-4. anexos de comprovantes
-5. balancete padrao
-6. importacao historica
-7. evolucoes futuras especificas do bloco de recibos ja entregue
+1. contratos previstos a pagar e a receber
+2. parcelas e recorrencia
+3. anexos de comprovantes
+4. balancete padrao
+5. importacao historica
+6. evolucoes futuras especificas do bloco de recibos ja entregue
 
 Observacao semantica do backlog:
 - os itens da secao `3. O que ja existe, mas ainda pode ser refinado` representam base ja entregue com espaco para refinamento futuro

@@ -1,0 +1,287 @@
+{% extends 'financeiro/base.html' %}
+{% load financeiro_format %}
+{% block title %}{{ page_title }}{% endblock %}
+{% block content %}
+<style>
+    .documentos-page-actions {
+        max-width: 980px;
+        margin: 0 auto 1rem;
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.5rem;
+    }
+
+    .documento-favorecido {
+        max-width: 980px;
+        margin: 0 auto 1.2rem;
+        background: #fff;
+        border: 1.4px solid #d1c7b8;
+        border-top-width: 4px;
+        box-shadow: 0 14px 34px rgba(52, 46, 36, 0.08);
+    }
+
+    .documento-favorecido.is-not-last {
+        break-after: page;
+        page-break-after: always;
+    }
+
+    .documento-header,
+    .documento-corpo,
+    .documento-rodape {
+        padding-left: 2rem;
+        padding-right: 2rem;
+    }
+
+    .documento-header {
+        padding-top: 1.5rem;
+        padding-bottom: 1.05rem;
+        border-bottom: 1.4px solid #d8d1c4;
+    }
+
+    .documento-identidade {
+        text-align: center;
+        color: #2d2a24;
+    }
+
+    .documento-logo {
+        max-height: 76px;
+        max-width: 230px;
+        object-fit: contain;
+    }
+
+    .documento-titulo {
+        margin: 0.75rem 0 0.1rem;
+        color: #2d2a24;
+        font-size: 1.55rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    .documento-subtitulo {
+        margin: 0;
+        color: #6b6256;
+        font-size: 0.9rem;
+    }
+
+    .documento-identificacao {
+        margin-top: 1rem;
+        color: #3d372f;
+        line-height: 1.65;
+        text-align: left;
+    }
+
+    .documento-identificacao p {
+        margin: 0.15rem 0;
+    }
+
+    .documento-identificacao strong {
+        color: #2d2a24;
+    }
+
+    .documento-corpo {
+        padding-top: 1.2rem;
+        padding-bottom: 1.1rem;
+    }
+
+    .documento-texto {
+        margin: 0 0 1rem;
+        color: #2e2a24;
+        line-height: 1.6;
+    }
+
+    .documento-table-wrap {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    .documento-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.92rem;
+    }
+
+    .documento-table th,
+    .documento-table td {
+        padding: 0.55rem 0.5rem;
+        border-bottom: 1px solid #eadfce;
+        text-align: left;
+        vertical-align: top;
+    }
+
+    .documento-table th {
+        color: #6b6256;
+        font-size: 0.75rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+    }
+
+    .documento-descricao {
+        min-width: 15rem;
+        overflow-wrap: anywhere;
+    }
+
+    .documento-valor {
+        white-space: nowrap;
+        text-align: right !important;
+        font-weight: 700;
+    }
+
+    .documento-total {
+        margin-top: 1rem;
+        display: flex;
+        justify-content: flex-end;
+        color: #1f5134;
+        font-size: 1.08rem;
+        font-weight: 800;
+    }
+
+    .documento-rodape {
+        padding-bottom: 1.15rem;
+    }
+
+    .documento-mensagem {
+        border-top: 1.4px solid #ddd4c5;
+        padding-top: 0.8rem;
+        color: #4f493f;
+        text-align: center;
+    }
+
+    .recibo-assinatura {
+        margin-top: 1.2rem;
+        text-align: center;
+    }
+
+    .recibo-assinatura-texto {
+        font-family: "Segoe Script", "Brush Script MT", "Lucida Handwriting", cursive;
+        font-size: 1.8rem;
+        font-weight: 500;
+        line-height: 1.1;
+        margin-bottom: 0.25rem;
+        letter-spacing: 0.03em;
+        color: #2f2a24;
+    }
+
+    .recibo-assinatura-nome {
+        margin: 0.05rem 0 0;
+        font-weight: 600;
+        color: #2f2a24;
+    }
+
+    .recibo-assinatura-cargo {
+        margin: 0.15rem 0 0;
+        font-size: 0.95rem;
+        color: #60584e;
+    }
+
+    .recibo-assinatura-linha {
+        width: min(320px, 100%);
+        margin: 0 auto 0.35rem;
+        border-bottom: 1px solid #433d34;
+        height: 1rem;
+    }
+
+    @media print {
+        .documentos-page-actions {
+            display: none !important;
+        }
+
+        .documento-favorecido {
+            max-width: 180mm;
+            box-shadow: none;
+            margin: 8mm auto 0;
+        }
+
+        .documento-header,
+        .documento-corpo,
+        .documento-rodape {
+            padding-left: 0.8rem;
+            padding-right: 0.8rem;
+        }
+    }
+</style>
+
+<div class="documentos-page-actions no-print" aria-label="Acoes do documento">
+    <button class="button is-light" type="button" onclick="window.print()">Imprimir</button>
+    <a class="button" href="{% url 'financeiro:lancamento-list' %}">Voltar</a>
+</div>
+
+{% for grupo in grupos_documentais %}
+<section class="documento-favorecido{% if not forloop.last %} is-not-last{% endif %}">
+    <header class="documento-header">
+        <div class="documento-identidade">
+            {% if recibo_logo_url %}
+                <img class="documento-logo" src="{{ recibo_logo_url }}" alt="Logo institucional">
+            {% elif recibo_nome_instituicao %}
+                <div class="documento-instituicao">{{ recibo_nome_instituicao }}</div>
+            {% endif %}
+            <h1 class="documento-titulo">{{ titulo_documento }}</h1>
+            <p class="documento-subtitulo">{{ subtitulo_documento }}</p>
+        </div>
+        <div class="documento-identificacao">
+            <p><strong>Favorecido:</strong> {{ grupo.pessoa.nome }}</p>
+        </div>
+    </header>
+
+    <section class="documento-corpo">
+        {% if tipo_documento == 'termo_anual_quitacao' %}
+            <p class="documento-texto">
+                Declaramos, para os devidos fins, que os valores relacionados abaixo foram recebidos e devidamente quitados em nome do favorecido acima.
+            </p>
+        {% else %}
+            <p class="documento-texto">
+                Recibo referente aos lancamentos listados abaixo para o favorecido indicado.
+            </p>
+        {% endif %}
+
+        <div class="documento-table-wrap">
+            <table class="documento-table">
+                <thead>
+                <tr>
+                    <th>Data</th>
+                    <th class="documento-descricao">Descricao</th>
+                    <th>Documento</th>
+                    <th class="documento-valor">Valor</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for lancamento in grupo.lancamentos %}
+                    <tr>
+                        <td>{{ lancamento.data_pagamento|default:lancamento.data_competencia|date:'d/m/Y' }}</td>
+                        <td class="documento-descricao">{{ lancamento.descricao }}</td>
+                        <td>{{ lancamento.numero_documento|default:'-' }}</td>
+                        <td class="documento-valor">R$ {{ lancamento.valor|br_money }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="documento-total">
+            Total do favorecido: R$ {{ grupo.total_formatado }}
+        </div>
+        <p class="documento-texto">
+            Valor por extenso: {{ grupo.valor_extenso }}.
+        </p>
+    </section>
+
+    <footer class="documento-rodape">
+        <div class="documento-mensagem">
+            {% if recibo_mensagem_final %}
+                <p>{{ recibo_mensagem_final }}</p>
+            {% endif %}
+            <p>
+                {% if recibo_cidade %}{{ recibo_cidade }}, {% endif %}{{ data_emissao_humana }}
+            </p>
+        </div>
+        <div class="recibo-assinatura">
+            {% if recibo_assinatura_texto %}
+                <p class="recibo-assinatura-texto">{{ recibo_assinatura_texto }}</p>
+            {% endif %}
+            <div class="recibo-assinatura-linha"></div>
+            <p class="recibo-assinatura-nome">{{ recibo_assinatura_nome }}</p>
+            <p class="recibo-assinatura-cargo">{{ recibo_assinatura_cargo }}</p>
+        </div>
+    </footer>
+</section>
+{% endfor %}
+{% endblock %}

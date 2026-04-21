@@ -1,0 +1,125 @@
+{% load financeiro_format %}
+<section class="recibo-documento{% if not recibo_ultimo %} recibo-documento--quebra{% endif %}">
+    <header class="recibo-header">
+        <div class="recibo-identidade">
+            <div class="recibo-identidade-bloco{% if not recibo.logo_url %} sem-logo{% endif %}">
+                {% if recibo.logo_url %}
+                    <img
+                        class="recibo-logo"
+                        src="{{ recibo.logo_url }}"
+                        alt="Logo institucional"
+                        loading="eager"
+                        decoding="async"
+                        referrerpolicy="no-referrer"
+                        onerror="this.style.display='none'; this.closest('.recibo-identidade-bloco').classList.add('sem-logo');"
+                    >
+                {% endif %}
+                {% if recibo.nome_instituicao and not recibo.logo_url %}
+                    <div class="recibo-identidade-texto">
+                        <span class="recibo-instituicao">{{ recibo.nome_instituicao }}</span>
+                        <span class="recibo-identidade-subtitulo">Documento financeiro</span>
+                    </div>
+                {% elif not recibo.logo_url %}
+                    <div class="recibo-identidade-faixa"></div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="recibo-topo">
+            <div class="recibo-titulo-box">
+                <h1 class="recibo-titulo">RECIBO</h1>
+                <p class="recibo-meta">
+                    <span class="recibo-meta-numero">
+                        {% if recibo.lote %}
+                            <strong>Lote</strong>
+                            {% if recibo.numero_documento and recibo.numero_documento|lower != 'lote' %}
+                                <span>{{ recibo.numero_documento }}</span>
+                            {% endif %}
+                        {% else %}
+                            <strong>Numero</strong>
+                            <span>{{ recibo.numero_documento|default:'-' }}</span>
+                        {% endif %}
+                    </span>
+                </p>
+            </div>
+            <div class="recibo-valor-box">
+                <span class="recibo-valor-label">Valor recebido</span>
+                <p class="recibo-valor">R$ {{ recibo.valor_total|br_money }}</p>
+            </div>
+        </div>
+    </header>
+
+    <section class="recibo-corpo">
+        <div class="recibo-texto">
+            <p class="recibo-linha">
+                <span class="recibo-campo">Recebi(emos) de</span>
+                <span class="recibo-valor-texto">{{ recibo.pessoa_nome }}</span>.
+            </p>
+            <p class="recibo-linha">
+                <span class="recibo-campo">A importancia de</span>
+                <span class="recibo-valor-texto">{{ recibo.valor_extenso }}</span>.
+            </p>
+            {% if recibo.lote %}
+                <p class="recibo-linha">
+                    <span class="recibo-campo">Referente aos</span>
+                    <span class="recibo-valor-texto">lancamentos listados abaixo</span>.
+                </p>
+                {% if recibo.itens %}
+                    <ul class="recibo-itens">
+                        {% for item in recibo.itens %}
+                            <li>
+                                <strong>{{ item.data_label }}</strong>
+                                &mdash;
+                                {{ item.descricao }}
+                                {% if item.consolidado %}
+                                    <span>(consolidado em {{ item.quantidade }} lancamento(s))</span>
+                                {% endif %}
+                                {% if item.documento_label %}
+                                    <span>- {{ item.documento_label }}</span>
+                                {% endif %}
+                                <span class="recibo-item-valor">R$ {{ item.valor|br_money }}</span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            {% else %}
+                <p class="recibo-linha">
+                    <span class="recibo-campo">Referente a</span>
+                    <span class="recibo-valor-texto">{{ recibo.referente }}</span>.
+                </p>
+            {% endif %}
+            {% if recibo.data_fallback %}
+                <p class="recibo-aviso">
+                    A data de recebimento nao foi informada. Este recibo usa a data documental disponivel no lancamento.
+                </p>
+            {% endif %}
+            <p class="recibo-data-local">
+                {% if recibo.cidade %}
+                    {{ recibo.cidade }}, {{ recibo.data_humana }}
+                {% else %}
+                    {{ recibo.data_humana }}
+                {% endif %}
+            </p>
+        </div>
+    </section>
+
+    <footer class="recibo-rodape">
+        <div class="recibo-mensagem">
+            <p{% if recibo.mensagem_personalizada %} class="has-text-weight-semibold"{% endif %}>{{ recibo.mensagem_final }}</p>
+        </div>
+        <div class="recibo-assinatura">
+            {% if recibo.assinatura_padrao %}
+                <p class="recibo-assinatura-texto">{{ recibo.assinatura_padrao.assinatura_texto }}</p>
+            {% endif %}
+            <div class="recibo-assinatura-linha"></div>
+            {% if recibo.assinatura_padrao and recibo.assinatura_padrao.nome_exibicao %}
+                <p class="recibo-assinatura-nome">{{ recibo.assinatura_padrao.nome_exibicao }}</p>
+            {% else %}
+                <p class="recibo-assinatura-nome">Assinatura</p>
+            {% endif %}
+            {% if recibo.assinatura_padrao and recibo.assinatura_padrao.cargo %}
+                <p class="recibo-assinatura-cargo">{{ recibo.assinatura_padrao.cargo }}</p>
+            {% endif %}
+        </div>
+    </footer>
+</section>

@@ -1,6 +1,6 @@
 {% extends 'financeiro/base.html' %}
 {% load financeiro_format %}
-{% block title %}Histórico do favorecido{% endblock %}
+{% block title %}Hist&oacute;rico do favorecido{% endblock %}
 {% block content %}
 <style>
     .financeiro-historico-page {
@@ -121,16 +121,16 @@
 <div class="financeiro-historico-page">
     <div class="financeiro-page-header financeiro-page-head">
         <div class="financeiro-page-header-main">
-            <h1 class="title financeiro-page-title">Histórico do favorecido</h1>
-            <p class="financeiro-page-subtitle">Consulta operacional dos lançamentos vinculados a {{ pessoa.nome }}.</p>
+            <h1 class="title financeiro-page-title">Hist&oacute;rico de {{ pessoa.nome }}</h1>
+            <p class="financeiro-page-subtitle">Consulta operacional dos lan&ccedil;amentos vinculados ao favorecido selecionado.</p>
             <div class="financeiro-historico-meta">
-                <span class="financeiro-historico-meta-item"><strong>Código:</strong> {{ pessoa.codigo }}</span>
+                <span class="financeiro-historico-meta-item"><strong>Favorecido:</strong> {{ pessoa.nome }}</span>
+                <span class="financeiro-historico-meta-item"><strong>C&oacute;digo:</strong> {{ pessoa.codigo }}</span>
                 {% if pessoa.documento %}<span class="financeiro-historico-meta-item"><strong>Documento:</strong> {{ pessoa.documento }}</span>{% endif %}
                 <span class="financeiro-historico-meta-item"><strong>Registros:</strong> {{ totais_historico.quantidade }}</span>
             </div>
         </div>
         <div class="financeiro-page-header-actions no-print">
-            <a class="button is-link is-light" href="{% url 'financeiro:pessoa-relatorio-anual' %}?pessoa={{ pessoa.pk }}">Relat&oacute;rio anual</a>
             <a class="button is-light" href="{% url 'financeiro:pessoa-list' %}">Voltar para favorecidos</a>
         </div>
     </div>

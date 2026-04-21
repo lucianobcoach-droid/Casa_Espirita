@@ -839,7 +839,7 @@
                                 <option value="alterar_status">Alterar status</option>
                                 {% endif %}
                                 {% if pode_emitir_recibo %}
-                                <option value="recibo_lote">Recibo em lote (mesmo favorecido)</option>
+                                <option value="emitir_recibos">Recibos em lote</option>
                                 {% endif %}
                                 {% if pode_acao_lote_excluir %}
                                 <option value="excluir">Excluir selecionados</option>
@@ -862,6 +862,14 @@
                     {% endif %}
                 </div>
                 <button class="button is-link is-light" type="submit">Aplicar</button>
+                {% if pode_emitir_recibo %}
+                <a
+                    class="button is-link is-light"
+                    href="{% url 'financeiro:lancamento-termo-anual-quitacao' %}{% if request.GET.urlencode %}?{{ request.GET.urlencode }}{% endif %}"
+                >
+                    Termo anual de quita&ccedil;&atilde;o
+                </a>
+                {% endif %}
             </div>
             {% endif %}
 
@@ -1599,7 +1607,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            if (acao === 'recibo_lote') {
+            if (acao === 'emitir_recibos' || acao === 'recibo_lote' || acao === 'recibos_lote_por_favorecido') {
                 return;
             }
 

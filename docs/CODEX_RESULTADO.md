@@ -1,20 +1,141 @@
 # CODEX_RESULTADO
 
-Data: 2026-04-17
+Data: 2026-04-21
 
-## Relatorio anual por favorecido no modulo financeiro
+## Reconciliacao explicita do saldo na Prestacao de Contas
 
-- correcao curta posterior: confirmei que a rota, a view e os atalhos por favorecido/historico existiam; o problema pratico era a ausencia da entrada no menu principal de `Relatorios`, entao inclui `Relatorio anual por favorecido` na topbar do `financeiro` usando a permissao ja adotada (`financeiro.lancamentos.listar`)
-- implementei a pagina propria `Relatorio anual por favorecido`, separada do historico detalhado
-- a tela permite selecionar favorecido e ano em painel compacto recolhido por padrao
-- a solucao reaproveita padroes ja existentes do modulo: shell/topbar do financeiro, permissao `financeiro.lancamentos.listar`, data operacional por `data_pagamento` com fallback para `data_competencia` e formatacao monetaria pt-BR
-- adicionei acesso natural pela listagem de `Favorecidos financeiros`
-- adicionei tambem atalho na tela de `Historico do favorecido`, apontando para o relatorio anual do mesmo favorecido
-- o resumo anual entregue mostra receitas, despesas, quitado, em aberto, quantidade de lancamentos e saldo liquido anual
-- o quadro mensal entregue mostra os 12 meses com receitas, despesas, quitado, em aberto e quantidade de lancamentos
-- mantive a primeira versao focada em receitas/despesas/status/quantidade; transferencias nao foram colocadas como eixo principal deste relatorio
-- nao implementei termo anual de quitacao, exportacao especifica, anexos, contratos, parcelas ou recorrencia
-- validacoes executadas: smoke autenticado com rollback para listagem de favorecidos, relatorio anual, troca de ano, troca de favorecido, totais anuais e tabela mensal; `py manage.py check` OK; `py -m compileall financeiro` OK; `git diff --check` OK
+- revisei a montagem da `Prestacao de Contas` para resolver a leitura enganosa do saldo final quando havia transferencia entre conta selecionada e outra conta da instituicao fora do filtro
+- a situacao de origem nao era erro de saldo bruto: o `saldo_final_consolidado` ja vinha correto pelos saldos reais das contas selecionadas; o problema era que o fechamento visual ainda parecia apenas `saldo inicial + receitas - despesas`
+- corrigi a reconciliacao exibida no relatorio sem mudar a natureza contabil das transferencias
+- regra final aplicada:
+  - transferencias entre contas selecionadas e outras contas da instituicao nao entram como receitas
+  - nao entram como despesas
+  - mas entram explicitamente na reconciliacao do saldo final consolidado como:
+    - `Entradas de outras contas da instituicao`
+    - `Saidas para outras contas da instituicao`
+- formula final entregue no relatorio:
+  - `Saldo final consolidado = saldo inicial consolidado + receitas do periodo - despesas do periodo + entradas de outras contas da instituicao - saidas para outras contas da instituicao`
+- atualizei a view para calcular e expor:
+  - `total_entradas_outras_contas`
+  - `total_saidas_outras_contas`
+  - `saldo_final_reconciliado`
+  - indicador de consistencia entre o saldo reconciliado e o saldo consolidado real
+- atualizei o template da `Prestacao de Contas` para mostrar esses blocos tanto nos KPIs quanto no resumo final do fechamento
+- atualizei o smoke transacional com rollback para validar os dois casos:
+  - transferencia da conta selecionada para conta externa
+  - transferencia de conta externa para conta selecionada
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+  - `py manage.py shell -c "exec(open(r'tmp/validar_prestacao_contas.py', encoding='utf-8').read())"` OK
+
+## Simplificacao final das acoes documentais e linguagem da Prestacao de Contas
+
+- removi a redundancia de acoes documentais na `lancamento_list`
+- a interface passou a manter apenas:
+  - `Recibos em lote`
+  - `Termo anual de quitacao`
+- `Recibos em lote` agora usa os lancamentos selecionados e agrupa automaticamente por favorecido:
+  - um favorecido gera um unico recibo
+  - varios favorecidos geram blocos sucessivos no mesmo documento, com quebra entre grupos
+- preservei a consolidacao por descricao aprovada para os recibos, sem reintroduzir categoria como elemento de bloqueio ou destaque visual
+- `Termo anual de quitacao` passou a assumir sozinho a emissao simples e em massa:
+  - usa o resultado filtrado atual da listagem
+  - continua filtrando internamente apenas receitas quitadas
+  - gera um ou varios termos conforme os favorecidos encontrados no filtro
+- mantive a rota plural antiga apenas como compatibilidade tecnica, redirecionando para a acao unificada
+- na `Prestacao de Contas`, troquei a linguagem tecnica:
+  - `Entradas de contas fora do universo` -> `Entradas de outras contas da instituicao`
+  - `Saidas para contas fora do universo` -> `Saidas para outras contas da instituicao`
+- no `Termo anual de quitacao`, troquei o fechamento para o mesmo estilo manuscrito do recibo oficial, reaproveitando a mesma linguagem visual da assinatura institucional
+- validacoes planejadas para este ajuste: `py manage.py check`, `py -m compileall financeiro`, `git diff --check` e smoke do bloco documental unificado
+
+## Evolucao do termo anual: assinatura estavel, acao em massa e filtro interno automatico
+
+- estabilizei a assinatura real do `Termo anual de quitacao`
+- a busca institucional do fechamento agora usa assinatura ativa padrao ou, na falta dela, a primeira assinatura ativa disponivel, evitando que o bloco final desapareca
+- o template do termo anual passou a exibir o `assinatura_texto` quando houver, mantendo local/data, linha de assinatura, nome e cargo
+- mantive a acao `Termo anual de quitacao`, que agora cobre sozinha os cenarios de um ou varios favorecidos no resultado filtrado
+- a rota plural antiga de termos anuais ficou apenas como compatibilidade tecnica e redireciona para a acao unificada
+- comportamento consolidado da acao:
+  - usa o filtro atual da listagem
+  - aplica internamente a triagem documental compativel
+  - agrupa por favorecido
+  - gera documento continuo com uma secao por favorecido e quebra de pagina entre eles quando houver varios grupos
+- regra automatica consolidada do termo anual, sem exigir filtro manual do usuario:
+  - considerar apenas lancamentos do tipo `receita`
+  - considerar apenas lancamentos com status `quitado`
+  - ignorar automaticamente `despesas`, `transferencias`, `receitas em aberto` e outros itens incompativeis
+- quando nenhum item compativel resta apos essa triagem, a acao retorna com a mensagem: `Nenhum lancamento compativel com termo anual de quitacao foi encontrado no filtro atual.`
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+  - smoke autenticado com rollback cobrindo termo anual unificado, ignorar automatico de despesas/transferencias/em aberto e mensagem de ausencia de itens compativeis OK
+
+## Ajuste visual e textual do termo anual de quitacao
+
+- refinei o `Termo anual de quitacao` para ele deixar de parecer recibo ou tela filtrada
+- removi do topo a `Quantidade de lancamentos` e o bloco visual de chips/badges que estava deixando a peca com cara de relatorio interno
+- mantive o cabecalho com identidade propria:
+  - titulo `TERMO ANUAL DE QUITACAO`
+  - subtitulo institucional no formato `Declaracao anual de quitacao referente ao ano de ...`
+  - identificacao textual simples de `Favorecido`
+- quando existe filtro de categoria ativo, a informacao continua disponivel, mas em linha textual simples, sem visual de filtro
+- atualizei o texto introdutorio para a redacao aprovada: declaracao anual mais humana e institucional, sem cara de recibo
+- preservei a tabela com `Data`, `Descricao`, `Documento` e `Valor`, alem do fechamento com total, valor por extenso, local/data e assinatura institucional
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+  - smoke autenticado com rollback do termo anual OK
+
+## Ajuste final do termo anual: assinatura e repeticao do ano
+
+- concentrei o ano apenas no subtitulo do termo, agora no formato `Referente ao ano de ...`
+- removi a repeticao do ano do bloco de identificacao e do texto introdutorio, deixando o documento mais natural e menos artificial
+- reduzi o bloco de identificacao do termo para a leitura aprovada de `Favorecido`, sem reintroduzir visual de filtro
+- reforcei o fechamento documental do termo para a assinatura sempre aparecer:
+  - a busca institucional agora usa a assinatura ativa padrao ou, na falta dela, a primeira assinatura ativa disponivel
+  - o bloco final passa a renderizar sempre nome e cargo com fallback institucional coerente, sem depender de uma condicao que zere o fechamento
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+  - smoke autenticado com rollback do termo anual final OK
+
+## Ajuste da Prestacao de Contas: cabecalho enxuto e leitura de contas fora do universo
+
+- simplifiquei o topo da `Prestacao de Contas` para a leitura aprovada: `Periodo`, `Emitido em`, `Saldo inicial consolidado`, `Receitas do periodo`, `Despesas do periodo` e `Saldo final consolidado`
+- removi do cabecalho os blocos redundantes/tecnicos que poluiam a peca, incluindo a marca `Prestacao Financeira`, textos longos, `Contas incluidas` no topo e a duplicidade visual de saldo final
+- mantive a selecao de contas apenas no painel de filtros e ajustei o rotulo para `Contas do relatorio`
+- formalizei no relatorio a regra de universo consolidado: o saldo considera somente as contas selecionadas no filtro
+- quando houver transferencia entre esse universo e contas de fora, como integralizacao ou outras contas nao operacionais, o relatorio passa a explicar isso em um bloco operacional proprio, fora do topo, sem transformar essas movimentacoes em receita ou despesa
+- mantive inalterada a logica contabil principal ja aprovada; a microetapa foi de leitura/clareza do relatorio, nao de redefinicao das formulas
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+  - smoke autenticado com rollback da `Prestacao de Contas` OK
+
+## Fluxo documental centralizado na lancamento_list
+
+- substitui a direcao de relatorio anual por favorecido como tela principal por tres acoes documentais na `lancamento_list`
+- removi o relatorio anual das superficies principais: menu superior, listagem de favorecidos, historico do favorecido, rota, view e template
+- unifiquei a interface de recibos em uma unica acao visivel: `Recibos em lote`
+- essa acao usa os lancamentos selecionados, agrupa automaticamente por favorecido e renderiza um documento continuo com quebra por favorecido quando necessario
+- o documento segue reaproveitando fielmente o recibo oficial ja existente, preservando cabecalho, texto explicativo, valor por extenso, mensagem final e bloco de assinatura
+- na correcao seguinte, mudei a direcao documental dos recibos em lote: categoria deixou de ser elemento relevante de leitura, saiu do topo/documento e deixou de bloquear emissao quando houver categorias diferentes no mesmo favorecido
+- passei a consolidar por descricao os itens repetidos dentro do mesmo favorecido, inclusive quando vierem de rateio; nesses casos o recibo soma os valores e mostra um unico item documental
+- quando a consolidacao junta datas ou documentos diferentes, o recibo sinaliza isso de forma compacta como `Datas diversas` e `Doc. diversos`
+- os recibos em lote passaram a usar fallback institucional/fixo do recibo oficial, sem depender de mensagem especifica por categoria para viabilizar a emissao
+- implementei `Termo anual de quitacao`, usando o resultado filtrado atual da listagem, exigindo periodo anual coerente, receitas quitadas, favorecido e ausencia de rateio
+- o recibo por favorecido deixou de usar template paralelo proprio e passou a nascer da mesma peca documental do recibo atual, apenas repetida por favorecido com quebra de pagina
+- na correcao seguinte, ajustei a integridade do recibo em lote para ele nascer exclusivamente dos lancamentos selecionados, consolidando apenas descricoes exatamente iguais e mantendo linhas separadas quando a descricao muda
+- nessa mesma correcao, o recibo em lote passou a sinalizar `Datas diversas` e `Doc. diversos` quando a consolidacao reunir datas ou documentos diferentes, sem reaproveitar `status` como dado documental visual
+- tambem humanizei o `Termo anual de quitacao`: subtitulo mais amigavel, bloco de identificacao simplificado, texto introdutorio institucional e tabela reduzida para `Data`, `Descricao`, `Documento` e `Valor`
+- mantive fora do escopo: PDF, anexos, assinatura final juridica, termo formal completo com juridiquês, contratos, parcelas e recorrencia
 
 ## Ajuste final dos quadros-resumo da listagem de lancamentos
 
@@ -60,7 +181,7 @@ Data: 2026-04-17
 - totalizadores entregues no topo: total geral, total de receitas, total de despesas, total quitado e total em aberto, sempre sobre o resultado filtrado
 - tabela entregue com data operacional, tipo, status, descricao, conta origem, conta destino, categoria, centro de custo, documento e valor
 - a permissao usada foi `financeiro.lancamentos.listar`; nao criei permissao nova nem alterei a matriz
-- nao implementei exportacao especifica, relatorio anual por favorecido, termo anual, contratos, anexos nem codigo automatico para contas/categorias
+- nao implementei exportacao especifica do historico, contratos, anexos nem codigo automatico para contas/categorias
 - validacoes executadas: `py manage.py check` OK, `py -m compileall financeiro` OK e smoke autenticado com rollback confirmando rota, link de acesso, totais, colunas e filtros
 
 ## Consolidacao final do working tree do ciclo recente do financeiro

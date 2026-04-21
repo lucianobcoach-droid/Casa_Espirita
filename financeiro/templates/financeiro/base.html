@@ -1011,6 +1011,24 @@
             color: #1f2937;
         }
 
+        .prestacao-kpi-grid {
+            gap: 0.7rem;
+        }
+
+        .prestacao-kpi {
+            min-height: 0;
+            padding: 0.8rem 0.9rem;
+        }
+
+        .prestacao-kpi .financeiro-kpi-label {
+            margin-bottom: 0.22rem;
+            line-height: 1.25;
+        }
+
+        .prestacao-kpi .financeiro-kpi-value {
+            line-height: 1.1;
+        }
+
         .prestacao-document {
             max-width: 1080px;
             margin: 0 auto;
@@ -2070,7 +2088,6 @@
 {% tem_permissao request.user 'financeiro.extratos.visualizar' as pode_visualizar_extratos %}
 {% tem_permissao request.user 'financeiro.resumo_financeiro.visualizar' as pode_visualizar_resumo %}
 {% tem_permissao request.user 'financeiro.prestacao_contas.visualizar' as pode_visualizar_prestacao %}
-{% tem_permissao request.user 'financeiro.lancamentos.listar' as pode_visualizar_relatorio_anual_favorecido %}
 {% tem_permissao request.user 'financeiro.auditoria.listar' as pode_visualizar_auditoria %}
 {% tem_permissao request.user 'financeiro.contas.listar' as pode_listar_contas %}
 {% tem_permissao request.user 'financeiro.pessoas.listar' as pode_listar_pessoas %}
@@ -2144,7 +2161,7 @@
                                 </section>
                                 {% endif %}
 
-                                {% if pode_visualizar_resumo or pode_visualizar_prestacao or pode_visualizar_relatorio_anual_favorecido or pode_visualizar_auditoria %}
+                                {% if pode_visualizar_resumo or pode_visualizar_prestacao or pode_visualizar_auditoria %}
                                 <section class="financeiro-menu-group">
                                     <h2 class="financeiro-menu-group-title">Relatorios</h2>
                                     <div class="financeiro-menu-links">
@@ -2156,11 +2173,6 @@
                                         {% if pode_visualizar_prestacao %}
                                         <a class="financeiro-menu-link{% if current_url_name == 'prestacao-contas' %} is-active{% endif %}" href="{% url 'financeiro:prestacao-contas' %}">
                                             <span>Prestacao de Contas</span>
-                                        </a>
-                                        {% endif %}
-                                        {% if pode_visualizar_relatorio_anual_favorecido %}
-                                        <a class="financeiro-menu-link{% if current_url_name == 'pessoa-relatorio-anual' %} is-active{% endif %}" href="{% url 'financeiro:pessoa-relatorio-anual' %}">
-                                            <span>Relatorio anual por favorecido</span>
                                         </a>
                                         {% endif %}
                                         {% if pode_visualizar_auditoria %}
@@ -2228,7 +2240,7 @@
                             Visao geral
                         {% elif current_url_name == 'lancamento-list' or current_url_name == 'lancamento-create' or current_url_name == 'lancamento-update' or current_url_name == 'lancamento-rateio-update' or current_url_name == 'lancamento-delete' or current_url_name == 'lancamento-importacao-exportacao' or current_url_name == 'extrato-list' or current_url_name == 'conta-extrato' %}
                             Movimentacao
-                        {% elif current_url_name == 'resumo' or current_url_name == 'prestacao-contas' or current_url_name == 'pessoa-relatorio-anual' or current_url_name == 'auditoria-lancamento-list' %}
+                        {% elif current_url_name == 'resumo' or current_url_name == 'prestacao-contas' or current_url_name == 'auditoria-lancamento-list' %}
                             Relatorios
                         {% elif current_url_name == 'conta-list' or current_url_name == 'conta-create' or current_url_name == 'conta-update' or current_url_name == 'conta-delete' or current_url_name == 'pessoa-list' or current_url_name == 'pessoa-create' or current_url_name == 'pessoa-update' or current_url_name == 'pessoa-delete' or current_url_name == 'categoria-list' or current_url_name == 'categoria-create' or current_url_name == 'categoria-update' or current_url_name == 'categoria-delete' or current_url_name == 'centro-custo-list' or current_url_name == 'centro-custo-create' or current_url_name == 'centro-custo-update' or current_url_name == 'centro-custo-delete' %}
                             Cadastros

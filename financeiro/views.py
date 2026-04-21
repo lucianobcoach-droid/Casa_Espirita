@@ -3310,6 +3310,54 @@ class FinanceiroPeriodoMixin(FinanceiroPermissaoMixin):
             total_transferencias_saida,
         )
 
+    def _resumir_transferencias_fora_do_universo(
+        self,
+        data_inicial: date,
+        data_final: date,
+        selected_ids: list[int],
+    ) -> dict[str, object]:
+        selected_ids_set = set(selected_ids)
+        transferencias = list(
+            LancamentoFinanceiro.objects.filter(
+                Q(conta_id__in=selected_ids) | Q(conta_destino_id__in=selected_ids),
+                status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+                tipo=LancamentoFinanceiro.TipoLancamento.TRANSFERENCIA,
+                data_competencia__gte=data_inicial,
+                data_competencia__lte=data_final,
+            )
+            .select_related('conta', 'conta_destino')
+            .distinct()
+            .order_by('data_competencia', 'criado_em', 'pk')
+        )
+
+        saida_para_fora = Decimal('0.00')
+        entrada_de_fora = Decimal('0.00')
+        transferencias_externas: list[LancamentoFinanceiro] = []
+
+        for lancamento in transferencias:
+            origem_no_universo = lancamento.conta_id in selected_ids_set
+            destino_no_universo = lancamento.conta_destino_id in selected_ids_set
+            if origem_no_universo == destino_no_universo:
+                continue
+
+            transferencias_externas.append(lancamento)
+            if origem_no_universo and not destino_no_universo:
+                saida_para_fora += lancamento.valor
+            elif destino_no_universo and not origem_no_universo:
+                entrada_de_fora += lancamento.valor
+
+        return {
+            'quantidade': len(transferencias_externas),
+            'saida_para_fora': saida_para_fora,
+            'entrada_de_fora': entrada_de_fora,
+            'tem_movimentacao_externa': bool(transferencias_externas),
+            'mensagem': (
+                'O relatorio principal consolida apenas as contas selecionadas. '
+                'Transferencias entre esse universo e contas fora dele, como integralizacao ou outras contas nao operacionais, '
+                'nao viram receita nem despesa, mas alteram o saldo consolidado das contas exibidas.'
+            ) if transferencias_externas else '',
+        }
+
     def _agrupar_por_campo(
         self,
         lancamentos: list[LancamentoFinanceiro],
@@ -3341,6 +3389,12 @@ class FinanceiroPeriodoMixin(FinanceiroPermissaoMixin):
         )
         opcoes_relatorio_ativas = mostrar_centro_custo or exibir_transferencias
         contas_selecionadas = [conta for conta in contas_disponiveis if conta.id in selected_ids]
+        todas_as_contas_selecionadas = len(selected_ids) == len(contas_disponiveis)
+        contas_incluidas_label = (
+            'Todas as contas'
+            if todas_as_contas_selecionadas
+            else ', '.join(conta.nome for conta in contas_selecionadas)
+        )
         context: dict[str, object] = {
             'data_inicial': data_inicial_raw,
             'data_final': data_final_raw,
@@ -3348,16 +3402,22 @@ class FinanceiroPeriodoMixin(FinanceiroPermissaoMixin):
             'contas_disponiveis': contas_disponiveis,
             'contas_selecionadas_ids': [str(conta_id) for conta_id in selected_ids],
             'contas_selecionadas': contas_selecionadas,
-            'contas_incluidas_label': (
-                'Todas as contas'
-                if len(selected_ids) == len(contas_disponiveis)
-                else ', '.join(conta.nome for conta in contas_selecionadas)
-            ),
+            'contas_incluidas_label': contas_incluidas_label,
             'quantidade_contas_selecionadas': len(contas_selecionadas),
             'mostrar_centro_custo': mostrar_centro_custo,
             'exibir_transferencias': exibir_transferencias,
             'filtros_relatorio_ativos': filtros_relatorio_ativos,
             'opcoes_relatorio_ativas': opcoes_relatorio_ativas,
+            'universo_contas_relatorio': {
+                'todas_as_contas': todas_as_contas_selecionadas,
+                'contas_label': contas_incluidas_label,
+                'mostrar_nota': not todas_as_contas_selecionadas,
+                'mensagem': (
+                    'O saldo consolidado considera apenas as contas selecionadas neste relatorio. '
+                    'Contas fora desse universo, como integralizacao ou outras contas nao operacionais, '
+                    'nao entram como receita nem despesa; elas so afetam o saldo das contas exibidas quando houver transferencia entre os dois universos.'
+                ) if not todas_as_contas_selecionadas else '',
+            },
         }
 
         if not data_inicial or not data_final:
@@ -3370,6 +3430,18 @@ class FinanceiroPeriodoMixin(FinanceiroPermissaoMixin):
             data_inicial,
             data_final,
             selected_ids,
+        )
+        resumo_transferencias_externas = self._resumir_transferencias_fora_do_universo(
+            data_inicial,
+            data_final,
+            selected_ids,
+        )
+        saldo_final_reconciliado = (
+            saldo_inicial_consolidado
+            + total_receitas
+            - total_despesas
+            + resumo_transferencias_externas['entrada_de_fora']
+            - resumo_transferencias_externas['saida_para_fora']
         )
         (
             transferencias,
@@ -3387,8 +3459,12 @@ class FinanceiroPeriodoMixin(FinanceiroPermissaoMixin):
                 'saldo_inicial_consolidado': saldo_inicial_consolidado,
                 'total_receitas_periodo': total_receitas,
                 'total_despesas_periodo': total_despesas,
+                'total_entradas_outras_contas': resumo_transferencias_externas['entrada_de_fora'],
+                'total_saidas_outras_contas': resumo_transferencias_externas['saida_para_fora'],
+                'saldo_final_reconciliado': saldo_final_reconciliado,
                 'saldo_final_consolidado': saldo_final_consolidado,
                 'saldo_periodo': saldo_final_consolidado - saldo_inicial_consolidado,
+                'reconciliacao_saldo_consistente': saldo_final_reconciliado == saldo_final_consolidado,
                 'composicao_inicial': composicao_inicial,
                 'composicao_final': composicao_final,
                 'receitas_periodo': receitas,
@@ -3397,6 +3473,7 @@ class FinanceiroPeriodoMixin(FinanceiroPermissaoMixin):
                 'total_transferencias_periodo': total_transferencias,
                 'total_transferencias_entrada': total_transferencias_entrada,
                 'total_transferencias_saida': total_transferencias_saida,
+                'resumo_transferencias_externas': resumo_transferencias_externas,
             }
         )
 
@@ -4310,139 +4387,6 @@ class PessoaFinanceiraHistoricoView(FinanceiroPermissaoMixin, DetailView):
                     'total_quitado_formatado': _formatar_moeda_brl(total_quitado),
                     'total_aberto_formatado': _formatar_moeda_brl(total_aberto),
                 },
-            }
-        )
-        return context
-
-
-class PessoaFinanceiraRelatorioAnualView(FinanceiroPermissaoMixin, TemplateView):
-    permissao_requerida = 'financeiro.lancamentos.listar'
-    template_name = 'financeiro/pessoa_relatorio_anual.html'
-
-    def _resolver_ano(self) -> int:
-        ano_raw = (self.request.GET.get('ano') or '').strip()
-        if ano_raw.isdigit():
-            ano = int(ano_raw)
-            if 1900 <= ano <= 2100:
-                return ano
-        return date.today().year
-
-    def _resolver_pessoa(self) -> PessoaFinanceira | None:
-        pessoa_raw = (self.request.GET.get('pessoa') or '').strip()
-        if not pessoa_raw:
-            return None
-        try:
-            pessoa_id = int(pessoa_raw)
-        except (TypeError, ValueError):
-            return None
-        return PessoaFinanceira.objects.filter(pk=pessoa_id).first()
-
-    def _lancamentos_anuais(self, pessoa: PessoaFinanceira, ano: int) -> list[LancamentoFinanceiro]:
-        data_inicial = date(ano, 1, 1)
-        data_final = date(ano, 12, 31)
-        return list(
-            LancamentoFinanceiro.objects
-            .filter(
-                pessoa=pessoa,
-                tipo__in=(
-                    LancamentoFinanceiro.TipoLancamento.RECEITA,
-                    LancamentoFinanceiro.TipoLancamento.DESPESA,
-                ),
-            )
-            .annotate(data_operacional=Coalesce('data_pagamento', 'data_competencia'))
-            .filter(data_operacional__gte=data_inicial, data_operacional__lte=data_final)
-            .order_by('data_operacional', 'pk')
-        )
-
-    def _montar_totais(self, lancamentos: list[LancamentoFinanceiro]) -> dict[str, object]:
-        total_receitas = sum(
-            (
-                lancamento.valor
-                for lancamento in lancamentos
-                if lancamento.tipo == LancamentoFinanceiro.TipoLancamento.RECEITA
-            ),
-            Decimal('0.00'),
-        )
-        total_despesas = sum(
-            (
-                lancamento.valor
-                for lancamento in lancamentos
-                if lancamento.tipo == LancamentoFinanceiro.TipoLancamento.DESPESA
-            ),
-            Decimal('0.00'),
-        )
-        total_quitado = sum(
-            (
-                lancamento.valor
-                for lancamento in lancamentos
-                if lancamento.status == LancamentoFinanceiro.StatusLancamento.QUITADO
-            ),
-            Decimal('0.00'),
-        )
-        total_aberto = sum(
-            (
-                lancamento.valor
-                for lancamento in lancamentos
-                if lancamento.status == LancamentoFinanceiro.StatusLancamento.ABERTO
-            ),
-            Decimal('0.00'),
-        )
-        saldo_liquido = total_receitas - total_despesas
-        return {
-            'quantidade': len(lancamentos),
-            'total_receitas': total_receitas,
-            'total_despesas': total_despesas,
-            'total_quitado': total_quitado,
-            'total_aberto': total_aberto,
-            'saldo_liquido': saldo_liquido,
-            'total_receitas_formatado': _formatar_moeda_brl(total_receitas),
-            'total_despesas_formatado': _formatar_moeda_brl(total_despesas),
-            'total_quitado_formatado': _formatar_moeda_brl(total_quitado),
-            'total_aberto_formatado': _formatar_moeda_brl(total_aberto),
-            'saldo_liquido_formatado': _formatar_moeda_brl(saldo_liquido),
-        }
-
-    def _montar_meses(self, lancamentos: list[LancamentoFinanceiro]) -> list[dict[str, object]]:
-        meses = []
-        for indice, nome_mes in enumerate(MESES_PT_BR, start=1):
-            lancamentos_mes = [
-                lancamento
-                for lancamento in lancamentos
-                if getattr(lancamento, 'data_operacional', None)
-                and lancamento.data_operacional.month == indice
-            ]
-            totais_mes = self._montar_totais(lancamentos_mes)
-            meses.append(
-                {
-                    'numero': indice,
-                    'nome': nome_mes,
-                    **totais_mes,
-                }
-            )
-        return meses
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        ano = self._resolver_ano()
-        pessoa = self._resolver_pessoa()
-        lancamentos = self._lancamentos_anuais(pessoa, ano) if pessoa else []
-        ano_atual = date.today().year
-        anos_disponiveis = list(range(ano_atual + 1, ano_atual - 9, -1))
-        if ano not in anos_disponiveis:
-            anos_disponiveis.append(ano)
-            anos_disponiveis = sorted(anos_disponiveis, reverse=True)
-
-        context.update(
-            {
-                'page_title': 'Relatorio anual por favorecido',
-                'pessoa_selecionada': pessoa,
-                'pessoas_disponiveis': PessoaFinanceira.objects.order_by('nome'),
-                'ano_selecionado': ano,
-                'anos_disponiveis': anos_disponiveis,
-                'lancamentos_anuais': lancamentos,
-                'totais_anuais': self._montar_totais(lancamentos),
-                'meses_relatorio': self._montar_meses(lancamentos),
-                'filtros_relatorio_ativos': bool(pessoa or self.request.GET.get('ano')),
             }
         )
         return context
@@ -5389,7 +5333,11 @@ class LancamentoFinanceiroAcoesLoteView(FinanceiroPermissaoMixin, View):
     def get_permissao_requerida(self) -> str:
         if (self.request.POST.get('acao_lote') or '').strip() == 'excluir':
             return 'financeiro.lancamentos.acoes_em_lote_excluir'
-        if (self.request.POST.get('acao_lote') or '').strip() == 'recibo_lote':
+        if (self.request.POST.get('acao_lote') or '').strip() in {
+            'emitir_recibos',
+            'recibo_lote',
+            'recibos_lote_por_favorecido',
+        }:
             return 'financeiro.lancamentos.emitir_recibo'
         return self.permissao_requerida
 
@@ -5479,36 +5427,27 @@ class LancamentoFinanceiroAcoesLoteView(FinanceiroPermissaoMixin, View):
             )
             return self._redirect_listagem(request)
 
-        if acao_lote == 'recibo_lote':
+        if acao_lote in {'emitir_recibos', 'recibo_lote', 'recibos_lote_por_favorecido'}:
             pessoas_ids = {lancamento.pessoa_id for lancamento in lancamentos}
             if None in pessoas_ids:
                 messages.warning(
                     request,
-                    'Selecione apenas lancamentos com favorecido para emitir recibo em lote.',
-                )
-                return self._redirect_listagem(request)
-            if len(pessoas_ids) != 1:
-                messages.warning(
-                    request,
-                    'Recibo em lote so pode ser emitido quando todos os lancamentos forem do mesmo favorecido.',
+                    'Selecione apenas lancamentos com favorecido para emitir recibos em lote.',
                 )
                 return self._redirect_listagem(request)
             if any(lancamento.tipo != LancamentoFinanceiro.TipoLancamento.RECEITA for lancamento in lancamentos):
                 messages.warning(
                     request,
-                    'Recibo em lote so pode ser emitido para lancamentos do tipo receita.',
+                    'Recibos em lote so podem ser emitidos para lancamentos do tipo receita.',
                 )
                 return self._redirect_listagem(request)
-            if any(lancamento.com_rateio or (lancamento.grupo_rateio or '').strip() for lancamento in lancamentos):
-                messages.warning(
-                    request,
-                    'Recibo em lote nao suporta lancamentos com rateio. Selecione apenas documentos simples.',
-                )
-                return self._redirect_listagem(request)
-
             ids_param = ','.join(str(lancamento.pk) for lancamento in lancamentos)
-            url_recibo_lote = reverse('financeiro:lancamento-recibo-lote')
-            return redirect(f'{url_recibo_lote}?{urlencode({"ids": ids_param})}')
+            filtros_retorno = (request.POST.get('filtros_retorno') or '').strip()
+            query_params = {'ids': ids_param}
+            if filtros_retorno:
+                query_params['filtros'] = filtros_retorno
+            url_recibos = reverse('financeiro:lancamento-recibos-por-favorecido')
+            return redirect(f'{url_recibos}?{urlencode(query_params)}')
 
         messages.warning(request, 'Escolha uma aÃ§Ã£o em lote vÃ¡lida para os lanÃ§amentos selecionados.')
         return self._redirect_listagem(request)
@@ -6020,36 +5959,12 @@ class LancamentoFinanceiroReciboView(FinanceiroPermissaoMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        data_recibo = self.object.data_pagamento or self.object.data_competencia
-        mensagem_categoria = ''
-        assinatura_padrao = AssinaturaInstitucional.objects.filter(ativo=True, padrao=True).first()
-        configuracao_padrao = ConfiguracaoInstitucional.objects.filter(ativo=True, padrao=True).first()
-        if self.object.categoria:
-            mensagem_categoria = (self.object.categoria.mensagem_recibo or '').strip()
         context['page_title'] = f'Recibo do Lancamento {self.object.pk}'
-        context['recibo_pessoa_nome'] = self.object.pessoa.nome if self.object.pessoa else '-'
-        context['recibo_referente'] = self.object.descricao
-        context['recibo_data_principal'] = data_recibo
-        context['recibo_data_humana'] = _data_documental_por_extenso(data_recibo)
-        context['recibo_valor_extenso'] = _valor_por_extenso(self.object.valor)
-        context['recibo_data_fallback'] = self.object.data_pagamento is None
-        context['recibo_mensagem_final'] = (
-            mensagem_categoria
-            or (
-                (configuracao_padrao.mensagem_padrao_recibo or '').strip()
-                if configuracao_padrao
-                else ''
-            )
-            or 'Recibo emitido com base no lancamento registrado no sistema.'
+        context['recibo_documento'] = _montar_contexto_recibo_documento(
+            [self.object],
+            lote=False,
+            categoria_documental=self.object.categoria,
         )
-        context['recibo_mensagem_personalizada'] = bool(mensagem_categoria)
-        context['recibo_assinatura_padrao'] = assinatura_padrao
-        context['recibo_configuracao_institucional'] = configuracao_padrao
-        context['recibo_nome_instituicao'] = (
-            (configuracao_padrao.nome_instituicao or '').strip() if configuracao_padrao else ''
-        )
-        context['recibo_logo_url'] = (configuracao_padrao.logo_url or '').strip() if configuracao_padrao else ''
-        context['recibo_cidade'] = (configuracao_padrao.cidade or '').strip() if configuracao_padrao else ''
         return context
 
 
@@ -6083,51 +5998,13 @@ class LancamentoFinanceiroReciboLoteView(FinanceiroPermissaoMixin, TemplateView)
         if any(lancamento.tipo != LancamentoFinanceiro.TipoLancamento.RECEITA for lancamento in lancamentos):
             return None, 'Recibo em lote so pode ser emitido para lancamentos do tipo receita.'
 
-        if any(lancamento.com_rateio or (lancamento.grupo_rateio or '').strip() for lancamento in lancamentos):
-            return None, 'Recibo em lote nao suporta lancamentos com rateio.'
-
         pessoa = lancamentos[0].pessoa
-        total_valor = sum((lancamento.valor for lancamento in lancamentos), Decimal('0.00'))
-        datas = [l.data_pagamento or l.data_competencia for l in lancamentos if (l.data_pagamento or l.data_competencia)]
-        data_recibo = max(datas) if datas else timezone.localdate()
-        assinatura_padrao = AssinaturaInstitucional.objects.filter(ativo=True, padrao=True).first()
-        configuracao_padrao = ConfiguracaoInstitucional.objects.filter(ativo=True, padrao=True).first()
-
-        itens = [
-            {
-                'descricao': lancamento.descricao,
-                'valor': lancamento.valor,
-                'documento': lancamento.numero_documento or '-',
-                'data': (lancamento.data_pagamento or lancamento.data_competencia),
-            }
-            for lancamento in lancamentos
-        ]
-
         context = {
             'page_title': f'Recibo em lote - {pessoa.nome if pessoa else ""}',
-            'recibo_lote': True,
-            'recibo_numero_documento': 'Lote',
-            'recibo_valor_total': total_valor,
-            'recibo_itens': itens,
-            'recibo_pessoa_nome': pessoa.nome if pessoa else '-',
-            'recibo_referente': 'os lancamentos listados abaixo',
-            'recibo_data_principal': data_recibo,
-            'recibo_data_humana': _data_documental_por_extenso(data_recibo),
-            'recibo_valor_extenso': _valor_por_extenso(total_valor),
-            'recibo_data_fallback': any(l.data_pagamento is None for l in lancamentos),
-            'recibo_mensagem_final': (
-                (configuracao_padrao.mensagem_padrao_recibo or '').strip()
-                if configuracao_padrao
-                else ''
-            ) or 'Recibo emitido com base nos lancamentos registrados no sistema.',
-            'recibo_mensagem_personalizada': False,
-            'recibo_assinatura_padrao': assinatura_padrao,
-            'recibo_configuracao_institucional': configuracao_padrao,
-            'recibo_nome_instituicao': (
-                (configuracao_padrao.nome_instituicao or '').strip() if configuracao_padrao else ''
+            'recibo_documento': _montar_contexto_recibo_documento(
+                lancamentos,
+                lote=True,
             ),
-            'recibo_logo_url': (configuracao_padrao.logo_url or '').strip() if configuracao_padrao else '',
-            'recibo_cidade': (configuracao_padrao.cidade or '').strip() if configuracao_padrao else '',
         }
         return context, ''
 
@@ -6136,6 +6013,394 @@ class LancamentoFinanceiroReciboLoteView(FinanceiroPermissaoMixin, TemplateView)
         if erro:
             return self._redirect_listagem(erro)
         return self.render_to_response(context)
+
+
+def _data_lancamento_documental(lancamento: LancamentoFinanceiro) -> date:
+    return lancamento.data_pagamento or lancamento.data_competencia
+
+
+def _obter_categoria_documental_unica(
+    lancamentos: list[LancamentoFinanceiro],
+) -> tuple[CategoriaFinanceira | None, str]:
+    categorias = {lancamento.categoria_id for lancamento in lancamentos}
+    if None in categorias:
+        return None, 'Recibos por favorecido exigem categoria definida em todos os lancamentos do grupo.'
+    if len(categorias) != 1:
+        return None, 'Recibos por favorecido exigem uma unica categoria documental por favorecido.'
+    return lancamentos[0].categoria, ''
+
+
+def _contexto_recibo_institucional(
+    categoria_documental: CategoriaFinanceira | None = None,
+    *,
+    usar_mensagem_categoria: bool = True,
+) -> dict[str, object]:
+    assinatura_padrao = AssinaturaInstitucional.objects.filter(ativo=True, padrao=True).first()
+    configuracao_padrao = ConfiguracaoInstitucional.objects.filter(ativo=True, padrao=True).first()
+    mensagem_categoria = ''
+    if categoria_documental and usar_mensagem_categoria:
+        mensagem_categoria = (categoria_documental.mensagem_recibo or '').strip()
+    return {
+        'mensagem_final': (
+            mensagem_categoria
+            or (
+                (configuracao_padrao.mensagem_padrao_recibo or '').strip()
+                if configuracao_padrao
+                else ''
+            )
+            or 'Recibo emitido com base no lancamento registrado no sistema.'
+        ),
+        'mensagem_personalizada': bool(mensagem_categoria),
+        'assinatura_padrao': assinatura_padrao,
+        'configuracao_institucional': configuracao_padrao,
+        'nome_instituicao': (
+            (configuracao_padrao.nome_instituicao or '').strip() if configuracao_padrao else ''
+        ),
+        'logo_url': (configuracao_padrao.logo_url or '').strip() if configuracao_padrao else '',
+        'cidade': (configuracao_padrao.cidade or '').strip() if configuracao_padrao else '',
+    }
+
+
+def _agrupar_itens_recibo_por_descricao(
+    lancamentos: list[LancamentoFinanceiro],
+) -> list[dict[str, object]]:
+    grupos: dict[str, dict[str, object]] = {}
+    ordem_grupos: list[str] = []
+
+    for lancamento in lancamentos:
+        descricao_original = (lancamento.descricao or '').strip() or '(Sem descricao)'
+        chave = descricao_original
+        if chave not in grupos:
+            grupos[chave] = {
+                'descricao': descricao_original,
+                'valor': Decimal('0.00'),
+                'datas': [],
+                'documentos': [],
+                'quantidade': 0,
+                'ordem_data': _data_lancamento_documental(lancamento) or date.today(),
+                'ordem_pk': lancamento.pk,
+            }
+            ordem_grupos.append(chave)
+
+        grupo = grupos[chave]
+        grupo['valor'] += lancamento.valor
+        grupo['quantidade'] += 1
+        grupo['datas'].append(_data_lancamento_documental(lancamento))
+        grupo['documentos'].append(lancamento.numero_documento or '-')
+        grupo['ordem_data'] = min(grupo['ordem_data'], _data_lancamento_documental(lancamento) or grupo['ordem_data'])
+        grupo['ordem_pk'] = min(grupo['ordem_pk'], lancamento.pk)
+
+    itens = []
+    for chave in ordem_grupos:
+        grupo = grupos[chave]
+        datas_unicas = [valor for valor in dict.fromkeys(grupo['datas']) if valor]
+        documentos_unicos = [valor for valor in dict.fromkeys(grupo['documentos']) if valor]
+
+        data_label = datas_unicas[0].strftime('%d/%m/%Y') if len(datas_unicas) == 1 else 'Datas diversas'
+        documento_label = documentos_unicos[0] if len(documentos_unicos) == 1 else 'Doc. diversos'
+
+        itens.append(
+            {
+                'descricao': grupo['descricao'],
+                'valor': grupo['valor'],
+                'data': datas_unicas[0] if len(datas_unicas) == 1 else None,
+                'data_label': data_label,
+                'documento_label': documento_label,
+                'quantidade': grupo['quantidade'],
+                'consolidado': grupo['quantidade'] > 1,
+                'ordem_data': grupo['ordem_data'],
+                'ordem_pk': grupo['ordem_pk'],
+            }
+        )
+
+    return sorted(itens, key=lambda item: (item['ordem_data'], item['ordem_pk']))
+
+
+def _montar_contexto_recibo_documento(
+    lancamentos: list[LancamentoFinanceiro],
+    *,
+    lote: bool,
+    categoria_documental: CategoriaFinanceira | None = None,
+    numero_documento: str = '',
+    usar_mensagem_categoria: bool = True,
+) -> dict[str, object]:
+    lancamentos_ordenados = sorted(
+        lancamentos,
+        key=lambda lancamento: (_data_lancamento_documental(lancamento) or date.today(), lancamento.pk),
+    )
+    lancamento_referencia = lancamentos_ordenados[0]
+    pessoa = lancamento_referencia.pessoa
+    total_valor = sum((lancamento.valor for lancamento in lancamentos_ordenados), Decimal('0.00'))
+    datas = [
+        _data_lancamento_documental(lancamento)
+        for lancamento in lancamentos_ordenados
+        if _data_lancamento_documental(lancamento)
+    ]
+    data_recibo = max(datas) if datas else date.today()
+    return {
+        'lote': lote,
+        'numero_documento': numero_documento if lote else (lancamento_referencia.numero_documento or '-'),
+        'valor_total': total_valor if lote else lancamento_referencia.valor,
+        'itens': _agrupar_itens_recibo_por_descricao(lancamentos_ordenados) if lote else [],
+        'pessoa_nome': pessoa.nome if pessoa else '-',
+        'referente': 'os lancamentos listados abaixo' if lote else lancamento_referencia.descricao,
+        'data_principal': data_recibo,
+        'data_humana': _data_documental_por_extenso(data_recibo),
+        'valor_extenso': _valor_por_extenso(total_valor if lote else lancamento_referencia.valor),
+        'data_fallback': any(lancamento.data_pagamento is None for lancamento in lancamentos_ordenados),
+        **_contexto_recibo_institucional(
+            categoria_documental if lote else lancamento_referencia.categoria,
+            usar_mensagem_categoria=usar_mensagem_categoria,
+        ),
+    }
+
+
+def _validar_lancamentos_documentais_receita(
+    lancamentos: list[LancamentoFinanceiro],
+    *,
+    exigir_quitado: bool = False,
+) -> str:
+    if not lancamentos:
+        return 'Nenhum lancamento foi encontrado para emissao documental.'
+    if any(lancamento.pessoa_id is None for lancamento in lancamentos):
+        return 'A emissao documental exige lancamentos com favorecido.'
+    if any(lancamento.tipo != LancamentoFinanceiro.TipoLancamento.RECEITA for lancamento in lancamentos):
+        return 'A emissao documental por favorecido aceita apenas lancamentos do tipo receita.'
+    if exigir_quitado and any(lancamento.status != LancamentoFinanceiro.StatusLancamento.QUITADO for lancamento in lancamentos):
+        return 'Termo anual de quitacao so pode considerar lancamentos quitados.'
+    return ''
+
+
+def _filtrar_lancamentos_compativeis_termo_anual(queryset):
+    return queryset.filter(
+        tipo=LancamentoFinanceiro.TipoLancamento.RECEITA,
+        status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+        pessoa__isnull=False,
+        com_rateio=False,
+    )
+
+
+def _resolver_categoria_documental(parametros) -> CategoriaFinanceira | None:
+    categoria_raw = (parametros.get('categoria') or '').strip()
+    if not categoria_raw.isdigit():
+        return None
+    return CategoriaFinanceira.objects.filter(pk=int(categoria_raw)).first()
+
+
+def _montar_contexto_filtros_documentais(parametros) -> dict[str, object]:
+    data_inicial = _parse_data_iso(parametros.get('data_inicial', ''))
+    data_final = _parse_data_iso(parametros.get('data_final', ''))
+    categoria = _resolver_categoria_documental(parametros)
+    periodo_partes = []
+    if data_inicial:
+        periodo_partes.append(f'a partir de {data_inicial.strftime("%d/%m/%Y")}')
+    if data_final:
+        periodo_partes.append(f'ate {data_final.strftime("%d/%m/%Y")}')
+    return {
+        'data_inicial': data_inicial,
+        'data_final': data_final,
+        'periodo_label': ' e '.join(periodo_partes),
+        'categoria': categoria,
+    }
+
+
+def _montar_grupos_documentais_por_favorecido(lancamentos: list[LancamentoFinanceiro]) -> list[dict[str, object]]:
+    grupos_por_pessoa: dict[int, list[LancamentoFinanceiro]] = {}
+    pessoas_por_id: dict[int, PessoaFinanceira] = {}
+    for lancamento in lancamentos:
+        if not lancamento.pessoa_id:
+            continue
+        grupos_por_pessoa.setdefault(lancamento.pessoa_id, []).append(lancamento)
+        pessoas_por_id[lancamento.pessoa_id] = lancamento.pessoa
+
+    grupos = []
+    for pessoa_id, lancamentos_pessoa in sorted(
+        grupos_por_pessoa.items(),
+        key=lambda item: pessoas_por_id[item[0]].nome.lower(),
+    ):
+        lancamentos_ordenados = sorted(
+            lancamentos_pessoa,
+            key=lambda lancamento: (_data_lancamento_documental(lancamento), lancamento.pk),
+        )
+        total = sum((lancamento.valor for lancamento in lancamentos_ordenados), Decimal('0.00'))
+        grupos.append(
+            {
+                'pessoa': pessoas_por_id[pessoa_id],
+                'lancamentos': lancamentos_ordenados,
+                'quantidade': len(lancamentos_ordenados),
+                'total': total,
+                'total_formatado': _formatar_moeda_brl(total),
+                'valor_extenso': _valor_por_extenso(total),
+            }
+        )
+    return grupos
+
+
+def _contexto_institucional_documental() -> dict[str, object]:
+    assinatura_padrao = (
+        AssinaturaInstitucional.objects.filter(ativo=True, padrao=True).first()
+        or AssinaturaInstitucional.objects.filter(ativo=True).first()
+    )
+    configuracao_padrao = ConfiguracaoInstitucional.objects.filter(ativo=True, padrao=True).first()
+    assinatura_nome = ''
+    assinatura_cargo = ''
+    assinatura_texto = ''
+    if assinatura_padrao:
+        assinatura_nome = (
+            (assinatura_padrao.nome_exibicao or '').strip()
+            or (assinatura_padrao.assinatura_texto or '').strip()
+            or (assinatura_padrao.nome or '').strip()
+        )
+        assinatura_cargo = (assinatura_padrao.cargo or '').strip()
+        assinatura_texto = (assinatura_padrao.assinatura_texto or '').strip()
+
+    return {
+        'recibo_assinatura_padrao': assinatura_padrao,
+        'recibo_assinatura_nome': assinatura_nome or 'Responsavel institucional',
+        'recibo_assinatura_cargo': assinatura_cargo or 'Casa Espirita',
+        'recibo_assinatura_texto': assinatura_texto,
+        'recibo_configuracao_institucional': configuracao_padrao,
+        'recibo_nome_instituicao': (
+            (configuracao_padrao.nome_instituicao or '').strip() if configuracao_padrao else ''
+        ),
+        'recibo_logo_url': (configuracao_padrao.logo_url or '').strip() if configuracao_padrao else '',
+        'recibo_cidade': (configuracao_padrao.cidade or '').strip() if configuracao_padrao else '',
+        'recibo_mensagem_final': (
+            (configuracao_padrao.mensagem_padrao_recibo or '').strip()
+            if configuracao_padrao
+            else ''
+        ),
+    }
+
+
+def _resolver_contexto_base_termo_anual(request) -> tuple[dict[str, object], date | None, date | None, object]:
+    contexto_filtros = _montar_contexto_filtros_documentais(request.GET)
+    data_inicial = contexto_filtros['data_inicial']
+    data_final = contexto_filtros['data_final']
+    if not data_inicial or not data_final:
+        return contexto_filtros, data_inicial, data_final, 'Informe Pagamento inicial e Pagamento final para emitir o termo anual de quitacao.'
+    if data_inicial.year != data_final.year:
+        return contexto_filtros, data_inicial, data_final, 'O termo anual de quitacao exige periodo dentro de um unico ano.'
+
+    queryset = LancamentoFinanceiro.objects.select_related('pessoa', 'categoria')
+    queryset = _filtrar_lancamentos_por_parametros(queryset, request.GET)
+    queryset = _filtrar_lancamentos_compativeis_termo_anual(queryset)
+    lancamentos = list(queryset.order_by('pessoa__nome', 'data_pagamento', 'data_competencia', 'pk'))
+    if not lancamentos:
+        return (
+            contexto_filtros,
+            data_inicial,
+            data_final,
+            'Nenhum lancamento compativel com termo anual de quitacao foi encontrado no filtro atual.',
+        )
+    return contexto_filtros, data_inicial, data_final, lancamentos
+
+
+class LancamentoFinanceiroRecibosPorFavorecidoView(FinanceiroPermissaoMixin, TemplateView):
+    permissao_requerida = 'financeiro.lancamentos.emitir_recibo'
+    template_name = 'financeiro/lancamento_recibo.html'
+
+    def _redirect_listagem(self, mensagem: str):
+        if mensagem:
+            messages.warning(self.request, mensagem)
+        return redirect(reverse('financeiro:lancamento-list'))
+
+    def get(self, request, *args, **kwargs):
+        ids_raw = (request.GET.get('ids') or '').strip()
+        ids = [int(valor) for valor in ids_raw.split(',') if valor.strip().isdigit()]
+        if not ids:
+            return self._redirect_listagem('Selecione lancamentos validos para emitir recibos por favorecido.')
+
+        lancamentos = list(
+            LancamentoFinanceiro.objects.filter(pk__in=ids)
+            .select_related('pessoa', 'categoria')
+            .order_by('pessoa__nome', 'data_pagamento', 'data_competencia', 'pk')
+        )
+        erro = _validar_lancamentos_documentais_receita(lancamentos)
+        if erro:
+            return self._redirect_listagem(erro)
+
+        grupos_receibo = []
+        grupos_por_pessoa: dict[int, list[LancamentoFinanceiro]] = {}
+        for lancamento in lancamentos:
+            grupos_por_pessoa.setdefault(lancamento.pessoa_id, []).append(lancamento)
+
+        for pessoa_id, lancamentos_pessoa in sorted(
+            grupos_por_pessoa.items(),
+            key=lambda item: (item[1][0].pessoa.nome or '').lower(),
+        ):
+            grupos_receibo.append(
+                _montar_contexto_recibo_documento(
+                    sorted(
+                        lancamentos_pessoa,
+                        key=lambda lancamento: (_data_lancamento_documental(lancamento), lancamento.pk),
+                    ),
+                    lote=True,
+                    numero_documento='Lote',
+                    usar_mensagem_categoria=False,
+                )
+            )
+
+        context = {
+            'page_title': 'Recibos em lote por favorecido',
+            'recibo_grupos': grupos_receibo,
+            'recibo_multigrupo': True,
+        }
+        return self.render_to_response(context)
+
+
+class LancamentoFinanceiroTermoAnualQuitacaoView(FinanceiroPermissaoMixin, TemplateView):
+    permissao_requerida = 'financeiro.lancamentos.emitir_recibo'
+    template_name = 'financeiro/lancamento_documentos_por_favorecido.html'
+
+    def _redirect_listagem(self, mensagem: str):
+        if mensagem:
+            messages.warning(self.request, mensagem)
+        url_listagem = reverse('financeiro:lancamento-list')
+        filtros = self.request.GET.urlencode()
+        if filtros:
+            return redirect(f'{url_listagem}?{filtros}')
+        return redirect(url_listagem)
+
+    def get(self, request, *args, **kwargs):
+        contexto_filtros, data_inicial, data_final, resultado = _resolver_contexto_base_termo_anual(request)
+        if isinstance(resultado, str):
+            return self._redirect_listagem(resultado)
+
+        lancamentos = resultado
+        context = {
+            'page_title': f'Termo anual de quitacao {data_inicial.year}',
+            'tipo_documento': 'termo_anual_quitacao',
+            'titulo_documento': 'TERMO ANUAL DE QUITACAO',
+            'subtitulo_documento': f'Referente ao ano de {data_inicial.year}',
+            'grupos_documentais': _montar_grupos_documentais_por_favorecido(lancamentos),
+            'contexto_filtros': contexto_filtros,
+            'ano_documento': data_inicial.year,
+            'data_emissao_humana': _data_documental_por_extenso(date.today()),
+            **_contexto_institucional_documental(),
+        }
+        return self.render_to_response(context)
+
+
+class LancamentoFinanceiroTermosAnuaisQuitacaoPorFavorecidoView(FinanceiroPermissaoMixin, TemplateView):
+    permissao_requerida = 'financeiro.lancamentos.emitir_recibo'
+    template_name = 'financeiro/lancamento_documentos_por_favorecido.html'
+
+    def _redirect_listagem(self, mensagem: str):
+        if mensagem:
+            messages.warning(self.request, mensagem)
+        url_listagem = reverse('financeiro:lancamento-list')
+        filtros = self.request.GET.urlencode()
+        if filtros:
+            return redirect(f'{url_listagem}?{filtros}')
+        return redirect(url_listagem)
+
+    def get(self, request, *args, **kwargs):
+        url = reverse('financeiro:lancamento-termo-anual-quitacao')
+        query = request.GET.urlencode()
+        if query:
+            url = f'{url}?{query}'
+        return redirect(url)
 
 
 class LancamentoFinanceiroDeleteView(FinanceiroDeleteMixin):

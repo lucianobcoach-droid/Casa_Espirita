@@ -32,7 +32,8 @@ Este arquivo nao substitui `docs/CEREBRO_PROJETO.md`, `docs/STATE.md`, `docs/COD
 - em cadastros sequenciais do financeiro, o padrao aprovado e manter `Salvar` como acao de salvar e sair/retornar conforme o contexto, e usar um botao compacto `+` para salvar e permanecer cadastrando, sem adotar o texto longo `Salvar e continuar cadastrando` como acao principal
 - quando um cadastro possuir `codigo` operacional, o campo pode ser opcional e gerar automaticamente um codigo sequencial quando deixado vazio, preservando o codigo manual quando informado
 - no formulario de lancamento, os botoes `+` de criacao rapida devem ficar fora do input, alinhados a direita do campo, sem sobreposicao
-- recibo em lote deve ser permitido apenas quando todos os lancamentos selecionados forem do mesmo favorecido e nao forem rateados, com bloqueio claro em selecao mista
+- na `lancamento_list`, acoes documentais redundantes devem ser evitadas: quando a diferenca for apenas o agrupamento automatico por favorecido, a interface deve preferir uma unica acao visivel de `Recibos em lote` e uma unica acao visivel de `Termo anual de quitacao`
+- em documentos anuais do financeiro, a assinatura institucional deve reaproveitar o mesmo estilo manuscrito ja consolidado no recibo oficial, sem criar assinatura paralela
 
 ## Checklist permanente
 - Navegacao/menu/atalhos foram revisados?
