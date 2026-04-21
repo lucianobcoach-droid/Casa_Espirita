@@ -112,6 +112,16 @@ MESES_PT_BR = (
     'Novembro',
     'Dezembro',
 )
+EVOLUCAO_CATEGORIAS_SERIES_CORES = (
+    '#1f5fbf',
+    '#b73a32',
+    '#2f855a',
+    '#8a5a10',
+    '#7c3aed',
+    '#0f766e',
+    '#c2410c',
+    '#475569',
+)
 
 
 def _auditoria_usuario(request):
@@ -2721,6 +2731,223 @@ def _formatar_moeda_brl(valor) -> str:
     return valor_formatado.replace(',', 'X').replace('.', ',').replace('X', '.')
 
 
+def _rotulo_mes_pt_br(ano: int, mes: int) -> str:
+    return f'{MESES_PT_BR[mes - 1][:3]}/{ano}'
+
+
+def _primeiro_dia_mes(data_base: date) -> date:
+    return date(data_base.year, data_base.month, 1)
+
+
+def _iterar_meses_periodo(data_inicial: date, data_final: date) -> list[date]:
+    meses: list[date] = []
+    cursor = _primeiro_dia_mes(data_inicial)
+    ultimo = _primeiro_dia_mes(data_final)
+    while cursor <= ultimo:
+        meses.append(cursor)
+        if cursor.month == 12:
+            cursor = date(cursor.year + 1, 1, 1)
+        else:
+            cursor = date(cursor.year, cursor.month + 1, 1)
+    return meses
+
+
+def _label_categoria_evolucao(categoria: CategoriaFinanceira) -> str:
+    if categoria.categoria_pai_id:
+        return f'{categoria.categoria_pai.nome} / {categoria.nome}'
+    return categoria.nome
+
+
+def _categoria_eh_agregadora(categoria: CategoriaFinanceira) -> bool:
+    return not categoria.permite_vinculo_em_lancamento
+
+
+def _coletar_series_evolucao_categorias(
+    categorias_selecionadas: list[CategoriaFinanceira],
+) -> tuple[list[dict[str, object]], list[str]]:
+    erros: list[str] = []
+    categorias_por_id = {categoria.id: categoria for categoria in categorias_selecionadas}
+
+    for categoria in categorias_selecionadas:
+        if not _categoria_eh_agregadora(categoria):
+            continue
+        conflito = next(
+            (
+                outra
+                for outra in categorias_selecionadas
+                if outra.categoria_pai_id == categoria.id
+            ),
+            None,
+        )
+        if conflito:
+            erros.append(
+                'Nao combine categoria agrupadora com sua subcategoria no mesmo grafico. '
+                f'Remova "{_label_categoria_evolucao(categoria)}" ou "{_label_categoria_evolucao(conflito)}".'
+            )
+            break
+
+    if erros:
+        return [], erros
+
+    filhos_por_pai: dict[int, list[CategoriaFinanceira]] = {}
+    if categorias_selecionadas:
+        categorias_relacionadas = CategoriaFinanceira.objects.filter(
+            Q(pk__in=[categoria.id for categoria in categorias_selecionadas])
+            | Q(categoria_pai_id__in=[categoria.id for categoria in categorias_selecionadas])
+        ).select_related('categoria_pai')
+        for categoria in categorias_relacionadas:
+            if categoria.categoria_pai_id:
+                filhos_por_pai.setdefault(categoria.categoria_pai_id, []).append(categoria)
+
+    series: list[dict[str, object]] = []
+    for indice, categoria in enumerate(categorias_selecionadas):
+        if _categoria_eh_agregadora(categoria):
+            categorias_base = filhos_por_pai.get(categoria.id, [])
+            categoria_ids = [item.id for item in categorias_base]
+        else:
+            categoria_ids = [categoria.id]
+
+        series.append(
+            {
+                'chave': f'categoria_{categoria.id}',
+                'categoria': categoria,
+                'categoria_ids': categoria_ids,
+                'label': _label_categoria_evolucao(categoria),
+                'tipo': categoria.tipo,
+                'cor': EVOLUCAO_CATEGORIAS_SERIES_CORES[indice % len(EVOLUCAO_CATEGORIAS_SERIES_CORES)],
+                'sem_dados_cadastrais': not categoria_ids,
+            }
+        )
+    return series, []
+
+
+def _montar_eixo_svg_evolucao(
+    labels: list[str],
+    series: list[dict[str, object]],
+) -> dict[str, object]:
+    largura = 980
+    altura = 360
+    padding_esquerda = 72
+    padding_direita = 24
+    padding_topo = 18
+    padding_base = 46
+    largura_grafico = max(1, largura - padding_esquerda - padding_direita)
+    altura_grafico = max(1, altura - padding_topo - padding_base)
+
+    valores = [Decimal('0.00')]
+    for serie in series:
+        valores.extend(serie['valores'])
+
+    valor_max = max(valores)
+    valor_min = min(valores)
+    if valor_max == valor_min:
+        if valor_max == Decimal('0.00'):
+            valor_max = Decimal('1.00')
+            valor_min = Decimal('-1.00')
+        elif valor_max > 0:
+            valor_min = Decimal('0.00')
+            valor_max = valor_max * Decimal('1.1')
+        else:
+            valor_max = Decimal('0.00')
+            valor_min = valor_min * Decimal('1.1')
+
+    amplitude = valor_max - valor_min
+    if amplitude == Decimal('0.00'):
+        amplitude = Decimal('1.00')
+
+    margem = amplitude * Decimal('0.08')
+    limite_superior = valor_max + margem
+    limite_inferior = valor_min - margem
+    amplitude_total = limite_superior - limite_inferior
+    if amplitude_total == Decimal('0.00'):
+        amplitude_total = Decimal('1.00')
+
+    def posicao_y(valor: Decimal) -> float:
+        proporcao = float((valor - limite_inferior) / amplitude_total)
+        return padding_topo + (altura_grafico * (1 - proporcao))
+
+    def posicao_x(indice: int) -> float:
+        if len(labels) <= 1:
+            return padding_esquerda + (largura_grafico / 2)
+        passo = largura_grafico / (len(labels) - 1)
+        return padding_esquerda + (passo * indice)
+
+    grade: list[dict[str, object]] = []
+    divisores = 4
+    for indice in range(divisores + 1):
+        valor = limite_superior - ((amplitude_total / divisores) * indice)
+        grade.append(
+            {
+                'y': posicao_y(valor),
+                'label': f'R$ {_formatar_moeda_brl(valor)}',
+            }
+        )
+
+    zero_y = posicao_y(Decimal('0.00'))
+    rotulos_eixo_x = [
+        {'x': posicao_x(indice), 'label': label}
+        for indice, label in enumerate(labels)
+    ]
+
+    return {
+        'largura': largura,
+        'altura': altura,
+        'padding_esquerda': padding_esquerda,
+        'padding_direita': padding_direita,
+        'padding_topo': padding_topo,
+        'padding_base': padding_base,
+        'zero_y': zero_y,
+        'grade': grade,
+        'rotulos_eixo_x': rotulos_eixo_x,
+        'posicao_x': posicao_x,
+        'posicao_y': posicao_y,
+    }
+
+
+def _montar_contexto_svg_evolucao(
+    labels: list[str],
+    series: list[dict[str, object]],
+) -> dict[str, object]:
+    if not labels or not series:
+        return {'tem_dados': False}
+
+    eixo = _montar_eixo_svg_evolucao(labels, series)
+    series_svg: list[dict[str, object]] = []
+    for serie in series:
+        pontos = []
+        path_data = []
+        for indice, valor in enumerate(serie['valores']):
+            x = eixo['posicao_x'](indice)
+            y = eixo['posicao_y'](valor)
+            pontos.append(
+                {
+                    'x': x,
+                    'y': y,
+                    'label_mes': labels[indice],
+                    'label_valor': f'R$ {_formatar_moeda_brl(valor)}',
+                }
+            )
+            path_data.append(f'{"M" if indice == 0 else "L"} {x:.2f} {y:.2f}')
+        series_svg.append(
+            {
+                'label': serie['label'],
+                'cor': serie['cor'],
+                'path_data': ' '.join(path_data),
+                'pontos': pontos,
+            }
+        )
+
+    return {
+        'tem_dados': True,
+        'largura': eixo['largura'],
+        'altura': eixo['altura'],
+        'zero_y': eixo['zero_y'],
+        'grade': eixo['grade'],
+        'rotulos_eixo_x': eixo['rotulos_eixo_x'],
+        'series': series_svg,
+    }
+
+
 def _resolver_conta_referencia_lancamentos_listagem(request) -> int | None:
     conta_raw = (request.GET.get('conta') or '').strip()
     if not conta_raw:
@@ -3570,6 +3797,309 @@ class PrestacaoContasFinanceiroView(FinanceiroPeriodoMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         context['page_title'] = 'Prestacao de Contas'
         context.update(self._build_periodo_context())
+        return context
+
+
+class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
+    permissao_requerida = 'financeiro.resumo_financeiro.visualizar'
+    template_name = 'financeiro/evolucao_categorias.html'
+    modo_padrao = 'categorias'
+    modos_disponiveis = (
+        ('categorias', 'Evolucao de categorias selecionadas'),
+        ('comparativo', 'Comparativo entrada x saida'),
+    )
+
+    def _parse_periodo(self) -> tuple[str, str, date | None, date | None, str]:
+        data_inicial_raw = (self.request.GET.get('data_inicial') or '').strip()
+        data_final_raw = (self.request.GET.get('data_final') or '').strip()
+
+        data_inicial = None
+        data_final = None
+        periodo_error = ''
+
+        if data_inicial_raw:
+            try:
+                data_inicial = date.fromisoformat(data_inicial_raw)
+            except ValueError:
+                periodo_error = 'Informe uma data inicial valida.'
+
+        if data_final_raw and not periodo_error:
+            try:
+                data_final = date.fromisoformat(data_final_raw)
+            except ValueError:
+                periodo_error = 'Informe uma data final valida.'
+
+        if not periodo_error and ((data_inicial and not data_final) or (data_final and not data_inicial)):
+            periodo_error = 'Informe data inicial e data final para gerar o grafico.'
+
+        if not periodo_error and data_inicial and data_final and data_final < data_inicial:
+            periodo_error = 'A data final precisa ser igual ou posterior a data inicial.'
+
+        return data_inicial_raw, data_final_raw, data_inicial, data_final, periodo_error
+
+    def _parse_contas(self) -> tuple[list[ContaFinanceira], list[str], list[int]]:
+        contas_disponiveis = list(ContaFinanceira.objects.order_by('nome'))
+        selected_ids_raw = [valor for valor in self.request.GET.getlist('contas') if valor.strip()]
+        selected_ids: list[int] = []
+        for valor in selected_ids_raw:
+            try:
+                selected_ids.append(int(valor))
+            except (TypeError, ValueError):
+                continue
+        if not selected_ids:
+            selected_ids = [conta.id for conta in contas_disponiveis]
+        return contas_disponiveis, selected_ids_raw, selected_ids
+
+    def _parse_categorias(self) -> tuple[list[CategoriaFinanceira], list[str], list[CategoriaFinanceira]]:
+        categorias_disponiveis = list(
+            CategoriaFinanceira.objects.select_related('categoria_pai').order_by(
+                'tipo',
+                'categoria_pai__nome',
+                'nome',
+            )
+        )
+        categorias_por_id = {categoria.id: categoria for categoria in categorias_disponiveis}
+        selecionadas_raw = [valor for valor in self.request.GET.getlist('categorias') if valor.strip()]
+        categorias_selecionadas: list[CategoriaFinanceira] = []
+        for valor in selecionadas_raw:
+            try:
+                categoria_id = int(valor)
+            except (TypeError, ValueError):
+                continue
+            categoria = categorias_por_id.get(categoria_id)
+            if categoria:
+                categorias_selecionadas.append(categoria)
+        return categorias_disponiveis, selecionadas_raw, categorias_selecionadas
+
+    def _build_contexto_base(self) -> dict[str, object]:
+        contas_disponiveis, selected_ids_raw, selected_ids = self._parse_contas()
+        categorias_disponiveis, categorias_raw, categorias_selecionadas = self._parse_categorias()
+        data_inicial_raw, data_final_raw, data_inicial, data_final, periodo_error = self._parse_periodo()
+        modo = (self.request.GET.get('modo') or self.modo_padrao).strip()
+        if modo not in {item[0] for item in self.modos_disponiveis}:
+            modo = self.modo_padrao
+        modo_label = dict(self.modos_disponiveis).get(modo, self.modo_padrao)
+
+        filtros_relatorio_ativos = _request_possui_parametros_get(
+            self.request,
+            ('contas', 'categorias', 'data_inicial', 'data_final', 'modo'),
+        )
+        contas_selecionadas = [conta for conta in contas_disponiveis if conta.id in selected_ids]
+        todas_as_contas_selecionadas = len(selected_ids) == len(contas_disponiveis)
+
+        return {
+            'page_title': 'Evolucao por categorias',
+            'modo': modo,
+            'modo_label': modo_label,
+            'modos_disponiveis': self.modos_disponiveis,
+            'contas_disponiveis': contas_disponiveis,
+            'contas_selecionadas_ids': [str(conta_id) for conta_id in selected_ids],
+            'quantidade_contas_selecionadas': len(contas_selecionadas),
+            'contas_incluidas_label': (
+                'Todas as contas'
+                if todas_as_contas_selecionadas
+                else ', '.join(conta.nome for conta in contas_selecionadas)
+            ),
+            'categorias_disponiveis': categorias_disponiveis,
+            'categorias_selecionadas_ids': categorias_raw,
+            'categorias_selecionadas': categorias_selecionadas,
+            'categorias_selecionadas_label': ', '.join(
+                _label_categoria_evolucao(categoria) for categoria in categorias_selecionadas
+            ),
+            'data_inicial': data_inicial_raw,
+            'data_final': data_final_raw,
+            'periodo_error': periodo_error,
+            'filtros_relatorio_ativos': filtros_relatorio_ativos,
+            'periodo_resolvido': (data_inicial, data_final),
+        }
+
+    def _montar_series(self, categorias_selecionadas: list[CategoriaFinanceira], modo: str):
+        series_base, erros = _coletar_series_evolucao_categorias(categorias_selecionadas)
+        if erros:
+            return [], {}, erros
+
+        mapa_categoria_para_serie: dict[int, int] = {}
+        for indice, serie in enumerate(series_base):
+            for categoria_id in serie['categoria_ids']:
+                mapa_categoria_para_serie[categoria_id] = indice
+
+        if modo == 'comparativo':
+            series = [
+                {
+                    'chave': 'receitas',
+                    'label': 'Entradas',
+                    'tipo': 'receita',
+                    'cor': '#1f5fbf',
+                    'valores': [],
+                },
+                {
+                    'chave': 'despesas',
+                    'label': 'Saidas',
+                    'tipo': 'despesa',
+                    'cor': '#b73a32',
+                    'valores': [],
+                },
+            ]
+            return series, mapa_categoria_para_serie, []
+
+        series = [
+            {
+                'chave': serie['chave'],
+                'label': serie['label'],
+                'tipo': serie['tipo'],
+                'cor': serie['cor'],
+                'valores': [],
+                'sem_dados_cadastrais': serie['sem_dados_cadastrais'],
+            }
+            for serie in series_base
+        ]
+        return series, mapa_categoria_para_serie, []
+
+    def _montar_relatorio(self, data_inicial: date, data_final: date, selected_ids: list[int], categorias_selecionadas: list[CategoriaFinanceira], modo: str) -> dict[str, object]:
+        if not categorias_selecionadas:
+            return {
+                'erro': 'Selecione ao menos uma categoria ou subcategoria para gerar o grafico.',
+            }
+
+        series, mapa_categoria_para_serie, erros = self._montar_series(categorias_selecionadas, modo)
+        if erros:
+            return {'erro': erros[0]}
+
+        categorias_ids_consideradas = sorted(mapa_categoria_para_serie.keys())
+        if not categorias_ids_consideradas:
+            return {
+                'erro': 'As categorias selecionadas nao possuem subcategorias lancaveis para compor o relatorio.',
+            }
+
+        lancamentos = list(
+            LancamentoFinanceiro.objects.annotate(
+                data_operacional=Coalesce('data_pagamento', 'data_competencia')
+            )
+            .filter(
+                data_operacional__gte=data_inicial,
+                data_operacional__lte=data_final,
+                categoria_id__in=categorias_ids_consideradas,
+                conta_id__in=selected_ids,
+                tipo__in=(
+                    LancamentoFinanceiro.TipoLancamento.RECEITA,
+                    LancamentoFinanceiro.TipoLancamento.DESPESA,
+                ),
+            )
+            .select_related('categoria', 'categoria__categoria_pai', 'conta')
+            .order_by('data_operacional', 'pk')
+        )
+
+        meses = _iterar_meses_periodo(data_inicial, data_final)
+        labels = [_rotulo_mes_pt_br(item.year, item.month) for item in meses]
+        valores_por_serie = [
+            [Decimal('0.00') for _ in meses]
+            for _ in series
+        ]
+        indice_mes = {(item.year, item.month): idx for idx, item in enumerate(meses)}
+
+        total_receitas = Decimal('0.00')
+        total_despesas = Decimal('0.00')
+        total_quitado = Decimal('0.00')
+        total_aberto = Decimal('0.00')
+
+        for lancamento in lancamentos:
+            chave_mes = (lancamento.data_operacional.year, lancamento.data_operacional.month)
+            indice_mes_lancamento = indice_mes.get(chave_mes)
+            if indice_mes_lancamento is None:
+                continue
+
+            if modo == 'comparativo':
+                indice_serie = 0 if lancamento.tipo == LancamentoFinanceiro.TipoLancamento.RECEITA else 1
+            else:
+                indice_serie = mapa_categoria_para_serie.get(lancamento.categoria_id)
+                if indice_serie is None:
+                    continue
+
+            valor_assinado = (
+                lancamento.valor
+                if lancamento.tipo == LancamentoFinanceiro.TipoLancamento.RECEITA
+                else (lancamento.valor * Decimal('-1'))
+            )
+            valores_por_serie[indice_serie][indice_mes_lancamento] += valor_assinado
+
+            if lancamento.tipo == LancamentoFinanceiro.TipoLancamento.RECEITA:
+                total_receitas += lancamento.valor
+            else:
+                total_despesas += lancamento.valor
+
+            if lancamento.status == LancamentoFinanceiro.StatusLancamento.QUITADO:
+                total_quitado += lancamento.valor
+            elif lancamento.status == LancamentoFinanceiro.StatusLancamento.ABERTO:
+                total_aberto += lancamento.valor
+
+        for indice, serie in enumerate(series):
+            serie['valores'] = valores_por_serie[indice]
+            serie['total'] = sum(valores_por_serie[indice], Decimal('0.00'))
+            serie['total_formatado'] = _formatar_moeda_brl(serie['total'])
+
+        linhas_tabela = []
+        for indice, mes in enumerate(meses):
+            valores_linha = [serie['valores'][indice] for serie in series]
+            linhas_tabela.append(
+                {
+                    'mes_label': _rotulo_mes_pt_br(mes.year, mes.month),
+                    'valores': [
+                        {
+                            'valor': valor,
+                            'valor_formatado': _formatar_moeda_brl(valor),
+                            'tipo': series[posicao]['tipo'],
+                        }
+                        for posicao, valor in enumerate(valores_linha)
+                    ],
+                    'saldo_liquido': sum(valores_linha, Decimal('0.00')),
+                    'saldo_liquido_formatado': _formatar_moeda_brl(sum(valores_linha, Decimal('0.00'))),
+                }
+            )
+
+        grafico = _montar_contexto_svg_evolucao(labels, series)
+        saldo_liquido = total_receitas - total_despesas
+        return {
+            'series': series,
+            'grafico': grafico,
+            'linhas_tabela': linhas_tabela,
+            'quantidade_lancamentos': len(lancamentos),
+            'quantidade_meses': len(meses),
+            'total_receitas': total_receitas,
+            'total_despesas': total_despesas,
+            'total_quitado': total_quitado,
+            'total_aberto': total_aberto,
+            'saldo_liquido': saldo_liquido,
+            'total_receitas_formatado': _formatar_moeda_brl(total_receitas),
+            'total_despesas_formatado': _formatar_moeda_brl(total_despesas),
+            'total_quitado_formatado': _formatar_moeda_brl(total_quitado),
+            'total_aberto_formatado': _formatar_moeda_brl(total_aberto),
+            'saldo_liquido_formatado': _formatar_moeda_brl(saldo_liquido),
+            'tem_dados': bool(lancamentos),
+            'periodo_label': f'{data_inicial.strftime("%d/%m/%Y")} a {data_final.strftime("%d/%m/%Y")}',
+        }
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        contexto_base = self._build_contexto_base()
+        context.update(contexto_base)
+
+        data_inicial, data_final = contexto_base['periodo_resolvido']
+        if contexto_base['periodo_error'] or not data_inicial or not data_final:
+            return context
+
+        _, _, selected_ids = self._parse_contas()
+        relatorio = self._montar_relatorio(
+            data_inicial,
+            data_final,
+            selected_ids,
+            contexto_base['categorias_selecionadas'],
+            contexto_base['modo'],
+        )
+        if relatorio.get('erro'):
+            context['periodo_error'] = relatorio['erro']
+            return context
+
+        context.update(relatorio)
         return context
 
 

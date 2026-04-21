@@ -2,6 +2,51 @@
 
 Data: 2026-04-21
 
+## Relatorio grafico de evolucao por categorias
+
+- implementei a nova tela `Evolucao por categorias` no modulo `financeiro`
+- diagnostico reaproveitado:
+  - a base de `Resumo` e `Prestacao de Contas` ja entregava padrao de filtros compactos, contas selecionaveis e shell coerente para relatorios
+  - o modulo ja tinha helpers de periodo e formatacao monetaria reutilizaveis em `financeiro/views.py`
+  - nao havia infraestrutura de graficos no repositorio, entao optei pela menor solucao segura: grafico SVG gerado no servidor, sem dependencia nova de JS externo
+- solucao implementada:
+  - nova rota `financeiro:evolucao-categorias`
+  - nova view `EvolucaoCategoriasFinanceiroView`
+  - novo template `financeiro/templates/financeiro/evolucao_categorias.html`
+  - novo ponto de entrada na secao `Relatorios` do menu superior do `financeiro`
+- filtros entregues:
+  - `data inicial`
+  - `data final`
+  - `categorias/subcategorias` com selecao multipla
+  - `contas` opcionais no mesmo padrao dropdown do modulo
+  - `modo do grafico`
+- modos entregues:
+  - `Evolucao de categorias selecionadas`
+    - uma serie por categoria/subcategoria selecionada
+    - quando a selecao e de categoria pai, a serie agrega as subcategorias lancaveis
+  - `Comparativo entrada x saida`
+    - compara no mesmo eixo temporal a soma mensal das categorias de receita e de despesa selecionadas
+- regra de seguranca aplicada ao filtro:
+  - a tela bloqueia a combinacao de `Categoria` agrupadora com sua propria `Subcategoria` no mesmo grafico para evitar sobreposicao e dupla contagem
+- regra temporal/financeira adotada:
+  - eixo mensal
+  - `data_pagamento` como data operacional principal, com fallback para `data_competencia`
+  - `receitas` positivas
+  - `despesas` negativas
+- saida final da tela:
+  - grafico mensal
+  - legenda por serie
+  - tabela mensal de apoio
+  - KPIs do periodo (`receitas`, `despesas`, `quitado`, `em aberto`, `saldo liquido`, `lancamentos considerados`)
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+  - smoke autenticado com rollback/logica local confirmando:
+    - acesso `200` a tela
+    - modo `categorias` com render do grafico e da tabela
+    - modo `comparativo` com series `Entradas` e `Saidas`
+
 ## Trava de seguranca para importacoes com base ja preenchida
 
 - implementei uma trava previa na central de importacoes do `financeiro`

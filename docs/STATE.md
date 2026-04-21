@@ -2,6 +2,41 @@
 
 Data de atualizacao: 2026-04-21
 
+## Relatorio grafico de evolucao por categorias
+
+- o `financeiro` passou a ter uma nova tela de relatorio propria: `Evolucao por categorias`
+- a tela entrou na area de `Relatorios` do menu superior do modulo, sem criar navegacao paralela nem poluir a listagem principal
+- filtros entregues nesta primeira versao:
+  - `data inicial`
+  - `data final`
+  - selecao multipla de `categorias/subcategorias`
+  - selecao opcional de `contas`
+  - `modo do grafico`
+- modos suportados:
+  - `Evolucao de categorias selecionadas`: uma serie por categoria/subcategoria selecionada
+  - `Comparativo entrada x saida`: consolidacao comparativa entre categorias de receita e despesa no mesmo eixo temporal
+- regra consolidada de agrupamento:
+  - consolidacao mensal por `data_pagamento`, com fallback para `data_competencia`
+  - quando o usuario seleciona `Categoria` agrupadora, a serie passa a agregar suas `Subcategorias` lancaveis
+  - para evitar dupla contagem, a tela bloqueia a combinacao de categoria pai com sua propria subcategoria no mesmo grafico
+- a visualizacao entregue combina:
+  - grafico SVG server-side, sem depender de biblioteca JS externa
+  - tabela mensal de apoio logo abaixo
+  - KPIs do periodo com `receitas`, `despesas`, `quitado`, `em aberto`, `saldo liquido` e `quantidade de lancamentos`
+- regra financeira adotada no grafico/tabela:
+  - `receitas` entram positivas
+  - `despesas` entram negativas
+  - o `saldo liquido` do periodo segue a natureza real dos lancamentos considerados
+- validacoes executadas nesta microetapa:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+  - smoke autenticado com usuario real confirmando:
+    - abertura da tela
+    - modo `categorias`
+    - modo `comparativo`
+    - renderizacao do grafico e da tabela mensal com dados reais
+
 ## Trava de seguranca nas importacoes do financeiro
 
 - a central de importacoes do `financeiro` passou a bloquear novas importacoes quando o dominio de destino ja estiver preenchido, evitando mistura de dados, duplicidade e sobreposicao de base

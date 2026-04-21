@@ -2175,6 +2175,11 @@
                                             <span>Prestacao de Contas</span>
                                         </a>
                                         {% endif %}
+                                        {% if pode_visualizar_resumo %}
+                                        <a class="financeiro-menu-link{% if current_url_name == 'evolucao-categorias' %} is-active{% endif %}" href="{% url 'financeiro:evolucao-categorias' %}">
+                                            <span>Evolucao por Categorias</span>
+                                        </a>
+                                        {% endif %}
                                         {% if pode_visualizar_auditoria %}
                                         <a class="financeiro-menu-link{% if current_url_name == 'auditoria-lancamento-list' %} is-active{% endif %}" href="{% url 'financeiro:auditoria-lancamento-list' %}">
                                             <span>Auditoria do Financeiro</span>
@@ -2240,7 +2245,7 @@
                             Visao geral
                         {% elif current_url_name == 'lancamento-list' or current_url_name == 'lancamento-create' or current_url_name == 'lancamento-update' or current_url_name == 'lancamento-rateio-update' or current_url_name == 'lancamento-delete' or current_url_name == 'lancamento-importacao-exportacao' or current_url_name == 'extrato-list' or current_url_name == 'conta-extrato' %}
                             Movimentacao
-                        {% elif current_url_name == 'resumo' or current_url_name == 'prestacao-contas' or current_url_name == 'auditoria-lancamento-list' %}
+                        {% elif current_url_name == 'resumo' or current_url_name == 'prestacao-contas' or current_url_name == 'evolucao-categorias' or current_url_name == 'auditoria-lancamento-list' %}
                             Relatorios
                         {% elif current_url_name == 'conta-list' or current_url_name == 'conta-create' or current_url_name == 'conta-update' or current_url_name == 'conta-delete' or current_url_name == 'pessoa-list' or current_url_name == 'pessoa-create' or current_url_name == 'pessoa-update' or current_url_name == 'pessoa-delete' or current_url_name == 'categoria-list' or current_url_name == 'categoria-create' or current_url_name == 'categoria-update' or current_url_name == 'categoria-delete' or current_url_name == 'centro-custo-list' or current_url_name == 'centro-custo-create' or current_url_name == 'centro-custo-update' or current_url_name == 'centro-custo-delete' %}
                             Cadastros
