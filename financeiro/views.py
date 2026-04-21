@@ -2489,6 +2489,44 @@ def _usuario_pode_importar_cadastro_auxiliar(usuario, slug: str) -> bool:
     return usuario_possui_permissao(usuario, configuracao['permissao'])
 
 
+IMPORTACAO_DOMINIOS_BLOQUEADOS_QUANDO_PREENCHIDOS = {
+    'contas': {
+        'modelo': ContaFinanceira,
+        'mensagem': 'Ja existem registros em Contas. Limpe ou redefina a base antes de nova importacao.',
+    },
+    'pessoas': {
+        'modelo': PessoaFinanceira,
+        'mensagem': 'Ja existem registros em Favorecidos. Limpe ou redefina a base antes de nova importacao.',
+    },
+    'centros-custo': {
+        'modelo': CentroCusto,
+        'mensagem': 'Ja existem registros em Centros de custo. Importe apenas em base vazia desse dominio.',
+    },
+    'categorias': {
+        'modelo': CategoriaFinanceira,
+        'mensagem': 'Ja existem registros em Categorias/Subcategorias. Importe apenas em base vazia desse dominio.',
+    },
+    'lancamentos': {
+        'modelo': LancamentoFinanceiro,
+        'mensagem': 'Ja existem registros em Lancamentos. Limpe ou redefina a base antes de nova importacao.',
+    },
+}
+
+
+def _dominio_importacao_ja_possui_registros(slug: str) -> bool:
+    configuracao = IMPORTACAO_DOMINIOS_BLOQUEADOS_QUANDO_PREENCHIDOS.get(slug)
+    if not configuracao:
+        return False
+    return configuracao['modelo'].objects.exists()
+
+
+def _mensagem_bloqueio_importacao_dominio(slug: str) -> str:
+    configuracao = IMPORTACAO_DOMINIOS_BLOQUEADOS_QUANDO_PREENCHIDOS.get(slug)
+    if not configuracao:
+        return 'Ja existem registros neste dominio. Limpe ou redefina a base antes de nova importacao.'
+    return configuracao['mensagem']
+
+
 AUXILIAR_IMPORTACAO_PROCESSADORES = {
     'contas': {'validar': _validar_conteudo_planilha_importacao_contas_xlsx, 'executar': _importar_contas_validadas},
     'pessoas': {'validar': _validar_conteudo_planilha_importacao_pessoas_xlsx, 'executar': _importar_pessoas_validadas},
@@ -4907,6 +4945,10 @@ class LancamentoFinanceiroImportacaoExportacaoView(FinanceiroPermissaoMixin, Tem
         )
 
     def _processar_importacao_lancamentos(self, request, arquivo_importacao):
+        if _dominio_importacao_ja_possui_registros('lancamentos'):
+            messages.error(request, _mensagem_bloqueio_importacao_dominio('lancamentos'))
+            return self.get(request)
+
         erros_estrutura = _validar_estrutura_planilha_importacao_lancamentos_xlsx(arquivo_importacao)
         if erros_estrutura:
             for erro in erros_estrutura:
@@ -4970,6 +5012,10 @@ class LancamentoFinanceiroImportacaoExportacaoView(FinanceiroPermissaoMixin, Tem
 
         if not _usuario_pode_importar_cadastro_auxiliar(request.user, slug):
             raise PermissionDenied
+
+        if _dominio_importacao_ja_possui_registros(slug):
+            messages.error(request, _mensagem_bloqueio_importacao_dominio(slug))
+            return self.get(request)
 
         configuracao = CADASTRO_AUXILIAR_PLANILHAS_BASE[slug]
         erros_estrutura = _validar_estrutura_planilha_modelo_xlsx(

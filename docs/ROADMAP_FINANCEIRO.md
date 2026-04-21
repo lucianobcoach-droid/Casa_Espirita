@@ -2,6 +2,23 @@
 
 Data: 2026-04-21
 
+## 0.11. Trava de seguranca para importacoes por dominio preenchido
+
+- a central de importacoes do `financeiro` passou a barrar importacoes quando o dominio de destino ja possui registros
+- dominios cobertos:
+  - `contas`
+  - `favorecidos`
+  - `categorias/subcategorias`
+  - `centros de custo`
+  - `lancamentos`
+- regra consolidada:
+  - importacao so pode acontecer em base vazia daquele dominio
+  - se houver registros existentes, a operacao e bloqueada antes da validacao/conteudo da planilha
+  - o bloqueio e acompanhado de mensagem clara indicando exatamente qual dominio precisa ser limpo ou redefinido
+- essa trava nao substitui os fluxos de reset/limpeza ja existentes; ela passa a reforcar operacionalmente que nova carga deve acontecer apenas sobre dominio vazio
+- backlog remanescente relacionado:
+  - evoluir futuramente a experiencia de preflight/importacao para informar de forma ainda mais visivel o estado de preenchimento de cada dominio antes do upload
+
 ## 0.5. Execucao atual da frente de planilha comum com ate 5 rateios na mesma linha
 
 - a frente antes mantida como futura de `exportacao/importacao comum de lancamentos com suporte a rateio em planilha` deixou de ser backlog e entrou em execucao real

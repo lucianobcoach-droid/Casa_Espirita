@@ -2,6 +2,33 @@
 
 Data: 2026-04-21
 
+## Trava de seguranca para importacoes com base ja preenchida
+
+- implementei uma trava previa na central de importacoes do `financeiro`
+- a verificacao agora acontece antes da validacao da planilha e antes de qualquer tentativa de gravacao
+- dominios cobertos:
+  - `contas`
+  - `pessoas/favorecidos`
+  - `categorias/subcategorias`
+  - `centros de custo`
+  - `lancamentos`
+- regra aplicada:
+  - se o dominio correspondente ja tiver registros, a importacao e barrada
+  - nenhuma linha e processada
+  - nenhuma importacao parcial acontece
+- mensagens finais entregues por dominio, com texto explicito de bloqueio
+- a implementacao ficou concentrada em `financeiro/views.py`, reutilizando helper unico para detectar base preenchida e devolver a mensagem padrao correspondente
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+  - smoke autenticado transacional com rollback OK:
+    - importacao de `lancamentos` em dominio vazio temporario seguiu para a validacao normal da planilha e nao foi bloqueada pela nova trava
+    - importacao de `contas` em dominio preenchido foi barrada com a mensagem clara esperada
+- observacao de validacao:
+  - a base local atual estava preenchida em todos os cinco dominios
+  - para provar o cenario de dominio vazio sem tocar na base real, o smoke esvaziou `lancamentos` apenas dentro de uma transacao com rollback
+
 ## Reconciliacao explicita do saldo na Prestacao de Contas
 
 - revisei a montagem da `Prestacao de Contas` para resolver a leitura enganosa do saldo final quando havia transferencia entre conta selecionada e outra conta da instituicao fora do filtro

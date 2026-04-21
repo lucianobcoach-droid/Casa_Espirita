@@ -2,6 +2,28 @@
 
 Data de atualizacao: 2026-04-21
 
+## Trava de seguranca nas importacoes do financeiro
+
+- a central de importacoes do `financeiro` passou a bloquear novas importacoes quando o dominio de destino ja estiver preenchido, evitando mistura de dados, duplicidade e sobreposicao de base
+- a trava foi aplicada antes da validacao estrutural/conteudo da planilha, preservando o comportamento `all-or-nothing` e evitando processamento inutil quando a base ja esta ocupada
+- dominios cobertos nesta etapa:
+  - `contas`
+  - `favorecidos`
+  - `categorias/subcategorias`
+  - `centros de custo`
+  - `lancamentos`
+- mensagens de bloqueio agora indicam explicitamente qual dominio barrou a operacao, por exemplo:
+  - `Ja existem registros em Lancamentos. Limpe ou redefina a base antes de nova importacao.`
+  - `Ja existem registros em Categorias/Subcategorias. Importe apenas em base vazia desse dominio.`
+- os fluxos de reset/limpeza ja existentes permanecem como caminho correto para preparar nova importacao quando a base do dominio nao estiver vazia
+- validacoes executadas nesta microetapa:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+  - smoke autenticado transacional com rollback:
+    - dominio vazio validado em `lancamentos`, esvaziado apenas dentro da transacao de teste
+    - dominio preenchido validado em `contas`, com bloqueio e mensagem clara
+
 ## Prestacao de Contas com reconciliacao explicita do saldo consolidado
 
 - a `Prestacao de Contas` passou a explicitar no proprio fechamento a reconciliacao do saldo quando houver transferencias entre as contas selecionadas no relatorio e outras contas da instituicao
