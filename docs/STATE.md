@@ -2,6 +2,26 @@
 
 Data de atualizacao: 2026-04-22
 
+## Correcao pontual da visualizacao comparativa em `Evolucao por categorias`
+
+- a homologacao visual apontou tres defeitos reais no comparativo da tela e a microetapa atuou apenas neles, sem reabrir a feature
+- no comparativo consolidado:
+  - a legenda deixou de usar `Periodo principal` / `Periodo comparativo` como rotulos genericos
+  - o grafico passou a mostrar os periodos reais selecionados como identificacao das duas series
+  - os rotulos sobre os pontos passaram a ser suprimidos automaticamente quando houver risco de poluicao, preservando o tooltip como leitura exata
+- no comparativo separado:
+  - a tabela comparativa continua sendo a leitura principal
+  - a tela voltou a ter apoio visual grafico, agora em bloco resumido e discreto, sem disputar protagonismo com a tabela
+- o fluxo sem `Periodo comparativo` permaneceu intacto
+- validacoes executadas nesta microetapa:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+  - smoke autenticado OK cobrindo:
+    - modo normal sem comparativo
+    - comparativo consolidado com periodos reais e protecao contra sobreposicao
+    - comparativo separado com grafico-resumo secundario
+
 ## Refinamento da visualizacao da comparacao em `Evolucao por categorias`
 
 - a tela manteve integralmente o comportamento anterior quando o `Periodo comparativo` nao e preenchido

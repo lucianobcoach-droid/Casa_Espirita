@@ -914,6 +914,9 @@
                                                 {% if bloco.usa_alinhamento_relativo %}
                                                     <span class="financeiro-evolucao-meta-item"><strong>Leitura:</strong> pontos alinhados pela posicao relativa de cada bucket.</span>
                                                 {% endif %}
+                                                {% if bloco.rotulos_suprimidos %}
+                                                    <span class="financeiro-evolucao-meta-item"><strong>Valores:</strong> leitura exata preservada no tooltip para evitar sobreposicao.</span>
+                                                {% endif %}
                                             </div>
                                         </div>
                                     {% else %}
@@ -928,6 +931,37 @@
                                         <span class="financeiro-evolucao-meta-item"><strong>Leitura principal:</strong> tabela comparativa abaixo</span>
                                     </div>
                                     <p class="financeiro-evolucao-panel-note">Quando a leitura fica detalhada, a comparacao prioriza a tabela para evitar excesso de linhas e preservar a clareza entre os itens selecionados.</p>
+                                    {% with bloco=comparacao_grafico_resumo_detalhado %}
+                                        {% if bloco.grafico.tem_dados %}
+                                            <div class="financeiro-evolucao-chart-wrap">
+                                                <div class="financeiro-evolucao-chart-stage" style="width: {{ bloco.grafico.render_width }}px;">
+                                                    <svg class="financeiro-evolucao-chart" viewBox="0 0 {{ bloco.grafico.largura }} {{ bloco.grafico.altura }}" style="width: {{ bloco.grafico.render_width }}px" role="img" aria-label="Resumo visual da comparacao entre periodos">
+                                                        {% for linha in bloco.grafico.grade %}
+                                                            <line class="financeiro-evolucao-grid-line" x1="{{ bloco.grafico.x_inicial }}" y1="{{ linha.y }}" x2="{{ bloco.grafico.x_final }}" y2="{{ linha.y }}"></line>
+                                                            <text class="financeiro-evolucao-axis-label" x="8" y="{{ linha.y|add:'4' }}">{{ linha.label }}</text>
+                                                        {% endfor %}
+                                                        <line class="financeiro-evolucao-zero-line" x1="{{ bloco.grafico.x_inicial }}" y1="{{ bloco.grafico.zero_y }}" x2="{{ bloco.grafico.x_final }}" y2="{{ bloco.grafico.zero_y }}"></line>
+                                                        {% for item in bloco.grafico.rotulos_eixo_x %}
+                                                            <line class="financeiro-evolucao-grid-line" x1="{{ item.x_svg }}" y1="{{ bloco.grafico.zero_y }}" x2="{{ item.x_svg }}" y2="{{ bloco.grafico.zero_y|add:'6' }}"></line>
+                                                            <text class="financeiro-evolucao-axis-label financeiro-evolucao-axis-label-x" x="{{ item.x_svg }}" y="{{ bloco.grafico.eixo_label_y }}">{{ item.label }}</text>
+                                                        {% endfor %}
+                                                        {% for serie in bloco.grafico.series %}
+                                                            <path class="financeiro-evolucao-series-line" d="{{ serie.path_data }}" stroke="{{ serie.cor }}"></path>
+                                                            {% for ponto in serie.pontos %}
+                                                                <circle class="financeiro-evolucao-series-point" cx="{{ ponto.x }}" cy="{{ ponto.y }}" r="4.5" fill="{{ serie.cor }}">
+                                                                    <title>{{ serie.label }} - {{ ponto.label_mes }} - {{ ponto.label_valor }}</title>
+                                                                </circle>
+                                                                {% if ponto.mostrar_rotulo %}
+                                                                    <line class="financeiro-evolucao-data-label-line" x1="{{ ponto.x_svg }}" y1="{{ ponto.y_svg }}" x2="{{ ponto.x_svg }}" y2="{{ ponto.linha_rotulo_y_svg }}"></line>
+                                                                    <text class="financeiro-evolucao-data-label-text" x="{{ ponto.x_svg }}" y="{{ ponto.rotulo_y_svg }}">{{ ponto.label_curto }}</text>
+                                                                {% endif %}
+                                                            {% endfor %}
+                                                        {% endfor %}
+                                                    </svg>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                    {% endwith %}
                                 </div>
                             {% endif %}
                         </section>

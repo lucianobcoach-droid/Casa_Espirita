@@ -2,6 +2,29 @@
 
 Data: 2026-04-22
 
+## Correcao pontual da visualizacao comparativa em `Evolucao por categorias`
+
+- tratei a rodada como correcao focada de homologacao, sem reimplementar a comparacao e sem mexer no fluxo normal da tela
+- correcao aplicada no consolidado:
+  - troquei a legenda generica pelas faixas reais de `Periodo principal` e `Periodo comparativo`
+  - endureci a exibicao de rotulos sobre os pontos: quando o comparativo consolidado fica denso demais, os valores deixam de ser desenhados no grafico e permanecem no tooltip para evitar sobreposicao
+- correcao aplicada no separado:
+  - mantive a `Tabela comparativa` como protagonista
+  - devolvi um grafico-resumo secundario, curto e discreto, para a tela nao ficar sem apoio visual
+- preservacao garantida:
+  - sem periodo comparativo preenchido, o grafico e a leitura normal continuam inalterados
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+  - smoke autenticado OK para:
+    - `normal`
+    - `comparativo_consolidado`
+    - `comparativo_separado`
+- resultado:
+  - microetapa pronta para commit coeso
+  - a homologacao visual/manual passa a ficar pronta para uma nova rodada curta de conferencia
+
 ## Refinamento da visualizacao da comparacao em `Evolucao por categorias`
 
 - refinei apenas a visualizacao da comparacao ja entregue, sem reimplementar a feature e sem mexer no contrato de entrada `Periodo principal` + `Periodo comparativo`

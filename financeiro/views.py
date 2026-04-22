@@ -4685,6 +4685,8 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
         *,
         relatorio_principal: dict[str, object],
         relatorio_comparativo: dict[str, object],
+        periodo_principal_label: str,
+        periodo_comparativo_label: str,
         mostrar_valores: bool,
     ) -> dict[str, object]:
         labels_principal = list(relatorio_principal.get('labels') or [])
@@ -4707,15 +4709,20 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
         if len(valores_comparativo) < quantidade_labels:
             valores_comparativo.extend([Decimal('0.00')] * (quantidade_labels - len(valores_comparativo)))
 
+        mostrar_valores_grafico = bool(
+            mostrar_valores
+            and quantidade_labels <= 4
+            and not usa_alinhamento_relativo
+        )
         series = [
             {
-                'label': 'Periodo principal',
+                'label': periodo_principal_label,
                 'cor': '#1f5fbf',
                 'tipo': 'misto',
                 'valores': valores_principal,
             },
             {
-                'label': 'Periodo comparativo',
+                'label': periodo_comparativo_label,
                 'cor': '#c97316',
                 'tipo': 'misto',
                 'valores': valores_comparativo,
@@ -4723,9 +4730,35 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
         ]
 
         return {
-            'grafico': _montar_contexto_svg_evolucao(labels, series, mostrar_valores=mostrar_valores),
+            'grafico': _montar_contexto_svg_evolucao(labels, series, mostrar_valores=mostrar_valores_grafico),
             'series': [{'label': serie['label'], 'cor': serie['cor']} for serie in series],
             'usa_alinhamento_relativo': usa_alinhamento_relativo,
+            'rotulos_suprimidos': mostrar_valores and not mostrar_valores_grafico,
+        }
+
+    def _montar_grafico_resumo_comparacao_detalhada(
+        self,
+        *,
+        total_periodo_principal: Decimal,
+        total_periodo_comparativo: Decimal,
+        mostrar_valores: bool,
+    ) -> dict[str, object]:
+        grafico = _montar_contexto_svg_evolucao(
+            ['Principal', 'Comparativo'],
+            [
+                {
+                    'label': 'Total consolidado',
+                    'cor': '#1f5fbf',
+                    'tipo': 'misto',
+                    'valores': [abs(total_periodo_principal), abs(total_periodo_comparativo)],
+                }
+            ],
+            mostrar_valores=mostrar_valores,
+        )
+        if grafico.get('tem_dados'):
+            grafico['render_width'] = min(grafico['largura'], 560)
+        return {
+            'grafico': grafico,
         }
 
     def _montar_filtros_humanos(
@@ -4922,10 +4955,19 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
         periodo_comparativo_label = f'{data_inicial_comparativo.strftime("%d/%m/%Y")} a {data_final_comparativo.strftime("%d/%m/%Y")}'
         comparacao_visual_consolidada = leitura == 'consolidado'
         comparacao_grafico_consolidado = None
+        comparacao_grafico_resumo_detalhado = None
         if comparacao_visual_consolidada:
             comparacao_grafico_consolidado = self._montar_grafico_comparativo_consolidado(
                 relatorio_principal=relatorio_a,
                 relatorio_comparativo=relatorio_b,
+                periodo_principal_label=periodo_principal_label,
+                periodo_comparativo_label=periodo_comparativo_label,
+                mostrar_valores=mostrar_valores,
+            )
+        else:
+            comparacao_grafico_resumo_detalhado = self._montar_grafico_resumo_comparacao_detalhada(
+                total_periodo_principal=total_periodo_a,
+                total_periodo_comparativo=total_periodo_b,
                 mostrar_valores=mostrar_valores,
             )
 
@@ -4937,6 +4979,7 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
             'comparacao_visual_consolidada': comparacao_visual_consolidada,
             'comparacao_visual_detalhada': not comparacao_visual_consolidada,
             'comparacao_grafico_consolidado': comparacao_grafico_consolidado,
+            'comparacao_grafico_resumo_detalhado': comparacao_grafico_resumo_detalhado,
             'linhas_comparacao': linhas_comparacao,
             'quantidade_itens_comparados': len(linhas_comparacao),
             'quantidade_lancamentos_principal': relatorio_a['quantidade_lancamentos'],
