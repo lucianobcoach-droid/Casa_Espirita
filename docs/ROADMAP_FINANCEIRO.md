@@ -30,6 +30,8 @@ Data: 2026-04-22
   - o modo `Comparativo entrada x saida` preserva os nomes reais das categorias/subcategorias escolhidas
   - a comparacao entre periodos e ativada automaticamente quando o `Periodo comparativo` e preenchido
   - a saida da comparacao passou a incluir `Periodo principal`, `Periodo comparativo`, diferenca absoluta e variacao percentual com tratamento seguro quando a base e zero
+  - com `Periodo comparativo` preenchido e `Leitura = Consolidado`, a comparacao passa a usar um unico grafico de linhas com duas series (`Periodo principal` e `Periodo comparativo`)
+  - com `Periodo comparativo` preenchido e `Leitura = Separado`, a tabela comparativa passa a ser a leitura principal para evitar poluicao visual por excesso de linhas
   - a troca de `Escopo` atualiza imediatamente o seletor visivel e a busca, sem exigir submit apenas para trocar a interface
   - o submit de `Atualizar grafico` recalcula efetivamente grafico, KPIs e tabela de apoio
 - entrega visual atual:
@@ -41,7 +43,7 @@ Data: 2026-04-22
   - toggle textual explicito para mostrar/ocultar a tabela mensal
 - backlog remanescente relacionado:
   - validar visualmente no navegador o fluxo simplificado com `Periodo comparativo` opcional
-  - avaliar refinamentos visuais/manuais apos uso real no navegador
+  - avaliar refinamentos visuais/manuais finos do novo grafico consolidado de comparacao apos uso real no navegador
   - avaliar se a tela deve ganhar exportacao futura da tabela mensal ou apenas permanecer como consulta visual
   - avaliar, por uso real, se convem expandir a comparacao para mais de dois agrupamentos operacionais alem de `entrada x saida`
   - avaliar se a comparacao entre periodos deve ganhar tabela comparativa mais rica ou exportacao propria em etapa futura

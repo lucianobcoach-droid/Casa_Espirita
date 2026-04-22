@@ -2,6 +2,35 @@
 
 Data: 2026-04-22
 
+## Refinamento da visualizacao da comparacao em `Evolucao por categorias`
+
+- refinei apenas a visualizacao da comparacao ja entregue, sem reimplementar a feature e sem mexer no contrato de entrada `Periodo principal` + `Periodo comparativo`
+- decisao de UX aplicada:
+  - sem periodo comparativo preenchido, a tela continua exatamente no fluxo normal ja consolidado
+  - com comparativo preenchido e leitura `Consolidado`, a comparacao passa a usar um unico grafico de linhas com duas series:
+    - `Periodo principal`
+    - `Periodo comparativo`
+  - com comparativo preenchido e leitura `Separado`, o grafico deixa de disputar protagonismo com a comparacao analitica e a `Tabela comparativa` passa a ser a leitura principal
+- no backend:
+  - passei a devolver os labels do relatorio por periodo
+  - criei um montador proprio do grafico consolidado da comparacao, somando visualmente os buckets de cada periodo para formar as duas series unicas
+  - preservei sem regressao a montagem do modo normal e a base da tabela comparativa
+- no template:
+  - removi os dois graficos paralelos como visual principal da comparacao
+  - exibi grafico unico apenas na comparacao consolidada
+  - deixei a comparacao detalhada mais contida, com foco na tabela
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+  - smoke autenticado OK para:
+    - `normal_sem_comparativo`
+    - `comparativo_consolidado`
+    - `comparativo_detalhado`
+- resultado:
+  - a tela ficou pronta para commit coeso desta microetapa
+  - a proxima microetapa logica passa a ser validacao visual/manual curta do comparativo refinado no navegador, seguida da decisao de acabamento fino ou evolucao futura da tabela/exportacao
+
 ## Refinamento de UX da comparacao entre periodos em `Evolucao por categorias`
 
 - refinei a feature ja entregue, sem reimplementa-la do zero e sem abrir nova tela

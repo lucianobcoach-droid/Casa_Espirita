@@ -857,12 +857,18 @@
                         <section class="financeiro-evolucao-panel">
                             <div class="financeiro-evolucao-panel-header">
                                 <div>
-                                    <h2 class="financeiro-evolucao-panel-title">Comparacao por {{ granularidade_grafico_label|lower }}</h2>
+                                    <h2 class="financeiro-evolucao-panel-title">
+                                        {% if comparacao_visual_consolidada %}
+                                            Comparacao consolidada por {{ granularidade_grafico_label|lower }}
+                                        {% else %}
+                                            Leitura detalhada da comparacao
+                                        {% endif %}
+                                    </h2>
                                     <p class="financeiro-evolucao-panel-note">{{ descricao_grafico }}</p>
                                 </div>
-                                {% if comparacao_series %}
+                                {% if comparacao_visual_consolidada and comparacao_grafico_consolidado.series %}
                                     <div class="financeiro-evolucao-legend">
-                                        {% for serie in comparacao_series %}
+                                        {% for serie in comparacao_grafico_consolidado.series %}
                                             <span class="financeiro-evolucao-legend-item">
                                                 <span class="financeiro-evolucao-legend-swatch" style="background: {{ serie.cor }}"></span>
                                                 {{ serie.label }}
@@ -871,91 +877,59 @@
                                     </div>
                                 {% endif %}
                             </div>
-                            <div class="financeiro-evolucao-comparacao-grid">
-                                <article class="financeiro-evolucao-comparacao-card">
-                                    <header class="financeiro-evolucao-comparacao-header">
-                                        <h3 class="financeiro-evolucao-comparacao-titulo">Periodo principal</h3>
-                                        <span class="financeiro-evolucao-comparacao-periodo">{{ periodo_principal_label }}</span>
-                                    </header>
-                                    <div class="financeiro-evolucao-comparacao-body">
-                                        {% with relatorio=comparacao_periodo_principal %}
-                                            {% if relatorio.grafico.tem_dados %}
-                                                <div class="financeiro-evolucao-chart-wrap">
-                                                    <div class="financeiro-evolucao-chart-stage" style="width: {{ relatorio.grafico.render_width }}px;">
-                                                        <svg class="financeiro-evolucao-chart" viewBox="0 0 {{ relatorio.grafico.largura }} {{ relatorio.grafico.altura }}" style="width: {{ relatorio.grafico.render_width }}px" role="img" aria-label="Grafico do periodo principal em {{ granularidade_grafico_label|lower }}">
-                                                            {% for linha in relatorio.grafico.grade %}
-                                                                <line class="financeiro-evolucao-grid-line" x1="{{ relatorio.grafico.x_inicial }}" y1="{{ linha.y }}" x2="{{ relatorio.grafico.x_final }}" y2="{{ linha.y }}"></line>
-                                                                <text class="financeiro-evolucao-axis-label" x="8" y="{{ linha.y|add:'4' }}">{{ linha.label }}</text>
-                                                            {% endfor %}
-                                                            <line class="financeiro-evolucao-zero-line" x1="{{ relatorio.grafico.x_inicial }}" y1="{{ relatorio.grafico.zero_y }}" x2="{{ relatorio.grafico.x_final }}" y2="{{ relatorio.grafico.zero_y }}"></line>
-                                                            {% for item in relatorio.grafico.rotulos_eixo_x %}
-                                                                <line class="financeiro-evolucao-grid-line" x1="{{ item.x_svg }}" y1="{{ relatorio.grafico.zero_y }}" x2="{{ item.x_svg }}" y2="{{ relatorio.grafico.zero_y|add:'6' }}"></line>
-                                                                <text class="financeiro-evolucao-axis-label financeiro-evolucao-axis-label-x" x="{{ item.x_svg }}" y="{{ relatorio.grafico.eixo_label_y }}">{{ item.label }}</text>
-                                                            {% endfor %}
-                                                            {% for serie in relatorio.grafico.series %}
-                                                                <path class="financeiro-evolucao-series-line" d="{{ serie.path_data }}" stroke="{{ serie.cor }}"></path>
-                                                                {% for ponto in serie.pontos %}
-                                                                    <circle class="financeiro-evolucao-series-point" cx="{{ ponto.x }}" cy="{{ ponto.y }}" r="4.5" fill="{{ serie.cor }}">
-                                                                        <title>{{ serie.label }} - {{ ponto.label_mes }} - {{ ponto.label_valor }}</title>
-                                                                    </circle>
-                                                                    {% if ponto.mostrar_rotulo %}
-                                                                        <line class="financeiro-evolucao-data-label-line" x1="{{ ponto.x_svg }}" y1="{{ ponto.y_svg }}" x2="{{ ponto.x_svg }}" y2="{{ ponto.linha_rotulo_y_svg }}"></line>
-                                                                        <text class="financeiro-evolucao-data-label-text" x="{{ ponto.x_svg }}" y="{{ ponto.rotulo_y_svg }}">{{ ponto.label_curto }}</text>
-                                                                    {% endif %}
-                                                                {% endfor %}
-                                                            {% endfor %}
-                                                        </svg>
-                                                    </div>
-                                                </div>
-                                            {% else %}
-                                                <div class="financeiro-evolucao-empty">Nenhum lancamento encontrado no periodo principal para o filtro atual.</div>
-                                            {% endif %}
-                                        {% endwith %}
+                            {% if comparacao_visual_consolidada %}
+                                {% with bloco=comparacao_grafico_consolidado %}
+                                    {% if bloco.grafico.tem_dados %}
+                                        <div class="financeiro-evolucao-chart-wrap">
+                                            <div class="financeiro-evolucao-chart-stage" style="width: {{ bloco.grafico.render_width }}px;">
+                                                <svg class="financeiro-evolucao-chart" viewBox="0 0 {{ bloco.grafico.largura }} {{ bloco.grafico.altura }}" style="width: {{ bloco.grafico.render_width }}px" role="img" aria-label="Grafico comparativo consolidado em {{ granularidade_grafico_label|lower }}">
+                                                    {% for linha in bloco.grafico.grade %}
+                                                        <line class="financeiro-evolucao-grid-line" x1="{{ bloco.grafico.x_inicial }}" y1="{{ linha.y }}" x2="{{ bloco.grafico.x_final }}" y2="{{ linha.y }}"></line>
+                                                        <text class="financeiro-evolucao-axis-label" x="8" y="{{ linha.y|add:'4' }}">{{ linha.label }}</text>
+                                                    {% endfor %}
+                                                    <line class="financeiro-evolucao-zero-line" x1="{{ bloco.grafico.x_inicial }}" y1="{{ bloco.grafico.zero_y }}" x2="{{ bloco.grafico.x_final }}" y2="{{ bloco.grafico.zero_y }}"></line>
+                                                    {% for item in bloco.grafico.rotulos_eixo_x %}
+                                                        <line class="financeiro-evolucao-grid-line" x1="{{ item.x_svg }}" y1="{{ bloco.grafico.zero_y }}" x2="{{ item.x_svg }}" y2="{{ bloco.grafico.zero_y|add:'6' }}"></line>
+                                                        <text class="financeiro-evolucao-axis-label financeiro-evolucao-axis-label-x" x="{{ item.x_svg }}" y="{{ bloco.grafico.eixo_label_y }}">{{ item.label }}</text>
+                                                    {% endfor %}
+                                                    {% for serie in bloco.grafico.series %}
+                                                        <path class="financeiro-evolucao-series-line" d="{{ serie.path_data }}" stroke="{{ serie.cor }}"></path>
+                                                        {% for ponto in serie.pontos %}
+                                                            <circle class="financeiro-evolucao-series-point" cx="{{ ponto.x }}" cy="{{ ponto.y }}" r="4.5" fill="{{ serie.cor }}">
+                                                                <title>{{ serie.label }} - {{ ponto.label_mes }} - {{ ponto.label_valor }}</title>
+                                                            </circle>
+                                                            {% if ponto.mostrar_rotulo %}
+                                                                <line class="financeiro-evolucao-data-label-line" x1="{{ ponto.x_svg }}" y1="{{ ponto.y_svg }}" x2="{{ ponto.x_svg }}" y2="{{ ponto.linha_rotulo_y_svg }}"></line>
+                                                                <text class="financeiro-evolucao-data-label-text" x="{{ ponto.x_svg }}" y="{{ ponto.rotulo_y_svg }}">{{ ponto.label_curto }}</text>
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                    {% endfor %}
+                                                </svg>
+                                            </div>
+                                        </div>
+                                        <div class="financeiro-evolucao-comparacao-body">
+                                            <div class="financeiro-evolucao-meta">
+                                                <span class="financeiro-evolucao-meta-item"><strong>Periodo principal:</strong> {{ periodo_principal_label }}</span>
+                                                <span class="financeiro-evolucao-meta-item"><strong>Periodo comparativo:</strong> {{ periodo_comparativo_label }}</span>
+                                                {% if bloco.usa_alinhamento_relativo %}
+                                                    <span class="financeiro-evolucao-meta-item"><strong>Leitura:</strong> pontos alinhados pela posicao relativa de cada bucket.</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        <div class="financeiro-evolucao-empty">Nenhum lancamento encontrado para compor o comparativo consolidado com o filtro atual.</div>
+                                    {% endif %}
+                                {% endwith %}
+                            {% else %}
+                                <div class="financeiro-evolucao-comparacao-body">
+                                    <div class="financeiro-evolucao-meta">
+                                        <span class="financeiro-evolucao-meta-item"><strong>Periodo principal:</strong> {{ periodo_principal_label }}</span>
+                                        <span class="financeiro-evolucao-meta-item"><strong>Periodo comparativo:</strong> {{ periodo_comparativo_label }}</span>
+                                        <span class="financeiro-evolucao-meta-item"><strong>Leitura principal:</strong> tabela comparativa abaixo</span>
                                     </div>
-                                </article>
-
-                                <article class="financeiro-evolucao-comparacao-card">
-                                    <header class="financeiro-evolucao-comparacao-header">
-                                        <h3 class="financeiro-evolucao-comparacao-titulo">Periodo comparativo</h3>
-                                        <span class="financeiro-evolucao-comparacao-periodo">{{ periodo_comparativo_label }}</span>
-                                    </header>
-                                    <div class="financeiro-evolucao-comparacao-body">
-                                        {% with relatorio=comparacao_periodo_comparativo %}
-                                            {% if relatorio.grafico.tem_dados %}
-                                                <div class="financeiro-evolucao-chart-wrap">
-                                                    <div class="financeiro-evolucao-chart-stage" style="width: {{ relatorio.grafico.render_width }}px;">
-                                                        <svg class="financeiro-evolucao-chart" viewBox="0 0 {{ relatorio.grafico.largura }} {{ relatorio.grafico.altura }}" style="width: {{ relatorio.grafico.render_width }}px" role="img" aria-label="Grafico do periodo comparativo em {{ granularidade_grafico_label|lower }}">
-                                                            {% for linha in relatorio.grafico.grade %}
-                                                                <line class="financeiro-evolucao-grid-line" x1="{{ relatorio.grafico.x_inicial }}" y1="{{ linha.y }}" x2="{{ relatorio.grafico.x_final }}" y2="{{ linha.y }}"></line>
-                                                                <text class="financeiro-evolucao-axis-label" x="8" y="{{ linha.y|add:'4' }}">{{ linha.label }}</text>
-                                                            {% endfor %}
-                                                            <line class="financeiro-evolucao-zero-line" x1="{{ relatorio.grafico.x_inicial }}" y1="{{ relatorio.grafico.zero_y }}" x2="{{ relatorio.grafico.x_final }}" y2="{{ relatorio.grafico.zero_y }}"></line>
-                                                            {% for item in relatorio.grafico.rotulos_eixo_x %}
-                                                                <line class="financeiro-evolucao-grid-line" x1="{{ item.x_svg }}" y1="{{ relatorio.grafico.zero_y }}" x2="{{ item.x_svg }}" y2="{{ relatorio.grafico.zero_y|add:'6' }}"></line>
-                                                                <text class="financeiro-evolucao-axis-label financeiro-evolucao-axis-label-x" x="{{ item.x_svg }}" y="{{ relatorio.grafico.eixo_label_y }}">{{ item.label }}</text>
-                                                            {% endfor %}
-                                                            {% for serie in relatorio.grafico.series %}
-                                                                <path class="financeiro-evolucao-series-line" d="{{ serie.path_data }}" stroke="{{ serie.cor }}"></path>
-                                                                {% for ponto in serie.pontos %}
-                                                                    <circle class="financeiro-evolucao-series-point" cx="{{ ponto.x }}" cy="{{ ponto.y }}" r="4.5" fill="{{ serie.cor }}">
-                                                                        <title>{{ serie.label }} - {{ ponto.label_mes }} - {{ ponto.label_valor }}</title>
-                                                                    </circle>
-                                                                    {% if ponto.mostrar_rotulo %}
-                                                                        <line class="financeiro-evolucao-data-label-line" x1="{{ ponto.x_svg }}" y1="{{ ponto.y_svg }}" x2="{{ ponto.x_svg }}" y2="{{ ponto.linha_rotulo_y_svg }}"></line>
-                                                                        <text class="financeiro-evolucao-data-label-text" x="{{ ponto.x_svg }}" y="{{ ponto.rotulo_y_svg }}">{{ ponto.label_curto }}</text>
-                                                                    {% endif %}
-                                                                {% endfor %}
-                                                            {% endfor %}
-                                                        </svg>
-                                                    </div>
-                                                </div>
-                                            {% else %}
-                                                <div class="financeiro-evolucao-empty">Nenhum lancamento encontrado no periodo comparativo para o filtro atual.</div>
-                                            {% endif %}
-                                        {% endwith %}
-                                    </div>
-                                </article>
-                            </div>
+                                    <p class="financeiro-evolucao-panel-note">Quando a leitura fica detalhada, a comparacao prioriza a tabela para evitar excesso de linhas e preservar a clareza entre os itens selecionados.</p>
+                                </div>
+                            {% endif %}
                         </section>
 
                         <section class="financeiro-evolucao-panel">

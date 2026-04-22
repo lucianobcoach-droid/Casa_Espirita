@@ -2,6 +2,27 @@
 
 Data de atualizacao: 2026-04-22
 
+## Refinamento da visualizacao da comparacao em `Evolucao por categorias`
+
+- a tela manteve integralmente o comportamento anterior quando o `Periodo comparativo` nao e preenchido
+- com `Periodo comparativo` preenchido e `Leitura = Consolidado`, a comparacao passou a usar:
+  - um unico grafico de linhas
+  - duas series fixas: `Periodo principal` e `Periodo comparativo`
+  - evolucao agregada dos valores selecionados na granularidade ativa
+- com `Periodo comparativo` preenchido e `Leitura = Separado`, a comparacao deixou de priorizar graficos paralelos:
+  - a tabela comparativa passou a ser a leitura principal
+  - o bloco visual do comparativo ficou mais contido para evitar poluicao por excesso de linhas
+- a view passou a montar um grafico consolidado proprio para a comparacao, reaproveitando a mesma base de buckets/series ja entregue na tela
+- quando os rotulos temporais dos dois periodos nao coincidem exatamente, o grafico consolidado sinaliza leitura por posicao relativa dos buckets, sem alterar o modo normal da tela
+- validacoes executadas nesta microetapa:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+  - smoke autenticado OK cobrindo:
+    - consulta normal sem periodo comparativo
+    - comparacao consolidada com grafico unico
+    - comparacao detalhada com tabela como leitura principal
+
 ## Refinamento de UX da comparacao entre periodos em `Evolucao por categorias`
 
 - a comparacao entre periodos deixou de depender de um seletor explicito de `modo comparacao`

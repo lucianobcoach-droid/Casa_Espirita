@@ -3193,6 +3193,15 @@ def _montar_contexto_svg_evolucao(
     }
 
 
+def _somar_valores_series(series: list[dict[str, object]]) -> list[Decimal]:
+    tamanho = max((len(serie.get('valores', [])) for serie in series), default=0)
+    totais = [Decimal('0.00') for _ in range(tamanho)]
+    for serie in series:
+        for indice, valor in enumerate(serie.get('valores', [])):
+            totais[indice] += abs(valor or Decimal('0.00'))
+    return totais
+
+
 def _resolver_conta_referencia_lancamentos_listagem(request) -> int | None:
     conta_raw = (request.GET.get('conta') or '').strip()
     if not conta_raw:
@@ -4652,6 +4661,7 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
         return {
             'series': series,
             'grafico': grafico,
+            'labels': labels,
             'linhas_tabela': linhas_tabela,
             'quantidade_lancamentos': len(lancamentos),
             'quantidade_buckets': len(buckets),
@@ -4668,6 +4678,54 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
             'tem_dados': bool(lancamentos),
             'periodo_label': f'{data_inicial.strftime("%d/%m/%Y")} a {data_final.strftime("%d/%m/%Y")}',
             'granularidade_grafico_label': dict(self.granularidades_disponiveis).get(granularidade, granularidade),
+        }
+
+    def _montar_grafico_comparativo_consolidado(
+        self,
+        *,
+        relatorio_principal: dict[str, object],
+        relatorio_comparativo: dict[str, object],
+        mostrar_valores: bool,
+    ) -> dict[str, object]:
+        labels_principal = list(relatorio_principal.get('labels') or [])
+        labels_comparativo = list(relatorio_comparativo.get('labels') or [])
+        quantidade_labels = max(len(labels_principal), len(labels_comparativo))
+
+        labels = []
+        usa_alinhamento_relativo = False
+        for indice in range(quantidade_labels):
+            label_principal = labels_principal[indice] if indice < len(labels_principal) else ''
+            label_comparativo = labels_comparativo[indice] if indice < len(labels_comparativo) else ''
+            if label_principal and label_comparativo and label_principal != label_comparativo:
+                usa_alinhamento_relativo = True
+            labels.append(label_principal or label_comparativo or str(indice + 1))
+
+        valores_principal = _somar_valores_series(relatorio_principal.get('series') or [])
+        valores_comparativo = _somar_valores_series(relatorio_comparativo.get('series') or [])
+        if len(valores_principal) < quantidade_labels:
+            valores_principal.extend([Decimal('0.00')] * (quantidade_labels - len(valores_principal)))
+        if len(valores_comparativo) < quantidade_labels:
+            valores_comparativo.extend([Decimal('0.00')] * (quantidade_labels - len(valores_comparativo)))
+
+        series = [
+            {
+                'label': 'Periodo principal',
+                'cor': '#1f5fbf',
+                'tipo': 'misto',
+                'valores': valores_principal,
+            },
+            {
+                'label': 'Periodo comparativo',
+                'cor': '#c97316',
+                'tipo': 'misto',
+                'valores': valores_comparativo,
+            },
+        ]
+
+        return {
+            'grafico': _montar_contexto_svg_evolucao(labels, series, mostrar_valores=mostrar_valores),
+            'series': [{'label': serie['label'], 'cor': serie['cor']} for serie in series],
+            'usa_alinhamento_relativo': usa_alinhamento_relativo,
         }
 
     def _montar_filtros_humanos(
@@ -4862,12 +4920,23 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
         variacao_total_percentual = _calcular_variacao_percentual(total_periodo_a, total_periodo_b)
         periodo_principal_label = f'{data_inicial_principal.strftime("%d/%m/%Y")} a {data_final_principal.strftime("%d/%m/%Y")}'
         periodo_comparativo_label = f'{data_inicial_comparativo.strftime("%d/%m/%Y")} a {data_final_comparativo.strftime("%d/%m/%Y")}'
+        comparacao_visual_consolidada = leitura == 'consolidado'
+        comparacao_grafico_consolidado = None
+        if comparacao_visual_consolidada:
+            comparacao_grafico_consolidado = self._montar_grafico_comparativo_consolidado(
+                relatorio_principal=relatorio_a,
+                relatorio_comparativo=relatorio_b,
+                mostrar_valores=mostrar_valores,
+            )
 
         return {
             'modo_comparacao_periodos': True,
             'comparacao_periodo_principal': relatorio_a,
             'comparacao_periodo_comparativo': relatorio_b,
             'comparacao_series': relatorio_a['series'],
+            'comparacao_visual_consolidada': comparacao_visual_consolidada,
+            'comparacao_visual_detalhada': not comparacao_visual_consolidada,
+            'comparacao_grafico_consolidado': comparacao_grafico_consolidado,
             'linhas_comparacao': linhas_comparacao,
             'quantidade_itens_comparados': len(linhas_comparacao),
             'quantidade_lancamentos_principal': relatorio_a['quantidade_lancamentos'],
@@ -4888,9 +4957,9 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
                 else ''
             ),
             'descricao_grafico': (
-                'Compara o periodo principal e o periodo comparativo lado a lado, preservando a mesma granularidade, a mesma selecao analitica e a leitura visual por valor absoluto.'
-                if modo != 'comparativo'
-                else 'Compara o periodo principal e o periodo comparativo lado a lado, preservando a mesma granularidade e a mesma leitura de entrada x saida.'
+                'No consolidado, a comparacao usa um unico grafico de linhas com duas series, reunindo a evolucao agregada do periodo principal e do periodo comparativo na granularidade escolhida.'
+                if comparacao_visual_consolidada
+                else 'Na leitura detalhada, a tabela comparativa abaixo vira a referencia principal para evitar excesso de linhas e manter a comparacao mais segura.'
             ),
             'filtros_humanos': self._montar_filtros_humanos(
                 escopo=escopo,
