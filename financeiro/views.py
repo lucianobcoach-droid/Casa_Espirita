@@ -1,10 +1,11 @@
 ﻿from __future__ import annotations
 
 import json
+import math
 import unicodedata
 from calendar import monthrange
 from datetime import date, datetime, timedelta
-from decimal import Decimal
+from decimal import ROUND_CEILING, Decimal
 from io import BytesIO
 from urllib.parse import urlencode, urlsplit, urlunsplit, parse_qsl
 from uuid import uuid4
@@ -1111,6 +1112,37 @@ def _normalizar_nome_aba_planilha_xlsx(valor: str) -> str:
         if not unicodedata.combining(caractere)
     )
     return valor_sem_acento.strip().lower()
+
+
+def _texto_ordenacao_insensivel(valor: object) -> str:
+    valor_normalizado = unicodedata.normalize('NFKD', str(valor or ''))
+    valor_sem_acento = ''.join(
+        caractere
+        for caractere in valor_normalizado
+        if not unicodedata.combining(caractere)
+    )
+    return valor_sem_acento.strip().lower()
+
+
+def _resolver_valor_ordenacao(item: object, caminho: str) -> object:
+    valor = item
+    for parte in caminho.split('__'):
+        if isinstance(valor, dict):
+            valor = valor.get(parte, '')
+        else:
+            valor = getattr(valor, parte, '')
+    return valor
+
+
+def _ordenar_itens_insensivel(itens, *campos: str):
+    itens_lista = list(itens)
+    return sorted(
+        itens_lista,
+        key=lambda item: (
+            *(_texto_ordenacao_insensivel(_resolver_valor_ordenacao(item, campo)) for campo in campos),
+            getattr(item, 'pk', None) if not isinstance(item, dict) else item.get('id', ''),
+        ),
+    )
 
 
 def _parse_booleano_importacao(valor: str) -> bool | None:
@@ -2731,12 +2763,35 @@ def _formatar_moeda_brl(valor) -> str:
     return valor_formatado.replace(',', 'X').replace('.', ',').replace('X', '.')
 
 
+def _abreviacao_mes_pt_br(mes: int) -> str:
+    return (
+        '',
+        'jan',
+        'fev',
+        'mar',
+        'abr',
+        'mai',
+        'jun',
+        'jul',
+        'ago',
+        'set',
+        'out',
+        'nov',
+        'dez',
+    )[mes]
+
+
 def _rotulo_mes_pt_br(ano: int, mes: int) -> str:
-    return f'{MESES_PT_BR[mes - 1][:3]}/{ano}'
+    return f'{_abreviacao_mes_pt_br(mes)}/{str(ano)[2:]}'
 
 
 def _primeiro_dia_mes(data_base: date) -> date:
     return date(data_base.year, data_base.month, 1)
+
+
+def _primeiro_dia_trimestre(data_base: date) -> date:
+    mes_inicial = (((data_base.month - 1) // 3) * 3) + 1
+    return date(data_base.year, mes_inicial, 1)
 
 
 def _iterar_meses_periodo(data_inicial: date, data_final: date) -> list[date]:
@@ -2752,6 +2807,89 @@ def _iterar_meses_periodo(data_inicial: date, data_final: date) -> list[date]:
     return meses
 
 
+def _iterar_buckets_periodo(data_inicial: date, data_final: date, granularidade: str) -> list[dict[str, object]]:
+    buckets: list[dict[str, object]] = []
+
+    if granularidade == 'dias':
+        cursor = data_inicial
+        while cursor <= data_final:
+            buckets.append(
+                {
+                    'chave': cursor.isoformat(),
+                    'rotulo': f'{cursor.day:02d} {_abreviacao_mes_pt_br(cursor.month)}',
+                    'inicio': cursor,
+                    'fim': cursor,
+                }
+            )
+            cursor += timedelta(days=1)
+        return buckets
+
+    if granularidade == 'anos':
+        cursor = date(data_inicial.year, 1, 1)
+        ultimo = date(data_final.year, 1, 1)
+        while cursor <= ultimo:
+            buckets.append(
+                {
+                    'chave': f'{cursor.year}',
+                    'rotulo': f'{cursor.year}',
+                    'inicio': cursor,
+                    'fim': date(cursor.year, 12, 31),
+                }
+            )
+            cursor = date(cursor.year + 1, 1, 1)
+        return buckets
+
+    if granularidade == 'trimestres':
+        cursor = _primeiro_dia_trimestre(data_inicial)
+        ultimo = _primeiro_dia_trimestre(data_final)
+        while cursor <= ultimo:
+            trimestre = ((cursor.month - 1) // 3) + 1
+            fim_mes = cursor.month + 2
+            fim = date(cursor.year, fim_mes, monthrange(cursor.year, fim_mes)[1])
+            buckets.append(
+                {
+                    'chave': f'{cursor.year}-T{trimestre}',
+                    'rotulo': f'{trimestre}º tri/{str(cursor.year)[2:]}',
+                    'inicio': cursor,
+                    'fim': fim,
+                }
+            )
+            if cursor.month >= 10:
+                cursor = date(cursor.year + 1, 1, 1)
+            else:
+                cursor = date(cursor.year, cursor.month + 3, 1)
+        return buckets
+
+    cursor = _primeiro_dia_mes(data_inicial)
+    ultimo = _primeiro_dia_mes(data_final)
+    while cursor <= ultimo:
+        fim = date(cursor.year, cursor.month, monthrange(cursor.year, cursor.month)[1])
+        buckets.append(
+            {
+                'chave': f'{cursor.year}-{cursor.month:02d}',
+                'rotulo': _rotulo_mes_pt_br(cursor.year, cursor.month),
+                'inicio': cursor,
+                'fim': fim,
+            }
+        )
+        if cursor.month == 12:
+            cursor = date(cursor.year + 1, 1, 1)
+        else:
+            cursor = date(cursor.year, cursor.month + 1, 1)
+    return buckets
+
+
+def _chave_bucket_data_operacional(data_operacional: date, granularidade: str) -> str:
+    if granularidade == 'dias':
+        return data_operacional.isoformat()
+    if granularidade == 'anos':
+        return f'{data_operacional.year}'
+    if granularidade == 'trimestres':
+        trimestre = ((data_operacional.month - 1) // 3) + 1
+        return f'{data_operacional.year}-T{trimestre}'
+    return f'{data_operacional.year}-{data_operacional.month:02d}'
+
+
 def _label_categoria_evolucao(categoria: CategoriaFinanceira) -> str:
     if categoria.categoria_pai_id:
         return f'{categoria.categoria_pai.nome} / {categoria.nome}'
@@ -2762,132 +2900,197 @@ def _categoria_eh_agregadora(categoria: CategoriaFinanceira) -> bool:
     return not categoria.permite_vinculo_em_lancamento
 
 
-def _coletar_series_evolucao_categorias(
-    categorias_selecionadas: list[CategoriaFinanceira],
-) -> tuple[list[dict[str, object]], list[str]]:
-    erros: list[str] = []
-    categorias_por_id = {categoria.id: categoria for categoria in categorias_selecionadas}
+def _rotulo_curto_lista_nomes(valores: list[str], *, limite: int = 2) -> str:
+    nomes = [valor for valor in valores if valor]
+    if not nomes:
+        return ''
+    if len(nomes) <= limite:
+        return ', '.join(nomes)
+    return f"{', '.join(nomes[:limite])} +{len(nomes) - limite}"
 
-    for categoria in categorias_selecionadas:
-        if not _categoria_eh_agregadora(categoria):
+
+def _formatar_rotulo_valor_grafico(valor: Decimal) -> str:
+    valor_absoluto = abs((valor or Decimal('0.00')).quantize(Decimal('0.01')))
+
+    if valor_absoluto >= Decimal('1000000'):
+        valor_milhoes = (valor_absoluto / Decimal('1000000')).quantize(Decimal('0.1'))
+        texto = str(valor_milhoes).replace('.', ',').rstrip('0').rstrip(',')
+        return f'{texto} mi'
+
+    if valor_absoluto >= Decimal('1000'):
+        valor_mil = (valor_absoluto / Decimal('1000')).quantize(Decimal('0.1'))
+        texto = str(valor_mil).replace('.', ',').rstrip('0').rstrip(',')
+        return f'{texto} mil'
+
+    if valor_absoluto == valor_absoluto.to_integral_value():
+        return f'{int(valor_absoluto)}'
+
+    return _formatar_moeda_brl(valor_absoluto).replace('R$ ', '')
+
+
+def _calcular_passo_bonito_eixo_y(valor_maximo: Decimal, *, divisores: int = 4) -> Decimal:
+    valor_maximo = abs(valor_maximo or Decimal('0.00'))
+    if valor_maximo <= Decimal('0.00'):
+        return Decimal('1')
+
+    passo_bruto = valor_maximo / Decimal(max(divisores, 1))
+    expoente = int(math.floor(math.log10(float(passo_bruto)))) if passo_bruto > 0 else 0
+    base = Decimal('10') ** expoente
+    multiplicadores = (
+        Decimal('1'),
+        Decimal('2'),
+        Decimal('2.5'),
+        Decimal('5'),
+        Decimal('7.5'),
+        Decimal('10'),
+    )
+
+    for multiplicador in multiplicadores:
+        passo = base * multiplicador
+        if passo >= passo_bruto:
+            return passo
+
+    return base * Decimal('10')
+
+
+def _montar_ticks_bonitos_eixo_y(valores: list[Decimal], *, divisores: int = 4) -> tuple[Decimal, list[Decimal]]:
+    valores_absolutos = [abs(valor or Decimal('0.00')) for valor in valores]
+    valor_maximo = max(valores_absolutos, default=Decimal('0.00'))
+    passo = _calcular_passo_bonito_eixo_y(valor_maximo, divisores=divisores)
+
+    if valor_maximo <= Decimal('0.00'):
+        limite_superior = passo * Decimal(divisores)
+    else:
+        limite_superior = (valor_maximo / passo).to_integral_value(rounding=ROUND_CEILING) * passo
+
+    ticks = [limite_superior - (passo * indice) for indice in range(divisores + 1)]
+    return limite_superior, ticks
+
+
+def _rotulos_visiveis_eixo_x(labels: list[str], posicao_x) -> list[dict[str, object]]:
+    if not labels:
+        return []
+
+    total = len(labels)
+    if total <= 8:
+        indices = list(range(total))
+    else:
+        max_rotulos = 8
+        passo = max(1, (total - 1) // (max_rotulos - 1))
+        indices = list(range(0, total, passo))
+        if indices[-1] != total - 1:
+            indices.append(total - 1)
+
+    vistos: set[int] = set()
+    rotulos = []
+    for indice in indices:
+        if indice in vistos or indice >= total:
             continue
-        conflito = next(
-            (
-                outra
-                for outra in categorias_selecionadas
-                if outra.categoria_pai_id == categoria.id
-            ),
-            None,
-        )
-        if conflito:
-            erros.append(
-                'Nao combine categoria agrupadora com sua subcategoria no mesmo grafico. '
-                f'Remova "{_label_categoria_evolucao(categoria)}" ou "{_label_categoria_evolucao(conflito)}".'
-            )
-            break
-
-    if erros:
-        return [], erros
-
-    filhos_por_pai: dict[int, list[CategoriaFinanceira]] = {}
-    if categorias_selecionadas:
-        categorias_relacionadas = CategoriaFinanceira.objects.filter(
-            Q(pk__in=[categoria.id for categoria in categorias_selecionadas])
-            | Q(categoria_pai_id__in=[categoria.id for categoria in categorias_selecionadas])
-        ).select_related('categoria_pai')
-        for categoria in categorias_relacionadas:
-            if categoria.categoria_pai_id:
-                filhos_por_pai.setdefault(categoria.categoria_pai_id, []).append(categoria)
-
-    series: list[dict[str, object]] = []
-    for indice, categoria in enumerate(categorias_selecionadas):
-        if _categoria_eh_agregadora(categoria):
-            categorias_base = filhos_por_pai.get(categoria.id, [])
-            categoria_ids = [item.id for item in categorias_base]
-        else:
-            categoria_ids = [categoria.id]
-
-        series.append(
+        vistos.add(indice)
+        rotulos.append(
             {
-                'chave': f'categoria_{categoria.id}',
-                'categoria': categoria,
-                'categoria_ids': categoria_ids,
-                'label': _label_categoria_evolucao(categoria),
-                'tipo': categoria.tipo,
-                'cor': EVOLUCAO_CATEGORIAS_SERIES_CORES[indice % len(EVOLUCAO_CATEGORIAS_SERIES_CORES)],
-                'sem_dados_cadastrais': not categoria_ids,
+                'x': posicao_x(indice),
+                'x_svg': f'{posicao_x(indice):.2f}',
+                'label': labels[indice],
             }
         )
-    return series, []
+    return rotulos
+
+
+def _descricao_leitura_temporal_evolucao(granularidade: str) -> str:
+    return {
+        'dias': 'uma leitura diaria',
+        'meses': 'uma leitura mensal',
+        'trimestres': 'uma leitura trimestral',
+        'anos': 'uma leitura anual',
+    }.get(granularidade, 'uma leitura temporal')
+
+
+def _ajustar_colisoes_rotulos_grafico(series_svg: list[dict[str, object]]) -> None:
+    rotulos_visiveis: list[dict[str, object]] = []
+    for serie in series_svg:
+        for ponto in serie['pontos']:
+            if ponto.get('mostrar_rotulo'):
+                rotulos_visiveis.append(ponto)
+
+    rotulos_visiveis.sort(key=lambda item: (item['x_float'], item['rotulo_y_float']))
+    ultimo_rotulo: dict[str, object] | None = None
+
+    for ponto in rotulos_visiveis:
+        largura_estimada = max(44.0, min(98.0, float(len(ponto['label_curto'])) * 6.2))
+        ponto['rotulo_largura_estimada'] = largura_estimada
+        ponto['nivel_colisao'] = 0
+
+        if ultimo_rotulo is not None:
+            distancia_x = abs(ponto['x_float'] - ultimo_rotulo['x_float'])
+            limite_colisao = ((largura_estimada + ultimo_rotulo['rotulo_largura_estimada']) / 2.0) - 6.0
+            distancia_y = abs(ponto['rotulo_y_float'] - ultimo_rotulo['rotulo_y_float'])
+
+            if distancia_x < limite_colisao and distancia_y < 18.0:
+                ponto['nivel_colisao'] = int(ultimo_rotulo.get('nivel_colisao', 0)) + 1
+                deslocamento = 22.0 * ponto['nivel_colisao']
+                if ponto['rotulo_posicao'] == 'acima':
+                    ponto['rotulo_y_float'] = max(18.0, ponto['rotulo_y_float'] - deslocamento)
+                    ponto['linha_rotulo_y_float'] = ponto['rotulo_y_float'] + 5.0
+                else:
+                    ponto['rotulo_y_float'] = ponto['rotulo_y_float'] + deslocamento
+                    ponto['linha_rotulo_y_float'] = ponto['rotulo_y_float'] - 12.0
+
+        ponto['rotulo_y_svg'] = f"{ponto['rotulo_y_float']:.2f}"
+        ponto['linha_rotulo_y_svg'] = f"{ponto['linha_rotulo_y_float']:.2f}"
+        ultimo_rotulo = ponto
 
 
 def _montar_eixo_svg_evolucao(
     labels: list[str],
     series: list[dict[str, object]],
 ) -> dict[str, object]:
-    largura = 980
-    altura = 360
-    padding_esquerda = 72
-    padding_direita = 24
-    padding_topo = 18
-    padding_base = 46
-    largura_grafico = max(1, largura - padding_esquerda - padding_direita)
+    largura = max(920, 220 + (min(max(len(labels), 2), 12) * 72))
+    altura = 384
+    padding_esquerda = 88
+    padding_direita = 28
+    padding_topo = 22
+    padding_base = 64
+    margem_plot_esquerda = 28
+    margem_plot_direita = 18
+    x_inicial = padding_esquerda + margem_plot_esquerda
+    x_final = largura - padding_direita - margem_plot_direita
+    largura_grafico = max(1, x_final - x_inicial)
     altura_grafico = max(1, altura - padding_topo - padding_base)
 
     valores = [Decimal('0.00')]
     for serie in series:
-        valores.extend(serie['valores'])
+        valores.extend(abs(valor or Decimal('0.00')) for valor in serie['valores'])
 
-    valor_max = max(valores)
-    valor_min = min(valores)
-    if valor_max == valor_min:
-        if valor_max == Decimal('0.00'):
-            valor_max = Decimal('1.00')
-            valor_min = Decimal('-1.00')
-        elif valor_max > 0:
-            valor_min = Decimal('0.00')
-            valor_max = valor_max * Decimal('1.1')
-        else:
-            valor_max = Decimal('0.00')
-            valor_min = valor_min * Decimal('1.1')
-
-    amplitude = valor_max - valor_min
-    if amplitude == Decimal('0.00'):
-        amplitude = Decimal('1.00')
-
-    margem = amplitude * Decimal('0.08')
-    limite_superior = valor_max + margem
-    limite_inferior = valor_min - margem
+    divisores = 4
+    limite_inferior = Decimal('0.00')
+    limite_superior, ticks = _montar_ticks_bonitos_eixo_y(valores, divisores=divisores)
     amplitude_total = limite_superior - limite_inferior
-    if amplitude_total == Decimal('0.00'):
+    if amplitude_total <= Decimal('0.00'):
         amplitude_total = Decimal('1.00')
 
     def posicao_y(valor: Decimal) -> float:
-        proporcao = float((valor - limite_inferior) / amplitude_total)
+        valor_absoluto = abs(valor or Decimal('0.00'))
+        proporcao = float((valor_absoluto - limite_inferior) / amplitude_total)
         return padding_topo + (altura_grafico * (1 - proporcao))
 
     def posicao_x(indice: int) -> float:
         if len(labels) <= 1:
-            return padding_esquerda + (largura_grafico / 2)
+            return x_inicial + (largura_grafico / 2)
         passo = largura_grafico / (len(labels) - 1)
-        return padding_esquerda + (passo * indice)
+        return x_inicial + (passo * indice)
 
     grade: list[dict[str, object]] = []
-    divisores = 4
-    for indice in range(divisores + 1):
-        valor = limite_superior - ((amplitude_total / divisores) * indice)
+    for valor in ticks:
         grade.append(
             {
                 'y': posicao_y(valor),
-                'label': f'R$ {_formatar_moeda_brl(valor)}',
+                'label': _formatar_rotulo_valor_grafico(valor),
             }
         )
 
     zero_y = posicao_y(Decimal('0.00'))
-    rotulos_eixo_x = [
-        {'x': posicao_x(indice), 'label': label}
-        for indice, label in enumerate(labels)
-    ]
+    rotulos_eixo_x = _rotulos_visiveis_eixo_x(labels, posicao_x)
 
     return {
         'largura': largura,
@@ -2896,6 +3099,8 @@ def _montar_eixo_svg_evolucao(
         'padding_direita': padding_direita,
         'padding_topo': padding_topo,
         'padding_base': padding_base,
+        'x_inicial': x_inicial,
+        'x_final': x_final,
         'zero_y': zero_y,
         'grade': grade,
         'rotulos_eixo_x': rotulos_eixo_x,
@@ -2907,6 +3112,8 @@ def _montar_eixo_svg_evolucao(
 def _montar_contexto_svg_evolucao(
     labels: list[str],
     series: list[dict[str, object]],
+    *,
+    mostrar_valores: bool = False,
 ) -> dict[str, object]:
     if not labels or not series:
         return {'tem_dados': False}
@@ -2919,12 +3126,26 @@ def _montar_contexto_svg_evolucao(
         for indice, valor in enumerate(serie['valores']):
             x = eixo['posicao_x'](indice)
             y = eixo['posicao_y'](valor)
+            rotulo_acima = y > 56
+            rotulo_y = y - 14 if rotulo_acima else y + 22
+            linha_rotulo_y = y - 6 if rotulo_acima else y + 6
             pontos.append(
                 {
                     'x': x,
                     'y': y,
+                    'x_svg': f'{x:.2f}',
+                    'y_svg': f'{y:.2f}',
+                    'x_float': x,
+                    'y_float': y,
                     'label_mes': labels[indice],
-                    'label_valor': f'R$ {_formatar_moeda_brl(valor)}',
+                    'label_valor': f'R$ {_formatar_moeda_brl(abs(valor))}',
+                    'label_curto': _formatar_rotulo_valor_grafico(valor),
+                    'mostrar_rotulo': mostrar_valores and abs(valor) > Decimal('0.00'),
+                    'rotulo_y_float': rotulo_y,
+                    'linha_rotulo_y_float': linha_rotulo_y,
+                    'rotulo_y_svg': f'{rotulo_y:.2f}',
+                    'linha_rotulo_y_svg': f'{linha_rotulo_y:.2f}',
+                    'rotulo_posicao': 'acima' if rotulo_acima else 'abaixo',
                 }
             )
             path_data.append(f'{"M" if indice == 0 else "L"} {x:.2f} {y:.2f}')
@@ -2937,10 +3158,15 @@ def _montar_contexto_svg_evolucao(
             }
         )
 
+    _ajustar_colisoes_rotulos_grafico(series_svg)
+
     return {
         'tem_dados': True,
         'largura': eixo['largura'],
         'altura': eixo['altura'],
+        'render_width': eixo['largura'],
+        'padding_base': eixo['padding_base'],
+        'eixo_label_y': eixo['altura'] - eixo['padding_base'] + 18,
         'zero_y': eixo['zero_y'],
         'grade': eixo['grade'],
         'rotulos_eixo_x': eixo['rotulos_eixo_x'],
@@ -3398,7 +3624,10 @@ class FinanceiroPeriodoMixin(FinanceiroPermissaoMixin):
         return primeiro_dia, ultimo_dia
 
     def _parse_contas(self) -> tuple[list[ContaFinanceira], list[str], list[int]]:
-        contas_disponiveis = list(ContaFinanceira.objects.order_by('nome'))
+        contas_disponiveis = _ordenar_itens_insensivel(
+            ContaFinanceira.objects.all(),
+            'nome',
+        )
         contas_por_id = {conta.id: conta for conta in contas_disponiveis}
         selected_ids_raw = [valor.strip() for valor in self.request.GET.getlist('contas') if valor.strip()]
 
@@ -3804,9 +4033,26 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
     permissao_requerida = 'financeiro.resumo_financeiro.visualizar'
     template_name = 'financeiro/evolucao_categorias.html'
     modo_padrao = 'categorias'
+    escopo_padrao = 'categorias'
+    leitura_padrao = 'separado'
+    granularidade_padrao = 'meses'
     modos_disponiveis = (
         ('categorias', 'Evolucao de categorias selecionadas'),
         ('comparativo', 'Comparativo entrada x saida'),
+    )
+    escopos_disponiveis = (
+        ('categorias', 'Categorias'),
+        ('subcategorias', 'Subcategorias'),
+    )
+    leituras_disponiveis = (
+        ('consolidado', 'Consolidado'),
+        ('separado', 'Separado'),
+    )
+    granularidades_disponiveis = (
+        ('dias', 'Dias'),
+        ('meses', 'Meses'),
+        ('trimestres', 'Trimestres'),
+        ('anos', 'Anos'),
     )
 
     def _parse_periodo(self) -> tuple[str, str, date | None, date | None, str]:
@@ -3838,7 +4084,10 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
         return data_inicial_raw, data_final_raw, data_inicial, data_final, periodo_error
 
     def _parse_contas(self) -> tuple[list[ContaFinanceira], list[str], list[int]]:
-        contas_disponiveis = list(ContaFinanceira.objects.order_by('nome'))
+        contas_disponiveis = _ordenar_itens_insensivel(
+            ContaFinanceira.objects.all(),
+            'nome',
+        )
         selected_ids_raw = [valor for valor in self.request.GET.getlist('contas') if valor.strip()]
         selected_ids: list[int] = []
         for valor in selected_ids_raw:
@@ -3850,30 +4099,142 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
             selected_ids = [conta.id for conta in contas_disponiveis]
         return contas_disponiveis, selected_ids_raw, selected_ids
 
-    def _parse_categorias(self) -> tuple[list[CategoriaFinanceira], list[str], list[CategoriaFinanceira]]:
-        categorias_disponiveis = list(
-            CategoriaFinanceira.objects.select_related('categoria_pai').order_by(
+    def _parse_escopo(self) -> tuple[str, str]:
+        escopo = (self.request.GET.get('escopo') or self.escopo_padrao).strip()
+        if escopo not in {item[0] for item in self.escopos_disponiveis}:
+            escopo = self.escopo_padrao
+        return escopo, dict(self.escopos_disponiveis).get(escopo, self.escopo_padrao)
+
+    def _parse_leitura(self) -> tuple[str, str]:
+        leitura = (self.request.GET.get('leitura') or self.leitura_padrao).strip()
+        if leitura not in {item[0] for item in self.leituras_disponiveis}:
+            leitura = self.leitura_padrao
+        return leitura, dict(self.leituras_disponiveis).get(leitura, self.leitura_padrao)
+
+    def _parse_granularidade(self) -> tuple[str, str]:
+        granularidade = (self.request.GET.get('granularidade') or self.granularidade_padrao).strip()
+        if granularidade not in {item[0] for item in self.granularidades_disponiveis}:
+            granularidade = self.granularidade_padrao
+        return granularidade, dict(self.granularidades_disponiveis).get(granularidade, self.granularidade_padrao)
+
+    def _parse_mostrar_valores(self) -> bool:
+        valor = (self.request.GET.get('mostrar_valores') or '').strip().lower()
+        return valor in {'1', 'true', 'sim', 'on'}
+
+    def _build_itens_disponiveis(self, escopo: str) -> list[dict[str, object]]:
+        if escopo == 'categorias':
+            categorias_pai = _ordenar_itens_insensivel(
+                CategoriaFinanceira.objects.filter(categoria_pai__isnull=True),
+                'nome',
                 'tipo',
+            )
+            filhos = _ordenar_itens_insensivel(
+                CategoriaFinanceira.objects.filter(categoria_pai_id__in=[categoria.id for categoria in categorias_pai])
+                .select_related('categoria_pai'),
                 'categoria_pai__nome',
                 'nome',
+                'tipo',
             )
+            filhos_por_pai: dict[int, list[CategoriaFinanceira]] = {}
+            for filho in filhos:
+                filhos_por_pai.setdefault(filho.categoria_pai_id, []).append(filho)
+
+            return [
+                {
+                    'id': categoria.id,
+                    'objeto': categoria,
+                    'label': categoria.nome,
+                    'display_label': categoria.nome,
+                    'tipo': categoria.tipo,
+                    'tipo_label': categoria.get_tipo_display(),
+                    'categoria_ids': [filho.id for filho in filhos_por_pai.get(categoria.id, [])],
+                    'search_text': f"{categoria.nome} {categoria.get_tipo_display()}",
+                    'is_parent': True,
+                    'parent_name': '',
+                    'hint': f"Categoria {categoria.get_tipo_display().lower()}",
+                    'hierarquia_label': categoria.nome,
+                }
+                for categoria in categorias_pai
+            ]
+
+        subcategorias = _ordenar_itens_insensivel(
+            CategoriaFinanceira.objects.filter(categoria_pai__isnull=False)
+            .select_related('categoria_pai'),
+            'nome',
+            'categoria_pai__nome',
+            'tipo',
         )
-        categorias_por_id = {categoria.id: categoria for categoria in categorias_disponiveis}
+        nomes_normalizados: dict[str, int] = {}
+        for categoria in subcategorias:
+            chave_nome = _texto_ordenacao_insensivel(categoria.nome)
+            nomes_normalizados[chave_nome] = nomes_normalizados.get(chave_nome, 0) + 1
+
+        return [
+            {
+                'id': categoria.id,
+                'objeto': categoria,
+                'label': _label_categoria_evolucao(categoria),
+                'display_label': (
+                    f'{categoria.nome} ({categoria.categoria_pai.nome})'
+                    if nomes_normalizados.get(_texto_ordenacao_insensivel(categoria.nome), 0) > 1
+                    else categoria.nome
+                ),
+                'tipo': categoria.tipo,
+                'tipo_label': categoria.get_tipo_display(),
+                'categoria_ids': [categoria.id],
+                'search_text': (
+                    f"{categoria.categoria_pai.nome} {categoria.nome} "
+                    f"{categoria.get_tipo_display()} {_label_categoria_evolucao(categoria)}"
+                ),
+                'is_parent': False,
+                'parent_name': categoria.categoria_pai.nome,
+                'hint': f"{categoria.categoria_pai.nome} • {categoria.get_tipo_display()}",
+                'hierarquia_label': _label_categoria_evolucao(categoria),
+                'sort_key': categoria.nome,
+            }
+            for categoria in subcategorias
+        ]
+
+    def _parse_itens_analiticos(self, escopo: str) -> tuple[list[dict[str, object]], list[str], list[dict[str, object]]]:
+        itens_disponiveis = self._build_itens_disponiveis(escopo)
+        itens_por_id = {item['id']: item for item in itens_disponiveis}
         selecionadas_raw = [valor for valor in self.request.GET.getlist('categorias') if valor.strip()]
-        categorias_selecionadas: list[CategoriaFinanceira] = []
+        itens_selecionados: list[dict[str, object]] = []
         for valor in selecionadas_raw:
             try:
-                categoria_id = int(valor)
+                item_id = int(valor)
             except (TypeError, ValueError):
                 continue
-            categoria = categorias_por_id.get(categoria_id)
-            if categoria:
-                categorias_selecionadas.append(categoria)
-        return categorias_disponiveis, selecionadas_raw, categorias_selecionadas
+            item = itens_por_id.get(item_id)
+            if item:
+                itens_selecionados.append(item)
+        return itens_disponiveis, selecionadas_raw, itens_selecionados
+
+    def _rotulo_serie_consolidada(self, itens: list[dict[str, object]], escopo: str) -> str:
+        prefixo = 'Categorias' if escopo == 'categorias' else 'Subcategorias'
+        nomes = [item['display_label'] for item in itens]
+        sufixo = _rotulo_curto_lista_nomes(nomes)
+        if sufixo:
+            return f'{prefixo}: {sufixo}'
+        return f'{prefixo} selecionadas'
+
+    def _rotulo_serie_comparativa_consolidada(self, itens: list[dict[str, object]], tipo: str) -> str:
+        prefixo = 'Receitas selecionadas' if tipo == LancamentoFinanceiro.TipoLancamento.RECEITA else 'Despesas selecionadas'
+        nomes = [item['display_label'] for item in itens]
+        sufixo = _rotulo_curto_lista_nomes(nomes)
+        if sufixo:
+            return f'{prefixo}: {sufixo}'
+        return prefixo
 
     def _build_contexto_base(self) -> dict[str, object]:
         contas_disponiveis, selected_ids_raw, selected_ids = self._parse_contas()
-        categorias_disponiveis, categorias_raw, categorias_selecionadas = self._parse_categorias()
+        escopo, escopo_label = self._parse_escopo()
+        leitura, leitura_label = self._parse_leitura()
+        granularidade, granularidade_label = self._parse_granularidade()
+        mostrar_valores = self._parse_mostrar_valores()
+        itens_disponiveis, categorias_raw, itens_selecionados = self._parse_itens_analiticos(escopo)
+        itens_disponiveis_categorias = self._build_itens_disponiveis('categorias')
+        itens_disponiveis_subcategorias = self._build_itens_disponiveis('subcategorias')
         data_inicial_raw, data_final_raw, data_inicial, data_final, periodo_error = self._parse_periodo()
         modo = (self.request.GET.get('modo') or self.modo_padrao).strip()
         if modo not in {item[0] for item in self.modos_disponiveis}:
@@ -3882,16 +4243,28 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
 
         filtros_relatorio_ativos = _request_possui_parametros_get(
             self.request,
-            ('contas', 'categorias', 'data_inicial', 'data_final', 'modo'),
+            ('contas', 'categorias', 'data_inicial', 'data_final', 'modo', 'escopo', 'leitura', 'granularidade', 'mostrar_valores'),
         )
         contas_selecionadas = [conta for conta in contas_disponiveis if conta.id in selected_ids]
         todas_as_contas_selecionadas = len(selected_ids) == len(contas_disponiveis)
+        itens_label = ', '.join(item['label'] for item in itens_selecionados)
+        itens_resumo = _rotulo_curto_lista_nomes([item['label'] for item in itens_selecionados], limite=3)
 
         return {
             'page_title': 'Evolucao por categorias',
             'modo': modo,
             'modo_label': modo_label,
             'modos_disponiveis': self.modos_disponiveis,
+            'escopo': escopo,
+            'escopo_label': escopo_label,
+            'escopos_disponiveis': self.escopos_disponiveis,
+            'leitura': leitura,
+            'leitura_label': leitura_label,
+            'leituras_disponiveis': self.leituras_disponiveis,
+            'granularidade': granularidade,
+            'granularidade_label': granularidade_label,
+            'granularidades_disponiveis': self.granularidades_disponiveis,
+            'mostrar_valores': mostrar_valores,
             'contas_disponiveis': contas_disponiveis,
             'contas_selecionadas_ids': [str(conta_id) for conta_id in selected_ids],
             'quantidade_contas_selecionadas': len(contas_selecionadas),
@@ -3900,12 +4273,14 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
                 if todas_as_contas_selecionadas
                 else ', '.join(conta.nome for conta in contas_selecionadas)
             ),
-            'categorias_disponiveis': categorias_disponiveis,
+            'categorias_disponiveis': itens_disponiveis,
+            'categorias_disponiveis_categorias': itens_disponiveis_categorias,
+            'categorias_disponiveis_subcategorias': itens_disponiveis_subcategorias,
             'categorias_selecionadas_ids': categorias_raw,
-            'categorias_selecionadas': categorias_selecionadas,
-            'categorias_selecionadas_label': ', '.join(
-                _label_categoria_evolucao(categoria) for categoria in categorias_selecionadas
-            ),
+            'categorias_selecionadas': itens_selecionados,
+            'categorias_selecionadas_label': itens_label,
+            'categorias_selecionadas_resumo': itens_resumo,
+            'quantidade_itens_selecionados': len(itens_selecionados),
             'data_inicial': data_inicial_raw,
             'data_final': data_final_raw,
             'periodo_error': periodo_error,
@@ -3913,59 +4288,134 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
             'periodo_resolvido': (data_inicial, data_final),
         }
 
-    def _montar_series(self, categorias_selecionadas: list[CategoriaFinanceira], modo: str):
-        series_base, erros = _coletar_series_evolucao_categorias(categorias_selecionadas)
-        if erros:
-            return [], {}, erros
+    def _montar_series(
+        self,
+        itens_selecionados: list[dict[str, object]],
+        *,
+        escopo: str,
+        leitura: str,
+        modo: str,
+    ) -> tuple[list[dict[str, object]], list[str]]:
+        if not itens_selecionados:
+            return [], []
 
-        mapa_categoria_para_serie: dict[int, int] = {}
-        for indice, serie in enumerate(series_base):
-            for categoria_id in serie['categoria_ids']:
-                mapa_categoria_para_serie[categoria_id] = indice
+        if any(not item['categoria_ids'] for item in itens_selecionados):
+            return [], ['As categorias selecionadas nao possuem subcategorias lancaveis para compor o relatorio.']
 
         if modo == 'comparativo':
+            if leitura == 'consolidado':
+                series = []
+                for tipo, cor in (
+                    (LancamentoFinanceiro.TipoLancamento.RECEITA, '#1f5fbf'),
+                    (LancamentoFinanceiro.TipoLancamento.DESPESA, '#b73a32'),
+                ):
+                    itens_tipo = [item for item in itens_selecionados if item['tipo'] == tipo]
+                    if not itens_tipo:
+                        continue
+                    categoria_ids = sorted({categoria_id for item in itens_tipo for categoria_id in item['categoria_ids']})
+                    series.append(
+                        {
+                            'chave': f'comparativo_{tipo}',
+                            'label': self._rotulo_serie_comparativa_consolidada(itens_tipo, tipo),
+                            'tipo': tipo,
+                            'cor': cor,
+                            'categoria_ids': categoria_ids,
+                            'categoria_ids_set': set(categoria_ids),
+                            'tipos_permitidos': {tipo},
+                            'valores': [],
+                        }
+                    )
+                return series, []
+
+            series = []
+            for indice, item in enumerate(itens_selecionados):
+                prefixo = 'Entrada' if item['tipo'] == LancamentoFinanceiro.TipoLancamento.RECEITA else 'Saida'
+                series.append(
+                    {
+                        'chave': f"comparativo_item_{item['id']}",
+                        'label': f"{prefixo} - {item['label']}",
+                        'tipo': item['tipo'],
+                        'cor': EVOLUCAO_CATEGORIAS_SERIES_CORES[indice % len(EVOLUCAO_CATEGORIAS_SERIES_CORES)],
+                        'categoria_ids': item['categoria_ids'],
+                        'categoria_ids_set': set(item['categoria_ids']),
+                        'tipos_permitidos': {item['tipo']},
+                        'valores': [],
+                    }
+                )
+            return series, []
+
+        if leitura == 'consolidado':
+            categoria_ids = sorted({categoria_id for item in itens_selecionados for categoria_id in item['categoria_ids']})
             series = [
                 {
-                    'chave': 'receitas',
-                    'label': 'Entradas',
-                    'tipo': 'receita',
+                    'chave': f'consolidado_{escopo}',
+                    'label': self._rotulo_serie_consolidada(itens_selecionados, escopo),
+                    'tipo': 'misto',
                     'cor': '#1f5fbf',
+                    'categoria_ids': categoria_ids,
+                    'categoria_ids_set': set(categoria_ids),
+                    'tipos_permitidos': {
+                        LancamentoFinanceiro.TipoLancamento.RECEITA,
+                        LancamentoFinanceiro.TipoLancamento.DESPESA,
+                    },
                     'valores': [],
-                },
-                {
-                    'chave': 'despesas',
-                    'label': 'Saidas',
-                    'tipo': 'despesa',
-                    'cor': '#b73a32',
-                    'valores': [],
-                },
+                }
             ]
-            return series, mapa_categoria_para_serie, []
+            return series, []
 
-        series = [
-            {
-                'chave': serie['chave'],
-                'label': serie['label'],
-                'tipo': serie['tipo'],
-                'cor': serie['cor'],
-                'valores': [],
-                'sem_dados_cadastrais': serie['sem_dados_cadastrais'],
-            }
-            for serie in series_base
-        ]
-        return series, mapa_categoria_para_serie, []
+        series = []
+        for indice, item in enumerate(itens_selecionados):
+            series.append(
+                {
+                    'chave': f"item_{item['id']}",
+                    'label': item['label'],
+                    'tipo': item['tipo'],
+                    'cor': EVOLUCAO_CATEGORIAS_SERIES_CORES[indice % len(EVOLUCAO_CATEGORIAS_SERIES_CORES)],
+                    'categoria_ids': item['categoria_ids'],
+                    'categoria_ids_set': set(item['categoria_ids']),
+                    'tipos_permitidos': {
+                        LancamentoFinanceiro.TipoLancamento.RECEITA,
+                        LancamentoFinanceiro.TipoLancamento.DESPESA,
+                    },
+                    'valores': [],
+                }
+            )
+        return series, []
 
-    def _montar_relatorio(self, data_inicial: date, data_final: date, selected_ids: list[int], categorias_selecionadas: list[CategoriaFinanceira], modo: str) -> dict[str, object]:
-        if not categorias_selecionadas:
+    def _montar_relatorio(
+        self,
+        data_inicial: date,
+        data_final: date,
+        selected_ids: list[int],
+        itens_selecionados: list[dict[str, object]],
+        *,
+        escopo: str,
+        leitura: str,
+        modo: str,
+        granularidade: str,
+        mostrar_valores: bool,
+    ) -> dict[str, object]:
+        if not itens_selecionados:
             return {
                 'erro': 'Selecione ao menos uma categoria ou subcategoria para gerar o grafico.',
             }
 
-        series, mapa_categoria_para_serie, erros = self._montar_series(categorias_selecionadas, modo)
+        series, erros = self._montar_series(
+            itens_selecionados,
+            escopo=escopo,
+            leitura=leitura,
+            modo=modo,
+        )
         if erros:
             return {'erro': erros[0]}
 
-        categorias_ids_consideradas = sorted(mapa_categoria_para_serie.keys())
+        categorias_ids_consideradas = sorted(
+            {
+                categoria_id
+                for serie in series
+                for categoria_id in serie['categoria_ids']
+            }
+        )
         if not categorias_ids_consideradas:
             return {
                 'erro': 'As categorias selecionadas nao possuem subcategorias lancaveis para compor o relatorio.',
@@ -3989,13 +4439,13 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
             .order_by('data_operacional', 'pk')
         )
 
-        meses = _iterar_meses_periodo(data_inicial, data_final)
-        labels = [_rotulo_mes_pt_br(item.year, item.month) for item in meses]
+        buckets = _iterar_buckets_periodo(data_inicial, data_final, granularidade)
+        labels = [str(item['rotulo']) for item in buckets]
         valores_por_serie = [
-            [Decimal('0.00') for _ in meses]
+            [Decimal('0.00') for _ in buckets]
             for _ in series
         ]
-        indice_mes = {(item.year, item.month): idx for idx, item in enumerate(meses)}
+        indice_bucket = {str(item['chave']): idx for idx, item in enumerate(buckets)}
 
         total_receitas = Decimal('0.00')
         total_despesas = Decimal('0.00')
@@ -4003,24 +4453,25 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
         total_aberto = Decimal('0.00')
 
         for lancamento in lancamentos:
-            chave_mes = (lancamento.data_operacional.year, lancamento.data_operacional.month)
-            indice_mes_lancamento = indice_mes.get(chave_mes)
-            if indice_mes_lancamento is None:
+            chave_bucket = _chave_bucket_data_operacional(lancamento.data_operacional, granularidade)
+            indice_bucket_lancamento = indice_bucket.get(chave_bucket)
+            if indice_bucket_lancamento is None:
                 continue
 
-            if modo == 'comparativo':
-                indice_serie = 0 if lancamento.tipo == LancamentoFinanceiro.TipoLancamento.RECEITA else 1
-            else:
-                indice_serie = mapa_categoria_para_serie.get(lancamento.categoria_id)
-                if indice_serie is None:
-                    continue
+            indice_serie = None
+            for posicao, serie in enumerate(series):
+                if (
+                    lancamento.categoria_id in serie['categoria_ids_set']
+                    and lancamento.tipo in serie['tipos_permitidos']
+                ):
+                    indice_serie = posicao
+                    break
 
-            valor_assinado = (
-                lancamento.valor
-                if lancamento.tipo == LancamentoFinanceiro.TipoLancamento.RECEITA
-                else (lancamento.valor * Decimal('-1'))
-            )
-            valores_por_serie[indice_serie][indice_mes_lancamento] += valor_assinado
+            if indice_serie is None:
+                continue
+
+            valor_visual = abs(lancamento.valor or Decimal('0.00'))
+            valores_por_serie[indice_serie][indice_bucket_lancamento] += valor_visual
 
             if lancamento.tipo == LancamentoFinanceiro.TipoLancamento.RECEITA:
                 total_receitas += lancamento.valor
@@ -4036,13 +4487,25 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
             serie['valores'] = valores_por_serie[indice]
             serie['total'] = sum(valores_por_serie[indice], Decimal('0.00'))
             serie['total_formatado'] = _formatar_moeda_brl(serie['total'])
+            serie['tipo_css'] = 'misto'
+            if serie['tipo'] == LancamentoFinanceiro.TipoLancamento.RECEITA:
+                serie['tipo_css'] = 'receita'
+            elif serie['tipo'] == LancamentoFinanceiro.TipoLancamento.DESPESA:
+                serie['tipo_css'] = 'despesa'
 
         linhas_tabela = []
-        for indice, mes in enumerate(meses):
+        for indice, bucket in enumerate(buckets):
             valores_linha = [serie['valores'][indice] for serie in series]
+            saldo_linha = Decimal('0.00')
+            for posicao, valor in enumerate(valores_linha):
+                tipo_serie = series[posicao]['tipo']
+                if tipo_serie == LancamentoFinanceiro.TipoLancamento.DESPESA:
+                    saldo_linha -= valor
+                else:
+                    saldo_linha += valor
             linhas_tabela.append(
                 {
-                    'mes_label': _rotulo_mes_pt_br(mes.year, mes.month),
+                    'mes_label': str(bucket['rotulo']),
                     'valores': [
                         {
                             'valor': valor,
@@ -4051,19 +4514,58 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
                         }
                         for posicao, valor in enumerate(valores_linha)
                     ],
-                    'saldo_liquido': sum(valores_linha, Decimal('0.00')),
-                    'saldo_liquido_formatado': _formatar_moeda_brl(sum(valores_linha, Decimal('0.00'))),
+                    'saldo_liquido': saldo_linha,
+                    'saldo_liquido_formatado': _formatar_moeda_brl(abs(saldo_linha)),
                 }
             )
 
-        grafico = _montar_contexto_svg_evolucao(labels, series)
+        grafico = _montar_contexto_svg_evolucao(labels, series, mostrar_valores=mostrar_valores)
         saldo_liquido = total_receitas - total_despesas
+        leitura_temporal = _descricao_leitura_temporal_evolucao(granularidade)
+        if modo == 'comparativo':
+            descricao_grafico = (
+                f'Compara no mesmo eixo temporal as categorias selecionadas em {leitura_temporal}, preservando nomes reais e a natureza de entrada ou saida de cada serie.'
+                if leitura == 'separado'
+                else f'Compara no mesmo eixo temporal, em {leitura_temporal}, o consolidado das categorias de entrada selecionadas e o consolidado das categorias de saida selecionadas.'
+            )
+        else:
+            descricao_grafico = (
+                f'Exibe uma serie por item selecionado em {leitura_temporal}, mantendo a leitura visual por valor absoluto de cada lancamento.'
+                if leitura == 'separado'
+                else f'Soma os itens selecionados em {leitura_temporal}, mantendo a leitura visual por valor absoluto dos lancamentos.'
+            )
+
+        filtros_humanos = [
+            f'Periodo: {data_inicial.strftime("%d/%m/%Y")} a {data_final.strftime("%d/%m/%Y")}',
+            f"Escopo: {'Categorias' if escopo == 'categorias' else 'Subcategorias'}",
+            f"Leitura: {'Consolidado' if leitura == 'consolidado' else 'Separado'}",
+            f"Modo: {dict(self.modos_disponiveis).get(modo, modo)}",
+            f"Granularidade: {dict(self.granularidades_disponiveis).get(granularidade, granularidade)}",
+            f"Mostrar valores no grafico: {'Sim' if mostrar_valores else 'Nao'}",
+        ]
+        if itens_selecionados:
+            filtros_humanos.append(
+                f"{'Categorias' if escopo == 'categorias' else 'Subcategorias'} selecionadas: "
+                + ', '.join(item['label'] for item in itens_selecionados)
+            )
+        if selected_ids:
+            contas_selecionadas = [
+                conta.nome
+                for conta in _ordenar_itens_insensivel(
+                    ContaFinanceira.objects.filter(id__in=selected_ids),
+                    'nome',
+                )
+            ]
+            filtros_humanos.append(
+                'Contas: ' + (', '.join(contas_selecionadas) if contas_selecionadas else 'Todas as contas')
+            )
+
         return {
             'series': series,
             'grafico': grafico,
             'linhas_tabela': linhas_tabela,
             'quantidade_lancamentos': len(lancamentos),
-            'quantidade_meses': len(meses),
+            'quantidade_buckets': len(buckets),
             'total_receitas': total_receitas,
             'total_despesas': total_despesas,
             'total_quitado': total_quitado,
@@ -4076,6 +4578,9 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
             'saldo_liquido_formatado': _formatar_moeda_brl(saldo_liquido),
             'tem_dados': bool(lancamentos),
             'periodo_label': f'{data_inicial.strftime("%d/%m/%Y")} a {data_final.strftime("%d/%m/%Y")}',
+            'descricao_grafico': descricao_grafico,
+            'filtros_humanos': filtros_humanos,
+            'granularidade_grafico_label': dict(self.granularidades_disponiveis).get(granularidade, granularidade),
         }
 
     def get_context_data(self, **kwargs):
@@ -4093,7 +4598,11 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
             data_final,
             selected_ids,
             contexto_base['categorias_selecionadas'],
-            contexto_base['modo'],
+            escopo=contexto_base['escopo'],
+            leitura=contexto_base['leitura'],
+            modo=contexto_base['modo'],
+            granularidade=contexto_base['granularidade'],
+            mostrar_valores=contexto_base['mostrar_valores'],
         )
         if relatorio.get('erro'):
             context['periodo_error'] = relatorio['erro']

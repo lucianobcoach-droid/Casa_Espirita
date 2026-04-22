@@ -153,10 +153,17 @@
         overflow-x: auto;
     }
 
+    .financeiro-evolucao-chart-stage {
+        position: relative;
+        width: fit-content;
+        min-width: 100%;
+    }
+
     .financeiro-evolucao-chart {
         display: block;
-        min-width: 46rem;
-        width: 100%;
+        width: auto;
+        min-width: 100%;
+        max-width: none;
         height: auto;
     }
 
@@ -177,6 +184,12 @@
         font-weight: 600;
     }
 
+    .financeiro-evolucao-axis-label-x {
+        font-size: 11px;
+        font-weight: 700;
+        text-anchor: middle;
+    }
+
     .financeiro-evolucao-series-line {
         fill: none;
         stroke-width: 3;
@@ -186,7 +199,7 @@
 
     .financeiro-evolucao-series-point {
         stroke: #fff;
-        stroke-width: 2;
+        stroke-width: 2.5;
     }
 
     .financeiro-evolucao-empty {
@@ -195,9 +208,158 @@
         font-size: 0.88rem;
     }
 
-    .financeiro-evolucao-multi-select {
-        min-height: 13rem;
-        font-size: 0.88rem;
+    .financeiro-evolucao-selector {
+        display: grid;
+        gap: 0.75rem;
+    }
+
+    .financeiro-evolucao-search {
+        position: relative;
+    }
+
+    .financeiro-evolucao-search .input {
+        padding-right: 2.5rem;
+    }
+
+    .financeiro-evolucao-search-icon {
+        position: absolute;
+        right: 0.8rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+        font-size: 0.8rem;
+        pointer-events: none;
+    }
+
+    .financeiro-evolucao-selector-list {
+        display: grid;
+        gap: 0.35rem;
+        max-height: 18rem;
+        padding: 0.35rem;
+        border: 1px solid #dbe6f1;
+        border-radius: 0.95rem;
+        background: #fff;
+        overflow-y: auto;
+    }
+
+    .financeiro-evolucao-selector-list[hidden] {
+        display: none;
+    }
+
+    .financeiro-evolucao-selector-item {
+        display: block;
+        padding: 0.42rem 0.6rem;
+        border: 1px solid #e5edf7;
+        border-radius: 0.85rem;
+        background: #fbfdff;
+        cursor: pointer;
+    }
+
+    .financeiro-evolucao-selector-item.is-child {
+        padding-left: 0.6rem;
+    }
+
+    .financeiro-evolucao-selector-item.is-hidden {
+        display: none;
+    }
+
+    .financeiro-evolucao-selector-main {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .financeiro-evolucao-selector-text {
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+        min-width: 0;
+        flex: 1 1 auto;
+    }
+
+    .financeiro-evolucao-selector-prefix {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+        font-size: 0.82rem;
+        font-weight: 700;
+        line-height: 1;
+    }
+
+    .financeiro-evolucao-selector-prefix.is-despesa {
+        color: #dc2626;
+    }
+
+    .financeiro-evolucao-selector-prefix.is-receita {
+        color: #0f766e;
+    }
+
+    .financeiro-evolucao-selector-label {
+        color: #0f172a;
+        font-size: 0.84rem;
+        font-weight: 500;
+        line-height: 1.25;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .financeiro-evolucao-selector-main input[type="checkbox"] {
+        margin-top: 0;
+        flex: 0 0 auto;
+    }
+
+    .financeiro-evolucao-selector-empty {
+        padding: 0.8rem 0.7rem;
+        color: #64748b;
+        font-size: 0.82rem;
+        text-align: center;
+    }
+
+    .financeiro-evolucao-data-label-line {
+        stroke: rgba(15, 23, 42, 0.22);
+        stroke-width: 1;
+    }
+
+    .financeiro-evolucao-data-label-text {
+        fill: #0f172a;
+        font-size: 11px;
+        font-weight: 800;
+        text-anchor: middle;
+        paint-order: stroke;
+        stroke: rgba(255, 255, 255, 0.95);
+        stroke-width: 4px;
+        stroke-linejoin: round;
+    }
+
+    .financeiro-evolucao-table-toggle-label {
+        color: #1d4ed8;
+        font-size: 0.82rem;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .financeiro-evolucao-table-toggle {
+        display: block;
+    }
+
+    .financeiro-evolucao-table-toggle summary {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        padding: 0.8rem 0.9rem 0.65rem;
+        cursor: pointer;
+        list-style: none;
+    }
+
+    .financeiro-evolucao-table-toggle summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .financeiro-evolucao-table-toggle[open] summary {
+        border-bottom: 1px solid #edf2f7;
     }
 
     .financeiro-evolucao-table-wrap {
@@ -220,6 +382,121 @@
     .financeiro-evolucao-table td:first-child {
         white-space: nowrap;
     }
+
+    .financeiro-evolucao-print-summary {
+        display: none;
+        margin-top: 0.75rem;
+        padding: 0.85rem 0.95rem;
+        border: 1px solid #dbe6f1;
+        border-radius: 0.9rem;
+        background: #fff;
+    }
+
+    .financeiro-evolucao-print-summary-title {
+        margin: 0 0 0.22rem;
+        color: #0f172a;
+        font-size: 1.05rem;
+        font-weight: 800;
+    }
+
+    .financeiro-evolucao-print-summary-subtitle {
+        margin: 0 0 0.6rem;
+        color: #475569;
+        font-size: 0.84rem;
+        line-height: 1.45;
+    }
+
+    .financeiro-evolucao-print-summary h2 {
+        margin: 0 0 0.45rem;
+        color: #0f172a;
+        font-size: 0.9rem;
+        font-weight: 800;
+    }
+
+    .financeiro-evolucao-print-summary ul {
+        margin: 0;
+        padding-left: 1rem;
+        color: #475569;
+        font-size: 0.82rem;
+    }
+
+    @media print {
+        @page {
+            margin: 12mm;
+        }
+
+        body * {
+            visibility: hidden !important;
+        }
+
+        .financeiro-evolucao-print-area,
+        .financeiro-evolucao-print-area * {
+            visibility: visible !important;
+        }
+
+        .financeiro-evolucao-print-area {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        .financeiro-evolucao-card {
+            box-shadow: none;
+            border-color: #cbd5e1;
+            overflow: visible;
+        }
+
+        .financeiro-evolucao-kpis {
+            background: #fff;
+            padding-left: 0;
+            padding-right: 0;
+        }
+
+        .no-print,
+        .financeiro-topbar,
+        .financeiro-module-menu,
+        .financeiro-page-header,
+        .financeiro-page-header-actions,
+        .financeiro-evolucao-card .filters-box {
+            display: none !important;
+        }
+
+        .financeiro-evolucao-print-summary {
+            display: block;
+            margin-top: 0;
+        }
+
+        .financeiro-evolucao-chart-wrap {
+            overflow: visible;
+            padding-left: 0;
+            padding-right: 0;
+        }
+
+        .financeiro-evolucao-chart {
+            min-width: 0;
+            width: 100% !important;
+            max-width: 100%;
+        }
+
+        .financeiro-evolucao-body {
+            padding-left: 0;
+            padding-right: 0;
+        }
+
+        .financeiro-evolucao-table-toggle:not([open]) {
+            display: none !important;
+        }
+
+        .financeiro-evolucao-table-toggle summary {
+            display: none;
+        }
+
+        .financeiro-evolucao-table-toggle[open] > div {
+            display: block !important;
+        }
+    }
 </style>
 
 <div class="financeiro-evolucao-page">
@@ -227,25 +504,28 @@
         <div class="financeiro-page-header-main">
             <div>
                 <h1 class="title financeiro-page-title">{{ page_title }}</h1>
-                <p class="financeiro-page-subtitle">Leitura mensal da evolucao de categorias e subcategorias no periodo selecionado.</p>
+                <p class="financeiro-page-subtitle">Leitura mensal comparativa para categorias ou subcategorias no periodo selecionado.</p>
                 <div class="financeiro-evolucao-meta">
                     {% if periodo_label %}<span class="financeiro-evolucao-meta-item"><strong>Periodo:</strong> {{ periodo_label }}</span>{% endif %}
-                    {% if categorias_selecionadas_label %}<span class="financeiro-evolucao-meta-item"><strong>Categorias:</strong> {{ categorias_selecionadas|length }}</span>{% endif %}
-                    {% if categorias_selecionadas_label %}<span class="financeiro-evolucao-meta-item"><strong>Selecao:</strong> {{ categorias_selecionadas_label }}</span>{% endif %}
-                    {% if contas_incluidas_label %}<span class="financeiro-evolucao-meta-item"><strong>Contas:</strong> {{ contas_incluidas_label }}</span>{% endif %}
+                    <span class="financeiro-evolucao-meta-item"><strong>Escopo:</strong> {{ escopo_label }}</span>
+                    <span class="financeiro-evolucao-meta-item"><strong>Leitura:</strong> {{ leitura_label }}</span>
+                    <span class="financeiro-evolucao-meta-item"><strong>Granularidade:</strong> {{ granularidade_label }}</span>
                     <span class="financeiro-evolucao-meta-item"><strong>Modo:</strong> {{ modo_label }}</span>
+                    {% if categorias_selecionadas_resumo %}<span class="financeiro-evolucao-meta-item"><strong>Selecao:</strong> {{ categorias_selecionadas_resumo }}</span>{% endif %}
+                    {% if contas_incluidas_label %}<span class="financeiro-evolucao-meta-item"><strong>Contas:</strong> {{ contas_incluidas_label }}</span>{% endif %}
                 </div>
             </div>
         </div>
         <div class="financeiro-page-header-actions no-print">
             <a class="button is-light" href="{% url 'financeiro:resumo' %}">Voltar aos relatorios</a>
+            <button class="button is-link is-light" type="button" data-print-relatorio>Imprimir relatorio</button>
         </div>
     </div>
 
     <section class="financeiro-evolucao-card">
         <form method="get" class="filters-box no-print">
             <div class="financeiro-secondary-toolbar">
-                <details class="financeiro-secondary-panel">
+                <details class="financeiro-secondary-panel" data-evolucao-filtros>
                     <summary class="financeiro-secondary-summary">
                         <span class="financeiro-secondary-summary-label">Filtros do grafico</span>
                         {% if filtros_relatorio_ativos %}<span class="financeiro-secondary-badge">ativos</span>{% endif %}
@@ -270,15 +550,49 @@
                                     </select>
                                 </div>
                             </div>
+                            <div class="column is-12-mobile is-6-tablet is-2-desktop">
+                                <label class="label">Escopo</label>
+                                <div class="select is-fullwidth">
+                                    <select name="escopo" data-evolucao-scope-select>
+                                        {% for valor, rotulo in escopos_disponiveis %}
+                                            <option value="{{ valor }}" {% if escopo == valor %}selected{% endif %}>{{ rotulo }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="column is-12-mobile is-6-tablet is-3-desktop">
+                                <label class="label">Forma de leitura</label>
+                                <div class="select is-fullwidth">
+                                    <select name="leitura">
+                                        {% for valor, rotulo in leituras_disponiveis %}
+                                            <option value="{{ valor }}" {% if leitura == valor %}selected{% endif %}>{{ rotulo }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="column is-12-mobile is-6-tablet is-3-desktop">
+                                <label class="label">Granularidade</label>
+                                <div class="select is-fullwidth">
+                                    <select name="granularidade">
+                                        {% for valor, rotulo in granularidades_disponiveis %}
+                                            <option value="{{ valor }}" {% if granularidade == valor %}selected{% endif %}>{{ rotulo }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="column is-12-mobile is-6-tablet is-3-desktop">
+                                <label class="label">Valores no grafico</label>
+                                <div class="select is-fullwidth">
+                                    <select name="mostrar_valores">
+                                        <option value="0" {% if not mostrar_valores %}selected{% endif %}>Nao</option>
+                                        <option value="1" {% if mostrar_valores %}selected{% endif %}>Sim</option>
+                                    </select>
+                                </div>
+                            </div>
                             <div class="column is-12-mobile is-6-tablet is-5-desktop">
                                 <label class="label">Contas incluidas</label>
                                 <div class="financeiro-contas-dropdown" data-contas-dropdown>
-                                    <button
-                                        class="button is-light financeiro-contas-trigger"
-                                        type="button"
-                                        data-contas-dropdown-toggle
-                                        aria-expanded="false"
-                                    >
+                                    <button class="button is-light financeiro-contas-trigger" type="button" data-contas-dropdown-toggle aria-expanded="false">
                                         <span class="financeiro-contas-trigger-label" data-contas-dropdown-summary>
                                             {% if quantidade_contas_selecionadas == contas_disponiveis|length %}
                                                 Contas: Todas
@@ -307,24 +621,51 @@
                                         </div>
                                     </div>
                                 </div>
-                                <p class="help">Sem selecao explicita, o relatorio considera todas as contas.</p>
                             </div>
-                            <div class="column is-12">
-                                <label class="label">Categorias e subcategorias</label>
-                                <div class="select is-multiple is-fullwidth">
-                                    <select class="financeiro-evolucao-multi-select" name="categorias" multiple>
-                                        {% for categoria in categorias_disponiveis %}
-                                            <option value="{{ categoria.pk }}" {% if categoria.pk|stringformat:'s' in categorias_selecionadas_ids %}selected{% endif %}>
-                                                {% if categoria.categoria_pai_id %}
-                                                    {{ categoria.categoria_pai.nome }} / {{ categoria.nome }} ({{ categoria.get_tipo_display }})
-                                                {% else %}
-                                                    {{ categoria.nome }} ({{ categoria.get_tipo_display }})
-                                                {% endif %}
-                                            </option>
+                            <div class="column is-12-mobile is-6-tablet is-7-desktop">
+                                <label class="label" data-evolucao-selector-label>{{ escopo_label }}</label>
+                                <div class="financeiro-evolucao-selector" data-evolucao-selector>
+                                    <div class="financeiro-evolucao-search">
+                                        <input class="input" type="search" placeholder="Buscar {{ escopo|lower }}..." data-evolucao-selector-search>
+                                        <span class="financeiro-evolucao-search-icon">Buscar</span>
+                                    </div>
+                                    <div class="financeiro-evolucao-selector-list" data-evolucao-selector-list data-scope="categorias" {% if escopo != 'categorias' %}hidden{% endif %}>
+                                        {% for categoria in categorias_disponiveis_categorias %}
+                                            <label class="financeiro-evolucao-selector-item" data-evolucao-item data-search="{{ categoria.search_text|lower }}" data-sort-key="{{ categoria.display_label }}">
+                                                <div class="financeiro-evolucao-selector-main">
+                                                    <input type="checkbox" name="categorias" value="{{ categoria.id }}" {% if categoria.id|stringformat:'s' in categorias_selecionadas_ids %}checked{% endif %} {% if escopo != 'categorias' %}disabled{% endif %}>
+                                                    <div class="financeiro-evolucao-selector-text">
+                                                        <span class="financeiro-evolucao-selector-prefix {% if categoria.tipo == 'receita' %}is-receita{% else %}is-despesa{% endif %}" aria-label="{{ categoria.tipo_label }}" title="{{ categoria.tipo_label }}">
+                                                            {% if categoria.tipo == 'receita' %}+{% else %}-{% endif %}
+                                                        </span>
+                                                        <span class="financeiro-evolucao-selector-label">{{ categoria.display_label }}</span>
+                                                    </div>
+                                                </div>
+                                            </label>
+                                        {% empty %}
+                                            <div class="financeiro-evolucao-selector-empty">Nenhuma categoria disponivel.</div>
                                         {% endfor %}
-                                    </select>
+                                        <div class="financeiro-evolucao-selector-empty" data-evolucao-selector-empty hidden>Nenhuma categoria encontrada para a busca atual.</div>
+                                    </div>
+                                    <div class="financeiro-evolucao-selector-list" data-evolucao-selector-list data-scope="subcategorias" {% if escopo != 'subcategorias' %}hidden{% endif %}>
+                                        {% for categoria in categorias_disponiveis_subcategorias %}
+                                            <label class="financeiro-evolucao-selector-item is-child" data-evolucao-item data-search="{{ categoria.search_text|lower }}" data-sort-key="{{ categoria.sort_key|default:categoria.display_label }}">
+                                                <div class="financeiro-evolucao-selector-main">
+                                                    <input type="checkbox" name="categorias" value="{{ categoria.id }}" {% if categoria.id|stringformat:'s' in categorias_selecionadas_ids %}checked{% endif %} {% if escopo != 'subcategorias' %}disabled{% endif %}>
+                                                    <div class="financeiro-evolucao-selector-text">
+                                                        <span class="financeiro-evolucao-selector-prefix {% if categoria.tipo == 'receita' %}is-receita{% else %}is-despesa{% endif %}" aria-label="{{ categoria.tipo_label }}" title="{{ categoria.tipo_label }}">
+                                                            {% if categoria.tipo == 'receita' %}+{% else %}-{% endif %}
+                                                        </span>
+                                                        <span class="financeiro-evolucao-selector-label">{{ categoria.display_label }}</span>
+                                                    </div>
+                                                </div>
+                                            </label>
+                                        {% empty %}
+                                            <div class="financeiro-evolucao-selector-empty">Nenhuma subcategoria disponivel.</div>
+                                        {% endfor %}
+                                        <div class="financeiro-evolucao-selector-empty" data-evolucao-selector-empty hidden>Nenhuma subcategoria encontrada para a busca atual.</div>
+                                    </div>
                                 </div>
-                                <p class="help">Selecione uma ou mais categorias/subcategorias. Se usar categoria pai, nao combine com a filha dela no mesmo grafico.</p>
                             </div>
                             <div class="column is-12-mobile is-6-tablet is-3-desktop">
                                 <label class="label">&nbsp;</label>
@@ -344,150 +685,297 @@
         {% endif %}
 
         {% if not periodo_error and periodo_label %}
-            <div class="financeiro-evolucao-kpis no-print">
-                <div class="financeiro-evolucao-kpi">
-                    <span class="financeiro-evolucao-kpi-label">Receitas no periodo</span>
-                    <span class="financeiro-evolucao-kpi-value is-receita">R$ {{ total_receitas_formatado }}</span>
+            <div class="financeiro-evolucao-print-area">
+                <div class="financeiro-evolucao-print-summary">
+                    <h1 class="financeiro-evolucao-print-summary-title">{{ page_title }}</h1>
+                    <p class="financeiro-evolucao-print-summary-subtitle">Resumo visual da evolucao financeira conforme os filtros aplicados.</p>
+                    <h2>Filtros aplicados</h2>
+                    <ul>
+                        {% for filtro in filtros_humanos %}
+                            <li>{{ filtro }}</li>
+                        {% endfor %}
+                    </ul>
                 </div>
-                <div class="financeiro-evolucao-kpi">
-                    <span class="financeiro-evolucao-kpi-label">Despesas no periodo</span>
-                    <span class="financeiro-evolucao-kpi-value is-despesa">R$ {{ total_despesas_formatado }}</span>
-                </div>
-                <div class="financeiro-evolucao-kpi">
-                    <span class="financeiro-evolucao-kpi-label">Saldo liquido</span>
-                    <span class="financeiro-evolucao-kpi-value">R$ {{ saldo_liquido_formatado }}</span>
-                </div>
-                <div class="financeiro-evolucao-kpi">
-                    <span class="financeiro-evolucao-kpi-label">Quitado</span>
-                    <span class="financeiro-evolucao-kpi-value">R$ {{ total_quitado_formatado }}</span>
-                </div>
-                <div class="financeiro-evolucao-kpi">
-                    <span class="financeiro-evolucao-kpi-label">Em aberto</span>
-                    <span class="financeiro-evolucao-kpi-value">R$ {{ total_aberto_formatado }}</span>
-                </div>
-                <div class="financeiro-evolucao-kpi">
-                    <span class="financeiro-evolucao-kpi-label">Lancamentos considerados</span>
-                    <span class="financeiro-evolucao-kpi-value">{{ quantidade_lancamentos }}</span>
-                </div>
-            </div>
 
-            <div class="financeiro-evolucao-body">
-                <section class="financeiro-evolucao-panel">
-                    <div class="financeiro-evolucao-panel-header">
-                        <div>
-                            <h2 class="financeiro-evolucao-panel-title">Grafico mensal</h2>
-                            <p class="financeiro-evolucao-panel-note">
-                                {% if modo == 'comparativo' %}
-                                    Compara a soma mensal das categorias de entrada e saida selecionadas no mesmo eixo temporal.
-                                {% else %}
-                                    Exibe uma serie por categoria ou subcategoria selecionada, respeitando a natureza financeira real do lancamento.
-                                {% endif %}
-                            </p>
-                        </div>
-                        {% if series %}
-                            <div class="financeiro-evolucao-legend">
-                                {% for serie in series %}
-                                    <span class="financeiro-evolucao-legend-item">
-                                        <span class="financeiro-evolucao-legend-swatch" style="background: {{ serie.cor }}"></span>
-                                        {{ serie.label }}
-                                    </span>
-                                {% endfor %}
+                <div class="financeiro-evolucao-kpis">
+                    <div class="financeiro-evolucao-kpi">
+                        <span class="financeiro-evolucao-kpi-label">Receitas no periodo</span>
+                        <span class="financeiro-evolucao-kpi-value is-receita">R$ {{ total_receitas_formatado }}</span>
+                    </div>
+                    <div class="financeiro-evolucao-kpi">
+                        <span class="financeiro-evolucao-kpi-label">Despesas no periodo</span>
+                        <span class="financeiro-evolucao-kpi-value is-despesa">R$ {{ total_despesas_formatado }}</span>
+                    </div>
+                    <div class="financeiro-evolucao-kpi">
+                        <span class="financeiro-evolucao-kpi-label">Saldo liquido</span>
+                        <span class="financeiro-evolucao-kpi-value">R$ {{ saldo_liquido_formatado }}</span>
+                    </div>
+                    <div class="financeiro-evolucao-kpi">
+                        <span class="financeiro-evolucao-kpi-label">Quitado</span>
+                        <span class="financeiro-evolucao-kpi-value">R$ {{ total_quitado_formatado }}</span>
+                    </div>
+                    <div class="financeiro-evolucao-kpi">
+                        <span class="financeiro-evolucao-kpi-label">Em aberto</span>
+                        <span class="financeiro-evolucao-kpi-value">R$ {{ total_aberto_formatado }}</span>
+                    </div>
+                    <div class="financeiro-evolucao-kpi">
+                        <span class="financeiro-evolucao-kpi-label">Lancamentos considerados</span>
+                        <span class="financeiro-evolucao-kpi-value">{{ quantidade_lancamentos }}</span>
+                    </div>
+                </div>
+
+                <div class="financeiro-evolucao-body">
+                    <section class="financeiro-evolucao-panel">
+                        <div class="financeiro-evolucao-panel-header">
+                            <div>
+                                <h2 class="financeiro-evolucao-panel-title">Grafico por {{ granularidade_grafico_label|lower }}</h2>
+                                <p class="financeiro-evolucao-panel-note">{{ descricao_grafico }}</p>
                             </div>
-                        {% endif %}
-                    </div>
-                    {% if grafico.tem_dados %}
-                        <div class="financeiro-evolucao-chart-wrap">
-                            <svg class="financeiro-evolucao-chart" viewBox="0 0 {{ grafico.largura }} {{ grafico.altura }}" role="img" aria-label="Grafico mensal de evolucao por categorias">
-                                {% for linha in grafico.grade %}
-                                    <line class="financeiro-evolucao-grid-line" x1="72" y1="{{ linha.y }}" x2="{{ grafico.largura|add:'-24' }}" y2="{{ linha.y }}"></line>
-                                    <text class="financeiro-evolucao-axis-label" x="8" y="{{ linha.y|add:'4' }}">{{ linha.label }}</text>
-                                {% endfor %}
-                                <line class="financeiro-evolucao-zero-line" x1="72" y1="{{ grafico.zero_y }}" x2="{{ grafico.largura|add:'-24' }}" y2="{{ grafico.zero_y }}"></line>
-
-                                {% for serie in grafico.series %}
-                                    <path class="financeiro-evolucao-series-line" d="{{ serie.path_data }}" stroke="{{ serie.cor }}"></path>
-                                    {% for ponto in serie.pontos %}
-                                        <circle class="financeiro-evolucao-series-point" cx="{{ ponto.x }}" cy="{{ ponto.y }}" r="4.5" fill="{{ serie.cor }}">
-                                            <title>{{ serie.label }} - {{ ponto.label_mes }} - {{ ponto.label_valor }}</title>
-                                        </circle>
-                                    {% endfor %}
-                                {% endfor %}
-
-                                {% for item in grafico.rotulos_eixo_x %}
-                                    <text class="financeiro-evolucao-axis-label" x="{{ item.x }}" y="{{ grafico.altura|add:'-12' }}" text-anchor="middle">{{ item.label }}</text>
-                                {% endfor %}
-                            </svg>
-                        </div>
-                    {% else %}
-                        <div class="financeiro-evolucao-empty">Nenhum lancamento encontrado para as categorias selecionadas no periodo informado.</div>
-                    {% endif %}
-                </section>
-
-                <section class="financeiro-evolucao-panel">
-                    <div class="financeiro-evolucao-panel-header">
-                        <div>
-                            <h2 class="financeiro-evolucao-panel-title">Tabela mensal de apoio</h2>
-                            <p class="financeiro-evolucao-panel-note">Resumo por mes para leitura rapida e conferencia dos valores plotados no grafico.</p>
-                        </div>
-                    </div>
-                    <div class="financeiro-evolucao-table-wrap">
-                        <table class="table is-fullwidth is-hoverable financeiro-table financeiro-evolucao-table">
-                            <thead>
-                                <tr>
-                                    <th>Mes</th>
-                                    {% for serie in series %}
-                                        <th>{{ serie.label }}</th>
-                                    {% endfor %}
-                                    <th>Saldo liquido</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for linha in linhas_tabela %}
-                                    <tr>
-                                        <td>{{ linha.mes_label }}</td>
-                                        {% for valor in linha.valores %}
-                                            <td>
-                                                <span class="valor-chip {% if valor.tipo == 'receita' %}is-receita{% else %}is-despesa{% endif %}">
-                                                    R$ {{ valor.valor_formatado }}
-                                                </span>
-                                            </td>
-                                        {% endfor %}
-                                        <td>
-                                            <span class="valor-chip {% if linha.saldo_liquido >= 0 %}is-receita{% else %}is-despesa{% endif %}">
-                                                R$ {{ linha.saldo_liquido_formatado }}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                {% empty %}
-                                    <tr>
-                                        <td colspan="{{ series|length|add:'2' }}">Nenhum dado mensal disponivel para o filtro atual.</td>
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
                             {% if series %}
-                                <tfoot>
-                                    <tr>
-                                        <th>Total do periodo</th>
-                                        {% for serie in series %}
-                                            <th>
-                                                <span class="valor-chip {% if serie.tipo == 'receita' %}is-receita{% else %}is-despesa{% endif %}">
-                                                    R$ {{ serie.total_formatado }}
-                                                </span>
-                                            </th>
-                                        {% endfor %}
-                                        <th>
-                                            <span class="valor-chip {% if saldo_liquido >= 0 %}is-receita{% else %}is-despesa{% endif %}">
-                                                R$ {{ saldo_liquido_formatado }}
-                                            </span>
-                                        </th>
-                                    </tr>
-                                </tfoot>
+                                <div class="financeiro-evolucao-legend">
+                                    {% for serie in series %}
+                                        <span class="financeiro-evolucao-legend-item">
+                                            <span class="financeiro-evolucao-legend-swatch" style="background: {{ serie.cor }}"></span>
+                                            {{ serie.label }}
+                                        </span>
+                                    {% endfor %}
+                                </div>
                             {% endif %}
-                        </table>
-                    </div>
-                </section>
+                        </div>
+                        {% if grafico.tem_dados %}
+                            <div class="financeiro-evolucao-chart-wrap">
+                                <div class="financeiro-evolucao-chart-stage" style="width: {{ grafico.render_width }}px;">
+                                    <svg class="financeiro-evolucao-chart" viewBox="0 0 {{ grafico.largura }} {{ grafico.altura }}" style="width: {{ grafico.render_width }}px" role="img" aria-label="Grafico de evolucao por categorias em {{ granularidade_grafico_label|lower }}">
+                                        {% for linha in grafico.grade %}
+                                            <line class="financeiro-evolucao-grid-line" x1="{{ grafico.x_inicial }}" y1="{{ linha.y }}" x2="{{ grafico.x_final }}" y2="{{ linha.y }}"></line>
+                                            <text class="financeiro-evolucao-axis-label" x="8" y="{{ linha.y|add:'4' }}">{{ linha.label }}</text>
+                                        {% endfor %}
+                                        <line class="financeiro-evolucao-zero-line" x1="{{ grafico.x_inicial }}" y1="{{ grafico.zero_y }}" x2="{{ grafico.x_final }}" y2="{{ grafico.zero_y }}"></line>
+                                        {% for item in grafico.rotulos_eixo_x %}
+                                            <line class="financeiro-evolucao-grid-line" x1="{{ item.x_svg }}" y1="{{ grafico.zero_y }}" x2="{{ item.x_svg }}" y2="{{ grafico.zero_y|add:'6' }}"></line>
+                                            <text class="financeiro-evolucao-axis-label financeiro-evolucao-axis-label-x" x="{{ item.x_svg }}" y="{{ grafico.eixo_label_y }}">{{ item.label }}</text>
+                                        {% endfor %}
+
+                                        {% for serie in grafico.series %}
+                                            <path class="financeiro-evolucao-series-line" d="{{ serie.path_data }}" stroke="{{ serie.cor }}"></path>
+                                            {% for ponto in serie.pontos %}
+                                                <circle class="financeiro-evolucao-series-point" cx="{{ ponto.x }}" cy="{{ ponto.y }}" r="4.5" fill="{{ serie.cor }}">
+                                                    <title>{{ serie.label }} - {{ ponto.label_mes }} - {{ ponto.label_valor }}</title>
+                                                </circle>
+                                                {% if ponto.mostrar_rotulo %}
+                                                    <line class="financeiro-evolucao-data-label-line" x1="{{ ponto.x_svg }}" y1="{{ ponto.y_svg }}" x2="{{ ponto.x_svg }}" y2="{{ ponto.linha_rotulo_y_svg }}"></line>
+                                                    <text class="financeiro-evolucao-data-label-text" x="{{ ponto.x_svg }}" y="{{ ponto.rotulo_y_svg }}">{{ ponto.label_curto }}</text>
+                                                {% endif %}
+                                            {% endfor %}
+                                        {% endfor %}
+
+                                    </svg>
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="financeiro-evolucao-empty">Nenhum lancamento encontrado para o filtro atual.</div>
+                        {% endif %}
+                    </section>
+
+                    <section class="financeiro-evolucao-panel">
+                        <details class="financeiro-evolucao-table-toggle" data-evolucao-tabela>
+                            <summary>
+                                <div>
+                                    <h2 class="financeiro-evolucao-panel-title">Tabela de apoio</h2>
+                                    <p class="financeiro-evolucao-panel-note">Resumo por {{ granularidade_grafico_label|lower }} para conferencia dos valores do grafico. Ela fica recolhida por padrao para manter o grafico em destaque.</p>
+                                </div>
+                                <span class="financeiro-evolucao-table-toggle-label" data-evolucao-tabela-toggle-label>Mostrar tabela mensal</span>
+                            </summary>
+                            <div class="financeiro-evolucao-table-wrap">
+                                <table class="table is-fullwidth is-hoverable financeiro-table financeiro-evolucao-table">
+                                    <thead>
+                                        <tr>
+                                            <th>{{ granularidade_grafico_label }}</th>
+                                            {% for serie in series %}
+                                                <th>{{ serie.label }}</th>
+                                            {% endfor %}
+                                            <th>Saldo liquido</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for linha in linhas_tabela %}
+                                            <tr>
+                                                <td>{{ linha.mes_label }}</td>
+                                                {% for valor in linha.valores %}
+                                                    <td>
+                                                        <span class="valor-chip {% if valor.tipo == 'receita' %}is-receita{% elif valor.tipo == 'despesa' %}is-despesa{% endif %}">
+                                                            R$ {{ valor.valor_formatado }}
+                                                        </span>
+                                                    </td>
+                                                {% endfor %}
+                                                <td>
+                                                    <span class="valor-chip {% if linha.saldo_liquido >= 0 %}is-receita{% else %}is-despesa{% endif %}">
+                                                        R$ {{ linha.saldo_liquido_formatado }}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        {% empty %}
+                                            <tr>
+                                                <td colspan="{{ series|length|add:'2' }}">Nenhum dado mensal disponivel para o filtro atual.</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                    {% if series %}
+                                        <tfoot>
+                                            <tr>
+                                                <th>Total do periodo</th>
+                                                {% for serie in series %}
+                                                    <th>
+                                                        <span class="valor-chip {% if serie.tipo_css == 'receita' %}is-receita{% elif serie.tipo_css == 'despesa' %}is-despesa{% endif %}">
+                                                            R$ {{ serie.total_formatado }}
+                                                        </span>
+                                                    </th>
+                                                {% endfor %}
+                                                <th>
+                                                    <span class="valor-chip {% if saldo_liquido >= 0 %}is-receita{% else %}is-despesa{% endif %}">
+                                                        R$ {{ saldo_liquido_formatado }}
+                                                    </span>
+                                                </th>
+                                            </tr>
+                                        </tfoot>
+                                    {% endif %}
+                                </table>
+                            </div>
+                        </details>
+                    </section>
+                </div>
             </div>
         {% endif %}
     </section>
 </div>
+
+<script>
+    (function() {
+        const selector = document.querySelector('[data-evolucao-selector]');
+        const scopeSelect = document.querySelector('[data-evolucao-scope-select]');
+
+        const normalize = (value) =>
+            (value || '')
+                .toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '');
+
+        if (selector && scopeSelect) {
+            const searchInput = selector.querySelector('[data-evolucao-selector-search]');
+            const lists = Array.from(selector.querySelectorAll('[data-evolucao-selector-list]'));
+            const selectorLabel = document.querySelector('[data-evolucao-selector-label]');
+            const collator = new Intl.Collator('pt-BR', {
+                sensitivity: 'base',
+                numeric: true,
+                ignorePunctuation: true,
+            });
+
+            const getActiveList = () =>
+                lists.find((list) => list.dataset.scope === scopeSelect.value) || null;
+
+            const getSortLabel = (item) =>
+                (item.dataset.sortKey || item.querySelector('.financeiro-evolucao-selector-label')?.textContent || '').trim();
+
+            const sortList = (list, { onlyVisible = false } = {}) => {
+                if (!list) {
+                    return;
+                }
+
+                const items = Array.from(list.querySelectorAll('[data-evolucao-item]'))
+                    .filter((item) => !onlyVisible || !item.classList.contains('is-hidden'));
+
+                items
+                    .sort((itemA, itemB) => collator.compare(getSortLabel(itemA), getSortLabel(itemB)))
+                    .forEach((item) => {
+                        list.appendChild(item);
+                    });
+            };
+
+            lists.forEach((list) => sortList(list));
+
+            const applySearch = () => {
+                const activeList = getActiveList();
+                if (!activeList || !searchInput) {
+                    return;
+                }
+
+                const term = normalize(searchInput.value);
+                const items = Array.from(activeList.querySelectorAll('[data-evolucao-item]'));
+                const emptyState = activeList.querySelector('[data-evolucao-selector-empty]');
+                let visibleCount = 0;
+
+                items.forEach((item) => {
+                    const haystack = normalize(item.dataset.search || '');
+                    const visible = !term || haystack.includes(term);
+                    item.classList.toggle('is-hidden', !visible);
+                    if (visible) {
+                        visibleCount += 1;
+                    }
+                });
+
+                sortList(activeList, { onlyVisible: true });
+
+                if (emptyState) {
+                    emptyState.hidden = visibleCount !== 0;
+                }
+            };
+
+            const syncScope = () => {
+                const activeScope = scopeSelect.value;
+                lists.forEach((list) => {
+                    const isActive = list.dataset.scope === activeScope;
+                    list.hidden = !isActive;
+                    list.querySelectorAll('input[type="checkbox"]').forEach((input) => {
+                        input.disabled = !isActive;
+                    });
+                });
+
+                if (selectorLabel) {
+                    selectorLabel.textContent = activeScope === 'categorias' ? 'Categorias' : 'Subcategorias';
+                }
+                if (searchInput) {
+                    searchInput.value = '';
+                    searchInput.placeholder = activeScope === 'categorias' ? 'Buscar categorias...' : 'Buscar subcategorias...';
+                }
+                applySearch();
+            };
+
+            if (searchInput) {
+                searchInput.addEventListener('input', applySearch);
+            }
+            scopeSelect.addEventListener('change', syncScope);
+            syncScope();
+        }
+
+        const printButton = document.querySelector('[data-print-relatorio]');
+        const tabelaDetails = document.querySelector('[data-evolucao-tabela]');
+        const toggleLabel = document.querySelector('[data-evolucao-tabela-toggle-label]');
+        const filtrosDetails = document.querySelector('[data-evolucao-filtros]');
+
+        const syncTableToggleLabel = () => {
+            if (!tabelaDetails || !toggleLabel) {
+                return;
+            }
+            toggleLabel.textContent = tabelaDetails.hasAttribute('open')
+                ? 'Ocultar tabela mensal'
+                : 'Mostrar tabela mensal';
+        };
+
+        if (printButton) {
+            printButton.addEventListener('click', () => {
+                syncTableToggleLabel();
+                window.print();
+            });
+        }
+
+        if (tabelaDetails) {
+            tabelaDetails.addEventListener('toggle', syncTableToggleLabel);
+            syncTableToggleLabel();
+        }
+
+        if (filtrosDetails) {
+            filtrosDetails.removeAttribute('open');
+        }
+    })();
+</script>
 {% endblock %}

@@ -1,6 +1,219 @@
 # CODEX_RESULTADO
 
-Data: 2026-04-21
+Data: 2026-04-22
+
+## Fechamento do bloco aberto da tela `Evolucao por categorias`
+
+- fechei o working tree aberto da tela sem misturar nova feature
+- o diff final mantido neste bloco ficou restrito a:
+  - [financeiro/views.py](C:\Users\lucia\OneDrive\Área de Trabalho\Casa_Espirita\financeiro\views.py)
+  - [financeiro/templates/financeiro/evolucao_categorias.html](C:\Users\lucia\OneDrive\Área de Trabalho\Casa_Espirita\financeiro\templates\financeiro\evolucao_categorias.html)
+  - [docs/STATE.md](C:\Users\lucia\OneDrive\Área de Trabalho\Casa_Espirita\docs\STATE.md)
+  - [docs/CODEX_RESULTADO.md](C:\Users\lucia\OneDrive\Área de Trabalho\Casa_Espirita\docs\CODEX_RESULTADO.md)
+  - [docs/ROADMAP_FINANCEIRO.md](C:\Users\lucia\OneDrive\Área de Trabalho\Casa_Espirita\docs\ROADMAP_FINANCEIRO.md)
+- consolidacao final mantida na tela:
+  - seletor simplificado em uma linha, com `+`/`-` antes do nome
+  - ordenacao visivel final no frontend, sem acento e sem diferenca de caixa
+  - separacao clara entre `Categorias` e `Subcategorias`
+  - leitura `Consolidado` / `Separado`
+  - granularidade configuravel
+  - grafico em valor absoluto
+  - escala do eixo Y arredondada e sem `R$`
+  - impressao apenas da area do relatorio
+  - tabela de apoio recolhida por padrao
+- ajuste de escopo feito no fechamento:
+  - retirei do diff a alteracao colateral na ordenacao de filtros da `lancamento_list`, para que o commit feche apenas a frente da `Evolucao por categorias`
+- validacoes executadas nesta etapa de fechamento:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+- observacao de ordem correta:
+  - a proxima frente continua sendo `Comparacao entre periodos`, mas ela nao entra neste commit
+- resultado:
+  - bloco pronto para commit coeso, sem abrir nova frente
+
+## Evolucao por categorias: escala do grafico limpa, sem `R$`, e ordenacao visivel validada
+
+- apliquei a microetapa corretiva curta focada apenas em tres pontos:
+  - escala do eixo Y
+  - remocao de `R$` da visualizacao do grafico
+  - ordenacao visivel das categorias
+- causa real da falha de ordenacao:
+  - no escopo `Subcategorias`, a lista ainda era montada com prioridade por `categoria_pai`, o que quebrava a ordem alfabetica que o usuario enxergava
+  - no frontend, o seletor mantinha a ordem herdada do DOM e nao reordenava a lista final apos carregar, trocar `Escopo` ou aplicar busca
+- correcoes aplicadas:
+  - o eixo Y deixou de usar divisao crua do range e passou a usar ticks arredondados/bem comportados
+  - os rotulos do grafico deixaram de exibir `R$` no eixo e sobre os pontos
+  - o tooltip do ponto continuou com valor monetario completo
+  - a montagem de `Subcategorias` passou a priorizar o nome exibido
+  - o JS do seletor passou a ordenar a lista final com `Intl.Collator('pt-BR')`, em modo `accent-insensitive` e `case-insensitive`
+  - a leitura visivel foi revalidada em navegador real, inclusive com caso acentuado e com busca aplicada
+- validacao executada nesta rodada:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+  - validacao visual/manual real no Edge com screenshots:
+    - `tmp/validacao_evolucao_categorias_escala_ordenacao.png`
+    - `tmp/validacao_evolucao_categorias_ordenacao_aberta.png`
+    - `tmp/validacao_ordenacao_categorias_aberta.png`
+    - `tmp/validacao_ordenacao_subcategorias_busca.png`
+- resultado visual confirmado:
+  - eixo com escala limpa
+  - rotulos sem `R$`
+  - categorias visivelmente em ordem crescente
+  - subcategorias visivelmente em ordem crescente mesmo apos busca por `agua`
+- observacao:
+  - a microetapa continua sem commit por decisao do fluxo atual; o working tree permanece aberto
+
+## Evolucao por categorias ainda bloqueada para commit por falta de validacao visual final
+
+- tratei como verdade o retorno do uso real: apenas o recolhimento do filtro estava aprovado; os demais pontos nao podiam mais ser marcados como resolvidos so por smoke tecnico
+- nesta rodada apliquei uma nova correcao de codigo focada nos bloqueios ainda abertos:
+  - removi o texto auxiliar remanescente da area principal de filtros
+  - reforcei a ordenacao `case-insensitive` e `accent-insensitive`
+  - troquei a prioridade de ordenacao das categorias para leitura alfabetica real, sem deixar `tipo` liderar a UX da lista
+  - simplifiquei os rotulos curtos do grafico para eliminar o caso em que o usuario via apenas `R`
+  - aumentei a largura base do SVG e o espaco inferior do eixo para favorecer os labels temporais
+  - mantive a impressao isolada na area do relatorio e sem abrir automaticamente a tabela de apoio
+- validacao executada nesta rodada:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+  - smoke autenticado principal OK
+  - smoke complementar OK para ordenacao renderizada no HTML e estrutura de impressao
+- BLOQUEIO ABERTO:
+  - a microetapa continua sem commit porque ainda falta validacao visual/manual real no navegador para confirmar:
+    - ordenacao visivel correta
+    - impressao realmente limitada ao relatorio
+    - tabela recolhida fora do impresso
+    - ausencia visual do texto auxiliar
+    - rotulos de dados corretos
+    - eixo temporal visivel e legivel
+
+## Evolucao por categorias com ordenacao acento-insensivel e impressao apenas do relatorio
+
+- apliquei uma rodada corretiva adicional antes do commit para fechar os bloqueios reais ainda abertos na tela
+- correcoes aplicadas:
+  - ordenacao `case-insensitive` e `accent-insensitive` nas listas da `Evolucao por categorias`
+  - o mesmo criterio foi levado para seletores equivalentes do `financeiro` que impactam a leitura operacional da listagem de lancamentos
+  - a impressao deixou de usar a pagina inteira e passou a isolar apenas a area documental do relatorio
+  - o impresso agora usa um cabecalho proprio com resumo humano dos filtros aplicados
+  - a tabela mensal nao e mais forcada a abrir antes da impressao e nao sai no papel quando estiver recolhida
+- ajuste tecnico relevante:
+  - criei helper unico de ordenacao textual sem acento/sem diferenca de caixa em `financeiro/views.py`
+  - o template da `Evolucao por categorias` passou a usar um wrapper proprio de impressao (`financeiro-evolucao-print-area`) com CSS de isolamento visual
+  - a chamada JS do botao `Imprimir relatorio` deixou de abrir automaticamente a tabela de apoio
+- validacoes executadas nesta rodada:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+  - smoke autenticado principal da tela OK
+  - smoke complementar OK confirmando:
+    - ordenacao correta de `contas`, `favorecidos` e `categorias`
+    - texto auxiliar removido no escopo `Categorias`
+    - estrutura de impressao restrita ao relatorio
+    - tabela recolhida nao sendo promovida automaticamente ao impresso
+
+## Evolucao por categorias refinada com escopo, leitura e impressao
+
+- apliquei uma rodada corretiva final para fechar os quatro bloqueios imediatos antes do commit
+- correcoes aplicadas:
+  - painel de filtros volta recolhido por padrao depois do submit
+  - remocao dos textos auxiliares desnecessarios na superficie principal da selecao
+  - rotulos de dados do grafico passaram a usar formato curto coerente, sem truncar em apenas `R`
+  - labels temporais do eixo X ficaram robustos e visiveis conforme a granularidade ativa
+- ajuste tecnico relevante:
+  - o template deixou de abrir automaticamente o painel so porque existem filtros ativos
+  - a view passou a gerar rotulo curto proprio para os valores desenhados no SVG
+  - o eixo X passou a selecionar labels visiveis de forma controlada, evitando poluicao ou sumico de datas
+- validacoes executadas nesta rodada:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+  - smoke autenticado OK confirmando:
+    - atualizacao real do grafico
+    - painel de filtros recolhido por padrao
+    - rotulos de dados sem truncamento indevido
+    - labels temporais visiveis em `Dias`, `Meses`, `Trimestres` e `Anos`
+
+- refinei a mesma tela antes do commit para corrigir pontos de UX e leitura que ainda estavam ruins no uso real
+- correcoes aplicadas nesta rodada:
+  - troca imediata de `Escopo` entre `Categorias` e `Subcategorias`, atualizando a lista visivel e a busca sem depender do submit
+  - exibicao limpa das categorias pai no escopo `Categorias`, sem texto de apoio desnecessario na linha principal
+  - novo controle de `Granularidade` com `Dias`, `Meses`, `Trimestres` e `Anos`
+  - novo controle `Mostrar valores no grafico` com opcao `Sim/Nao`
+  - titulo do grafico passando a refletir a granularidade ativa
+  - tabela mensal mantida recolhida por padrao, agora com rotulo explicito de `Mostrar tabela mensal` / `Ocultar tabela mensal`
+- ajuste funcional relevante:
+  - o backend do relatorio deixou de estar preso a buckets mensais e passou a montar os agrupamentos temporais de forma generica por dia, mes, trimestre ou ano
+  - o eixo do grafico e a tabela de apoio passaram a usar os mesmos buckets, evitando renderizacao confusa como `0` e `1`
+- regra final da granularidade:
+  - `Dias` usa `dd/mm`
+  - `Meses` usa `mm/aa`
+  - `Trimestres` usa `1o tri/25`, `2o tri/25`...
+  - `Anos` usa `YYYY`
+- arquivos alterados nesta rodada:
+  - `financeiro/views.py`
+  - `financeiro/templates/financeiro/evolucao_categorias.html`
+  - `tmp/validar_evolucao_categorias.py`
+  - `docs/STATE.md`
+  - `docs/CODEX_RESULTADO.md`
+  - `docs/ROADMAP_FINANCEIRO.md`
+- validacoes executadas nesta rodada:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+  - smoke autenticado OK para:
+    - `escopo categorias`
+    - `escopo subcategorias`
+    - granularidade `dias`, `meses`, `trimestres` e `anos`
+    - periodo menor que `30 dias`
+    - `comparativo entrada x saida`
+    - toggle da tabela mensal
+    - renderizacao da opcao `Mostrar valores no grafico`
+
+- evolui a tela `Evolucao por categorias` antes do commit, sem abrir nova frente fora do relatorio
+- diagnostico reaproveitado:
+  - a primeira versao da tela ja tinha rota, view, grafico SVG server-side e entrada no menu de `Relatorios`
+  - a base atual tambem ja tinha filtro de contas e estrutura mensal suficiente para expandir a UX sem mexer no shell/topbar
+- melhorias implementadas:
+  - separacao explicita do escopo em `Categorias` e `Subcategorias`
+  - seletor multiplo limpo por checklist, com busca dinamica
+  - destaque visual entre categoria pai e subcategoria no seletor
+  - novo controle de forma de leitura:
+    - `Consolidado`
+    - `Separado`
+  - eixo temporal ajustado para `mm/aa`
+  - tabela mensal de apoio recolhida por padrao, com toggle
+  - botao `Imprimir relatorio` com resumo humano dos filtros e CSS proprio de impressao
+- regra final entregue:
+  - `Escopo = Categorias`
+    - `Consolidado`: uma unica serie somando as categorias escolhidas
+    - `Separado`: uma serie por categoria escolhida
+  - `Escopo = Subcategorias`
+    - `Consolidado`: uma unica serie somando as subcategorias escolhidas
+    - `Separado`: uma serie por subcategoria escolhida
+- ajuste importante do modo `Comparativo entrada x saida`:
+  - o grafico passou a preservar os nomes reais das categorias/subcategorias selecionadas, sem cair apenas em rotulos genericos
+- arquivos alterados nesta microetapa:
+  - `financeiro/views.py`
+  - `financeiro/templates/financeiro/evolucao_categorias.html`
+  - `tmp/validar_evolucao_categorias.py`
+  - `docs/STATE.md`
+  - `docs/CODEX_RESULTADO.md`
+  - `docs/ROADMAP_FINANCEIRO.md`
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+  - smoke autenticado com usuario real OK para:
+    - `escopo categorias`
+    - `escopo subcategorias`
+    - `modo consolidado`
+    - `modo separado`
+    - `comparativo entrada x saida` com nomes reais
+    - `tabela mensal` recolhida por padrao
+    - botao `Imprimir relatorio` renderizado
 
 ## Relatorio grafico de evolucao por categorias
 
