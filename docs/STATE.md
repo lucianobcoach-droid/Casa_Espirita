@@ -2,6 +2,37 @@
 
 Data de atualizacao: 2026-04-22
 
+## Refinamento de UX da comparacao entre periodos em `Evolucao por categorias`
+
+- a comparacao entre periodos deixou de depender de um seletor explicito de `modo comparacao`
+- a tela agora passou a trabalhar com contrato progressivo:
+  - `Periodo principal` sempre visivel e obrigatorio para a consulta
+  - `Periodo comparativo` opcional
+  - sem `Periodo comparativo` preenchido, a tela funciona como consulta normal
+  - com `Periodo comparativo` preenchido, a comparacao e ativada automaticamente
+- a interface deixou de expor `Periodo A` e `Periodo B` como conceito principal de UX
+- esses nomes foram substituidos visualmente por:
+  - `Periodo principal`
+  - `Periodo comparativo`
+- o antigo seletor de modo foi mantido apenas parcialmente:
+  - ele continua existindo para a escolha analitica do grafico
+  - ele deixa de ser a chave para ligar ou desligar a comparacao
+- a comparacao continua entregando:
+  - total do periodo principal
+  - total do periodo comparativo
+  - diferenca absoluta
+  - variacao percentual segura
+  - tabela comparativa recolhida por padrao
+- o modo normal permaneceu preservado sem regressao
+- validacoes executadas nesta microetapa:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+  - smoke autenticado OK cobrindo:
+    - consulta normal sem periodo comparativo
+    - comparacao automatica com periodo comparativo preenchido
+    - renderizacao de `Periodo principal`, `Periodo comparativo` e `Tabela comparativa`
+
 ## Comparacao entre periodos entregue na tela `Evolucao por categorias`
 
 - a tela `Evolucao por categorias` passou a suportar dois fluxos no mesmo shell:

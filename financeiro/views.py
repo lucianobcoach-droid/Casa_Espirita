@@ -4058,7 +4058,6 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
     modos_disponiveis = (
         ('categorias', 'Evolucao de categorias selecionadas'),
         ('comparativo', 'Comparativo entrada x saida'),
-        ('comparacao_periodos', 'Comparacao entre periodos'),
     )
     escopos_disponiveis = (
         ('categorias', 'Categorias'),
@@ -4116,40 +4115,57 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
         )
 
     def _parse_periodos_comparacao(self) -> dict[str, object]:
-        (
-            data_inicial_a_raw,
-            data_final_a_raw,
-            data_inicial_a,
-            data_final_a,
-            periodo_a_error,
-        ) = self._parse_periodo_campos('data_inicial_a', 'data_final_a', rotulo='o Periodo A')
-        (
-            data_inicial_b_raw,
-            data_final_b_raw,
-            data_inicial_b,
-            data_final_b,
-            periodo_b_error,
-        ) = self._parse_periodo_campos('data_inicial_b', 'data_final_b', rotulo='o Periodo B')
+        data_inicial_comparativo_raw = (self.request.GET.get('data_inicial_comparativo') or '').strip()
+        data_final_comparativo_raw = (self.request.GET.get('data_final_comparativo') or '').strip()
+        if not data_inicial_comparativo_raw and not data_final_comparativo_raw:
+            data_inicial_comparativo_raw = (self.request.GET.get('data_inicial_b') or '').strip()
+            data_final_comparativo_raw = (self.request.GET.get('data_final_b') or '').strip()
 
-        periodo_error = periodo_a_error or periodo_b_error
+        data_inicial_comparativo = None
+        data_final_comparativo = None
+        periodo_comparativo_error = ''
+
+        if data_inicial_comparativo_raw:
+            try:
+                data_inicial_comparativo = date.fromisoformat(data_inicial_comparativo_raw)
+            except ValueError:
+                periodo_comparativo_error = 'Informe uma data inicial valida para o periodo comparativo.'
+
+        if data_final_comparativo_raw and not periodo_comparativo_error:
+            try:
+                data_final_comparativo = date.fromisoformat(data_final_comparativo_raw)
+            except ValueError:
+                periodo_comparativo_error = 'Informe uma data final valida para o periodo comparativo.'
+
+        if (
+            not periodo_comparativo_error
+            and (
+                (data_inicial_comparativo and not data_final_comparativo)
+                or (data_final_comparativo and not data_inicial_comparativo)
+            )
+        ):
+            periodo_comparativo_error = 'Informe data inicial e data final para o periodo comparativo.'
+
+        if (
+            not periodo_comparativo_error
+            and data_inicial_comparativo
+            and data_final_comparativo
+            and data_final_comparativo < data_inicial_comparativo
+        ):
+            periodo_comparativo_error = 'A data final do periodo comparativo precisa ser igual ou posterior a data inicial.'
+
+        comparacao_solicitada = bool(data_inicial_comparativo_raw or data_final_comparativo_raw)
         return {
-            'data_inicial_a': data_inicial_a_raw,
-            'data_final_a': data_final_a_raw,
-            'data_inicial_b': data_inicial_b_raw,
-            'data_final_b': data_final_b_raw,
-            'periodo_a_resolvido': (data_inicial_a, data_final_a),
-            'periodo_b_resolvido': (data_inicial_b, data_final_b),
-            'periodo_a_label': (
-                f'{data_inicial_a.strftime("%d/%m/%Y")} a {data_final_a.strftime("%d/%m/%Y")}'
-                if data_inicial_a and data_final_a
+            'data_inicial_comparativo': data_inicial_comparativo_raw,
+            'data_final_comparativo': data_final_comparativo_raw,
+            'periodo_comparativo_resolvido': (data_inicial_comparativo, data_final_comparativo),
+            'periodo_comparativo_label': (
+                f'{data_inicial_comparativo.strftime("%d/%m/%Y")} a {data_final_comparativo.strftime("%d/%m/%Y")}'
+                if data_inicial_comparativo and data_final_comparativo
                 else ''
             ),
-            'periodo_b_label': (
-                f'{data_inicial_b.strftime("%d/%m/%Y")} a {data_final_b.strftime("%d/%m/%Y")}'
-                if data_inicial_b and data_final_b
-                else ''
-            ),
-            'periodo_error': periodo_error,
+            'comparacao_solicitada': comparacao_solicitada,
+            'periodo_error': periodo_comparativo_error if comparacao_solicitada else '',
         }
 
     def _parse_contas(self) -> tuple[list[ContaFinanceira], list[str], list[int]]:
@@ -4330,6 +4346,7 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
         itens_disponiveis_subcategorias = self._build_itens_disponiveis('subcategorias')
         data_inicial_raw, data_final_raw, data_inicial, data_final, periodo_error = self._parse_periodo()
         periodos_comparacao = self._parse_periodos_comparacao()
+        comparacao_solicitada = bool(periodos_comparacao['comparacao_solicitada'])
 
         filtros_relatorio_ativos = _request_possui_parametros_get(
             self.request,
@@ -4338,8 +4355,8 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
                 'categorias',
                 'data_inicial',
                 'data_final',
-                'data_inicial_a',
-                'data_final_a',
+                'data_inicial_comparativo',
+                'data_final_comparativo',
                 'data_inicial_b',
                 'data_final_b',
                 'modo',
@@ -4387,18 +4404,20 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
             'quantidade_itens_selecionados': len(itens_selecionados),
             'data_inicial': data_inicial_raw,
             'data_final': data_final_raw,
-            'data_inicial_a': periodos_comparacao['data_inicial_a'],
-            'data_final_a': periodos_comparacao['data_final_a'],
-            'data_inicial_b': periodos_comparacao['data_inicial_b'],
-            'data_final_b': periodos_comparacao['data_final_b'],
-            'periodo_a_label': periodos_comparacao['periodo_a_label'],
-            'periodo_b_label': periodos_comparacao['periodo_b_label'],
-            'periodo_error': periodos_comparacao['periodo_error'] if modo == 'comparacao_periodos' else periodo_error,
+            'data_inicial_comparativo': periodos_comparacao['data_inicial_comparativo'],
+            'data_final_comparativo': periodos_comparacao['data_final_comparativo'],
+            'periodo_principal_label': (
+                f'{data_inicial.strftime("%d/%m/%Y")} a {data_final.strftime("%d/%m/%Y")}'
+                if data_inicial and data_final
+                else ''
+            ),
+            'periodo_comparativo_label': periodos_comparacao['periodo_comparativo_label'],
+            'periodo_error': periodos_comparacao['periodo_error'] or periodo_error,
             'filtros_relatorio_ativos': filtros_relatorio_ativos,
             'periodo_resolvido': (data_inicial, data_final),
-            'periodo_a_resolvido': periodos_comparacao['periodo_a_resolvido'],
-            'periodo_b_resolvido': periodos_comparacao['periodo_b_resolvido'],
-            'modo_comparacao_periodos': modo == 'comparacao_periodos',
+            'periodo_comparativo_resolvido': periodos_comparacao['periodo_comparativo_resolvido'],
+            'modo_comparacao_periodos': comparacao_solicitada,
+            'comparacao_solicitada': comparacao_solicitada,
         }
 
     def _montar_series(
@@ -4662,16 +4681,16 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
         itens_selecionados: list[dict[str, object]],
         selected_ids: list[int],
         periodo_label: str = '',
-        periodo_a_label: str = '',
-        periodo_b_label: str = '',
+        periodo_principal_label: str = '',
+        periodo_comparativo_label: str = '',
     ) -> list[str]:
         filtros_humanos = []
-        if periodo_label:
-            filtros_humanos.append(f'Periodo: {periodo_label}')
-        if periodo_a_label:
-            filtros_humanos.append(f'Periodo A: {periodo_a_label}')
-        if periodo_b_label:
-            filtros_humanos.append(f'Periodo B: {periodo_b_label}')
+        if periodo_principal_label:
+            filtros_humanos.append(f'Periodo principal: {periodo_principal_label}')
+        elif periodo_label:
+            filtros_humanos.append(f'Periodo principal: {periodo_label}')
+        if periodo_comparativo_label:
+            filtros_humanos.append(f'Periodo comparativo: {periodo_comparativo_label}')
 
         filtros_humanos.extend(
             [
@@ -4747,21 +4766,22 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
             mostrar_valores=mostrar_valores,
             itens_selecionados=itens_selecionados,
             selected_ids=selected_ids,
-            periodo_label=relatorio['periodo_label'],
+            periodo_principal_label=relatorio['periodo_label'],
         )
         return relatorio
 
     def _montar_relatorio_comparacao(
         self,
         *,
-        data_inicial_a: date,
-        data_final_a: date,
-        data_inicial_b: date,
-        data_final_b: date,
+        data_inicial_principal: date,
+        data_final_principal: date,
+        data_inicial_comparativo: date,
+        data_final_comparativo: date,
         selected_ids: list[int],
         itens_selecionados: list[dict[str, object]],
         escopo: str,
         leitura: str,
+        modo: str,
         granularidade: str,
         mostrar_valores: bool,
     ) -> dict[str, object]:
@@ -4771,13 +4791,13 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
             }
 
         relatorio_a = self._montar_relatorio_periodo(
-            data_inicial_a,
-            data_final_a,
+            data_inicial_principal,
+            data_final_principal,
             selected_ids,
             itens_selecionados,
             escopo=escopo,
             leitura=leitura,
-            modo_series='categorias',
+            modo_series=modo,
             granularidade=granularidade,
             mostrar_valores=mostrar_valores,
         )
@@ -4785,13 +4805,13 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
             return relatorio_a
 
         relatorio_b = self._montar_relatorio_periodo(
-            data_inicial_b,
-            data_final_b,
+            data_inicial_comparativo,
+            data_final_comparativo,
             selected_ids,
             itens_selecionados,
             escopo=escopo,
             leitura=leitura,
-            modo_series='categorias',
+            modo_series=modo,
             granularidade=granularidade,
             mostrar_valores=mostrar_valores,
         )
@@ -4840,22 +4860,22 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
 
         diferenca_total_absoluta = abs(total_periodo_b - total_periodo_a)
         variacao_total_percentual = _calcular_variacao_percentual(total_periodo_a, total_periodo_b)
-        periodo_a_label = f'{data_inicial_a.strftime("%d/%m/%Y")} a {data_final_a.strftime("%d/%m/%Y")}'
-        periodo_b_label = f'{data_inicial_b.strftime("%d/%m/%Y")} a {data_final_b.strftime("%d/%m/%Y")}'
+        periodo_principal_label = f'{data_inicial_principal.strftime("%d/%m/%Y")} a {data_final_principal.strftime("%d/%m/%Y")}'
+        periodo_comparativo_label = f'{data_inicial_comparativo.strftime("%d/%m/%Y")} a {data_final_comparativo.strftime("%d/%m/%Y")}'
 
         return {
             'modo_comparacao_periodos': True,
-            'comparacao_periodo_a': relatorio_a,
-            'comparacao_periodo_b': relatorio_b,
+            'comparacao_periodo_principal': relatorio_a,
+            'comparacao_periodo_comparativo': relatorio_b,
             'comparacao_series': relatorio_a['series'],
             'linhas_comparacao': linhas_comparacao,
             'quantidade_itens_comparados': len(linhas_comparacao),
-            'quantidade_lancamentos_a': relatorio_a['quantidade_lancamentos'],
-            'quantidade_lancamentos_b': relatorio_b['quantidade_lancamentos'],
-            'total_periodo_a': total_periodo_a,
-            'total_periodo_a_formatado': _formatar_moeda_brl(total_periodo_a),
-            'total_periodo_b': total_periodo_b,
-            'total_periodo_b_formatado': _formatar_moeda_brl(total_periodo_b),
+            'quantidade_lancamentos_principal': relatorio_a['quantidade_lancamentos'],
+            'quantidade_lancamentos_comparativo': relatorio_b['quantidade_lancamentos'],
+            'total_periodo_principal': total_periodo_a,
+            'total_periodo_principal_formatado': _formatar_moeda_brl(total_periodo_a),
+            'total_periodo_comparativo': total_periodo_b,
+            'total_periodo_comparativo_formatado': _formatar_moeda_brl(total_periodo_b),
             'diferenca_total_absoluta': diferenca_total_absoluta,
             'diferenca_total_absoluta_formatada': _formatar_moeda_brl(diferenca_total_absoluta),
             'variacao_total_percentual': variacao_total_percentual,
@@ -4868,22 +4888,24 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
                 else ''
             ),
             'descricao_grafico': (
-                'Compara os dois intervalos selecionados lado a lado, preservando a mesma granularidade, a mesma selecao analitica e a leitura visual por valor absoluto.'
+                'Compara o periodo principal e o periodo comparativo lado a lado, preservando a mesma granularidade, a mesma selecao analitica e a leitura visual por valor absoluto.'
+                if modo != 'comparativo'
+                else 'Compara o periodo principal e o periodo comparativo lado a lado, preservando a mesma granularidade e a mesma leitura de entrada x saida.'
             ),
             'filtros_humanos': self._montar_filtros_humanos(
                 escopo=escopo,
                 leitura=leitura,
-                modo='comparacao_periodos',
+                modo=modo,
                 granularidade=granularidade,
                 mostrar_valores=mostrar_valores,
                 itens_selecionados=itens_selecionados,
                 selected_ids=selected_ids,
-                periodo_a_label=periodo_a_label,
-                periodo_b_label=periodo_b_label,
+                periodo_principal_label=periodo_principal_label,
+                periodo_comparativo_label=periodo_comparativo_label,
             ),
-            'periodo_a_label': periodo_a_label,
-            'periodo_b_label': periodo_b_label,
-            'periodo_label': f'{periodo_a_label} x {periodo_b_label}',
+            'periodo_principal_label': periodo_principal_label,
+            'periodo_comparativo_label': periodo_comparativo_label,
+            'periodo_label': f'{periodo_principal_label} x {periodo_comparativo_label}',
             'granularidade_grafico_label': dict(self.granularidades_disponiveis).get(granularidade, granularidade),
             'tem_dados': relatorio_a['tem_dados'] or relatorio_b['tem_dados'],
         }
@@ -4894,27 +4916,28 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
         context.update(contexto_base)
 
         _, _, selected_ids = self._parse_contas()
-        if contexto_base['modo'] == 'comparacao_periodos':
-            data_inicial_a, data_final_a = contexto_base['periodo_a_resolvido']
-            data_inicial_b, data_final_b = contexto_base['periodo_b_resolvido']
+        if contexto_base['modo_comparacao_periodos']:
+            data_inicial, data_final = contexto_base['periodo_resolvido']
+            data_inicial_comparativo, data_final_comparativo = contexto_base['periodo_comparativo_resolvido']
             if (
                 contexto_base['periodo_error']
-                or not data_inicial_a
-                or not data_final_a
-                or not data_inicial_b
-                or not data_final_b
+                or not data_inicial
+                or not data_final
+                or not data_inicial_comparativo
+                or not data_final_comparativo
             ):
                 return context
 
             relatorio = self._montar_relatorio_comparacao(
-                data_inicial_a=data_inicial_a,
-                data_final_a=data_final_a,
-                data_inicial_b=data_inicial_b,
-                data_final_b=data_final_b,
+                data_inicial_principal=data_inicial,
+                data_final_principal=data_final,
+                data_inicial_comparativo=data_inicial_comparativo,
+                data_final_comparativo=data_final_comparativo,
                 selected_ids=selected_ids,
                 itens_selecionados=contexto_base['categorias_selecionadas'],
                 escopo=contexto_base['escopo'],
                 leitura=contexto_base['leitura'],
+                modo=contexto_base['modo'],
                 granularidade=contexto_base['granularidade'],
                 mostrar_valores=contexto_base['mostrar_valores'],
             )

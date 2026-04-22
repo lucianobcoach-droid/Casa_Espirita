@@ -2,6 +2,41 @@
 
 Data: 2026-04-22
 
+## Refinamento de UX da comparacao entre periodos em `Evolucao por categorias`
+
+- refinei a feature ja entregue, sem reimplementa-la do zero e sem abrir nova tela
+- a principal mudanca de contrato foi:
+  - sair da logica de `modo normal` versus `modo comparacao`
+  - entrar na logica de `Periodo principal` + `Periodo comparativo` opcional
+- decisao de UX aplicada:
+  - o usuario nao precisa mais escolher um modo extra para comparar
+  - se preencher o `Periodo comparativo`, a comparacao acontece automaticamente
+  - se deixar o comparativo vazio, a tela continua como consulta normal
+  - `Periodo A/B` deixou de ser linguagem principal da interface
+- o seletor de modo foi mantido apenas parcialmente:
+  - permaneceu como seletor do tipo de analise do grafico
+  - deixou de controlar a ativacao da comparacao
+- no backend:
+  - reaproveitei a logica de comparacao ja pronta
+  - a view passou a identificar a comparacao automaticamente pelo preenchimento do periodo comparativo
+  - a montagem comparativa passou a reaproveitar tambem o `modo` analitico atual, sem desperdiçar a estrutura existente
+- no template:
+  - os blocos de filtro passaram a exibir `Periodo principal` e `Periodo comparativo`
+  - KPIs, cards e tabela comparativa passaram a usar a mesma nomenclatura mais humana
+  - o modo normal seguiu intacto
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+  - smoke autenticado OK para:
+    - consulta normal sem periodo comparativo
+    - comparacao automatica com periodo comparativo preenchido
+    - presenca de `Tabela comparativa`, `Diferenca absoluta` e `Variacao percentual`
+- resultado:
+  - refinamento pronto para commit coeso
+  - a proxima microetapa logica passa a ser validacao visual/manual curta desse fluxo simplificado no navegador
+  - depois disso, decidir se a tela pede apenas acabamento fino ou se vale evoluir exportacao/tabela comparativa
+
 ## Comparacao entre periodos na tela `Evolucao por categorias`
 
 - evolui a tela existente, sem abrir nova view isolada, para suportar o modo `Comparacao entre periodos`

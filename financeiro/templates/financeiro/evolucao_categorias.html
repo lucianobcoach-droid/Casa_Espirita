@@ -596,15 +596,15 @@
                 <p class="financeiro-page-subtitle">Leitura mensal comparativa para categorias ou subcategorias no periodo selecionado.</p>
                 <div class="financeiro-evolucao-meta">
                     {% if modo_comparacao_periodos %}
-                        {% if periodo_a_label %}<span class="financeiro-evolucao-meta-item"><strong>Periodo A:</strong> {{ periodo_a_label }}</span>{% endif %}
-                        {% if periodo_b_label %}<span class="financeiro-evolucao-meta-item"><strong>Periodo B:</strong> {{ periodo_b_label }}</span>{% endif %}
+                        {% if periodo_principal_label %}<span class="financeiro-evolucao-meta-item"><strong>Periodo principal:</strong> {{ periodo_principal_label }}</span>{% endif %}
+                        {% if periodo_comparativo_label %}<span class="financeiro-evolucao-meta-item"><strong>Periodo comparativo:</strong> {{ periodo_comparativo_label }}</span>{% endif %}
                     {% else %}
-                        {% if periodo_label %}<span class="financeiro-evolucao-meta-item"><strong>Periodo:</strong> {{ periodo_label }}</span>{% endif %}
+                        {% if periodo_principal_label %}<span class="financeiro-evolucao-meta-item"><strong>Periodo principal:</strong> {{ periodo_principal_label }}</span>{% endif %}
                     {% endif %}
                     <span class="financeiro-evolucao-meta-item"><strong>Escopo:</strong> {{ escopo_label }}</span>
                     <span class="financeiro-evolucao-meta-item"><strong>Leitura:</strong> {{ leitura_label }}</span>
                     <span class="financeiro-evolucao-meta-item"><strong>Granularidade:</strong> {{ granularidade_label }}</span>
-                    <span class="financeiro-evolucao-meta-item"><strong>Modo:</strong> {{ modo_label }}</span>
+                    <span class="financeiro-evolucao-meta-item"><strong>Analise:</strong> {{ modo_label }}</span>
                     {% if categorias_selecionadas_resumo %}<span class="financeiro-evolucao-meta-item"><strong>Selecao:</strong> {{ categorias_selecionadas_resumo }}</span>{% endif %}
                     {% if contas_incluidas_label %}<span class="financeiro-evolucao-meta-item"><strong>Contas:</strong> {{ contas_incluidas_label }}</span>{% endif %}
                 </div>
@@ -626,58 +626,46 @@
                     </summary>
                     <div class="financeiro-secondary-body">
                         <div class="columns is-multiline">
-                            <div class="column is-12" data-evolucao-periodo-normal {% if modo_comparacao_periodos %}hidden{% endif %}>
-                                <div class="columns is-multiline">
-                                    <div class="column is-6-mobile is-3-tablet is-2-desktop">
-                                        <label class="label">Data inicial</label>
-                                        <input class="input" type="date" name="data_inicial" value="{{ data_inicial }}">
-                                    </div>
-                                    <div class="column is-6-mobile is-3-tablet is-2-desktop">
-                                        <label class="label">Data final</label>
-                                        <input class="input" type="date" name="data_final" value="{{ data_final }}">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="column is-12" data-evolucao-periodo-comparacao {% if not modo_comparacao_periodos %}hidden{% endif %}>
+                            <div class="column is-12">
                                 <div class="financeiro-evolucao-periodo-grid">
                                     <div class="financeiro-evolucao-periodo-bloco">
                                         <div>
-                                            <h3 class="financeiro-evolucao-periodo-titulo">Periodo A</h3>
-                                            <p class="financeiro-evolucao-periodo-nota">Intervalo-base da comparacao.</p>
+                                            <h3 class="financeiro-evolucao-periodo-titulo">Periodo principal</h3>
+                                            <p class="financeiro-evolucao-periodo-nota">Intervalo base da consulta atual.</p>
                                         </div>
                                         <div class="columns is-multiline">
                                             <div class="column is-6-mobile">
                                                 <label class="label">Data inicial</label>
-                                                <input class="input" type="date" name="data_inicial_a" value="{{ data_inicial_a }}">
+                                                <input class="input" type="date" name="data_inicial" value="{{ data_inicial }}">
                                             </div>
                                             <div class="column is-6-mobile">
                                                 <label class="label">Data final</label>
-                                                <input class="input" type="date" name="data_final_a" value="{{ data_final_a }}">
+                                                <input class="input" type="date" name="data_final" value="{{ data_final }}">
                                             </div>
                                         </div>
                                     </div>
                                     <div class="financeiro-evolucao-periodo-bloco">
                                         <div>
-                                            <h3 class="financeiro-evolucao-periodo-titulo">Periodo B</h3>
-                                            <p class="financeiro-evolucao-periodo-nota">Intervalo comparado com a mesma selecao analitica.</p>
+                                            <h3 class="financeiro-evolucao-periodo-titulo">Periodo comparativo</h3>
+                                            <p class="financeiro-evolucao-periodo-nota">Opcional. Quando preenchido, a comparacao e ativada automaticamente.</p>
                                         </div>
                                         <div class="columns is-multiline">
                                             <div class="column is-6-mobile">
                                                 <label class="label">Data inicial</label>
-                                                <input class="input" type="date" name="data_inicial_b" value="{{ data_inicial_b }}">
+                                                <input class="input" type="date" name="data_inicial_comparativo" value="{{ data_inicial_comparativo }}">
                                             </div>
                                             <div class="column is-6-mobile">
                                                 <label class="label">Data final</label>
-                                                <input class="input" type="date" name="data_final_b" value="{{ data_final_b }}">
+                                                <input class="input" type="date" name="data_final_comparativo" value="{{ data_final_comparativo }}">
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             <div class="column is-12-mobile is-6-tablet is-3-desktop">
-                                <label class="label">Modo do grafico</label>
+                                <label class="label">Modo analitico</label>
                                 <div class="select is-fullwidth">
-                                    <select name="modo" data-evolucao-mode-select>
+                                    <select name="modo">
                                         {% for valor, rotulo in modos_disponiveis %}
                                             <option value="{{ valor }}" {% if modo == valor %}selected{% endif %}>{{ rotulo }}</option>
                                         {% endfor %}
@@ -824,7 +812,7 @@
                     <h1 class="financeiro-evolucao-print-summary-title">{{ page_title }}</h1>
                     <p class="financeiro-evolucao-print-summary-subtitle">
                         {% if modo_comparacao_periodos %}
-                            Comparacao visual entre dois intervalos com a mesma selecao analitica e a mesma granularidade.
+                            Comparacao visual entre o periodo principal e o periodo comparativo usando a mesma selecao analitica e a mesma granularidade.
                         {% else %}
                             Resumo visual da evolucao financeira conforme os filtros aplicados.
                         {% endif %}
@@ -840,12 +828,12 @@
                 {% if modo_comparacao_periodos %}
                     <div class="financeiro-evolucao-kpis">
                         <div class="financeiro-evolucao-kpi">
-                            <span class="financeiro-evolucao-kpi-label">Total do Periodo A</span>
-                            <span class="financeiro-evolucao-kpi-value">R$ {{ total_periodo_a_formatado }}</span>
+                            <span class="financeiro-evolucao-kpi-label">Total do periodo principal</span>
+                            <span class="financeiro-evolucao-kpi-value">R$ {{ total_periodo_principal_formatado }}</span>
                         </div>
                         <div class="financeiro-evolucao-kpi">
-                            <span class="financeiro-evolucao-kpi-label">Total do Periodo B</span>
-                            <span class="financeiro-evolucao-kpi-value">R$ {{ total_periodo_b_formatado }}</span>
+                            <span class="financeiro-evolucao-kpi-label">Total do periodo comparativo</span>
+                            <span class="financeiro-evolucao-kpi-value">R$ {{ total_periodo_comparativo_formatado }}</span>
                         </div>
                         <div class="financeiro-evolucao-kpi">
                             <span class="financeiro-evolucao-kpi-label">Diferenca absoluta</span>
@@ -856,12 +844,12 @@
                             <span class="financeiro-evolucao-kpi-value {{ variacao_total_css }}">{{ variacao_total_percentual_formatada }}</span>
                         </div>
                         <div class="financeiro-evolucao-kpi">
-                            <span class="financeiro-evolucao-kpi-label">Lancamentos no Periodo A</span>
-                            <span class="financeiro-evolucao-kpi-value">{{ quantidade_lancamentos_a }}</span>
+                            <span class="financeiro-evolucao-kpi-label">Lancamentos no periodo principal</span>
+                            <span class="financeiro-evolucao-kpi-value">{{ quantidade_lancamentos_principal }}</span>
                         </div>
                         <div class="financeiro-evolucao-kpi">
-                            <span class="financeiro-evolucao-kpi-label">Lancamentos no Periodo B</span>
-                            <span class="financeiro-evolucao-kpi-value">{{ quantidade_lancamentos_b }}</span>
+                            <span class="financeiro-evolucao-kpi-label">Lancamentos no periodo comparativo</span>
+                            <span class="financeiro-evolucao-kpi-value">{{ quantidade_lancamentos_comparativo }}</span>
                         </div>
                     </div>
 
@@ -886,15 +874,15 @@
                             <div class="financeiro-evolucao-comparacao-grid">
                                 <article class="financeiro-evolucao-comparacao-card">
                                     <header class="financeiro-evolucao-comparacao-header">
-                                        <h3 class="financeiro-evolucao-comparacao-titulo">Periodo A</h3>
-                                        <span class="financeiro-evolucao-comparacao-periodo">{{ periodo_a_label }}</span>
+                                        <h3 class="financeiro-evolucao-comparacao-titulo">Periodo principal</h3>
+                                        <span class="financeiro-evolucao-comparacao-periodo">{{ periodo_principal_label }}</span>
                                     </header>
                                     <div class="financeiro-evolucao-comparacao-body">
-                                        {% with relatorio=comparacao_periodo_a %}
+                                        {% with relatorio=comparacao_periodo_principal %}
                                             {% if relatorio.grafico.tem_dados %}
                                                 <div class="financeiro-evolucao-chart-wrap">
                                                     <div class="financeiro-evolucao-chart-stage" style="width: {{ relatorio.grafico.render_width }}px;">
-                                                        <svg class="financeiro-evolucao-chart" viewBox="0 0 {{ relatorio.grafico.largura }} {{ relatorio.grafico.altura }}" style="width: {{ relatorio.grafico.render_width }}px" role="img" aria-label="Grafico do Periodo A em {{ granularidade_grafico_label|lower }}">
+                                                        <svg class="financeiro-evolucao-chart" viewBox="0 0 {{ relatorio.grafico.largura }} {{ relatorio.grafico.altura }}" style="width: {{ relatorio.grafico.render_width }}px" role="img" aria-label="Grafico do periodo principal em {{ granularidade_grafico_label|lower }}">
                                                             {% for linha in relatorio.grafico.grade %}
                                                                 <line class="financeiro-evolucao-grid-line" x1="{{ relatorio.grafico.x_inicial }}" y1="{{ linha.y }}" x2="{{ relatorio.grafico.x_final }}" y2="{{ linha.y }}"></line>
                                                                 <text class="financeiro-evolucao-axis-label" x="8" y="{{ linha.y|add:'4' }}">{{ linha.label }}</text>
@@ -920,7 +908,7 @@
                                                     </div>
                                                 </div>
                                             {% else %}
-                                                <div class="financeiro-evolucao-empty">Nenhum lancamento encontrado no Periodo A para o filtro atual.</div>
+                                                <div class="financeiro-evolucao-empty">Nenhum lancamento encontrado no periodo principal para o filtro atual.</div>
                                             {% endif %}
                                         {% endwith %}
                                     </div>
@@ -928,15 +916,15 @@
 
                                 <article class="financeiro-evolucao-comparacao-card">
                                     <header class="financeiro-evolucao-comparacao-header">
-                                        <h3 class="financeiro-evolucao-comparacao-titulo">Periodo B</h3>
-                                        <span class="financeiro-evolucao-comparacao-periodo">{{ periodo_b_label }}</span>
+                                        <h3 class="financeiro-evolucao-comparacao-titulo">Periodo comparativo</h3>
+                                        <span class="financeiro-evolucao-comparacao-periodo">{{ periodo_comparativo_label }}</span>
                                     </header>
                                     <div class="financeiro-evolucao-comparacao-body">
-                                        {% with relatorio=comparacao_periodo_b %}
+                                        {% with relatorio=comparacao_periodo_comparativo %}
                                             {% if relatorio.grafico.tem_dados %}
                                                 <div class="financeiro-evolucao-chart-wrap">
                                                     <div class="financeiro-evolucao-chart-stage" style="width: {{ relatorio.grafico.render_width }}px;">
-                                                        <svg class="financeiro-evolucao-chart" viewBox="0 0 {{ relatorio.grafico.largura }} {{ relatorio.grafico.altura }}" style="width: {{ relatorio.grafico.render_width }}px" role="img" aria-label="Grafico do Periodo B em {{ granularidade_grafico_label|lower }}">
+                                                        <svg class="financeiro-evolucao-chart" viewBox="0 0 {{ relatorio.grafico.largura }} {{ relatorio.grafico.altura }}" style="width: {{ relatorio.grafico.render_width }}px" role="img" aria-label="Grafico do periodo comparativo em {{ granularidade_grafico_label|lower }}">
                                                             {% for linha in relatorio.grafico.grade %}
                                                                 <line class="financeiro-evolucao-grid-line" x1="{{ relatorio.grafico.x_inicial }}" y1="{{ linha.y }}" x2="{{ relatorio.grafico.x_final }}" y2="{{ linha.y }}"></line>
                                                                 <text class="financeiro-evolucao-axis-label" x="8" y="{{ linha.y|add:'4' }}">{{ linha.label }}</text>
@@ -962,7 +950,7 @@
                                                     </div>
                                                 </div>
                                             {% else %}
-                                                <div class="financeiro-evolucao-empty">Nenhum lancamento encontrado no Periodo B para o filtro atual.</div>
+                                                <div class="financeiro-evolucao-empty">Nenhum lancamento encontrado no periodo comparativo para o filtro atual.</div>
                                             {% endif %}
                                         {% endwith %}
                                     </div>
@@ -985,8 +973,8 @@
                                             <thead>
                                                 <tr>
                                                     <th>Item</th>
-                                                    <th>Periodo A</th>
-                                                    <th>Periodo B</th>
+                                                    <th>Periodo principal</th>
+                                                    <th>Periodo comparativo</th>
                                                     <th>Diferenca absoluta</th>
                                                     <th>Variacao percentual</th>
                                                 </tr>
@@ -1009,8 +997,8 @@
                                             <tfoot>
                                                 <tr>
                                                     <th>Total</th>
-                                                    <th>R$ {{ total_periodo_a_formatado }}</th>
-                                                    <th>R$ {{ total_periodo_b_formatado }}</th>
+                                                    <th>R$ {{ total_periodo_principal_formatado }}</th>
+                                                    <th>R$ {{ total_periodo_comparativo_formatado }}</th>
                                                     <th>R$ {{ diferenca_total_absoluta_formatada }}</th>
                                                     <th><span class="financeiro-evolucao-variacao {{ variacao_total_css }}">{{ variacao_total_percentual_formatada }}</span></th>
                                                 </tr>
@@ -1179,35 +1167,12 @@
     (function() {
         const selector = document.querySelector('[data-evolucao-selector]');
         const scopeSelect = document.querySelector('[data-evolucao-scope-select]');
-        const modeSelect = document.querySelector('[data-evolucao-mode-select]');
-        const normalPeriodBlocks = Array.from(document.querySelectorAll('[data-evolucao-periodo-normal]'));
-        const comparisonPeriodBlocks = Array.from(document.querySelectorAll('[data-evolucao-periodo-comparacao]'));
 
         const normalize = (value) =>
             (value || '')
                 .toLowerCase()
                 .normalize('NFD')
                 .replace(/[\u0300-\u036f]/g, '');
-
-        const syncMode = () => {
-            if (!modeSelect) {
-                return;
-            }
-
-            const comparisonMode = modeSelect.value === 'comparacao_periodos';
-            normalPeriodBlocks.forEach((block) => {
-                block.hidden = comparisonMode;
-                block.querySelectorAll('input').forEach((input) => {
-                    input.disabled = comparisonMode;
-                });
-            });
-            comparisonPeriodBlocks.forEach((block) => {
-                block.hidden = !comparisonMode;
-                block.querySelectorAll('input').forEach((input) => {
-                    input.disabled = !comparisonMode;
-                });
-            });
-        };
 
         if (selector && scopeSelect) {
             const searchInput = selector.querySelector('[data-evolucao-selector-search]');
@@ -1324,11 +1289,6 @@
 
         if (filtrosDetails) {
             filtrosDetails.removeAttribute('open');
-        }
-
-        if (modeSelect) {
-            modeSelect.addEventListener('change', syncMode);
-            syncMode();
         }
     })();
 </script>

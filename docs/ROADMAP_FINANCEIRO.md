@@ -9,10 +9,11 @@ Data: 2026-04-22
 - filtros entregues na versao atual:
   - `data inicial`
   - `data final`
+  - `data inicial` e `data final` do `periodo comparativo`, em preenchimento opcional
   - controle de escopo entre `categorias` e `subcategorias`
   - selecao multipla contextual conforme o escopo
   - selecao opcional de `contas`
-  - `modo do grafico`
+  - `modo analitico` do grafico
   - `forma de leitura` (`consolidado` / `separado`)
   - `granularidade` (`dias` / `meses` / `trimestres` / `anos`)
   - `mostrar valores no grafico`
@@ -27,8 +28,8 @@ Data: 2026-04-22
   - `Consolidado` soma os itens escolhidos em uma unica serie
   - `Separado` mostra uma serie por item selecionado
   - o modo `Comparativo entrada x saida` preserva os nomes reais das categorias/subcategorias escolhidas
-  - o modo `Comparacao entre periodos` compara dois intervalos na mesma tela, usando a mesma selecao de contas e itens analiticos
-  - a saida da comparacao passou a incluir `Periodo A`, `Periodo B`, diferenca absoluta e variacao percentual com tratamento seguro quando a base e zero
+  - a comparacao entre periodos e ativada automaticamente quando o `Periodo comparativo` e preenchido
+  - a saida da comparacao passou a incluir `Periodo principal`, `Periodo comparativo`, diferenca absoluta e variacao percentual com tratamento seguro quando a base e zero
   - a troca de `Escopo` atualiza imediatamente o seletor visivel e a busca, sem exigir submit apenas para trocar a interface
   - o submit de `Atualizar grafico` recalcula efetivamente grafico, KPIs e tabela de apoio
 - entrega visual atual:
@@ -39,7 +40,7 @@ Data: 2026-04-22
   - acao `Imprimir relatorio`
   - toggle textual explicito para mostrar/ocultar a tabela mensal
 - backlog remanescente relacionado:
-  - validar visualmente no navegador o modo `Comparacao entre periodos` apos o commit desta entrega
+  - validar visualmente no navegador o fluxo simplificado com `Periodo comparativo` opcional
   - avaliar refinamentos visuais/manuais apos uso real no navegador
   - avaliar se a tela deve ganhar exportacao futura da tabela mensal ou apenas permanecer como consulta visual
   - avaliar, por uso real, se convem expandir a comparacao para mais de dois agrupamentos operacionais alem de `entrada x saida`
