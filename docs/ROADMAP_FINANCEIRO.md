@@ -19,6 +19,7 @@ Data: 2026-04-22
 - modos entregues:
   - `Evolucao de categorias selecionadas`
   - `Comparativo entrada x saida`
+  - `Comparacao entre periodos`
 - regra consolidada nesta versao:
   - consolidacao mensal por `data_pagamento`, com fallback para `data_competencia`
   - `Categorias` listam apenas categorias pai e podem agregar automaticamente as subcategorias lancaveis
@@ -26,6 +27,8 @@ Data: 2026-04-22
   - `Consolidado` soma os itens escolhidos em uma unica serie
   - `Separado` mostra uma serie por item selecionado
   - o modo `Comparativo entrada x saida` preserva os nomes reais das categorias/subcategorias escolhidas
+  - o modo `Comparacao entre periodos` compara dois intervalos na mesma tela, usando a mesma selecao de contas e itens analiticos
+  - a saida da comparacao passou a incluir `Periodo A`, `Periodo B`, diferenca absoluta e variacao percentual com tratamento seguro quando a base e zero
   - a troca de `Escopo` atualiza imediatamente o seletor visivel e a busca, sem exigir submit apenas para trocar a interface
   - o submit de `Atualizar grafico` recalcula efetivamente grafico, KPIs e tabela de apoio
 - entrega visual atual:
@@ -36,10 +39,11 @@ Data: 2026-04-22
   - acao `Imprimir relatorio`
   - toggle textual explicito para mostrar/ocultar a tabela mensal
 - backlog remanescente relacionado:
+  - validar visualmente no navegador o modo `Comparacao entre periodos` apos o commit desta entrega
   - avaliar refinamentos visuais/manuais apos uso real no navegador
   - avaliar se a tela deve ganhar exportacao futura da tabela mensal ou apenas permanecer como consulta visual
   - avaliar, por uso real, se convem expandir a comparacao para mais de dois agrupamentos operacionais alem de `entrada x saida`
-  - proxima evolucao logica da frente: modo `Comparacao entre periodos`, em microetapa propria e separada
+  - avaliar se a comparacao entre periodos deve ganhar tabela comparativa mais rica ou exportacao propria em etapa futura
 
 ## 0.11. Trava de seguranca para importacoes por dominio preenchido
 

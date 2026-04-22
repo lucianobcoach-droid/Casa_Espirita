@@ -2763,6 +2763,25 @@ def _formatar_moeda_brl(valor) -> str:
     return valor_formatado.replace(',', 'X').replace('.', ',').replace('X', '.')
 
 
+def _calcular_variacao_percentual(valor_base: Decimal, valor_comparado: Decimal) -> Decimal | None:
+    valor_base = valor_base or Decimal('0.00')
+    valor_comparado = valor_comparado or Decimal('0.00')
+    if valor_base == Decimal('0.00'):
+        return Decimal('0.00') if valor_comparado == Decimal('0.00') else None
+    return ((valor_comparado - valor_base) / valor_base) * Decimal('100')
+
+
+def _formatar_percentual_relatorio(valor: Decimal | None) -> str:
+    if valor is None:
+        return '—'
+
+    valor_quantizado = valor.quantize(Decimal('0.1'))
+    texto = f'{valor_quantizado:.1f}'.replace('.', ',')
+    if texto.endswith(',0'):
+        texto = texto[:-2]
+    return f'{texto}%'
+
+
 def _abreviacao_mes_pt_br(mes: int) -> str:
     return (
         '',
@@ -4039,6 +4058,7 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
     modos_disponiveis = (
         ('categorias', 'Evolucao de categorias selecionadas'),
         ('comparativo', 'Comparativo entrada x saida'),
+        ('comparacao_periodos', 'Comparacao entre periodos'),
     )
     escopos_disponiveis = (
         ('categorias', 'Categorias'),
@@ -4055,10 +4075,15 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
         ('anos', 'Anos'),
     )
 
-    def _parse_periodo(self) -> tuple[str, str, date | None, date | None, str]:
-        data_inicial_raw = (self.request.GET.get('data_inicial') or '').strip()
-        data_final_raw = (self.request.GET.get('data_final') or '').strip()
-
+    def _parse_periodo_campos(
+        self,
+        campo_inicial: str,
+        campo_final: str,
+        *,
+        rotulo: str,
+    ) -> tuple[str, str, date | None, date | None, str]:
+        data_inicial_raw = (self.request.GET.get(campo_inicial) or '').strip()
+        data_final_raw = (self.request.GET.get(campo_final) or '').strip()
         data_inicial = None
         data_final = None
         periodo_error = ''
@@ -4067,21 +4092,65 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
             try:
                 data_inicial = date.fromisoformat(data_inicial_raw)
             except ValueError:
-                periodo_error = 'Informe uma data inicial valida.'
+                periodo_error = f'Informe uma data inicial valida para {rotulo}.'
 
         if data_final_raw and not periodo_error:
             try:
                 data_final = date.fromisoformat(data_final_raw)
             except ValueError:
-                periodo_error = 'Informe uma data final valida.'
+                periodo_error = f'Informe uma data final valida para {rotulo}.'
 
         if not periodo_error and ((data_inicial and not data_final) or (data_final and not data_inicial)):
-            periodo_error = 'Informe data inicial e data final para gerar o grafico.'
+            periodo_error = f'Informe data inicial e data final para {rotulo}.'
 
         if not periodo_error and data_inicial and data_final and data_final < data_inicial:
-            periodo_error = 'A data final precisa ser igual ou posterior a data inicial.'
+            periodo_error = f'A data final de {rotulo} precisa ser igual ou posterior a data inicial.'
 
         return data_inicial_raw, data_final_raw, data_inicial, data_final, periodo_error
+
+    def _parse_periodo(self) -> tuple[str, str, date | None, date | None, str]:
+        return self._parse_periodo_campos(
+            'data_inicial',
+            'data_final',
+            rotulo='o periodo principal',
+        )
+
+    def _parse_periodos_comparacao(self) -> dict[str, object]:
+        (
+            data_inicial_a_raw,
+            data_final_a_raw,
+            data_inicial_a,
+            data_final_a,
+            periodo_a_error,
+        ) = self._parse_periodo_campos('data_inicial_a', 'data_final_a', rotulo='o Periodo A')
+        (
+            data_inicial_b_raw,
+            data_final_b_raw,
+            data_inicial_b,
+            data_final_b,
+            periodo_b_error,
+        ) = self._parse_periodo_campos('data_inicial_b', 'data_final_b', rotulo='o Periodo B')
+
+        periodo_error = periodo_a_error or periodo_b_error
+        return {
+            'data_inicial_a': data_inicial_a_raw,
+            'data_final_a': data_final_a_raw,
+            'data_inicial_b': data_inicial_b_raw,
+            'data_final_b': data_final_b_raw,
+            'periodo_a_resolvido': (data_inicial_a, data_final_a),
+            'periodo_b_resolvido': (data_inicial_b, data_final_b),
+            'periodo_a_label': (
+                f'{data_inicial_a.strftime("%d/%m/%Y")} a {data_final_a.strftime("%d/%m/%Y")}'
+                if data_inicial_a and data_final_a
+                else ''
+            ),
+            'periodo_b_label': (
+                f'{data_inicial_b.strftime("%d/%m/%Y")} a {data_final_b.strftime("%d/%m/%Y")}'
+                if data_inicial_b and data_final_b
+                else ''
+            ),
+            'periodo_error': periodo_error,
+        }
 
     def _parse_contas(self) -> tuple[list[ContaFinanceira], list[str], list[int]]:
         contas_disponiveis = _ordenar_itens_insensivel(
@@ -4226,8 +4295,32 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
             return f'{prefixo}: {sufixo}'
         return prefixo
 
+    def _descricao_grafico(
+        self,
+        *,
+        modo: str,
+        leitura: str,
+        granularidade: str,
+    ) -> str:
+        leitura_temporal = _descricao_leitura_temporal_evolucao(granularidade)
+        if modo == 'comparativo':
+            return (
+                f'Compara no mesmo eixo temporal as categorias selecionadas em {leitura_temporal}, preservando nomes reais e a natureza de entrada ou saida de cada serie.'
+                if leitura == 'separado'
+                else f'Compara no mesmo eixo temporal, em {leitura_temporal}, o consolidado das categorias de entrada selecionadas e o consolidado das categorias de saida selecionadas.'
+            )
+        return (
+            f'Exibe uma serie por item selecionado em {leitura_temporal}, mantendo a leitura visual por valor absoluto de cada lancamento.'
+            if leitura == 'separado'
+            else f'Soma os itens selecionados em {leitura_temporal}, mantendo a leitura visual por valor absoluto dos lancamentos.'
+        )
+
     def _build_contexto_base(self) -> dict[str, object]:
         contas_disponiveis, selected_ids_raw, selected_ids = self._parse_contas()
+        modo = (self.request.GET.get('modo') or self.modo_padrao).strip()
+        if modo not in {item[0] for item in self.modos_disponiveis}:
+            modo = self.modo_padrao
+        modo_label = dict(self.modos_disponiveis).get(modo, self.modo_padrao)
         escopo, escopo_label = self._parse_escopo()
         leitura, leitura_label = self._parse_leitura()
         granularidade, granularidade_label = self._parse_granularidade()
@@ -4236,14 +4329,25 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
         itens_disponiveis_categorias = self._build_itens_disponiveis('categorias')
         itens_disponiveis_subcategorias = self._build_itens_disponiveis('subcategorias')
         data_inicial_raw, data_final_raw, data_inicial, data_final, periodo_error = self._parse_periodo()
-        modo = (self.request.GET.get('modo') or self.modo_padrao).strip()
-        if modo not in {item[0] for item in self.modos_disponiveis}:
-            modo = self.modo_padrao
-        modo_label = dict(self.modos_disponiveis).get(modo, self.modo_padrao)
+        periodos_comparacao = self._parse_periodos_comparacao()
 
         filtros_relatorio_ativos = _request_possui_parametros_get(
             self.request,
-            ('contas', 'categorias', 'data_inicial', 'data_final', 'modo', 'escopo', 'leitura', 'granularidade', 'mostrar_valores'),
+            (
+                'contas',
+                'categorias',
+                'data_inicial',
+                'data_final',
+                'data_inicial_a',
+                'data_final_a',
+                'data_inicial_b',
+                'data_final_b',
+                'modo',
+                'escopo',
+                'leitura',
+                'granularidade',
+                'mostrar_valores',
+            ),
         )
         contas_selecionadas = [conta for conta in contas_disponiveis if conta.id in selected_ids]
         todas_as_contas_selecionadas = len(selected_ids) == len(contas_disponiveis)
@@ -4283,9 +4387,18 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
             'quantidade_itens_selecionados': len(itens_selecionados),
             'data_inicial': data_inicial_raw,
             'data_final': data_final_raw,
-            'periodo_error': periodo_error,
+            'data_inicial_a': periodos_comparacao['data_inicial_a'],
+            'data_final_a': periodos_comparacao['data_final_a'],
+            'data_inicial_b': periodos_comparacao['data_inicial_b'],
+            'data_final_b': periodos_comparacao['data_final_b'],
+            'periodo_a_label': periodos_comparacao['periodo_a_label'],
+            'periodo_b_label': periodos_comparacao['periodo_b_label'],
+            'periodo_error': periodos_comparacao['periodo_error'] if modo == 'comparacao_periodos' else periodo_error,
             'filtros_relatorio_ativos': filtros_relatorio_ativos,
             'periodo_resolvido': (data_inicial, data_final),
+            'periodo_a_resolvido': periodos_comparacao['periodo_a_resolvido'],
+            'periodo_b_resolvido': periodos_comparacao['periodo_b_resolvido'],
+            'modo_comparacao_periodos': modo == 'comparacao_periodos',
         }
 
     def _montar_series(
@@ -4382,7 +4495,7 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
             )
         return series, []
 
-    def _montar_relatorio(
+    def _montar_relatorio_periodo(
         self,
         data_inicial: date,
         data_final: date,
@@ -4391,20 +4504,15 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
         *,
         escopo: str,
         leitura: str,
-        modo: str,
+        modo_series: str,
         granularidade: str,
         mostrar_valores: bool,
     ) -> dict[str, object]:
-        if not itens_selecionados:
-            return {
-                'erro': 'Selecione ao menos uma categoria ou subcategoria para gerar o grafico.',
-            }
-
         series, erros = self._montar_series(
             itens_selecionados,
             escopo=escopo,
             leitura=leitura,
-            modo=modo,
+            modo=modo_series,
         )
         if erros:
             return {'erro': erros[0]}
@@ -4521,44 +4629,6 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
 
         grafico = _montar_contexto_svg_evolucao(labels, series, mostrar_valores=mostrar_valores)
         saldo_liquido = total_receitas - total_despesas
-        leitura_temporal = _descricao_leitura_temporal_evolucao(granularidade)
-        if modo == 'comparativo':
-            descricao_grafico = (
-                f'Compara no mesmo eixo temporal as categorias selecionadas em {leitura_temporal}, preservando nomes reais e a natureza de entrada ou saida de cada serie.'
-                if leitura == 'separado'
-                else f'Compara no mesmo eixo temporal, em {leitura_temporal}, o consolidado das categorias de entrada selecionadas e o consolidado das categorias de saida selecionadas.'
-            )
-        else:
-            descricao_grafico = (
-                f'Exibe uma serie por item selecionado em {leitura_temporal}, mantendo a leitura visual por valor absoluto de cada lancamento.'
-                if leitura == 'separado'
-                else f'Soma os itens selecionados em {leitura_temporal}, mantendo a leitura visual por valor absoluto dos lancamentos.'
-            )
-
-        filtros_humanos = [
-            f'Periodo: {data_inicial.strftime("%d/%m/%Y")} a {data_final.strftime("%d/%m/%Y")}',
-            f"Escopo: {'Categorias' if escopo == 'categorias' else 'Subcategorias'}",
-            f"Leitura: {'Consolidado' if leitura == 'consolidado' else 'Separado'}",
-            f"Modo: {dict(self.modos_disponiveis).get(modo, modo)}",
-            f"Granularidade: {dict(self.granularidades_disponiveis).get(granularidade, granularidade)}",
-            f"Mostrar valores no grafico: {'Sim' if mostrar_valores else 'Nao'}",
-        ]
-        if itens_selecionados:
-            filtros_humanos.append(
-                f"{'Categorias' if escopo == 'categorias' else 'Subcategorias'} selecionadas: "
-                + ', '.join(item['label'] for item in itens_selecionados)
-            )
-        if selected_ids:
-            contas_selecionadas = [
-                conta.nome
-                for conta in _ordenar_itens_insensivel(
-                    ContaFinanceira.objects.filter(id__in=selected_ids),
-                    'nome',
-                )
-            ]
-            filtros_humanos.append(
-                'Contas: ' + (', '.join(contas_selecionadas) if contas_selecionadas else 'Todas as contas')
-            )
 
         return {
             'series': series,
@@ -4578,9 +4648,244 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
             'saldo_liquido_formatado': _formatar_moeda_brl(saldo_liquido),
             'tem_dados': bool(lancamentos),
             'periodo_label': f'{data_inicial.strftime("%d/%m/%Y")} a {data_final.strftime("%d/%m/%Y")}',
-            'descricao_grafico': descricao_grafico,
-            'filtros_humanos': filtros_humanos,
             'granularidade_grafico_label': dict(self.granularidades_disponiveis).get(granularidade, granularidade),
+        }
+
+    def _montar_filtros_humanos(
+        self,
+        *,
+        escopo: str,
+        leitura: str,
+        modo: str,
+        granularidade: str,
+        mostrar_valores: bool,
+        itens_selecionados: list[dict[str, object]],
+        selected_ids: list[int],
+        periodo_label: str = '',
+        periodo_a_label: str = '',
+        periodo_b_label: str = '',
+    ) -> list[str]:
+        filtros_humanos = []
+        if periodo_label:
+            filtros_humanos.append(f'Periodo: {periodo_label}')
+        if periodo_a_label:
+            filtros_humanos.append(f'Periodo A: {periodo_a_label}')
+        if periodo_b_label:
+            filtros_humanos.append(f'Periodo B: {periodo_b_label}')
+
+        filtros_humanos.extend(
+            [
+                f"Escopo: {'Categorias' if escopo == 'categorias' else 'Subcategorias'}",
+                f"Leitura: {'Consolidado' if leitura == 'consolidado' else 'Separado'}",
+                f"Modo: {dict(self.modos_disponiveis).get(modo, modo)}",
+                f"Granularidade: {dict(self.granularidades_disponiveis).get(granularidade, granularidade)}",
+                f"Mostrar valores no grafico: {'Sim' if mostrar_valores else 'Nao'}",
+            ]
+        )
+
+        if itens_selecionados:
+            filtros_humanos.append(
+                f"{'Categorias' if escopo == 'categorias' else 'Subcategorias'} selecionadas: "
+                + ', '.join(item['label'] for item in itens_selecionados)
+            )
+
+        if selected_ids:
+            contas_selecionadas = [
+                conta.nome
+                for conta in _ordenar_itens_insensivel(
+                    ContaFinanceira.objects.filter(id__in=selected_ids),
+                    'nome',
+                )
+            ]
+            filtros_humanos.append(
+                'Contas: ' + (', '.join(contas_selecionadas) if contas_selecionadas else 'Todas as contas')
+            )
+        return filtros_humanos
+
+    def _montar_relatorio(
+        self,
+        data_inicial: date,
+        data_final: date,
+        selected_ids: list[int],
+        itens_selecionados: list[dict[str, object]],
+        *,
+        escopo: str,
+        leitura: str,
+        modo: str,
+        granularidade: str,
+        mostrar_valores: bool,
+    ) -> dict[str, object]:
+        if not itens_selecionados:
+            return {
+                'erro': 'Selecione ao menos uma categoria ou subcategoria para gerar o grafico.',
+            }
+
+        relatorio = self._montar_relatorio_periodo(
+            data_inicial,
+            data_final,
+            selected_ids,
+            itens_selecionados,
+            escopo=escopo,
+            leitura=leitura,
+            modo_series=modo,
+            granularidade=granularidade,
+            mostrar_valores=mostrar_valores,
+        )
+        if relatorio.get('erro'):
+            return relatorio
+
+        relatorio['descricao_grafico'] = self._descricao_grafico(
+            modo=modo,
+            leitura=leitura,
+            granularidade=granularidade,
+        )
+        relatorio['filtros_humanos'] = self._montar_filtros_humanos(
+            escopo=escopo,
+            leitura=leitura,
+            modo=modo,
+            granularidade=granularidade,
+            mostrar_valores=mostrar_valores,
+            itens_selecionados=itens_selecionados,
+            selected_ids=selected_ids,
+            periodo_label=relatorio['periodo_label'],
+        )
+        return relatorio
+
+    def _montar_relatorio_comparacao(
+        self,
+        *,
+        data_inicial_a: date,
+        data_final_a: date,
+        data_inicial_b: date,
+        data_final_b: date,
+        selected_ids: list[int],
+        itens_selecionados: list[dict[str, object]],
+        escopo: str,
+        leitura: str,
+        granularidade: str,
+        mostrar_valores: bool,
+    ) -> dict[str, object]:
+        if not itens_selecionados:
+            return {
+                'erro': 'Selecione ao menos uma categoria ou subcategoria para gerar a comparacao.',
+            }
+
+        relatorio_a = self._montar_relatorio_periodo(
+            data_inicial_a,
+            data_final_a,
+            selected_ids,
+            itens_selecionados,
+            escopo=escopo,
+            leitura=leitura,
+            modo_series='categorias',
+            granularidade=granularidade,
+            mostrar_valores=mostrar_valores,
+        )
+        if relatorio_a.get('erro'):
+            return relatorio_a
+
+        relatorio_b = self._montar_relatorio_periodo(
+            data_inicial_b,
+            data_final_b,
+            selected_ids,
+            itens_selecionados,
+            escopo=escopo,
+            leitura=leitura,
+            modo_series='categorias',
+            granularidade=granularidade,
+            mostrar_valores=mostrar_valores,
+        )
+        if relatorio_b.get('erro'):
+            return relatorio_b
+
+        series_a = {serie['chave']: serie for serie in relatorio_a['series']}
+        series_b = {serie['chave']: serie for serie in relatorio_b['series']}
+        ordem_series = [serie['chave'] for serie in relatorio_a['series']]
+        for chave in series_b:
+            if chave not in ordem_series:
+                ordem_series.append(chave)
+
+        linhas_comparacao = []
+        total_periodo_a = Decimal('0.00')
+        total_periodo_b = Decimal('0.00')
+        for chave in ordem_series:
+            serie_a = series_a.get(chave)
+            serie_b = series_b.get(chave)
+            valor_a = serie_a['total'] if serie_a else Decimal('0.00')
+            valor_b = serie_b['total'] if serie_b else Decimal('0.00')
+            diferenca_absoluta = abs(valor_b - valor_a)
+            variacao_percentual = _calcular_variacao_percentual(valor_a, valor_b)
+            total_periodo_a += valor_a
+            total_periodo_b += valor_b
+            linhas_comparacao.append(
+                {
+                    'label': (serie_a or serie_b)['label'],
+                    'valor_a': valor_a,
+                    'valor_a_formatado': _formatar_moeda_brl(valor_a),
+                    'valor_b': valor_b,
+                    'valor_b_formatado': _formatar_moeda_brl(valor_b),
+                    'diferenca_absoluta': diferenca_absoluta,
+                    'diferenca_absoluta_formatada': _formatar_moeda_brl(diferenca_absoluta),
+                    'variacao_percentual': variacao_percentual,
+                    'variacao_percentual_formatada': _formatar_percentual_relatorio(variacao_percentual),
+                    'variacao_css': (
+                        'is-receita'
+                        if variacao_percentual is not None and variacao_percentual > Decimal('0.00')
+                        else 'is-despesa'
+                        if variacao_percentual is not None and variacao_percentual < Decimal('0.00')
+                        else ''
+                    ),
+                }
+            )
+
+        diferenca_total_absoluta = abs(total_periodo_b - total_periodo_a)
+        variacao_total_percentual = _calcular_variacao_percentual(total_periodo_a, total_periodo_b)
+        periodo_a_label = f'{data_inicial_a.strftime("%d/%m/%Y")} a {data_final_a.strftime("%d/%m/%Y")}'
+        periodo_b_label = f'{data_inicial_b.strftime("%d/%m/%Y")} a {data_final_b.strftime("%d/%m/%Y")}'
+
+        return {
+            'modo_comparacao_periodos': True,
+            'comparacao_periodo_a': relatorio_a,
+            'comparacao_periodo_b': relatorio_b,
+            'comparacao_series': relatorio_a['series'],
+            'linhas_comparacao': linhas_comparacao,
+            'quantidade_itens_comparados': len(linhas_comparacao),
+            'quantidade_lancamentos_a': relatorio_a['quantidade_lancamentos'],
+            'quantidade_lancamentos_b': relatorio_b['quantidade_lancamentos'],
+            'total_periodo_a': total_periodo_a,
+            'total_periodo_a_formatado': _formatar_moeda_brl(total_periodo_a),
+            'total_periodo_b': total_periodo_b,
+            'total_periodo_b_formatado': _formatar_moeda_brl(total_periodo_b),
+            'diferenca_total_absoluta': diferenca_total_absoluta,
+            'diferenca_total_absoluta_formatada': _formatar_moeda_brl(diferenca_total_absoluta),
+            'variacao_total_percentual': variacao_total_percentual,
+            'variacao_total_percentual_formatada': _formatar_percentual_relatorio(variacao_total_percentual),
+            'variacao_total_css': (
+                'is-receita'
+                if variacao_total_percentual is not None and variacao_total_percentual > Decimal('0.00')
+                else 'is-despesa'
+                if variacao_total_percentual is not None and variacao_total_percentual < Decimal('0.00')
+                else ''
+            ),
+            'descricao_grafico': (
+                'Compara os dois intervalos selecionados lado a lado, preservando a mesma granularidade, a mesma selecao analitica e a leitura visual por valor absoluto.'
+            ),
+            'filtros_humanos': self._montar_filtros_humanos(
+                escopo=escopo,
+                leitura=leitura,
+                modo='comparacao_periodos',
+                granularidade=granularidade,
+                mostrar_valores=mostrar_valores,
+                itens_selecionados=itens_selecionados,
+                selected_ids=selected_ids,
+                periodo_a_label=periodo_a_label,
+                periodo_b_label=periodo_b_label,
+            ),
+            'periodo_a_label': periodo_a_label,
+            'periodo_b_label': periodo_b_label,
+            'periodo_label': f'{periodo_a_label} x {periodo_b_label}',
+            'granularidade_grafico_label': dict(self.granularidades_disponiveis).get(granularidade, granularidade),
+            'tem_dados': relatorio_a['tem_dados'] or relatorio_b['tem_dados'],
         }
 
     def get_context_data(self, **kwargs):
@@ -4588,22 +4893,47 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
         contexto_base = self._build_contexto_base()
         context.update(contexto_base)
 
-        data_inicial, data_final = contexto_base['periodo_resolvido']
-        if contexto_base['periodo_error'] or not data_inicial or not data_final:
-            return context
-
         _, _, selected_ids = self._parse_contas()
-        relatorio = self._montar_relatorio(
-            data_inicial,
-            data_final,
-            selected_ids,
-            contexto_base['categorias_selecionadas'],
-            escopo=contexto_base['escopo'],
-            leitura=contexto_base['leitura'],
-            modo=contexto_base['modo'],
-            granularidade=contexto_base['granularidade'],
-            mostrar_valores=contexto_base['mostrar_valores'],
-        )
+        if contexto_base['modo'] == 'comparacao_periodos':
+            data_inicial_a, data_final_a = contexto_base['periodo_a_resolvido']
+            data_inicial_b, data_final_b = contexto_base['periodo_b_resolvido']
+            if (
+                contexto_base['periodo_error']
+                or not data_inicial_a
+                or not data_final_a
+                or not data_inicial_b
+                or not data_final_b
+            ):
+                return context
+
+            relatorio = self._montar_relatorio_comparacao(
+                data_inicial_a=data_inicial_a,
+                data_final_a=data_final_a,
+                data_inicial_b=data_inicial_b,
+                data_final_b=data_final_b,
+                selected_ids=selected_ids,
+                itens_selecionados=contexto_base['categorias_selecionadas'],
+                escopo=contexto_base['escopo'],
+                leitura=contexto_base['leitura'],
+                granularidade=contexto_base['granularidade'],
+                mostrar_valores=contexto_base['mostrar_valores'],
+            )
+        else:
+            data_inicial, data_final = contexto_base['periodo_resolvido']
+            if contexto_base['periodo_error'] or not data_inicial or not data_final:
+                return context
+
+            relatorio = self._montar_relatorio(
+                data_inicial,
+                data_final,
+                selected_ids,
+                contexto_base['categorias_selecionadas'],
+                escopo=contexto_base['escopo'],
+                leitura=contexto_base['leitura'],
+                modo=contexto_base['modo'],
+                granularidade=contexto_base['granularidade'],
+                mostrar_valores=contexto_base['mostrar_valores'],
+            )
         if relatorio.get('erro'):
             context['periodo_error'] = relatorio['erro']
             return context

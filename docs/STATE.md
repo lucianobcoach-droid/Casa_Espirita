@@ -2,6 +2,51 @@
 
 Data de atualizacao: 2026-04-22
 
+## Comparacao entre periodos entregue na tela `Evolucao por categorias`
+
+- a tela `Evolucao por categorias` passou a suportar dois fluxos no mesmo shell:
+  - modo normal ja consolidado
+  - modo `Comparacao entre periodos`
+- o modo novo foi implementado sem abrir nova tela e sem quebrar a arquitetura atual de filtros compactos, seletor analitico, impressao isolada e tabela auxiliar recolhida por padrao
+- no modo comparacao, a interface agora exibe blocos claros para:
+  - `Periodo A`
+  - `Periodo B`
+- os mesmos filtros analiticos continuam valendo para os dois periodos:
+  - `Categorias` / `Subcategorias`
+  - contas
+  - leitura `Consolidado` / `Separado`
+  - granularidade em `Dias`, `Meses`, `Trimestres` e `Anos`
+  - opcao de mostrar valores no grafico
+- a saida consolidada da comparacao passou a entregar:
+  - total do `Periodo A`
+  - total do `Periodo B`
+  - diferenca absoluta
+  - variacao percentual com tratamento seguro quando a base e zero
+  - quantidade de lancamentos em cada periodo
+  - tabela comparativa recolhida por padrao
+- regra consolidada para percentual:
+  - se `A = 0` e `B != 0`, a tela mostra `—`
+  - se `A = 0` e `B = 0`, a tela mostra variacao neutra
+  - se `A != 0`, calcula normalmente sobre a base do `Periodo A`
+- validacoes executadas nesta microetapa:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+  - smoke autenticado OK para:
+    - modo normal preservado com categoria pai valida
+    - modo comparacao com `Periodo A` e `Periodo B`
+    - comparacao valida em `Subcategorias`
+    - renderizacao de `Tabela comparativa`, `Diferenca absoluta` e `Variacao percentual`
+- arquivos diretamente impactados nesta entrega:
+  - [financeiro/views.py](C:\Users\lucia\OneDrive\Área de Trabalho\Casa_Espirita\financeiro\views.py)
+  - [financeiro/templates/financeiro/evolucao_categorias.html](C:\Users\lucia\OneDrive\Área de Trabalho\Casa_Espirita\financeiro\templates\financeiro\evolucao_categorias.html)
+  - [docs/STATE.md](C:\Users\lucia\OneDrive\Área de Trabalho\Casa_Espirita\docs\STATE.md)
+  - [docs/CODEX_RESULTADO.md](C:\Users\lucia\OneDrive\Área de Trabalho\Casa_Espirita\docs\CODEX_RESULTADO.md)
+  - [docs/ROADMAP_FINANCEIRO.md](C:\Users\lucia\OneDrive\Área de Trabalho\Casa_Espirita\docs\ROADMAP_FINANCEIRO.md)
+- a proxima microetapa logica deixa de ser `Comparacao entre periodos` e passa a ser:
+  - validacao visual/manual curta desse modo no navegador
+  - depois disso, decidir entre refinamento da comparacao ou evolucao futura da tela para exportacao/tabela comparativa
+
 ## Evolucao por categorias fechada no working tree, pronta para commit
 
 - o bloco aberto da tela `Evolucao por categorias` foi consolidado sem abrir nova frente

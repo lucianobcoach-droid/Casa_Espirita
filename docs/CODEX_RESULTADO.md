@@ -2,6 +2,49 @@
 
 Data: 2026-04-22
 
+## Comparacao entre periodos na tela `Evolucao por categorias`
+
+- evolui a tela existente, sem abrir nova view isolada, para suportar o modo `Comparacao entre periodos`
+- o backend da `EvolucaoCategoriasFinanceiroView` foi reorganizado para separar:
+  - montagem de relatorio por periodo
+  - montagem do modo normal
+  - montagem do modo comparativo entre dois intervalos
+- o modo novo passou a aceitar:
+  - `Periodo A`
+  - `Periodo B`
+  - os mesmos filtros analiticos do modo normal
+- decisao de UX aplicada:
+  - manter a mesma tela e o mesmo shell
+  - esconder o periodo simples quando o modo e comparacao
+  - mostrar blocos compactos e claros para `Periodo A` e `Periodo B`
+  - preservar os filtros secundarios recolhidos por padrao
+  - manter a tabela comparativa recolhida por padrao
+- decisao funcional aplicada:
+  - comparar lado a lado os dois intervalos usando a mesma selecao de contas e itens analiticos
+  - entregar por item:
+    - valor do `Periodo A`
+    - valor do `Periodo B`
+    - diferenca absoluta
+    - variacao percentual segura
+  - evitar percentual artificial quando a base e zero, usando `—` quando necessario
+- no template, a comparacao foi apresentada com:
+  - KPIs proprios do modo comparacao
+  - dois blocos graficos separados, um para cada periodo
+  - `Tabela comparativa` com totais finais
+  - impressao ainda isolando apenas a area util do relatorio
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+  - smoke autenticado OK:
+    - modo normal preservado
+    - modo comparacao respondendo `200`
+    - comparacao valida com categoria pai e com subcategoria
+    - renderizacao de `Periodo A`, `Periodo B`, `Tabela comparativa`, `Diferenca absoluta` e `Variacao percentual`
+- resultado:
+  - microetapa pronta para commit coeso
+  - a proxima frente logica deixa de ser a comparacao em si e passa a ser validacao visual/manual curta do novo modo, seguida da decisao de refinamento ou exportacao futura
+
 ## Fechamento do bloco aberto da tela `Evolucao por categorias`
 
 - fechei o working tree aberto da tela sem misturar nova feature

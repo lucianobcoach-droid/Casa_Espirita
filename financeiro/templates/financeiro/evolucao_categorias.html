@@ -383,6 +383,95 @@
         white-space: nowrap;
     }
 
+    .financeiro-evolucao-periodo-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+        gap: 0.75rem;
+    }
+
+    .financeiro-evolucao-periodo-bloco {
+        display: grid;
+        gap: 0.65rem;
+        padding: 0.8rem;
+        border: 1px solid #dbe6f1;
+        border-radius: 0.95rem;
+        background: #fff;
+    }
+
+    .financeiro-evolucao-periodo-titulo {
+        margin: 0;
+        color: #0f172a;
+        font-size: 0.9rem;
+        font-weight: 800;
+    }
+
+    .financeiro-evolucao-periodo-nota {
+        margin: 0.12rem 0 0;
+        color: #64748b;
+        font-size: 0.78rem;
+        line-height: 1.4;
+    }
+
+    .financeiro-evolucao-comparacao-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+        gap: 0.9rem;
+    }
+
+    .financeiro-evolucao-comparacao-card {
+        border: 1px solid #e5edf7;
+        border-radius: 0.95rem;
+        background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+        overflow: hidden;
+    }
+
+    .financeiro-evolucao-comparacao-header {
+        display: grid;
+        gap: 0.18rem;
+        padding: 0.8rem 0.9rem 0.65rem;
+        border-bottom: 1px solid #edf2f7;
+    }
+
+    .financeiro-evolucao-comparacao-titulo {
+        margin: 0;
+        color: #0f172a;
+        font-size: 0.92rem;
+        font-weight: 800;
+    }
+
+    .financeiro-evolucao-comparacao-periodo {
+        color: #475569;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .financeiro-evolucao-comparacao-body {
+        padding: 0.75rem 0.85rem 0.95rem;
+    }
+
+    .financeiro-evolucao-comparacao-table th,
+    .financeiro-evolucao-comparacao-table td {
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+
+    .financeiro-evolucao-comparacao-table td:first-child,
+    .financeiro-evolucao-comparacao-table th:first-child {
+        white-space: normal;
+    }
+
+    .financeiro-evolucao-variacao {
+        font-weight: 800;
+    }
+
+    .financeiro-evolucao-variacao.is-receita {
+        color: #236746;
+    }
+
+    .financeiro-evolucao-variacao.is-despesa {
+        color: #b42318;
+    }
+
     .financeiro-evolucao-print-summary {
         display: none;
         margin-top: 0.75rem;
@@ -506,7 +595,12 @@
                 <h1 class="title financeiro-page-title">{{ page_title }}</h1>
                 <p class="financeiro-page-subtitle">Leitura mensal comparativa para categorias ou subcategorias no periodo selecionado.</p>
                 <div class="financeiro-evolucao-meta">
-                    {% if periodo_label %}<span class="financeiro-evolucao-meta-item"><strong>Periodo:</strong> {{ periodo_label }}</span>{% endif %}
+                    {% if modo_comparacao_periodos %}
+                        {% if periodo_a_label %}<span class="financeiro-evolucao-meta-item"><strong>Periodo A:</strong> {{ periodo_a_label }}</span>{% endif %}
+                        {% if periodo_b_label %}<span class="financeiro-evolucao-meta-item"><strong>Periodo B:</strong> {{ periodo_b_label }}</span>{% endif %}
+                    {% else %}
+                        {% if periodo_label %}<span class="financeiro-evolucao-meta-item"><strong>Periodo:</strong> {{ periodo_label }}</span>{% endif %}
+                    {% endif %}
                     <span class="financeiro-evolucao-meta-item"><strong>Escopo:</strong> {{ escopo_label }}</span>
                     <span class="financeiro-evolucao-meta-item"><strong>Leitura:</strong> {{ leitura_label }}</span>
                     <span class="financeiro-evolucao-meta-item"><strong>Granularidade:</strong> {{ granularidade_label }}</span>
@@ -532,18 +626,58 @@
                     </summary>
                     <div class="financeiro-secondary-body">
                         <div class="columns is-multiline">
-                            <div class="column is-6-mobile is-3-tablet is-2-desktop">
-                                <label class="label">Data inicial</label>
-                                <input class="input" type="date" name="data_inicial" value="{{ data_inicial }}">
+                            <div class="column is-12" data-evolucao-periodo-normal {% if modo_comparacao_periodos %}hidden{% endif %}>
+                                <div class="columns is-multiline">
+                                    <div class="column is-6-mobile is-3-tablet is-2-desktop">
+                                        <label class="label">Data inicial</label>
+                                        <input class="input" type="date" name="data_inicial" value="{{ data_inicial }}">
+                                    </div>
+                                    <div class="column is-6-mobile is-3-tablet is-2-desktop">
+                                        <label class="label">Data final</label>
+                                        <input class="input" type="date" name="data_final" value="{{ data_final }}">
+                                    </div>
+                                </div>
                             </div>
-                            <div class="column is-6-mobile is-3-tablet is-2-desktop">
-                                <label class="label">Data final</label>
-                                <input class="input" type="date" name="data_final" value="{{ data_final }}">
+                            <div class="column is-12" data-evolucao-periodo-comparacao {% if not modo_comparacao_periodos %}hidden{% endif %}>
+                                <div class="financeiro-evolucao-periodo-grid">
+                                    <div class="financeiro-evolucao-periodo-bloco">
+                                        <div>
+                                            <h3 class="financeiro-evolucao-periodo-titulo">Periodo A</h3>
+                                            <p class="financeiro-evolucao-periodo-nota">Intervalo-base da comparacao.</p>
+                                        </div>
+                                        <div class="columns is-multiline">
+                                            <div class="column is-6-mobile">
+                                                <label class="label">Data inicial</label>
+                                                <input class="input" type="date" name="data_inicial_a" value="{{ data_inicial_a }}">
+                                            </div>
+                                            <div class="column is-6-mobile">
+                                                <label class="label">Data final</label>
+                                                <input class="input" type="date" name="data_final_a" value="{{ data_final_a }}">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="financeiro-evolucao-periodo-bloco">
+                                        <div>
+                                            <h3 class="financeiro-evolucao-periodo-titulo">Periodo B</h3>
+                                            <p class="financeiro-evolucao-periodo-nota">Intervalo comparado com a mesma selecao analitica.</p>
+                                        </div>
+                                        <div class="columns is-multiline">
+                                            <div class="column is-6-mobile">
+                                                <label class="label">Data inicial</label>
+                                                <input class="input" type="date" name="data_inicial_b" value="{{ data_inicial_b }}">
+                                            </div>
+                                            <div class="column is-6-mobile">
+                                                <label class="label">Data final</label>
+                                                <input class="input" type="date" name="data_final_b" value="{{ data_final_b }}">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             <div class="column is-12-mobile is-6-tablet is-3-desktop">
                                 <label class="label">Modo do grafico</label>
                                 <div class="select is-fullwidth">
-                                    <select name="modo">
+                                    <select name="modo" data-evolucao-mode-select>
                                         {% for valor, rotulo in modos_disponiveis %}
                                             <option value="{{ valor }}" {% if modo == valor %}selected{% endif %}>{{ rotulo }}</option>
                                         {% endfor %}
@@ -688,7 +822,13 @@
             <div class="financeiro-evolucao-print-area">
                 <div class="financeiro-evolucao-print-summary">
                     <h1 class="financeiro-evolucao-print-summary-title">{{ page_title }}</h1>
-                    <p class="financeiro-evolucao-print-summary-subtitle">Resumo visual da evolucao financeira conforme os filtros aplicados.</p>
+                    <p class="financeiro-evolucao-print-summary-subtitle">
+                        {% if modo_comparacao_periodos %}
+                            Comparacao visual entre dois intervalos com a mesma selecao analitica e a mesma granularidade.
+                        {% else %}
+                            Resumo visual da evolucao financeira conforme os filtros aplicados.
+                        {% endif %}
+                    </p>
                     <h2>Filtros aplicados</h2>
                     <ul>
                         {% for filtro in filtros_humanos %}
@@ -697,153 +837,339 @@
                     </ul>
                 </div>
 
-                <div class="financeiro-evolucao-kpis">
-                    <div class="financeiro-evolucao-kpi">
-                        <span class="financeiro-evolucao-kpi-label">Receitas no periodo</span>
-                        <span class="financeiro-evolucao-kpi-value is-receita">R$ {{ total_receitas_formatado }}</span>
-                    </div>
-                    <div class="financeiro-evolucao-kpi">
-                        <span class="financeiro-evolucao-kpi-label">Despesas no periodo</span>
-                        <span class="financeiro-evolucao-kpi-value is-despesa">R$ {{ total_despesas_formatado }}</span>
-                    </div>
-                    <div class="financeiro-evolucao-kpi">
-                        <span class="financeiro-evolucao-kpi-label">Saldo liquido</span>
-                        <span class="financeiro-evolucao-kpi-value">R$ {{ saldo_liquido_formatado }}</span>
-                    </div>
-                    <div class="financeiro-evolucao-kpi">
-                        <span class="financeiro-evolucao-kpi-label">Quitado</span>
-                        <span class="financeiro-evolucao-kpi-value">R$ {{ total_quitado_formatado }}</span>
-                    </div>
-                    <div class="financeiro-evolucao-kpi">
-                        <span class="financeiro-evolucao-kpi-label">Em aberto</span>
-                        <span class="financeiro-evolucao-kpi-value">R$ {{ total_aberto_formatado }}</span>
-                    </div>
-                    <div class="financeiro-evolucao-kpi">
-                        <span class="financeiro-evolucao-kpi-label">Lancamentos considerados</span>
-                        <span class="financeiro-evolucao-kpi-value">{{ quantidade_lancamentos }}</span>
-                    </div>
-                </div>
-
-                <div class="financeiro-evolucao-body">
-                    <section class="financeiro-evolucao-panel">
-                        <div class="financeiro-evolucao-panel-header">
-                            <div>
-                                <h2 class="financeiro-evolucao-panel-title">Grafico por {{ granularidade_grafico_label|lower }}</h2>
-                                <p class="financeiro-evolucao-panel-note">{{ descricao_grafico }}</p>
-                            </div>
-                            {% if series %}
-                                <div class="financeiro-evolucao-legend">
-                                    {% for serie in series %}
-                                        <span class="financeiro-evolucao-legend-item">
-                                            <span class="financeiro-evolucao-legend-swatch" style="background: {{ serie.cor }}"></span>
-                                            {{ serie.label }}
-                                        </span>
-                                    {% endfor %}
-                                </div>
-                            {% endif %}
+                {% if modo_comparacao_periodos %}
+                    <div class="financeiro-evolucao-kpis">
+                        <div class="financeiro-evolucao-kpi">
+                            <span class="financeiro-evolucao-kpi-label">Total do Periodo A</span>
+                            <span class="financeiro-evolucao-kpi-value">R$ {{ total_periodo_a_formatado }}</span>
                         </div>
-                        {% if grafico.tem_dados %}
-                            <div class="financeiro-evolucao-chart-wrap">
-                                <div class="financeiro-evolucao-chart-stage" style="width: {{ grafico.render_width }}px;">
-                                    <svg class="financeiro-evolucao-chart" viewBox="0 0 {{ grafico.largura }} {{ grafico.altura }}" style="width: {{ grafico.render_width }}px" role="img" aria-label="Grafico de evolucao por categorias em {{ granularidade_grafico_label|lower }}">
-                                        {% for linha in grafico.grade %}
-                                            <line class="financeiro-evolucao-grid-line" x1="{{ grafico.x_inicial }}" y1="{{ linha.y }}" x2="{{ grafico.x_final }}" y2="{{ linha.y }}"></line>
-                                            <text class="financeiro-evolucao-axis-label" x="8" y="{{ linha.y|add:'4' }}">{{ linha.label }}</text>
-                                        {% endfor %}
-                                        <line class="financeiro-evolucao-zero-line" x1="{{ grafico.x_inicial }}" y1="{{ grafico.zero_y }}" x2="{{ grafico.x_final }}" y2="{{ grafico.zero_y }}"></line>
-                                        {% for item in grafico.rotulos_eixo_x %}
-                                            <line class="financeiro-evolucao-grid-line" x1="{{ item.x_svg }}" y1="{{ grafico.zero_y }}" x2="{{ item.x_svg }}" y2="{{ grafico.zero_y|add:'6' }}"></line>
-                                            <text class="financeiro-evolucao-axis-label financeiro-evolucao-axis-label-x" x="{{ item.x_svg }}" y="{{ grafico.eixo_label_y }}">{{ item.label }}</text>
-                                        {% endfor %}
+                        <div class="financeiro-evolucao-kpi">
+                            <span class="financeiro-evolucao-kpi-label">Total do Periodo B</span>
+                            <span class="financeiro-evolucao-kpi-value">R$ {{ total_periodo_b_formatado }}</span>
+                        </div>
+                        <div class="financeiro-evolucao-kpi">
+                            <span class="financeiro-evolucao-kpi-label">Diferenca absoluta</span>
+                            <span class="financeiro-evolucao-kpi-value">R$ {{ diferenca_total_absoluta_formatada }}</span>
+                        </div>
+                        <div class="financeiro-evolucao-kpi">
+                            <span class="financeiro-evolucao-kpi-label">Variacao percentual</span>
+                            <span class="financeiro-evolucao-kpi-value {{ variacao_total_css }}">{{ variacao_total_percentual_formatada }}</span>
+                        </div>
+                        <div class="financeiro-evolucao-kpi">
+                            <span class="financeiro-evolucao-kpi-label">Lancamentos no Periodo A</span>
+                            <span class="financeiro-evolucao-kpi-value">{{ quantidade_lancamentos_a }}</span>
+                        </div>
+                        <div class="financeiro-evolucao-kpi">
+                            <span class="financeiro-evolucao-kpi-label">Lancamentos no Periodo B</span>
+                            <span class="financeiro-evolucao-kpi-value">{{ quantidade_lancamentos_b }}</span>
+                        </div>
+                    </div>
 
-                                        {% for serie in grafico.series %}
-                                            <path class="financeiro-evolucao-series-line" d="{{ serie.path_data }}" stroke="{{ serie.cor }}"></path>
-                                            {% for ponto in serie.pontos %}
-                                                <circle class="financeiro-evolucao-series-point" cx="{{ ponto.x }}" cy="{{ ponto.y }}" r="4.5" fill="{{ serie.cor }}">
-                                                    <title>{{ serie.label }} - {{ ponto.label_mes }} - {{ ponto.label_valor }}</title>
-                                                </circle>
-                                                {% if ponto.mostrar_rotulo %}
-                                                    <line class="financeiro-evolucao-data-label-line" x1="{{ ponto.x_svg }}" y1="{{ ponto.y_svg }}" x2="{{ ponto.x_svg }}" y2="{{ ponto.linha_rotulo_y_svg }}"></line>
-                                                    <text class="financeiro-evolucao-data-label-text" x="{{ ponto.x_svg }}" y="{{ ponto.rotulo_y_svg }}">{{ ponto.label_curto }}</text>
-                                                {% endif %}
-                                            {% endfor %}
-                                        {% endfor %}
-
-                                    </svg>
-                                </div>
-                            </div>
-                        {% else %}
-                            <div class="financeiro-evolucao-empty">Nenhum lancamento encontrado para o filtro atual.</div>
-                        {% endif %}
-                    </section>
-
-                    <section class="financeiro-evolucao-panel">
-                        <details class="financeiro-evolucao-table-toggle" data-evolucao-tabela>
-                            <summary>
+                    <div class="financeiro-evolucao-body">
+                        <section class="financeiro-evolucao-panel">
+                            <div class="financeiro-evolucao-panel-header">
                                 <div>
-                                    <h2 class="financeiro-evolucao-panel-title">Tabela de apoio</h2>
-                                    <p class="financeiro-evolucao-panel-note">Resumo por {{ granularidade_grafico_label|lower }} para conferencia dos valores do grafico. Ela fica recolhida por padrao para manter o grafico em destaque.</p>
+                                    <h2 class="financeiro-evolucao-panel-title">Comparacao por {{ granularidade_grafico_label|lower }}</h2>
+                                    <p class="financeiro-evolucao-panel-note">{{ descricao_grafico }}</p>
                                 </div>
-                                <span class="financeiro-evolucao-table-toggle-label" data-evolucao-tabela-toggle-label>Mostrar tabela mensal</span>
-                            </summary>
-                            <div class="financeiro-evolucao-table-wrap">
-                                <table class="table is-fullwidth is-hoverable financeiro-table financeiro-evolucao-table">
-                                    <thead>
-                                        <tr>
-                                            <th>{{ granularidade_grafico_label }}</th>
-                                            {% for serie in series %}
-                                                <th>{{ serie.label }}</th>
+                                {% if comparacao_series %}
+                                    <div class="financeiro-evolucao-legend">
+                                        {% for serie in comparacao_series %}
+                                            <span class="financeiro-evolucao-legend-item">
+                                                <span class="financeiro-evolucao-legend-swatch" style="background: {{ serie.cor }}"></span>
+                                                {{ serie.label }}
+                                            </span>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="financeiro-evolucao-comparacao-grid">
+                                <article class="financeiro-evolucao-comparacao-card">
+                                    <header class="financeiro-evolucao-comparacao-header">
+                                        <h3 class="financeiro-evolucao-comparacao-titulo">Periodo A</h3>
+                                        <span class="financeiro-evolucao-comparacao-periodo">{{ periodo_a_label }}</span>
+                                    </header>
+                                    <div class="financeiro-evolucao-comparacao-body">
+                                        {% with relatorio=comparacao_periodo_a %}
+                                            {% if relatorio.grafico.tem_dados %}
+                                                <div class="financeiro-evolucao-chart-wrap">
+                                                    <div class="financeiro-evolucao-chart-stage" style="width: {{ relatorio.grafico.render_width }}px;">
+                                                        <svg class="financeiro-evolucao-chart" viewBox="0 0 {{ relatorio.grafico.largura }} {{ relatorio.grafico.altura }}" style="width: {{ relatorio.grafico.render_width }}px" role="img" aria-label="Grafico do Periodo A em {{ granularidade_grafico_label|lower }}">
+                                                            {% for linha in relatorio.grafico.grade %}
+                                                                <line class="financeiro-evolucao-grid-line" x1="{{ relatorio.grafico.x_inicial }}" y1="{{ linha.y }}" x2="{{ relatorio.grafico.x_final }}" y2="{{ linha.y }}"></line>
+                                                                <text class="financeiro-evolucao-axis-label" x="8" y="{{ linha.y|add:'4' }}">{{ linha.label }}</text>
+                                                            {% endfor %}
+                                                            <line class="financeiro-evolucao-zero-line" x1="{{ relatorio.grafico.x_inicial }}" y1="{{ relatorio.grafico.zero_y }}" x2="{{ relatorio.grafico.x_final }}" y2="{{ relatorio.grafico.zero_y }}"></line>
+                                                            {% for item in relatorio.grafico.rotulos_eixo_x %}
+                                                                <line class="financeiro-evolucao-grid-line" x1="{{ item.x_svg }}" y1="{{ relatorio.grafico.zero_y }}" x2="{{ item.x_svg }}" y2="{{ relatorio.grafico.zero_y|add:'6' }}"></line>
+                                                                <text class="financeiro-evolucao-axis-label financeiro-evolucao-axis-label-x" x="{{ item.x_svg }}" y="{{ relatorio.grafico.eixo_label_y }}">{{ item.label }}</text>
+                                                            {% endfor %}
+                                                            {% for serie in relatorio.grafico.series %}
+                                                                <path class="financeiro-evolucao-series-line" d="{{ serie.path_data }}" stroke="{{ serie.cor }}"></path>
+                                                                {% for ponto in serie.pontos %}
+                                                                    <circle class="financeiro-evolucao-series-point" cx="{{ ponto.x }}" cy="{{ ponto.y }}" r="4.5" fill="{{ serie.cor }}">
+                                                                        <title>{{ serie.label }} - {{ ponto.label_mes }} - {{ ponto.label_valor }}</title>
+                                                                    </circle>
+                                                                    {% if ponto.mostrar_rotulo %}
+                                                                        <line class="financeiro-evolucao-data-label-line" x1="{{ ponto.x_svg }}" y1="{{ ponto.y_svg }}" x2="{{ ponto.x_svg }}" y2="{{ ponto.linha_rotulo_y_svg }}"></line>
+                                                                        <text class="financeiro-evolucao-data-label-text" x="{{ ponto.x_svg }}" y="{{ ponto.rotulo_y_svg }}">{{ ponto.label_curto }}</text>
+                                                                    {% endif %}
+                                                                {% endfor %}
+                                                            {% endfor %}
+                                                        </svg>
+                                                    </div>
+                                                </div>
+                                            {% else %}
+                                                <div class="financeiro-evolucao-empty">Nenhum lancamento encontrado no Periodo A para o filtro atual.</div>
+                                            {% endif %}
+                                        {% endwith %}
+                                    </div>
+                                </article>
+
+                                <article class="financeiro-evolucao-comparacao-card">
+                                    <header class="financeiro-evolucao-comparacao-header">
+                                        <h3 class="financeiro-evolucao-comparacao-titulo">Periodo B</h3>
+                                        <span class="financeiro-evolucao-comparacao-periodo">{{ periodo_b_label }}</span>
+                                    </header>
+                                    <div class="financeiro-evolucao-comparacao-body">
+                                        {% with relatorio=comparacao_periodo_b %}
+                                            {% if relatorio.grafico.tem_dados %}
+                                                <div class="financeiro-evolucao-chart-wrap">
+                                                    <div class="financeiro-evolucao-chart-stage" style="width: {{ relatorio.grafico.render_width }}px;">
+                                                        <svg class="financeiro-evolucao-chart" viewBox="0 0 {{ relatorio.grafico.largura }} {{ relatorio.grafico.altura }}" style="width: {{ relatorio.grafico.render_width }}px" role="img" aria-label="Grafico do Periodo B em {{ granularidade_grafico_label|lower }}">
+                                                            {% for linha in relatorio.grafico.grade %}
+                                                                <line class="financeiro-evolucao-grid-line" x1="{{ relatorio.grafico.x_inicial }}" y1="{{ linha.y }}" x2="{{ relatorio.grafico.x_final }}" y2="{{ linha.y }}"></line>
+                                                                <text class="financeiro-evolucao-axis-label" x="8" y="{{ linha.y|add:'4' }}">{{ linha.label }}</text>
+                                                            {% endfor %}
+                                                            <line class="financeiro-evolucao-zero-line" x1="{{ relatorio.grafico.x_inicial }}" y1="{{ relatorio.grafico.zero_y }}" x2="{{ relatorio.grafico.x_final }}" y2="{{ relatorio.grafico.zero_y }}"></line>
+                                                            {% for item in relatorio.grafico.rotulos_eixo_x %}
+                                                                <line class="financeiro-evolucao-grid-line" x1="{{ item.x_svg }}" y1="{{ relatorio.grafico.zero_y }}" x2="{{ item.x_svg }}" y2="{{ relatorio.grafico.zero_y|add:'6' }}"></line>
+                                                                <text class="financeiro-evolucao-axis-label financeiro-evolucao-axis-label-x" x="{{ item.x_svg }}" y="{{ relatorio.grafico.eixo_label_y }}">{{ item.label }}</text>
+                                                            {% endfor %}
+                                                            {% for serie in relatorio.grafico.series %}
+                                                                <path class="financeiro-evolucao-series-line" d="{{ serie.path_data }}" stroke="{{ serie.cor }}"></path>
+                                                                {% for ponto in serie.pontos %}
+                                                                    <circle class="financeiro-evolucao-series-point" cx="{{ ponto.x }}" cy="{{ ponto.y }}" r="4.5" fill="{{ serie.cor }}">
+                                                                        <title>{{ serie.label }} - {{ ponto.label_mes }} - {{ ponto.label_valor }}</title>
+                                                                    </circle>
+                                                                    {% if ponto.mostrar_rotulo %}
+                                                                        <line class="financeiro-evolucao-data-label-line" x1="{{ ponto.x_svg }}" y1="{{ ponto.y_svg }}" x2="{{ ponto.x_svg }}" y2="{{ ponto.linha_rotulo_y_svg }}"></line>
+                                                                        <text class="financeiro-evolucao-data-label-text" x="{{ ponto.x_svg }}" y="{{ ponto.rotulo_y_svg }}">{{ ponto.label_curto }}</text>
+                                                                    {% endif %}
+                                                                {% endfor %}
+                                                            {% endfor %}
+                                                        </svg>
+                                                    </div>
+                                                </div>
+                                            {% else %}
+                                                <div class="financeiro-evolucao-empty">Nenhum lancamento encontrado no Periodo B para o filtro atual.</div>
+                                            {% endif %}
+                                        {% endwith %}
+                                    </div>
+                                </article>
+                            </div>
+                        </section>
+
+                        <section class="financeiro-evolucao-panel">
+                            <details class="financeiro-evolucao-table-toggle" data-evolucao-tabela>
+                                <summary>
+                                    <div>
+                                        <h2 class="financeiro-evolucao-panel-title">Tabela comparativa</h2>
+                                        <p class="financeiro-evolucao-panel-note">Confronta os valores de cada item entre os dois intervalos, destacando diferenca absoluta e variacao percentual com seguranca quando houver base comparavel.</p>
+                                    </div>
+                                    <span class="financeiro-evolucao-table-toggle-label" data-evolucao-tabela-toggle-label data-label-open="Ocultar tabela comparativa" data-label-closed="Mostrar tabela comparativa">Mostrar tabela comparativa</span>
+                                </summary>
+                                <div class="financeiro-evolucao-comparacao-body">
+                                    <div class="financeiro-evolucao-table-wrap">
+                                        <table class="table is-fullwidth is-hoverable financeiro-table financeiro-evolucao-table financeiro-evolucao-comparacao-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Item</th>
+                                                    <th>Periodo A</th>
+                                                    <th>Periodo B</th>
+                                                    <th>Diferenca absoluta</th>
+                                                    <th>Variacao percentual</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for linha in linhas_comparacao %}
+                                                    <tr>
+                                                        <td>{{ linha.label }}</td>
+                                                        <td>R$ {{ linha.valor_a_formatado }}</td>
+                                                        <td>R$ {{ linha.valor_b_formatado }}</td>
+                                                        <td>R$ {{ linha.diferenca_absoluta_formatada }}</td>
+                                                        <td><span class="financeiro-evolucao-variacao {{ linha.variacao_css }}">{{ linha.variacao_percentual_formatada }}</span></td>
+                                                    </tr>
+                                                {% empty %}
+                                                    <tr>
+                                                        <td colspan="5">Nenhum item comparavel foi encontrado para os filtros atuais.</td>
+                                                    </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                            <tfoot>
+                                                <tr>
+                                                    <th>Total</th>
+                                                    <th>R$ {{ total_periodo_a_formatado }}</th>
+                                                    <th>R$ {{ total_periodo_b_formatado }}</th>
+                                                    <th>R$ {{ diferenca_total_absoluta_formatada }}</th>
+                                                    <th><span class="financeiro-evolucao-variacao {{ variacao_total_css }}">{{ variacao_total_percentual_formatada }}</span></th>
+                                                </tr>
+                                            </tfoot>
+                                        </table>
+                                    </div>
+                                </div>
+                            </details>
+                        </section>
+                    </div>
+                {% else %}
+                    <div class="financeiro-evolucao-kpis">
+                        <div class="financeiro-evolucao-kpi">
+                            <span class="financeiro-evolucao-kpi-label">Receitas no periodo</span>
+                            <span class="financeiro-evolucao-kpi-value is-receita">R$ {{ total_receitas_formatado }}</span>
+                        </div>
+                        <div class="financeiro-evolucao-kpi">
+                            <span class="financeiro-evolucao-kpi-label">Despesas no periodo</span>
+                            <span class="financeiro-evolucao-kpi-value is-despesa">R$ {{ total_despesas_formatado }}</span>
+                        </div>
+                        <div class="financeiro-evolucao-kpi">
+                            <span class="financeiro-evolucao-kpi-label">Saldo liquido</span>
+                            <span class="financeiro-evolucao-kpi-value">R$ {{ saldo_liquido_formatado }}</span>
+                        </div>
+                        <div class="financeiro-evolucao-kpi">
+                            <span class="financeiro-evolucao-kpi-label">Quitado</span>
+                            <span class="financeiro-evolucao-kpi-value">R$ {{ total_quitado_formatado }}</span>
+                        </div>
+                        <div class="financeiro-evolucao-kpi">
+                            <span class="financeiro-evolucao-kpi-label">Em aberto</span>
+                            <span class="financeiro-evolucao-kpi-value">R$ {{ total_aberto_formatado }}</span>
+                        </div>
+                        <div class="financeiro-evolucao-kpi">
+                            <span class="financeiro-evolucao-kpi-label">Lancamentos considerados</span>
+                            <span class="financeiro-evolucao-kpi-value">{{ quantidade_lancamentos }}</span>
+                        </div>
+                    </div>
+
+                    <div class="financeiro-evolucao-body">
+                        <section class="financeiro-evolucao-panel">
+                            <div class="financeiro-evolucao-panel-header">
+                                <div>
+                                    <h2 class="financeiro-evolucao-panel-title">Grafico por {{ granularidade_grafico_label|lower }}</h2>
+                                    <p class="financeiro-evolucao-panel-note">{{ descricao_grafico }}</p>
+                                </div>
+                                {% if series %}
+                                    <div class="financeiro-evolucao-legend">
+                                        {% for serie in series %}
+                                            <span class="financeiro-evolucao-legend-item">
+                                                <span class="financeiro-evolucao-legend-swatch" style="background: {{ serie.cor }}"></span>
+                                                {{ serie.label }}
+                                            </span>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            {% if grafico.tem_dados %}
+                                <div class="financeiro-evolucao-chart-wrap">
+                                    <div class="financeiro-evolucao-chart-stage" style="width: {{ grafico.render_width }}px;">
+                                        <svg class="financeiro-evolucao-chart" viewBox="0 0 {{ grafico.largura }} {{ grafico.altura }}" style="width: {{ grafico.render_width }}px" role="img" aria-label="Grafico de evolucao por categorias em {{ granularidade_grafico_label|lower }}">
+                                            {% for linha in grafico.grade %}
+                                                <line class="financeiro-evolucao-grid-line" x1="{{ grafico.x_inicial }}" y1="{{ linha.y }}" x2="{{ grafico.x_final }}" y2="{{ linha.y }}"></line>
+                                                <text class="financeiro-evolucao-axis-label" x="8" y="{{ linha.y|add:'4' }}">{{ linha.label }}</text>
                                             {% endfor %}
-                                            <th>Saldo liquido</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for linha in linhas_tabela %}
+                                            <line class="financeiro-evolucao-zero-line" x1="{{ grafico.x_inicial }}" y1="{{ grafico.zero_y }}" x2="{{ grafico.x_final }}" y2="{{ grafico.zero_y }}"></line>
+                                            {% for item in grafico.rotulos_eixo_x %}
+                                                <line class="financeiro-evolucao-grid-line" x1="{{ item.x_svg }}" y1="{{ grafico.zero_y }}" x2="{{ item.x_svg }}" y2="{{ grafico.zero_y|add:'6' }}"></line>
+                                                <text class="financeiro-evolucao-axis-label financeiro-evolucao-axis-label-x" x="{{ item.x_svg }}" y="{{ grafico.eixo_label_y }}">{{ item.label }}</text>
+                                            {% endfor %}
+
+                                            {% for serie in grafico.series %}
+                                                <path class="financeiro-evolucao-series-line" d="{{ serie.path_data }}" stroke="{{ serie.cor }}"></path>
+                                                {% for ponto in serie.pontos %}
+                                                    <circle class="financeiro-evolucao-series-point" cx="{{ ponto.x }}" cy="{{ ponto.y }}" r="4.5" fill="{{ serie.cor }}">
+                                                        <title>{{ serie.label }} - {{ ponto.label_mes }} - {{ ponto.label_valor }}</title>
+                                                    </circle>
+                                                    {% if ponto.mostrar_rotulo %}
+                                                        <line class="financeiro-evolucao-data-label-line" x1="{{ ponto.x_svg }}" y1="{{ ponto.y_svg }}" x2="{{ ponto.x_svg }}" y2="{{ ponto.linha_rotulo_y_svg }}"></line>
+                                                        <text class="financeiro-evolucao-data-label-text" x="{{ ponto.x_svg }}" y="{{ ponto.rotulo_y_svg }}">{{ ponto.label_curto }}</text>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            {% endfor %}
+
+                                        </svg>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="financeiro-evolucao-empty">Nenhum lancamento encontrado para o filtro atual.</div>
+                            {% endif %}
+                        </section>
+
+                        <section class="financeiro-evolucao-panel">
+                            <details class="financeiro-evolucao-table-toggle" data-evolucao-tabela>
+                                <summary>
+                                    <div>
+                                        <h2 class="financeiro-evolucao-panel-title">Tabela de apoio</h2>
+                                        <p class="financeiro-evolucao-panel-note">Resumo por {{ granularidade_grafico_label|lower }} para conferencia dos valores do grafico. Ela fica recolhida por padrao para manter o grafico em destaque.</p>
+                                    </div>
+                                    <span class="financeiro-evolucao-table-toggle-label" data-evolucao-tabela-toggle-label data-label-open="Ocultar tabela mensal" data-label-closed="Mostrar tabela mensal">Mostrar tabela mensal</span>
+                                </summary>
+                                <div class="financeiro-evolucao-table-wrap">
+                                    <table class="table is-fullwidth is-hoverable financeiro-table financeiro-evolucao-table">
+                                        <thead>
                                             <tr>
-                                                <td>{{ linha.mes_label }}</td>
-                                                {% for valor in linha.valores %}
+                                                <th>{{ granularidade_grafico_label }}</th>
+                                                {% for serie in series %}
+                                                    <th>{{ serie.label }}</th>
+                                                {% endfor %}
+                                                <th>Saldo liquido</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for linha in linhas_tabela %}
+                                                <tr>
+                                                    <td>{{ linha.mes_label }}</td>
+                                                    {% for valor in linha.valores %}
+                                                        <td>
+                                                            <span class="valor-chip {% if valor.tipo == 'receita' %}is-receita{% elif valor.tipo == 'despesa' %}is-despesa{% endif %}">
+                                                                R$ {{ valor.valor_formatado }}
+                                                            </span>
+                                                        </td>
+                                                    {% endfor %}
                                                     <td>
-                                                        <span class="valor-chip {% if valor.tipo == 'receita' %}is-receita{% elif valor.tipo == 'despesa' %}is-despesa{% endif %}">
-                                                            R$ {{ valor.valor_formatado }}
+                                                        <span class="valor-chip {% if linha.saldo_liquido >= 0 %}is-receita{% else %}is-despesa{% endif %}">
+                                                            R$ {{ linha.saldo_liquido_formatado }}
                                                         </span>
                                                     </td>
-                                                {% endfor %}
-                                                <td>
-                                                    <span class="valor-chip {% if linha.saldo_liquido >= 0 %}is-receita{% else %}is-despesa{% endif %}">
-                                                        R$ {{ linha.saldo_liquido_formatado }}
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                        {% empty %}
-                                            <tr>
-                                                <td colspan="{{ series|length|add:'2' }}">Nenhum dado mensal disponivel para o filtro atual.</td>
-                                            </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                    {% if series %}
-                                        <tfoot>
-                                            <tr>
-                                                <th>Total do periodo</th>
-                                                {% for serie in series %}
+                                                </tr>
+                                            {% empty %}
+                                                <tr>
+                                                    <td colspan="{{ series|length|add:'2' }}">Nenhum dado mensal disponivel para o filtro atual.</td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                        {% if series %}
+                                            <tfoot>
+                                                <tr>
+                                                    <th>Total do periodo</th>
+                                                    {% for serie in series %}
+                                                        <th>
+                                                            <span class="valor-chip {% if serie.tipo_css == 'receita' %}is-receita{% elif serie.tipo_css == 'despesa' %}is-despesa{% endif %}">
+                                                                R$ {{ serie.total_formatado }}
+                                                            </span>
+                                                        </th>
+                                                    {% endfor %}
                                                     <th>
-                                                        <span class="valor-chip {% if serie.tipo_css == 'receita' %}is-receita{% elif serie.tipo_css == 'despesa' %}is-despesa{% endif %}">
-                                                            R$ {{ serie.total_formatado }}
+                                                        <span class="valor-chip {% if saldo_liquido >= 0 %}is-receita{% else %}is-despesa{% endif %}">
+                                                            R$ {{ saldo_liquido_formatado }}
                                                         </span>
                                                     </th>
-                                                {% endfor %}
-                                                <th>
-                                                    <span class="valor-chip {% if saldo_liquido >= 0 %}is-receita{% else %}is-despesa{% endif %}">
-                                                        R$ {{ saldo_liquido_formatado }}
-                                                    </span>
-                                                </th>
-                                            </tr>
-                                        </tfoot>
-                                    {% endif %}
-                                </table>
-                            </div>
-                        </details>
-                    </section>
-                </div>
+                                                </tr>
+                                            </tfoot>
+                                        {% endif %}
+                                    </table>
+                                </div>
+                            </details>
+                        </section>
+                    </div>
+                {% endif %}
             </div>
         {% endif %}
     </section>
@@ -853,12 +1179,35 @@
     (function() {
         const selector = document.querySelector('[data-evolucao-selector]');
         const scopeSelect = document.querySelector('[data-evolucao-scope-select]');
+        const modeSelect = document.querySelector('[data-evolucao-mode-select]');
+        const normalPeriodBlocks = Array.from(document.querySelectorAll('[data-evolucao-periodo-normal]'));
+        const comparisonPeriodBlocks = Array.from(document.querySelectorAll('[data-evolucao-periodo-comparacao]'));
 
         const normalize = (value) =>
             (value || '')
                 .toLowerCase()
                 .normalize('NFD')
                 .replace(/[\u0300-\u036f]/g, '');
+
+        const syncMode = () => {
+            if (!modeSelect) {
+                return;
+            }
+
+            const comparisonMode = modeSelect.value === 'comparacao_periodos';
+            normalPeriodBlocks.forEach((block) => {
+                block.hidden = comparisonMode;
+                block.querySelectorAll('input').forEach((input) => {
+                    input.disabled = comparisonMode;
+                });
+            });
+            comparisonPeriodBlocks.forEach((block) => {
+                block.hidden = !comparisonMode;
+                block.querySelectorAll('input').forEach((input) => {
+                    input.disabled = !comparisonMode;
+                });
+            });
+        };
 
         if (selector && scopeSelect) {
             const searchInput = selector.querySelector('[data-evolucao-selector-search]');
@@ -956,9 +1305,9 @@
             if (!tabelaDetails || !toggleLabel) {
                 return;
             }
-            toggleLabel.textContent = tabelaDetails.hasAttribute('open')
-                ? 'Ocultar tabela mensal'
-                : 'Mostrar tabela mensal';
+            const openLabel = toggleLabel.dataset.labelOpen || 'Ocultar tabela';
+            const closedLabel = toggleLabel.dataset.labelClosed || 'Mostrar tabela';
+            toggleLabel.textContent = tabelaDetails.hasAttribute('open') ? openLabel : closedLabel;
         };
 
         if (printButton) {
@@ -975,6 +1324,11 @@
 
         if (filtrosDetails) {
             filtrosDetails.removeAttribute('open');
+        }
+
+        if (modeSelect) {
+            modeSelect.addEventListener('change', syncMode);
+            syncMode();
         }
     })();
 </script>
