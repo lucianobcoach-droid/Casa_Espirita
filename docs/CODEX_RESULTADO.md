@@ -2,6 +2,33 @@
 
 Data: 2026-04-23
 
+## Filtro fixo no topo da analise em `Evolucao por categorias`
+
+- tratei a rodada como refinamento de UX estrutural/local, sem tocar em calculos, comparacao ou semantica financeira
+- causa objetiva:
+  - o filtro recolhido estava descendo para baixo da tela depois da analise
+  - isso quebrava a orientacao mental da pagina e enfraquecia a leitura de `tela analitica`
+- solucao aplicada:
+  - mantive o filtro no topo da area de analise
+  - removi a inversao de ordem visual que empurrava o card de filtros para baixo
+  - preservei o resumo recolhido e o painel expandido no mesmo lugar estrutural
+  - deixei o resumo compacto mais util, incluindo periodo/comparacao, escopo, leitura, granularidade e selecao resumida quando houver
+- consolidacao:
+  - a tela agora segue melhor a ordem:
+    - titulo e contexto
+    - filtro resumido ou expandido
+    - KPIs
+    - resultados
+  - os resultados continuam protagonistas, mas o filtro nao perde mais o lugar logico de interacao
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+- resultado:
+  - microetapa pronta para commit
+  - tela pronta para homologacao visual focada em UX
+  - a solucao ficou madura para servir como base local do futuro padrao analitico reutilizavel
+
 ## Rebaixamento do filtro e limpeza do topo em `Evolucao por categorias`
 
 - tratei a rodada como refinamento de UX visual/estrutural, sem tocar em calculos, comparacao, KPIs ou semantica financeira

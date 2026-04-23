@@ -67,7 +67,6 @@
     }
 
     .financeiro-evolucao-card.is-filters {
-        order: 4;
         border-color: #e2e8f0;
         background: linear-gradient(180deg, #fbfcfe 0%, #f7fafc 100%);
         box-shadow: 0 10px 24px rgba(15, 23, 42, 0.035);
@@ -75,10 +74,6 @@
 
     .financeiro-evolucao-card.is-filters .filters-box {
         background: transparent;
-    }
-
-    .financeiro-evolucao-card--results {
-        order: 3;
     }
 
     .financeiro-evolucao-meta {
@@ -618,6 +613,11 @@
         line-height: 1.45;
     }
 
+    .financeiro-evolucao-filter-summary-text strong {
+        color: #334155;
+        font-weight: 700;
+    }
+
     .financeiro-evolucao-filter-summary-action {
         display: inline-flex;
         align-items: center;
@@ -959,13 +959,16 @@
                             </span>
                             <span class="financeiro-evolucao-filter-summary-text">
                                 {% if modo_comparacao_periodos and periodo_principal_label and periodo_comparativo_label %}
-                                    {{ periodo_principal_label }} x {{ periodo_comparativo_label }}
+                                    <strong>Comparacao:</strong> {{ periodo_principal_label }} x {{ periodo_comparativo_label }}
                                 {% elif periodo_principal_label %}
-                                    {{ periodo_principal_label }}
+                                    <strong>Periodo:</strong> {{ periodo_principal_label }}
                                 {% else %}
                                     Defina o periodo e a leitura analitica da consulta.
                                 {% endif %}
                                 | {{ escopo_label }} | {{ leitura_label }} | {{ granularidade_label }}
+                                {% if categorias_selecionadas_resumo %}
+                                    | <strong>Selecao:</strong> {{ categorias_selecionadas_resumo }}
+                                {% endif %}
                             </span>
                         </span>
                         <span class="financeiro-evolucao-filter-summary-action">

@@ -2,6 +2,30 @@
 
 Data de atualizacao: 2026-04-23
 
+## Filtro fixo no topo da analise em `Evolucao por categorias`
+
+- a microetapa atuou apenas na estrutura visual da tela `Evolucao por categorias`, preservando calculos, comparacao entre periodos, semantica financeira e impressao
+- o painel de filtros deixou de mudar de posicao na pagina:
+  - permanece no topo da area analitica
+  - fica acima dos KPIs
+  - fica acima dos resultados
+- o estado resumido e o estado expandido agora ocupam o mesmo lugar estrutural
+- quando ha resultado renderizado:
+  - o filtro pode vir recolhido por padrao
+  - o resumo compacto continua no topo da analise
+  - o resumo passou a orientar melhor periodo/comparacao, escopo, leitura, granularidade e selecao resumida
+- preservacao:
+  - os resultados continuam protagonistas
+  - nenhuma regra funcional mudou
+  - nenhuma regra de receita/despesa mudou
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+- observacao:
+  - a tela fica pronta para homologacao visual focada em UX
+  - a estrutura passa a ficar madura como base local do futuro padrao analitico do sistema
+
 ## Rebaixamento do painel de filtros e limpeza do topo em `Evolucao por categorias`
 
 - a microetapa atuou apenas na hierarquia visual da tela `Evolucao por categorias`, preservando calculos, comparacao entre periodos, semantica financeira e impressao funcional

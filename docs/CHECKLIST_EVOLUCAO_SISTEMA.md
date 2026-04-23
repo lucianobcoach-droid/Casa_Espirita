@@ -13,6 +13,7 @@ Objetivo: servir como checklist operacional permanente e curta para revisar toda
 - Listagens impactadas foram revisadas em filtros, ordenacao, colunas, truncamento, acoes em lote e exportacao?
 - Links de criar, editar, excluir, cancelar e salvar preservam filtros, pagina, ordenacao e demais parametros da listagem quando isso for parte do fluxo?
 - Se a listagem tiver muitas colunas, foi avaliado se precisa de colunas configuraveis, ordem manual, totalizadores e restauracao de padrao?
+- Em telas analiticas, o filtro resumido/expandido permanece no topo da analise, sem cair para baixo dos KPIs ou dos resultados?
 - Formularios impactados foram revisados em rotulos, obrigatoriedade, mensagens, preview e consistencia visual?
 - Em cadastros sequenciais, foi avaliado o padrao `Salvar` para sair/retornar e `+` para salvar e permanecer?
 - Existe impacto em importacao/exportacao?
