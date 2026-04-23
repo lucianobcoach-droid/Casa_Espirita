@@ -71,6 +71,11 @@ Estas regras devem ser respeitadas em qualquer etapa:
 - o padrao desejado para as telas administrativas e um layout limpo, funcional e inspirado no tema Tabler, sem copia literal de estrutura nem implementacao abrupta
 - a adocao desse padrao deve acontecer de forma progressiva, guiada por componentes reutilizaveis e por reorganizacao controlada do layout-base
 - a base inicial dessa padronizacao e o app `financeiro`, por concentrar hoje a camada visual mais madura do projeto
+- dentro do `financeiro`, a tela `Evolucao por categorias` passa a ser a base atual do padrao analitico reutilizavel do sistema
+- nessa base analitica, a ordem estrutural duradoura da pagina deve ser: `titulo/contexto` -> `filtro no topo da analise` -> `KPIs` -> `resultados`
+- nessa mesma estrutura, o filtro deve permanecer no mesmo lugar estrutural da tela, alternando apenas entre estado resumido e estado expandido
+- nessa mesma estrutura, os KPIs devem permanecer entre o filtro e o resultado, e o resultado deve ser o protagonista visual da pagina
+- como prioridade operacional apos a consolidacao dessa base analitica, a propagacao recomendada do padrao no `financeiro` deve seguir a ordem: `Resumo`, `Extrato` e `Prestacao de contas`
 - no app `financeiro`, a navegacao lateral padronizada ja foi autorizada e implementada de forma incremental no shell compartilhado, sem tornar essa mesma adocao automaticamente obrigatoria para os demais apps
 - no `financeiro`, a navegacao principal do modulo foi migrada apos auditoria estrutural para topbar/shell unico com navegacao principal em menu suspenso no topo; sidebar/drawer nao deve concorrer como camada principal persistente
 - o topo do shell nao deve competir com outra camada persistente de navegacao; evitar repetir ao mesmo tempo topbar global, topbar local, botao de menu, sidebar expandida e atalhos redundantes da tela
@@ -121,6 +126,16 @@ Estas regras devem ser respeitadas em qualquer etapa:
 - com a expansao para novos modulos, o projeto deve poder separar cadastros globais de cadastros especificos por modulo
 - tambem fica registrada como diretriz estrutural futura a possibilidade de unificacao de entidades compartilhadas, incluindo base comum de pessoas quando isso fizer sentido para o sistema como um todo
 - essa frente continua futura e nao deve ser misturada com microetapas locais de formulários, listagens, extratos ou refinamentos visuais isolados do `financeiro`
+
+### 5.2.1. Diretriz estrutural futura de frequencia/recorrencia por competencia
+- fica registrada como frente estrutural futura do `financeiro` a camada de controle de frequencia/recorrencia por competencia
+- essa frente deve combinar `favorecido/pessoa recorrente` com `subcategoria` para definir o eixo principal de acompanhamento recorrente
+- a frequencia deve ser baseada em competencia explicita e nao deve ser inferida apenas pela data do lancamento
+- o sistema deve poder sugerir automaticamente competencias/meses em aberto quando identificar recorrencia esperada
+- o desenho futuro deve permitir competencias futuras e correcao manual da competencia sem quebrar o historico
+- a frequencia deve permanecer independente do valor exato pago, permitindo acompanhamento de recorrencia mesmo quando houver variacao monetaria
+- essa estrutura deve nascer de forma generica o bastante para atender outras categorias recorrentes, como contas de consumo, sem ficar presa apenas ao relacionamento com favorecidos
+- como desdobramento futuro dessa frente, o sistema deve poder oferecer relatorio gerencial em matriz mensal com valores por competencia, matriz mensal sem valores com indicador visual de frequencia e termo de quitacao em lote por favorecido contendo competencias feitas ou nao, valor medio contribuido, valor total no periodo e periodo selecionado
 
 ### 5.1.3. Diretriz consolidada de simplificacao da navegacao do financeiro
 - a navegacao lateral persistente do `financeiro` deixou de ser a direcao principal do modulo

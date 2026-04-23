@@ -1,6 +1,52 @@
 # ROADMAP FINANCEIRO
 
-Data: 2026-04-22
+Data: 2026-04-23
+
+## 0.13. Base analitica consolidada e retomada da padronizacao visual
+
+- a tela `Evolucao por categorias` deixa de ser apenas uma entrega isolada e passa a ser a base atual do padrao analitico do sistema
+- a estrutura consolidada dessa base fica registrada como:
+  - titulo/contexto
+  - filtro no topo da analise
+  - KPIs
+  - resultados
+- nessa base, o filtro permanece no mesmo lugar estrutural quando resumido ou expandido
+- a comparacao fica considerada consolidada para essa tela, incluindo:
+  - `Periodo principal` e `Periodo comparativo`
+  - reordenacao cronologica automatica
+  - aviso discreto
+  - barra do separado por magnitude absoluta
+  - texto monetario com sinal real
+  - tabela comparativa com semantica visual pela natureza do item
+- a prioridade operacional volta a ser a propagacao controlada desse padrao para as demais telas analiticas do `financeiro`
+- ordem recomendada de propagacao:
+  1. `Resumo`
+  2. `Extrato`
+  3. `Prestacao de contas`
+- observacao:
+  - esta secao registra a ordem correta de continuidade
+  - nao significa que `Resumo`, `Extrato` e `Prestacao de contas` ja estejam repadronizados neste mesmo contrato visual
+
+## 0.14. Frente futura de controle de frequencia/recorrencia por competencia
+
+- fica registrada como nova frente futura do `financeiro` a camada de controle de frequencia/recorrencia orientada por competencia
+- diretriz estrutural da frente:
+  - combinar `favorecido/pessoa recorrente` + `subcategoria` como eixo principal de controle da recorrencia
+  - usar competencia explicita como base oficial da frequencia
+  - nao inferir frequencia apenas pela data do lancamento
+  - sugerir automaticamente meses/competencias em aberto
+  - permitir competencias futuras
+  - permitir correcao manual da competencia
+  - manter a frequencia independente do valor exato pago
+  - estruturar a base de forma generica para outros recorrentes, como contas de consumo
+- entregaveis futuros previstos dessa frente:
+  - relatorio gerencial em modo `matriz mensal com valores por competencia`
+  - relatorio gerencial em modo `matriz mensal sem valores`, apenas com indicador visual de frequencia
+  - `Termo de quitacao em lote por favorecido`, trazendo:
+    - competencias feitas ou nao
+    - valor medio contribuido
+    - valor total no periodo
+    - periodo selecionado
 
 ## 0.12. Evolucao por categorias
 
@@ -42,9 +88,11 @@ Data: 2026-04-22
   - busca no seletor multiplo
   - acao `Imprimir relatorio`
   - toggle textual explicito para mostrar/ocultar a tabela mensal
+- consolidacao visual/estrutural posterior:
+  - a tela ficou madura como base atual do padrao analitico do sistema
+  - o filtro permanece no topo da analise no mesmo lugar estrutural, resumido ou expandido
+  - a hierarquia consolidada passa a ser `titulo/contexto -> filtro -> KPIs -> resultados`
 - backlog remanescente relacionado:
-  - validar visualmente no navegador o fluxo simplificado com `Periodo comparativo` opcional
-  - avaliar refinamentos visuais/manuais finos do novo grafico consolidado de comparacao apos uso real no navegador
   - avaliar se a tela deve ganhar exportacao futura da tabela mensal ou apenas permanecer como consulta visual
   - avaliar, por uso real, se convem expandir a comparacao para mais de dois agrupamentos operacionais alem de `entrada x saida`
   - avaliar se a comparacao entre periodos deve ganhar tabela comparativa mais rica ou exportacao propria em etapa futura
