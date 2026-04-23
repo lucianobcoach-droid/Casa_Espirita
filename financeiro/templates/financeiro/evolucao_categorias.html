@@ -503,7 +503,7 @@
 
     .financeiro-evolucao-bar-row {
         display: grid;
-        grid-template-columns: minmax(6.5rem, 9rem) minmax(8rem, 1fr) minmax(5.5rem, auto);
+        grid-template-columns: minmax(7rem, 12rem) minmax(8rem, 1fr) minmax(5.5rem, auto);
         align-items: center;
         gap: 0.55rem;
     }
@@ -701,8 +701,7 @@
                 <p class="financeiro-page-subtitle">Leitura mensal comparativa para categorias ou subcategorias no periodo selecionado.</p>
                 <div class="financeiro-evolucao-meta">
                     {% if modo_comparacao_periodos %}
-                        {% if periodo_principal_label %}<span class="financeiro-evolucao-meta-item"><strong>Periodo principal:</strong> {{ periodo_principal_label }}</span>{% endif %}
-                        {% if periodo_comparativo_label %}<span class="financeiro-evolucao-meta-item"><strong>Periodo comparativo:</strong> {{ periodo_comparativo_label }}</span>{% endif %}
+                        {% if periodo_principal_label and periodo_comparativo_label %}<span class="financeiro-evolucao-meta-item"><strong>Comparacao:</strong> {{ periodo_principal_label }} x {{ periodo_comparativo_label }}</span>{% endif %}
                     {% else %}
                         {% if periodo_principal_label %}<span class="financeiro-evolucao-meta-item"><strong>Periodo principal:</strong> {{ periodo_principal_label }}</span>{% endif %}
                     {% endif %}
@@ -1014,8 +1013,7 @@
                                         </div>
                                         <div class="financeiro-evolucao-comparacao-body">
                                             <div class="financeiro-evolucao-meta">
-                                                <span class="financeiro-evolucao-meta-item"><strong>Periodo principal:</strong> {{ periodo_principal_label }}</span>
-                                                <span class="financeiro-evolucao-meta-item"><strong>Periodo comparativo:</strong> {{ periodo_comparativo_label }}</span>
+                                                <span class="financeiro-evolucao-meta-item"><strong>Comparacao:</strong> {{ periodo_principal_label }} x {{ periodo_comparativo_label }}</span>
                                                 {% if bloco.usa_alinhamento_relativo %}
                                                     <span class="financeiro-evolucao-meta-item"><strong>Leitura:</strong> pontos alinhados pela posicao relativa de cada bucket.</span>
                                                 {% endif %}
@@ -1031,8 +1029,7 @@
                             {% else %}
                                 <div class="financeiro-evolucao-comparacao-body">
                                     <div class="financeiro-evolucao-meta">
-                                        <span class="financeiro-evolucao-meta-item"><strong>Periodo principal:</strong> {{ periodo_principal_label }}</span>
-                                        <span class="financeiro-evolucao-meta-item"><strong>Periodo comparativo:</strong> {{ periodo_comparativo_label }}</span>
+                                        <span class="financeiro-evolucao-meta-item"><strong>Comparacao:</strong> {{ periodo_principal_label }} x {{ periodo_comparativo_label }}</span>
                                         <span class="financeiro-evolucao-meta-item"><strong>Leitura principal:</strong> tabela comparativa abaixo</span>
                                     </div>
                                     <p class="financeiro-evolucao-panel-note">Quando a leitura fica detalhada, a comparacao prioriza a tabela para evitar excesso de linhas e preservar a clareza entre os itens selecionados.</p>
@@ -1044,11 +1041,11 @@
                                                     <div class="financeiro-evolucao-bars-legend">
                                                         <span class="financeiro-evolucao-legend-item">
                                                             <span class="financeiro-evolucao-legend-swatch" style="background: #1f5fbf"></span>
-                                                            Periodo principal
+                                                            {{ bloco.periodo_principal_label }}
                                                         </span>
                                                         <span class="financeiro-evolucao-legend-item">
                                                             <span class="financeiro-evolucao-legend-swatch" style="background: #c97316"></span>
-                                                            Periodo comparativo
+                                                            {{ bloco.periodo_comparativo_label }}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -1057,14 +1054,14 @@
                                                         <div class="financeiro-evolucao-bar-item">
                                                             <div class="financeiro-evolucao-bar-label">{{ item.label }}</div>
                                                             <div class="financeiro-evolucao-bar-row">
-                                                                <span class="financeiro-evolucao-bar-period" title="{{ bloco.periodo_principal_label }}">Principal</span>
+                                                                <span class="financeiro-evolucao-bar-period" title="{{ bloco.periodo_principal_label }}">{{ bloco.periodo_principal_label }}</span>
                                                                 <span class="financeiro-evolucao-bar-track">
                                                                     <span class="financeiro-evolucao-bar-fill is-principal" style="width: {{ item.largura_principal }}%;"></span>
                                                                 </span>
                                                                 <span class="financeiro-evolucao-bar-value">R$ {{ item.valor_principal_formatado }}</span>
                                                             </div>
                                                             <div class="financeiro-evolucao-bar-row">
-                                                                <span class="financeiro-evolucao-bar-period" title="{{ bloco.periodo_comparativo_label }}">Comparativo</span>
+                                                                <span class="financeiro-evolucao-bar-period" title="{{ bloco.periodo_comparativo_label }}">{{ bloco.periodo_comparativo_label }}</span>
                                                                 <span class="financeiro-evolucao-bar-track">
                                                                     <span class="financeiro-evolucao-bar-fill is-comparativo" style="width: {{ item.largura_comparativo }}%;"></span>
                                                                 </span>
@@ -1098,8 +1095,8 @@
                                             <thead>
                                                 <tr>
                                                     <th>Item</th>
-                                                    <th>Periodo principal</th>
-                                                    <th>Periodo comparativo</th>
+                                                    <th>{{ periodo_principal_label }}</th>
+                                                    <th>{{ periodo_comparativo_label }}</th>
                                                     <th>Diferenca absoluta</th>
                                                     <th>Variacao percentual</th>
                                                 </tr>

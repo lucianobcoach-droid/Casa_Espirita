@@ -2,6 +2,34 @@
 
 Data: 2026-04-23
 
+## Normalizacao dos rotulos de periodo na comparacao de `Evolucao por categorias`
+
+- tratei a rodada como correcao textual pontual, sem mexer na logica de calculo nem no fluxo normal sem comparativo
+- causa objetiva:
+  - alguns pontos da UI comparativa ainda exibiam `Principal` e `Comparativo` como rotulos soltos
+  - os periodos conhecidos precisavam virar o proprio label visivel do usuario
+- solucao aplicada:
+  - criei um formatador unico para labels visiveis de periodos comparativos
+  - apliquei o label normalizado na legenda do consolidado, nos resumos da comparacao, na legenda/linhas do grafico de barras separado, nos cabecalhos da tabela comparativa e no resumo humano dos filtros
+- regra final adotada:
+  - `01/01/2025 a 31/01/2025` vira `01/25`
+  - `01/01/2025 a 31/03/2025` vira `01/25 a 03/25`
+  - qualquer intervalo quebrado em pelo menos uma ponta preserva `DD/MM/AAAA a DD/MM/AAAA`
+- preservacao:
+  - modo normal sem comparativo continua mostrando o periodo completo como antes
+  - consolidado e separado continuam usando os mesmos calculos e visualizacoes ja aprovados
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+  - smoke autenticado com rollback OK confirmando:
+    - exemplos do formatador
+    - comparacao separada com `01/26 a 02/26` e `01/25` no lugar de `Principal`/`Comparativo`
+    - consolidado com legenda normalizada
+    - fluxo normal sem `Periodo comparativo` preservado
+- resultado:
+  - tela pronta para homologacao final de encerramento da comparacao
+
 ## Correcao da legenda e anti-colisao dos rotulos no comparativo consolidado
 
 - tratei a rodada como correcao pontual do modo consolidado da comparacao em `Evolucao por categorias`

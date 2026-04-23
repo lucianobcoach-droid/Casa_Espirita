@@ -2782,6 +2782,20 @@ def _formatar_percentual_relatorio(valor: Decimal | None) -> str:
     return f'{texto}%'
 
 
+def _formatar_periodo_comparacao(data_inicial: date, data_final: date) -> str:
+    inicio_mes_fechado = data_inicial.day == 1
+    fim_mes_fechado = data_final.day == monthrange(data_final.year, data_final.month)[1]
+
+    if inicio_mes_fechado and fim_mes_fechado:
+        inicio_label = data_inicial.strftime('%m/%y')
+        fim_label = data_final.strftime('%m/%y')
+        if data_inicial.year == data_final.year and data_inicial.month == data_final.month:
+            return inicio_label
+        return f'{inicio_label} a {fim_label}'
+
+    return f'{data_inicial.strftime("%d/%m/%Y")} a {data_final.strftime("%d/%m/%Y")}'
+
+
 def _abreviacao_mes_pt_br(mes: int) -> str:
     return (
         '',
@@ -4169,7 +4183,7 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
             'data_final_comparativo': data_final_comparativo_raw,
             'periodo_comparativo_resolvido': (data_inicial_comparativo, data_final_comparativo),
             'periodo_comparativo_label': (
-                f'{data_inicial_comparativo.strftime("%d/%m/%Y")} a {data_final_comparativo.strftime("%d/%m/%Y")}'
+                _formatar_periodo_comparacao(data_inicial_comparativo, data_final_comparativo)
                 if data_inicial_comparativo and data_final_comparativo
                 else ''
             ),
@@ -4864,12 +4878,12 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
         periodo_comparativo_label: str = '',
     ) -> list[str]:
         filtros_humanos = []
-        if periodo_principal_label:
+        if periodo_principal_label and periodo_comparativo_label:
+            filtros_humanos.append(f'Comparacao: {periodo_principal_label} x {periodo_comparativo_label}')
+        elif periodo_principal_label:
             filtros_humanos.append(f'Periodo principal: {periodo_principal_label}')
         elif periodo_label:
             filtros_humanos.append(f'Periodo principal: {periodo_label}')
-        if periodo_comparativo_label:
-            filtros_humanos.append(f'Periodo comparativo: {periodo_comparativo_label}')
 
         filtros_humanos.extend(
             [
@@ -5039,8 +5053,8 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
 
         diferenca_total_absoluta = abs(total_periodo_b - total_periodo_a)
         variacao_total_percentual = _calcular_variacao_percentual(total_periodo_a, total_periodo_b)
-        periodo_principal_label = f'{data_inicial_principal.strftime("%d/%m/%Y")} a {data_final_principal.strftime("%d/%m/%Y")}'
-        periodo_comparativo_label = f'{data_inicial_comparativo.strftime("%d/%m/%Y")} a {data_final_comparativo.strftime("%d/%m/%Y")}'
+        periodo_principal_label = _formatar_periodo_comparacao(data_inicial_principal, data_final_principal)
+        periodo_comparativo_label = _formatar_periodo_comparacao(data_inicial_comparativo, data_final_comparativo)
         comparacao_visual_consolidada = leitura == 'consolidado'
         comparacao_grafico_consolidado = None
         comparacao_grafico_resumo_detalhado = None
@@ -5088,7 +5102,7 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
                 else ''
             ),
             'descricao_grafico': (
-                'No consolidado, a comparacao usa um unico grafico de linhas com duas series, reunindo a evolucao agregada do periodo principal e do periodo comparativo na granularidade escolhida.'
+                'No consolidado, a comparacao usa um unico grafico de linhas com duas series, reunindo a evolucao agregada dos intervalos selecionados na granularidade escolhida.'
                 if comparacao_visual_consolidada
                 else 'Na leitura detalhada, a tabela comparativa abaixo vira a referencia principal para evitar excesso de linhas e manter a comparacao mais segura.'
             ),

@@ -2,6 +2,26 @@
 
 Data de atualizacao: 2026-04-23
 
+## Normalizacao dos rotulos de periodo na comparacao de `Evolucao por categorias`
+
+- a microetapa corrigiu apenas a apresentacao textual dos periodos quando `Periodo comparativo` esta preenchido
+- a logica de calculo, KPIs, tabela comparativa, grafico consolidado, grafico separado e fluxo normal sem comparativo permaneceram preservados
+- regra final de formatacao:
+  - intervalos de mes fechado usam `MM/AA`
+  - multiplos meses fechados usam `MM/AA a MM/AA`
+  - intervalos quebrados em qualquer ponta usam `DD/MM/AAAA a DD/MM/AAAA`
+- pontos da UI normalizados:
+  - legenda do comparativo consolidado
+  - chips/resumos da comparacao
+  - legenda e rotulos das barras no comparativo separado
+  - cabecalhos da tabela comparativa
+  - resumo humano dos filtros/impressao da comparacao
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+  - smoke autenticado com rollback OK confirmando exemplos do formatador, comparativo separado sem `Principal`/`Comparativo` soltos, consolidado com labels normalizados e fluxo normal preservado
+
 ## Correcao da legenda e anti-colisao dos rotulos no comparativo consolidado
 
 - a microetapa atuou apenas no modo `Periodo comparativo` preenchido + `Leitura = Consolidado` da tela `Evolucao por categorias`
