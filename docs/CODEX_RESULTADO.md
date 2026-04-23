@@ -2,6 +2,31 @@
 
 Data: 2026-04-23
 
+## Correcao dos rotulos no comparativo consolidado de `Evolucao por categorias`
+
+- tratei a rodada como correcao pontual do modo consolidado, sem mexer no fluxo normal nem no modo separado recem-corrigido
+- causa objetiva:
+  - a view so liberava rotulos no comparativo consolidado quando havia no maximo 4 pontos
+  - em comparacoes curtas/moderadas isso escondia valores que ainda cabem visualmente e empobrecia a leitura do grafico
+- solucao aplicada:
+  - mantive a dependencia da opcao `Mostrar valores no grafico`
+  - ampliei o limite seguro para ate 12 pontos
+  - mantive a supressao automatica acima desse limite, preservando o tooltip como fonte do valor exato
+- preservacao:
+  - sem periodo comparativo, o fluxo normal permaneceu inalterado
+  - com comparativo + `Separado`, o grafico de barras horizontais por item e a tabela comparativa permaneceram intactos
+  - com comparativo + `Consolidado`, a legenda com periodos reais foi preservada
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+  - smoke autenticado OK confirmando:
+    - ausencia de regressao no normal
+    - rotulos renderizados no consolidado com poucos pontos
+    - barras do separado preservadas
+- resultado:
+  - tela pronta para homologacao final curta
+
 ## Correcao do grafico separado na comparacao de `Evolucao por categorias`
 
 - corrigi a visualizacao do modo separado sem reimplementar a comparacao e sem mexer no comportamento normal da tela

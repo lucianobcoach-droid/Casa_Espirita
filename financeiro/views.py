@@ -4711,8 +4711,7 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
 
         mostrar_valores_grafico = bool(
             mostrar_valores
-            and quantidade_labels <= 4
-            and not usa_alinhamento_relativo
+            and quantidade_labels <= 12
         )
         series = [
             {

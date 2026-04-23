@@ -2,6 +2,26 @@
 
 Data de atualizacao: 2026-04-23
 
+## Correcao dos rotulos no comparativo consolidado de `Evolucao por categorias`
+
+- a microetapa corrigiu apenas o modo `Periodo comparativo` preenchido + `Leitura = Consolidado`
+- o grafico consolidado manteve a estrutura ja aprovada:
+  - grafico unico de linhas
+  - duas series
+  - legenda com os periodos reais selecionados
+- a regra de rotulos foi ajustada:
+  - quando `Mostrar valores no grafico` esta ativo e a comparacao possui ate 12 pontos, os valores aparecem nos pontos
+  - quando a quantidade de pontos passa desse limite, os rotulos continuam suprimidos para evitar poluicao visual e a leitura exata permanece no tooltip
+- o fluxo sem `Periodo comparativo` e o modo separado com barras horizontais por item permaneceram preservados
+- validacoes executadas nesta microetapa:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+  - smoke autenticado OK cobrindo:
+    - fluxo normal sem comparativo sem grafico comparativo
+    - comparativo consolidado com rotulos de dados renderizados em poucos pontos
+    - comparativo separado preservando barras horizontais por item
+
 ## Correcao do grafico separado na comparacao de `Evolucao por categorias`
 
 - a microetapa corrigiu apenas o modo `Periodo comparativo` preenchido + `Leitura = Separado`, sem alterar o fluxo normal sem comparativo nem o grafico consolidado ja aprovado
