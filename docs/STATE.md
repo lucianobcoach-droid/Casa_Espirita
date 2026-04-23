@@ -2,6 +2,37 @@
 
 Data de atualizacao: 2026-04-23
 
+## Refino final da tabela comparativa e normalizacao cronologica em `Evolucao por categorias`
+
+- a microetapa atuou apenas no comparativo da tela `Evolucao por categorias`, preservando o fluxo normal sem comparativo e sem reabrir a logica central do grafico consolidado
+- a coluna `Item` da tabela comparativa passou a usar o nome curto do item:
+  - nome simples quando nao ha ambiguidade
+  - fallback expandido apenas quando houver nomes repetidos de fato
+- a linha `Total` deixou de herdar semantica de receita/despesa individual e passou a usar leitura liquida propria:
+  - `comparativo > principal` = melhor (`is-receita`)
+  - `comparativo < principal` = pior (`is-despesa`)
+  - empate = neutro
+- essa regra do `Total` agora orienta:
+  - `Diferenca absoluta`
+  - `Variacao percentual`
+- a comparacao entre periodos passou a ser normalizada cronologicamente:
+  - `Periodo principal` sempre representa o intervalo anterior
+  - `Periodo comparativo` sempre representa o intervalo posterior
+  - quando o usuario preenche invertido, a tela reorganiza os intervalos automaticamente
+  - a interface mostra aviso discreto informando a reorganizacao para manter a leitura `anterior -> posterior`
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+  - smoke autenticado com rollback OK confirmando:
+    - inputs reorganizados cronologicamente
+    - aviso discreto de reorganizacao visivel
+    - coluna `Item` com nome curto
+    - linha `Total` com semantica liquida positiva quando o comparativo supera o principal
+- observacao:
+  - a tela fica tecnicamente pronta para encerramento deste bloco
+  - homologacao visual/manual curta continua sendo a ultima confirmacao opcional antes de encerrar a frente como 100% fechada
+
 ## Correcao da barra e da semantica de cores no comparativo separado de `Evolucao por categorias`
 
 - a microetapa reverteu a tentativa anterior de barra divergente no bloco `Itens com maior diferenca absoluta`, porque a leitura visual validada pelo usuario nao ficou boa

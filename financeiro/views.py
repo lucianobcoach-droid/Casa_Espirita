@@ -4392,6 +4392,29 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
         itens_disponiveis_subcategorias = self._build_itens_disponiveis('subcategorias')
         data_inicial_raw, data_final_raw, data_inicial, data_final, periodo_error = self._parse_periodo()
         periodos_comparacao = self._parse_periodos_comparacao()
+        comparacao_periodos_reorganizada = False
+        if (
+            not periodo_error
+            and not periodos_comparacao['periodo_error']
+            and data_inicial
+            and data_final
+            and periodos_comparacao['periodo_comparativo_resolvido'][0]
+            and periodos_comparacao['periodo_comparativo_resolvido'][1]
+        ):
+            periodo_principal_resolvido = (data_inicial, data_final)
+            periodo_comparativo_resolvido = periodos_comparacao['periodo_comparativo_resolvido']
+            if periodo_comparativo_resolvido < periodo_principal_resolvido:
+                data_inicial, data_final = periodo_comparativo_resolvido
+                data_inicial_raw = data_inicial.isoformat()
+                data_final_raw = data_final.isoformat()
+                periodos_comparacao['data_inicial_comparativo'] = periodo_principal_resolvido[0].isoformat()
+                periodos_comparacao['data_final_comparativo'] = periodo_principal_resolvido[1].isoformat()
+                periodos_comparacao['periodo_comparativo_resolvido'] = periodo_principal_resolvido
+                periodos_comparacao['periodo_comparativo_label'] = _formatar_periodo_comparacao(
+                    periodo_principal_resolvido[0],
+                    periodo_principal_resolvido[1],
+                )
+                comparacao_periodos_reorganizada = True
         comparacao_solicitada = bool(periodos_comparacao['comparacao_solicitada'])
 
         filtros_relatorio_ativos = _request_possui_parametros_get(
@@ -4464,6 +4487,12 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
             'periodo_comparativo_resolvido': periodos_comparacao['periodo_comparativo_resolvido'],
             'modo_comparacao_periodos': comparacao_solicitada,
             'comparacao_solicitada': comparacao_solicitada,
+            'comparacao_periodos_reorganizada': comparacao_periodos_reorganizada,
+            'comparacao_periodos_reorganizada_mensagem': (
+                'Os periodos foram reorganizados automaticamente para manter a leitura cronologica anterior -> posterior.'
+                if comparacao_periodos_reorganizada
+                else ''
+            ),
         }
 
     def _montar_series(
@@ -4913,6 +4942,13 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
             return 'is-receita' if valor_comparativo < valor_principal else 'is-despesa'
         return 'is-receita' if valor_comparativo > valor_principal else 'is-despesa'
 
+    def _classe_semantica_total_comparacao(self, valor_principal: Decimal, valor_comparativo: Decimal) -> str:
+        valor_principal = valor_principal or Decimal('0.00')
+        valor_comparativo = valor_comparativo or Decimal('0.00')
+        if valor_comparativo == valor_principal:
+            return ''
+        return 'is-receita' if valor_comparativo > valor_principal else 'is-despesa'
+
     def _montar_filtros_humanos(
         self,
         *,
@@ -5087,6 +5123,7 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
             linhas_comparacao.append(
                 {
                     'label': serie_base['label'],
+                    'label_tabela': serie_base.get('label_grafico') or serie_base['label'],
                     'label_grafico': serie_base.get('label_grafico') or serie_base['label'],
                     'tipo': serie_base['tipo'],
                     'valor_a_absoluto': valor_a,
@@ -5115,6 +5152,10 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
             Decimal('0.00'),
         )
         diferenca_total_absoluta_exibicao = abs(total_periodo_b_exibicao - total_periodo_a_exibicao)
+        total_liquido_css = self._classe_semantica_total_comparacao(
+            total_periodo_a_exibicao,
+            total_periodo_b_exibicao,
+        )
         periodo_principal_label = _formatar_periodo_comparacao(data_inicial_principal, data_final_principal)
         periodo_comparativo_label = _formatar_periodo_comparacao(data_inicial_comparativo, data_final_comparativo)
         comparacao_visual_consolidada = leitura == 'consolidado'
@@ -5157,15 +5198,10 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
             'diferenca_total_absoluta': diferenca_total_absoluta,
             'diferenca_total_absoluta_exibicao': diferenca_total_absoluta_exibicao,
             'diferenca_total_absoluta_formatada': _formatar_moeda_brl_exibicao(diferenca_total_absoluta_exibicao),
+            'diferenca_total_css': total_liquido_css,
             'variacao_total_percentual': variacao_total_percentual,
             'variacao_total_percentual_formatada': _formatar_percentual_relatorio(variacao_total_percentual),
-            'variacao_total_css': (
-                'is-receita'
-                if variacao_total_percentual is not None and variacao_total_percentual > Decimal('0.00')
-                else 'is-despesa'
-                if variacao_total_percentual is not None and variacao_total_percentual < Decimal('0.00')
-                else ''
-            ),
+            'variacao_total_css': total_liquido_css if variacao_total_percentual is not None else '',
             'descricao_grafico': (
                 'No consolidado, a comparacao usa um unico grafico de linhas com duas series, reunindo a evolucao agregada dos intervalos selecionados na granularidade escolhida.'
                 if comparacao_visual_consolidada

@@ -2,6 +2,42 @@
 
 Data: 2026-04-23
 
+## Refino da tabela comparativa e normalizacao cronologica
+
+- tratei a rodada como acabamento funcional/semantico do comparativo de `Evolucao por categorias`, sem mexer no fluxo normal da tela
+- solucao aplicada na coluna `Item`:
+  - a tabela comparativa passou a usar o mesmo rotulo curto ja consolidado no bloco visual
+  - quando o nome do item e univoco, a linha mostra apenas o nome curto
+  - quando houver ambiguidade real, o fallback expandido continua disponivel
+- solucao aplicada na linha `Total`:
+  - o total deixou de herdar leitura de receita/despesa por item
+  - a linha passou a usar semantica de resultado liquido:
+    - comparativo maior que principal = melhor
+    - comparativo menor que principal = pior
+    - sem diferenca = neutro
+  - essa classe passou a ser usada em `Diferenca absoluta` e `Variacao percentual` do rodape
+- solucao aplicada na cronologia:
+  - a tela agora reorganiza automaticamente os periodos quando o usuario preenche `principal` e `comparativo` invertidos no tempo
+  - o periodo mais antigo passa a ocupar `Periodo principal`
+  - o periodo mais novo passa a ocupar `Periodo comparativo`
+  - a interface mostra aviso discreto informando a reorganizacao para manter a leitura `anterior -> posterior`
+- preservacao:
+  - fluxo sem `Periodo comparativo` permaneceu intacto
+  - comparativo separado permaneceu intacto no que ja estava aprovado visualmente
+  - comparativo consolidado nao teve alteracao de calculo
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+  - smoke autenticado com rollback OK confirmando:
+    - reorganizacao cronologica dos campos
+    - aviso discreto de reorganizacao
+    - nome curto na coluna `Item`
+    - linha `Total` positiva quando o resultado liquido melhora no comparativo
+- resultado:
+  - microetapa pronta para commit
+  - do ponto de vista tecnico, o bloco fica pronto para encerramento definitivo apos esta etapa
+
 ## Reversao da barra divergente e cor semantica da tabela comparativa
 
 - tratei a rodada como correcao pontual de apresentacao no comparativo separado da `Evolucao por categorias`, sem reabrir calculos nem mexer no consolidado

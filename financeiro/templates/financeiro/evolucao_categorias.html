@@ -774,6 +774,9 @@
                                         </div>
                                     </div>
                                 </div>
+                                {% if comparacao_periodos_reorganizada %}
+                                    <p class="financeiro-evolucao-periodo-nota">Os periodos foram reorganizados automaticamente para manter a leitura cronologica anterior -> posterior.</p>
+                                {% endif %}
                             </div>
                             <div class="column is-12-mobile is-6-tablet is-3-desktop">
                                 <label class="label">Modo analitico</label>
@@ -1113,7 +1116,7 @@
                                             <tbody>
                                                 {% for linha in linhas_comparacao %}
                                                     <tr>
-                                                        <td>{{ linha.label }}</td>
+                                                        <td>{{ linha.label_tabela }}</td>
                                                         <td>{{ linha.valor_a_exibido_formatado }}</td>
                                                         <td>{{ linha.valor_b_exibido_formatado }}</td>
                                                         <td><span class="financeiro-evolucao-variacao {{ linha.diferenca_css }}">{{ linha.diferenca_absoluta_formatada }}</span></td>
@@ -1130,7 +1133,7 @@
                                                     <th>Total</th>
                                                     <th>{{ total_periodo_principal_formatado }}</th>
                                                     <th>{{ total_periodo_comparativo_formatado }}</th>
-                                                    <th>{{ diferenca_total_absoluta_formatada }}</th>
+                                                    <th><span class="financeiro-evolucao-variacao {{ diferenca_total_css }}">{{ diferenca_total_absoluta_formatada }}</span></th>
                                                     <th><span class="financeiro-evolucao-variacao {{ variacao_total_css }}">{{ variacao_total_percentual_formatada }}</span></th>
                                                 </tr>
                                             </tfoot>
