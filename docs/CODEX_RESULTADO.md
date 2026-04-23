@@ -2,6 +2,36 @@
 
 Data: 2026-04-23
 
+## Aplicacao do padrao analitico consolidado na tela `Extrato`
+
+- tratei a rodada como segunda propagacao controlada do padrao analitico consolidado a partir de `Evolucao por categorias`, sem reabrir regra de negocio nem mexer na base de calculo do extrato
+- heranca aplicada do padrao-base:
+  - ordem `titulo/contexto -> filtro -> KPIs -> resultado principal`
+  - filtro mantido no topo da area analitica
+  - filtro recolhido por padrao quando a conta ja esta carregada
+  - resumo recolhido util para orientar rapidamente conta, periodo e exibicao de observacoes
+  - resultado como protagonista visual da pagina
+- adaptacoes especificas do `Extrato`:
+  - mantive a leitura cronologica como centro da tela, sem transformar o extrato em relatorio excessivamente gerencial
+  - o bloco executivo foi reorganizado para concentrar saldo anterior/inicial, entradas, saidas, quantidade de movimentacoes e saldo final
+  - a area de resultados foi reestruturada para manter a tabela de movimentacoes como leitura principal, com saldo acumulado e fechamento final preservados
+  - a impressao documental foi preservada, ocultando topo, filtros e KPIs fora do papel para nao poluir o extrato impresso
+- apoio minimo no backend:
+  - adicionei apenas labels e totais simples necessarios ao layout (`periodo_label`, `conta_label`, `total_entradas_periodo`, `total_saidas_periodo`, `quantidade_movimentos`)
+  - nao alterei classificacao de lancamentos, ordenacao cronologica nem regra de consolidacao de rateio
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+  - smoke autenticado OK cobrindo:
+    - estado sem conta carregada com filtro no topo
+    - estado com conta carregada exibindo `Leitura executiva do extrato`
+    - bloco principal `Movimentacoes da conta`
+    - acao `Atualizar extrato`
+- resultado:
+  - microetapa pronta para commit
+  - tela `Extrato` pronta para homologacao visual
+
 ## Aplicacao do padrao analitico consolidado na tela `Resumo`
 
 - tratei a rodada como primeira propagacao real do padrao analitico consolidado a partir de `Evolucao por categorias`, sem reabrir regra de negocio nem mexer em calculos financeiros

@@ -5616,6 +5616,23 @@ class ContaFinanceiraDeleteView(FinanceiroDeleteMixin):
 
 
 class ExtratoContaMixin(FinanceiroPermissaoMixin):
+    def _formatar_data_rotulo(self, valor: str) -> str:
+        if not valor:
+            return ''
+        try:
+            return datetime.strptime(valor, '%Y-%m-%d').strftime('%d/%m/%Y')
+        except ValueError:
+            return valor
+
+    def _montar_periodo_label(self, data_inicial: str, data_final: str) -> str:
+        if data_inicial and data_final:
+            return f'{self._formatar_data_rotulo(data_inicial)} a {self._formatar_data_rotulo(data_final)}'
+        if data_inicial:
+            return f'A partir de {self._formatar_data_rotulo(data_inicial)}'
+        if data_final:
+            return f'Ate {self._formatar_data_rotulo(data_final)}'
+        return 'Periodo completo da conta'
+
     def _parse_checkbox(self, param_name: str) -> bool:
         valores = [valor.strip().lower() for valor in self.request.GET.getlist(param_name)]
         if not valores:
@@ -5733,6 +5750,8 @@ class ExtratoContaMixin(FinanceiroPermissaoMixin):
 
         saldo_base = saldo_anterior if data_inicial else (conta.saldo_inicial or Decimal('0.00'))
         itens_extrato, saldo_acumulado = self._montar_itens_extrato(conta, list(lancamentos), saldo_base)
+        total_entradas = sum((item['entrada'] for item in itens_extrato), Decimal('0.00'))
+        total_saidas = sum((item['saida'] for item in itens_extrato), Decimal('0.00'))
 
         return {
             'conta': conta,
@@ -5740,12 +5759,17 @@ class ExtratoContaMixin(FinanceiroPermissaoMixin):
             'data_saldo_inicial': conta.data_saldo_inicial,
             'data_inicial': data_inicial,
             'data_final': data_final,
+            'periodo_label': self._montar_periodo_label(data_inicial, data_final),
             'saldo_anterior': saldo_anterior if data_inicial else None,
             'exibe_linha_saldo_inicial': True,
             'itens_extrato': itens_extrato,
             'saldo_final': saldo_acumulado,
             'saldo_atual': saldo_acumulado,
             'mostrar_observacao': mostrar_observacao,
+            'total_entradas_periodo': total_entradas,
+            'total_saidas_periodo': total_saidas,
+            'quantidade_movimentos': len(itens_extrato),
+            'conta_label': conta.nome,
         }
 
 

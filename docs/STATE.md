@@ -2,6 +2,44 @@
 
 Data de atualizacao: 2026-04-23
 
+## Aplicacao do padrao analitico consolidado na tela `Extrato`
+
+- a microetapa adaptou a tela `Extrato` ao padrao analitico consolidado em `Evolucao por categorias`, preservando a logica cronologica do extrato, os calculos de saldo e a base documental de impressao
+- estrutura aplicada no `Extrato`:
+  - `titulo/contexto`
+  - `filtro no topo da analise`
+  - `KPIs`
+  - `resultado principal`
+- o filtro passou a permanecer no mesmo lugar estrutural da tela:
+  - abre no topo quando ainda nao ha conta selecionada ou quando existe erro de carregamento
+  - fica recolhido por padrao quando o extrato ja esta carregado
+  - o resumo recolhido mostra conta, periodo e estado da opcao de observacoes
+- a hierarquia visual foi reforcada:
+  - filtros ficaram visualmente secundarios
+  - os resumos executivos ganharam mais protagonismo
+  - a tabela cronologica do extrato permaneceu como area principal da pagina
+- heranca direta do padrao-base:
+  - hero mais enxuto com contexto principal no topo
+  - card proprio para filtros
+  - card proprio para KPIs
+  - card proprio para resultados
+- adaptacoes especificas do `Extrato`:
+  - a tela manteve foco em `saldo anterior/saldo inicial`, `entradas`, `saidas`, `quantidade de movimentacoes` e `saldo final`
+  - a tabela cronologica permaneceu como protagonista, com leitura crescente por data e saldo acumulado apos cada movimento
+  - a impressao do extrato foi preservada, escondendo topo, filtros e KPIs no papel para manter apenas a area documental util
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+  - smoke autenticado OK confirmando:
+    - filtro no topo
+    - KPIs apenas quando ha conta carregada
+    - bloco principal `Movimentacoes da conta`
+    - acao `Atualizar extrato`
+- observacao:
+  - a tela `Extrato` fica pronta para homologacao visual
+  - o padrao analitico segue forte o bastante para a proxima tela da sequencia apos essa homologacao
+
 ## Aplicacao do padrao analitico consolidado na tela `Resumo`
 
 - a microetapa adaptou a tela `Resumo` ao padrao analitico consolidado em `Evolucao por categorias`, preservando calculos, semantica financeira e fluxo documental de impressao

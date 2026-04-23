@@ -3,89 +3,283 @@
 {% block title %}{{ page_title }}{% endblock %}
 {% block content %}
 <style>
-    .financeiro-extrato-screen-header .financeiro-page-subtitle {
-        max-width: 42rem;
-        color: #5b6b7f;
+    .financeiro-extrato-page {
+        display: grid;
+        gap: 1rem;
+        min-width: 0;
+    }
+
+    .financeiro-extrato-hero {
+        position: relative;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1.1rem 1.2rem;
+        border: 1px solid rgba(203, 213, 225, 0.92);
+        border-radius: 1.15rem;
+        background:
+            radial-gradient(circle at top right, rgba(191, 219, 254, 0.32), transparent 34%),
+            linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+        box-shadow: 0 16px 34px rgba(15, 23, 42, 0.055);
+    }
+
+    .financeiro-extrato-hero .financeiro-page-title {
+        margin-bottom: 0.3rem;
+        font-size: 1.7rem;
+        line-height: 1.12;
+    }
+
+    .financeiro-extrato-hero .financeiro-page-subtitle {
+        max-width: 54rem;
+        color: #475569;
+        font-size: 0.95rem;
+        line-height: 1.5;
     }
 
     .financeiro-extrato-meta {
         display: flex;
         flex-wrap: wrap;
-        gap: 0.4rem 0.55rem;
-        margin-top: 0.35rem;
+        gap: 0.5rem;
+        margin-top: 0.7rem;
     }
 
     .financeiro-extrato-meta-item {
         display: inline-flex;
         align-items: center;
         gap: 0.35rem;
-        padding: 0.3rem 0.5rem;
-        border: 1px solid #e5e7eb;
+        padding: 0.38rem 0.72rem;
+        border: 1px solid #dbe6f1;
         border-radius: 999px;
-        background: #fafafa;
-        font-size: 0.8rem;
-        color: #4b5563;
-        line-height: 1.2;
+        background: rgba(255, 255, 255, 0.9);
+        color: #475569;
+        font-size: 0.79rem;
+        box-shadow: 0 4px 10px rgba(15, 23, 42, 0.03);
     }
 
     .financeiro-extrato-meta-item strong {
-        color: #1f2937;
-        font-weight: 700;
+        color: #1e293b;
     }
 
-    .financeiro-extrato-filter-card {
-        margin-bottom: 0.9rem;
-        padding: 0.8rem 0.9rem;
-        border: 1px solid #dce7f5;
+    .financeiro-extrato-context-note {
+        display: grid;
+        gap: 0.22rem;
+        margin-top: 0.72rem;
+        color: #64748b;
+        font-size: 0.82rem;
+        line-height: 1.45;
+    }
+
+    .financeiro-extrato-context-note strong {
+        color: #334155;
+    }
+
+    .financeiro-extrato-hero .financeiro-page-header-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+    }
+
+    .financeiro-extrato-hero .financeiro-page-header-actions .button.is-light {
+        background: rgba(255, 255, 255, 0.92);
+    }
+
+    .financeiro-extrato-hero .financeiro-page-header-actions .button:first-child {
+        background: #1d4ed8;
+        border-color: #1d4ed8;
+        color: #fff;
+        box-shadow: 0 10px 22px rgba(29, 78, 216, 0.18);
+    }
+
+    .financeiro-extrato-card {
+        border: 1px solid rgba(203, 213, 225, 0.86);
         border-radius: 1rem;
-        background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 12px 28px rgba(15, 23, 42, 0.04);
+        background: #fff;
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.045);
+        overflow: hidden;
     }
 
-    .financeiro-extrato-filter-card .columns {
-        row-gap: 0.35rem;
+    .financeiro-extrato-card.is-filters {
+        border-color: #e2e8f0;
+        background: linear-gradient(180deg, #fbfcfe 0%, #f7fafc 100%);
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.035);
     }
 
-    .financeiro-extrato-filter-card .column {
-        padding-top: 0.2rem;
-        padding-bottom: 0.2rem;
+    .financeiro-extrato-card.is-filters .filters-box {
+        margin-bottom: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
     }
 
-    .financeiro-extrato-filter-card .label {
-        margin-bottom: 0.22rem;
-        color: #4b5b70;
+    .financeiro-extrato-card.is-kpis {
+        background: linear-gradient(180deg, #fbfdff 0%, #f5f9fd 100%);
+    }
+
+    .financeiro-extrato-card.is-results {
+        border-color: #d7e3f2;
+        box-shadow: 0 16px 34px rgba(15, 23, 42, 0.05);
+    }
+
+    .financeiro-extrato-filter-summary {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+    }
+
+    .financeiro-extrato-filter-summary-main {
+        display: grid;
+        gap: 0.18rem;
+        min-width: 0;
+    }
+
+    .financeiro-extrato-filter-summary-heading {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        flex-wrap: wrap;
+    }
+
+    .financeiro-extrato-filter-summary-text {
+        color: #64748b;
+        font-size: 0.82rem;
+        line-height: 1.45;
+    }
+
+    .financeiro-extrato-filter-summary-action {
+        color: #1d4ed8;
+        font-size: 0.8rem;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .financeiro-secondary-panel[open] .financeiro-extrato-filter-summary-action .is-open {
+        display: inline;
+    }
+
+    .financeiro-secondary-panel[open] .financeiro-extrato-filter-summary-action .is-closed {
+        display: none;
+    }
+
+    .financeiro-secondary-panel:not([open]) .financeiro-extrato-filter-summary-action .is-open {
+        display: none;
+    }
+
+    .financeiro-secondary-panel:not([open]) .financeiro-extrato-filter-summary-action .is-closed {
+        display: inline;
+    }
+
+    .financeiro-extrato-kpi-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.8rem;
+        padding: 0.95rem 1rem 0;
+    }
+
+    .financeiro-extrato-section-title {
+        margin: 0;
+        color: #0f172a;
+        font-size: 1rem;
+        font-weight: 800;
+    }
+
+    .financeiro-extrato-section-note {
+        margin: 0.3rem 0 0;
+        color: #64748b;
+        font-size: 0.82rem;
+        line-height: 1.48;
+    }
+
+    .financeiro-extrato-kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+        gap: 0.85rem;
+        padding: 0.95rem 1rem 1rem;
+    }
+
+    .financeiro-extrato-kpi {
+        display: grid;
+        gap: 0.22rem;
+        padding: 0.92rem 0.95rem;
+        border: 1px solid #dce8f4;
+        border-radius: 1rem;
+        background: rgba(255, 255, 255, 0.97);
+        box-shadow: 0 12px 24px rgba(15, 23, 42, 0.05);
+        position: relative;
+    }
+
+    .financeiro-extrato-kpi::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        border-radius: 1rem 1rem 0 0;
+        background: linear-gradient(90deg, #cbd5e1 0%, #e2e8f0 100%);
+    }
+
+    .financeiro-extrato-kpi-label {
+        color: #64748b;
         font-size: 0.72rem;
-        letter-spacing: 0.03em;
+        font-weight: 700;
+        letter-spacing: 0.04em;
         text-transform: uppercase;
     }
 
-    .financeiro-extrato-filter-card .input,
-    .financeiro-extrato-filter-card .select select {
-        min-height: 2.45rem;
-        border: 1px solid #d7e2f0;
-        border-radius: 0.8rem;
-        box-shadow: none;
+    .financeiro-extrato-kpi-value {
+        color: #0f172a;
+        font-size: 1.28rem;
+        font-weight: 800;
+        line-height: 1.14;
+        letter-spacing: -0.02em;
     }
 
-    .financeiro-extrato-filter-card .input:focus,
-    .financeiro-extrato-filter-card .select select:focus {
-        border-color: #206bc4;
-        box-shadow: 0 0 0 0.2rem rgba(32, 107, 196, 0.12);
+    .financeiro-extrato-kpi-value.is-receita {
+        color: #236746;
     }
 
-    .financeiro-extrato-filter-actions {
+    .financeiro-extrato-kpi-value.is-despesa {
+        color: #b42318;
+    }
+
+    .financeiro-extrato-results-body {
+        display: grid;
+        gap: 1rem;
+        padding: 1rem;
+        background: linear-gradient(180deg, #fcfdff 0%, #f8fbfe 100%);
+    }
+
+    .financeiro-extrato-panel {
+        border: 1px solid #d5e3f4;
+        border-radius: 1rem;
+        background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+        box-shadow: 0 16px 32px rgba(15, 23, 42, 0.055);
+        overflow: hidden;
+    }
+
+    .financeiro-extrato-panel-header {
         display: flex;
         flex-wrap: wrap;
-        gap: 0.45rem;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.8rem;
+        padding: 0.95rem 1rem 0.8rem;
+        border-bottom: 1px solid #e9eff7;
+        background: linear-gradient(180deg, rgba(248, 251, 255, 0.95) 0%, rgba(255, 255, 255, 0.98) 100%);
     }
 
-    .financeiro-extrato-filter-actions .button {
-        min-height: 2.45rem;
-        border-radius: 0.8rem;
+    .financeiro-extrato-panel-body {
+        padding: 0.95rem 1rem 1rem;
     }
 
     .financeiro-extrato-state {
-        margin-bottom: 0.9rem;
+        margin: 0;
         border-radius: 0.95rem;
     }
 
@@ -224,6 +418,23 @@
         text-align: center;
     }
 
+    @media (max-width: 768px) {
+        .financeiro-extrato-hero {
+            padding: 1rem;
+        }
+
+        .financeiro-extrato-kpi-grid,
+        .financeiro-extrato-results-body,
+        .financeiro-extrato-panel-body {
+            padding-left: 0.85rem;
+            padding-right: 0.85rem;
+        }
+
+        .financeiro-extrato-filter-summary {
+            align-items: flex-start;
+        }
+    }
+
     @media print {
         .financeiro-app-shell-body,
         .financeiro-app-main,
@@ -238,13 +449,34 @@
             margin: 0 !important;
         }
 
+        .financeiro-extrato-page {
+            gap: 0;
+        }
+
+        .financeiro-extrato-card,
+        .financeiro-extrato-panel {
+            box-shadow: none;
+            border-color: #d6dee8;
+        }
+
+        .financeiro-extrato-results-body {
+            padding: 0;
+            background: #fff;
+        }
+
+        .financeiro-extrato-panel-body {
+            padding: 0.75rem 0.9rem 0.95rem;
+        }
+
         .table-wrapper {
             width: 100% !important;
             max-width: none !important;
             overflow: visible !important;
         }
 
-        .financeiro-extrato-screen-header {
+        .financeiro-extrato-hero,
+        .financeiro-extrato-card.is-filters,
+        .financeiro-extrato-card.is-kpis {
             display: none !important;
         }
 
@@ -331,218 +563,287 @@
         .financeiro-extrato-table th .only-print {
             display: inline !important;
         }
-
     }
 </style>
-<div class="financeiro-page-header financeiro-page-head financeiro-extrato-screen-header">
-    <div class="financeiro-page-header-main">
-        <div>
-            <h1 class="title financeiro-page-title">{{ page_title }}</h1>
-            <p class="financeiro-page-subtitle no-print">Consulta por conta, com saldos do per&iacute;odo e leitura operacional mais direta.</p>
-            {% if conta %}
-                <div class="financeiro-extrato-meta">
-                    <div class="financeiro-extrato-meta-item">
-                        <strong>Conta</strong>
-                        <span>{{ conta.nome }}</span>
-                    </div>
-                    {% if data_inicial or data_final %}
-                        <div class="financeiro-extrato-meta-item">
-                            <strong>Per&iacute;odo</strong>
-                            <span>{% if data_inicial %}{{ data_inicial }}{% else %}in&iacute;cio em aberto{% endif %}</span>
-                            <span>at&eacute;</span>
-                            <span>{% if data_final %}{{ data_final }}{% else %}fim em aberto{% endif %}</span>
-                        </div>
+
+<div class="financeiro-extrato-page">
+    <div class="financeiro-page-header financeiro-page-head financeiro-extrato-hero">
+        <div class="financeiro-page-header-main">
+            <div>
+                <h1 class="title financeiro-page-title">{{ page_title }}</h1>
+                <p class="financeiro-page-subtitle no-print">Leitura cronologica da conta, com saldo anterior, movimentacoes quitadas e saldo final do periodo consultado.</p>
+                <div class="financeiro-extrato-meta no-print">
+                    <span class="financeiro-extrato-meta-item"><strong>Periodo:</strong> {{ periodo_label|default:'Periodo completo da conta' }}</span>
+                    {% if conta %}
+                        <span class="financeiro-extrato-meta-item"><strong>Conta:</strong> {{ conta_label }}</span>
                     {% endif %}
-                    {% if saldo_anterior is not None %}
-                        <div class="financeiro-extrato-meta-item">
-                            <strong>Saldo anterior</strong>
-                            <span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_anterior|br_money }}</span></span>
-                        </div>
+                    {% if mostrar_observacao %}
+                        <span class="financeiro-extrato-meta-item"><strong>Observacoes:</strong> Visiveis</span>
                     {% endif %}
                 </div>
+                <div class="financeiro-extrato-context-note no-print">
+                    <span><strong>Analise:</strong> Extrato operacional por conta com foco em saldo anterior, movimentacoes e saldo final.</span>
+                    <span><strong>Escopo:</strong> Apenas lancamentos quitados que impactam a conta selecionada.</span>
+                </div>
+            </div>
+        </div>
+        <div class="financeiro-page-header-actions no-print">
+            {% if conta %}
+                <button class="button is-light" type="button" onclick="window.print()">Imprimir</button>
+            {% endif %}
+            {% if not show_conta_filter %}
+                <a class="button is-light" href="{% url 'financeiro:conta-list' %}">Voltar para contas</a>
             {% endif %}
         </div>
     </div>
-    {% if not show_conta_filter %}
-        <div class="financeiro-page-header-actions no-print">
-            <button class="button is-light" type="button" onclick="window.print()">Imprimir</button>
-            <a class="button" href="{% url 'financeiro:conta-list' %}">Voltar para contas</a>
+
+    <section class="financeiro-extrato-card is-filters no-print">
+        <form method="get" class="filters-box">
+            <div class="financeiro-secondary-toolbar">
+                <details class="financeiro-secondary-panel" {% if extrato_error or not conta %}open{% endif %}>
+                    <summary class="financeiro-secondary-summary financeiro-extrato-filter-summary">
+                        <span class="financeiro-extrato-filter-summary-main">
+                            <span class="financeiro-extrato-filter-summary-heading">
+                                <span class="financeiro-secondary-summary-label">Filtros do extrato</span>
+                                {% if conta or data_inicial or data_final or mostrar_observacao %}<span class="financeiro-secondary-badge">ativos</span>{% endif %}
+                            </span>
+                            <span class="financeiro-extrato-filter-summary-text">
+                                {% if conta %}
+                                    <strong>Conta:</strong> {{ conta_label }} | <strong>Periodo:</strong> {{ periodo_label }}{% if mostrar_observacao %} | <strong>Observacoes:</strong> Visiveis{% endif %}
+                                {% else %}
+                                    Selecione a conta e o periodo para carregar o extrato cronologico.
+                                {% endif %}
+                            </span>
+                        </span>
+                        <span class="financeiro-extrato-filter-summary-action">
+                            <span class="is-closed">Editar filtros</span>
+                            <span class="is-open">Ocultar filtros</span>
+                        </span>
+                    </summary>
+                    <div class="financeiro-secondary-body">
+                        <div class="columns is-multiline">
+                            {% if show_conta_filter %}
+                                <div class="column is-12-mobile is-6-tablet is-4-desktop">
+                                    <label class="label">Conta</label>
+                                    <div class="select is-fullwidth">
+                                        <select name="conta">
+                                            <option value="">Selecione uma conta</option>
+                                            {% for conta_item in contas %}
+                                                <option value="{{ conta_item.pk }}" {% if conta_selecionada_id == conta_item.pk|stringformat:'s' %}selected{% endif %}>
+                                                    {{ conta_item.nome }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            <div class="column is-6-mobile is-3-tablet {% if show_conta_filter %}is-3-desktop{% else %}is-4-desktop{% endif %}">
+                                <label class="label">Data inicial</label>
+                                <input class="input" type="date" name="data_inicial" value="{{ data_inicial }}">
+                            </div>
+                            <div class="column is-6-mobile is-3-tablet {% if show_conta_filter %}is-3-desktop{% else %}is-4-desktop{% endif %}">
+                                <label class="label">Data final</label>
+                                <input class="input" type="date" name="data_final" value="{{ data_final }}">
+                            </div>
+                            <div class="column is-12-mobile is-6-tablet {% if show_conta_filter %}is-2-desktop{% else %}is-4-desktop{% endif %}">
+                                <label class="label">Opcoes de leitura</label>
+                                <label class="checkbox">
+                                    <input type="checkbox" name="exibir_observacao" value="1" {% if mostrar_observacao %}checked{% endif %}>
+                                    Mostrar observacoes no extrato
+                                </label>
+                            </div>
+                            <div class="column is-12-mobile is-6-tablet {% if show_conta_filter %}is-2-desktop{% else %}is-4-desktop{% endif %}">
+                                <label class="label">&nbsp;</label>
+                                <div class="buttons">
+                                    <button class="button is-link is-fullwidth" type="submit">Atualizar extrato</button>
+                                    <a class="button is-light is-fullwidth" href="{{ clear_extrato_url }}">Limpar</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </details>
+            </div>
+        </form>
+    </section>
+
+    {% if extrato_error %}
+        <div class="notification is-warning financeiro-extrato-state">{{ extrato_error }}</div>
+    {% elif not conta and show_conta_filter %}
+        <div class="notification is-light financeiro-extrato-state">Selecione uma conta para carregar o extrato.</div>
+    {% endif %}
+
+    {% if conta %}
+        <div class="financeiro-extrato-card is-kpis">
+            <div class="financeiro-extrato-kpi-head">
+                <div>
+                    <h2 class="financeiro-extrato-section-title">Leitura executiva do extrato</h2>
+                    <p class="financeiro-extrato-section-note">Os indicadores resumem a base cronologica antes da tabela detalhada de movimentacoes.</p>
+                </div>
+            </div>
+            <div class="financeiro-extrato-kpi-grid">
+                <div class="financeiro-extrato-kpi">
+                    <span class="financeiro-extrato-kpi-label">{% if saldo_anterior is not None %}Saldo anterior{% else %}Saldo inicial{% endif %}</span>
+                    <span class="financeiro-extrato-kpi-value"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_anterior|default:saldo_inicial|br_money }}</span></span></span>
+                </div>
+                <div class="financeiro-extrato-kpi">
+                    <span class="financeiro-extrato-kpi-label">Entradas do periodo</span>
+                    <span class="financeiro-extrato-kpi-value is-receita"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ total_entradas_periodo|br_money }}</span></span></span>
+                </div>
+                <div class="financeiro-extrato-kpi">
+                    <span class="financeiro-extrato-kpi-label">Saidas do periodo</span>
+                    <span class="financeiro-extrato-kpi-value is-despesa"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ total_saidas_periodo|br_money }}</span></span></span>
+                </div>
+                <div class="financeiro-extrato-kpi">
+                    <span class="financeiro-extrato-kpi-label">Movimentacoes</span>
+                    <span class="financeiro-extrato-kpi-value">{{ quantidade_movimentos }}</span>
+                </div>
+                <div class="financeiro-extrato-kpi">
+                    <span class="financeiro-extrato-kpi-label">Saldo final</span>
+                    <span class="financeiro-extrato-kpi-value"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_final|br_money }}</span></span></span>
+                </div>
+            </div>
         </div>
-    {% elif conta %}
-        <div class="financeiro-page-header-actions no-print">
-            <button class="button is-light" type="button" onclick="window.print()">Imprimir</button>
+
+        <div class="financeiro-report-sheet">
+            <article class="financeiro-document-report">
+                <div class="financeiro-extrato-card is-results">
+                    <div class="financeiro-extrato-results-body">
+                        <section class="financeiro-extrato-panel">
+                            <div class="financeiro-extrato-panel-header">
+                                <div>
+                                    <h2 class="financeiro-extrato-section-title">Movimentacoes da conta</h2>
+                                    <p class="financeiro-extrato-section-note">A tabela permanece como leitura principal do extrato, em ordem cronologica crescente, com saldo acumulado apos cada movimento.</p>
+                                </div>
+                                <div class="tags no-print">
+                                    <span class="tag is-light"><strong>Conta:</strong>&nbsp;{{ conta_label }}</span>
+                                    <span class="tag is-light"><strong>Periodo:</strong>&nbsp;{{ periodo_label }}</span>
+                                </div>
+                            </div>
+                            <div class="financeiro-extrato-panel-body">
+                                <article class="financeiro-document-report financeiro-extrato-document">
+                                    <header class="financeiro-document-header only-print">
+                                        <div class="financeiro-document-brand financeiro-extrato-brand">
+                                            <p class="financeiro-document-brand-name financeiro-extrato-brand-name">{{ financeiro_shell_brand_name }}</p>
+                                        </div>
+                                        <div>
+                                            <h2 class="financeiro-document-title">Extrato</h2>
+                                        </div>
+                                    </header>
+
+                                    <p class="financeiro-document-note only-print">
+                                        <strong>Conta:</strong> {{ conta.nome }}
+                                        <span class="financeiro-document-note-separator">|</span>
+                                        <strong>Periodo:</strong> {{ periodo_label }}
+                                        <span class="financeiro-document-note-separator">|</span>
+                                        <strong>Emitido em:</strong> {% now "d/m/Y H:i" %}
+                                    </p>
+
+                                    <div class="table-wrapper">
+                                        <table class="table is-fullwidth is-hoverable financeiro-table financeiro-extrato-table">
+                                            <colgroup>
+                                                <col class="financeiro-extrato-col-date">
+                                                <col class="financeiro-extrato-col-doc">
+                                                <col class="financeiro-extrato-col-desc">
+                                                <col class="financeiro-extrato-col-fav">
+                                                <col class="financeiro-extrato-col-type">
+                                                <col class="financeiro-extrato-col-in">
+                                                <col class="financeiro-extrato-col-out">
+                                                <col class="financeiro-extrato-col-balance">
+                                                {% if mostrar_observacao %}<col class="financeiro-extrato-col-obs">{% endif %}
+                                            </colgroup>
+                                            <thead>
+                                            {% if exibe_linha_saldo_inicial %}
+                                                <tr class="is-closing-balance">
+                                                    <th></th>
+                                                    <th></th>
+                                                    <th><span class="financeiro-balance-line-label">{% if saldo_anterior is not None %}Saldo anterior{% else %}Saldo inicial{% endif %}</span></th>
+                                                    <th></th>
+                                                    <th></th>
+                                                    <th></th>
+                                                    <th></th>
+                                                    <th><strong><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_anterior|default:saldo_inicial|br_money }}</span></span></strong></th>
+                                                    {% if mostrar_observacao %}<th></th>{% endif %}
+                                                </tr>
+                                            {% endif %}
+                                                <tr>
+                                                    <th>Data</th>
+                                                    <th><span class="no-print">Documento</span><span class="only-print">Doc.</span></th>
+                                                    <th>Descricao</th>
+                                                    <th>Favorecido</th>
+                                                    <th><span class="no-print">Tipo</span><span class="only-print">Mov.</span></th>
+                                                    <th>Entrada</th>
+                                                    <th>Saida</th>
+                                                    <th><span class="no-print">Saldo acumulado</span><span class="only-print">Saldo</span></th>
+                                                    {% if mostrar_observacao %}<th><span class="no-print">Observacoes</span><span class="only-print">Obs.</span></th>{% endif %}
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                            {% for item in itens_extrato %}
+                                                <tr>
+                                                    <td>{{ item.lancamento.data_pagamento|default:item.lancamento.data_competencia|date:'d/m/Y' }}</td>
+                                                    <td><span class="financeiro-extrato-document-number">{{ item.lancamento.numero_documento|default:'-' }}</span></td>
+                                                    <td>{{ item.lancamento.descricao }}</td>
+                                                    <td>{{ item.favorecido_exibicao }}</td>
+                                                    <td>
+                                                        <span class="extrato-text {% if item.lancamento.tipo == 'receita' %}is-receita{% elif item.lancamento.tipo == 'despesa' %}is-despesa{% else %}is-transferencia{% endif %}">
+                                                            {{ item.lancamento.get_tipo_display }}
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        {% if item.entrada %}
+                                                            <span class="extrato-text is-receita"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ item.entrada|br_money }}</span></span></span>
+                                                        {% else %}
+                                                            -
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        {% if item.saida %}
+                                                            <span class="extrato-text {% if item.lancamento.tipo == 'transferencia' %}is-transferencia{% else %}is-despesa{% endif %}"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ item.saida|br_money }}</span></span></span>
+                                                        {% else %}
+                                                            -
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        <span class="extrato-balance {% if item.saldo_acumulado > 0 %}is-positive{% elif item.saldo_acumulado < 0 %}is-negative{% else %}is-neutral{% endif %}">
+                                                            <span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ item.saldo_acumulado|br_money }}</span></span>
+                                                        </span>
+                                                    </td>
+                                                    {% if mostrar_observacao %}
+                                                        <td>
+                                                            {% if item.observacoes_exibicao != '-' %}
+                                                                {{ item.observacoes_exibicao }}
+                                                            {% else %}
+                                                                <span class="has-text-grey">-</span>
+                                                            {% endif %}
+                                                        </td>
+                                                    {% endif %}
+                                                </tr>
+                                            {% empty %}
+                                                <tr class="financeiro-extrato-empty-row">
+                                                    <td colspan="{% if mostrar_observacao %}9{% else %}8{% endif %}">Nenhum lancamento quitado encontrado para os filtros atuais.</td>
+                                                </tr>
+                                            {% endfor %}
+                                                <tr class="is-closing-balance">
+                                                    <td></td>
+                                                    <td></td>
+                                                    <td><span class="financeiro-balance-line-label">Saldo final</span></td>
+                                                    <td></td>
+                                                    <td></td>
+                                                    <td></td>
+                                                    <td></td>
+                                                    <td><strong><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_final|br_money }}</span></span></strong></td>
+                                                    {% if mostrar_observacao %}<td></td>{% endif %}
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </article>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+            </article>
         </div>
     {% endif %}
 </div>
-
-<form method="get" class="filters-box financeiro-extrato-filter-card no-print">
-    <div class="columns is-multiline">
-        {% if show_conta_filter %}
-            <div class="column is-12-mobile is-6-tablet is-4-desktop">
-                <label class="label">Conta</label>
-                <div class="select is-fullwidth">
-                    <select name="conta">
-                        <option value="">Selecione uma conta</option>
-                        {% for conta_item in contas %}
-                            <option value="{{ conta_item.pk }}" {% if conta_selecionada_id == conta_item.pk|stringformat:'s' %}selected{% endif %}>
-                                {{ conta_item.nome }}
-                            </option>
-                        {% endfor %}
-                    </select>
-                </div>
-            </div>
-        {% endif %}
-        <div class="column is-6-mobile is-3-tablet {% if show_conta_filter %}is-3-desktop{% else %}is-4-desktop{% endif %}">
-            <label class="label">Data inicial</label>
-            <input class="input" type="date" name="data_inicial" value="{{ data_inicial }}">
-        </div>
-        <div class="column is-6-mobile is-3-tablet {% if show_conta_filter %}is-3-desktop{% else %}is-4-desktop{% endif %}">
-            <label class="label">Data final</label>
-            <input class="input" type="date" name="data_final" value="{{ data_final }}">
-        </div>
-        <div class="column is-12-mobile is-6-tablet {% if show_conta_filter %}is-2-desktop{% else %}is-4-desktop{% endif %}">
-            <label class="label">Exibir observação</label>
-            <label class="checkbox">
-                <input type="checkbox" name="exibir_observacao" value="1" {% if mostrar_observacao %}checked{% endif %}>
-                Mostrar observações no extrato
-            </label>
-        </div>
-        <div class="column is-12-mobile is-6-tablet {% if show_conta_filter %}is-2-desktop{% else %}is-4-desktop{% endif %}">
-            <label class="label">&nbsp;</label>
-            <div class="buttons financeiro-extrato-filter-actions">
-                <button class="button is-link is-fullwidth" type="submit">Aplicar</button>
-                <a class="button is-light is-fullwidth" href="{{ clear_extrato_url }}">Limpar</a>
-            </div>
-        </div>
-    </div>
-</form>
-
-{% if extrato_error %}
-    <div class="notification is-warning financeiro-extrato-state">{{ extrato_error }}</div>
-{% elif not conta and show_conta_filter %}
-    <div class="notification is-light financeiro-extrato-state">Selecione uma conta para carregar o extrato.</div>
-{% endif %}
-
-{% if conta %}
-    <div class="financeiro-report-sheet">
-        <article class="financeiro-document-report financeiro-extrato-document">
-            <header class="financeiro-document-header only-print">
-                <div class="financeiro-document-brand financeiro-extrato-brand">
-                    <p class="financeiro-document-brand-name financeiro-extrato-brand-name">{{ financeiro_shell_brand_name }}</p>
-                </div>
-                <div>
-                    <h2 class="financeiro-document-title">Extrato</h2>
-                </div>
-            </header>
-
-            <p class="financeiro-document-note only-print">
-                <strong>Conta:</strong> {{ conta.nome }}
-                <span class="financeiro-document-note-separator">|</span>
-                <strong>Per&iacute;odo:</strong> {% if data_inicial %}{{ data_inicial|slice:"8:10" }}/{{ data_inicial|slice:"5:7" }}/{{ data_inicial|slice:"0:4" }}{% else %}in&iacute;cio em aberto{% endif %} at&eacute; {% if data_final %}{{ data_final|slice:"8:10" }}/{{ data_final|slice:"5:7" }}/{{ data_final|slice:"0:4" }}{% else %}fim em aberto{% endif %}
-                <span class="financeiro-document-note-separator">|</span>
-                <strong>Emitido em:</strong> {% now "d/m/Y H:i" %}
-            </p>
-
-            <div class="table-wrapper">
-                <table class="table is-fullwidth is-hoverable financeiro-table financeiro-extrato-table">
-                    <colgroup>
-                        <col class="financeiro-extrato-col-date">
-                        <col class="financeiro-extrato-col-doc">
-                        <col class="financeiro-extrato-col-desc">
-                        <col class="financeiro-extrato-col-fav">
-                        <col class="financeiro-extrato-col-type">
-                        <col class="financeiro-extrato-col-in">
-                        <col class="financeiro-extrato-col-out">
-                        <col class="financeiro-extrato-col-balance">
-                        {% if mostrar_observacao %}<col class="financeiro-extrato-col-obs">{% endif %}
-                    </colgroup>
-                    <thead>
-                    {% if exibe_linha_saldo_inicial %}
-                    <tr class="is-closing-balance">
-                        <th></th>
-                        <th></th>
-                        <th><span class="financeiro-balance-line-label">Saldo anterior</span></th>
-                        <th></th>
-                        <th></th>
-                        <th></th>
-                        <th></th>
-                        <th><strong><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_anterior|default:saldo_inicial|br_money }}</span></span></strong></th>
-                        {% if mostrar_observacao %}<th></th>{% endif %}
-                    </tr>
-                    {% endif %}
-                    <tr>
-                        <th>Data</th>
-                        <th><span class="no-print">Documento</span><span class="only-print">Doc.</span></th>
-                        <th>Descri&ccedil;&atilde;o</th>
-                        <th><span class="no-print">Favorecido</span><span class="only-print">Favorecido</span></th>
-                        <th><span class="no-print">Tipo</span><span class="only-print">Mov.</span></th>
-                        <th>Entrada</th>
-                        <th>Sa&iacute;da</th>
-                        <th><span class="no-print">Saldo acumulado</span><span class="only-print">Saldo</span></th>
-                        {% if mostrar_observacao %}<th><span class="no-print">Observa&ccedil;&otilde;es</span><span class="only-print">Obs.</span></th>{% endif %}
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {% for item in itens_extrato %}
-                        <tr>
-                            <td>{{ item.lancamento.data_pagamento|default:item.lancamento.data_competencia|date:'d/m/Y' }}</td>
-                            <td><span class="financeiro-extrato-document-number">{{ item.lancamento.numero_documento|default:'-' }}</span></td>
-                            <td>{{ item.lancamento.descricao }}</td>
-                            <td>{{ item.favorecido_exibicao }}</td>
-                            <td>
-                                <span class="extrato-text {% if item.lancamento.tipo == 'receita' %}is-receita{% elif item.lancamento.tipo == 'despesa' %}is-despesa{% else %}is-transferencia{% endif %}">
-                                    {{ item.lancamento.get_tipo_display }}
-                                </span>
-                            </td>
-                            <td>
-                                {% if item.entrada %}
-                                    <span class="extrato-text is-receita"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ item.entrada|br_money }}</span></span></span>
-                                {% else %}
-                                    -
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if item.saida %}
-                                    <span class="extrato-text {% if item.lancamento.tipo == 'transferencia' %}is-transferencia{% else %}is-despesa{% endif %}"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ item.saida|br_money }}</span></span></span>
-                                {% else %}
-                                    -
-                                {% endif %}
-                            </td>
-                            <td>
-                                <span class="extrato-balance {% if item.saldo_acumulado > 0 %}is-positive{% elif item.saldo_acumulado < 0 %}is-negative{% else %}is-neutral{% endif %}">
-                                    <span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ item.saldo_acumulado|br_money }}</span></span>
-                                </span>
-                            </td>
-                            {% if mostrar_observacao %}
-                                <td>
-                                    {% if item.observacoes_exibicao != '-' %}
-                                        {{ item.observacoes_exibicao }}
-                                    {% else %}
-                                        <span class="has-text-grey">-</span>
-                                    {% endif %}
-                                </td>
-                            {% endif %}
-                        </tr>
-                    {% empty %}
-                        <tr class="financeiro-extrato-empty-row">
-                            <td colspan="{% if mostrar_observacao %}9{% else %}8{% endif %}">Nenhum lan&ccedil;amento quitado encontrado para os filtros atuais.</td>
-                        </tr>
-                    {% endfor %}
-                        <tr class="is-closing-balance">
-                            <td></td>
-                            <td></td>
-                            <td><span class="financeiro-balance-line-label">Saldo final</span></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td><strong><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_final|br_money }}</span></span></strong></td>
-                            <td></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </article>
-    </div>
-{% endif %}
 {% endblock %}
