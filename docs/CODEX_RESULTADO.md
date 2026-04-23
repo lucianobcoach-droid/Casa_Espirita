@@ -2,6 +2,33 @@
 
 Data: 2026-04-23
 
+## Padronizacao das celulas monetarias do `Extrato`
+
+- tratei a rodada como ajuste visual pontual do miolo monetario do `Extrato`, sem tocar em calculos ou estrutura logica da tabela
+- causa objetiva:
+  - `Valor` e `Saldo` ainda deixavam o `R$` visualmente separado do numero
+  - isso enfraquecia a leitura financeira, especialmente no PDF
+- solucao aplicada:
+  - padronizei as celulas monetarias para usar a mesma composicao interna
+  - `R$` ficou alinhado a esquerda da propria celula
+  - o numero ficou alinhado a direita da mesma celula
+  - o sinal negativo continuou junto do numero
+- pontos cobertos:
+  - coluna `Valor`
+  - coluna `Saldo`
+  - linha de `Saldo anterior`/`Saldo inicial`
+  - linha de `Saldo final`
+- exemplo final:
+  - `R$        150,00`
+  - `R$       -350,00`
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+- resultado:
+  - microetapa pronta para commit
+  - extrato pronto para homologacao final
+
 ## Refinamento do `Extrato` com remocao do tipo textual no corpo da tabela
 
 - tratei a rodada como limpeza pontual do miolo do `Extrato`, sem tocar em calculos, saldo, cronologia ou regra de negocio

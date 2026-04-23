@@ -2,6 +2,33 @@
 
 Data de atualizacao: 2026-04-23
 
+## Padronizacao das celulas monetarias do `Extrato`
+
+- a microetapa atuou apenas na composicao visual interna das celulas monetarias do `Extrato`, sem alterar calculos, colunas ou regras de negocio
+- padrao consolidado:
+  - `R$` alinhado a esquerda
+  - numero alinhado a direita
+  - ambos na mesma celula
+- esse padrao passou a valer para:
+  - coluna `Valor`
+  - coluna `Saldo`
+  - linhas especiais de `Saldo anterior`/`Saldo inicial`
+  - linha de `Saldo final`
+- regra preservada:
+  - o sinal financeiro continua junto do numero
+  - saidas/despesas continuam negativas
+  - entradas/receitas continuam positivas
+- efeito esperado:
+  - leitura monetaria mais limpa
+  - menor sensacao de `R$` solto no PDF
+  - maior consistencia entre tela e impressao
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+- observacao:
+  - o extrato fica pronto para homologacao final desta rodada visual
+
 ## Refinamento visual do miolo do `Extrato`
 
 - a microetapa atuou apenas no layout/apresentacao da tabela do `Extrato`, sem alterar calculos, ordenacao cronologica ou semantica financeira

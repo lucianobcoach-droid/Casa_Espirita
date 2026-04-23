@@ -401,11 +401,39 @@
     }
 
     .financeiro-extrato-value {
-        display: inline-block;
+        display: inline-flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 0.45rem;
         width: 100%;
         color: #0f172a;
         font-variant-numeric: tabular-nums;
         white-space: nowrap;
+        text-align: right;
+    }
+
+    .financeiro-extrato-balance-cell {
+        display: inline-flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 0.45rem;
+        width: 100%;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+        text-align: right;
+    }
+
+    .financeiro-extrato-value .money-symbol,
+    .financeiro-extrato-balance-cell .money-symbol {
+        flex: 0 0 auto;
+        color: #64748b;
+        font-weight: 700;
+    }
+
+    .financeiro-extrato-value .money-number,
+    .financeiro-extrato-balance-cell .money-number {
+        flex: 1 1 auto;
+        min-width: 0;
         text-align: right;
     }
 
@@ -418,7 +446,7 @@
     }
 
     .financeiro-extrato-value .money-number,
-    .extrato-balance .money-number {
+    .financeiro-extrato-balance-cell .money-number {
         letter-spacing: -0.01em;
     }
 
@@ -570,15 +598,6 @@
             text-align: right !important;
         }
 
-        .financeiro-extrato-table .money-cell {
-            justify-content: flex-end !important;
-            gap: 0.04rem !important;
-        }
-
-        .financeiro-extrato-table .money-symbol {
-            min-width: 0.88rem !important;
-        }
-
         .financeiro-extrato-description-main,
         .financeiro-extrato-favorecido-main,
         .financeiro-extrato-description-meta {
@@ -591,7 +610,8 @@
             font-size: 7.1pt !important;
         }
 
-        .financeiro-extrato-value {
+        .financeiro-extrato-value,
+        .financeiro-extrato-balance-cell {
             width: 100% !important;
         }
 
@@ -796,7 +816,12 @@
                                                     <th></th>
                                                     <th><span class="financeiro-balance-line-label">{% if saldo_anterior is not None %}Saldo anterior{% else %}Saldo inicial{% endif %}</span></th>
                                                     <th></th>
-                                                    <th><strong><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_anterior|default:saldo_inicial|br_money }}</span></span></strong></th>
+                                                    <th>
+                                                        <strong class="financeiro-extrato-balance-cell">
+                                                            <span class="money-symbol">R$</span>
+                                                            <span class="money-number">{{ saldo_anterior|default:saldo_inicial|br_money }}</span>
+                                                        </strong>
+                                                    </th>
                                                     <th></th>
                                                 </tr>
                                             {% endif %}
@@ -825,16 +850,18 @@
                                                     </td>
                                                     <td>
                                                         <span class="financeiro-extrato-value {% if item.valor_exibicao < 0 %}is-negative{% elif item.valor_exibicao > 0 %}is-positive{% endif %}">
+                                                            <span class="money-symbol">R$</span>
                                                             {% if item.valor_exibicao < 0 %}
-                                                                <span class="money-number">R$ -{{ item.valor_exibicao_absoluto|br_money }}</span>
+                                                                <span class="money-number">-{{ item.valor_exibicao_absoluto|br_money }}</span>
                                                             {% else %}
-                                                                <span class="money-number">R$ {{ item.valor_exibicao|br_money }}</span>
+                                                                <span class="money-number">{{ item.valor_exibicao|br_money }}</span>
                                                             {% endif %}
                                                         </span>
                                                     </td>
                                                     <td>
-                                                        <span class="extrato-balance {% if item.saldo_acumulado > 0 %}is-positive{% elif item.saldo_acumulado < 0 %}is-negative{% else %}is-neutral{% endif %}">
-                                                            <span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ item.saldo_acumulado|br_money }}</span></span>
+                                                        <span class="financeiro-extrato-balance-cell extrato-balance {% if item.saldo_acumulado > 0 %}is-positive{% elif item.saldo_acumulado < 0 %}is-negative{% else %}is-neutral{% endif %}">
+                                                            <span class="money-symbol">R$</span>
+                                                            <span class="money-number">{{ item.saldo_acumulado|br_money }}</span>
                                                         </span>
                                                     </td>
                                                 </tr>
@@ -849,7 +876,12 @@
                                                     <td><span class="financeiro-balance-line-label">Saldo final</span></td>
                                                     <td></td>
                                                     <td></td>
-                                                    <td><strong><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_final|br_money }}</span></span></strong></td>
+                                                    <td>
+                                                        <strong class="financeiro-extrato-balance-cell">
+                                                            <span class="money-symbol">R$</span>
+                                                            <span class="money-number">{{ saldo_final|br_money }}</span>
+                                                        </strong>
+                                                    </td>
                                                 </tr>
                                             </tbody>
                                         </table>
