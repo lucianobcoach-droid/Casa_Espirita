@@ -2,6 +2,39 @@
 
 Data de atualizacao: 2026-04-23
 
+## Redesenho do impresso do `Extrato` para modelo bancario compacto
+
+- a microetapa redesenhou apenas o layout de impressao/PDF do `Extrato`, preservando calculos, ordem cronologica, semantica financeira e a versao de tela normal
+- o impresso passou a usar uma tabela propria de 5 colunas:
+  - `Data`
+  - `Doc.`
+  - `Historico`
+  - `Valor`
+  - `Saldo`
+- deixaram de existir como colunas separadas no impresso:
+  - `Favorecido`
+  - `Mov.`
+  - `Entrada`
+  - `Saida`
+- regra do `Historico` no impresso:
+  - a descricao da movimentacao passa a ser a linha principal
+  - favorecido e tipo da movimentacao passam a compor uma linha secundaria compacta no mesmo campo
+  - o `Historico` vira a coluna textual elastica principal do extrato impresso
+- regra da coluna `Valor` no impresso:
+  - `entrada` passa a ser exibida como `valor C`
+  - `saida` passa a ser exibida como `valor D`
+  - o saldo continua em coluna propria, alinhado a direita e protegido
+- linhas especiais permanecem no documento:
+  - `Saldo anterior`/`Saldo inicial`
+  - `Saldo final`
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+  - PDF de conferência gerado em `tmp/extrato_homologacao_bancario.pdf`
+- observacao:
+  - o impresso do extrato fica pronto para nova homologacao visual neste modelo bancario compacto
+
 ## Correcao da sobreposicao de colunas no impresso do `Extrato`
 
 - a microetapa atuou apenas no layout de impressao/PDF da tabela do `Extrato`, sem alterar calculos, ordenacao cronologica, saldos ou semantica financeira

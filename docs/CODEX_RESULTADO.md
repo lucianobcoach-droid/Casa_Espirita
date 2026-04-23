@@ -2,6 +2,41 @@
 
 Data: 2026-04-23
 
+## Redesenho do impresso do `Extrato` para modelo bancario compacto de 5 colunas
+
+- tratei a rodada como redesenho pontual apenas do print/PDF do `Extrato`, sem tocar na tela normal e sem alterar qualquer calculo
+- causa objetiva:
+  - o modelo anterior ainda carregava informacao demais em colunas demais
+  - isso deixava o miolo fragmentado e distante da leitura esperada de um extrato bancario
+- solucao aplicada:
+  - mantive a tabela atual apenas para a versao em tela
+  - criei uma tabela dedicada de impressao com 5 colunas:
+    - `Data`
+    - `Doc.`
+    - `Historico`
+    - `Valor`
+    - `Saldo`
+- regra final do `Historico`:
+  - linha principal com a descricao da movimentacao
+  - linha secundaria compacta com `favorecido` quando existir e `tipo da movimentacao`
+  - `Historico` passa a ser a coluna elastica principal do impresso
+- regra final da coluna `Valor`:
+  - `entrada` vira `valor C`
+  - `saida` vira `valor D`
+  - a semantica de credito/debito fica consolidada na propria coluna
+- preservacao:
+  - a versao de tela normal do extrato permaneceu intacta
+  - saldo anterior/inicial e saldo final permaneceram destacados
+  - a coluna `Saldo` continua propria, alinhada a direita e protegida
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+  - PDF de conferência gerado em `tmp/extrato_homologacao_bancario.pdf`
+- resultado:
+  - microetapa pronta para commit
+  - impresso do `Extrato` pronto para nova homologacao visual
+
 ## Correcao da sobreposicao de colunas no impresso do `Extrato`
 
 - tratei a rodada como correcao pontual de print/PDF do `Extrato`, sem tocar na leitura cronologica da tela normal nem em qualquer calculo financeiro
