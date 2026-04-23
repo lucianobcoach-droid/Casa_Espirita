@@ -2,6 +2,34 @@
 
 Data: 2026-04-23
 
+## Rebaixamento do filtro e limpeza do topo em `Evolucao por categorias`
+
+- tratei a rodada como refinamento de UX visual/estrutural, sem tocar em calculos, comparacao, KPIs ou semantica financeira
+- no painel de filtros:
+  - se ja existe resultado carregado, o painel agora vem recolhido por padrao
+  - o summary passou a exibir um resumo compacto do estado atual da analise
+  - a acao de abrir/fechar ficou mais clara, usando o proprio summary como ponto de retorno rapido
+- na hierarquia da pagina:
+  - separei o card de resultados do card de filtros
+  - o resultado passa a aparecer acima do filtro na hierarquia visual da pagina
+  - isso ajuda a tela a parecer mais consulta analitica e menos formulario dominante
+- no topo:
+  - mantive como chips principais apenas os contextos mais estruturais
+  - `analise`, `selecao atual` e `contas` migraram para texto secundario
+  - o topo ficou menos carregado e com menor repeticao de peso visual
+- preservacao:
+  - nenhuma regra de negocio mudou
+  - o fluxo sem comparativo foi preservado
+  - o comparativo consolidado e o comparativo separado nao tiveram alteracao de calculo
+  - impressao permaneceu sem regressao estrutural
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+- resultado:
+  - microetapa pronta para commit
+  - tela pronta para nova homologacao visual focada em UX
+
 ## Reforco da hierarquia visual da tela `Evolucao por categorias`
 
 - tratei a rodada como refinamento de UX visual, sem tocar em calculos, comparacao entre periodos ou semantica financeira

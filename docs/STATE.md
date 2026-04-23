@@ -2,6 +2,31 @@
 
 Data de atualizacao: 2026-04-23
 
+## Rebaixamento do painel de filtros e limpeza do topo em `Evolucao por categorias`
+
+- a microetapa atuou apenas na hierarquia visual da tela `Evolucao por categorias`, preservando calculos, comparacao entre periodos, semantica financeira e impressao funcional
+- o painel de filtros deixou de disputar protagonismo com a analise:
+  - quando ha resultado carregado, o painel passa a vir recolhido por padrao
+  - no estado recolhido, a tela mostra um resumo compacto da configuracao atual
+  - o usuario pode reabrir facilmente pelo proprio resumo com acao clara de editar/ocultar filtros
+- a pagina passou a ficar mais coerente com tela analitica:
+  - o card de resultados foi separado do card de filtros
+  - o resultado fica visualmente acima do formulario na hierarquia da pagina
+  - KPIs e blocos de leitura continuam protagonistas
+- o topo ficou menos carregado:
+  - os chips principais foram reduzidos para `comparacao`/`periodo principal`, `escopo`, `leitura` e `granularidade`
+  - `analise`, `selecao atual` e `contas` passaram para contexto textual secundario
+- preservacao:
+  - nenhuma regra funcional foi alterada
+  - nenhuma regra de receita/despesa foi alterada
+  - o comparativo consolidado e o fluxo normal sem comparativo foram preservados
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+- observacao:
+  - a tela fica pronta para nova homologacao visual focada em UX
+
 ## Reorganizacao da hierarquia visual em `Evolucao por categorias`
 
 - a microetapa atuou apenas na apresentacao da tela `Evolucao por categorias`, preservando calculos, semantica financeira, comparacao entre periodos e fluxo normal sem comparativo
