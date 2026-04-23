@@ -2,6 +2,24 @@
 
 Data de atualizacao: 2026-04-23
 
+## Rotulos curtos e ordenacao analitica no comparativo separado
+
+- a microetapa refinou apenas o bloco `Itens com maior diferenca absoluta` da tela `Evolucao por categorias`
+- a logica de calculo, KPIs, comparativo consolidado, comparativo separado e fluxo normal sem comparativo permaneceram preservados
+- regra final de rotulo do bloco:
+  - categorias e subcategorias exibem nome curto com prefixo visual `+`
+  - quando nomes repetidos geram ambiguidade real, apenas esses itens usam o formato expandido `Categoria / Nome`
+  - a tabela comparativa continua podendo preservar o label analitico completo
+- regra final de ordenacao do bloco:
+  - maior diferenca absoluta entre os periodos
+  - maior valor total somado entre os dois periodos
+  - ordem alfabetica como desempate final
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+  - smoke autenticado com rollback OK confirmando labels curtos, fallback por ambiguidade, ordenacao analitica do bloco e fluxo normal preservado
+
 ## Normalizacao dos rotulos de periodo na comparacao de `Evolucao por categorias`
 
 - a microetapa corrigiu apenas a apresentacao textual dos periodos quando `Periodo comparativo` esta preenchido

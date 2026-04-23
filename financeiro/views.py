@@ -4334,6 +4334,23 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
             return f'{prefixo}: {sufixo}'
         return prefixo
 
+    def _montar_rotulos_curtos_comparacao(self, itens: list[dict[str, object]]) -> dict[int, str]:
+        contagem_nomes: dict[str, int] = {}
+        for item in itens:
+            objeto = item.get('objeto')
+            nome_curto = getattr(objeto, 'nome', item.get('display_label') or item.get('label') or '')
+            chave = _texto_ordenacao_insensivel(nome_curto)
+            contagem_nomes[chave] = contagem_nomes.get(chave, 0) + 1
+
+        rotulos: dict[int, str] = {}
+        for item in itens:
+            objeto = item.get('objeto')
+            nome_curto = getattr(objeto, 'nome', item.get('display_label') or item.get('label') or '')
+            chave = _texto_ordenacao_insensivel(nome_curto)
+            nome_exibido = item.get('label') if contagem_nomes.get(chave, 0) > 1 else nome_curto
+            rotulos[int(item['id'])] = f'+ {nome_exibido}'
+        return rotulos
+
     def _descricao_grafico(
         self,
         *,
@@ -4483,12 +4500,14 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
                 return series, []
 
             series = []
+            rotulos_curtos = self._montar_rotulos_curtos_comparacao(itens_selecionados)
             for indice, item in enumerate(itens_selecionados):
                 prefixo = 'Entrada' if item['tipo'] == LancamentoFinanceiro.TipoLancamento.RECEITA else 'Saida'
                 series.append(
                     {
                         'chave': f"comparativo_item_{item['id']}",
                         'label': f"{prefixo} - {item['label']}",
+                        'label_grafico': rotulos_curtos.get(int(item['id']), item['label']),
                         'tipo': item['tipo'],
                         'cor': EVOLUCAO_CATEGORIAS_SERIES_CORES[indice % len(EVOLUCAO_CATEGORIAS_SERIES_CORES)],
                         'categoria_ids': item['categoria_ids'],
@@ -4519,11 +4538,13 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
             return series, []
 
         series = []
+        rotulos_curtos = self._montar_rotulos_curtos_comparacao(itens_selecionados)
         for indice, item in enumerate(itens_selecionados):
             series.append(
                 {
                     'chave': f"item_{item['id']}",
                     'label': item['label'],
+                    'label_grafico': rotulos_curtos.get(int(item['id']), item['label']),
                     'tipo': item['tipo'],
                     'cor': EVOLUCAO_CATEGORIAS_SERIES_CORES[indice % len(EVOLUCAO_CATEGORIAS_SERIES_CORES)],
                     'categoria_ids': item['categoria_ids'],
@@ -4818,7 +4839,7 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
             key=lambda linha: (
                 -abs(linha.get('diferenca_absoluta') or Decimal('0.00')),
                 -(abs(linha.get('valor_a') or Decimal('0.00')) + abs(linha.get('valor_b') or Decimal('0.00'))),
-                _texto_ordenacao_insensivel(linha.get('label') or ''),
+                _texto_ordenacao_insensivel(linha.get('label_grafico') or linha.get('label') or ''),
             ),
         )
         linhas_exibidas = linhas_ordenadas[:limite_itens]
@@ -4852,7 +4873,7 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
             'tem_itens_ocultos': len(linhas_comparacao) > limite_itens,
             'itens': [
                 {
-                    'label': linha['label'],
+                    'label': linha.get('label_grafico') or linha['label'],
                     'valor_principal_formatado': linha['valor_a_formatado'],
                     'valor_comparativo_formatado': linha['valor_b_formatado'],
                     'diferenca_absoluta_formatada': linha['diferenca_absoluta_formatada'],
@@ -5024,6 +5045,7 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
         for chave in ordem_series:
             serie_a = series_a.get(chave)
             serie_b = series_b.get(chave)
+            serie_base = serie_a or serie_b
             valor_a = serie_a['total'] if serie_a else Decimal('0.00')
             valor_b = serie_b['total'] if serie_b else Decimal('0.00')
             diferenca_absoluta = abs(valor_b - valor_a)
@@ -5032,7 +5054,8 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
             total_periodo_b += valor_b
             linhas_comparacao.append(
                 {
-                    'label': (serie_a or serie_b)['label'],
+                    'label': serie_base['label'],
+                    'label_grafico': serie_base.get('label_grafico') or serie_base['label'],
                     'valor_a': valor_a,
                     'valor_a_formatado': _formatar_moeda_brl(valor_a),
                     'valor_b': valor_b,

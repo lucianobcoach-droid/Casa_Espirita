@@ -2,6 +2,37 @@
 
 Data: 2026-04-23
 
+## Rotulos curtos e ordenacao analitica no comparativo separado
+
+- tratei a rodada como acabamento de UX do bloco `Itens com maior diferenca absoluta`, sem alterar calculos nem a estrutura da comparacao
+- causa objetiva:
+  - o bloco de barras herdava o label analitico completo da serie, como `Captacao / Doacao`, deixando a leitura mais pesada do que o necessario
+  - a ordenacao analitica ja existia, mas precisava ficar consolidada e validada para o bloco visual
+- solucao aplicada:
+  - separei o label completo da tabela do label curto usado no grafico de barras
+  - o bloco visual passou a usar labels como `+ Doacao` e `+ Rendimento de juros`
+  - quando existe ambiguidade real por nomes repetidos, o item usa fallback expandido, como `+ Administracao / Outros`
+- regra final de ordenacao:
+  - ordenar por maior diferenca absoluta decrescente
+  - desempatar por maior soma dos valores dos dois periodos
+  - desempatar por ordem alfabetica do label visual
+- preservacao:
+  - comparativo consolidado nao foi alterado
+  - calculos, KPIs e tabela comparativa permaneceram intactos
+  - fluxo normal sem `Periodo comparativo` permaneceu sem tabela comparativa
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+  - smoke autenticado com rollback OK confirmando:
+    - labels curtos em escopo `Subcategorias`
+    - labels curtos em escopo `Categorias`
+    - fallback expandido para subcategorias homonimas
+    - ordenacao visual coerente com maior diferenca absoluta
+    - fluxo normal sem comparativo preservado
+- resultado:
+  - tela pronta para encerramento definitivo deste bloco, pendente apenas de homologacao visual final se desejado
+
 ## Normalizacao dos rotulos de periodo na comparacao de `Evolucao por categorias`
 
 - tratei a rodada como correcao textual pontual, sem mexer na logica de calculo nem no fluxo normal sem comparativo
