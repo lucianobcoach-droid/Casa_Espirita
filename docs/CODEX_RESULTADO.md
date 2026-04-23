@@ -2,6 +2,33 @@
 
 Data: 2026-04-23
 
+## Correcao da sobreposicao de colunas no impresso do `Extrato`
+
+- tratei a rodada como correcao pontual de print/PDF do `Extrato`, sem tocar na leitura cronologica da tela normal nem em qualquer calculo financeiro
+- causa objetiva:
+  - no impresso, o miolo da tabela ficava apertado demais
+  - `Favorecido`, `Mov`, `Entrada`, `Saida` e `Saldo` disputavam largura e acabavam invadindo visualmente colunas vizinhas
+- solucao aplicada:
+  - ativei `table-layout: fixed` no modo print
+  - protegi larguras de `Entrada`, `Saida` e `Saldo`
+  - reduzi `Doc.` e deixei `Mov.` mais enxuta no papel
+  - passei `Descricao`, `Favorecido` e `Observacoes` para truncamento controlado com `ellipsis`
+  - reduzi `font-size` e `padding` apenas no impresso
+  - reforcei alinhamento numerico a direita e o `money-cell` no print
+- preservacao:
+  - nenhuma regra de negocio mudou
+  - nenhum calculo de saldo mudou
+  - nenhuma ordenacao mudou
+  - a versao de tela normal do `Extrato` permaneceu intacta
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+  - geracao de PDF de conferência em `tmp/extrato_homologacao_impresso_corrigido.pdf`
+- resultado:
+  - microetapa pronta para commit
+  - impresso do `Extrato` pronto para nova homologacao visual
+
 ## Aplicacao do padrao analitico consolidado na tela `Extrato`
 
 - tratei a rodada como segunda propagacao controlada do padrao analitico consolidado a partir de `Evolucao por categorias`, sem reabrir regra de negocio nem mexer na base de calculo do extrato

@@ -2,6 +2,29 @@
 
 Data de atualizacao: 2026-04-23
 
+## Correcao da sobreposicao de colunas no impresso do `Extrato`
+
+- a microetapa atuou apenas no layout de impressao/PDF da tabela do `Extrato`, sem alterar calculos, ordenacao cronologica, saldos ou semantica financeira
+- a base do ajuste foi concentrada no `@media print` do template do extrato
+- correcoes aplicadas no impresso:
+  - tabela passou a usar `table-layout: fixed` no papel
+  - colunas numericas ficaram com larguras protegidas para `Entrada`, `Saida` e `Saldo`
+  - a coluna `Mov.` ficou mais enxuta no impresso
+  - a coluna `Doc.` foi reduzida no papel para liberar respiro no miolo
+  - `Descricao`, `Favorecido` e `Observacoes` passaram a aceitar truncamento controlado com `ellipsis`
+  - padding e font-size do miolo foram reduzidos apenas no modo print
+  - alinhamento numerico foi reforcado a direita para melhorar leitura de valores e saldo final
+- efeito esperado:
+  - o miolo do extrato impresso deixa de colidir visualmente entre `Favorecido`, `Mov`, `Entrada`, `Saida` e `Saldo`
+  - a leitura textual continua aceitavel, com prioridade pratica para valores e fechamento do extrato
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+  - geracao de PDF de homologacao do extrato corrigido em `tmp/extrato_homologacao_impresso_corrigido.pdf`
+- observacao:
+  - o impresso do extrato fica pronto para nova homologacao visual focada em PDF/print
+
 ## Aplicacao do padrao analitico consolidado na tela `Extrato`
 
 - a microetapa adaptou a tela `Extrato` ao padrao analitico consolidado em `Evolucao por categorias`, preservando a logica cronologica do extrato, os calculos de saldo e a base documental de impressao
