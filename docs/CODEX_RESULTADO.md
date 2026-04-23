@@ -2,6 +2,43 @@
 
 Data: 2026-04-23
 
+## Correcao da semantica visual das barras de despesa no comparativo separado
+
+- tratei a rodada como correcao visual/semantica pontual do bloco `Itens com maior diferenca absoluta`, sem reabrir a comparacao nem tocar no consolidado
+- causa objetiva:
+  - o texto monetario da despesa ja estava negativo
+  - mas a barra ainda usava trilha positiva simples, sempre crescendo para a direita, o que fazia despesa parecer receita no desenho
+- solucao aplicada:
+  - adaptei a estrutura HTML/CSS do bloco para barra divergente com eixo central
+  - cada linha agora tem duas metades de trilha:
+    - lado esquerdo para despesa
+    - lado direito para receita
+  - a view passou a enviar a natureza do item para o bloco (`is-despesa` / `is-receita`)
+  - a largura continua proporcional a magnitude absoluta
+  - a direcao visual passou a ser definida pela natureza financeira do item
+- regra final consolidada:
+  - `receita`: texto positivo, barra para a direita
+  - `despesa`: texto negativo, barra para a esquerda
+  - o eixo central deixa explicito o lado negativo/positivo
+- preservacao:
+  - rotulos curtos permaneceram intactos
+  - ordenacao analitica permaneceu intacta
+  - comparativo consolidado nao foi alterado
+  - fluxo normal sem `Periodo comparativo` nao foi alterado
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+  - smoke autenticado com rollback OK confirmando:
+    - texto de despesa negativo
+    - `financeiro-evolucao-bar-fill is-principal is-negative`
+    - `financeiro-evolucao-bar-fill is-comparativo is-negative`
+    - `financeiro-evolucao-bar-fill is-principal is-positive`
+    - `financeiro-evolucao-bar-fill is-comparativo is-positive`
+- resultado:
+  - o defeito ficou corrigido tecnicamente
+  - a homologacao visual/manual em navegador real ainda precisa confirmar a leitura final da barra
+
 ## Correcao final da renderizacao do sinal das despesas na comparacao separada
 
 - reabri a correcao porque o retorno do usuario foi tratado como verdade operacional: despesas ainda apareciam positivas na interface, entao a rodada anterior nao podia ser considerada encerrada

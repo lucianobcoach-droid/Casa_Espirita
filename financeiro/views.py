@@ -4883,6 +4883,11 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
             'itens': [
                 {
                     'label': linha.get('label_grafico') or linha['label'],
+                    'natureza_css': (
+                        'is-despesa'
+                        if linha.get('tipo') == LancamentoFinanceiro.TipoLancamento.DESPESA
+                        else 'is-receita'
+                    ),
                     'valor_principal_exibido_formatado': linha['valor_a_exibido_formatado'],
                     'valor_comparativo_exibido_formatado': linha['valor_b_exibido_formatado'],
                     'diferenca_absoluta_formatada': linha['diferenca_absoluta_formatada'],
@@ -5073,6 +5078,7 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
                 {
                     'label': serie_base['label'],
                     'label_grafico': serie_base.get('label_grafico') or serie_base['label'],
+                    'tipo': serie_base['tipo'],
                     'valor_a_absoluto': valor_a,
                     'valor_a_exibicao': valor_a_exibicao,
                     'valor_a_exibido_formatado': _formatar_moeda_brl_exibicao(valor_a_exibicao),

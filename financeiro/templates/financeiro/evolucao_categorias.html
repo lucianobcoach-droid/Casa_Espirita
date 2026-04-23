@@ -518,10 +518,44 @@
     }
 
     .financeiro-evolucao-bar-track {
-        height: 0.58rem;
+        position: relative;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        align-items: center;
+        height: 0.9rem;
         border-radius: 999px;
-        background: #e8eef6;
+        background: linear-gradient(90deg, #f4f7fb 0%, #eef3f8 50%, #f4f7fb 100%);
         overflow: hidden;
+    }
+
+    .financeiro-evolucao-bar-track::before {
+        content: "";
+        position: absolute;
+        left: 50%;
+        top: 0.08rem;
+        bottom: 0.08rem;
+        width: 2px;
+        transform: translateX(-50%);
+        background: rgba(71, 85, 105, 0.34);
+        border-radius: 999px;
+        z-index: 2;
+    }
+
+    .financeiro-evolucao-bar-half {
+        position: relative;
+        height: 100%;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        padding: 0.11rem 0;
+    }
+
+    .financeiro-evolucao-bar-half.is-negative {
+        justify-content: flex-end;
+    }
+
+    .financeiro-evolucao-bar-half.is-positive {
+        justify-content: flex-start;
     }
 
     .financeiro-evolucao-bar-fill {
@@ -539,12 +573,30 @@
         background: #c97316;
     }
 
+    .financeiro-evolucao-bar-fill.is-negative {
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+
+    .financeiro-evolucao-bar-fill.is-positive {
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+    }
+
     .financeiro-evolucao-bar-value {
         color: #0f172a;
         font-size: 0.78rem;
         font-weight: 800;
         text-align: right;
         white-space: nowrap;
+    }
+
+    .financeiro-evolucao-bar-value.is-despesa {
+        color: #b42318;
+    }
+
+    .financeiro-evolucao-bar-value.is-receita {
+        color: #236746;
     }
 
     .financeiro-evolucao-bars-note {
@@ -1056,16 +1108,34 @@
                                                             <div class="financeiro-evolucao-bar-row">
                                                                 <span class="financeiro-evolucao-bar-period" title="{{ bloco.periodo_principal_label }}">{{ bloco.periodo_principal_label }}</span>
                                                                 <span class="financeiro-evolucao-bar-track">
-                                                                    <span class="financeiro-evolucao-bar-fill is-principal" style="width: {{ item.largura_principal }}%;"></span>
+                                                                    <span class="financeiro-evolucao-bar-half is-negative">
+                                                                        {% if item.natureza_css == 'is-despesa' %}
+                                                                            <span class="financeiro-evolucao-bar-fill is-principal is-negative" style="width: {{ item.largura_principal }}%;"></span>
+                                                                        {% endif %}
+                                                                    </span>
+                                                                    <span class="financeiro-evolucao-bar-half is-positive">
+                                                                        {% if item.natureza_css != 'is-despesa' %}
+                                                                            <span class="financeiro-evolucao-bar-fill is-principal is-positive" style="width: {{ item.largura_principal }}%;"></span>
+                                                                        {% endif %}
+                                                                    </span>
                                                                 </span>
-                                                                <span class="financeiro-evolucao-bar-value">{{ item.valor_principal_exibido_formatado }}</span>
+                                                                <span class="financeiro-evolucao-bar-value {{ item.natureza_css }}">{{ item.valor_principal_exibido_formatado }}</span>
                                                             </div>
                                                             <div class="financeiro-evolucao-bar-row">
                                                                 <span class="financeiro-evolucao-bar-period" title="{{ bloco.periodo_comparativo_label }}">{{ bloco.periodo_comparativo_label }}</span>
                                                                 <span class="financeiro-evolucao-bar-track">
-                                                                    <span class="financeiro-evolucao-bar-fill is-comparativo" style="width: {{ item.largura_comparativo }}%;"></span>
+                                                                    <span class="financeiro-evolucao-bar-half is-negative">
+                                                                        {% if item.natureza_css == 'is-despesa' %}
+                                                                            <span class="financeiro-evolucao-bar-fill is-comparativo is-negative" style="width: {{ item.largura_comparativo }}%;"></span>
+                                                                        {% endif %}
+                                                                    </span>
+                                                                    <span class="financeiro-evolucao-bar-half is-positive">
+                                                                        {% if item.natureza_css != 'is-despesa' %}
+                                                                            <span class="financeiro-evolucao-bar-fill is-comparativo is-positive" style="width: {{ item.largura_comparativo }}%;"></span>
+                                                                        {% endif %}
+                                                                    </span>
                                                                 </span>
-                                                                <span class="financeiro-evolucao-bar-value">{{ item.valor_comparativo_exibido_formatado }}</span>
+                                                                <span class="financeiro-evolucao-bar-value {{ item.natureza_css }}">{{ item.valor_comparativo_exibido_formatado }}</span>
                                                             </div>
                                                         </div>
                                                     {% endfor %}

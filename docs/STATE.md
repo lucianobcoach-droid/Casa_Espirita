@@ -2,6 +2,35 @@
 
 Data de atualizacao: 2026-04-23
 
+## Correcao da semantica visual das barras de despesa no comparativo separado
+
+- a microetapa corrigiu o defeito remanescente do bloco `Itens com maior diferenca absoluta`: o texto ja estava negativo para despesa, mas a barra ainda crescia para a direita como se fosse positiva
+- regra visual final aplicada no comparativo separado:
+  - `receita` continua com texto positivo e barra crescendo para a direita
+  - `despesa` continua com texto negativo e passa a ter barra crescendo para a esquerda
+  - o bloco agora usa eixo central fixo na trilha para explicitar a divergencia positiva/negativa
+- separacao consolidada:
+  - texto continua usando campos assinados de exibicao
+  - escala/largura continuam usando magnitude absoluta
+  - direcao da barra passa a depender da natureza do item (`receita` / `despesa`)
+- preservacao:
+  - rotulos curtos permaneceram os mesmos
+  - ordenacao por maior diferenca absoluta permaneceu a mesma
+  - comparativo consolidado nao foi alterado
+  - fluxo normal sem comparativo permaneceu preservado
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+  - smoke autenticado com rollback OK confirmando:
+    - texto de despesa negativo
+    - markup de barra negativa para despesa
+    - markup de barra positiva para receita
+    - cores/classe coerentes no bloco
+- observacao:
+  - a semantica visual ficou validada tecnicamente nesta etapa
+  - a confirmacao visual/manual em navegador real continua pendente para homologacao visual final
+
 ## Correcao final da renderizacao do sinal na comparacao separada de `Evolucao por categorias`
 
 - a microetapa reabriu a correcao anterior porque o retorno do uso real confirmou que despesas ainda apareciam positivas na interface
