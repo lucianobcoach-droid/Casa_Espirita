@@ -2,6 +2,43 @@
 
 Data de atualizacao: 2026-04-23
 
+## Alinhamento estrutural do `Extrato` entre tela e impressao
+
+- a microetapa corrigiu a tentativa anterior de modelo bancario compacto, que nao foi aprovada na homologacao visual
+- a regra consolidada passa a ser:
+  - tela e impressao compartilham a mesma logica estrutural de colunas
+  - `Descricao` e `Favorecido` permanecem separados
+  - `Valor` nao usa `C/D` e passa a respeitar sinal positivo/negativo
+- estrutura final das colunas no `Extrato`:
+  - `Data`
+  - `Doc.`
+  - `Descricao`
+  - `Favorecido`
+  - `Valor`
+  - `Saldo`
+- o impresso deixou de usar:
+  - historico fundido
+  - coluna `Valor` com `C/D`
+  - separacao anterior entre `Entrada` e `Saida`
+- regra do `Valor`:
+  - receitas/entradas aparecem positivas
+  - despesas/saidas aparecem negativas
+  - saldo continua em coluna propria, alinhado a direita e protegido
+- ajuste minimo no backend:
+  - a view passou a expor `valor_exibicao` assinado e `valor_exibicao_absoluto` para a apresentacao da coluna `Valor`, sem alterar calculos do extrato
+- preservacao:
+  - ordem cronologica mantida
+  - calculos de saldo mantidos
+  - semantica financeira mantida
+  - impressao continua isolada do shell e dos filtros
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+  - PDF de conferência gerado em `tmp/extrato_homologacao_alinhado.pdf`
+- observacao:
+  - o extrato fica pronto para nova homologacao visual desta estrutura alinhada
+
 ## Redesenho do impresso do `Extrato` para modelo bancario compacto
 
 - a microetapa redesenhou apenas o layout de impressao/PDF do `Extrato`, preservando calculos, ordem cronologica, semantica financeira e a versao de tela normal

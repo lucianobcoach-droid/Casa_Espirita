@@ -5708,6 +5708,8 @@ class ExtratoContaMixin(FinanceiroPermissaoMixin):
                     'lancamento': lancamento_representante,
                     'entrada': entrada_total,
                     'saida': saida_total,
+                    'valor_exibicao': entrada_total if entrada_total else (-saida_total if saida_total else Decimal('0.00')),
+                    'valor_exibicao_absoluto': entrada_total if entrada_total else saida_total,
                     'saldo_acumulado': saldo_acumulado,
                     'rateio_consolidado': len(bloco) > 1 and bool((lancamento_representante.grupo_rateio or '').strip()),
                     'quantidade_linhas_rateio': len(bloco),

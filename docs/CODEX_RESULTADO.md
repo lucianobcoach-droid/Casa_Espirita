@@ -2,6 +2,43 @@
 
 Data: 2026-04-23
 
+## Alinhamento do layout do `Extrato` entre tela e impressao
+
+- tratei a rodada como correcao da tentativa anterior de modelo bancario, que o usuario reprovou por fundir `Descricao` com `Favorecido` e por usar `C/D` na coluna de valor
+- decisao consolidada nesta etapa:
+  - tela e impressao passam a seguir a mesma logica estrutural de colunas
+  - `Descricao` e `Favorecido` permanecem em colunas distintas
+  - `Valor` passa a ser unico, sem `C/D`, com sinal negativo quando aplicavel
+- estrutura final aplicada:
+  - `Data`
+  - `Doc.`
+  - `Descricao`
+  - `Favorecido`
+  - `Valor`
+  - `Saldo`
+- solucao aplicada:
+  - removi a tabela impressa de 5 colunas criada na rodada anterior
+  - mantive uma unica estrutura de tabela entre tela e print, com ajustes apenas de largura, tipografia e compactacao no modo de impressao
+  - `Descricao` ganhou linha principal e pode exibir observacao opcional como meta discreta
+  - `Favorecido` ganhou linha principal e mantem o tipo da movimentacao como meta discreta, sem virar fusao com `Descricao`
+- regra final da coluna `Valor`:
+  - a view passou a expor `valor_exibicao` assinado
+  - quando a linha representa saida/despesa, o valor e exibido com sinal `-`
+  - quando a linha representa entrada/receita, o valor permanece positivo
+  - o saldo continua em coluna propria e alinhada a direita
+- preservacao:
+  - nenhum calculo mudou
+  - nenhuma ordenacao cronologica mudou
+  - a versao de tela nao voltou para a fragmentacao anterior com `Entrada` e `Saida`
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+  - PDF de conferência gerado em `tmp/extrato_homologacao_alinhado.pdf`
+- resultado:
+  - microetapa pronta para commit
+  - extrato pronto para nova homologacao visual desta estrutura alinhada
+
 ## Redesenho do impresso do `Extrato` para modelo bancario compacto de 5 colunas
 
 - tratei a rodada como redesenho pontual apenas do print/PDF do `Extrato`, sem tocar na tela normal e sem alterar qualquer calculo
