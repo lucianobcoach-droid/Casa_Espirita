@@ -2,6 +2,24 @@
 
 Data de atualizacao: 2026-04-23
 
+## Correcao da legenda e anti-colisao dos rotulos no comparativo consolidado
+
+- a microetapa atuou apenas no modo `Periodo comparativo` preenchido + `Leitura = Consolidado` da tela `Evolucao por categorias`
+- o fluxo sem `Periodo comparativo` permanece preservado e o modo `Leitura = Separado` permanece com o grafico de barras horizontais por item ja aprovado
+- regra final da legenda:
+  - as duas series do grafico consolidado usam os periodos reais selecionados como rotulo
+  - a legenda visual nao deve voltar a usar `Periodo principal` / `Periodo comparativo` como nome das series
+- regra final de anti-colisao dos rotulos:
+  - a serie principal posiciona seus valores acima dos pontos
+  - a serie comparativa posiciona seus valores abaixo dos pontos
+  - quando os valores do mesmo indice ficam muito proximos, o offset vertical aumenta
+  - se ainda houver risco de colisao, um rotulo e suprimido naquele ponto e o valor exato permanece disponivel no tooltip
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+  - smoke autenticado com rollback OK confirmando legenda com periodos reais e rotulos reposicionados no comparativo consolidado
+
 ## Correcao dos rotulos no comparativo consolidado de `Evolucao por categorias`
 
 - a microetapa corrigiu apenas o modo `Periodo comparativo` preenchido + `Leitura = Consolidado`

@@ -2,6 +2,31 @@
 
 Data: 2026-04-23
 
+## Correcao da legenda e anti-colisao dos rotulos no comparativo consolidado
+
+- tratei a rodada como correcao pontual do modo consolidado da comparacao em `Evolucao por categorias`
+- preservacao aplicada:
+  - sem `Periodo comparativo`, a tela continua no fluxo normal
+  - com `Leitura = Separado`, o grafico de barras horizontais por item e a tabela comparativa permanecem intactos
+- causa objetiva:
+  - a legenda do grafico precisava ser garantida a partir dos labels reais dos periodos selecionados
+  - os rotulos dos pontos ainda usavam a regra generica do SVG, que podia posicionar valores proximos na mesma area visual
+- solucao aplicada:
+  - mantive os periodos reais como labels das duas series do grafico consolidado
+  - adicionei uma regra especifica para o comparativo consolidado: serie principal acima dos pontos e serie comparativa abaixo
+  - quando os valores do mesmo indice ficam proximos, o offset vertical aumenta
+  - se a proximidade ainda representar risco de colisao, um rotulo daquele ponto e suprimido e o tooltip preserva o valor exato
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+  - smoke autenticado com rollback OK confirmando:
+    - legenda do consolidado com `01/01/2026 a 28/02/2026` e `01/01/2025 a 28/02/2025`
+    - ausencia de `Periodo principal` / `Periodo comparativo` dentro da legenda visual do consolidado
+    - rotulo da serie principal acima e rotulo da serie comparativa abaixo, sem colisao menor que o limite seguro
+- resultado:
+  - tela pronta para homologacao final curtissima do comparativo consolidado
+
 ## Correcao dos rotulos no comparativo consolidado de `Evolucao por categorias`
 
 - tratei a rodada como correcao pontual do modo consolidado, sem mexer no fluxo normal nem no modo separado recem-corrigido

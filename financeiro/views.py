@@ -4728,12 +4728,68 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
             },
         ]
 
+        grafico = _montar_contexto_svg_evolucao(labels, series, mostrar_valores=mostrar_valores_grafico)
+        rotulos_suprimidos_por_colisao = False
+        if mostrar_valores_grafico and grafico.get('tem_dados'):
+            rotulos_suprimidos_por_colisao = self._ajustar_rotulos_comparativo_consolidado(grafico)
+
         return {
-            'grafico': _montar_contexto_svg_evolucao(labels, series, mostrar_valores=mostrar_valores_grafico),
+            'grafico': grafico,
             'series': [{'label': serie['label'], 'cor': serie['cor']} for serie in series],
             'usa_alinhamento_relativo': usa_alinhamento_relativo,
-            'rotulos_suprimidos': mostrar_valores and not mostrar_valores_grafico,
+            'rotulos_suprimidos': mostrar_valores and (
+                not mostrar_valores_grafico or rotulos_suprimidos_por_colisao
+            ),
         }
+
+    @staticmethod
+    def _reposicionar_rotulo_comparativo(ponto: dict[str, object], y_rotulo: float, posicao: str) -> None:
+        ponto['rotulo_posicao'] = posicao
+        ponto['rotulo_y_float'] = y_rotulo
+        ponto['linha_rotulo_y_float'] = y_rotulo + 5.0 if posicao == 'acima' else y_rotulo - 12.0
+        ponto['rotulo_y_svg'] = f'{y_rotulo:.2f}'
+        ponto['linha_rotulo_y_svg'] = f"{ponto['linha_rotulo_y_float']:.2f}"
+
+    def _ajustar_rotulos_comparativo_consolidado(self, grafico: dict[str, object]) -> bool:
+        series = grafico.get('series') or []
+        if len(series) < 2:
+            return False
+
+        pontos_principal = series[0].get('pontos') or []
+        pontos_comparativo = series[1].get('pontos') or []
+        quantidade_pontos = min(len(pontos_principal), len(pontos_comparativo))
+        limite_superior = 16.0
+        limite_inferior = float(grafico.get('eixo_label_y') or grafico.get('altura') or 384) - 20.0
+        rotulo_suprimido = False
+
+        for indice in range(quantidade_pontos):
+            ponto_principal = pontos_principal[indice]
+            ponto_comparativo = pontos_comparativo[indice]
+            if not ponto_principal.get('mostrar_rotulo') and not ponto_comparativo.get('mostrar_rotulo'):
+                continue
+
+            y_principal = float(ponto_principal.get('y_float') or 0.0)
+            y_comparativo = float(ponto_comparativo.get('y_float') or 0.0)
+            valores_proximos = abs(y_principal - y_comparativo) < 26.0
+            offset_principal = 30.0 if valores_proximos else 20.0
+            offset_comparativo = 36.0 if valores_proximos else 26.0
+
+            if ponto_principal.get('mostrar_rotulo'):
+                rotulo_principal_y = max(limite_superior, y_principal - offset_principal)
+                self._reposicionar_rotulo_comparativo(ponto_principal, rotulo_principal_y, 'acima')
+
+            if ponto_comparativo.get('mostrar_rotulo'):
+                rotulo_comparativo_y = min(limite_inferior, y_comparativo + offset_comparativo)
+                if (
+                    ponto_principal.get('mostrar_rotulo')
+                    and abs(rotulo_comparativo_y - float(ponto_principal['rotulo_y_float'])) < 18.0
+                ):
+                    ponto_comparativo['mostrar_rotulo'] = False
+                    rotulo_suprimido = True
+                    continue
+                self._reposicionar_rotulo_comparativo(ponto_comparativo, rotulo_comparativo_y, 'abaixo')
+
+        return rotulo_suprimido
 
     def _montar_grafico_resumo_comparacao_detalhada(
         self,
