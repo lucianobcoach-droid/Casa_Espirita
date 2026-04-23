@@ -2,383 +2,758 @@
 {% load financeiro_format %}
 {% block title %}{{ page_title }}{% endblock %}
 {% block content %}
-<div class="financeiro-page-header financeiro-page-head">
-    <div class="financeiro-page-header-main">
-        <div>
-            <h1 class="title financeiro-page-title">{{ page_title }}</h1>
-            <p class="financeiro-page-subtitle no-print">Visao consolidada do periodo com totais e agrupamentos operacionais.</p>
-            <p class="report-print-meta only-print">Periodo: {{ periodo_label|default:'Nao informado' }}</p>
-            <p class="report-print-meta only-print">Contas incluidas: {{ contas_incluidas_label|default:'Todas as contas' }}</p>
-            <p class="report-print-meta only-print">Emitido em {% now "d/m/Y H:i" %}</p>
+<style>
+    .financeiro-resumo-page {
+        display: grid;
+        gap: 1rem;
+        min-width: 0;
+    }
+
+    .financeiro-resumo-hero {
+        position: relative;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1.1rem 1.2rem;
+        border: 1px solid rgba(203, 213, 225, 0.92);
+        border-radius: 1.15rem;
+        background:
+            radial-gradient(circle at top right, rgba(191, 219, 254, 0.32), transparent 34%),
+            linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+        box-shadow: 0 16px 34px rgba(15, 23, 42, 0.055);
+    }
+
+    .financeiro-resumo-hero .financeiro-page-title {
+        margin-bottom: 0.3rem;
+        font-size: 1.7rem;
+        line-height: 1.12;
+    }
+
+    .financeiro-resumo-hero .financeiro-page-subtitle {
+        max-width: 52rem;
+        color: #475569;
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+
+    .financeiro-resumo-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 0.7rem;
+    }
+
+    .financeiro-resumo-meta-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.38rem 0.72rem;
+        border: 1px solid #dbe6f1;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.9);
+        color: #475569;
+        font-size: 0.79rem;
+        box-shadow: 0 4px 10px rgba(15, 23, 42, 0.03);
+    }
+
+    .financeiro-resumo-meta-item strong {
+        color: #1e293b;
+    }
+
+    .financeiro-resumo-context-note {
+        display: grid;
+        gap: 0.22rem;
+        margin-top: 0.72rem;
+        color: #64748b;
+        font-size: 0.82rem;
+        line-height: 1.45;
+    }
+
+    .financeiro-resumo-context-note strong {
+        color: #334155;
+    }
+
+    .financeiro-resumo-hero .financeiro-page-header-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+    }
+
+    .financeiro-resumo-hero .financeiro-page-header-actions .button.is-light {
+        background: rgba(255, 255, 255, 0.92);
+    }
+
+    .financeiro-resumo-hero .financeiro-page-header-actions .button:first-child {
+        background: #1d4ed8;
+        border-color: #1d4ed8;
+        color: #fff;
+        box-shadow: 0 10px 22px rgba(29, 78, 216, 0.18);
+    }
+
+    .financeiro-resumo-card {
+        border: 1px solid rgba(203, 213, 225, 0.86);
+        border-radius: 1rem;
+        background: #fff;
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.045);
+        overflow: hidden;
+    }
+
+    .financeiro-resumo-card.is-filters {
+        border-color: #e2e8f0;
+        background: linear-gradient(180deg, #fbfcfe 0%, #f7fafc 100%);
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.035);
+    }
+
+    .financeiro-resumo-card.is-filters .filters-box {
+        margin-bottom: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+    }
+
+    .financeiro-resumo-card.is-kpis {
+        background: linear-gradient(180deg, #fbfdff 0%, #f5f9fd 100%);
+    }
+
+    .financeiro-resumo-card.is-results {
+        border-color: #d7e3f2;
+        box-shadow: 0 16px 34px rgba(15, 23, 42, 0.05);
+    }
+
+    .financeiro-resumo-filter-summary {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+    }
+
+    .financeiro-resumo-filter-summary-main {
+        display: grid;
+        gap: 0.18rem;
+        min-width: 0;
+    }
+
+    .financeiro-resumo-filter-summary-heading {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        flex-wrap: wrap;
+    }
+
+    .financeiro-resumo-filter-summary-text {
+        color: #64748b;
+        font-size: 0.82rem;
+        line-height: 1.45;
+    }
+
+    .financeiro-resumo-filter-summary-action {
+        color: #1d4ed8;
+        font-size: 0.8rem;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .financeiro-secondary-panel[open] .financeiro-resumo-filter-summary-action .is-open {
+        display: inline;
+    }
+
+    .financeiro-secondary-panel[open] .financeiro-resumo-filter-summary-action .is-closed {
+        display: none;
+    }
+
+    .financeiro-secondary-panel:not([open]) .financeiro-resumo-filter-summary-action .is-open {
+        display: none;
+    }
+
+    .financeiro-secondary-panel:not([open]) .financeiro-resumo-filter-summary-action .is-closed {
+        display: inline;
+    }
+
+    .financeiro-resumo-kpi-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.8rem;
+        padding: 0.95rem 1rem 0;
+    }
+
+    .financeiro-resumo-section-title {
+        margin: 0;
+        color: #0f172a;
+        font-size: 1rem;
+        font-weight: 800;
+    }
+
+    .financeiro-resumo-section-note {
+        margin: 0.3rem 0 0;
+        color: #64748b;
+        font-size: 0.82rem;
+        line-height: 1.48;
+    }
+
+    .financeiro-resumo-kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+        gap: 0.85rem;
+        padding: 0.95rem 1rem 1rem;
+    }
+
+    .financeiro-resumo-kpi {
+        display: grid;
+        gap: 0.22rem;
+        padding: 0.92rem 0.95rem;
+        border: 1px solid #dce8f4;
+        border-radius: 1rem;
+        background: rgba(255, 255, 255, 0.97);
+        box-shadow: 0 12px 24px rgba(15, 23, 42, 0.05);
+        position: relative;
+    }
+
+    .financeiro-resumo-kpi::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        border-radius: 1rem 1rem 0 0;
+        background: linear-gradient(90deg, #cbd5e1 0%, #e2e8f0 100%);
+    }
+
+    .financeiro-resumo-kpi-label {
+        color: #64748b;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+    }
+
+    .financeiro-resumo-kpi-value {
+        color: #0f172a;
+        font-size: 1.28rem;
+        font-weight: 800;
+        line-height: 1.14;
+        letter-spacing: -0.02em;
+    }
+
+    .financeiro-resumo-kpi-value.is-receita {
+        color: #236746;
+    }
+
+    .financeiro-resumo-kpi-value.is-despesa {
+        color: #b42318;
+    }
+
+    .financeiro-resumo-results-body {
+        display: grid;
+        gap: 1rem;
+        padding: 1rem;
+        background: linear-gradient(180deg, #fcfdff 0%, #f8fbfe 100%);
+    }
+
+    .financeiro-resumo-panel {
+        border: 1px solid #dfe8f3;
+        border-radius: 1rem;
+        background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+        box-shadow: 0 12px 24px rgba(15, 23, 42, 0.04);
+        overflow: hidden;
+    }
+
+    .financeiro-resumo-panel.is-primary {
+        border-color: #d5e3f4;
+        box-shadow: 0 16px 32px rgba(15, 23, 42, 0.055);
+    }
+
+    .financeiro-resumo-panel-header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.8rem;
+        padding: 0.95rem 1rem 0.8rem;
+        border-bottom: 1px solid #e9eff7;
+        background: linear-gradient(180deg, rgba(248, 251, 255, 0.95) 0%, rgba(255, 255, 255, 0.98) 100%);
+    }
+
+    .financeiro-resumo-panel-body {
+        padding: 0.95rem 1rem 1rem;
+    }
+
+    .financeiro-resumo-panel-header .tags {
+        margin-bottom: 0;
+    }
+
+    .financeiro-resumo-panel-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1rem;
+    }
+
+    .financeiro-resumo-print-header {
+        margin-bottom: 1rem;
+    }
+
+    .financeiro-resumo-print-header .financeiro-document-brand-note,
+    .financeiro-resumo-print-header .financeiro-document-subtitle {
+        max-width: 44rem;
+    }
+
+    @media (max-width: 1023px) {
+        .financeiro-resumo-panel-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .financeiro-resumo-hero {
+            padding: 1rem;
+        }
+
+        .financeiro-resumo-kpi-grid,
+        .financeiro-resumo-results-body,
+        .financeiro-resumo-panel-body {
+            padding-left: 0.85rem;
+            padding-right: 0.85rem;
+        }
+
+        .financeiro-resumo-filter-summary {
+            align-items: flex-start;
+        }
+    }
+
+    @media print {
+        .financeiro-resumo-page {
+            gap: 0;
+        }
+
+        .financeiro-resumo-card,
+        .financeiro-resumo-panel {
+            box-shadow: none;
+            border-color: #d6dee8;
+        }
+
+        .financeiro-resumo-results-body {
+            padding: 0;
+            background: #fff;
+        }
+
+        .financeiro-resumo-panel-body {
+            padding: 0.75rem 0.9rem 0.95rem;
+        }
+    }
+</style>
+
+<div class="financeiro-resumo-page">
+    <div class="financeiro-page-header financeiro-page-head financeiro-resumo-hero">
+        <div class="financeiro-page-header-main">
+            <div>
+                <h1 class="title financeiro-page-title">{{ page_title }}</h1>
+                <p class="financeiro-page-subtitle no-print">Leitura consolidada do periodo para acompanhar saldos, receitas e despesas com foco executivo.</p>
+                <div class="financeiro-resumo-meta no-print">
+                    {% if periodo_label %}<span class="financeiro-resumo-meta-item"><strong>Periodo:</strong> {{ periodo_label }}</span>{% endif %}
+                    <span class="financeiro-resumo-meta-item"><strong>Contas:</strong> {{ contas_incluidas_label|default:'Todas as contas' }}</span>
+                    {% if mostrar_centro_custo %}<span class="financeiro-resumo-meta-item"><strong>Leitura:</strong> Centro de custo visivel</span>{% endif %}
+                    {% if exibir_transferencias %}<span class="financeiro-resumo-meta-item"><strong>Transferencias:</strong> Exibidas</span>{% endif %}
+                </div>
+                <div class="financeiro-resumo-context-note no-print">
+                    <span><strong>Analise:</strong> Resumo consolidado do periodo selecionado.</span>
+                    <span><strong>Escopo:</strong> Receitas, despesas e saldo das contas filtradas.</span>
+                </div>
+                <p class="report-print-meta only-print">Periodo: {{ periodo_label|default:'Nao informado' }}</p>
+                <p class="report-print-meta only-print">Contas incluidas: {{ contas_incluidas_label|default:'Todas as contas' }}</p>
+                <p class="report-print-meta only-print">Emitido em {% now "d/m/Y H:i" %}</p>
+            </div>
+        </div>
+        <div class="financeiro-page-header-actions no-print">
+            <button class="button is-light" type="button" onclick="window.print()">Imprimir</button>
+            <a class="button is-light" href="{% url 'financeiro:home' %}">Voltar ao financeiro</a>
         </div>
     </div>
-    <div class="financeiro-page-header-actions no-print">
-        <button class="button is-light" type="button" onclick="window.print()">Imprimir</button>
-        <a class="button" href="{% url 'financeiro:home' %}">Voltar ao financeiro</a>
-    </div>
-</div>
 
-<form method="get" class="filters-box no-print">
-    <div class="financeiro-secondary-toolbar">
-        <details class="financeiro-secondary-panel">
-            <summary class="financeiro-secondary-summary">
-                <span class="financeiro-secondary-summary-label">Filtros do resumo</span>
-                {% if filtros_relatorio_ativos %}<span class="financeiro-secondary-badge">ativos</span>{% endif %}
-            </summary>
-            <div class="financeiro-secondary-body">
-                <div class="columns is-multiline">
-                    <div class="column is-12-mobile is-6-tablet is-4-desktop">
-                        <label class="label">Contas incluidas</label>
-                        <div class="financeiro-contas-dropdown" data-contas-dropdown>
-                            <button
-                                class="button is-light financeiro-contas-trigger"
-                                type="button"
-                                data-contas-dropdown-toggle
-                                aria-expanded="false"
-                            >
-                                <span class="financeiro-contas-trigger-label" data-contas-dropdown-summary>
-                                    {% if quantidade_contas_selecionadas == contas_disponiveis|length %}
-                                        Contas: Todas
-                                    {% elif quantidade_contas_selecionadas == 1 %}
-                                        Contas: 1 selecionada
-                                    {% else %}
-                                        Contas: {{ quantidade_contas_selecionadas }} selecionadas
-                                    {% endif %}
-                                </span>
-                                <span class="financeiro-contas-trigger-icon">▼</span>
-                            </button>
-                            <div class="financeiro-contas-panel" data-contas-dropdown-panel hidden>
-                                <div class="financeiro-contas-checklist">
-                                    <div class="financeiro-contas-actions">
-                                        <button class="button is-small is-light" type="button" data-contas-checklist-action="all">Marcar todas</button>
-                                        <button class="button is-small is-light" type="button" data-contas-checklist-action="none">Limpar selecao</button>
+    <section class="financeiro-resumo-card is-filters no-print">
+        <form method="get" class="filters-box">
+            <div class="financeiro-secondary-toolbar">
+                <details class="financeiro-secondary-panel" {% if periodo_error or not periodo_label %}open{% endif %}>
+                    <summary class="financeiro-secondary-summary financeiro-resumo-filter-summary">
+                        <span class="financeiro-resumo-filter-summary-main">
+                            <span class="financeiro-resumo-filter-summary-heading">
+                                <span class="financeiro-secondary-summary-label">Filtros do resumo</span>
+                                {% if filtros_relatorio_ativos %}<span class="financeiro-secondary-badge">ativos</span>{% endif %}
+                            </span>
+                            <span class="financeiro-resumo-filter-summary-text">
+                                {% if periodo_label %}
+                                    <strong>Periodo:</strong> {{ periodo_label }} | <strong>Contas:</strong> {{ contas_incluidas_label|default:'Todas as contas' }}
+                                {% else %}
+                                    Defina o periodo e as contas que entram no resumo.
+                                {% endif %}
+                            </span>
+                        </span>
+                        <span class="financeiro-resumo-filter-summary-action">
+                            <span class="is-closed">Editar filtros</span>
+                            <span class="is-open">Ocultar filtros</span>
+                        </span>
+                    </summary>
+                    <div class="financeiro-secondary-body">
+                        <div class="columns is-multiline">
+                            <div class="column is-12-mobile is-6-tablet is-4-desktop">
+                                <label class="label">Contas incluidas</label>
+                                <div class="financeiro-contas-dropdown" data-contas-dropdown>
+                                    <button
+                                        class="button is-light financeiro-contas-trigger"
+                                        type="button"
+                                        data-contas-dropdown-toggle
+                                        aria-expanded="false"
+                                    >
+                                        <span class="financeiro-contas-trigger-label" data-contas-dropdown-summary>
+                                            {% if quantidade_contas_selecionadas == contas_disponiveis|length %}
+                                                Contas: Todas
+                                            {% elif quantidade_contas_selecionadas == 1 %}
+                                                Contas: 1 selecionada
+                                            {% else %}
+                                                Contas: {{ quantidade_contas_selecionadas }} selecionadas
+                                            {% endif %}
+                                        </span>
+                                        <span class="financeiro-contas-trigger-icon">▼</span>
+                                    </button>
+                                    <div class="financeiro-contas-panel" data-contas-dropdown-panel hidden>
+                                        <div class="financeiro-contas-checklist">
+                                            <div class="financeiro-contas-actions">
+                                                <button class="button is-small is-light" type="button" data-contas-checklist-action="all">Marcar todas</button>
+                                                <button class="button is-small is-light" type="button" data-contas-checklist-action="none">Limpar selecao</button>
+                                            </div>
+                                            <div class="financeiro-contas-grid">
+                                                {% for conta in contas_disponiveis %}
+                                                    <label class="checkbox financeiro-conta-option">
+                                                        <input type="checkbox" name="contas" value="{{ conta.pk }}" {% if conta.pk|stringformat:'s' in contas_selecionadas_ids %}checked{% endif %}>
+                                                        <span>{{ conta.nome }}</span>
+                                                    </label>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="financeiro-contas-grid">
-                                        {% for conta in contas_disponiveis %}
-                                            <label class="checkbox financeiro-conta-option">
-                                                <input type="checkbox" name="contas" value="{{ conta.pk }}" {% if conta.pk|stringformat:'s' in contas_selecionadas_ids %}checked{% endif %}>
-                                                <span>{{ conta.nome }}</span>
-                                            </label>
-                                        {% endfor %}
-                                    </div>
+                                </div>
+                                <p class="help">Sem selecao explicita, o resumo considera todas as contas.</p>
+                            </div>
+                            <div class="column is-6-mobile is-3-tablet is-2-desktop">
+                                <label class="label">Data inicial</label>
+                                <input class="input" type="date" name="data_inicial" value="{{ data_inicial }}">
+                            </div>
+                            <div class="column is-6-mobile is-3-tablet is-2-desktop">
+                                <label class="label">Data final</label>
+                                <input class="input" type="date" name="data_final" value="{{ data_final }}">
+                            </div>
+                            <div class="column is-12-mobile is-6-tablet is-4-desktop">
+                                <label class="label">Opcoes de leitura</label>
+                                <div class="field mb-2">
+                                    <label class="checkbox">
+                                        <input type="hidden" name="mostrar_centro_custo" value="0">
+                                        <input type="checkbox" name="mostrar_centro_custo" value="1" {% if mostrar_centro_custo %}checked{% endif %}>
+                                        Mostrar centro de custo
+                                    </label>
+                                </div>
+                                <div class="field">
+                                    <label class="checkbox">
+                                        <input type="hidden" name="exibir_transferencias" value="0">
+                                        <input type="checkbox" name="exibir_transferencias" value="1" {% if exibir_transferencias %}checked{% endif %}>
+                                        Exibir transferencias
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="column is-12">
+                                <div class="buttons">
+                                    <button class="button is-link" type="submit">Atualizar resumo</button>
+                                    <a class="button is-light" href="{% url 'financeiro:resumo' %}">Limpar</a>
                                 </div>
                             </div>
                         </div>
-                        <p class="help">Sem selecao explicita, o resumo considera todas as contas.</p>
                     </div>
-                    <div class="column is-6-mobile is-3-tablet is-2-desktop">
-                        <label class="label">Data inicial</label>
-                        <input class="input" type="date" name="data_inicial" value="{{ data_inicial }}">
-                    </div>
-                    <div class="column is-6-mobile is-3-tablet is-2-desktop">
-                        <label class="label">Data final</label>
-                        <input class="input" type="date" name="data_final" value="{{ data_final }}">
-                    </div>
-                    <div class="column is-12-mobile is-6-tablet is-2-desktop">
-                        <label class="label">&nbsp;</label>
-                        <div class="buttons">
-                            <button class="button is-link" type="submit">Atualizar resumo</button>
-                            <a class="button is-light" href="{% url 'financeiro:resumo' %}">Limpar</a>
-                        </div>
-                    </div>
-                </div>
+                </details>
             </div>
-        </details>
-        <details class="financeiro-secondary-panel">
-            <summary class="financeiro-secondary-summary">
-                <span class="financeiro-secondary-summary-label">Opcoes do relatorio</span>
-                {% if opcoes_relatorio_ativas %}<span class="financeiro-secondary-badge">ativas</span>{% endif %}
-            </summary>
-            <div class="financeiro-secondary-body">
-                <div class="columns is-multiline">
-                    <div class="column is-12-mobile is-6-tablet is-3-desktop">
-                        <label class="label">Centro de custo no relatorio</label>
-                        <div class="field">
-                            <label class="checkbox">
-                                <input type="hidden" name="mostrar_centro_custo" value="0">
-                                <input type="checkbox" name="mostrar_centro_custo" value="1" {% if mostrar_centro_custo %}checked{% endif %}>
-                                Mostrar centro de custo
-                            </label>
-                        </div>
-                    </div>
-                    <div class="column is-12-mobile is-6-tablet is-3-desktop">
-                        <label class="label">Transferencias</label>
-                        <div class="field">
-                            <label class="checkbox">
-                                <input type="hidden" name="exibir_transferencias" value="0">
-                                <input type="checkbox" name="exibir_transferencias" value="1" {% if exibir_transferencias %}checked{% endif %}>
-                                Exibir transferencias
-                            </label>
-                        </div>
-                    </div>
-                    <div class="column is-12-mobile is-6-tablet is-2-desktop">
-                        <label class="label">&nbsp;</label>
-                        <button class="button is-link is-light" type="submit">Aplicar opcoes</button>
-                    </div>
-                </div>
-            </div>
-        </details>
-    </div>
-</form>
+        </form>
+    </section>
 
-{% if periodo_error %}
-    <div class="notification is-warning">{{ periodo_error }}</div>
-{% else %}
-    <div class="financeiro-report-sheet">
-        <article class="financeiro-document-report">
-            <header class="financeiro-document-header only-print">
-                <div class="financeiro-document-brand">
-                    {% if financeiro_shell_brand_logo_url %}
-                    <div class="financeiro-document-brand-identity">
-                        <img
-                            class="financeiro-document-logo"
-                            src="{{ financeiro_shell_brand_logo_url }}"
-                            alt="Logo institucional"
-                            loading="eager"
-                            decoding="async"
-                            referrerpolicy="no-referrer"
-                            onerror="this.closest('.financeiro-document-brand-identity').remove();"
-                        >
-                    </div>
-                    {% endif %}
-                    <div class="financeiro-document-brand-copy">
-                        <span class="financeiro-document-kicker">Relatorio Financeiro</span>
-                        {% if not financeiro_shell_brand_logo_url %}
-                        <p class="financeiro-document-brand-name">{{ financeiro_shell_brand_name }}</p>
-                        {% endif %}
-                        <p class="financeiro-document-brand-note">Resumo consolidado do periodo com totais principais e agrupamentos para leitura institucional objetiva.</p>
-                    </div>
-                </div>
+    {% if periodo_error %}
+        <div class="notification is-warning">{{ periodo_error }}</div>
+    {% else %}
+        <div class="financeiro-resumo-card is-kpis">
+            <div class="financeiro-resumo-kpi-head">
                 <div>
-                    <h2 class="financeiro-document-title">Resumo Consolidado</h2>
-                    <p class="financeiro-document-subtitle">Documento sintese para leitura de saldos, receitas e despesas do periodo selecionado.</p>
-                </div>
-            </header>
-
-            <div class="financeiro-document-meta-grid only-print">
-                <div class="financeiro-document-meta-card">
-                    <span class="financeiro-document-meta-label">Periodo</span>
-                    <span class="financeiro-document-meta-value">{{ periodo_label|default:'Nao informado' }}</span>
-                </div>
-                <div class="financeiro-document-meta-card">
-                    <span class="financeiro-document-meta-label">Contas incluidas</span>
-                    <span class="financeiro-document-meta-value">{{ contas_incluidas_label|default:'Todas as contas' }}</span>
-                </div>
-                <div class="financeiro-document-meta-card">
-                    <span class="financeiro-document-meta-label">Saldo final</span>
-                    <span class="financeiro-document-meta-value"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_final_consolidado|br_money }}</span></span></span>
-                </div>
-                <div class="financeiro-document-meta-card">
-                    <span class="financeiro-document-meta-label">Emitido em</span>
-                    <span class="financeiro-document-meta-value">{% now "d/m/Y H:i" %}</span>
+                    <h2 class="financeiro-resumo-section-title">Leitura executiva do periodo</h2>
+                    <p class="financeiro-resumo-section-note">Os indicadores sintetizam o periodo selecionado antes do detalhamento por categoria e centro de custo.</p>
                 </div>
             </div>
+            <div class="financeiro-resumo-kpi-grid">
+                <div class="financeiro-resumo-kpi">
+                    <span class="financeiro-resumo-kpi-label">Saldo inicial consolidado</span>
+                    <span class="financeiro-resumo-kpi-value"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_inicial_consolidado|br_money }}</span></span></span>
+                </div>
+                <div class="financeiro-resumo-kpi">
+                    <span class="financeiro-resumo-kpi-label">Receitas do periodo</span>
+                    <span class="financeiro-resumo-kpi-value is-receita"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ total_receitas_periodo|br_money }}</span></span></span>
+                </div>
+                <div class="financeiro-resumo-kpi">
+                    <span class="financeiro-resumo-kpi-label">Despesas do periodo</span>
+                    <span class="financeiro-resumo-kpi-value is-despesa"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ total_despesas_periodo|br_money }}</span></span></span>
+                </div>
+                <div class="financeiro-resumo-kpi">
+                    <span class="financeiro-resumo-kpi-label">Saldo do periodo</span>
+                    <span class="financeiro-resumo-kpi-value"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_periodo|br_money }}</span></span></span>
+                </div>
+                <div class="financeiro-resumo-kpi">
+                    <span class="financeiro-resumo-kpi-label">Saldo final consolidado</span>
+                    <span class="financeiro-resumo-kpi-value"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_final_consolidado|br_money }}</span></span></span>
+                </div>
+            </div>
+        </div>
 
-            <p class="financeiro-document-note only-print">Transferencias internas entre contas proprias nao entram como receita nem despesa neste resumo consolidado.</p>
-
-            <div class="financeiro-report-block">
-                <div class="financeiro-report-body">
-                    <div class="financeiro-hero">
-                        <div class="tags no-print">
-                            <span class="tag is-light"><strong>Periodo:</strong>&nbsp;{{ periodo_label }}</span>
-                            <span class="tag is-light"><strong>Contas:</strong>&nbsp;{{ contas_incluidas_label }}</span>
+        <div class="financeiro-report-sheet">
+            <article class="financeiro-document-report">
+                <header class="financeiro-document-header financeiro-resumo-print-header only-print">
+                    <div class="financeiro-document-brand">
+                        {% if financeiro_shell_brand_logo_url %}
+                        <div class="financeiro-document-brand-identity">
+                            <img
+                                class="financeiro-document-logo"
+                                src="{{ financeiro_shell_brand_logo_url }}"
+                                alt="Logo institucional"
+                                loading="eager"
+                                decoding="async"
+                                referrerpolicy="no-referrer"
+                                onerror="this.closest('.financeiro-document-brand-identity').remove();"
+                            >
                         </div>
-                        <div class="financeiro-kpi-grid">
-                            <div class="financeiro-kpi">
-                                <span class="financeiro-kpi-label">Saldo inicial consolidado</span>
-                                <span class="financeiro-kpi-value"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_inicial_consolidado|br_money }}</span></span></span>
-                            </div>
-                            <div class="financeiro-kpi">
-                                <span class="financeiro-kpi-label">Receitas do periodo</span>
-                                <span class="financeiro-kpi-value has-text-link"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ total_receitas_periodo|br_money }}</span></span></span>
-                            </div>
-                            <div class="financeiro-kpi">
-                                <span class="financeiro-kpi-label">Despesas do periodo</span>
-                                <span class="financeiro-kpi-value has-text-danger"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ total_despesas_periodo|br_money }}</span></span></span>
-                            </div>
-                            <div class="financeiro-kpi">
-                                <span class="financeiro-kpi-label">Saldo do periodo</span>
-                                <span class="financeiro-kpi-value"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_periodo|br_money }}</span></span></span>
-                            </div>
-                            <div class="financeiro-kpi">
-                                <span class="financeiro-kpi-label">Saldo final consolidado</span>
-                                <span class="financeiro-kpi-value"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_final_consolidado|br_money }}</span></span></span>
-                            </div>
-                        </div>
-                        <p class="table-caption">Transferencias internas entre contas proprias nao entram como receita nem despesa neste resumo consolidado.</p>
-                        {% if existe_lancamento_sem_categoria %}
-                            <p class="table-caption">Lancamentos sem categoria aparecem agrupados como "Sem categoria".</p>
                         {% endif %}
-                        {% if mostrar_centro_custo and existe_lancamento_sem_centro_custo %}
-                            <p class="table-caption">Despesas sem centro de custo aparecem agrupadas como "Sem centro de custo".</p>
+                        <div class="financeiro-document-brand-copy">
+                            <span class="financeiro-document-kicker">Relatorio Financeiro</span>
+                            {% if not financeiro_shell_brand_logo_url %}
+                            <p class="financeiro-document-brand-name">{{ financeiro_shell_brand_name }}</p>
+                            {% endif %}
+                            <p class="financeiro-document-brand-note">Resumo consolidado do periodo com totais principais e agrupamentos para leitura institucional objetiva.</p>
+                        </div>
+                    </div>
+                    <div>
+                        <h2 class="financeiro-document-title">Resumo Consolidado</h2>
+                        <p class="financeiro-document-subtitle">Documento sintese para leitura de saldos, receitas e despesas do periodo selecionado.</p>
+                    </div>
+                </header>
+
+                <div class="financeiro-document-meta-grid only-print">
+                    <div class="financeiro-document-meta-card">
+                        <span class="financeiro-document-meta-label">Periodo</span>
+                        <span class="financeiro-document-meta-value">{{ periodo_label|default:'Nao informado' }}</span>
+                    </div>
+                    <div class="financeiro-document-meta-card">
+                        <span class="financeiro-document-meta-label">Contas incluidas</span>
+                        <span class="financeiro-document-meta-value">{{ contas_incluidas_label|default:'Todas as contas' }}</span>
+                    </div>
+                    <div class="financeiro-document-meta-card">
+                        <span class="financeiro-document-meta-label">Saldo final</span>
+                        <span class="financeiro-document-meta-value"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_final_consolidado|br_money }}</span></span></span>
+                    </div>
+                    <div class="financeiro-document-meta-card">
+                        <span class="financeiro-document-meta-label">Emitido em</span>
+                        <span class="financeiro-document-meta-value">{% now "d/m/Y H:i" %}</span>
+                    </div>
+                </div>
+
+                <div class="financeiro-resumo-card is-results">
+                    <div class="financeiro-resumo-results-body">
+                        <section class="financeiro-resumo-panel is-primary">
+                            <div class="financeiro-resumo-panel-header">
+                                <div>
+                                    <h2 class="financeiro-resumo-section-title">Leitura principal do resumo</h2>
+                                    <p class="financeiro-resumo-section-note">Transferencias internas entre contas proprias nao entram como receita nem despesa neste consolidado.</p>
+                                </div>
+                                <div class="tags no-print">
+                                    <span class="tag is-light"><strong>Periodo:</strong>&nbsp;{{ periodo_label }}</span>
+                                    <span class="tag is-light"><strong>Contas:</strong>&nbsp;{{ contas_incluidas_label }}</span>
+                                </div>
+                            </div>
+                            <div class="financeiro-resumo-panel-body">
+                                {% if existe_lancamento_sem_categoria %}
+                                    <p class="table-caption">Lancamentos sem categoria aparecem agrupados como "Sem categoria".</p>
+                                {% endif %}
+                                {% if mostrar_centro_custo and existe_lancamento_sem_centro_custo %}
+                                    <p class="table-caption">Despesas sem centro de custo aparecem agrupadas como "Sem centro de custo".</p>
+                                {% endif %}
+                                <div class="financeiro-resumo-panel-grid">
+                                    <section class="financeiro-resumo-panel">
+                                        <div class="financeiro-resumo-panel-header">
+                                            <div>
+                                                <h3 class="financeiro-resumo-section-title">Receitas por categoria</h3>
+                                                <p class="financeiro-resumo-section-note">Agrupamento das entradas efetivas do periodo.</p>
+                                            </div>
+                                        </div>
+                                        <div class="financeiro-resumo-panel-body">
+                                            <div class="table-wrapper">
+                                                <table class="table is-fullwidth financeiro-table">
+                                                    <thead>
+                                                    <tr>
+                                                        <th>Categoria</th>
+                                                        <th>Valor</th>
+                                                    </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                    {% for item in receitas_por_categoria %}
+                                                        <tr>
+                                                            <td>{{ item.categoria }}</td>
+                                                            <td class="has-text-link"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ item.valor|br_money }}</span></span></td>
+                                                        </tr>
+                                                    {% empty %}
+                                                        <tr>
+                                                            <td colspan="2">Nao houve receitas para agrupar no periodo.</td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                    </tbody>
+                                                    <tfoot>
+                                                    <tr>
+                                                        <th>Total de receitas por categoria</th>
+                                                        <th><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ total_receitas_por_categoria|br_money }}</span></span></th>
+                                                    </tr>
+                                                    </tfoot>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </section>
+
+                                    <section class="financeiro-resumo-panel">
+                                        <div class="financeiro-resumo-panel-header">
+                                            <div>
+                                                <h3 class="financeiro-resumo-section-title">Despesas por categoria</h3>
+                                                <p class="financeiro-resumo-section-note">Agrupamento das saidas efetivas do periodo.</p>
+                                            </div>
+                                        </div>
+                                        <div class="financeiro-resumo-panel-body">
+                                            <div class="table-wrapper">
+                                                <table class="table is-fullwidth financeiro-table">
+                                                    <thead>
+                                                    <tr>
+                                                        <th>Categoria</th>
+                                                        <th>Valor</th>
+                                                    </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                    {% for item in despesas_por_categoria %}
+                                                        <tr>
+                                                            <td>{{ item.categoria }}</td>
+                                                            <td class="has-text-danger"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ item.valor|br_money }}</span></span></td>
+                                                        </tr>
+                                                    {% empty %}
+                                                        <tr>
+                                                            <td colspan="2">Nao houve despesas para agrupar no periodo.</td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                    </tbody>
+                                                    <tfoot>
+                                                    <tr>
+                                                        <th>Total de despesas por categoria</th>
+                                                        <th><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ total_despesas_por_categoria|br_money }}</span></span></th>
+                                                    </tr>
+                                                    </tfoot>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </section>
+                                </div>
+                            </div>
+                        </section>
+
+                        {% if exibir_transferencias %}
+                            <section class="financeiro-resumo-panel">
+                                <div class="financeiro-resumo-panel-header">
+                                    <div>
+                                        <h2 class="financeiro-resumo-section-title">Transferencias do periodo</h2>
+                                        <p class="financeiro-resumo-section-note">Exibidas para conferencia operacional; nao entram como receita nem despesa.</p>
+                                    </div>
+                                    <div class="tags">
+                                        <span class="tag is-light">Movimentado: R$ {{ total_transferencias_periodo|br_money }}</span>
+                                        <span class="tag is-success is-light">Entradas: R$ {{ total_transferencias_entrada|br_money }}</span>
+                                        <span class="tag is-warning is-light">Saidas: R$ {{ total_transferencias_saida|br_money }}</span>
+                                    </div>
+                                </div>
+                                <div class="financeiro-resumo-panel-body">
+                                    <div class="table-wrapper">
+                                        <table class="table is-fullwidth financeiro-table">
+                                            <thead>
+                                            <tr>
+                                                <th>Data</th>
+                                                <th>Descricao</th>
+                                                <th>Conta origem</th>
+                                                <th>Conta destino</th>
+                                                <th>Documento</th>
+                                                <th>Valor</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            {% for transferencia in transferencias_periodo %}
+                                                <tr>
+                                                    <td>{{ transferencia.data_competencia|date:'d/m/Y' }}</td>
+                                                    <td>{{ transferencia.descricao }}</td>
+                                                    <td>{{ transferencia.conta|default:'-' }}</td>
+                                                    <td>{{ transferencia.conta_destino|default:'-' }}</td>
+                                                    <td>{{ transferencia.numero_documento|default:'-' }}</td>
+                                                    <td><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ transferencia.valor|br_money }}</span></span></td>
+                                                </tr>
+                                            {% empty %}
+                                                <tr>
+                                                    <td colspan="6">Nao houve transferencias no periodo selecionado.</td>
+                                                </tr>
+                                            {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </section>
+                        {% endif %}
+
+                        {% if mostrar_centro_custo %}
+                            <section class="financeiro-resumo-panel">
+                                <div class="financeiro-resumo-panel-header">
+                                    <div>
+                                        <h2 class="financeiro-resumo-section-title">Despesas por centro de custo</h2>
+                                        <p class="financeiro-resumo-section-note">Leitura complementar para detalhar a distribuicao das despesas do periodo.</p>
+                                    </div>
+                                </div>
+                                <div class="financeiro-resumo-panel-body">
+                                    <div class="table-wrapper">
+                                        <table class="table is-fullwidth financeiro-table">
+                                            <thead>
+                                            <tr>
+                                                <th>Centro de custo</th>
+                                                <th>Valor</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            {% for item in despesas_por_centro_custo %}
+                                                <tr>
+                                                    <td>{{ item.label }}</td>
+                                                    <td class="has-text-danger"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ item.valor|br_money }}</span></span></td>
+                                                </tr>
+                                            {% empty %}
+                                                <tr>
+                                                    <td colspan="2">Nao houve despesas para agrupar por centro de custo no periodo.</td>
+                                                </tr>
+                                            {% endfor %}
+                                            </tbody>
+                                            <tfoot>
+                                            <tr>
+                                                <th>Total de despesas por centro de custo</th>
+                                                <th><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ total_despesas_por_centro_custo|br_money }}</span></span></th>
+                                            </tr>
+                                            </tfoot>
+                                        </table>
+                                    </div>
+                                </div>
+                            </section>
                         {% endif %}
                     </div>
                 </div>
-            </div>
-
-            {% if exibir_transferencias %}
-                <div class="financeiro-report-block">
-                    <div class="financeiro-report-header">
-                        <div>
-                            <h2 class="financeiro-report-title">Transferencias do periodo</h2>
-                            <p class="table-caption">Exibidas para conferencia operacional; nao entram como receita nem despesa.</p>
-                        </div>
-                        <div class="tags">
-                            <span class="tag is-light">Movimentado: R$ {{ total_transferencias_periodo|br_money }}</span>
-                            <span class="tag is-success is-light">Entradas: R$ {{ total_transferencias_entrada|br_money }}</span>
-                            <span class="tag is-warning is-light">Saidas: R$ {{ total_transferencias_saida|br_money }}</span>
-                        </div>
-                    </div>
-                    <div class="financeiro-report-body">
-                        <div class="table-wrapper">
-                            <table class="table is-fullwidth financeiro-table">
-                                <thead>
-                                <tr>
-                                    <th>Data</th>
-                                    <th>Descricao</th>
-                                    <th>Conta origem</th>
-                                    <th>Conta destino</th>
-                                    <th>Documento</th>
-                                    <th>Valor</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                {% for transferencia in transferencias_periodo %}
-                                    <tr>
-                                        <td>{{ transferencia.data_competencia|date:'d/m/Y' }}</td>
-                                        <td>{{ transferencia.descricao }}</td>
-                                        <td>{{ transferencia.conta|default:'-' }}</td>
-                                        <td>{{ transferencia.conta_destino|default:'-' }}</td>
-                                        <td>{{ transferencia.numero_documento|default:'-' }}</td>
-                                        <td><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ transferencia.valor|br_money }}</span></span></td>
-                                    </tr>
-                                {% empty %}
-                                    <tr>
-                                        <td colspan="6">Nao houve transferencias no periodo selecionado.</td>
-                                    </tr>
-                                {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            {% endif %}
-
-            <div class="columns is-multiline">
-                <div class="column is-12-tablet is-6-desktop">
-                    <div class="financeiro-report-block">
-                        <div class="financeiro-report-header">
-                            <h2 class="financeiro-report-title">Receitas por categoria</h2>
-                        </div>
-                        <div class="financeiro-report-body">
-                            <div class="table-wrapper">
-                                <table class="table is-fullwidth financeiro-table">
-                                    <thead>
-                                    <tr>
-                                        <th>Categoria</th>
-                                        <th>Valor</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    {% for item in receitas_por_categoria %}
-                                        <tr>
-                                            <td>{{ item.categoria }}</td>
-                                            <td class="has-text-link"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ item.valor|br_money }}</span></span></td>
-                                        </tr>
-                                    {% empty %}
-                                        <tr>
-                                            <td colspan="2">Nao houve receitas para agrupar no periodo.</td>
-                                        </tr>
-                                    {% endfor %}
-                                    </tbody>
-                                    <tfoot>
-                                    <tr>
-                                        <th>Total de receitas por categoria</th>
-                                        <th><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ total_receitas_por_categoria|br_money }}</span></span></th>
-                                    </tr>
-                                    </tfoot>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="column is-12-tablet is-6-desktop">
-                    <div class="financeiro-report-block">
-                        <div class="financeiro-report-header">
-                            <h2 class="financeiro-report-title">Despesas por categoria</h2>
-                        </div>
-                        <div class="financeiro-report-body">
-                            <div class="table-wrapper">
-                                <table class="table is-fullwidth financeiro-table">
-                                    <thead>
-                                    <tr>
-                                        <th>Categoria</th>
-                                        <th>Valor</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    {% for item in despesas_por_categoria %}
-                                        <tr>
-                                            <td>{{ item.categoria }}</td>
-                                            <td class="has-text-danger"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ item.valor|br_money }}</span></span></td>
-                                        </tr>
-                                    {% empty %}
-                                        <tr>
-                                            <td colspan="2">Nao houve despesas para agrupar no periodo.</td>
-                                        </tr>
-                                    {% endfor %}
-                                    </tbody>
-                                    <tfoot>
-                                    <tr>
-                                        <th>Total de despesas por categoria</th>
-                                        <th><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ total_despesas_por_categoria|br_money }}</span></span></th>
-                                    </tr>
-                                    </tfoot>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {% if mostrar_centro_custo %}
-                <div class="financeiro-report-block">
-                    <div class="financeiro-report-header">
-                        <h2 class="financeiro-report-title">Despesas por centro de custo</h2>
-                    </div>
-                    <div class="financeiro-report-body">
-                        <div class="table-wrapper">
-                            <table class="table is-fullwidth financeiro-table">
-                                <thead>
-                                <tr>
-                                    <th>Centro de custo</th>
-                                    <th>Valor</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                {% for item in despesas_por_centro_custo %}
-                                    <tr>
-                                        <td>{{ item.label }}</td>
-                                        <td class="has-text-danger"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ item.valor|br_money }}</span></span></td>
-                                    </tr>
-                                {% empty %}
-                                    <tr>
-                                        <td colspan="2">Nao houve despesas para agrupar por centro de custo no periodo.</td>
-                                    </tr>
-                                {% endfor %}
-                                </tbody>
-                                <tfoot>
-                                <tr>
-                                    <th>Total de despesas por centro de custo</th>
-                                    <th><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ total_despesas_por_centro_custo|br_money }}</span></span></th>
-                                </tr>
-                                </tfoot>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            {% endif %}
-        </article>
-    </div>
-{% endif %}
+            </article>
+        </div>
+    {% endif %}
+</div>
 {% endblock %}

@@ -2,6 +2,37 @@
 
 Data: 2026-04-23
 
+## Aplicacao do padrao analitico consolidado na tela `Resumo`
+
+- tratei a rodada como primeira propagacao real do padrao analitico consolidado a partir de `Evolucao por categorias`, sem reabrir regra de negocio nem mexer em calculos financeiros
+- heranca aplicada do padrao-base:
+  - ordem `titulo/contexto -> filtro -> KPIs -> resultados`
+  - filtro mantido no topo da area analitica
+  - filtro recolhido por padrao quando ja existe resultado valido
+  - resumo recolhido util para orientar rapidamente periodo, contas e opcoes ativas
+  - resultado como protagonista visual da pagina
+- adaptacoes especificas do `Resumo`:
+  - mantive a leitura executiva propria da tela, sem importar a logica de comparacao entre periodos da `Evolucao por categorias`
+  - o bloco de KPIs foi reorganizado para concentrar saldo inicial, receitas, despesas, saldo do periodo e saldo final consolidado
+  - a area de resultados foi reestruturada em blocos claros:
+    - `Receitas por categoria`
+    - `Despesas por categoria`
+    - `Transferencias do periodo`, quando ativadas
+    - `Despesas por centro de custo`, quando ativadas
+  - a impressao documental foi preservada, mantendo cabecalho e metadados do relatorio sem reintroduzir o filtro no papel
+- decisao de UX:
+  - o filtro deixou de disputar protagonismo com a leitura do resumo
+  - o topo passou a concentrar apenas contexto principal e acoes
+  - as opcoes de leitura foram incorporadas ao mesmo painel de filtro para reduzir ruido visual
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+- resultado:
+  - microetapa pronta para commit
+  - tela `Resumo` pronta para homologacao visual
+  - o padrao analitico fica forte o suficiente para seguir depois para a proxima tela da sequencia, caso a homologacao visual confirme esta primeira propagacao
+
 ## Filtro fixo no topo da analise em `Evolucao por categorias`
 
 - tratei a rodada como refinamento de UX estrutural/local, sem tocar em calculos, comparacao ou semantica financeira

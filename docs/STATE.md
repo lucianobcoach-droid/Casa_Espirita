@@ -2,6 +2,39 @@
 
 Data de atualizacao: 2026-04-23
 
+## Aplicacao do padrao analitico consolidado na tela `Resumo`
+
+- a microetapa adaptou a tela `Resumo` ao padrao analitico consolidado em `Evolucao por categorias`, preservando calculos, semantica financeira e fluxo documental de impressao
+- estrutura aplicada no `Resumo`:
+  - `titulo/contexto`
+  - `filtro no topo da analise`
+  - `KPIs`
+  - `resultados`
+- o filtro passou a permanecer no mesmo lugar estrutural da tela:
+  - abre no topo quando ainda nao ha leitura valida ou quando existe erro de periodo
+  - fica recolhido por padrao quando o resultado ja esta carregado
+  - o resumo recolhido mostra periodo, contas e o estado das opcoes principais
+- a hierarquia visual foi reforcada:
+  - filtros ficaram visualmente secundarios
+  - os KPIs ganharam mais protagonismo
+  - a area de resultados passou a concentrar os agrupamentos de receitas, despesas, transferencias e centro de custo em blocos mais claros
+- heranca direta do padrao-base:
+  - hero mais enxuto com contexto principal no topo
+  - card proprio para filtros
+  - card proprio para KPIs
+  - card proprio para resultados
+- adaptacoes especificas do `Resumo`:
+  - a comparacao entre periodos nao foi levada para esta tela
+  - o bloco executivo foi mantido focado em saldo inicial, receitas, despesas, saldo do periodo e saldo final consolidado
+  - o resultado principal foi organizado em tabelas analiticas de receitas e despesas, com blocos complementares para transferencias e centro de custo quando aplicavel
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+- observacao:
+  - a tela `Resumo` fica pronta para homologacao visual
+  - o padrao analitico fica forte o bastante para seguir depois para a proxima tela da sequencia, desde que a homologacao visual confirme a leitura final
+
 ## Filtro fixo no topo da analise em `Evolucao por categorias`
 
 - a microetapa atuou apenas na estrutura visual da tela `Evolucao por categorias`, preservando calculos, comparacao entre periodos, semantica financeira e impressao
