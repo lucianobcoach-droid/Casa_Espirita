@@ -2,6 +2,39 @@
 
 Data de atualizacao: 2026-04-23
 
+## Correcao final da renderizacao do sinal na comparacao separada de `Evolucao por categorias`
+
+- a microetapa reabriu a correcao anterior porque o retorno do uso real confirmou que despesas ainda apareciam positivas na interface
+- origem exata confirmada:
+  - a comparacao separada ainda usava campos ambiguidos entre calculo visual e exibicao textual
+  - no template, os textos monetarios ainda eram montados com prefixo de moeda externo sobre campos genericos formatados
+  - a view ainda nao separava de forma explicita `valor exibido com sinal` de `magnitude absoluta usada na barra`
+- regra final aplicada:
+  - textos da comparacao agora usam campos assinados e completos, como `-R$ 300,00` e `R$ 200,00`
+  - barras continuam usando apenas magnitude absoluta para largura e comparabilidade visual
+  - totais textuais da comparacao tambem passaram a usar a leitura assinada, sem reaproveitar os campos de magnitude
+- campos explicitamente separados no backend:
+  - `valor_a_exibicao` / `valor_b_exibicao`
+  - `valor_a_exibido_formatado` / `valor_b_exibido_formatado`
+  - `valor_a_absoluto` / `valor_b_absoluto`
+- preservacao:
+  - ordenacao analitica do bloco permaneceu a mesma
+  - comparativo consolidado nao foi alterado
+  - fluxo normal sem comparativo permaneceu preservado
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+  - smoke autenticado com rollback OK confirmando:
+    - receita positiva no texto exibido
+    - despesa negativa no texto exibido
+    - barras calculadas por magnitude absoluta
+    - tabela comparativa e totais usando valores assinados
+    - fluxo normal sem comparativo preservado
+- observacao:
+  - a renderizacao tecnica ficou validada nesta etapa
+  - a confirmacao visual/manual no navegador continua pendente para encerrar o defeito como homologado visualmente
+
 ## Correcao do sinal de despesas no comparativo separado de `Evolucao por categorias`
 
 - a microetapa corrigiu uma regressao pontual no bloco `Itens com maior diferenca absoluta` da comparacao separada

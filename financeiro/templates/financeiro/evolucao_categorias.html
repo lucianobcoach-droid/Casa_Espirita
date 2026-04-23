@@ -933,15 +933,15 @@
                     <div class="financeiro-evolucao-kpis">
                         <div class="financeiro-evolucao-kpi">
                             <span class="financeiro-evolucao-kpi-label">Total do periodo principal</span>
-                            <span class="financeiro-evolucao-kpi-value">R$ {{ total_periodo_principal_formatado }}</span>
+                            <span class="financeiro-evolucao-kpi-value">{{ total_periodo_principal_formatado }}</span>
                         </div>
                         <div class="financeiro-evolucao-kpi">
                             <span class="financeiro-evolucao-kpi-label">Total do periodo comparativo</span>
-                            <span class="financeiro-evolucao-kpi-value">R$ {{ total_periodo_comparativo_formatado }}</span>
+                            <span class="financeiro-evolucao-kpi-value">{{ total_periodo_comparativo_formatado }}</span>
                         </div>
                         <div class="financeiro-evolucao-kpi">
                             <span class="financeiro-evolucao-kpi-label">Diferenca absoluta</span>
-                            <span class="financeiro-evolucao-kpi-value">R$ {{ diferenca_total_absoluta_formatada }}</span>
+                            <span class="financeiro-evolucao-kpi-value">{{ diferenca_total_absoluta_formatada }}</span>
                         </div>
                         <div class="financeiro-evolucao-kpi">
                             <span class="financeiro-evolucao-kpi-label">Variacao percentual</span>
@@ -1058,14 +1058,14 @@
                                                                 <span class="financeiro-evolucao-bar-track">
                                                                     <span class="financeiro-evolucao-bar-fill is-principal" style="width: {{ item.largura_principal }}%;"></span>
                                                                 </span>
-                                                                <span class="financeiro-evolucao-bar-value">R$ {{ item.valor_principal_formatado }}</span>
+                                                                <span class="financeiro-evolucao-bar-value">{{ item.valor_principal_exibido_formatado }}</span>
                                                             </div>
                                                             <div class="financeiro-evolucao-bar-row">
                                                                 <span class="financeiro-evolucao-bar-period" title="{{ bloco.periodo_comparativo_label }}">{{ bloco.periodo_comparativo_label }}</span>
                                                                 <span class="financeiro-evolucao-bar-track">
                                                                     <span class="financeiro-evolucao-bar-fill is-comparativo" style="width: {{ item.largura_comparativo }}%;"></span>
                                                                 </span>
-                                                                <span class="financeiro-evolucao-bar-value">R$ {{ item.valor_comparativo_formatado }}</span>
+                                                                <span class="financeiro-evolucao-bar-value">{{ item.valor_comparativo_exibido_formatado }}</span>
                                                             </div>
                                                         </div>
                                                     {% endfor %}
@@ -1105,9 +1105,9 @@
                                                 {% for linha in linhas_comparacao %}
                                                     <tr>
                                                         <td>{{ linha.label }}</td>
-                                                        <td>R$ {{ linha.valor_a_formatado }}</td>
-                                                        <td>R$ {{ linha.valor_b_formatado }}</td>
-                                                        <td>R$ {{ linha.diferenca_absoluta_formatada }}</td>
+                                                        <td>{{ linha.valor_a_exibido_formatado }}</td>
+                                                        <td>{{ linha.valor_b_exibido_formatado }}</td>
+                                                        <td>{{ linha.diferenca_absoluta_formatada }}</td>
                                                         <td><span class="financeiro-evolucao-variacao {{ linha.variacao_css }}">{{ linha.variacao_percentual_formatada }}</span></td>
                                                     </tr>
                                                 {% empty %}
@@ -1119,9 +1119,9 @@
                                             <tfoot>
                                                 <tr>
                                                     <th>Total</th>
-                                                    <th>R$ {{ total_periodo_principal_formatado }}</th>
-                                                    <th>R$ {{ total_periodo_comparativo_formatado }}</th>
-                                                    <th>R$ {{ diferenca_total_absoluta_formatada }}</th>
+                                                    <th>{{ total_periodo_principal_formatado }}</th>
+                                                    <th>{{ total_periodo_comparativo_formatado }}</th>
+                                                    <th>{{ diferenca_total_absoluta_formatada }}</th>
                                                     <th><span class="financeiro-evolucao-variacao {{ variacao_total_css }}">{{ variacao_total_percentual_formatada }}</span></th>
                                                 </tr>
                                             </tfoot>

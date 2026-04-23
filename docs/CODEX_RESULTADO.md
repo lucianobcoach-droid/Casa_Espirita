@@ -2,6 +2,45 @@
 
 Data: 2026-04-23
 
+## Correcao final da renderizacao do sinal das despesas na comparacao separada
+
+- reabri a correcao porque o retorno do usuario foi tratado como verdade operacional: despesas ainda apareciam positivas na interface, entao a rodada anterior nao podia ser considerada encerrada
+- causa objetiva confirmada:
+  - a view ainda entregava campos genericos demais para a comparacao separada
+  - o template seguia montando texto monetario com `R$ ` por fora, reaproveitando campos que ainda carregavam ambiguidade entre exibicao e magnitude visual
+- solucao aplicada:
+  - criei separacao explicita entre o que e texto exibido e o que e base visual da barra
+  - backend agora entrega:
+    - `valor_a_exibicao` / `valor_b_exibicao`
+    - `valor_a_exibido_formatado` / `valor_b_exibido_formatado`
+    - `valor_a_absoluto` / `valor_b_absoluto`
+  - o bloco `Itens com maior diferenca absoluta` passou a usar:
+    - texto: campos assinados completos
+    - barra: campos absolutos
+  - a tabela comparativa passou a usar os campos assinados explicitos
+  - os totais textuais da comparacao tambem passaram a usar a leitura assinada
+- regra final consolidada:
+  - receita aparece como valor positivo
+  - despesa aparece como valor negativo
+  - barra continua comparando magnitudes absolutas
+  - ordenacao analitica do bloco permaneceu inalterada
+- preservacao:
+  - comparativo consolidado nao foi alterado
+  - fluxo normal sem `Periodo comparativo` nao foi alterado
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+  - smoke autenticado com rollback OK confirmando:
+    - `-R$ 300,00` e `-R$ 100,00` para despesa
+    - `R$ 200,00` e `R$ 50,00` para receita
+    - tabela comparativa com leitura assinada
+    - barras ainda baseadas em magnitude absoluta
+    - fluxo normal sem comparativo preservado
+- resultado:
+  - defeito corrigido tecnicamente e pronto para nova validacao visual/manual curta no navegador
+  - esta etapa nao fecha, por si so, homologacao visual real do defeito
+
 ## Correcao do sinal de despesas no comparativo separado
 
 - tratei a rodada como correcao pontual de regressao no bloco `Itens com maior diferenca absoluta`, sem reabrir a comparacao nem mexer no fluxo normal

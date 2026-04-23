@@ -2763,6 +2763,12 @@ def _formatar_moeda_brl(valor) -> str:
     return valor_formatado.replace(',', 'X').replace('.', ',').replace('X', '.')
 
 
+def _formatar_moeda_brl_exibicao(valor) -> str:
+    valor = (valor or Decimal('0.00')).quantize(Decimal('0.01'))
+    prefixo = '-R$ ' if valor < Decimal('0.00') else 'R$ '
+    return f"{prefixo}{_formatar_moeda_brl(abs(valor))}"
+
+
 def _calcular_variacao_percentual(valor_base: Decimal, valor_comparado: Decimal) -> Decimal | None:
     valor_base = valor_base or Decimal('0.00')
     valor_comparado = valor_comparado or Decimal('0.00')
@@ -4838,18 +4844,21 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
             linhas_comparacao,
             key=lambda linha: (
                 -abs(linha.get('diferenca_absoluta') or Decimal('0.00')),
-                -(abs(linha.get('valor_a') or Decimal('0.00')) + abs(linha.get('valor_b') or Decimal('0.00'))),
+                -(
+                    abs(linha.get('valor_a_absoluto') or Decimal('0.00'))
+                    + abs(linha.get('valor_b_absoluto') or Decimal('0.00'))
+                ),
                 _texto_ordenacao_insensivel(linha.get('label_grafico') or linha.get('label') or ''),
             ),
         )
         linhas_exibidas = linhas_ordenadas[:limite_itens]
         maior_valor = max(
             [
-                abs(linha.get('valor_a') or Decimal('0.00'))
+                abs(linha.get('valor_a_absoluto') or Decimal('0.00'))
                 for linha in linhas_exibidas
             ]
             + [
-                abs(linha.get('valor_b') or Decimal('0.00'))
+                abs(linha.get('valor_b_absoluto') or Decimal('0.00'))
                 for linha in linhas_exibidas
             ],
             default=Decimal('0.00'),
@@ -4874,11 +4883,11 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
             'itens': [
                 {
                     'label': linha.get('label_grafico') or linha['label'],
-                    'valor_principal_formatado': linha['valor_a_formatado'],
-                    'valor_comparativo_formatado': linha['valor_b_formatado'],
+                    'valor_principal_exibido_formatado': linha['valor_a_exibido_formatado'],
+                    'valor_comparativo_exibido_formatado': linha['valor_b_exibido_formatado'],
                     'diferenca_absoluta_formatada': linha['diferenca_absoluta_formatada'],
-                    'largura_principal': _largura_barra(linha.get('valor_a') or Decimal('0.00')),
-                    'largura_comparativo': _largura_barra(linha.get('valor_b') or Decimal('0.00')),
+                    'largura_principal': _largura_barra(linha.get('valor_a_absoluto') or Decimal('0.00')),
+                    'largura_comparativo': _largura_barra(linha.get('valor_b_absoluto') or Decimal('0.00')),
                 }
                 for linha in linhas_exibidas
             ],
@@ -5064,14 +5073,14 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
                 {
                     'label': serie_base['label'],
                     'label_grafico': serie_base.get('label_grafico') or serie_base['label'],
-                    'valor_a': valor_a,
+                    'valor_a_absoluto': valor_a,
                     'valor_a_exibicao': valor_a_exibicao,
-                    'valor_a_formatado': _formatar_moeda_brl(valor_a_exibicao),
-                    'valor_b': valor_b,
+                    'valor_a_exibido_formatado': _formatar_moeda_brl_exibicao(valor_a_exibicao),
+                    'valor_b_absoluto': valor_b,
                     'valor_b_exibicao': valor_b_exibicao,
-                    'valor_b_formatado': _formatar_moeda_brl(valor_b_exibicao),
+                    'valor_b_exibido_formatado': _formatar_moeda_brl_exibicao(valor_b_exibicao),
                     'diferenca_absoluta': diferenca_absoluta,
-                    'diferenca_absoluta_formatada': _formatar_moeda_brl(diferenca_absoluta),
+                    'diferenca_absoluta_formatada': _formatar_moeda_brl_exibicao(diferenca_absoluta),
                     'variacao_percentual': variacao_percentual,
                     'variacao_percentual_formatada': _formatar_percentual_relatorio(variacao_percentual),
                     'variacao_css': (
@@ -5086,6 +5095,15 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
 
         diferenca_total_absoluta = abs(total_periodo_b - total_periodo_a)
         variacao_total_percentual = _calcular_variacao_percentual(total_periodo_a, total_periodo_b)
+        total_periodo_a_exibicao = sum(
+            (linha['valor_a_exibicao'] for linha in linhas_comparacao),
+            Decimal('0.00'),
+        )
+        total_periodo_b_exibicao = sum(
+            (linha['valor_b_exibicao'] for linha in linhas_comparacao),
+            Decimal('0.00'),
+        )
+        diferenca_total_absoluta_exibicao = abs(total_periodo_b_exibicao - total_periodo_a_exibicao)
         periodo_principal_label = _formatar_periodo_comparacao(data_inicial_principal, data_final_principal)
         periodo_comparativo_label = _formatar_periodo_comparacao(data_inicial_comparativo, data_final_comparativo)
         comparacao_visual_consolidada = leitura == 'consolidado'
@@ -5120,11 +5138,14 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
             'quantidade_lancamentos_principal': relatorio_a['quantidade_lancamentos'],
             'quantidade_lancamentos_comparativo': relatorio_b['quantidade_lancamentos'],
             'total_periodo_principal': total_periodo_a,
-            'total_periodo_principal_formatado': _formatar_moeda_brl(total_periodo_a),
+            'total_periodo_principal_exibido': total_periodo_a_exibicao,
+            'total_periodo_principal_formatado': _formatar_moeda_brl_exibicao(total_periodo_a_exibicao),
             'total_periodo_comparativo': total_periodo_b,
-            'total_periodo_comparativo_formatado': _formatar_moeda_brl(total_periodo_b),
+            'total_periodo_comparativo_exibido': total_periodo_b_exibicao,
+            'total_periodo_comparativo_formatado': _formatar_moeda_brl_exibicao(total_periodo_b_exibicao),
             'diferenca_total_absoluta': diferenca_total_absoluta,
-            'diferenca_total_absoluta_formatada': _formatar_moeda_brl(diferenca_total_absoluta),
+            'diferenca_total_absoluta_exibicao': diferenca_total_absoluta_exibicao,
+            'diferenca_total_absoluta_formatada': _formatar_moeda_brl_exibicao(diferenca_total_absoluta_exibicao),
             'variacao_total_percentual': variacao_total_percentual,
             'variacao_total_percentual_formatada': _formatar_percentual_relatorio(variacao_total_percentual),
             'variacao_total_css': (
