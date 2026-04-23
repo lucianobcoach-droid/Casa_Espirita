@@ -304,27 +304,27 @@
     }
 
     .financeiro-extrato-col-date {
-        width: 7.5rem;
+        width: 6.6rem;
     }
 
     .financeiro-extrato-col-doc {
-        width: 7rem;
+        width: 5.9rem;
     }
 
     .financeiro-extrato-col-desc {
-        width: 18rem;
+        width: 21rem;
     }
 
     .financeiro-extrato-col-fav {
-        width: 13.5rem;
+        width: 15.5rem;
     }
 
     .financeiro-extrato-col-value {
-        width: 10rem;
+        width: 8.75rem;
     }
 
     .financeiro-extrato-col-balance {
-        width: 11rem;
+        width: 9.6rem;
     }
 
     .is-closing-balance td,
@@ -389,8 +389,7 @@
         color: #0f172a;
     }
 
-    .financeiro-extrato-description-meta,
-    .financeiro-extrato-favorecido-meta {
+    .financeiro-extrato-description-meta {
         display: block;
         margin-top: 0.1rem;
         color: #64748b;
@@ -402,10 +401,12 @@
     }
 
     .financeiro-extrato-value {
-        display: inline-flex;
-        align-items: center;
-        justify-content: flex-end;
+        display: inline-block;
         width: 100%;
+        color: #0f172a;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+        text-align: right;
     }
 
     .financeiro-extrato-value.is-negative .money-number {
@@ -414,6 +415,11 @@
 
     .financeiro-extrato-value.is-positive .money-number {
         color: #236746;
+    }
+
+    .financeiro-extrato-value .money-number,
+    .extrato-balance .money-number {
+        letter-spacing: -0.01em;
     }
 
     @media (max-width: 768px) {
@@ -527,15 +533,15 @@
         }
 
         .financeiro-extrato-document table.financeiro-extrato-table col.financeiro-extrato-col-doc {
-            width: 9% !important;
+            width: 8% !important;
         }
 
         .financeiro-extrato-document table.financeiro-extrato-table col.financeiro-extrato-col-desc {
-            width: 29% !important;
+            width: 33% !important;
         }
 
         .financeiro-extrato-document table.financeiro-extrato-table col.financeiro-extrato-col-fav {
-            width: 23% !important;
+            width: 24% !important;
         }
 
         .financeiro-extrato-document table.financeiro-extrato-table col.financeiro-extrato-col-value {
@@ -543,7 +549,7 @@
         }
 
         .financeiro-extrato-document table.financeiro-extrato-table col.financeiro-extrato-col-balance {
-            width: 18% !important;
+            width: 14% !important;
         }
 
         .financeiro-extrato-table th:nth-child(1),
@@ -575,15 +581,13 @@
 
         .financeiro-extrato-description-main,
         .financeiro-extrato-favorecido-main,
-        .financeiro-extrato-description-meta,
-        .financeiro-extrato-favorecido-meta {
+        .financeiro-extrato-description-meta {
             white-space: nowrap !important;
             overflow: hidden !important;
             text-overflow: ellipsis !important;
         }
 
-        .financeiro-extrato-description-meta,
-        .financeiro-extrato-favorecido-meta {
+        .financeiro-extrato-description-meta {
             font-size: 7.1pt !important;
         }
 
@@ -818,17 +822,14 @@
                                                     </td>
                                                     <td>
                                                         <span class="financeiro-extrato-favorecido-main">{{ item.favorecido_exibicao }}</span>
-                                                        <span class="financeiro-extrato-favorecido-meta">{{ item.lancamento.get_tipo_display }}</span>
                                                     </td>
                                                     <td>
                                                         <span class="financeiro-extrato-value {% if item.valor_exibicao < 0 %}is-negative{% elif item.valor_exibicao > 0 %}is-positive{% endif %}">
-                                                            <span class="money-cell">
-                                                                {% if item.valor_exibicao < 0 %}
-                                                                    <span class="money-number">-{{ item.valor_exibicao_absoluto|br_money }}</span>
-                                                                {% else %}
-                                                                    <span class="money-number">{{ item.valor_exibicao|br_money }}</span>
-                                                                {% endif %}
-                                                            </span>
+                                                            {% if item.valor_exibicao < 0 %}
+                                                                <span class="money-number">R$ -{{ item.valor_exibicao_absoluto|br_money }}</span>
+                                                            {% else %}
+                                                                <span class="money-number">R$ {{ item.valor_exibicao|br_money }}</span>
+                                                            {% endif %}
                                                         </span>
                                                     </td>
                                                     <td>

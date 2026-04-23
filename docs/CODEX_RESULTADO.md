@@ -2,6 +2,41 @@
 
 Data: 2026-04-23
 
+## Refinamento do `Extrato` com remocao do tipo textual no corpo da tabela
+
+- tratei a rodada como limpeza pontual do miolo do `Extrato`, sem tocar em calculos, saldo, cronologia ou regra de negocio
+- causa objetiva:
+  - `Favorecido` ainda carregava uma segunda linha com `Receita`, `Despesa` ou `Transferencia`
+  - isso aumentava a altura das linhas e tirava largura util de `Descricao` e `Favorecido`
+  - a coluna `Valor` ainda desperdicava espaco ao separar a leitura financeira em microblocos
+- solucao aplicada:
+  - removi o texto auxiliar de tipo do movimento do corpo da tabela
+  - mantive `Descricao` e `Favorecido` separados
+  - redistribui as larguras favorecendo `Descricao` e `Favorecido`
+  - deixei `Valor` mais direto, em uma unica leitura visual, com sinal positivo/negativo e sem `C/D`
+- estrutura mantida:
+  - `Data`
+  - `Doc.`
+  - `Descricao`
+  - `Favorecido`
+  - `Valor`
+  - `Saldo`
+- regra final da apresentacao do valor:
+  - entrada/receita: `R$ 150,00`
+  - saida/despesa: `R$ -350,00`
+  - `Saldo` continua em coluna propria, alinhado a direita e protegido
+- efeito esperado:
+  - altura das linhas menor
+  - menos truncamento em `Descricao` e `Favorecido`
+  - leitura mais limpa do extrato em tela e impressao
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+- resultado:
+  - microetapa pronta para commit
+  - extrato pronto para nova homologacao visual
+
 ## Alinhamento do layout do `Extrato` entre tela e impressao
 
 - tratei a rodada como correcao da tentativa anterior de modelo bancario, que o usuario reprovou por fundir `Descricao` com `Favorecido` e por usar `C/D` na coluna de valor

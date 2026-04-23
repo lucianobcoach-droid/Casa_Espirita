@@ -2,6 +2,31 @@
 
 Data de atualizacao: 2026-04-23
 
+## Refinamento visual do miolo do `Extrato`
+
+- a microetapa atuou apenas no layout/apresentacao da tabela do `Extrato`, sem alterar calculos, ordenacao cronologica ou semantica financeira
+- limpeza aplicada no corpo da tabela:
+  - o texto auxiliar de tipo por linha (`Receita`, `Despesa`, `Transferencia`) deixou de aparecer em `Favorecido`
+  - `Descricao` e `Favorecido` permanecem em colunas separadas
+  - o valor passou a ser exibido de forma mais direta, em linha unica, sem `C/D`
+- redistribuicao de largura:
+  - `Descricao` e `Favorecido` ganharam mais largura util
+  - `Data`, `Doc.`, `Valor` e `Saldo` foram protegidos com larguras menores e mais proporcionais
+- regra visual consolidada:
+  - entradas/receitas seguem positivas
+  - saidas/despesas seguem negativas
+  - o proprio valor passa a comunicar a natureza do movimento, sem texto auxiliar adicional no miolo
+- efeito esperado:
+  - linhas mais baixas
+  - menos truncamento perceptivel
+  - leitura mais limpa e financeira do extrato em tela e impressao
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+- observacao:
+  - o extrato fica pronto para nova homologacao visual desta rodada de limpeza
+
 ## Alinhamento estrutural do `Extrato` entre tela e impressao
 
 - a microetapa corrigiu a tentativa anterior de modelo bancario compacto, que nao foi aprovada na homologacao visual
