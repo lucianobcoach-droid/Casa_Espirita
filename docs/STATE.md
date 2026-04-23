@@ -25,6 +25,33 @@ Data de atualizacao: 2026-04-23
 - observacao:
   - o impresso do extrato fica pronto para nova homologacao visual focada em PDF/print
 
+## Refinamento do impresso do `Extrato` com compactacao tipografica leve
+
+- a microetapa refinou novamente apenas o modo print/PDF do `Extrato`, preservando a correcao anterior de sobreposicao e sem tocar na tela normal
+- objetivo desta rodada:
+  - reduzir truncamento excessivo
+  - manter texto em linha unica como regra principal
+  - devolver mais conteudo util para `Descricao` e `Favorecido`
+- ajustes aplicados no impresso:
+  - fonte da tabela reduzida discretamente para um passo mais compacto
+  - `line-height` e `padding` horizontal/vertical reduzidos apenas no modo print
+  - redistribuicao de larguras favorecendo `Descricao` e `Favorecido`
+  - `Doc.` foi rebaixada no impresso, ficando mais estreita
+  - `Mov.` ficou ligeiramente mais compacta
+  - `Entrada`, `Saida` e `Saldo` permaneceram protegidas e alinhadas a direita
+  - truncamento por `ellipsis` foi mantido apenas como fallback nas colunas textuais mais longas
+- efeito esperado:
+  - menos `...` no miolo do extrato impresso
+  - mais conteudo visivel em `Descricao` e `Favorecido`
+  - preservacao da leitura dos valores e do saldo final
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+  - novo PDF de conferência gerado em `tmp/extrato_homologacao_impresso_corrigido2.pdf`
+- observacao:
+  - o impresso do extrato fica pronto para nova homologacao visual desta segunda rodada de refinamento
+
 ## Aplicacao do padrao analitico consolidado na tela `Extrato`
 
 - a microetapa adaptou a tela `Extrato` ao padrao analitico consolidado em `Evolucao por categorias`, preservando a logica cronologica do extrato, os calculos de saldo e a base documental de impressao

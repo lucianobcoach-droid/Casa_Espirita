@@ -29,6 +29,33 @@ Data: 2026-04-23
   - microetapa pronta para commit
   - impresso do `Extrato` pronto para nova homologacao visual
 
+## Refinamento do impresso do `Extrato` com compactacao tipografica leve
+
+- tratei a rodada como ajuste fino do print/PDF do `Extrato`, sem alterar a solucao anterior de nao sobrepor colunas e sem tocar na tela normal
+- causa objetiva:
+  - a correcao anterior segurou a sobreposicao
+  - mas ainda deixou truncamento excessivo em `Descricao` e `Favorecido`, empobrecendo a utilidade do relatorio
+- solucao aplicada:
+  - reduzi discretamente a tipografia da tabela no modo print
+  - reduzi `line-height` e `padding` do miolo apenas no impresso
+  - redistribui larguras para devolver espaco a `Descricao` e `Favorecido`
+  - rebaixei `Doc.` no papel, deixando a coluna mais estreita
+  - deixei `Mov.` mais compacta no impresso
+  - mantive `Entrada`, `Saida` e `Saldo` protegidas, com alinhamento numerico a direita
+  - preservei `ellipsis` apenas como fallback inevitavel nas colunas textuais
+- regra final desta rodada:
+  - nao usar quebra de linha em massa nas celulas
+  - melhorar o aproveitamento horizontal antes de aceitar truncamento
+  - manter o valor financeiro mais protegido do que o texto auxiliar
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+  - PDF de conferência regenerado em `tmp/extrato_homologacao_impresso_corrigido2.pdf`
+- resultado:
+  - microetapa pronta para commit
+  - impresso do `Extrato` pronto para nova homologacao visual
+
 ## Aplicacao do padrao analitico consolidado na tela `Extrato`
 
 - tratei a rodada como segunda propagacao controlada do padrao analitico consolidado a partir de `Evolucao por categorias`, sem reabrir regra de negocio nem mexer na base de calculo do extrato
