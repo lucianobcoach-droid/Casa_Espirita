@@ -2,6 +2,44 @@
 
 Data: 2026-04-23
 
+## Reversao da barra divergente e cor semantica da tabela comparativa
+
+- tratei a rodada como correcao pontual de apresentacao no comparativo separado da `Evolucao por categorias`, sem reabrir calculos nem mexer no consolidado
+- causa objetiva:
+  - a barra divergente validada tecnicamente na rodada anterior nao ficou boa no navegador real
+  - o bloco ainda carregava prefixo `+` indevido no nome do item
+  - a tabela comparativa seguia colorindo a variacao apenas pelo sinal bruto, sem considerar `receita` versus `despesa`
+- solucao aplicada:
+  - reverti o bloco `Itens com maior diferenca absoluta` para barra simples com magnitude absoluta
+  - mantive o texto monetario assinado:
+    - `receita` positiva
+    - `despesa` negativa
+  - removi o prefixo `+` dos rotulos curtos do bloco, mantendo nome neutro do item
+  - criei na view uma regra semantica explicita para comparar `principal` x `comparativo` conforme a natureza do item
+  - passei a aplicar essa semantica na tabela comparativa em:
+    - `Diferenca absoluta`
+    - `Variacao percentual`
+- regra final consolidada da tabela:
+  - `receita`: comparativo maior = melhor (`is-receita`), comparativo menor = pior (`is-despesa`)
+  - `despesa`: comparativo maior em magnitude = pior (`is-despesa`), comparativo menor em magnitude = melhor (`is-receita`)
+- preservacao:
+  - comparativo consolidado nao foi alterado
+  - fluxo normal sem `Periodo comparativo` nao foi alterado
+  - ordenacao do bloco separado permaneceu a mesma
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+  - smoke autenticado com rollback OK confirmando:
+    - barra simples sem `bar-half`
+    - rotulos sem prefixo `+`
+    - despesa negativa no texto
+    - receita com diferenca/variacao positivas na tabela
+    - despesa com diferenca/variacao negativas na tabela
+- resultado:
+  - a microetapa ficou pronta para commit
+  - a homologacao visual/manual em navegador real ainda precisa confirmar o acabamento final desta reversao
+
 ## Correcao da semantica visual das barras de despesa no comparativo separado
 
 - tratei a rodada como correcao visual/semantica pontual do bloco `Itens com maior diferenca absoluta`, sem reabrir a comparacao nem tocar no consolidado

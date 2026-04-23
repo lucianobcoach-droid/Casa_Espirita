@@ -4354,7 +4354,7 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
             nome_curto = getattr(objeto, 'nome', item.get('display_label') or item.get('label') or '')
             chave = _texto_ordenacao_insensivel(nome_curto)
             nome_exibido = item.get('label') if contagem_nomes.get(chave, 0) > 1 else nome_curto
-            rotulos[int(item['id'])] = f'+ {nome_exibido}'
+            rotulos[int(item['id'])] = str(nome_exibido)
         return rotulos
 
     def _descricao_grafico(
@@ -4904,6 +4904,15 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
             return -abs(valor)
         return valor
 
+    def _classe_semantica_comparacao(self, tipo: str, valor_principal: Decimal, valor_comparativo: Decimal) -> str:
+        valor_principal = abs(valor_principal or Decimal('0.00'))
+        valor_comparativo = abs(valor_comparativo or Decimal('0.00'))
+        if valor_comparativo == valor_principal:
+            return ''
+        if tipo == LancamentoFinanceiro.TipoLancamento.DESPESA:
+            return 'is-receita' if valor_comparativo < valor_principal else 'is-despesa'
+        return 'is-receita' if valor_comparativo > valor_principal else 'is-despesa'
+
     def _montar_filtros_humanos(
         self,
         *,
@@ -5072,6 +5081,7 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
             valor_b_exibicao = self._valor_exibicao_comparacao(valor_b, serie_base['tipo'])
             diferenca_absoluta = abs(valor_b - valor_a)
             variacao_percentual = _calcular_variacao_percentual(valor_a, valor_b)
+            comparacao_css = self._classe_semantica_comparacao(serie_base['tipo'], valor_a, valor_b)
             total_periodo_a += valor_a
             total_periodo_b += valor_b
             linhas_comparacao.append(
@@ -5087,15 +5097,10 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
                     'valor_b_exibido_formatado': _formatar_moeda_brl_exibicao(valor_b_exibicao),
                     'diferenca_absoluta': diferenca_absoluta,
                     'diferenca_absoluta_formatada': _formatar_moeda_brl_exibicao(diferenca_absoluta),
+                    'diferenca_css': comparacao_css,
                     'variacao_percentual': variacao_percentual,
                     'variacao_percentual_formatada': _formatar_percentual_relatorio(variacao_percentual),
-                    'variacao_css': (
-                        'is-receita'
-                        if variacao_percentual is not None and variacao_percentual > Decimal('0.00')
-                        else 'is-despesa'
-                        if variacao_percentual is not None and variacao_percentual < Decimal('0.00')
-                        else ''
-                    ),
+                    'variacao_css': comparacao_css if variacao_percentual is not None else '',
                 }
             )
 

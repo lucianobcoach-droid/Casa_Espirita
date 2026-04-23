@@ -2,6 +2,37 @@
 
 Data de atualizacao: 2026-04-23
 
+## Correcao da barra e da semantica de cores no comparativo separado de `Evolucao por categorias`
+
+- a microetapa reverteu a tentativa anterior de barra divergente no bloco `Itens com maior diferenca absoluta`, porque a leitura visual validada pelo usuario nao ficou boa
+- regra final do bloco:
+  - a barra voltou a usar apenas magnitude absoluta
+  - o texto monetario continua respeitando o sinal real do item
+  - `receita` permanece positiva no texto
+  - `despesa` permanece negativa no texto
+- o nome visual do item no bloco deixou de usar prefixo `+`; o rotulo curto agora fica neutro, preservando apenas o nome do item e o fallback expandido quando houver ambiguidade real
+- a tabela comparativa passou a aplicar semantica de cor pela natureza financeira do item:
+  - em `receita`, comparativo maior que principal = melhor (`is-receita`) e comparativo menor = pior (`is-despesa`)
+  - em `despesa`, comparativo maior em magnitude = pior (`is-despesa`) e comparativo menor em magnitude = melhor (`is-receita`)
+  - a regra passou a valer ao menos para `Diferenca absoluta` e `Variacao percentual`
+- preservacao:
+  - comparativo consolidado nao foi alterado
+  - fluxo normal sem comparativo nao foi alterado
+  - ordenacao do bloco separado permaneceu a mesma
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+  - smoke autenticado com rollback OK confirmando:
+    - barra simples por magnitude absoluta
+    - despesa negativa no texto
+    - ausencia do prefixo `+` no nome do item
+    - semantica positiva para receita maior no comparativo
+    - semantica negativa para despesa maior no comparativo
+- observacao:
+  - o resultado desta etapa ficou validado tecnicamente e por smoke controlado de HTML
+  - a confirmacao visual/manual final no navegador real continua pendente nesta propria rodada
+
 ## Correcao da semantica visual das barras de despesa no comparativo separado
 
 - a microetapa corrigiu o defeito remanescente do bloco `Itens com maior diferenca absoluta`: o texto ja estava negativo para despesa, mas a barra ainda crescia para a direita como se fosse positiva
