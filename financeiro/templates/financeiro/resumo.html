@@ -345,6 +345,23 @@
             padding: 0.75rem 0.9rem 0.95rem;
         }
     }
+
+    @media screen {
+        .financeiro-document-header.only-print,
+        .financeiro-document-meta-grid.only-print {
+            display: none !important;
+        }
+    }
+
+    @media print {
+        .financeiro-document-header.only-print {
+            display: flex !important;
+        }
+
+        .financeiro-document-meta-grid.only-print {
+            display: grid !important;
+        }
+    }
 </style>
 
 <div class="financeiro-resumo-page">
