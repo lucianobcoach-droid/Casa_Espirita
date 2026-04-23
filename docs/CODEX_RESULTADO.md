@@ -2,6 +2,36 @@
 
 Data: 2026-04-23
 
+## Correcao do sinal de despesas no comparativo separado
+
+- tratei a rodada como correcao pontual de regressao no bloco `Itens com maior diferenca absoluta`, sem reabrir a comparacao nem mexer no fluxo normal
+- causa objetiva:
+  - a view usava os totais das series em valor absoluto para a leitura grafica do bloco separado
+  - o mesmo valor absoluto estava sendo reaproveitado para a formatacao textual dos periodos, o que fazia despesas aparecerem como positivas
+- solucao aplicada:
+  - separei `magnitude visual` de `valor exibido`
+  - a largura das barras e a ordenacao continuam usando os totais absolutos
+  - os campos formatados exibidos ao usuario agora passam por regra de natureza:
+    - `receita` permanece positiva
+    - `despesa` passa a ser formatada como negativa
+- preservacao:
+  - rotulos curtos do bloco permaneceram intactos
+  - fallback por ambiguidade permaneceu intacto
+  - ordenacao analitica do bloco permaneceu intacta
+  - comparativo consolidado nao foi alterado
+  - fluxo normal sem `Periodo comparativo` nao foi alterado
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+  - smoke autenticado com rollback OK confirmando:
+    - `R$ -300,00` e `R$ -100,00` para item de despesa
+    - `R$ 200,00` e `R$ 50,00` preservados para receita
+    - `Tabela comparativa` presente so no fluxo comparativo
+    - fluxo normal preservado sem tabela comparativa
+- resultado:
+  - o bloco fica pronto para encerramento definitivo apos esta correcao
+
 ## Rotulos curtos e ordenacao analitica no comparativo separado
 
 - tratei a rodada como acabamento de UX do bloco `Itens com maior diferenca absoluta`, sem alterar calculos nem a estrutura da comparacao

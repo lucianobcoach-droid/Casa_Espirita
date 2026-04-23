@@ -2,6 +2,29 @@
 
 Data de atualizacao: 2026-04-23
 
+## Correcao do sinal de despesas no comparativo separado de `Evolucao por categorias`
+
+- a microetapa corrigiu uma regressao pontual no bloco `Itens com maior diferenca absoluta` da comparacao separada
+- causa objetiva:
+  - a comparacao separada reutilizava os totais visuais das series, armazenados em magnitude absoluta para ordenar o bloco e dimensionar as barras
+  - esses mesmos totais estavam sendo formatados diretamente para exibicao, fazendo despesas aparecerem com sinal positivo ao usuario
+- regra final consolidada:
+  - o valor exibido respeita a natureza financeira real da serie
+  - `receita` continua positiva
+  - `despesa` passa a aparecer negativa
+  - a barra visual continua baseada em magnitude absoluta para preservar comparabilidade e largura coerente
+  - a ordenacao do bloco permanece por maior diferenca absoluta, depois maior soma de magnitudes e depois ordem alfabetica
+  - os rotulos curtos com `+ Nome` e fallback por ambiguidade permanecem preservados
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+  - smoke autenticado com rollback OK confirmando:
+    - despesas negativas no comparativo separado
+    - receitas positivas preservadas
+    - tabela comparativa presente apenas quando ha periodo comparativo
+    - fluxo normal sem comparativo preservado
+
 ## Rotulos curtos e ordenacao analitica no comparativo separado
 
 - a microetapa refinou apenas o bloco `Itens com maior diferenca absoluta` da tela `Evolucao por categorias`

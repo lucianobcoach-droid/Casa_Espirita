@@ -4884,6 +4884,12 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
             ],
         }
 
+    def _valor_exibicao_comparacao(self, valor: Decimal, tipo: str) -> Decimal:
+        valor = valor or Decimal('0.00')
+        if tipo == LancamentoFinanceiro.TipoLancamento.DESPESA:
+            return -abs(valor)
+        return valor
+
     def _montar_filtros_humanos(
         self,
         *,
@@ -5048,6 +5054,8 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
             serie_base = serie_a or serie_b
             valor_a = serie_a['total'] if serie_a else Decimal('0.00')
             valor_b = serie_b['total'] if serie_b else Decimal('0.00')
+            valor_a_exibicao = self._valor_exibicao_comparacao(valor_a, serie_base['tipo'])
+            valor_b_exibicao = self._valor_exibicao_comparacao(valor_b, serie_base['tipo'])
             diferenca_absoluta = abs(valor_b - valor_a)
             variacao_percentual = _calcular_variacao_percentual(valor_a, valor_b)
             total_periodo_a += valor_a
@@ -5057,9 +5065,11 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
                     'label': serie_base['label'],
                     'label_grafico': serie_base.get('label_grafico') or serie_base['label'],
                     'valor_a': valor_a,
-                    'valor_a_formatado': _formatar_moeda_brl(valor_a),
+                    'valor_a_exibicao': valor_a_exibicao,
+                    'valor_a_formatado': _formatar_moeda_brl(valor_a_exibicao),
                     'valor_b': valor_b,
-                    'valor_b_formatado': _formatar_moeda_brl(valor_b),
+                    'valor_b_exibicao': valor_b_exibicao,
+                    'valor_b_formatado': _formatar_moeda_brl(valor_b_exibicao),
                     'diferenca_absoluta': diferenca_absoluta,
                     'diferenca_absoluta_formatada': _formatar_moeda_brl(diferenca_absoluta),
                     'variacao_percentual': variacao_percentual,
