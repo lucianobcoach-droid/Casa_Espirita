@@ -2,6 +2,37 @@
 
 Data de atualizacao: 2026-04-23
 
+## Reorganizacao da hierarquia visual em `Evolucao por categorias`
+
+- a microetapa atuou apenas na apresentacao da tela `Evolucao por categorias`, preservando calculos, semantica financeira, comparacao entre periodos e fluxo normal sem comparativo
+- o topo da pagina ganhou hierarquia visual mais clara:
+  - cabecalho com tratamento de hero leve
+  - melhor separacao entre titulo, subtitulo, contexto e acoes
+  - botao principal de impressao com mais protagonismo do que a acao secundaria de retorno
+- o painel de filtros passou a ter leitura mais claramente secundaria:
+  - card de filtros com menor peso do que a area de resultados
+  - agrupamento mais limpo
+  - `Atualizar grafico` destacado como acao principal
+  - `Limpar` mantido como acao secundaria
+- a faixa de KPIs ganhou mais forca executiva:
+  - numeros maiores
+  - contraste e separacao mais firmes entre os cards
+  - maior respiracao entre os indicadores
+- a area de resultados ficou mais protagonista:
+  - bloco principal do grafico/leitura detalhada com mais destaque
+  - tabela comparativa em segundo nivel visual, sem competir com o resultado principal
+  - reforco de borda, sombra, espacamento e legibilidade nos blocos comparativos
+- preservacao:
+  - nenhuma regra funcional foi alterada
+  - nenhuma semantica de receita/despesa foi alterada
+  - impressao permaneceu sem regressao estrutural
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+- observacao:
+  - a tela fica pronta para homologacao visual focada em UX
+
 ## Refino final da tabela comparativa e normalizacao cronologica em `Evolucao por categorias`
 
 - a microetapa atuou apenas no comparativo da tela `Evolucao por categorias`, preservando o fluxo normal sem comparativo e sem reabrir a logica central do grafico consolidado

@@ -2,6 +2,37 @@
 
 Data: 2026-04-23
 
+## Reforco da hierarquia visual da tela `Evolucao por categorias`
+
+- tratei a rodada como refinamento de UX visual, sem tocar em calculos, comparacao entre periodos ou semantica financeira
+- topo da pagina:
+  - transformei o cabecalho em um bloco visual mais estruturado e respirado
+  - melhorei a distancia entre titulo, subtitulo, chips de contexto e acoes
+  - deixei a acao principal de impressao mais evidente, mantendo o retorno aos relatorios em segundo plano
+- filtros:
+  - o card de filtros passou a ter peso visual secundario
+  - `Atualizar grafico` ganhou mais destaque como acao principal
+  - `Limpar` ficou visualmente mais discreto
+- KPIs:
+  - aumentei o protagonismo dos numeros
+  - reforcei contraste, espacamento e separacao entre os cards
+  - deixei a faixa mais executiva e menos misturada com o restante da pagina
+- resultados:
+  - destaquei o painel principal do grafico/leitura detalhada
+  - empurrei a tabela comparativa para um segundo nivel visual
+  - melhorei respiro, borda e legibilidade do bloco `Itens com maior diferenca absoluta` e da tabela
+- preservacao:
+  - nenhum calculo foi alterado
+  - nenhuma regra de comparacao foi alterada
+  - impressao permaneceu preservada
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+- resultado:
+  - microetapa pronta para commit
+  - tela pronta para homologacao visual focada em UX
+
 ## Refino da tabela comparativa e normalizacao cronologica
 
 - tratei a rodada como acabamento funcional/semantico do comparativo de `Evolucao por categorias`, sem mexer no fluxo normal da tela
