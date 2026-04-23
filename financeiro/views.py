@@ -4739,26 +4739,59 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
     def _montar_grafico_resumo_comparacao_detalhada(
         self,
         *,
-        total_periodo_principal: Decimal,
-        total_periodo_comparativo: Decimal,
-        mostrar_valores: bool,
+        linhas_comparacao: list[dict[str, object]],
+        periodo_principal_label: str,
+        periodo_comparativo_label: str,
     ) -> dict[str, object]:
-        grafico = _montar_contexto_svg_evolucao(
-            ['Principal', 'Comparativo'],
-            [
-                {
-                    'label': 'Total consolidado',
-                    'cor': '#1f5fbf',
-                    'tipo': 'misto',
-                    'valores': [abs(total_periodo_principal), abs(total_periodo_comparativo)],
-                }
-            ],
-            mostrar_valores=mostrar_valores,
+        limite_itens = 8
+        linhas_ordenadas = sorted(
+            linhas_comparacao,
+            key=lambda linha: (
+                -abs(linha.get('diferenca_absoluta') or Decimal('0.00')),
+                -(abs(linha.get('valor_a') or Decimal('0.00')) + abs(linha.get('valor_b') or Decimal('0.00'))),
+                _texto_ordenacao_insensivel(linha.get('label') or ''),
+            ),
         )
-        if grafico.get('tem_dados'):
-            grafico['render_width'] = min(grafico['largura'], 560)
+        linhas_exibidas = linhas_ordenadas[:limite_itens]
+        maior_valor = max(
+            [
+                abs(linha.get('valor_a') or Decimal('0.00'))
+                for linha in linhas_exibidas
+            ]
+            + [
+                abs(linha.get('valor_b') or Decimal('0.00'))
+                for linha in linhas_exibidas
+            ],
+            default=Decimal('0.00'),
+        )
+
+        def _largura_barra(valor: Decimal) -> str:
+            valor = abs(valor or Decimal('0.00'))
+            if maior_valor <= Decimal('0.00') or valor <= Decimal('0.00'):
+                return '0'
+            percentual = (valor / maior_valor) * Decimal('100')
+            if percentual < Decimal('6.0'):
+                percentual = Decimal('6.0')
+            return str(percentual.quantize(Decimal('0.1'))).replace(',', '.')
+
         return {
-            'grafico': grafico,
+            'tem_dados': bool(linhas_exibidas) and maior_valor > Decimal('0.00'),
+            'periodo_principal_label': periodo_principal_label,
+            'periodo_comparativo_label': periodo_comparativo_label,
+            'quantidade_total': len(linhas_comparacao),
+            'quantidade_exibida': len(linhas_exibidas),
+            'tem_itens_ocultos': len(linhas_comparacao) > limite_itens,
+            'itens': [
+                {
+                    'label': linha['label'],
+                    'valor_principal_formatado': linha['valor_a_formatado'],
+                    'valor_comparativo_formatado': linha['valor_b_formatado'],
+                    'diferenca_absoluta_formatada': linha['diferenca_absoluta_formatada'],
+                    'largura_principal': _largura_barra(linha.get('valor_a') or Decimal('0.00')),
+                    'largura_comparativo': _largura_barra(linha.get('valor_b') or Decimal('0.00')),
+                }
+                for linha in linhas_exibidas
+            ],
         }
 
     def _montar_filtros_humanos(
@@ -4966,9 +4999,9 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
             )
         else:
             comparacao_grafico_resumo_detalhado = self._montar_grafico_resumo_comparacao_detalhada(
-                total_periodo_principal=total_periodo_a,
-                total_periodo_comparativo=total_periodo_b,
-                mostrar_valores=mostrar_valores,
+                linhas_comparacao=linhas_comparacao,
+                periodo_principal_label=periodo_principal_label,
+                periodo_comparativo_label=periodo_comparativo_label,
             )
 
         return {

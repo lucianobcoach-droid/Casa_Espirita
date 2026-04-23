@@ -449,6 +449,111 @@
         padding: 0.75rem 0.85rem 0.95rem;
     }
 
+    .financeiro-evolucao-bars {
+        display: grid;
+        gap: 0.75rem;
+        margin-top: 0.85rem;
+        padding: 0.85rem;
+        border: 1px solid #e5edf7;
+        border-radius: 0.95rem;
+        background: #fff;
+    }
+
+    .financeiro-evolucao-bars-heading {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.55rem;
+    }
+
+    .financeiro-evolucao-bars-title {
+        margin: 0;
+        color: #0f172a;
+        font-size: 0.88rem;
+        font-weight: 800;
+    }
+
+    .financeiro-evolucao-bars-legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.45rem;
+    }
+
+    .financeiro-evolucao-bars-list {
+        display: grid;
+        gap: 0.7rem;
+    }
+
+    .financeiro-evolucao-bar-item {
+        display: grid;
+        gap: 0.38rem;
+        padding: 0.68rem 0.72rem;
+        border: 1px solid #eef3f8;
+        border-radius: 0.85rem;
+        background: linear-gradient(180deg, #fbfdff 0%, #ffffff 100%);
+    }
+
+    .financeiro-evolucao-bar-label {
+        color: #0f172a;
+        font-size: 0.84rem;
+        font-weight: 800;
+        line-height: 1.25;
+    }
+
+    .financeiro-evolucao-bar-row {
+        display: grid;
+        grid-template-columns: minmax(6.5rem, 9rem) minmax(8rem, 1fr) minmax(5.5rem, auto);
+        align-items: center;
+        gap: 0.55rem;
+    }
+
+    .financeiro-evolucao-bar-period {
+        color: #64748b;
+        font-size: 0.74rem;
+        font-weight: 700;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .financeiro-evolucao-bar-track {
+        height: 0.58rem;
+        border-radius: 999px;
+        background: #e8eef6;
+        overflow: hidden;
+    }
+
+    .financeiro-evolucao-bar-fill {
+        display: block;
+        height: 100%;
+        min-width: 0;
+        border-radius: inherit;
+    }
+
+    .financeiro-evolucao-bar-fill.is-principal {
+        background: #1f5fbf;
+    }
+
+    .financeiro-evolucao-bar-fill.is-comparativo {
+        background: #c97316;
+    }
+
+    .financeiro-evolucao-bar-value {
+        color: #0f172a;
+        font-size: 0.78rem;
+        font-weight: 800;
+        text-align: right;
+        white-space: nowrap;
+    }
+
+    .financeiro-evolucao-bars-note {
+        margin: 0;
+        color: #64748b;
+        font-size: 0.76rem;
+        line-height: 1.4;
+    }
+
     .financeiro-evolucao-comparacao-table th,
     .financeiro-evolucao-comparacao-table td {
         vertical-align: middle;
@@ -932,33 +1037,45 @@
                                     </div>
                                     <p class="financeiro-evolucao-panel-note">Quando a leitura fica detalhada, a comparacao prioriza a tabela para evitar excesso de linhas e preservar a clareza entre os itens selecionados.</p>
                                     {% with bloco=comparacao_grafico_resumo_detalhado %}
-                                        {% if bloco.grafico.tem_dados %}
-                                            <div class="financeiro-evolucao-chart-wrap">
-                                                <div class="financeiro-evolucao-chart-stage" style="width: {{ bloco.grafico.render_width }}px;">
-                                                    <svg class="financeiro-evolucao-chart" viewBox="0 0 {{ bloco.grafico.largura }} {{ bloco.grafico.altura }}" style="width: {{ bloco.grafico.render_width }}px" role="img" aria-label="Resumo visual da comparacao entre periodos">
-                                                        {% for linha in bloco.grafico.grade %}
-                                                            <line class="financeiro-evolucao-grid-line" x1="{{ bloco.grafico.x_inicial }}" y1="{{ linha.y }}" x2="{{ bloco.grafico.x_final }}" y2="{{ linha.y }}"></line>
-                                                            <text class="financeiro-evolucao-axis-label" x="8" y="{{ linha.y|add:'4' }}">{{ linha.label }}</text>
-                                                        {% endfor %}
-                                                        <line class="financeiro-evolucao-zero-line" x1="{{ bloco.grafico.x_inicial }}" y1="{{ bloco.grafico.zero_y }}" x2="{{ bloco.grafico.x_final }}" y2="{{ bloco.grafico.zero_y }}"></line>
-                                                        {% for item in bloco.grafico.rotulos_eixo_x %}
-                                                            <line class="financeiro-evolucao-grid-line" x1="{{ item.x_svg }}" y1="{{ bloco.grafico.zero_y }}" x2="{{ item.x_svg }}" y2="{{ bloco.grafico.zero_y|add:'6' }}"></line>
-                                                            <text class="financeiro-evolucao-axis-label financeiro-evolucao-axis-label-x" x="{{ item.x_svg }}" y="{{ bloco.grafico.eixo_label_y }}">{{ item.label }}</text>
-                                                        {% endfor %}
-                                                        {% for serie in bloco.grafico.series %}
-                                                            <path class="financeiro-evolucao-series-line" d="{{ serie.path_data }}" stroke="{{ serie.cor }}"></path>
-                                                            {% for ponto in serie.pontos %}
-                                                                <circle class="financeiro-evolucao-series-point" cx="{{ ponto.x }}" cy="{{ ponto.y }}" r="4.5" fill="{{ serie.cor }}">
-                                                                    <title>{{ serie.label }} - {{ ponto.label_mes }} - {{ ponto.label_valor }}</title>
-                                                                </circle>
-                                                                {% if ponto.mostrar_rotulo %}
-                                                                    <line class="financeiro-evolucao-data-label-line" x1="{{ ponto.x_svg }}" y1="{{ ponto.y_svg }}" x2="{{ ponto.x_svg }}" y2="{{ ponto.linha_rotulo_y_svg }}"></line>
-                                                                    <text class="financeiro-evolucao-data-label-text" x="{{ ponto.x_svg }}" y="{{ ponto.rotulo_y_svg }}">{{ ponto.label_curto }}</text>
-                                                                {% endif %}
-                                                            {% endfor %}
-                                                        {% endfor %}
-                                                    </svg>
+                                        {% if bloco.tem_dados %}
+                                            <div class="financeiro-evolucao-bars" role="img" aria-label="Resumo visual por item da comparacao entre periodos">
+                                                <div class="financeiro-evolucao-bars-heading">
+                                                    <h3 class="financeiro-evolucao-bars-title">Itens com maior diferenca absoluta</h3>
+                                                    <div class="financeiro-evolucao-bars-legend">
+                                                        <span class="financeiro-evolucao-legend-item">
+                                                            <span class="financeiro-evolucao-legend-swatch" style="background: #1f5fbf"></span>
+                                                            Periodo principal
+                                                        </span>
+                                                        <span class="financeiro-evolucao-legend-item">
+                                                            <span class="financeiro-evolucao-legend-swatch" style="background: #c97316"></span>
+                                                            Periodo comparativo
+                                                        </span>
+                                                    </div>
                                                 </div>
+                                                <div class="financeiro-evolucao-bars-list">
+                                                    {% for item in bloco.itens %}
+                                                        <div class="financeiro-evolucao-bar-item">
+                                                            <div class="financeiro-evolucao-bar-label">{{ item.label }}</div>
+                                                            <div class="financeiro-evolucao-bar-row">
+                                                                <span class="financeiro-evolucao-bar-period" title="{{ bloco.periodo_principal_label }}">Principal</span>
+                                                                <span class="financeiro-evolucao-bar-track">
+                                                                    <span class="financeiro-evolucao-bar-fill is-principal" style="width: {{ item.largura_principal }}%;"></span>
+                                                                </span>
+                                                                <span class="financeiro-evolucao-bar-value">R$ {{ item.valor_principal_formatado }}</span>
+                                                            </div>
+                                                            <div class="financeiro-evolucao-bar-row">
+                                                                <span class="financeiro-evolucao-bar-period" title="{{ bloco.periodo_comparativo_label }}">Comparativo</span>
+                                                                <span class="financeiro-evolucao-bar-track">
+                                                                    <span class="financeiro-evolucao-bar-fill is-comparativo" style="width: {{ item.largura_comparativo }}%;"></span>
+                                                                </span>
+                                                                <span class="financeiro-evolucao-bar-value">R$ {{ item.valor_comparativo_formatado }}</span>
+                                                            </div>
+                                                        </div>
+                                                    {% endfor %}
+                                                </div>
+                                                {% if bloco.tem_itens_ocultos %}
+                                                    <p class="financeiro-evolucao-bars-note">Exibindo {{ bloco.quantidade_exibida }} de {{ bloco.quantidade_total }} itens, priorizados por maior diferenca absoluta. A relacao completa permanece na tabela comparativa.</p>
+                                                {% endif %}
                                             </div>
                                         {% endif %}
                                     {% endwith %}

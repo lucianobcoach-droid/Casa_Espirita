@@ -1,6 +1,21 @@
 # STATE
 
-Data de atualizacao: 2026-04-22
+Data de atualizacao: 2026-04-23
+
+## Correcao do grafico separado na comparacao de `Evolucao por categorias`
+
+- a microetapa corrigiu apenas o modo `Periodo comparativo` preenchido + `Leitura = Separado`, sem alterar o fluxo normal sem comparativo nem o grafico consolidado ja aprovado
+- o grafico-resumo anterior, que mostrava uma linha agregada entre `Principal` e `Comparativo`, foi removido por nao comunicar a comparacao item a item
+- no modo separado, a tela passa a exibir um grafico-resumo discreto de barras horizontais agrupadas por item:
+  - uma barra para o `Periodo principal`
+  - uma barra para o `Periodo comparativo`
+  - valores exibidos ao lado de cada barra
+- a selecao visual do grafico separado mostra ate 8 itens, priorizados por maior diferenca absoluta entre os periodos; a tabela comparativa continua sendo a leitura principal e mantem a relacao completa
+- validacoes executadas nesta microetapa:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+  - smoke autenticado OK cobrindo fluxo normal sem comparativo, comparativo consolidado e comparativo separado com barras por item
 
 ## Correcao pontual da visualizacao comparativa em `Evolucao por categorias`
 

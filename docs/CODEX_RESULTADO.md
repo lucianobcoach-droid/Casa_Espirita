@@ -1,6 +1,35 @@
 # CODEX_RESULTADO
 
-Data: 2026-04-22
+Data: 2026-04-23
+
+## Correcao do grafico separado na comparacao de `Evolucao por categorias`
+
+- corrigi a visualizacao do modo separado sem reimplementar a comparacao e sem mexer no comportamento normal da tela
+- causa objetiva:
+  - o apoio visual do modo separado ainda era um grafico agregado com dois pontos (`Principal` e `Comparativo`)
+  - isso repetia uma leitura consolidada e nao mostrava a comparacao por categoria/subcategoria
+- solucao aplicada:
+  - removi a linha agregada inutil do modo separado
+  - passei a montar, no backend, um resumo por item a partir da propria tabela comparativa
+  - renderizei esse resumo no template como barras horizontais agrupadas por item, com uma barra para cada periodo
+- regra adotada para selecionar/ordenar itens:
+  - exibir ate 8 itens no grafico
+  - ordenar por maior diferenca absoluta entre os periodos
+  - usar maior valor agregado apenas como desempate secundario
+  - manter todos os itens na tabela comparativa, que continua sendo a leitura principal do modo separado
+- preservacao:
+  - sem periodo comparativo preenchido, o fluxo normal permanece intacto
+  - com comparativo + `Consolidado`, o grafico de linhas com duas series permanece como estava
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+  - smoke autenticado OK para:
+    - consulta normal sem comparativo
+    - comparacao consolidada ainda com grafico de linhas
+    - comparacao separada com barras horizontais por item e tabela comparativa preservada
+- resultado:
+  - microetapa pronta para nova rodada curta de homologacao visual/manual
 
 ## Correcao pontual da visualizacao comparativa em `Evolucao por categorias`
 

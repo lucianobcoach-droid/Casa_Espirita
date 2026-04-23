@@ -31,7 +31,8 @@ Data: 2026-04-22
   - a comparacao entre periodos e ativada automaticamente quando o `Periodo comparativo` e preenchido
   - a saida da comparacao passou a incluir `Periodo principal`, `Periodo comparativo`, diferenca absoluta e variacao percentual com tratamento seguro quando a base e zero
   - com `Periodo comparativo` preenchido e `Leitura = Consolidado`, a comparacao passa a usar um unico grafico de linhas com duas series (`Periodo principal` e `Periodo comparativo`)
-  - com `Periodo comparativo` preenchido e `Leitura = Separado`, a tabela comparativa passa a ser a leitura principal para evitar poluicao visual por excesso de linhas
+  - com `Periodo comparativo` preenchido e `Leitura = Separado`, a tabela comparativa passa a ser a leitura principal para evitar poluicao visual por excesso de linhas, com apoio visual discreto em barras horizontais agrupadas por item
+  - no grafico de apoio do comparativo separado, a tela exibe ate 8 itens priorizados por maior diferenca absoluta entre os periodos, mantendo a lista completa na tabela comparativa
   - a troca de `Escopo` atualiza imediatamente o seletor visivel e a busca, sem exigir submit apenas para trocar a interface
   - o submit de `Atualizar grafico` recalcula efetivamente grafico, KPIs e tabela de apoio
 - entrega visual atual:
