@@ -392,12 +392,16 @@
             gap: 0;
         }
 
+        .financeiro-document-report {
+            font-size: 0.94rem;
+        }
+
         .financeiro-prestacao-panel-grid {
             display: block;
         }
 
         .financeiro-prestacao-panel-grid > .financeiro-prestacao-panel {
-            margin-bottom: 0.85rem;
+            margin-bottom: 0.65rem;
         }
 
         .financeiro-prestacao-card,
@@ -409,10 +413,37 @@
         .financeiro-prestacao-results-body {
             padding: 0;
             background: #fff;
+            gap: 0.6rem;
         }
 
         .financeiro-prestacao-panel-body {
-            padding: 0.75rem 0.9rem 0.95rem;
+            padding: 0.62rem 0.78rem 0.78rem;
+        }
+
+        .financeiro-prestacao-panel-header {
+            padding: 0.72rem 0.78rem 0.58rem;
+        }
+
+        .financeiro-prestacao-section-title {
+            font-size: 0.94rem;
+        }
+
+        .financeiro-prestacao-section-note,
+        .financeiro-document-note,
+        .financeiro-prestacao-signature-caption {
+            font-size: 0.76rem;
+            line-height: 1.35;
+        }
+
+        .prestacao-table th,
+        .prestacao-table td,
+        .financeiro-prestacao-summary-table td {
+            padding-top: 0.4rem;
+            padding-bottom: 0.4rem;
+        }
+
+        .financeiro-prestacao-print-header {
+            margin-bottom: 0.7rem;
         }
 
         .prestacao-table thead {
@@ -454,15 +485,16 @@
         <div class="financeiro-page-header-main">
             <div>
                 <h1 class="title financeiro-page-title">{{ page_title }}</h1>
-                <p class="financeiro-page-subtitle no-print">Leitura documental e gerencial do periodo, com reconciliacao do saldo consolidado e blocos formais de conferencia.</p>
+                <p class="financeiro-page-subtitle no-print">Resumo gerencial reconciliado do periodo selecionado, com fechamento formal e blocos de conferencia.</p>
                 <div class="financeiro-prestacao-meta no-print">
                     {% if periodo_label %}<span class="financeiro-prestacao-meta-item"><strong>Periodo:</strong> {{ periodo_label }}</span>{% endif %}
                     <span class="financeiro-prestacao-meta-item"><strong>Contas:</strong> {{ contas_incluidas_label|default:'Todas as contas' }}</span>
                     {% if exibir_transferencias %}<span class="financeiro-prestacao-meta-item"><strong>Transferencias:</strong> Exibidas</span>{% endif %}
                     {% if mostrar_centro_custo %}<span class="financeiro-prestacao-meta-item"><strong>Centro de custo:</strong> Visivel</span>{% endif %}
+                    {% if mostrar_contas_zeradas %}<span class="financeiro-prestacao-meta-item"><strong>Contas zeradas:</strong> Exibidas</span>{% endif %}
                 </div>
                 <div class="financeiro-prestacao-context-note no-print">
-                    <span><strong>Analise:</strong> Prestacao de contas com fechamento formal do periodo selecionado.</span>
+                    <span><strong>Analise:</strong> Fechamento gerencial do periodo com leitura formal do saldo reconciliado.</span>
                     <span><strong>Escopo:</strong> Receitas, despesas, reconciliacao entre contas da instituicao e composicao do saldo final.</span>
                 </div>
             </div>
@@ -480,14 +512,14 @@
                     <summary class="financeiro-secondary-summary financeiro-prestacao-filter-summary">
                         <span class="financeiro-prestacao-filter-summary-main">
                             <span class="financeiro-prestacao-filter-summary-heading">
-                                <span class="financeiro-secondary-summary-label">Filtros da prestacao</span>
+                                <span class="financeiro-secondary-summary-label">Filtros do fechamento</span>
                                 {% if filtros_relatorio_ativos or opcoes_relatorio_ativas %}<span class="financeiro-secondary-badge">ativos</span>{% endif %}
                             </span>
                             <span class="financeiro-prestacao-filter-summary-text">
                                 {% if periodo_label %}
-                                    <strong>Periodo:</strong> {{ periodo_label }} | <strong>Contas:</strong> {{ contas_incluidas_label|default:'Todas as contas' }}{% if exibir_transferencias %} | <strong>Transferencias:</strong> Exibidas{% endif %}{% if mostrar_centro_custo %} | <strong>Centro de custo:</strong> Visivel{% endif %}
+                                    <strong>Periodo:</strong> {{ periodo_label }} | <strong>Contas:</strong> {{ contas_incluidas_label|default:'Todas as contas' }}{% if exibir_transferencias %} | <strong>Transferencias:</strong> Exibidas{% endif %}{% if mostrar_centro_custo %} | <strong>Centro de custo:</strong> Visivel{% endif %}{% if mostrar_contas_zeradas %} | <strong>Contas zeradas:</strong> Exibidas{% endif %}
                                 {% else %}
-                                    Defina o periodo, as contas e as opcoes de leitura da prestacao de contas.
+                                    Defina o periodo, as contas e as opcoes de leitura do fechamento do periodo.
                                 {% endif %}
                             </span>
                         </span>
@@ -535,7 +567,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <p class="help">Sem selecao explicita, a prestacao considera todas as contas.</p>
+                                <p class="help">Sem selecao explicita, o fechamento considera todas as contas.</p>
                             </div>
                             <div class="column is-6-mobile is-3-tablet is-2-desktop">
                                 <label class="label">Data inicial</label>
@@ -561,10 +593,17 @@
                                         Exibir transferencias
                                     </label>
                                 </div>
+                                <div class="field mt-2">
+                                    <label class="checkbox">
+                                        <input type="hidden" name="mostrar_contas_zeradas" value="0">
+                                        <input type="checkbox" name="mostrar_contas_zeradas" value="1" {% if mostrar_contas_zeradas %}checked{% endif %}>
+                                        Mostrar contas sem movimentacao e sem saldo
+                                    </label>
+                                </div>
                             </div>
                             <div class="column is-12">
                                 <div class="buttons">
-                                    <button class="button is-link" type="submit">Atualizar prestacao</button>
+                                    <button class="button is-link" type="submit">Atualizar fechamento</button>
                                     <a class="button is-light" href="{% url 'financeiro:prestacao-contas' %}">Limpar</a>
                                 </div>
                             </div>
@@ -581,7 +620,7 @@
         <div class="financeiro-prestacao-card is-kpis">
             <div class="financeiro-prestacao-kpi-head">
                 <div>
-                    <h2 class="financeiro-prestacao-section-title">Leitura executiva da prestacao</h2>
+                    <h2 class="financeiro-prestacao-section-title">Leitura executiva do fechamento</h2>
                     <p class="financeiro-prestacao-section-note">Os totais principais sintetizam o periodo antes do detalhamento documental da composicao e da reconciliacao.</p>
                 </div>
             </div>
@@ -635,12 +674,12 @@
                             {% if not financeiro_shell_brand_logo_url %}
                             <p class="financeiro-document-brand-name">{{ financeiro_shell_brand_name }}</p>
                             {% endif %}
-                            <p class="financeiro-document-brand-note">Prestacao de contas com leitura gerencial do periodo, reconciliacao do saldo consolidado e composicao final para conferencia institucional.</p>
+                            <p class="financeiro-document-brand-note">Fechamento do periodo com leitura gerencial reconciliada, composicao final e conferencia institucional.</p>
                         </div>
                     </div>
                     <div>
                         <h2 class="financeiro-document-title">{{ page_title }}</h2>
-                        <p class="financeiro-document-subtitle">Documento formal de conferencia do periodo selecionado.</p>
+                        <p class="financeiro-document-subtitle">Resumo gerencial reconciliado do periodo selecionado.</p>
                     </div>
                 </header>
 
@@ -653,6 +692,12 @@
                         <span class="financeiro-document-meta-label">Contas incluidas</span>
                         <span class="financeiro-document-meta-value">{{ contas_incluidas_label|default:'Todas as contas' }}</span>
                     </div>
+                    {% if mostrar_contas_zeradas %}
+                    <div class="financeiro-document-meta-card">
+                        <span class="financeiro-document-meta-label">Contas zeradas</span>
+                        <span class="financeiro-document-meta-value">Exibidas no fechamento</span>
+                    </div>
+                    {% endif %}
                     <div class="financeiro-document-meta-card">
                         <span class="financeiro-document-meta-label">Saldo final reconciliado</span>
                         <span class="financeiro-document-meta-value"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_final_reconciliado|br_money }}</span></span></span>
@@ -668,7 +713,7 @@
                         <section class="financeiro-prestacao-panel is-primary">
                             <div class="financeiro-prestacao-panel-header">
                                 <div>
-                                    <h2 class="financeiro-prestacao-section-title">Leitura principal da prestacao</h2>
+                                    <h2 class="financeiro-prestacao-section-title">Leitura principal do fechamento</h2>
                                     <p class="financeiro-prestacao-section-note">O relatorio preserva carater documental, com destaque para a reconciliacao do saldo e para os blocos de conferencia do periodo.</p>
                                 </div>
                                 <div class="tags no-print">
@@ -871,7 +916,7 @@
                                     </section>
                                 </div>
 
-                                {% if exibir_transferencias %}
+                                {% if exibir_transferencias and transferencias_periodo %}
                                     <section class="financeiro-prestacao-panel">
                                         <div class="financeiro-prestacao-panel-header">
                                             <div>
@@ -879,9 +924,9 @@
                                                 <p class="financeiro-prestacao-section-note">Exibidas para conferencia operacional; nao alteram receitas, despesas nem o resultado do periodo.</p>
                                             </div>
                                             <div class="tags">
-                                                <span class="tag is-light">Movimentado: R$ {{ total_transferencias_periodo|br_money }}</span>
-                                                <span class="tag is-success is-light">Entradas: R$ {{ total_transferencias_entrada|br_money }}</span>
-                                                <span class="tag is-warning is-light">Saidas: R$ {{ total_transferencias_saida|br_money }}</span>
+                                                <span class="tag is-light">Movimentado: <span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ total_transferencias_periodo|br_money }}</span></span></span>
+                                                <span class="tag is-success is-light">Entradas: <span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ total_transferencias_entrada|br_money }}</span></span></span>
+                                                <span class="tag is-warning is-light">Saidas: <span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ total_transferencias_saida|br_money }}</span></span></span>
                                             </div>
                                         </div>
                                         <div class="financeiro-prestacao-panel-body">
@@ -906,10 +951,6 @@
                                                             <td>{{ transferencia.conta_destino|default:'-' }}</td>
                                                             <td>{{ transferencia.numero_documento|default:'-' }}</td>
                                                             <td><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ transferencia.valor|br_money }}</span></span></td>
-                                                        </tr>
-                                                    {% empty %}
-                                                        <tr>
-                                                            <td colspan="6">Nao houve transferencias no periodo selecionado.</td>
                                                         </tr>
                                                     {% endfor %}
                                                     </tbody>
@@ -969,7 +1010,7 @@
                                         </div>
                                     </section>
 
-                                    {% if mostrar_centro_custo %}
+                                    {% if mostrar_centro_custo and despesas_por_centro_custo %}
                                         <section class="financeiro-prestacao-panel">
                                             <div class="financeiro-prestacao-panel-header">
                                                 <div>
@@ -992,10 +1033,6 @@
                                                                 <td>{{ item.label }}</td>
                                                                 <td><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ item.valor|br_money }}</span></span></td>
                                                             </tr>
-                                                        {% empty %}
-                                                            <tr>
-                                                                <td colspan="2">Nao houve despesas para agrupar por centro de custo no periodo.</td>
-                                                            </tr>
                                                         {% endfor %}
                                                         </tbody>
                                                         <tfoot>
@@ -1013,7 +1050,7 @@
 
                                 <div class="financeiro-prestacao-signature">
                                     <div class="financeiro-prestacao-signature-line"></div>
-                                    <p>Responsavel pela prestacao de contas</p>
+                                    <p>Responsavel pelo fechamento do periodo</p>
                                     <p class="financeiro-prestacao-signature-caption">Documento emitido para conferencia institucional de {{ financeiro_shell_brand_name }}.</p>
                                 </div>
                             </div>

@@ -2,6 +2,35 @@
 
 Data de atualizacao: 2026-04-24
 
+## Refinamento final da `Prestacao de contas` para `Fechamento do periodo`
+
+- a microetapa refinou a mesma tela/relatorio sem reabrir regra de negocio, calculos ou reconciliacao contabil
+- o nome principal da experiencia passou a ser `Fechamento do periodo`, com subtitulo e textos de apoio mais gerenciais
+- a apresentacao monetaria foi padronizada com o mesmo modelo do `Extrato`:
+  - `R$` a esquerda
+  - numero a direita
+  - mesma celula
+- esse padrao passou a valer na tela e no impresso para:
+  - KPIs
+  - tabelas
+  - totais
+  - saldo inicial/final
+  - composicao do saldo
+- foi incluida a opcao `Mostrar contas sem movimentacao e sem saldo`
+  - comportamento padrao: desligado
+  - com a opcao desligada, as composicoes ocultam contas zeradas que tambem nao tiveram movimentacao no periodo
+  - com a opcao ligada, essas contas voltam a aparecer no relatorio
+- a impressao ficou mais compacta, sem prometer pagina unica em qualquer cenario:
+  - reducao leve de fonte e padding no modo print
+  - menor espacamento entre paineis
+  - cabecalho impresso mais enxuto
+  - ocultacao de secoes opcionais vazias, quando aplicavel, para aproveitar melhor a folha
+- validacoes executadas nesta microetapa:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+- com esse refinamento, a tela fica pronta para homologacao final
+
 ## Correcao da ordem formal e da paginacao impressa na `Prestacao de contas`
 
 - a microetapa corrigiu exclusivamente a impressao/PDF da `Prestacao de contas`, sem alterar calculos, reconciliacao ou regra de negocio

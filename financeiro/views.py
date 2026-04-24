@@ -3925,11 +3925,12 @@ class FinanceiroPeriodoMixin(FinanceiroPermissaoMixin):
         data_inicial_raw, data_final_raw, data_inicial, data_final, periodo_error = self._parse_periodo()
         mostrar_centro_custo = self._parse_checkbox('mostrar_centro_custo')
         exibir_transferencias = self._parse_checkbox('exibir_transferencias')
+        mostrar_contas_zeradas = self._parse_checkbox('mostrar_contas_zeradas')
         filtros_relatorio_ativos = _request_possui_parametros_get(
             self.request,
             ('contas', 'data_inicial', 'data_final'),
         )
-        opcoes_relatorio_ativas = mostrar_centro_custo or exibir_transferencias
+        opcoes_relatorio_ativas = mostrar_centro_custo or exibir_transferencias or mostrar_contas_zeradas
         contas_selecionadas = [conta for conta in contas_disponiveis if conta.id in selected_ids]
         todas_as_contas_selecionadas = len(selected_ids) == len(contas_disponiveis)
         contas_incluidas_label = (
@@ -3948,6 +3949,7 @@ class FinanceiroPeriodoMixin(FinanceiroPermissaoMixin):
             'quantidade_contas_selecionadas': len(contas_selecionadas),
             'mostrar_centro_custo': mostrar_centro_custo,
             'exibir_transferencias': exibir_transferencias,
+            'mostrar_contas_zeradas': mostrar_contas_zeradas,
             'filtros_relatorio_ativos': filtros_relatorio_ativos,
             'opcoes_relatorio_ativas': opcoes_relatorio_ativas,
             'universo_contas_relatorio': {
@@ -3986,15 +3988,66 @@ class FinanceiroPeriodoMixin(FinanceiroPermissaoMixin):
             - resumo_transferencias_externas['saida_para_fora']
         )
         (
+            transferencias_reais,
+            total_transferencias_reais,
+            total_transferencias_entrada_reais,
+            total_transferencias_saida_reais,
+        ) = self._lancamentos_transferencias(data_inicial, data_final, selected_ids)
+        (
             transferencias,
             total_transferencias,
             total_transferencias_entrada,
             total_transferencias_saida,
         ) = (
-            self._lancamentos_transferencias(data_inicial, data_final, selected_ids)
+            (
+                transferencias_reais,
+                total_transferencias_reais,
+                total_transferencias_entrada_reais,
+                total_transferencias_saida_reais,
+            )
             if exibir_transferencias
             else ([], Decimal('0.00'), Decimal('0.00'), Decimal('0.00'))
         )
+
+        contas_com_movimentacao_ids = {
+            lancamento.conta_id
+            for lancamento in [*receitas, *despesas]
+            if lancamento.conta_id
+        }
+        contas_com_movimentacao_ids.update(
+            lancamento.conta_id
+            for lancamento in transferencias_reais
+            if lancamento.conta_id
+        )
+        contas_com_movimentacao_ids.update(
+            lancamento.conta_destino_id
+            for lancamento in transferencias_reais
+            if lancamento.conta_destino_id
+        )
+
+        if not mostrar_contas_zeradas:
+            saldos_iniciais_por_id = {
+                item['conta'].id: item['saldo']
+                for item in composicao_inicial
+            }
+            saldos_finais_por_id = {
+                item['conta'].id: item['saldo']
+                for item in composicao_final
+            }
+
+            def _manter_conta(item: dict[str, object]) -> bool:
+                conta_id = item['conta'].id
+                saldo_inicial = saldos_iniciais_por_id.get(conta_id, Decimal('0.00'))
+                saldo_final = saldos_finais_por_id.get(conta_id, Decimal('0.00'))
+                return (
+                    saldo_inicial != Decimal('0.00')
+                    or saldo_final != Decimal('0.00')
+                    or conta_id in contas_com_movimentacao_ids
+                )
+
+            composicao_inicial = [item for item in composicao_inicial if _manter_conta(item)]
+            composicao_final = [item for item in composicao_final if _manter_conta(item)]
+
         context.update(
             {
                 'periodo_label': f'{data_inicial.strftime("%d/%m/%Y")} a {data_final.strftime("%d/%m/%Y")}',
@@ -4072,7 +4125,7 @@ class PrestacaoContasFinanceiroView(FinanceiroPeriodoMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['page_title'] = 'Prestacao de Contas'
+        context['page_title'] = 'Fechamento do periodo'
         context.update(self._build_periodo_context())
         return context
 

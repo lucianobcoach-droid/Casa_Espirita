@@ -2,6 +2,35 @@
 
 Data: 2026-04-24
 
+## Refinamento final da `Prestacao de contas` para `Fechamento do periodo`
+
+- tratei a rodada como acabamento funcional/visual da mesma tela, preservando calculos, reconciliacao e semantica financeira
+- a experiencia principal passou a usar o nome `Fechamento do periodo`, com linguagem de apoio mais gerencial e menos obrigatoria
+- apliquei na tela e no impresso o mesmo padrao monetario ja consolidado no `Extrato`:
+  - `R$` a esquerda
+  - numero a direita
+  - mesma celula
+- introduzi a opcao `Mostrar contas sem movimentacao e sem saldo`:
+  - por padrao ela fica desligada
+  - com ela desligada, saem das composicoes as contas zeradas e sem movimentacao real no periodo
+  - com ela ligada, essas contas reaparecem no relatorio sem alterar totais
+- refinei a compactacao do impresso para melhorar a chance de caber em uma pagina quando o volume permitir:
+  - fonte um pouco menor no PDF
+  - padding e espacamentos verticais mais contidos
+  - cabecalho impresso mais enxuto
+  - ocultacao de secoes opcionais vazias, quando aplicavel
+- arquivos alterados:
+  - `financeiro/views.py`
+  - `financeiro/templates/financeiro/prestacao_contas.html`
+  - `docs/STATE.md`
+  - `docs/CODEX_RESULTADO.md`
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+- conclusao:
+  - a tela `Fechamento do periodo` fica pronta para homologacao final
+
 ## Correcao da ordem formal e da paginacao impressa na `Prestacao de contas`
 
 - tratei a rodada como correcao pontual de impressao/PDF, sem reabrir calculos, reconciliacao nem a estrutura geral da tela
