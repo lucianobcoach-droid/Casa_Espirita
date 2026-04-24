@@ -1,6 +1,39 @@
 # STATE
 
-Data de atualizacao: 2026-04-23
+Data de atualizacao: 2026-04-24
+
+## Aplicacao do padrao analitico consolidado na tela `Prestacao de contas`
+
+- a microetapa adaptou a tela `Prestacao de contas` ao padrao analitico consolidado a partir de `Evolucao por categorias`, `Resumo` e `Extrato`, preservando calculos, reconciliacao, semantica financeira e identidade documental da tela
+- estrutura aplicada:
+  - `titulo/contexto`
+  - `filtro no topo da analise`
+  - `KPIs`
+  - `resultado principal`
+- o filtro passou a permanecer no mesmo lugar estrutural da pagina:
+  - abre no topo quando ainda nao ha leitura valida ou quando existe erro de periodo
+  - fica recolhido por padrao quando o relatorio ja esta carregado
+  - o resumo recolhido orienta rapidamente periodo, contas e opcoes de leitura
+- heranca direta do padrao-base:
+  - hero mais enxuto com contexto principal no topo
+  - card proprio para filtros
+  - card proprio para KPIs
+  - card proprio para resultados
+- adaptacoes especificas da `Prestacao de contas`:
+  - o relatorio preserva carater formal/documental
+  - os blocos de reconciliacao e de composicao do saldo final continuam com protagonismo
+  - a impressao segue isolada do shell, dos filtros e dos KPIs, preservando a leitura documental util
+- frente ativa e prioridade:
+  - a frente ativa continua sendo a padronizacao das telas analiticas do `financeiro`
+  - `Resumo`, `Extrato` e `Prestacao de contas` passam a formar a propagacao principal ja executada dessa base
+  - a normalizacao de favorecidos permanece fora da sequencia operacional desta etapa
+  - a frente de frequencia/recorrencia continua futura e nao priorizada agora
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+- observacao:
+  - a tela `Prestacao de contas` fica pronta para homologacao visual
 
 ## Padronizacao das celulas monetarias do `Extrato`
 

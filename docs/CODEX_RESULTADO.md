@@ -1,6 +1,42 @@
 # CODEX_RESULTADO
 
-Data: 2026-04-23
+Data: 2026-04-24
+
+## Aplicacao do padrao analitico consolidado na tela `Prestacao de contas`
+
+- tratei a rodada como terceira propagacao controlada do padrao analitico consolidado, sem reabrir regras de negocio da prestacao nem tocar na reconciliacao contabil ja aprovada
+- heranca aplicada do padrao-base:
+  - ordem `titulo/contexto -> filtro -> KPIs -> resultado principal`
+  - filtro mantido no topo da area analitica
+  - filtro recolhido por padrao quando o relatorio ja esta carregado
+  - resumo recolhido util para orientar rapidamente periodo, contas e opcoes ativas
+  - resultado como protagonista visual da pagina
+- adaptacoes especificas da `Prestacao de contas`:
+  - preservei o carater documental/gerencial da tela, sem transformá-la em dashboard genérico
+  - mantive os blocos formais de conferencia e a reconciliacao do saldo como leitura principal
+  - reorganizei o resultado em paineis mais claros para:
+    - leitura operacional do relatorio
+    - saldo inicial
+    - resumo do saldo disponivel
+    - receitas e despesas do periodo
+    - transferencias do periodo, quando exibidas
+    - composicao do saldo final
+    - despesas por centro de custo, quando exibidas
+  - preservei o bloco final de assinatura e a impressao isolada do shell administrativo
+- apoio minimo no backend:
+  - nenhum ajuste de regra de negocio foi necessario na view
+  - a adaptacao ficou concentrada no template e na hierarquia visual
+- consolidacao documental desta etapa:
+  - a frente ativa continua sendo a padronizacao das telas analiticas do `financeiro`
+  - a discussao de normalizacao de favorecidos nao entrou nesta sequencia operacional
+  - a frente de frequencia/recorrencia continua registrada apenas como futura
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+- resultado:
+  - microetapa pronta para commit
+  - tela `Prestacao de contas` pronta para homologacao visual
 
 ## Padronizacao das celulas monetarias do `Extrato`
 
