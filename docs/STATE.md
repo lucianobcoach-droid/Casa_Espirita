@@ -2,6 +2,27 @@
 
 Data de atualizacao: 2026-04-24
 
+## Correcao da ordem formal e da paginacao impressa na `Prestacao de contas`
+
+- a microetapa corrigiu exclusivamente a impressao/PDF da `Prestacao de contas`, sem alterar calculos, reconciliacao ou regra de negocio
+- a numeracao das secoes passou a seguir a ordem visual real do relatorio, com contagem automatica aplicada apenas aos blocos formais numerados
+- ordem impressa consolidada:
+  - `Saldo disponivel no inicio do periodo`
+  - `Resumo do saldo disponivel`
+  - `Receitas do periodo`
+  - `Despesas do periodo`
+  - `Transferencias do periodo`, quando exibidas
+  - `Composicao do saldo final`
+  - `Despesas por centro de custo`, quando exibidas
+- a secao `Despesas do periodo` recebeu protecao de quebra no modo print para evitar fragmentacao ruim no fim da pagina
+- no modo print, os blocos em grade passam a ser empilhados para melhorar continuidade documental da leitura
+- a tabela da secao passou a reforcar `thead` como cabecalho de continuacao e `tfoot` como fechamento real, impedindo que o total apareca antes do termino efetivo da listagem
+- validacoes executadas nesta microetapa:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+- com esse ajuste, a `Prestacao de contas` fica pronta para homologacao final focada em impressao
+
 ## Aplicacao do padrao analitico consolidado na tela `Prestacao de contas`
 
 - a microetapa adaptou a tela `Prestacao de contas` ao padrao analitico consolidado a partir de `Evolucao por categorias`, `Resumo` e `Extrato`, preservando calculos, reconciliacao, semantica financeira e identidade documental da tela

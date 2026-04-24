@@ -188,6 +188,11 @@
         font-weight: 800;
     }
 
+    .financeiro-prestacao-section-title.is-numbered::before {
+        counter-increment: prestacao-section;
+        content: counter(prestacao-section) ". ";
+    }
+
     .financeiro-prestacao-section-note {
         margin: 0.3rem 0 0;
         color: #64748b;
@@ -260,6 +265,7 @@
         gap: 1rem;
         padding: 1rem;
         background: linear-gradient(180deg, #fcfdff 0%, #f8fbfe 100%);
+        counter-reset: prestacao-section;
     }
 
     .financeiro-prestacao-panel {
@@ -386,6 +392,14 @@
             gap: 0;
         }
 
+        .financeiro-prestacao-panel-grid {
+            display: block;
+        }
+
+        .financeiro-prestacao-panel-grid > .financeiro-prestacao-panel {
+            margin-bottom: 0.85rem;
+        }
+
         .financeiro-prestacao-card,
         .financeiro-prestacao-panel {
             box-shadow: none;
@@ -399,6 +413,20 @@
 
         .financeiro-prestacao-panel-body {
             padding: 0.75rem 0.9rem 0.95rem;
+        }
+
+        .prestacao-table thead {
+            display: table-header-group;
+        }
+
+        .prestacao-table tfoot {
+            display: table-footer-group;
+        }
+
+        .financeiro-prestacao-panel.is-print-keep-together,
+        .financeiro-prestacao-panel.is-print-keep-together .table-wrapper {
+            break-inside: avoid-page;
+            page-break-inside: avoid;
         }
 
         .financeiro-prestacao-hero,
@@ -684,7 +712,7 @@
                                     <section class="financeiro-prestacao-panel">
                                         <div class="financeiro-prestacao-panel-header">
                                             <div>
-                                                <h3 class="financeiro-prestacao-section-title">1. Saldo disponivel no inicio do periodo</h3>
+                                                <h3 class="financeiro-prestacao-section-title is-numbered">Saldo disponivel no inicio do periodo</h3>
                                                 <p class="financeiro-prestacao-section-note">Composicao inicial das contas incluidas no relatorio.</p>
                                             </div>
                                         </div>
@@ -723,7 +751,7 @@
                                     <section class="financeiro-prestacao-panel">
                                         <div class="financeiro-prestacao-panel-header">
                                             <div>
-                                                <h3 class="financeiro-prestacao-section-title">4. Resumo do saldo disponivel</h3>
+                                                <h3 class="financeiro-prestacao-section-title is-numbered">Resumo do saldo disponivel</h3>
                                                 <p class="financeiro-prestacao-section-note">Fechamento reconciliado do periodo com entradas e saidas entre contas da instituicao.</p>
                                             </div>
                                         </div>
@@ -767,7 +795,7 @@
                                     <section class="financeiro-prestacao-panel">
                                         <div class="financeiro-prestacao-panel-header">
                                             <div>
-                                                <h3 class="financeiro-prestacao-section-title">2. Receitas do periodo</h3>
+                                                <h3 class="financeiro-prestacao-section-title is-numbered">Receitas do periodo</h3>
                                                 <p class="financeiro-prestacao-section-note">Agrupamento das entradas efetivas do periodo por categoria.</p>
                                             </div>
                                         </div>
@@ -803,10 +831,10 @@
                                         </div>
                                     </section>
 
-                                    <section class="financeiro-prestacao-panel">
+                                    <section class="financeiro-prestacao-panel is-print-keep-together">
                                         <div class="financeiro-prestacao-panel-header">
                                             <div>
-                                                <h3 class="financeiro-prestacao-section-title">3. Despesas do periodo</h3>
+                                                <h3 class="financeiro-prestacao-section-title is-numbered">Despesas do periodo</h3>
                                                 <p class="financeiro-prestacao-section-note">Agrupamento das saidas efetivas do periodo por categoria.</p>
                                             </div>
                                         </div>
@@ -847,7 +875,7 @@
                                     <section class="financeiro-prestacao-panel">
                                         <div class="financeiro-prestacao-panel-header">
                                             <div>
-                                                <h3 class="financeiro-prestacao-section-title">Transferencias do periodo</h3>
+                                                <h3 class="financeiro-prestacao-section-title is-numbered">Transferencias do periodo</h3>
                                                 <p class="financeiro-prestacao-section-note">Exibidas para conferencia operacional; nao alteram receitas, despesas nem o resultado do periodo.</p>
                                             </div>
                                             <div class="tags">
@@ -905,7 +933,7 @@
                                     <section class="financeiro-prestacao-panel">
                                         <div class="financeiro-prestacao-panel-header">
                                             <div>
-                                                <h3 class="financeiro-prestacao-section-title">5. Composicao do saldo final</h3>
+                                                <h3 class="financeiro-prestacao-section-title is-numbered">Composicao do saldo final</h3>
                                                 <p class="financeiro-prestacao-section-note">Saldo final por conta apos a reconciliacao do periodo selecionado.</p>
                                             </div>
                                         </div>
@@ -945,7 +973,7 @@
                                         <section class="financeiro-prestacao-panel">
                                             <div class="financeiro-prestacao-panel-header">
                                                 <div>
-                                                    <h3 class="financeiro-prestacao-section-title">6. Despesas por centro de custo</h3>
+                                                    <h3 class="financeiro-prestacao-section-title is-numbered">Despesas por centro de custo</h3>
                                                     <p class="financeiro-prestacao-section-note">Leitura complementar para detalhar a distribuicao das despesas do periodo.</p>
                                                 </div>
                                             </div>

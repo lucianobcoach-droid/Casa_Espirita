@@ -2,6 +2,34 @@
 
 Data: 2026-04-24
 
+## Correcao da ordem formal e da paginacao impressa na `Prestacao de contas`
+
+- tratei a rodada como correcao pontual de impressao/PDF, sem reabrir calculos, reconciliacao nem a estrutura geral da tela
+- corrigi a numeracao das secoes para seguir a ordem real de leitura do documento, usando contagem automatica nas secoes formais numeradas
+- ordem final consolidada no relatorio:
+  - `Saldo disponivel no inicio do periodo`
+  - `Resumo do saldo disponivel`
+  - `Receitas do periodo`
+  - `Despesas do periodo`
+  - `Transferencias do periodo`, quando exibidas
+  - `Composicao do saldo final`
+  - `Despesas por centro de custo`, quando exibidas
+- para a secao `Despesas do periodo`, endureci o comportamento de print:
+  - a grade de paineis passa a empilhar no PDF para melhorar continuidade
+  - a secao fica protegida contra quebra ruim no fim da pagina sempre que houver espaco insuficiente
+  - `thead` e `tfoot` da tabela passam a manter papel formal de cabecalho/fechamento no impresso
+  - o total da secao deixa de correr o risco de aparecer antes da continuacao da listagem
+- arquivos alterados:
+  - `financeiro/templates/financeiro/prestacao_contas.html`
+  - `docs/STATE.md`
+  - `docs/CODEX_RESULTADO.md`
+- validacoes executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `git diff --check` OK
+- conclusao:
+  - `Prestacao de contas` segue preservando carater formal/documental e fica pronta para homologacao final de impressao
+
 ## Aplicacao do padrao analitico consolidado na tela `Prestacao de contas`
 
 - tratei a rodada como terceira propagacao controlada do padrao analitico consolidado, sem reabrir regras de negocio da prestacao nem tocar na reconciliacao contabil ja aprovada
