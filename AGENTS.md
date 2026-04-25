@@ -21,3 +21,24 @@ Antes de qualquer alteração relevante, consultar os documentos em docs/.
 ## Uso de skills
 
 Quando a tarefa envolver documentação, financeiro, relatórios/impressão, UX ou importação, consultar a skill correspondente em .agents/skills/.
+
+## Formato obrigatório de retorno
+
+Ao finalizar qualquer tarefa, o Codex deve responder de forma curta e estruturada:
+
+1. Resumo objetivo da execução
+2. Arquivos consultados
+3. Arquivos alterados
+4. O que foi alterado em cada arquivo
+5. Validações executadas
+6. Resultado de git status --short
+7. Pendências ou riscos
+8. Commit/push realizado? sim/não
+
+Regras de economia de tokens:
+
+- Não colar diff completo, salvo se houver erro.
+- Não repetir documentação longa.
+- Não explicar histórico já registrado nos documentos.
+- Não devolver análise extensa quando a tarefa for objetiva.
+- Se houver erro, trazer o erro completo.
