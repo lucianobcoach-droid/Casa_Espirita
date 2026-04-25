@@ -2873,3 +2873,14 @@ Com filtro por periodo:
 - a acao `+` foi habilitada nos cadastros de `conta`, `favorecido`, `categoria`, `centro de custo` e `lancamento`; clones de lancamento nao usam essa acao para evitar ambiguidades operacionais
 - exclusoes feitas a partir de listagens preservam o retorno contextual tambem no cancelamento e apos confirmacao
 - validacao tecnica executada: `py manage.py check` OK, `py -m compileall financeiro` OK e smoke test com Django `Client` confirmando link com `return_to`, formulario com campo oculto de retorno, botao `+` e cancelamento contextual
+
+## Estrutura de governança com AGENTS, skills, índice e regras de negócio
+
+Foi criada e versionada a estrutura mínima de governança do projeto:
+
+- AGENTS.md, com regras permanentes para o Codex.
+- .agents/skills/, com skills iniciais para documentação, financeiro, relatórios/impressão, UX e importação.
+- docs/INDICE_PROJETO.md, como ponto de entrada rápido do projeto.
+- docs/REGRAS_NEGOCIO.md, como consolidação objetiva das regras permanentes.
+
+Essa estrutura não altera o funcionamento do sistema Django. Ela organiza a forma de condução do projeto, reduz dependência de chats longos e estabelece uma base mais segura para continuidade entre conversas, GPT e Codex.

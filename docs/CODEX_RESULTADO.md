@@ -4009,3 +4009,28 @@ Foi executada a etapa incremental para impedir repeticao de `numero_documento` e
 - o formulario coordenado de rateio tambem passou a preservar a origem ao cancelar, voltar para a linha representativa ou salvar o grupo
 - templates ajustados: `conta_form`, `pessoa_form`, `categoria_form`, `centro_custo_form`, `lancamento_form`, `lancamento_rateio_grupo_form`, `confirm_delete` e as cinco listagens principais do financeiro
 - validacao executada: `py manage.py check` OK, `py -m compileall financeiro` OK e smoke test com Django `Client` confirmando listagem com links contendo `return_to`, formulario de conta com campo oculto de retorno, botao `+` visivel e cancelamento preservando a URL filtrada
+
+## Criação da estrutura de governança com AGENTS, skills, índice e regras
+
+Foi criada uma estrutura inicial de governança para otimizar o desenvolvimento com GPT/ChatGPT e Codex:
+
+Arquivos criados:
+
+- AGENTS.md
+- .agents/skills/docs-governanca/SKILL.md
+- .agents/skills/financeiro-regras/SKILL.md
+- .agents/skills/relatorios-impressao/SKILL.md
+- .agents/skills/ux-padrao/SKILL.md
+- .agents/skills/importacao-dados/SKILL.md
+- docs/INDICE_PROJETO.md
+- docs/REGRAS_NEGOCIO.md
+
+Objetivo da etapa:
+
+- reduzir consumo de tokens;
+- evitar perda de contexto entre chats;
+- estabelecer ponto de entrada curto para leitura do projeto;
+- separar cérebro estratégico, executor técnico e aprovação do usuário;
+- preservar os documentos existentes sem apagar histórico.
+
+Não houve alteração de código funcional nesta etapa.

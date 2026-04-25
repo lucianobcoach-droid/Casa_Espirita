@@ -653,3 +653,19 @@ Ele serve apenas para:
 - registrar o que ja foi entregue
 - organizar o que ainda falta
 - orientar proximas etapas pequenas, seguras e incrementais
+
+## Reestruturação documental futura sem perda de histórico
+
+Fica registrada como frente futura controlada a reorganização gradual da documentação longa do projeto.
+
+Diretrizes:
+
+- não apagar histórico útil;
+- não reescrever documentos inteiros sem necessidade;
+- criar resumos e índices antes de reduzir arquivos grandes;
+- manter STATE.md como estado real;
+- manter CODEX_RESULTADO.md como histórico cronológico;
+- usar INDICE_PROJETO.md e REGRAS_NEGOCIO.md como camada curta de leitura;
+- só mover ou arquivar conteúdo após validação do usuário.
+
+Essa frente deve ser tratada como melhoria de governança/documentação, sem impacto direto no funcionamento do sistema financeiro.

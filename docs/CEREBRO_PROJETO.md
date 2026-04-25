@@ -524,3 +524,21 @@ Se houver conflito entre o pedido e o repositorio, pare e avise antes de codific
 - tentativas manuais anteriores de recomposicao visual do `lancamento_form.html` devem ser tratadas apenas como montagem intermediaria de estudo e nao como execucao valida da POC com tema-base real
 - a expansao do tema para outras telas do `financeiro` ou para modulos futuros so pode acontecer depois de auditoria visual e funcional real da tela piloto
 - se a base do tema resolver o problema visual de forma convincente, customizacoes pontuais por cima dela passam a ser aceitaveis; antes disso, a prioridade e validar a base pronta em vez de reabrir refinamentos incrementais
+
+## Governança permanente com GPT, Codex, AGENTS e skills
+
+A estrutura oficial de condução do projeto passa a considerar:
+
+- docs/ como memória oficial do projeto.
+- docs/INDICE_PROJETO.md como ponto de entrada rápido para leitura.
+- docs/REGRAS_NEGOCIO.md como consolidação objetiva das regras permanentes.
+- AGENTS.md como instrução mínima obrigatória do Codex.
+- .agents/skills/ como conjunto de instruções específicas por tipo de tarefa.
+
+O GPT/ChatGPT atua como cérebro estratégico: consulta os documentos, define microetapas, gera SPECs e orienta o usuário.
+
+O Codex atua como executor técnico: altera código/documentos conforme SPEC aprovada, sem redefinir regra de negócio ou prioridade por conta própria.
+
+O usuário atua como aprovador, testador e decisor final.
+
+Regra permanente: se houver divergência entre chat, documentos e código, o código representa o estado real do sistema, e os documentos devem ser corrigidos sem apagar o histórico.
