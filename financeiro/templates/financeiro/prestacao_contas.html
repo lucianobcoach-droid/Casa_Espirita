@@ -392,8 +392,15 @@
             gap: 0;
         }
 
+        @page {
+            size: A4 portrait;
+            margin: var(--financeiro-print-page-margin-y) var(--financeiro-print-page-margin-x);
+        }
+
         .financeiro-document-report {
             font-size: 0.94rem;
+            box-decoration-break: clone;
+            -webkit-box-decoration-break: clone;
         }
 
         .financeiro-prestacao-panel-grid {
@@ -408,16 +415,22 @@
         .financeiro-prestacao-panel {
             box-shadow: none;
             border-color: #d6dee8;
+            box-decoration-break: clone;
+            -webkit-box-decoration-break: clone;
         }
 
         .financeiro-prestacao-results-body {
             padding: 0;
             background: #fff;
             gap: 0.6rem;
+            box-decoration-break: clone;
+            -webkit-box-decoration-break: clone;
         }
 
         .financeiro-prestacao-panel-body {
             padding: 0.62rem 0.78rem 0.78rem;
+            box-decoration-break: clone;
+            -webkit-box-decoration-break: clone;
         }
 
         .financeiro-prestacao-panel-header {
