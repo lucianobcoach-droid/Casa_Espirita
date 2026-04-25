@@ -35,3 +35,22 @@ Este documento é o ponto de entrada rápido para qualquer chat, GPT ou Codex co
 4. Codex executa.
 5. Usuário testa.
 6. Resultado é registrado nos documentos base.
+
+## Documentos auxiliares de governança
+
+- AUDITORIA_DOCUMENTACAO.md: registra riscos, diagnóstico e diretrizes para reorganização segura da documentação.
+- MAPA_RECLASSIFICACAO.md: lista itens que precisam ser classificados como implementados, parcialmente implementados, futuros ou dúvida antes de qualquer reorganização maior.
+
+## Regra para escolha de próxima microetapa
+
+Antes de propor nova implementação, o GPT/Cérebro deve consultar:
+
+1. AGENTS.md
+2. docs/INDICE_PROJETO.md
+3. docs/AUDITORIA_DOCUMENTACAO.md
+4. docs/MAPA_RECLASSIFICACAO.md
+5. docs/STATE.md
+6. docs/CEREBRO_PROJETO.md
+7. docs/ROADMAP_FINANCEIRO.md, se a tarefa envolver futuro/backlog
+
+Se um item aparecer no MAPA_RECLASSIFICACAO.md como DÚVIDA ou REQUER CONFERÊNCIA NO CÓDIGO, a próxima microetapa deve ser auditoria/conferência, não implementação.
