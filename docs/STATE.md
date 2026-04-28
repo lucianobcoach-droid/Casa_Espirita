@@ -2,6 +2,12 @@
 
 Data de atualizacao: 2026-04-28
 
+## Refinamento da impressao da Prestacao/Fechamento
+
+- o modo print/PDF da Prestacao/Fechamento foi compactado com margens menores, cabecalho mais enxuto, tabelas mais densas e menor espacamento entre blocos
+- o bloco final de composicao do saldo e assinatura passou a ter controle de quebra para reduzir assinatura isolada em pagina quase vazia quando houver espaco
+- nao houve alteracao em calculos, queries, regras de transferencia, filtros, Extrato, Resumo, Evolucao, models, migrations ou permissoes
+
 ## Padronizacao do filtro de contas nas telas analiticas
 
 - Resumo, Fechamento/Prestacao e Evolucao por categorias passaram a usar o padrao visual/comportamental do filtro de contas validado no Extrato

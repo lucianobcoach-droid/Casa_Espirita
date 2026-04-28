@@ -16,6 +16,7 @@ Este bloco registra pendencias levantadas pela usuaria para continuidade do fina
    - Classificacao: AJUSTE VISUAL DE RELATORIO / IMPRESSAO.
    - Prioridade documental: MEDIA.
    - Direcao: compactar margens, espacamentos e quebras de pagina do PDF/impresso da Prestacao/Fechamento, sem alterar calculos.
+   - Status: executado ajuste de compactacao do modo print/PDF, sem alteracao de calculos.
 
 ## 0.15. Pendencias levantadas apos Extrato multi-contas
 

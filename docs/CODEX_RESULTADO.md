@@ -2,6 +2,14 @@
 
 Data: 2026-04-28
 
+## Refinamento da impressao da Prestacao/Fechamento
+
+- compactei exclusivamente o modo print/PDF da Prestacao/Fechamento do periodo
+- reduzi margens, padding, fonte, line-height e espacamentos de cabecalho, cards, tabelas e assinatura
+- ocultei microtextos auxiliares no impresso para preservar leitura documental com menor altura
+- agrupei composicao final e assinatura para reduzir quebra ruim e assinatura isolada quando houver espaco
+- nao alterei calculos, views, queries, regras de transferencia, filtros ou outros relatorios
+
 ## Padronizacao do filtro de contas nas telas analiticas
 
 - apliquei o padrao do filtro de contas do Extrato em Resumo, Fechamento/Prestacao e Evolucao por categorias
