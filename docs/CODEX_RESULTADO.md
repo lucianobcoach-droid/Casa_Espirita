@@ -1,5 +1,32 @@
 # CODEX_RESULTADO
 
+Data: 2026-04-28
+
+## Correção do Fechamento do período por escopo de transferências
+
+- comparei a lógica do Extrato com a lógica do Fechamento do período / Prestação de contas
+- causa encontrada: o Extrato usava data operacional (`data_pagamento` com fallback para `data_competencia`), enquanto o Fechamento calculava saldos e movimentos por `data_competencia`; além disso, o detalhamento visual podia listar transferências internas ao escopo quando `Exibir transferências` estava ligado
+- corrigi o Fechamento para calcular saldo inicial, receitas/despesas, transferências e saldo final pela mesma data operacional do Extrato
+- mantive transferências fora de receitas/despesas operacionais
+- mantive transferências sempre dentro da composição real do saldo conforme escopo das contas, independentemente da opção `Exibir transferências`
+- ajustei o detalhamento analítico para exibir apenas transferências com uma ponta dentro do filtro; transferências internas ao escopo ficam ocultas porque se anulam no consolidado
+- alinhei a data exibida no detalhamento de transferências à data operacional usada no cálculo
+- registrei a regra permanente em `docs/REGRAS_NEGOCIO.md`
+- adicionei teste pontual para transferência interna, origem no filtro, destino no filtro e `Exibir transferências` ligada/desligada sem mudar saldo real
+- arquivos alterados:
+  - `financeiro/views.py`
+  - `financeiro/templates/financeiro/prestacao_contas.html`
+  - `financeiro/tests.py`
+  - `docs/REGRAS_NEGOCIO.md`
+  - `docs/STATE.md`
+  - `docs/CODEX_RESULTADO.md`
+- validações executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `py manage.py test financeiro.tests.PrestacaoContasTransferenciasEscopoTests` OK
+  - conferência local da conta `Dinheiro` em `01/03/2026 a 31/03/2026` OK: Fechamento e Extrato retornaram saldo inicial `270.06`, entradas `756.26`, saídas `314.26` e saldo final `712.06`
+- ajuste visual complementar: o relatório deixou de exibir linhas/cards zerados de entradas ou saídas por transferência externa ao escopo; cálculo e Extrato não foram alterados
+
 Data: 2026-04-24
 
 ## Refinamento final da `Prestacao de contas` para `Fechamento do periodo`

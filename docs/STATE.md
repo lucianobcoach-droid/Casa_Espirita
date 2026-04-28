@@ -1,6 +1,25 @@
 # STATE
 
-Data de atualizacao: 2026-04-24
+Data de atualizacao: 2026-04-28
+
+## Correção do Fechamento do período por escopo de transferências
+
+- o Fechamento do período / Prestação de contas passou a usar a mesma referência operacional do Extrato para movimentos e saldos: `data_pagamento` com fallback para `data_competencia`
+- receitas e despesas continuam operacionais e não incluem transferências
+- transferências passaram a compor saldo conforme o escopo de contas selecionado:
+  - origem e destino dentro do filtro se anulam no consolidado
+  - somente destino dentro do filtro entra como entrada por transferência
+  - somente origem dentro do filtro entra como saída por transferência
+- a opção `Exibir transferências` ficou limitada ao detalhamento analítico; ela não altera saldo inicial, saldo final nem reconciliação
+- mesmo com `Exibir transferências` desligado, os totais de entrada/saída por transferência necessários à reconciliação continuam compondo o resumo do saldo
+- transferências internas ao escopo selecionado não aparecem no bloco visual de transferências como linha zerada ou entrada/saída desnecessária
+- foi criado teste pontual cobrindo transferência interna ao escopo, apenas origem no filtro, apenas destino no filtro e opção `Exibir transferências` ligada/desligada sem alterar saldo real
+- validações executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `py manage.py test financeiro.tests.PrestacaoContasTransferenciasEscopoTests` OK
+  - conferência local da conta `Dinheiro` em `01/03/2026 a 31/03/2026` OK: Fechamento e Extrato reconciliaram saldo inicial, entradas, saídas e saldo final
+- ajuste visual complementar: linhas/cards de entradas ou saídas por transferência externa ao escopo agora só aparecem quando o respectivo total for diferente de zero, sem alterar cálculo
 
 ## Refinamento final da `Prestacao de contas` para `Fechamento do periodo`
 

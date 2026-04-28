@@ -650,14 +650,18 @@
                     <span class="financeiro-prestacao-kpi-label">Despesas do periodo</span>
                     <span class="financeiro-prestacao-kpi-value is-despesa"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ total_despesas_periodo|br_money }}</span></span></span>
                 </div>
-                <div class="financeiro-prestacao-kpi">
-                    <span class="financeiro-prestacao-kpi-label">Entradas de outras contas da instituicao</span>
-                    <span class="financeiro-prestacao-kpi-value is-receita"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ total_entradas_outras_contas|br_money }}</span></span></span>
-                </div>
-                <div class="financeiro-prestacao-kpi">
-                    <span class="financeiro-prestacao-kpi-label">Saidas para outras contas da instituicao</span>
-                    <span class="financeiro-prestacao-kpi-value is-transferencia"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ total_saidas_outras_contas|br_money }}</span></span></span>
-                </div>
+                {% if total_entradas_outras_contas %}
+                    <div class="financeiro-prestacao-kpi">
+                        <span class="financeiro-prestacao-kpi-label">Entradas de outras contas da instituicao</span>
+                        <span class="financeiro-prestacao-kpi-value is-receita"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ total_entradas_outras_contas|br_money }}</span></span></span>
+                    </div>
+                {% endif %}
+                {% if total_saidas_outras_contas %}
+                    <div class="financeiro-prestacao-kpi">
+                        <span class="financeiro-prestacao-kpi-label">Saidas para outras contas da instituicao</span>
+                        <span class="financeiro-prestacao-kpi-value is-transferencia"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ total_saidas_outras_contas|br_money }}</span></span></span>
+                    </div>
+                {% endif %}
                 <div class="financeiro-prestacao-kpi">
                     <span class="financeiro-prestacao-kpi-label">Saldo final consolidado</span>
                     <span class="financeiro-prestacao-kpi-value"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_final_consolidado|br_money }}</span></span></span>
@@ -750,14 +754,18 @@
                                             {% if resumo_transferencias_externas.tem_movimentacao_externa %}
                                                 <p class="financeiro-document-note">{{ resumo_transferencias_externas.mensagem }}</p>
                                                 <div class="financeiro-document-meta-grid">
-                                                    <div class="financeiro-document-meta-card">
-                                                        <span class="financeiro-document-meta-label">Entradas de outras contas da instituicao</span>
-                                                        <span class="financeiro-document-meta-value"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ resumo_transferencias_externas.entrada_de_fora|br_money }}</span></span></span>
-                                                    </div>
-                                                    <div class="financeiro-document-meta-card">
-                                                        <span class="financeiro-document-meta-label">Saidas para outras contas da instituicao</span>
-                                                        <span class="financeiro-document-meta-value"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ resumo_transferencias_externas.saida_para_fora|br_money }}</span></span></span>
-                                                    </div>
+                                                    {% if resumo_transferencias_externas.entrada_de_fora %}
+                                                        <div class="financeiro-document-meta-card">
+                                                            <span class="financeiro-document-meta-label">Entradas de outras contas da instituicao</span>
+                                                            <span class="financeiro-document-meta-value"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ resumo_transferencias_externas.entrada_de_fora|br_money }}</span></span></span>
+                                                        </div>
+                                                    {% endif %}
+                                                    {% if resumo_transferencias_externas.saida_para_fora %}
+                                                        <div class="financeiro-document-meta-card">
+                                                            <span class="financeiro-document-meta-label">Saidas para outras contas da instituicao</span>
+                                                            <span class="financeiro-document-meta-value"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ resumo_transferencias_externas.saida_para_fora|br_money }}</span></span></span>
+                                                        </div>
+                                                    {% endif %}
                                                 </div>
                                             {% elif exibir_transferencias %}
                                                 <p class="financeiro-document-note">Transferencias aparecem apenas para conferencia operacional e nao entram como receita nem despesa.</p>
@@ -828,14 +836,18 @@
                                                     <td>(-) Despesas do periodo</td>
                                                     <td><span class="money-cell financeiro-prestacao-money is-despesa"><span class="money-symbol">R$</span><span class="money-number">{{ total_despesas_periodo|br_money }}</span></span></td>
                                                 </tr>
-                                                <tr>
-                                                    <td>(+) Entradas de outras contas da instituicao</td>
-                                                    <td><span class="money-cell financeiro-prestacao-money is-receita"><span class="money-symbol">R$</span><span class="money-number">{{ total_entradas_outras_contas|br_money }}</span></span></td>
-                                                </tr>
-                                                <tr>
-                                                    <td>(-) Saidas para outras contas da instituicao</td>
-                                                    <td><span class="money-cell financeiro-prestacao-money is-transferencia"><span class="money-symbol">R$</span><span class="money-number">{{ total_saidas_outras_contas|br_money }}</span></span></td>
-                                                </tr>
+                                                {% if total_entradas_outras_contas %}
+                                                    <tr>
+                                                        <td>(+) Entradas de outras contas da instituicao</td>
+                                                        <td><span class="money-cell financeiro-prestacao-money is-receita"><span class="money-symbol">R$</span><span class="money-number">{{ total_entradas_outras_contas|br_money }}</span></span></td>
+                                                    </tr>
+                                                {% endif %}
+                                                {% if total_saidas_outras_contas %}
+                                                    <tr>
+                                                        <td>(-) Saidas para outras contas da instituicao</td>
+                                                        <td><span class="money-cell financeiro-prestacao-money is-transferencia"><span class="money-symbol">R$</span><span class="money-number">{{ total_saidas_outras_contas|br_money }}</span></span></td>
+                                                    </tr>
+                                                {% endif %}
                                                 <tr class="is-total">
                                                     <td>(=) Saldo final consolidado</td>
                                                     <td><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_final_reconciliado|br_money }}</span></span></td>
@@ -843,7 +855,7 @@
                                                 </tbody>
                                             </table>
                                             <p class="financeiro-document-note">
-                                                Fechamento: saldo inicial + receitas - despesas + entradas de outras contas da instituicao - saidas para outras contas da instituicao.
+                                                Fechamento: saldo inicial + receitas - despesas{% if total_entradas_outras_contas %} + entradas de outras contas da instituicao{% endif %}{% if total_saidas_outras_contas %} - saidas para outras contas da instituicao{% endif %}.
                                             </p>
                                         </div>
                                     </section>
@@ -958,7 +970,7 @@
                                                     <tbody>
                                                     {% for transferencia in transferencias_periodo %}
                                                         <tr>
-                                                            <td>{{ transferencia.data_competencia|date:'d/m/Y' }}</td>
+                                                            <td>{{ transferencia.data_operacional|date:'d/m/Y' }}</td>
                                                             <td>{{ transferencia.descricao }}</td>
                                                             <td>{{ transferencia.conta|default:'-' }}</td>
                                                             <td>{{ transferencia.conta_destino|default:'-' }}</td>

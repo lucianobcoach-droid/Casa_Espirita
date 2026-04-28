@@ -3750,11 +3750,15 @@ class FinanceiroPeriodoMixin(FinanceiroPermissaoMixin):
             conta.saldo_calculado = conta.saldo_inicial or Decimal('0.00')
 
         if contas_por_id:
-            lancamentos = LancamentoFinanceiro.objects.filter(
-                Q(conta_id__in=contas_por_id.keys()) | Q(conta_destino_id__in=contas_por_id.keys()),
-                status=LancamentoFinanceiro.StatusLancamento.QUITADO,
-                data_competencia__lte=data_referencia,
-            ).only('tipo', 'valor', 'conta_id', 'conta_destino_id')
+            lancamentos = (
+                LancamentoFinanceiro.objects.filter(
+                    Q(conta_id__in=contas_por_id.keys()) | Q(conta_destino_id__in=contas_por_id.keys()),
+                    status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+                )
+                .annotate(data_operacional=Coalesce('data_pagamento', 'data_competencia'))
+                .filter(data_operacional__lte=data_referencia)
+                .only('tipo', 'valor', 'conta_id', 'conta_destino_id')
+            )
 
             for lancamento in lancamentos:
                 if (
@@ -3788,22 +3792,22 @@ class FinanceiroPeriodoMixin(FinanceiroPermissaoMixin):
                 status=LancamentoFinanceiro.StatusLancamento.QUITADO,
                 tipo=LancamentoFinanceiro.TipoLancamento.RECEITA,
                 conta_id__in=selected_ids,
-                data_competencia__gte=data_inicial,
-                data_competencia__lte=data_final,
             )
+            .annotate(data_operacional=Coalesce('data_pagamento', 'data_competencia'))
+            .filter(data_operacional__gte=data_inicial, data_operacional__lte=data_final)
             .select_related('conta', 'pessoa', 'categoria', 'centro_custo')
-            .order_by('data_competencia', 'criado_em', 'pk')
+            .order_by('data_operacional', 'criado_em', 'pk')
         )
         despesas = list(
             LancamentoFinanceiro.objects.filter(
                 status=LancamentoFinanceiro.StatusLancamento.QUITADO,
                 tipo=LancamentoFinanceiro.TipoLancamento.DESPESA,
                 conta_id__in=selected_ids,
-                data_competencia__gte=data_inicial,
-                data_competencia__lte=data_final,
             )
+            .annotate(data_operacional=Coalesce('data_pagamento', 'data_competencia'))
+            .filter(data_operacional__gte=data_inicial, data_operacional__lte=data_final)
             .select_related('conta', 'pessoa', 'categoria', 'centro_custo')
-            .order_by('data_competencia', 'criado_em', 'pk')
+            .order_by('data_operacional', 'criado_em', 'pk')
         )
         total_receitas = sum((lancamento.valor for lancamento in receitas), Decimal('0.00'))
         total_despesas = sum((lancamento.valor for lancamento in despesas), Decimal('0.00'))
@@ -3820,12 +3824,12 @@ class FinanceiroPeriodoMixin(FinanceiroPermissaoMixin):
                 Q(conta_id__in=selected_ids) | Q(conta_destino_id__in=selected_ids),
                 status=LancamentoFinanceiro.StatusLancamento.QUITADO,
                 tipo=LancamentoFinanceiro.TipoLancamento.TRANSFERENCIA,
-                data_competencia__gte=data_inicial,
-                data_competencia__lte=data_final,
             )
+            .annotate(data_operacional=Coalesce('data_pagamento', 'data_competencia'))
+            .filter(data_operacional__gte=data_inicial, data_operacional__lte=data_final)
             .select_related('conta', 'conta_destino')
             .distinct()
-            .order_by('data_competencia', 'criado_em', 'pk')
+            .order_by('data_operacional', 'criado_em', 'pk')
         )
         total_transferencias = sum((lancamento.valor for lancamento in transferencias), Decimal('0.00'))
         selected_ids_set = set(selected_ids)
@@ -3864,12 +3868,12 @@ class FinanceiroPeriodoMixin(FinanceiroPermissaoMixin):
                 Q(conta_id__in=selected_ids) | Q(conta_destino_id__in=selected_ids),
                 status=LancamentoFinanceiro.StatusLancamento.QUITADO,
                 tipo=LancamentoFinanceiro.TipoLancamento.TRANSFERENCIA,
-                data_competencia__gte=data_inicial,
-                data_competencia__lte=data_final,
             )
+            .annotate(data_operacional=Coalesce('data_pagamento', 'data_competencia'))
+            .filter(data_operacional__gte=data_inicial, data_operacional__lte=data_final)
             .select_related('conta', 'conta_destino')
             .distinct()
-            .order_by('data_competencia', 'criado_em', 'pk')
+            .order_by('data_operacional', 'criado_em', 'pk')
         )
 
         saida_para_fora = Decimal('0.00')
@@ -3993,6 +3997,32 @@ class FinanceiroPeriodoMixin(FinanceiroPermissaoMixin):
             total_transferencias_entrada_reais,
             total_transferencias_saida_reais,
         ) = self._lancamentos_transferencias(data_inicial, data_final, selected_ids)
+        selected_ids_set = set(selected_ids)
+        transferencias_visiveis = [
+            lancamento
+            for lancamento in transferencias_reais
+            if (lancamento.conta_id in selected_ids_set) != (lancamento.conta_destino_id in selected_ids_set)
+        ]
+        total_transferencias_visiveis = sum(
+            (lancamento.valor for lancamento in transferencias_visiveis),
+            Decimal('0.00'),
+        )
+        total_transferencias_entrada_visiveis = sum(
+            (
+                lancamento.valor
+                for lancamento in transferencias_visiveis
+                if lancamento.conta_destino_id in selected_ids_set
+            ),
+            Decimal('0.00'),
+        )
+        total_transferencias_saida_visiveis = sum(
+            (
+                lancamento.valor
+                for lancamento in transferencias_visiveis
+                if lancamento.conta_id in selected_ids_set
+            ),
+            Decimal('0.00'),
+        )
         (
             transferencias,
             total_transferencias,
@@ -4000,10 +4030,10 @@ class FinanceiroPeriodoMixin(FinanceiroPermissaoMixin):
             total_transferencias_saida,
         ) = (
             (
-                transferencias_reais,
-                total_transferencias_reais,
-                total_transferencias_entrada_reais,
-                total_transferencias_saida_reais,
+                transferencias_visiveis,
+                total_transferencias_visiveis,
+                total_transferencias_entrada_visiveis,
+                total_transferencias_saida_visiveis,
             )
             if exibir_transferencias
             else ([], Decimal('0.00'), Decimal('0.00'), Decimal('0.00'))
