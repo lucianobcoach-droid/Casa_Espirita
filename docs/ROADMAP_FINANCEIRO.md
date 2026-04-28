@@ -11,6 +11,7 @@ Este bloco registra a revisao da direcao conceitual anterior. A Prestacao/Fecham
    - Prioridade documental: MEDIA.
    - Direcao revisada: criar relatorio proprio chamado `Balancete Institucional`, sem substituir a Prestacao/Fechamento atual.
    - Base de calculo: reutilizar a mesma regra/base de calculo da Prestacao/Fechamento, evitando divergencia de resultado e evitando duplicar regra financeira em dois lugares diferentes.
+   - Status tecnico: base comum inicial preparada em `montar_contexto_fechamento_periodo`, sem criacao do relatorio Balancete nesta etapa.
    - Apresentacao: template/documento proprio, com fundo branco, linhas compactas, secoes numeradas, valores alinhados a direita, fechamento do saldo disponivel, composicao final do saldo e aparencia institucional.
    - Regras preservadas: manter receitas/despesas separadas, transferencias fora do resultado operacional e transferencias compondo saldo apenas quando necessarias conforme escopo de contas.
    - Impressao: priorizar uma pagina quando o volume permitir; quando o relatorio for grande, quebrar paginas de forma clara e organizada, sem assinatura ou blocos finais isolados de maneira ruim.

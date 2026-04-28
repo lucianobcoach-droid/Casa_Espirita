@@ -3926,6 +3926,9 @@ class FinanceiroPeriodoMixin(FinanceiroPermissaoMixin):
         return itens, total
 
     def _build_periodo_context(self) -> dict[str, object]:
+        return montar_contexto_fechamento_periodo(self)
+
+    def _montar_contexto_fechamento_periodo_base(self) -> dict[str, object]:
         contas_disponiveis, selected_ids_raw, selected_ids = self._parse_contas()
         data_inicial_raw, data_final_raw, data_inicial, data_final, periodo_error = self._parse_periodo()
         mostrar_centro_custo = self._parse_checkbox('mostrar_centro_custo')
@@ -4137,6 +4140,11 @@ class FinanceiroPeriodoMixin(FinanceiroPermissaoMixin):
             }
         )
         return context
+
+
+def montar_contexto_fechamento_periodo(fonte: FinanceiroPeriodoMixin) -> dict[str, object]:
+    """Base de calculo compartilhavel pela Prestacao e pelo futuro Balancete."""
+    return fonte._montar_contexto_fechamento_periodo_base()
 
 
 class ResumoFinanceiroView(FinanceiroPeriodoMixin, TemplateView):

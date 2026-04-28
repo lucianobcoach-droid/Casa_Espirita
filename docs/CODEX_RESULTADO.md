@@ -2,6 +2,14 @@
 
 Data: 2026-04-28
 
+## Base comum de calculo para Fechamento e futuro Balancete
+
+- criei o ponto comum `montar_contexto_fechamento_periodo` para concentrar o acesso a base de calculo/contexto do Fechamento
+- preservei `_build_periodo_context` como compatibilidade para as telas atuais
+- adicionei teste pontual chamando a base comum e validando a reconciliacao do saldo por escopo de contas
+- nao criei Balancete, rota, URL, template, CSS, model, migration, permissao ou assinatura nova
+- nao alterei calculos, filtros, regras de transferencia, Extrato, Resumo ou Evolucao
+
 ## Revisao documental do Balancete Institucional como relatorio proprio
 
 - ajustei a direcao registrada para manter a Prestacao/Fechamento como relatorio analitico/gerencial

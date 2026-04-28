@@ -5,7 +5,7 @@ from django.test import RequestFactory, TestCase
 
 from .forms import ContaFinanceiraForm, PessoaFinanceiraForm
 from .models import ContaFinanceira, LancamentoFinanceiro, PessoaFinanceira
-from .views import ExtratoFinanceiroView, PrestacaoContasFinanceiroView
+from .views import ExtratoFinanceiroView, PrestacaoContasFinanceiroView, montar_contexto_fechamento_periodo
 
 
 class ContaFinanceiraEdicaoFormTests(TestCase):
@@ -126,6 +126,24 @@ class PrestacaoContasTransferenciasEscopoTests(TestCase):
         self.assertEqual(contexto_todas['saldo_final_consolidado'], Decimal('0.00'))
         self.assertEqual(contexto_todas['saldo_final_reconciliado'], Decimal('0.00'))
         self.assertEqual(contexto_todas['transferencias_periodo'], [])
+
+    def test_base_comum_de_calculo_fechamento_reconcilia_saldo(self):
+        request = self.factory.get(
+            '/financeiro/prestacao-contas/',
+            data=[
+                ('data_inicial', '2026-03-01'),
+                ('data_final', '2026-03-31'),
+                ('contas', str(self.dinheiro.id)),
+            ],
+        )
+        view = PrestacaoContasFinanceiroView()
+        view.request = request
+
+        contexto = montar_contexto_fechamento_periodo(view)
+
+        self.assertEqual(contexto['saldo_final_consolidado'], Decimal('-60.00'))
+        self.assertEqual(contexto['saldo_final_reconciliado'], Decimal('-60.00'))
+        self.assertTrue(contexto['reconciliacao_saldo_consistente'])
 
 
 class ExtratoFinanceiroMultiplasContasTests(TestCase):

@@ -2,6 +2,12 @@
 
 Data de atualizacao: 2026-04-28
 
+## Base comum de calculo para Fechamento e futuro Balancete
+
+- a logica de contexto/calculo do Fechamento passou a ter ponto tecnico comum em `montar_contexto_fechamento_periodo`, preparando reaproveitamento pelo futuro Balancete Institucional
+- a Prestacao/Fechamento atual preserva os mesmos nomes de contexto e comportamento, sem alteracao visual, filtros, regras de transferencia ou calculos
+- nao foram criados relatorio, rota, URL, template, CSS, models, migrations, permissao ou assinatura nova nesta microetapa
+
 ## Revisao documental da direcao do Balancete Institucional
 
 - a direcao foi revisada: a Prestacao/Fechamento permanece como relatorio analitico/gerencial, e o Balancete Institucional fica registrado como relatorio proprio futuro
