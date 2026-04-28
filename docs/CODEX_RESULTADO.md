@@ -2,6 +2,13 @@
 
 Data: 2026-04-28
 
+## Correcao da edicao de conta financeira
+
+- ajustei o form de conta financeira para preencher `data_saldo_inicial` em formato compativel com `input type="date"` na edicao
+- mantive o carregamento do `saldo_inicial` salvo e a possibilidade de alterar saldo/data no proprio formulario
+- adicionei teste pontual para abertura do form de edicao com saldo/data preenchidos e salvamento de novos valores
+- nao alterei calculos financeiros, Extrato, Fechamento/Prestacao, lancamentos ou importacao
+
 ## Correcao de duplicidade de favorecido por nome
 
 - implementei validacao de duplicidade por nome normalizado em `PessoaFinanceira.clean()`

@@ -2,6 +2,12 @@
 
 Data de atualizacao: 2026-04-28
 
+## Correcao da edicao de conta financeira
+
+- o formulario de conta financeira passou a renderizar `data_saldo_inicial` no formato HTML `YYYY-MM-DD` ao editar registro existente
+- a edicao carrega o `saldo_inicial` e a `data_saldo_inicial` ja cadastrados e permite alterar esses valores
+- nao houve alteracao em calculos de saldo, Extrato, Fechamento/Prestacao, lancamentos ou importacao
+
 ## Correcao de duplicidade de favorecido por nome
 
 - o cadastro e a edicao de favorecidos/pessoas financeiras passaram a bloquear duplicidade por nome normalizado

@@ -3,9 +3,46 @@ from decimal import Decimal
 
 from django.test import RequestFactory, TestCase
 
-from .forms import PessoaFinanceiraForm
+from .forms import ContaFinanceiraForm, PessoaFinanceiraForm
 from .models import ContaFinanceira, LancamentoFinanceiro, PessoaFinanceira
 from .views import ExtratoFinanceiroView, PrestacaoContasFinanceiroView
+
+
+class ContaFinanceiraEdicaoFormTests(TestCase):
+    def test_form_edicao_carrega_saldo_inicial_e_data_html(self):
+        conta = ContaFinanceira.objects.create(
+            nome='Conta teste',
+            saldo_inicial=Decimal('1234.56'),
+            data_saldo_inicial=date(2026, 3, 15),
+        )
+
+        form = ContaFinanceiraForm(instance=conta)
+
+        self.assertEqual(str(form['saldo_inicial'].value()), '1234.56')
+        self.assertIn('value="2026-03-15"', form['data_saldo_inicial'].as_widget())
+
+    def test_form_edicao_permite_atualizar_saldo_inicial_e_data(self):
+        conta = ContaFinanceira.objects.create(
+            nome='Conta teste',
+            saldo_inicial=Decimal('1234.56'),
+            data_saldo_inicial=date(2026, 3, 15),
+        )
+
+        form = ContaFinanceiraForm(
+            data={
+                'nome': 'Conta teste atualizada',
+                'descricao': '',
+                'saldo_inicial': '987.65',
+                'data_saldo_inicial': '2026-04-20',
+                'ativa': 'on',
+            },
+            instance=conta,
+        )
+
+        self.assertTrue(form.is_valid(), form.errors)
+        conta_atualizada = form.save()
+        self.assertEqual(conta_atualizada.saldo_inicial, Decimal('987.65'))
+        self.assertEqual(conta_atualizada.data_saldo_inicial, date(2026, 4, 20))
 
 
 class PrestacaoContasTransferenciasEscopoTests(TestCase):

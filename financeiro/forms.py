@@ -43,7 +43,7 @@ class ContaFinanceiraForm(forms.ModelForm):
             'ativa',
         ]
         widgets = {
-            'data_saldo_inicial': forms.DateInput(attrs={'type': 'date'}),
+            'data_saldo_inicial': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date'}),
         }
 
 
