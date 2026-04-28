@@ -2,6 +2,14 @@
 
 Data: 2026-04-28
 
+## Registro documental do modelo balancete para Prestacao/Fechamento
+
+- registrei no `ROADMAP_FINANCEIRO.md` a frente futura para evoluir a Prestacao/Fechamento para modelo tipo balancete institucional
+- registrei no `CEREBRO_PROJETO.md` a diretriz duradoura de relatorios impressos com fundo branco, economia de tinta e aparencia documental
+- atualizei o `MAPA_RECLASSIFICACAO.md` com acompanhamento de modelo balancete, duas assinaturas e fundo branco permanente nos impressos
+- registrei nota curta no `STATE.md`
+- nao alterei codigo, templates, CSS, testes, models, migrations ou calculos
+
 ## Refinamento da impressao da Prestacao/Fechamento
 
 - compactei exclusivamente o modo print/PDF da Prestacao/Fechamento do periodo

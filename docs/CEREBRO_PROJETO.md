@@ -83,6 +83,10 @@ Estas regras devem ser respeitadas em qualquer etapa:
 - no `financeiro`, a central de `Importacoes` deve ser tratada como pagina central do modulo e aparecer na navegacao principal; exportacoes devem permanecer nas listagens/telas especificas quando dependerem dos filtros locais
 - paginas de impressao, PDF e recibo ficam fora da logica normal de navegacao e nao devem ser tratadas como alvo inicial da mesma padronizacao estrutural
 - no `financeiro`, relatorios e impressos operacionais devem manter margens explicitas de folha e isolamento do shell visual para nao herdarem sidebar, topbar ou wrappers de overflow no modo print
+- relatorios impressos/PDF devem usar fundo branco por padrao para economia de tinta e aparencia documental; cores devem ficar restritas a fonte, linhas discretas, zebra leve ou destaque pontual
+- no modo print, evitar fundos coloridos grandes, cards preenchidos, sombras e elementos visuais de tela administrativa quando eles nao contribuirem para o documento final
+- ajustes de aparencia em relatorios impressos nao devem alterar calculos, regras de transferencia, reconciliacao de saldo ou transparencia da composicao apresentada ao usuario
+- a Prestacao/Fechamento deve evoluir futuramente para modelo tipo balancete institucional, com cabecalho compacto, titulo do periodo, secoes numeradas, valores alinhados a direita, fechamento do saldo disponivel, composicao final e duas assinaturas quando essa frente for implementada
 - quando a natureza `receita` / `despesa` ja estiver clara pelo contexto da tela, pelo agrupamento ou por indicador de tipo, a exibicao visivel da categoria deve preferir nome curto, sem prefixos textuais redundantes
 - no shell do `financeiro`, a sigla visual da marca deve preferir iniciais dinamicas derivadas do nome da `ConfiguracaoInstitucional` ativa/padrao, com fallback seguro para `CE` quando nao houver nome configurado
 - quando a frente incremental de refinamento visual entrar em retrabalho repetitivo sobre a mesma tela, o projeto pode abrir POC controlada de tema/base visual pronta e leve, desde que exista primeiro um ponto de restauracao seguro em Git

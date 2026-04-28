@@ -2,6 +2,18 @@
 
 Data: 2026-04-23
 
+## 0.17. Evolucao futura da Prestacao/Fechamento para modelo tipo balancete
+
+Este bloco registra direcao conceitual futura para o impresso da Prestacao/Fechamento. Nao representa implementacao concluida.
+
+1. **Prestacao/Fechamento em modelo de balancete institucional**
+   - Classificacao: FRENTE FUTURA DE RELATORIO / IMPRESSAO.
+   - Prioridade documental: MEDIA.
+   - Direcao: evoluir o impresso para aparencia documental de balancete institucional, com fundo branco, linhas compactas, secoes numeradas, valores alinhados a direita, fechamento do saldo disponivel e composicao final do saldo.
+   - Regras preservadas: manter os calculos atuais, receitas/despesas separadas, transferencias fora do resultado operacional e transferencias compondo saldo apenas quando necessarias conforme escopo de contas.
+   - Impressao: priorizar uma pagina quando o volume permitir; quando o relatorio for grande, quebrar paginas de forma clara e organizada, sem assinatura ou blocos finais isolados de maneira ruim.
+   - Assinaturas: prever evolucao futura para duas assinaturas no relatorio, considerando o cadastro manual de assinaturas ja existente e futura definicao/selecao de duas assinaturas padrao para este documento.
+
 ## 0.16. Pendencias documentadas apos correcao da edicao de contas
 
 Este bloco registra pendencias levantadas pela usuaria para continuidade do financeiro. Nao representa implementacao concluida.

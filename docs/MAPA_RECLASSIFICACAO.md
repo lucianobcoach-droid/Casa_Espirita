@@ -376,6 +376,64 @@ Documentos relacionados:
 - docs/STATE.md
 - docs/REGRAS_NEGOCIO.md
 
+---
+
+### 22. Modelo balancete da Prestacao/Fechamento
+
+Status inicial: FUTURO REAL / FRENTE DE RELATORIO
+
+Motivo:
+Foi definida direcao futura para aproximar o impresso da Prestacao/Fechamento de um modelo de balancete institucional, mantendo os calculos atuais, a transparencia da composicao de saldo e a regra consolidada de transferencias por escopo.
+
+Classificacao documental:
+- FRENTE FUTURA DE RELATORIO / IMPRESSAO
+- AJUSTE VISUAL DOCUMENTAL
+
+Prioridade documental: MEDIA
+
+Documentos relacionados:
+- docs/ROADMAP_FINANCEIRO.md
+- docs/CEREBRO_PROJETO.md
+- docs/REGRAS_NEGOCIO.md
+
+---
+
+### 23. Duas assinaturas na Prestacao/Fechamento
+
+Status inicial: FUTURO REAL
+
+Motivo:
+Foi levantada necessidade futura de permitir duas assinaturas no relatorio de Prestacao/Fechamento, aproveitando a base de cadastro manual de assinaturas ja existente e evoluindo para selecao ou definicao de duas assinaturas padrao para esse documento.
+
+Classificacao documental:
+- MELHORIA FUNCIONAL
+- AJUSTE DOCUMENTAL / IMPRESSAO
+
+Prioridade documental: MEDIA
+
+Documentos relacionados:
+- docs/ROADMAP_FINANCEIRO.md
+- docs/CEREBRO_PROJETO.md
+
+---
+
+### 24. Fundo branco permanente nos relatorios impressos
+
+Status inicial: DIRETRIZ PERMANENTE / FUTURO REAL PARA PROPAGACAO
+
+Motivo:
+Foi consolidada diretriz de que relatorios impressos/PDF devem usar fundo branco por padrao para economia de tinta e aparencia documental, evitando elementos de tela administrativa como fundos coloridos grandes, cards preenchidos e sombras no modo print.
+
+Classificacao documental:
+- DIRETRIZ DE UX / IMPRESSAO
+- PADRONIZACAO TRANSVERSAL
+
+Prioridade documental: MEDIA
+
+Documentos relacionados:
+- docs/CEREBRO_PROJETO.md
+- docs/ROADMAP_FINANCEIRO.md
+
 ## Próxima ação recomendada
 
 A próxima microetapa documental deve conferir os itens acima contra o código e contra os documentos atuais, um grupo por vez, sem alterar funcionalidades.

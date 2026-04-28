@@ -2,6 +2,12 @@
 
 Data de atualizacao: 2026-04-28
 
+## Direcao futura de balancete para Prestacao/Fechamento
+
+- foi registrada decisao conceitual para evoluir futuramente o impresso da Prestacao/Fechamento para modelo tipo balancete institucional
+- a diretriz preserva os calculos atuais, a transparencia da composicao de saldo, fundo branco por padrao para economia de tinta e possibilidade futura de duas assinaturas
+- nao houve implementacao, alteracao de codigo, templates, CSS, testes, models, migrations ou calculos nesta microetapa documental
+
 ## Refinamento da impressao da Prestacao/Fechamento
 
 - o modo print/PDF da Prestacao/Fechamento foi compactado com margens menores, cabecalho mais enxuto, tabelas mais densas e menor espacamento entre blocos
