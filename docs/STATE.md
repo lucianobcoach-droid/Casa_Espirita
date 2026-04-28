@@ -2,6 +2,22 @@
 
 Data de atualizacao: 2026-04-28
 
+## Extrato com seleção de múltiplas contas
+
+- o Extrato financeiro passou a permitir seleção de uma conta, várias contas ou todas as contas em `/financeiro/extratos/`
+- o comportamento antigo por conta individual foi preservado, inclusive compatibilidade com o parâmetro `conta`
+- para múltiplas contas, saldo anterior, entradas, saídas, saldo acumulado linha a linha e saldo final passam a respeitar o escopo selecionado
+- transferências internas ao conjunto selecionado não alteram o saldo consolidado nem aparecem como linha artificial zerada
+- transferências com apenas uma ponta no escopo aparecem como entrada ou saída, conforme origem/destino selecionados
+- em extrato multi-contas, cada movimento exibido mostra a conta relacionada para facilitar leitura em tela e impressão
+- validações executadas:
+  - `py manage.py check` OK
+  - `py -m compileall financeiro` OK
+  - `py manage.py test financeiro.tests.PrestacaoContasTransferenciasEscopoTests financeiro.tests.ExtratoFinanceiroMultiplasContasTests` OK
+- ajuste complementar do filtro: seleção parcial deixa de voltar automaticamente para `Todas as contas`, envio sem nenhuma conta mostra orientação clara, o seletor ficou mais largo e ganhou busca local por nome da conta
+- ajuste visual complementar: o dropdown de contas do Extrato deixou de ser cortado pelo card de filtros e passou a ter altura máxima com rolagem interna
+- ajuste complementar da busca: o filtro local por nome de conta passou a ocultar as opções em tempo real e a lista do Extrato ficou empilhada em uma conta por linha
+
 ## Correção do Fechamento do período por escopo de transferências
 
 - o Fechamento do período / Prestação de contas passou a usar a mesma referência operacional do Extrato para movimentos e saldos: `data_pagamento` com fallback para `data_competencia`

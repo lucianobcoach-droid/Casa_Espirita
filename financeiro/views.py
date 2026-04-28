@@ -5707,14 +5707,14 @@ class ExtratoContaMixin(FinanceiroPermissaoMixin):
         except ValueError:
             return valor
 
-    def _montar_periodo_label(self, data_inicial: str, data_final: str) -> str:
+    def _montar_periodo_label(self, data_inicial: str, data_final: str, escopo_padrao: str = 'conta') -> str:
         if data_inicial and data_final:
             return f'{self._formatar_data_rotulo(data_inicial)} a {self._formatar_data_rotulo(data_final)}'
         if data_inicial:
             return f'A partir de {self._formatar_data_rotulo(data_inicial)}'
         if data_final:
             return f'Ate {self._formatar_data_rotulo(data_final)}'
-        return 'Periodo completo da conta'
+        return f'Periodo completo {escopo_padrao}'
 
     def _parse_checkbox(self, param_name: str) -> bool:
         valores = [valor.strip().lower() for valor in self.request.GET.getlist(param_name)]
@@ -5743,6 +5743,53 @@ class ExtratoContaMixin(FinanceiroPermissaoMixin):
                 entrada = lancamento.valor
 
         return entrada, saida
+
+    def _classificar_lancamento_escopo(
+        self,
+        selected_ids_set: set[int],
+        lancamento: LancamentoFinanceiro,
+    ) -> tuple[Decimal, Decimal]:
+        entrada = Decimal('0.00')
+        saida = Decimal('0.00')
+
+        if (
+            lancamento.tipo == LancamentoFinanceiro.TipoLancamento.RECEITA
+            and lancamento.conta_id in selected_ids_set
+        ):
+            entrada = lancamento.valor
+        elif (
+            lancamento.tipo == LancamentoFinanceiro.TipoLancamento.DESPESA
+            and lancamento.conta_id in selected_ids_set
+        ):
+            saida = lancamento.valor
+        elif lancamento.tipo == LancamentoFinanceiro.TipoLancamento.TRANSFERENCIA:
+            origem_no_escopo = lancamento.conta_id in selected_ids_set
+            destino_no_escopo = lancamento.conta_destino_id in selected_ids_set
+            if origem_no_escopo and not destino_no_escopo:
+                saida = lancamento.valor
+            elif destino_no_escopo and not origem_no_escopo:
+                entrada = lancamento.valor
+
+        return entrada, saida
+
+    def _resolver_conta_exibicao_escopo(
+        self,
+        selected_ids_set: set[int],
+        lancamento: LancamentoFinanceiro,
+    ) -> str:
+        if lancamento.tipo == LancamentoFinanceiro.TipoLancamento.TRANSFERENCIA:
+            origem_no_escopo = lancamento.conta_id in selected_ids_set
+            destino_no_escopo = lancamento.conta_destino_id in selected_ids_set
+            if origem_no_escopo and destino_no_escopo:
+                origem = lancamento.conta.nome if lancamento.conta_id else '-'
+                destino = lancamento.conta_destino.nome if lancamento.conta_destino_id else '-'
+                return f'{origem} -> {destino}'
+            if origem_no_escopo and lancamento.conta_id:
+                return lancamento.conta.nome
+            if destino_no_escopo and lancamento.conta_destino_id:
+                return lancamento.conta_destino.nome
+            return '-'
+        return lancamento.conta.nome if lancamento.conta_id else '-'
 
     def _chave_bloco_extrato(self, lancamento: LancamentoFinanceiro) -> str:
         grupo_rateio = (lancamento.grupo_rateio or '').strip()
@@ -5803,6 +5850,64 @@ class ExtratoContaMixin(FinanceiroPermissaoMixin):
 
         return itens_extrato, saldo_acumulado
 
+    def _montar_itens_extrato_escopo(
+        self,
+        selected_ids: list[int],
+        lancamentos: list[LancamentoFinanceiro],
+        saldo_inicial: Decimal,
+    ) -> tuple[list[dict[str, object]], Decimal]:
+        selected_ids_set = set(selected_ids)
+        blocos: list[list[LancamentoFinanceiro]] = []
+        blocos_por_chave: dict[str, list[LancamentoFinanceiro]] = {}
+
+        for lancamento in lancamentos:
+            chave_bloco = self._chave_bloco_extrato(lancamento)
+            bloco = blocos_por_chave.get(chave_bloco)
+            if bloco is None:
+                bloco = []
+                blocos_por_chave[chave_bloco] = bloco
+                blocos.append(bloco)
+            bloco.append(lancamento)
+
+        saldo_acumulado = saldo_inicial
+        itens_extrato: list[dict[str, object]] = []
+
+        for bloco in blocos:
+            lancamento_representante = bloco[0]
+            entrada_total = Decimal('0.00')
+            saida_total = Decimal('0.00')
+
+            for lancamento in bloco:
+                entrada, saida = self._classificar_lancamento_escopo(selected_ids_set, lancamento)
+                entrada_total += entrada
+                saida_total += saida
+
+            if entrada_total == Decimal('0.00') and saida_total == Decimal('0.00'):
+                continue
+
+            saldo_acumulado += entrada_total - saida_total
+            observacoes = next(
+                ((lancamento.observacoes or '').strip() for lancamento in bloco if (lancamento.observacoes or '').strip()),
+                '',
+            )
+            itens_extrato.append(
+                {
+                    'lancamento': lancamento_representante,
+                    'entrada': entrada_total,
+                    'saida': saida_total,
+                    'valor_exibicao': entrada_total if entrada_total else (-saida_total if saida_total else Decimal('0.00')),
+                    'valor_exibicao_absoluto': entrada_total if entrada_total else saida_total,
+                    'saldo_acumulado': saldo_acumulado,
+                    'rateio_consolidado': len(bloco) > 1 and bool((lancamento_representante.grupo_rateio or '').strip()),
+                    'quantidade_linhas_rateio': len(bloco),
+                    'favorecido_exibicao': lancamento_representante.pessoa.nome if lancamento_representante.pessoa else '-',
+                    'observacoes_exibicao': observacoes or '-',
+                    'conta_exibicao': self._resolver_conta_exibicao_escopo(selected_ids_set, lancamento_representante),
+                }
+            )
+
+        return itens_extrato, saldo_acumulado
+
     def _get_extrato_context(
         self,
         conta: ContaFinanceira,
@@ -5855,7 +5960,112 @@ class ExtratoContaMixin(FinanceiroPermissaoMixin):
             'total_saidas_periodo': total_saidas,
             'quantidade_movimentos': len(itens_extrato),
             'conta_label': conta.nome,
+            'contas_label': conta.nome,
+            'tem_extrato': True,
+            'extrato_multiplas_contas': False,
+            'extrato_todas_contas': False,
         }
+
+    def _get_extrato_escopo_context(
+        self,
+        contas: list[ContaFinanceira],
+        data_inicial: str = '',
+        data_final: str = '',
+        mostrar_observacao: bool = False,
+        todas_as_contas: bool = False,
+    ) -> dict[str, object]:
+        selected_ids = [conta.id for conta in contas]
+        selected_ids_set = set(selected_ids)
+        queryset_base = (
+            LancamentoFinanceiro.objects.filter(
+                Q(conta_id__in=selected_ids) | Q(conta_destino_id__in=selected_ids),
+                status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+            )
+            .select_related('conta', 'conta_destino', 'pessoa', 'categoria')
+            .annotate(data_extrato=Coalesce('data_pagamento', 'data_competencia'))
+            .order_by('data_extrato', 'pk')
+        )
+
+        saldo_inicial = sum((conta.saldo_inicial or Decimal('0.00') for conta in contas), Decimal('0.00'))
+        saldo_anterior = saldo_inicial
+        if data_inicial:
+            lancamentos_anteriores = queryset_base.filter(data_extrato__lt=data_inicial)
+            for lancamento in lancamentos_anteriores:
+                entrada, saida = self._classificar_lancamento_escopo(selected_ids_set, lancamento)
+                saldo_anterior += entrada - saida
+
+        lancamentos = queryset_base
+        if data_inicial:
+            lancamentos = lancamentos.filter(data_extrato__gte=data_inicial)
+        if data_final:
+            lancamentos = lancamentos.filter(data_extrato__lte=data_final)
+
+        saldo_base = saldo_anterior if data_inicial else saldo_inicial
+        itens_extrato, saldo_acumulado = self._montar_itens_extrato_escopo(
+            selected_ids,
+            list(lancamentos),
+            saldo_base,
+        )
+        total_entradas = sum((item['entrada'] for item in itens_extrato), Decimal('0.00'))
+        total_saidas = sum((item['saida'] for item in itens_extrato), Decimal('0.00'))
+        contas_label = (
+            'Todas as contas'
+            if todas_as_contas
+            else ', '.join(conta.nome for conta in contas)
+        )
+
+        return {
+            'conta': contas[0] if len(contas) == 1 else None,
+            'contas_selecionadas': contas,
+            'saldo_inicial': saldo_inicial,
+            'data_saldo_inicial': None,
+            'data_inicial': data_inicial,
+            'data_final': data_final,
+            'periodo_label': self._montar_periodo_label(data_inicial, data_final, 'do escopo'),
+            'saldo_anterior': saldo_anterior if data_inicial else None,
+            'exibe_linha_saldo_inicial': True,
+            'itens_extrato': itens_extrato,
+            'saldo_final': saldo_acumulado,
+            'saldo_atual': saldo_acumulado,
+            'mostrar_observacao': mostrar_observacao,
+            'total_entradas_periodo': total_entradas,
+            'total_saidas_periodo': total_saidas,
+            'quantidade_movimentos': len(itens_extrato),
+            'conta_label': contas_label,
+            'contas_label': contas_label,
+            'tem_extrato': True,
+            'extrato_multiplas_contas': len(contas) > 1,
+            'extrato_todas_contas': todas_as_contas,
+        }
+
+    def _parse_contas_extrato(self, contas) -> tuple[list[ContaFinanceira], list[str], bool, bool]:
+        contas_lista = list(contas)
+        contas_por_id = {conta.id: conta for conta in contas_lista}
+        todas_as_contas = self._parse_checkbox('todas_contas')
+        filtro_enviado = (self.request.GET.get('contas_form') or '').strip() == '1'
+        selected_ids_raw = [valor.strip() for valor in self.request.GET.getlist('contas') if valor.strip()]
+        conta_compat = (self.request.GET.get('conta') or '').strip()
+        if conta_compat and not selected_ids_raw:
+            selected_ids_raw = [conta_compat]
+
+        selected_ids: list[int] = []
+        for valor in selected_ids_raw:
+            try:
+                conta_id = int(valor)
+            except (TypeError, ValueError):
+                continue
+            if conta_id in contas_por_id and conta_id not in selected_ids:
+                selected_ids.append(conta_id)
+
+        if todas_as_contas and selected_ids_raw and len(selected_ids) < len(contas_por_id):
+            todas_as_contas = False
+
+        if todas_as_contas:
+            selected_ids = list(contas_por_id.keys())
+
+        contas_selecionadas = [contas_por_id[conta_id] for conta_id in selected_ids]
+        selecao_informada = filtro_enviado or todas_as_contas or bool(selected_ids_raw)
+        return contas_selecionadas, [str(conta_id) for conta_id in selected_ids], todas_as_contas, selecao_informada
 
 
 class ContaFinanceiraExtratoView(ExtratoContaMixin, DetailView):
@@ -5885,27 +6095,46 @@ class ExtratoFinanceiroView(ExtratoContaMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        conta_id = self.request.GET.get('conta', '').strip()
         data_inicial = self.request.GET.get('data_inicial', '').strip()
         data_final = self.request.GET.get('data_final', '').strip()
         mostrar_observacao = self._parse_checkbox('exibir_observacao')
         contas = ContaFinanceira.objects.order_by('nome')
+        contas_selecionadas, contas_selecionadas_ids, todas_as_contas, selecao_informada = self._parse_contas_extrato(contas)
 
         context['page_title'] = 'Extratos'
         context['contas'] = contas
-        context['conta_selecionada_id'] = conta_id
+        context['conta_selecionada_id'] = contas_selecionadas_ids[0] if len(contas_selecionadas_ids) == 1 else ''
+        context['contas_selecionadas_ids'] = contas_selecionadas_ids
+        context['todas_contas_selecionadas'] = todas_as_contas
+        context['tem_extrato'] = False
         context['show_conta_filter'] = True
         context['clear_extrato_url'] = reverse_lazy('financeiro:extrato-list')
         context['mostrar_observacao'] = mostrar_observacao
+        context['data_inicial'] = data_inicial
+        context['data_final'] = data_final
+        context['periodo_label'] = self._montar_periodo_label(data_inicial, data_final, 'do escopo')
 
-        if conta_id:
-            try:
-                conta = contas.get(pk=conta_id)
-            except ContaFinanceira.DoesNotExist:
-                context['extrato_error'] = 'Conta financeira nao encontrada.'
-            else:
+        if selecao_informada and not contas_selecionadas:
+            context['extrato_error'] = 'Selecione pelo menos uma conta para carregar o extrato.'
+        elif contas_selecionadas:
+            if len(contas_selecionadas) == 1 and not todas_as_contas:
+                conta = contas_selecionadas[0]
                 context.update(self._get_extrato_context(conta, data_inicial, data_final, mostrar_observacao))
+                context['contas_selecionadas'] = contas_selecionadas
+                context['contas_selecionadas_ids'] = contas_selecionadas_ids
+                context['todas_contas_selecionadas'] = False
                 context['page_title'] = f'Extratos - {conta.nome}'
+            else:
+                context.update(
+                    self._get_extrato_escopo_context(
+                        contas_selecionadas,
+                        data_inicial,
+                        data_final,
+                        mostrar_observacao,
+                        todas_as_contas=todas_as_contas,
+                    )
+                )
+                context['page_title'] = f'Extratos - {context["contas_label"]}'
 
         return context
 

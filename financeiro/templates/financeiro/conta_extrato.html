@@ -101,6 +101,9 @@
     }
 
     .financeiro-extrato-card.is-filters {
+        position: relative;
+        z-index: 80;
+        overflow: visible;
         border-color: #e2e8f0;
         background: linear-gradient(180deg, #fbfcfe 0%, #f7fafc 100%);
         box-shadow: 0 10px 24px rgba(15, 23, 42, 0.035);
@@ -376,6 +379,20 @@
         min-width: 0;
     }
 
+    .financeiro-extrato-table.is-multi-contas th:nth-child(5),
+    .financeiro-extrato-table.is-multi-contas td:nth-child(5) {
+        text-align: left;
+        white-space: normal;
+    }
+
+    .financeiro-extrato-table.is-multi-contas th:nth-child(6),
+    .financeiro-extrato-table.is-multi-contas td:nth-child(6),
+    .financeiro-extrato-table.is-multi-contas th:nth-child(7),
+    .financeiro-extrato-table.is-multi-contas td:nth-child(7) {
+        text-align: right;
+        white-space: nowrap;
+    }
+
     .financeiro-extrato-description-main,
     .financeiro-extrato-favorecido-main {
         display: block;
@@ -465,6 +482,39 @@
         .financeiro-extrato-filter-summary {
             align-items: flex-start;
         }
+    }
+
+    .financeiro-extrato-contas-filter {
+        min-width: min(100%, 24rem);
+    }
+
+    .financeiro-extrato-contas-filter .financeiro-contas-panel {
+        width: min(38rem, calc(100vw - 2rem));
+        max-height: min(24rem, calc(100vh - 10rem));
+        overflow: hidden;
+        right: auto;
+        z-index: 200;
+    }
+
+    .financeiro-extrato-contas-filter .financeiro-contas-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.18rem;
+        max-height: min(15rem, calc(100vh - 18rem));
+        overflow-y: auto;
+        overscroll-behavior: contain;
+    }
+
+    .financeiro-extrato-contas-filter .financeiro-conta-option {
+        min-height: 1.75rem;
+        padding: 0.12rem 0.15rem;
+    }
+
+    .financeiro-extrato-contas-filter .financeiro-contas-checklist {
+        max-height: inherit;
+        overflow: hidden;
+        display: grid;
+        gap: 0.45rem;
     }
 
     @media print {
@@ -598,6 +648,20 @@
             text-align: right !important;
         }
 
+        .financeiro-extrato-table.is-multi-contas th:nth-child(5),
+        .financeiro-extrato-table.is-multi-contas td:nth-child(5) {
+            text-align: left !important;
+            white-space: normal !important;
+        }
+
+        .financeiro-extrato-table.is-multi-contas th:nth-child(6),
+        .financeiro-extrato-table.is-multi-contas td:nth-child(6),
+        .financeiro-extrato-table.is-multi-contas th:nth-child(7),
+        .financeiro-extrato-table.is-multi-contas td:nth-child(7) {
+            text-align: right !important;
+            white-space: nowrap !important;
+        }
+
         .financeiro-extrato-description-main,
         .financeiro-extrato-favorecido-main,
         .financeiro-extrato-description-meta {
@@ -632,24 +696,24 @@
         <div class="financeiro-page-header-main">
             <div>
                 <h1 class="title financeiro-page-title">{{ page_title }}</h1>
-                <p class="financeiro-page-subtitle no-print">Leitura cronologica da conta, com saldo anterior, movimentacoes quitadas e saldo final do periodo consultado.</p>
+                <p class="financeiro-page-subtitle no-print">Leitura cronologica do escopo selecionado, com saldo anterior, movimentacoes quitadas e saldo final do periodo consultado.</p>
                 <div class="financeiro-extrato-meta no-print">
-                    <span class="financeiro-extrato-meta-item"><strong>Periodo:</strong> {{ periodo_label|default:'Periodo completo da conta' }}</span>
-                    {% if conta %}
-                        <span class="financeiro-extrato-meta-item"><strong>Conta:</strong> {{ conta_label }}</span>
+                    <span class="financeiro-extrato-meta-item"><strong>Periodo:</strong> {{ periodo_label|default:'Periodo completo do escopo' }}</span>
+                    {% if tem_extrato %}
+                        <span class="financeiro-extrato-meta-item"><strong>Contas:</strong> {{ contas_label|default:conta_label }}</span>
                     {% endif %}
                     {% if mostrar_observacao %}
                         <span class="financeiro-extrato-meta-item"><strong>Observacoes:</strong> Visiveis</span>
                     {% endif %}
                 </div>
                 <div class="financeiro-extrato-context-note no-print">
-                    <span><strong>Analise:</strong> Extrato operacional por conta com foco em saldo anterior, movimentacoes e saldo final.</span>
-                    <span><strong>Escopo:</strong> Apenas lancamentos quitados que impactam a conta selecionada.</span>
+                    <span><strong>Analise:</strong> Extrato operacional com foco em saldo anterior, movimentacoes e saldo final.</span>
+                    <span><strong>Escopo:</strong> Apenas lancamentos quitados que impactam as contas selecionadas.</span>
                 </div>
             </div>
         </div>
         <div class="financeiro-page-header-actions no-print">
-            {% if conta %}
+            {% if tem_extrato %}
                 <button class="button is-light" type="button" onclick="window.print()">Imprimir</button>
             {% endif %}
             {% if not show_conta_filter %}
@@ -660,19 +724,20 @@
 
     <section class="financeiro-extrato-card is-filters no-print">
         <form method="get" class="filters-box">
+            <input type="hidden" name="contas_form" value="1">
             <div class="financeiro-secondary-toolbar">
-                <details class="financeiro-secondary-panel" {% if extrato_error or not conta %}open{% endif %}>
+                <details class="financeiro-secondary-panel" {% if extrato_error or not tem_extrato %}open{% endif %}>
                     <summary class="financeiro-secondary-summary financeiro-extrato-filter-summary">
                         <span class="financeiro-extrato-filter-summary-main">
                             <span class="financeiro-extrato-filter-summary-heading">
                                 <span class="financeiro-secondary-summary-label">Filtros do extrato</span>
-                                {% if conta or data_inicial or data_final or mostrar_observacao %}<span class="financeiro-secondary-badge">ativos</span>{% endif %}
+                                {% if tem_extrato or data_inicial or data_final or mostrar_observacao %}<span class="financeiro-secondary-badge">ativos</span>{% endif %}
                             </span>
                             <span class="financeiro-extrato-filter-summary-text">
-                                {% if conta %}
-                                    <strong>Conta:</strong> {{ conta_label }} | <strong>Periodo:</strong> {{ periodo_label }}{% if mostrar_observacao %} | <strong>Observacoes:</strong> Visiveis{% endif %}
+                                {% if tem_extrato %}
+                                    <strong>Contas:</strong> {{ contas_label|default:conta_label }} | <strong>Periodo:</strong> {{ periodo_label }}{% if mostrar_observacao %} | <strong>Observacoes:</strong> Visiveis{% endif %}
                                 {% else %}
-                                    Selecione a conta e o periodo para carregar o extrato cronologico.
+                                    Selecione uma ou mais contas, ou marque todas, para carregar o extrato cronologico.
                                 {% endif %}
                             </span>
                         </span>
@@ -684,18 +749,51 @@
                     <div class="financeiro-secondary-body">
                         <div class="columns is-multiline">
                             {% if show_conta_filter %}
-                                <div class="column is-12-mobile is-6-tablet is-4-desktop">
-                                    <label class="label">Conta</label>
-                                    <div class="select is-fullwidth">
-                                        <select name="conta">
-                                            <option value="">Selecione uma conta</option>
-                                            {% for conta_item in contas %}
-                                                <option value="{{ conta_item.pk }}" {% if conta_selecionada_id == conta_item.pk|stringformat:'s' %}selected{% endif %}>
-                                                    {{ conta_item.nome }}
-                                                </option>
-                                            {% endfor %}
-                                        </select>
+                                <div class="column is-12-mobile is-12-tablet is-6-desktop financeiro-extrato-contas-filter">
+                                    <label class="label">Contas do extrato</label>
+                                    <div class="financeiro-contas-dropdown" data-contas-dropdown>
+                                        <button
+                                            class="button is-light financeiro-contas-trigger"
+                                            type="button"
+                                            data-contas-dropdown-toggle
+                                            aria-expanded="false"
+                                        >
+                                            <span class="financeiro-contas-trigger-label" data-contas-dropdown-summary>
+                                                {% if todas_contas_selecionadas %}
+                                                    Contas: Todas
+                                                {% elif contas_selecionadas_ids|length == 1 %}
+                                                    Contas: 1 selecionada
+                                                {% elif contas_selecionadas_ids %}
+                                                    Contas: {{ contas_selecionadas_ids|length }} selecionadas
+                                                {% else %}
+                                                    Selecionar contas
+                                                {% endif %}
+                                            </span>
+                                            <span class="financeiro-contas-trigger-icon">v</span>
+                                        </button>
+                                        <div class="financeiro-contas-panel" data-contas-dropdown-panel hidden>
+                                            <div class="financeiro-contas-checklist">
+                                                <div class="financeiro-contas-actions">
+                                                    <label class="checkbox financeiro-conta-option">
+                                                        <input type="checkbox" name="todas_contas" value="1" {% if todas_contas_selecionadas %}checked{% endif %} data-contas-select-all>
+                                                        <span>Todas as contas</span>
+                                                    </label>
+                                                </div>
+                                                <div class="field mb-2">
+                                                    <input class="input is-small" type="search" placeholder="Pesquisar conta" data-contas-search>
+                                                </div>
+                                                <div class="financeiro-contas-grid">
+                                                    {% for conta_item in contas %}
+                                                        <label class="checkbox financeiro-conta-option" data-contas-option>
+                                                            <input type="checkbox" name="contas" value="{{ conta_item.pk }}" {% if conta_item.pk|stringformat:'s' in contas_selecionadas_ids %}checked{% endif %}>
+                                                            <span>{{ conta_item.nome }}</span>
+                                                        </label>
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
+                                    <p class="help">Marque uma, varias ou todas as contas.</p>
                                 </div>
                             {% endif %}
                             <div class="column is-6-mobile is-3-tablet {% if show_conta_filter %}is-3-desktop{% else %}is-4-desktop{% endif %}">
@@ -729,11 +827,11 @@
 
     {% if extrato_error %}
         <div class="notification is-warning financeiro-extrato-state">{{ extrato_error }}</div>
-    {% elif not conta and show_conta_filter %}
-        <div class="notification is-light financeiro-extrato-state">Selecione uma conta para carregar o extrato.</div>
+    {% elif not tem_extrato and show_conta_filter %}
+        <div class="notification is-light financeiro-extrato-state">Selecione uma ou mais contas para carregar o extrato.</div>
     {% endif %}
 
-    {% if conta %}
+    {% if tem_extrato %}
         <div class="financeiro-extrato-card is-kpis">
             <div class="financeiro-extrato-kpi-head">
                 <div>
@@ -772,11 +870,11 @@
                         <section class="financeiro-extrato-panel">
                             <div class="financeiro-extrato-panel-header">
                                 <div>
-                                    <h2 class="financeiro-extrato-section-title">Movimentacoes da conta</h2>
+                                    <h2 class="financeiro-extrato-section-title">Movimentacoes do extrato</h2>
                                     <p class="financeiro-extrato-section-note">A tabela permanece como leitura principal do extrato, em ordem cronologica crescente, com saldo acumulado apos cada movimento.</p>
                                 </div>
                                 <div class="tags no-print">
-                                    <span class="tag is-light"><strong>Conta:</strong>&nbsp;{{ conta_label }}</span>
+                                    <span class="tag is-light"><strong>Contas:</strong>&nbsp;{{ contas_label|default:conta_label }}</span>
                                     <span class="tag is-light"><strong>Periodo:</strong>&nbsp;{{ periodo_label }}</span>
                                 </div>
                             </div>
@@ -792,7 +890,7 @@
                                     </header>
 
                                     <p class="financeiro-document-note only-print">
-                                        <strong>Conta:</strong> {{ conta.nome }}
+                                        <strong>Contas:</strong> {{ contas_label|default:conta_label }}
                                         <span class="financeiro-document-note-separator">|</span>
                                         <strong>Periodo:</strong> {{ periodo_label }}
                                         <span class="financeiro-document-note-separator">|</span>
@@ -800,10 +898,11 @@
                                     </p>
 
                                     <div class="table-wrapper">
-                                        <table class="table is-fullwidth is-hoverable financeiro-table financeiro-extrato-table">
+                                        <table class="table is-fullwidth is-hoverable financeiro-table financeiro-extrato-table{% if extrato_multiplas_contas %} is-multi-contas{% endif %}">
                                             <colgroup>
                                                 <col class="financeiro-extrato-col-date">
                                                 <col class="financeiro-extrato-col-doc">
+                                                {% if extrato_multiplas_contas %}<col class="financeiro-extrato-col-fav">{% endif %}
                                                 <col class="financeiro-extrato-col-desc">
                                                 <col class="financeiro-extrato-col-fav">
                                                 <col class="financeiro-extrato-col-value">
@@ -814,6 +913,7 @@
                                                 <tr class="is-closing-balance">
                                                     <th></th>
                                                     <th></th>
+                                                    {% if extrato_multiplas_contas %}<th></th>{% endif %}
                                                     <th><span class="financeiro-balance-line-label">{% if saldo_anterior is not None %}Saldo anterior{% else %}Saldo inicial{% endif %}</span></th>
                                                     <th></th>
                                                     <th>
@@ -828,6 +928,7 @@
                                                 <tr>
                                                     <th>Data</th>
                                                     <th><span class="no-print">Documento</span><span class="only-print">Doc.</span></th>
+                                                    {% if extrato_multiplas_contas %}<th>Conta</th>{% endif %}
                                                     <th>Descricao</th>
                                                     <th>Favorecido</th>
                                                     <th>Valor</th>
@@ -839,6 +940,9 @@
                                                 <tr>
                                                     <td>{{ item.lancamento.data_pagamento|default:item.lancamento.data_competencia|date:'d/m/Y' }}</td>
                                                     <td><span class="financeiro-extrato-document-number">{{ item.lancamento.numero_documento|default:'-' }}</span></td>
+                                                    {% if extrato_multiplas_contas %}
+                                                        <td><span class="financeiro-extrato-favorecido-main">{{ item.conta_exibicao }}</span></td>
+                                                    {% endif %}
                                                     <td>
                                                         <span class="financeiro-extrato-description-main">{{ item.lancamento.descricao }}</span>
                                                         {% if mostrar_observacao and item.observacoes_exibicao != '-' %}
@@ -867,12 +971,13 @@
                                                 </tr>
                                             {% empty %}
                                                 <tr class="financeiro-extrato-empty-row">
-                                                    <td colspan="6">Nenhum lancamento quitado encontrado para os filtros atuais.</td>
+                                                    <td colspan="{% if extrato_multiplas_contas %}7{% else %}6{% endif %}">Nenhum lancamento quitado encontrado para os filtros atuais.</td>
                                                 </tr>
                                             {% endfor %}
                                                 <tr class="is-closing-balance">
                                                     <td></td>
                                                     <td></td>
+                                                    {% if extrato_multiplas_contas %}<td></td>{% endif %}
                                                     <td><span class="financeiro-balance-line-label">Saldo final</span></td>
                                                     <td></td>
                                                     <td></td>

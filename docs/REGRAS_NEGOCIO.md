@@ -29,6 +29,7 @@ Este documento consolida regras permanentes do sistema. Ele não substitui o his
 - Transferência entre duas contas dentro do filtro selecionado é interna ao escopo: sai de uma conta, entra em outra e se anula no consolidado.
 - Transferência com apenas a conta destino dentro do filtro compõe o saldo como entrada por transferência.
 - Transferência com apenas a conta origem dentro do filtro compõe o saldo como saída por transferência.
+- O Extrato multi-contas deve usar a mesma regra de escopo de contas para saldo anterior, movimentos do período e saldo final.
 - No Fechamento do período / Prestação de contas, transferências internas ao escopo selecionado não precisam aparecer como entrada/saída nem como linha zerada; totais zerados de transferências externas ao escopo também não devem aparecer.
 - Transferências com apenas uma ponta dentro do filtro devem aparecer nos totais necessários de entrada/saída por transferência para explicar a reconciliação do saldo.
 - A opção "Exibir transferências" controla somente detalhamento analítico/visual das transferências; não controla a inclusão das transferências no cálculo real do saldo.

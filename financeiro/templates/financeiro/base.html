@@ -2362,6 +2362,9 @@
         const panel = dropdown.querySelector('[data-contas-dropdown-panel]');
         const summary = dropdown.querySelector('[data-contas-dropdown-summary]');
         const checkboxes = dropdown.querySelectorAll('input[type="checkbox"][name="contas"]');
+        const allCheckbox = dropdown.querySelector('[data-contas-select-all]');
+        const searchInput = dropdown.querySelector('[data-contas-search]');
+        const options = dropdown.querySelectorAll('[data-contas-option]');
         const total = checkboxes.length;
 
         if (!toggle || !panel || !summary || !checkboxes.length) {
@@ -2370,7 +2373,11 @@
 
         const updateSummary = () => {
             const checkedCount = Array.from(checkboxes).filter((checkbox) => checkbox.checked).length;
-            if (checkedCount === 0 || checkedCount === total) {
+            if (allCheckbox && allCheckbox.checked) {
+                summary.textContent = 'Contas: Todas';
+            } else if (allCheckbox && checkedCount === 0) {
+                summary.textContent = 'Nenhuma conta selecionada';
+            } else if (!allCheckbox && (checkedCount === 0 || checkedCount === total)) {
                 summary.textContent = 'Contas: Todas';
             } else if (checkedCount === 1) {
                 summary.textContent = 'Contas: 1 selecionada';
@@ -2378,6 +2385,11 @@
                 summary.textContent = `Contas: ${checkedCount} selecionadas`;
             }
         };
+
+        const normalizeText = (value) => (value || '')
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase();
 
         toggle.addEventListener('click', () => {
             const isOpen = !panel.hasAttribute('hidden');
@@ -2399,13 +2411,43 @@
                 checkboxes.forEach((checkbox) => {
                     checkbox.checked = markAll;
                 });
+                if (allCheckbox) {
+                    allCheckbox.checked = markAll;
+                }
                 updateSummary();
             });
         });
 
+        if (allCheckbox) {
+            allCheckbox.addEventListener('change', () => {
+                checkboxes.forEach((checkbox) => {
+                    checkbox.checked = allCheckbox.checked;
+                });
+                updateSummary();
+            });
+        }
+
         checkboxes.forEach((checkbox) => {
-            checkbox.addEventListener('change', updateSummary);
+            checkbox.addEventListener('change', () => {
+                if (allCheckbox) {
+                    const checkedCount = Array.from(checkboxes).filter((item) => item.checked).length;
+                    allCheckbox.checked = checkedCount === total;
+                }
+                updateSummary();
+            });
         });
+
+        if (searchInput && options.length) {
+            searchInput.addEventListener('input', () => {
+                const termo = normalizeText(searchInput.value);
+                options.forEach((option) => {
+                    const texto = normalizeText(option.textContent);
+                    const shouldHide = Boolean(termo) && !texto.includes(termo);
+                    option.hidden = shouldHide;
+                    option.style.display = shouldHide ? 'none' : '';
+                });
+            });
+        }
 
         document.addEventListener('click', (event) => {
             if (!dropdown.contains(event.target)) {
