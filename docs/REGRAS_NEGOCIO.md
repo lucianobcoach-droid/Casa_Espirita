@@ -21,6 +21,10 @@ Este documento consolida regras permanentes do sistema. Ele não substitui o his
 - Rateios devem ser preservados.
 - Conta destino deve ser obrigatória em transferências.
 - Número de documento deve existir; quando não preenchido, deve ser gerado automaticamente conforme regra do sistema.
+- Favorecido/pessoa financeira não deve permitir duplicidade por nome normalizado.
+- Conta inativa não deve aparecer como opção para novos lançamentos, mas deve permanecer disponível em relatórios históricos quando tiver movimento no período selecionado.
+- Em transferências exibidas no Extrato, quando não houver favorecido operacional, a apresentação do favorecido deve usar o texto padronizado "Transferência entre contas".
+- Rateio deve preservar validação pelo valor total do documento e pode exibir saldo/diferença restante como apoio operacional ao usuário.
 
 ### Resultado operacional e composição de saldo
 

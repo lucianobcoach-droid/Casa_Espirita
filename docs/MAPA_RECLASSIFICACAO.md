@@ -183,6 +183,138 @@ Documentos relacionados:
 - docs/STATE.md
 - docs/ROADMAP_FINANCEIRO.md
 
+---
+
+### 13. Favorecido duplicado por nome
+
+Status inicial: FUTURO REAL / BUG OPERACIONAL
+
+Motivo:
+Foi levantado que o cadastro de favorecidos permite duplicidade por nome. Antes de implementar, e necessario conferir a regra atual de validacao, a existencia de duplicados ja cadastrados e a melhor normalizacao de nome.
+
+Classificacao documental:
+- BUG / correcao operacional
+- REGRA DE NEGOCIO
+
+Prioridade documental: ALTA
+
+Documentos relacionados:
+- docs/ROADMAP_FINANCEIRO.md
+- docs/REGRAS_NEGOCIO.md
+
+---
+
+### 14. Edicao de conta sem saldo inicial/data ja preenchidos
+
+Status inicial: FUTURO REAL / BUG OPERACIONAL
+
+Motivo:
+Foi levantado que, ao atualizar dados da conta cadastrada, o formulario deve trazer saldo inicial e data do saldo ja cadastrados. Requer conferencia do formulario atual antes de qualquer correcao.
+
+Classificacao documental:
+- BUG / correcao operacional
+
+Prioridade documental: ALTA
+
+Documentos relacionados:
+- docs/ROADMAP_FINANCEIRO.md
+- docs/STATE.md
+
+---
+
+### 15. Conta inativa em novos lancamentos e relatorios historicos
+
+Status inicial: FUTURO REAL / REQUER CONFERENCIA NO CODIGO
+
+Motivo:
+Foi definida a regra de que conta inativa nao deve aparecer para novos lancamentos, mas deve aparecer em relatorios historicos quando tiver movimento no periodo selecionado. Requer conferencia de formularios, filtros e relatorios.
+
+Classificacao documental:
+- REGRA DE NEGOCIO
+- BUG / correcao operacional
+
+Prioridade documental: ALTA
+
+Documentos relacionados:
+- docs/ROADMAP_FINANCEIRO.md
+- docs/REGRAS_NEGOCIO.md
+- docs/STATE.md
+
+---
+
+### 16. Favorecido em transferencia no Extrato
+
+Status inicial: FUTURO REAL
+
+Motivo:
+Foi levantado que, quando o lancamento for transferencia, o campo favorecido no Extrato deve aparecer como `Transferencia entre contas`. Requer ajuste visual pontual futuro sem alterar regra de saldo.
+
+Classificacao documental:
+- MELHORIA DE UX
+- BUG / correcao operacional
+
+Prioridade documental: MEDIA
+
+Documentos relacionados:
+- docs/ROADMAP_FINANCEIRO.md
+- docs/REGRAS_NEGOCIO.md
+
+---
+
+### 17. Diferenca restante no rateio
+
+Status inicial: FUTURO REAL
+
+Motivo:
+Foi levantada melhoria para mostrar o valor que falta para fechar o valor total do documento em lancamentos com rateio.
+
+Classificacao documental:
+- MELHORIA FUNCIONAL
+- MELHORIA DE UX
+
+Prioridade documental: MEDIA
+
+Documentos relacionados:
+- docs/ROADMAP_FINANCEIRO.md
+- docs/REGRAS_NEGOCIO.md
+
+---
+
+### 18. Filtro multi-contas na listagem de lancamentos
+
+Status inicial: FUTURO REAL
+
+Motivo:
+Foi levantada melhoria para permitir selecionar mais de uma conta na listagem de lancamentos, reaproveitando a experiencia validada no Extrato multi-contas.
+
+Classificacao documental:
+- MELHORIA FUNCIONAL
+- MELHORIA DE UX
+
+Prioridade documental: MEDIA
+
+Documentos relacionados:
+- docs/ROADMAP_FINANCEIRO.md
+- docs/STATE.md
+
+---
+
+### 19. Tabelas personalizadas de controle
+
+Status inicial: FUTURO REAL / FRENTE FUTURA GRANDE
+
+Motivo:
+Foi levantada frente futura para controles configuraveis, como energia eletrica mensal, com colunas definidas pelo usuario, formulas por celula e totalizadores. Deve ser tratada separadamente das correcoes imediatas do financeiro.
+
+Classificacao documental:
+- FRENTE FUTURA GRANDE
+
+Prioridade documental: FUTURA / BAIXA para execucao imediata
+
+Documentos relacionados:
+- docs/ROADMAP_FINANCEIRO.md
+- docs/CEREBRO_PROJETO.md
+
 ## Próxima ação recomendada
 
 A próxima microetapa documental deve conferir os itens acima contra o código e contra os documentos atuais, um grupo por vez, sem alterar funcionalidades.

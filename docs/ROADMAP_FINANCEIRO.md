@@ -2,6 +2,52 @@
 
 Data: 2026-04-23
 
+## 0.15. Pendencias levantadas apos Extrato multi-contas
+
+Este bloco registra pendencias novas levantadas pela usuaria apos a correcao do Fechamento/Prestacao e a implementacao do Extrato com multiplas contas. Nao representa implementacao concluida.
+
+### Bugs / correcoes operacionais proximas
+
+1. **Favorecido duplicado por nome**
+   - Classificacao: BUG / correcao operacional + REGRA DE NEGOCIO.
+   - Prioridade documental: ALTA.
+   - Direcao: impedir duplicidade por nome normalizado, preservando dados existentes e avaliando tratamento de duplicados ja cadastrados.
+
+2. **Edicao de conta deve trazer saldo inicial e data do saldo ja cadastrados**
+   - Classificacao: BUG / correcao operacional.
+   - Prioridade documental: ALTA.
+   - Direcao: ao abrir edicao de conta, os campos de saldo inicial e data do saldo devem aparecer preenchidos com os valores atuais.
+
+3. **Conta inativa em novos lancamentos e relatorios historicos**
+   - Classificacao: REGRA DE NEGOCIO + correcao operacional.
+   - Prioridade documental: ALTA.
+   - Direcao: conta inativa nao deve aparecer para novos lancamentos, mas deve continuar disponivel em relatorios quando tiver movimento no periodo selecionado.
+
+4. **Favorecido em transferencia no Extrato**
+   - Classificacao: MELHORIA DE UX + correcao operacional.
+   - Prioridade documental: MEDIA.
+   - Direcao: em lancamentos de transferencia, o Extrato deve apresentar o favorecido como `Transferencia entre contas` quando nao houver favorecido operacional.
+
+### Melhorias operacionais
+
+5. **Diferenca restante no rateio**
+   - Classificacao: MELHORIA FUNCIONAL + MELHORIA DE UX.
+   - Prioridade documental: MEDIA.
+   - Direcao: no fluxo de lancamento com rateio, mostrar o valor que ainda falta para fechar o valor total do documento.
+
+6. **Filtro multi-contas na listagem de lancamentos**
+   - Classificacao: MELHORIA FUNCIONAL + MELHORIA DE UX.
+   - Prioridade documental: MEDIA.
+   - Direcao: permitir selecionar mais de uma conta na listagem de lancamentos, reaproveitando a experiencia aprovada no Extrato multi-contas quando fizer sentido.
+
+### Frente futura grande
+
+7. **Tabelas personalizadas de controle**
+   - Classificacao: FRENTE FUTURA GRANDE.
+   - Prioridade documental: FUTURA / BAIXA para execucao imediata.
+   - Direcao: disponibilizar futuramente cadastros de controles configuraveis, como energia eletrica mensal, em que o usuario defina nome das colunas, formulas por celula e colunas com totalizadores.
+   - Observacao: esta frente deve ser desenhada separadamente das correcoes imediatas do financeiro, pois envolve modelo estrutural proprio, validacao de formulas e experiencia de configuracao.
+
 ## 0.13. Base analitica consolidada e retomada da padronizacao visual
 
 - a tela `Evolucao por categorias` deixa de ser apenas uma entrega isolada e passa a ser a base atual do padrao analitico do sistema

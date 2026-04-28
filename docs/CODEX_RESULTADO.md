@@ -2,6 +2,16 @@
 
 Data: 2026-04-28
 
+## Classificacao documental de novas pendencias do financeiro
+
+- registrei sete novas melhorias levantadas pela usuaria apos Fechamento/Prestacao e Extrato multi-contas
+- classifiquei os itens entre BUG/correcao operacional, REGRA DE NEGOCIO, MELHORIA DE UX, MELHORIA FUNCIONAL e FRENTE FUTURA GRANDE
+- atualizei `docs/ROADMAP_FINANCEIRO.md` com novo bloco de pendencias pos-Extrato multi-contas
+- atualizei `docs/MAPA_RECLASSIFICACAO.md` para acompanhar os novos itens sem remover entradas antigas
+- acrescentei em `docs/REGRAS_NEGOCIO.md` apenas regras permanentes ja claras
+- registrei em `docs/CEREBRO_PROJETO.md` a frente futura grande de tabelas personalizadas de controle
+- nao houve implementacao funcional, alteracao de codigo, templates, models, migrations ou testes nesta microetapa documental
+
 ## Extrato com seleção de múltiplas contas
 
 - adaptei `/financeiro/extratos/` para aceitar seleção de uma conta, várias contas ou todas as contas

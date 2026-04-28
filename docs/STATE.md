@@ -2,6 +2,11 @@
 
 Data de atualizacao: 2026-04-28
 
+## Classificacao documental de novas pendencias do financeiro
+
+- novas melhorias levantadas apos Fechamento/Prestacao e Extrato multi-contas foram registradas e classificadas documentalmente, sem implementacao funcional nesta microetapa
+- os itens foram organizados em `ROADMAP_FINANCEIRO.md`, acompanhados em `MAPA_RECLASSIFICACAO.md` e regras permanentes objetivas foram acrescentadas em `REGRAS_NEGOCIO.md`
+
 ## Extrato com seleção de múltiplas contas
 
 - o Extrato financeiro passou a permitir seleção de uma conta, várias contas ou todas as contas em `/financeiro/extratos/`

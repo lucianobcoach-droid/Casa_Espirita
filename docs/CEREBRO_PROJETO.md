@@ -209,6 +209,12 @@ Estas regras devem ser respeitadas em qualquer etapa:
 - a expansao para outros modulos deve ocorrer apenas depois da estabilizacao do `financeiro` e da amarracao desses padroes, reaproveitando as melhorias aprovadas no `financeiro` de forma transversal e controlada
 - a expansao futura de acoes em lote para outros cadastros permanece registrada como frente posterior de UX/operacao, sem ser tratada como regra de negocio estrutural
 
+### 5.6. Diretriz futura de tabelas personalizadas de controle
+- fica registrada como frente futura grande a possibilidade de controles configuraveis por tabela, como energia eletrica mensal ou outros acompanhamentos operacionais recorrentes
+- essa frente deve permitir, em desenho futuro proprio, que o usuario defina nome das colunas, formulas por celula e colunas com totalizadores
+- essa frente nao deve ser misturada com correcoes imediatas do financeiro, pois envolve estrutura propria de configuracao, validacao de formulas, persistencia e experiencia de edicao tabular
+- antes de qualquer implementacao, essa frente deve passar por desenho funcional separado, avaliando seguranca das formulas, auditoria, permissao, exportacao e relacao com lancamentos financeiros reais
+
 ## 6. Estado funcional ja validado
 Ate o momento, esta validado que:
 
