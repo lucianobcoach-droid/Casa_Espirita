@@ -2,6 +2,12 @@
 
 Data de atualizacao: 2026-04-28
 
+## Revisao documental da direcao do Balancete Institucional
+
+- a direcao foi revisada: a Prestacao/Fechamento permanece como relatorio analitico/gerencial, e o Balancete Institucional fica registrado como relatorio proprio futuro
+- o Balancete devera reutilizar a mesma regra/base de calculo da Prestacao/Fechamento, com template documental proprio, fundo branco e duas assinaturas
+- nao houve implementacao, alteracao de codigo, templates, CSS, testes, rotas, views, models, migrations ou calculos nesta microetapa documental
+
 ## Direcao futura de balancete para Prestacao/Fechamento
 
 - foi registrada decisao conceitual para evoluir futuramente o impresso da Prestacao/Fechamento para modelo tipo balancete institucional

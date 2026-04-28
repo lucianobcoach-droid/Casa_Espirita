@@ -2,6 +2,14 @@
 
 Data: 2026-04-28
 
+## Revisao documental do Balancete Institucional como relatorio proprio
+
+- ajustei a direcao registrada para manter a Prestacao/Fechamento como relatorio analitico/gerencial
+- registrei o Balancete Institucional como relatorio proprio futuro, com finalidade formal/documental
+- alinhei `ROADMAP_FINANCEIRO.md`, `CEREBRO_PROJETO.md` e `MAPA_RECLASSIFICACAO.md` para indicar reaproveitamento da regra/base de calculo da Prestacao/Fechamento
+- acrescentei em `REGRAS_NEGOCIO.md` que o Balancete futuro nao deve ter calculo divergente
+- nao alterei codigo, templates, CSS, testes, rotas, views, models, migrations ou calculos
+
 ## Registro documental do modelo balancete para Prestacao/Fechamento
 
 - registrei no `ROADMAP_FINANCEIRO.md` a frente futura para evoluir a Prestacao/Fechamento para modelo tipo balancete institucional

@@ -378,18 +378,25 @@ Documentos relacionados:
 
 ---
 
-### 22. Modelo balancete da Prestacao/Fechamento
+### 22. Balancete Institucional como relatorio proprio
 
 Status inicial: FUTURO REAL / FRENTE DE RELATORIO
 
 Motivo:
-Foi definida direcao futura para aproximar o impresso da Prestacao/Fechamento de um modelo de balancete institucional, mantendo os calculos atuais, a transparencia da composicao de saldo e a regra consolidada de transferencias por escopo.
+Foi revisada a direcao anterior: a Prestacao/Fechamento deve permanecer como relatorio analitico/gerencial, e o Balancete Institucional deve ser criado futuramente como relatorio proprio, formal/documental, reutilizando a mesma base de calculo da Prestacao/Fechamento.
 
 Classificacao documental:
 - FRENTE FUTURA DE RELATORIO / IMPRESSAO
 - AJUSTE VISUAL DOCUMENTAL
 
 Prioridade documental: MEDIA
+
+Direcao revisada:
+- relatorio proprio chamado `Balancete Institucional`
+- nao substituir a Prestacao/Fechamento atual
+- reaproveitar regra/base de calculo da Prestacao/Fechamento
+- evitar divergencia de calculo e duplicacao de regra financeira
+- preservar transparencia da composicao do saldo e regra de transferencias por escopo
 
 Documentos relacionados:
 - docs/ROADMAP_FINANCEIRO.md
@@ -398,12 +405,12 @@ Documentos relacionados:
 
 ---
 
-### 23. Duas assinaturas na Prestacao/Fechamento
+### 23. Duas assinaturas no Balancete Institucional
 
 Status inicial: FUTURO REAL
 
 Motivo:
-Foi levantada necessidade futura de permitir duas assinaturas no relatorio de Prestacao/Fechamento, aproveitando a base de cadastro manual de assinaturas ja existente e evoluindo para selecao ou definicao de duas assinaturas padrao para esse documento.
+Foi levantada necessidade futura de permitir duas assinaturas no Balancete Institucional, aproveitando a base de cadastro manual de assinaturas ja existente e evoluindo para selecao ou definicao de duas assinaturas padrao para esse documento.
 
 Classificacao documental:
 - MELHORIA FUNCIONAL

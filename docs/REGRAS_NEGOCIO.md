@@ -39,6 +39,7 @@ Este documento consolida regras permanentes do sistema. Ele não substitui o his
 - No Fechamento do período / Prestação de contas, transferências internas ao escopo selecionado não precisam aparecer como entrada/saída nem como linha zerada; totais zerados de transferências externas ao escopo também não devem aparecer.
 - Transferências com apenas uma ponta dentro do filtro devem aparecer nos totais necessários de entrada/saída por transferência para explicar a reconciliação do saldo.
 - A opção "Exibir transferências" controla somente detalhamento analítico/visual das transferências; não controla a inclusão das transferências no cálculo real do saldo.
+- O Balancete Institucional futuro deve reutilizar a mesma regra/base de cálculo da Prestação/Fechamento, sem cálculo divergente para saldos, receitas, despesas e transferências por escopo.
 
 ## Relatórios e impressão
 
