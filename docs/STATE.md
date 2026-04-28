@@ -2,6 +2,11 @@
 
 Data de atualizacao: 2026-04-28
 
+## Registro documental de novas pendencias de filtro e impressao
+
+- foram registradas documentalmente duas pendencias futuras: padronizar o filtro de contas nas telas com selecao de contas e refinar a impressao da Prestacao/Fechamento do periodo
+- nao houve implementacao funcional, alteracao de codigo, templates, CSS, testes, filtros, relatorios ou calculos nesta microetapa
+
 ## Correcao da edicao de conta financeira
 
 - o formulario de conta financeira passou a renderizar `data_saldo_inicial` no formato HTML `YYYY-MM-DD` ao editar registro existente

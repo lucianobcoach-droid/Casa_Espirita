@@ -337,6 +337,45 @@ Documentos relacionados:
 - docs/ROADMAP_FINANCEIRO.md
 - docs/CEREBRO_PROJETO.md
 
+---
+
+### 20. Padronizacao do filtro de contas nas telas com selecao de contas
+
+Status inicial: FUTURO REAL / PADRONIZACAO TRANSVERSAL
+
+Motivo:
+Foi levantada melhoria para aplicar o padrao visual/comportamental do filtro de contas validado no Extrato em outras telas que possuam selecao de contas. Deve ser implementado futuramente em microetapas por tela ou conjunto minimo seguro.
+
+Classificacao documental:
+- MELHORIA DE UX
+- PADRONIZACAO TRANSVERSAL
+
+Prioridade documental: MEDIA
+
+Documentos relacionados:
+- docs/ROADMAP_FINANCEIRO.md
+- docs/PADRAO_UX_SISTEMA.md
+- docs/STATE.md
+
+---
+
+### 21. Refinamento de impressao da Prestacao/Fechamento do periodo
+
+Status inicial: FUTURO REAL / AJUSTE VISUAL DE RELATORIO
+
+Motivo:
+Foi levantado que o PDF/impresso atual da Prestacao/Fechamento do periodo esta pouco compacto, com margens/espacamentos grandes e quebra de pagina ruim. O ajuste futuro deve tratar apenas layout de impressao, sem alterar calculos.
+
+Classificacao documental:
+- AJUSTE VISUAL DE RELATORIO / IMPRESSAO
+
+Prioridade documental: MEDIA
+
+Documentos relacionados:
+- docs/ROADMAP_FINANCEIRO.md
+- docs/STATE.md
+- docs/REGRAS_NEGOCIO.md
+
 ## Próxima ação recomendada
 
 A próxima microetapa documental deve conferir os itens acima contra o código e contra os documentos atuais, um grupo por vez, sem alterar funcionalidades.

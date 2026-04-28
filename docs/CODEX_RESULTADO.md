@@ -2,6 +2,13 @@
 
 Data: 2026-04-28
 
+## Registro documental de pendencias de filtro de contas e impressao
+
+- registrei no `ROADMAP_FINANCEIRO.md` as pendencias de padronizacao do filtro de contas e refinamento da impressao da Prestacao/Fechamento
+- atualizei o `MAPA_RECLASSIFICACAO.md` para acompanhar esses dois pontos como itens futuros
+- registrei nota curta no `STATE.md`
+- nao alterei codigo, templates, CSS, testes, filtros, relatorios ou calculos
+
 ## Correcao da edicao de conta financeira
 
 - ajustei o form de conta financeira para preencher `data_saldo_inicial` em formato compativel com `input type="date"` na edicao

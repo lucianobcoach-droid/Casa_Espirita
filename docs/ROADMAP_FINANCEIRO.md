@@ -2,6 +2,20 @@
 
 Data: 2026-04-23
 
+## 0.16. Pendencias documentadas apos correcao da edicao de contas
+
+Este bloco registra pendencias levantadas pela usuaria para continuidade do financeiro. Nao representa implementacao concluida.
+
+1. **Padronizacao do filtro de contas nas telas com selecao de contas**
+   - Classificacao: MELHORIA DE UX + PADRONIZACAO TRANSVERSAL.
+   - Prioridade documental: MEDIA.
+   - Direcao: aplicar progressivamente o padrao visual/comportamental validado no filtro de contas do Extrato em outras telas que possuam selecao de contas, em microetapas separadas por tela ou conjunto minimo seguro.
+
+2. **Refinamento de impressao da Prestacao/Fechamento do periodo**
+   - Classificacao: AJUSTE VISUAL DE RELATORIO / IMPRESSAO.
+   - Prioridade documental: MEDIA.
+   - Direcao: compactar margens, espacamentos e quebras de pagina do PDF/impresso da Prestacao/Fechamento, sem alterar calculos.
+
 ## 0.15. Pendencias levantadas apos Extrato multi-contas
 
 Este bloco registra pendencias novas levantadas pela usuaria apos a correcao do Fechamento/Prestacao e a implementacao do Extrato com multiplas contas. Nao representa implementacao concluida.
