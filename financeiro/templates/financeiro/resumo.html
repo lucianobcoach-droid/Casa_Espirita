@@ -101,6 +101,9 @@
     }
 
     .financeiro-resumo-card.is-filters {
+        position: relative;
+        z-index: 80;
+        overflow: visible;
         border-color: #e2e8f0;
         background: linear-gradient(180deg, #fbfcfe 0%, #f7fafc 100%);
         box-shadow: 0 10px 24px rgba(15, 23, 42, 0.035);
@@ -416,7 +419,7 @@
                     </summary>
                     <div class="financeiro-secondary-body">
                         <div class="columns is-multiline">
-                            <div class="column is-12-mobile is-6-tablet is-4-desktop">
+                            <div class="column is-12-mobile is-12-tablet is-6-desktop financeiro-contas-filter">
                                 <label class="label">Contas incluidas</label>
                                 <div class="financeiro-contas-dropdown" data-contas-dropdown>
                                     <button
@@ -439,12 +442,17 @@
                                     <div class="financeiro-contas-panel" data-contas-dropdown-panel hidden>
                                         <div class="financeiro-contas-checklist">
                                             <div class="financeiro-contas-actions">
-                                                <button class="button is-small is-light" type="button" data-contas-checklist-action="all">Marcar todas</button>
-                                                <button class="button is-small is-light" type="button" data-contas-checklist-action="none">Limpar selecao</button>
+                                                <label class="checkbox financeiro-conta-option">
+                                                    <input type="checkbox" name="todas_contas" value="1" {% if quantidade_contas_selecionadas == contas_disponiveis|length %}checked{% endif %} data-contas-select-all>
+                                                    <span>Todas as contas</span>
+                                                </label>
+                                            </div>
+                                            <div class="field mb-2">
+                                                <input class="input is-small" type="search" placeholder="Pesquisar conta" data-contas-search>
                                             </div>
                                             <div class="financeiro-contas-grid">
                                                 {% for conta in contas_disponiveis %}
-                                                    <label class="checkbox financeiro-conta-option">
+                                                    <label class="checkbox financeiro-conta-option" data-contas-option>
                                                         <input type="checkbox" name="contas" value="{{ conta.pk }}" {% if conta.pk|stringformat:'s' in contas_selecionadas_ids %}checked{% endif %}>
                                                         <span>{{ conta.nome }}</span>
                                                     </label>

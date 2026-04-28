@@ -10,6 +10,7 @@ Este bloco registra pendencias levantadas pela usuaria para continuidade do fina
    - Classificacao: MELHORIA DE UX + PADRONIZACAO TRANSVERSAL.
    - Prioridade documental: MEDIA.
    - Direcao: aplicar progressivamente o padrao visual/comportamental validado no filtro de contas do Extrato em outras telas que possuam selecao de contas, em microetapas separadas por tela ou conjunto minimo seguro.
+   - Status: executado para as telas analiticas Resumo, Fechamento/Prestacao e Evolucao por categorias; listagem de lancamentos permanece em pendencia propria.
 
 2. **Refinamento de impressao da Prestacao/Fechamento do periodo**
    - Classificacao: AJUSTE VISUAL DE RELATORIO / IMPRESSAO.

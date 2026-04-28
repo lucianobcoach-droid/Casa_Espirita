@@ -2,6 +2,12 @@
 
 Data de atualizacao: 2026-04-28
 
+## Padronizacao do filtro de contas nas telas analiticas
+
+- Resumo, Fechamento/Prestacao e Evolucao por categorias passaram a usar o padrao visual/comportamental do filtro de contas validado no Extrato
+- o filtro ganhou opcao clara de `Todas as contas`, busca local por nome, lista empilhada e dropdown com largura/altura confortaveis
+- nao houve alteracao em calculos, regras de transferencia, impressao, listagem de lancamentos, models, migrations ou permissoes
+
 ## Registro documental de novas pendencias de filtro e impressao
 
 - foram registradas documentalmente duas pendencias futuras: padronizar o filtro de contas nas telas com selecao de contas e refinar a impressao da Prestacao/Fechamento do periodo

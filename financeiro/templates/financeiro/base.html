@@ -1269,6 +1269,10 @@
             position: relative;
         }
 
+        .financeiro-contas-filter {
+            min-width: min(100%, 24rem);
+        }
+
         .financeiro-contas-trigger {
             width: 100%;
             min-height: 2.2rem;
@@ -1309,6 +1313,14 @@
             display: none;
         }
 
+        .financeiro-contas-filter .financeiro-contas-panel {
+            width: min(38rem, calc(100vw - 2rem));
+            max-height: min(24rem, calc(100vh - 10rem));
+            overflow: hidden;
+            right: auto;
+            z-index: 200;
+        }
+
         .financeiro-contas-actions {
             display: flex;
             flex-wrap: wrap;
@@ -1331,6 +1343,13 @@
             padding-right: 0.1rem;
         }
 
+        .financeiro-contas-filter .financeiro-contas-grid {
+            grid-template-columns: 1fr;
+            gap: 0.18rem;
+            max-height: min(15rem, calc(100vh - 18rem));
+            overscroll-behavior: contain;
+        }
+
         .financeiro-conta-option {
             display: flex;
             align-items: center;
@@ -1339,6 +1358,18 @@
             padding: 0.02rem 0;
             font-size: 0.88rem;
             color: #243041;
+        }
+
+        .financeiro-contas-filter .financeiro-conta-option {
+            min-height: 1.75rem;
+            padding: 0.12rem 0.15rem;
+        }
+
+        .financeiro-contas-filter .financeiro-contas-checklist {
+            max-height: inherit;
+            overflow: hidden;
+            display: grid;
+            gap: 0.45rem;
         }
 
         .financeiro-conta-option input[type="checkbox"] {

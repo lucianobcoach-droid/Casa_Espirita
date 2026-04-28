@@ -2,6 +2,13 @@
 
 Data: 2026-04-28
 
+## Padronizacao do filtro de contas nas telas analiticas
+
+- apliquei o padrao do filtro de contas do Extrato em Resumo, Fechamento/Prestacao e Evolucao por categorias
+- mantive os parametros e o significado atual dos filtros, sem alterar calculos ou regras financeiras
+- centralizei o conforto visual do dropdown em classe comum no `financeiro/base.html`
+- nao alterei impressao da Prestacao/Fechamento nem implementei filtro multi-contas na listagem de lancamentos
+
 ## Registro documental de pendencias de filtro de contas e impressao
 
 - registrei no `ROADMAP_FINANCEIRO.md` as pendencias de padronizacao do filtro de contas e refinamento da impressao da Prestacao/Fechamento
