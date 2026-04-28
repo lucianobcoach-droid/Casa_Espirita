@@ -202,6 +202,28 @@ Documentos relacionados:
 - docs/ROADMAP_FINANCEIRO.md
 - docs/REGRAS_NEGOCIO.md
 
+Observacao complementar:
+A regra-mae foi ampliada para todos os cadastros por identificadores-chave, mas a implementacao pratica desta microetapa permanece restrita a favorecidos/pessoas financeiras.
+
+---
+
+### 13.1. Regra geral de identificadores-chave nos cadastros
+
+Status inicial: FUTURO REAL / APLICACAO PROGRESSIVA
+
+Motivo:
+Foi definida regra geral de que cadastros do sistema nao devem duplicar identificadores-chave, como codigo, nome ou equivalentes, conforme a natureza de cada cadastro. A extensao para contas, categorias/subcategorias, centros de custo e cadastros futuros deve ocorrer em microetapas proprias.
+
+Classificacao documental:
+- REGRA DE NEGOCIO
+- MELHORIA FUNCIONAL progressiva
+
+Prioridade documental: ALTA como diretriz; execucao incremental por cadastro
+
+Documentos relacionados:
+- docs/ROADMAP_FINANCEIRO.md
+- docs/REGRAS_NEGOCIO.md
+
 ---
 
 ### 14. Edicao de conta sem saldo inicial/data ja preenchidos

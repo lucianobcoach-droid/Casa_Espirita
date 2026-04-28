@@ -15,6 +15,8 @@ Este documento consolida regras permanentes do sistema. Ele não substitui o his
 ## Financeiro
 
 - Não alterar cálculos financeiros sem pedido explícito.
+- Cadastros do sistema não devem permitir duplicidade de identificadores-chave, como código, nome ou equivalentes, conforme a natureza de cada cadastro.
+- Essa regra de identificadores-chave deve ser aplicada progressivamente por cadastro, sem presumir que todos os cadastros atuais já estejam endurecidos no mesmo nível.
 - Separar receita, despesa e transferência.
 - Transferências internas não devem inflar receitas ou despesas operacionais.
 - Data de pagamento é a principal referência operacional, com fallback para competência quando aplicável.
@@ -57,3 +59,6 @@ Este documento consolida regras permanentes do sistema. Ele não substitui o his
 - Apontar inconsistências com orientação clara.
 - Transferências devem ser tratadas como movimentação entre contas.
 - Categorias e favorecidos não devem ser generalizados sem validação.
+- Em importações por planilha, duplicidade de linha/código deve ser distinguida de conflito cadastral contra regras permanentes do cadastro.
+- Uma linha de cadastro importada só deve ser tratada como duplicada quando o código for igual a outro já cadastrado/repetido na planilha ou quando todos os dados relevantes coincidirem com cadastro/linha existente.
+- Quando a linha não for duplicada por esses critérios, mas violar regra permanente de cadastro, como nome normalizado já existente com código diferente, o erro deve ser tratado como conflito cadastral.

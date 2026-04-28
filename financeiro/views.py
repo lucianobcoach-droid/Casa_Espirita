@@ -48,6 +48,7 @@ from .models import (
     LancamentoFinanceiro,
     PessoaFinanceira,
     RegraLancamentoFinanceiro,
+    normalizar_nome_pessoa_financeira,
 )
 from .permissoes import FinanceiroPermissaoMixin, usuario_possui_permissao
 
@@ -2206,7 +2207,7 @@ def _validar_conteudo_planilha_importacao_pessoas_xlsx(arquivo_importacao) -> di
         for item in PessoaFinanceira.objects.all().only('codigo')
     }
     nomes_existentes = {
-        _normalizar_nome_importacao_lancamento(item.nome)
+        normalizar_nome_pessoa_financeira(item.nome)
         for item in PessoaFinanceira.objects.all().only('nome')
     }
     codigos_arquivo: set[str] = set()
@@ -2231,7 +2232,7 @@ def _validar_conteudo_planilha_importacao_pessoas_xlsx(arquivo_importacao) -> di
         ativo_texto = (dados_linha.get('ativo') or '').strip()
 
         codigo_normalizado = _normalizar_codigo_importacao(codigo)
-        nome_normalizado = _normalizar_nome_importacao_lancamento(nome)
+        nome_normalizado = normalizar_nome_pessoa_financeira(nome)
         ativo = _parse_booleano_importacao(ativo_texto)
 
         if not codigo:
@@ -2244,9 +2245,9 @@ def _validar_conteudo_planilha_importacao_pessoas_xlsx(arquivo_importacao) -> di
         if not nome:
             _adicionar_erro_importacao(erros_linha, 'nome', 'Informe o nome do favorecido.')
         elif nome_normalizado in nomes_existentes:
-            _adicionar_erro_importacao(erros_linha, 'nome', 'Ja existe um favorecido com este nome no cadastro.')
+            _adicionar_erro_importacao(erros_linha, 'nome', 'Conflito cadastral: ja existe um favorecido com este nome no cadastro.')
         elif nome_normalizado in nomes_arquivo:
-            _adicionar_erro_importacao(erros_linha, 'nome', 'Este nome de favorecido esta repetido na planilha.')
+            _adicionar_erro_importacao(erros_linha, 'nome', 'Conflito cadastral: este nome de favorecido ja aparece em outra linha da planilha.')
 
         if tipo_pessoa and tipo_pessoa not in tipos_validos:
             _adicionar_erro_importacao(erros_linha, 'tipo_pessoa', 'Use fisica ou juridica.')

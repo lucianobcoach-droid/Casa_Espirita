@@ -3,7 +3,8 @@ from decimal import Decimal
 
 from django.test import RequestFactory, TestCase
 
-from .models import ContaFinanceira, LancamentoFinanceiro
+from .forms import PessoaFinanceiraForm
+from .models import ContaFinanceira, LancamentoFinanceiro, PessoaFinanceira
 from .views import ExtratoFinanceiroView, PrestacaoContasFinanceiroView
 
 
@@ -224,3 +225,47 @@ class ExtratoFinanceiroMultiplasContasTests(TestCase):
             'Selecione pelo menos uma conta para carregar o extrato.',
         )
         self.assertFalse(contexto_sem_contas['tem_extrato'])
+
+
+class PessoaFinanceiraDuplicidadeNomeTests(TestCase):
+    def _dados_form(self, nome, codigo=''):
+        return {
+            'codigo': codigo,
+            'nome': nome,
+            'tipo_pessoa': '',
+            'documento': '',
+            'telefone': '',
+            'email': '',
+            'observacoes': '',
+            'ativo': 'on',
+        }
+
+    def test_bloqueia_cadastro_com_nome_normalizado_duplicado(self):
+        PessoaFinanceira.objects.create(codigo='0001', nome='Maria Silva')
+
+        form = PessoaFinanceiraForm(data=self._dados_form(' maria   silva ', codigo='0002'))
+
+        self.assertFalse(form.is_valid())
+        self.assertIn('Já existe um favorecido cadastrado com este nome.', form.errors['nome'])
+
+    def test_permite_editar_o_proprio_favorecido_sem_acusar_duplicidade(self):
+        pessoa = PessoaFinanceira.objects.create(codigo='0001', nome='Maria Silva')
+
+        form = PessoaFinanceiraForm(
+            data=self._dados_form('MARIA   SILVA', codigo='0001'),
+            instance=pessoa,
+        )
+
+        self.assertTrue(form.is_valid(), form.errors)
+
+    def test_bloqueia_edicao_para_nome_de_outro_favorecido(self):
+        PessoaFinanceira.objects.create(codigo='0001', nome='Maria Silva')
+        outra_pessoa = PessoaFinanceira.objects.create(codigo='0002', nome='Joana Souza')
+
+        form = PessoaFinanceiraForm(
+            data=self._dados_form(' maria   silva ', codigo='0002'),
+            instance=outra_pessoa,
+        )
+
+        self.assertFalse(form.is_valid())
+        self.assertIn('Já existe um favorecido cadastrado com este nome.', form.errors['nome'])

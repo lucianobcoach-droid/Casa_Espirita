@@ -8,6 +8,12 @@ Este bloco registra pendencias novas levantadas pela usuaria apos a correcao do 
 
 ### Bugs / correcoes operacionais proximas
 
+0. **Regra geral de identificadores-chave nos cadastros**
+   - Classificacao: REGRA DE NEGOCIO + MELHORIA FUNCIONAL progressiva.
+   - Prioridade documental: ALTA como diretriz; execucao incremental por cadastro.
+   - Direcao: aplicar progressivamente a regra de nao duplicar identificadores-chave, como codigo, nome ou equivalentes, em contas financeiras, categorias/subcategorias, centros de custo e demais cadastros atuais ou futuros.
+   - Observacao: nesta microetapa pratica, a implementacao fica restrita a favorecidos/pessoas financeiras.
+
 1. **Favorecido duplicado por nome**
    - Classificacao: BUG / correcao operacional + REGRA DE NEGOCIO.
    - Prioridade documental: ALTA.

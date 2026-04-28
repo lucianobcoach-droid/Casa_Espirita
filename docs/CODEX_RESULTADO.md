@@ -2,6 +2,17 @@
 
 Data: 2026-04-28
 
+## Correcao de duplicidade de favorecido por nome
+
+- implementei validacao de duplicidade por nome normalizado em `PessoaFinanceira.clean()`
+- a validacao bloqueia cadastro novo duplicado e edicao para o nome de outro favorecido, mas permite salvar o proprio registro
+- a normalizacao considera maiusculas/minusculas, espacos extras e acentos
+- alinhei a importacao auxiliar de favorecidos para usar a mesma normalizacao de nome
+- ajuste complementar: registrei a regra-mae de identificadores-chave para todos os cadastros, sem expandir implementacao para contas, categorias ou centros de custo nesta etapa
+- na importacao auxiliar, mensagens de nome normalizado ja existente/repetido foram ajustadas para `conflito cadastral`, distinguindo de duplicidade de codigo/linha
+- adicionei teste pontual para cadastro duplicado, edicao do proprio registro e edicao para nome de outro favorecido
+- nao houve limpeza/mescla de registros duplicados existentes nem criacao de migration
+
 ## Classificacao documental de novas pendencias do financeiro
 
 - registrei sete novas melhorias levantadas pela usuaria apos Fechamento/Prestacao e Extrato multi-contas

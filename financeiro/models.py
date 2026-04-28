@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+import unicodedata
 from decimal import Decimal
 from uuid import uuid4
 
@@ -37,6 +39,16 @@ def _proximo_codigo_sequencial(modelo, min_width: int = 4) -> str:
     proximo = max_codigo + 1
     width = max(min_width, len(str(proximo)))
     return str(proximo).zfill(width)
+
+
+def normalizar_nome_pessoa_financeira(valor: str) -> str:
+    valor_sem_acentos = unicodedata.normalize('NFKD', valor or '')
+    valor_sem_acentos = ''.join(
+        caractere
+        for caractere in valor_sem_acentos
+        if not unicodedata.combining(caractere)
+    )
+    return re.sub(r'\s+', ' ', valor_sem_acentos).strip().casefold()
 
 
 class CentroCusto(models.Model):
@@ -96,6 +108,20 @@ class PessoaFinanceira(models.Model):
 
     def __str__(self) -> str:
         return f'{self.codigo} - {self.nome}'
+
+    def clean(self) -> None:
+        super().clean()
+        nome_normalizado = normalizar_nome_pessoa_financeira(self.nome)
+        if not nome_normalizado:
+            return
+
+        queryset = type(self).objects.all()
+        if self.pk:
+            queryset = queryset.exclude(pk=self.pk)
+
+        for pessoa in queryset.only('nome'):
+            if normalizar_nome_pessoa_financeira(pessoa.nome) == nome_normalizado:
+                raise ValidationError({'nome': 'Já existe um favorecido cadastrado com este nome.'})
 
     def save(self, *args, **kwargs) -> None:
         if not (self.codigo or '').strip():

@@ -2,6 +2,15 @@
 
 Data de atualizacao: 2026-04-28
 
+## Correcao de duplicidade de favorecido por nome
+
+- o cadastro e a edicao de favorecidos/pessoas financeiras passaram a bloquear duplicidade por nome normalizado
+- a normalizacao considera maiusculas/minusculas, espacos extras e acentos, preservando a edicao do proprio registro
+- a importacao auxiliar de favorecidos passou a usar a mesma normalizacao para detectar nomes ja cadastrados ou repetidos na planilha
+- ajuste complementar: a regra-mae de identificadores-chave foi registrada para todos os cadastros, mas a implementacao pratica segue restrita a favorecidos nesta microetapa
+- na importacao de favorecidos, nome normalizado ja existente/repetido passa a ser descrito como conflito cadastral, separado conceitualmente de duplicidade de codigo/linha
+- nao houve limpeza, mescla ou alteracao de registros duplicados ja existentes
+
 ## Classificacao documental de novas pendencias do financeiro
 
 - novas melhorias levantadas apos Fechamento/Prestacao e Extrato multi-contas foram registradas e classificadas documentalmente, sem implementacao funcional nesta microetapa
