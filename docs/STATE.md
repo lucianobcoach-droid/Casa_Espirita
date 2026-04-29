@@ -2,6 +2,21 @@
 
 Data de atualizacao: 2026-04-28
 
+## Logo institucional no Extrato impresso
+
+- o cabecalho impresso do Extrato passou a renderizar `financeiro_shell_brand_logo_url` como `<img>` quando houver logo institucional configurada
+- quando nao houver logo, o Extrato mantem fallback textual com `financeiro_shell_brand_name`, sem reservar espaco vazio
+- ajuste complementar: o print do Extrato foi compactado, o cabecalho explicativo da tela foi ocultado na impressao e o `thead` ficou restrito aos titulos das colunas para repetir em quebras de pagina
+- ajuste complementar: o print foi reequilibrado com margem superior explicita, cabecalho documental mais proporcional, bloco proprio para contas selecionadas e maior destaque nos titulos das colunas
+- ajuste complementar: o cabecalho impresso foi reconstruido para exibir logo e nome institucional juntos, titulo/metadados em bloco proprio e resumo das contas selecionadas sem lista longa no topo
+- ajuste complementar: a margem superior do print foi ampliada, o cabecalho institucional foi alinhado verticalmente e o `thead` recebeu respiro print-only para paginas seguintes
+- ajuste complementar: foi removida a frase explicativa do bloco de movimentacoes e o print foi suavizado para ficar mais proximo da leveza visual da tela
+- ajuste complementar: o Extrato passou a ter contrato local de impressao com margens explicitas, padding superior real no documento e respiro de continuacao no `thead` para paginas seguintes
+- ajuste complementar: a tabela do Extrato passou a ter layout fixo, truncamento para textos longos, separadores verticais leves e valores monetarios sem simbolo `R$` dentro da tabela
+- ajuste complementar: o contrato local de pagina foi normalizado para A4 com margens 14mm/12mm/14mm, spacer moderado de 6,5mm e respiro final inferior discreto
+- ajuste complementar: o respiro inferior da tabela longa deixou de usar `tbody::after` e passou para `tfoot` real com `table-footer-group`
+- nao houve alteracao de view, filtros, calculos, regras financeiras, Prestacao, Resumo ou Balancete
+
 ## Auditoria da logo no Extrato impresso
 
 - auditoria concluida sem implementacao funcional: o Extrato impresso recebe o nome institucional pelo contexto global, mas o template `conta_extrato.html` nao renderiza `financeiro_shell_brand_logo_url` como imagem no cabecalho

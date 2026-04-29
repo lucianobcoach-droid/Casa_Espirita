@@ -83,6 +83,8 @@ Estas regras devem ser respeitadas em qualquer etapa:
 - no `financeiro`, a central de `Importacoes` deve ser tratada como pagina central do modulo e aparecer na navegacao principal; exportacoes devem permanecer nas listagens/telas especificas quando dependerem dos filtros locais
 - paginas de impressao, PDF e recibo ficam fora da logica normal de navegacao e nao devem ser tratadas como alvo inicial da mesma padronizacao estrutural
 - no `financeiro`, relatorios e impressos operacionais devem manter margens explicitas de folha e isolamento do shell visual para nao herdarem sidebar, topbar ou wrappers de overflow no modo print
+- quando um relatorio impresso apresentar retrabalho recorrente de margem/quebra, a solucao deve evoluir para contrato local explicito de impressao antes de virar padrao transversal; a propagacao para outros relatorios exige microetapa propria
+- em tabelas longas impressas, preferir `thead`/`tfoot` reais com `table-header-group` e `table-footer-group` para respiro de pagina, evitando pseudo-elementos em `tbody` como margem de impressao
 - relatorios impressos/PDF devem usar fundo branco por padrao para economia de tinta e aparencia documental; cores devem ficar restritas a fonte, linhas discretas, zebra leve ou destaque pontual
 - no modo print, evitar fundos coloridos grandes, cards preenchidos, sombras e elementos visuais de tela administrativa quando eles nao contribuirem para o documento final
 - ajustes de aparencia em relatorios impressos nao devem alterar calculos, regras de transferencia, reconciliacao de saldo ou transparencia da composicao apresentada ao usuario

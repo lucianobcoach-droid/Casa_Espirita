@@ -32,9 +32,9 @@ Este bloco registra nova frente gerencial/patrimonial levantada pela usuaria. Na
 5. **Logo no Extrato impresso**
    - Classificacao: AJUSTE VISUAL DE RELATORIO / IMPRESSAO.
    - Prioridade documental: MEDIA.
-   - Status: AUDITADO / REQUER CORRECAO PONTUAL NO TEMPLATE.
+   - Status: IMPLEMENTADO COM REFINAMENTO VISUAL / AGUARDANDO VALIDACAO VISUAL.
    - Achado: o Extrato usa o nome institucional no cabecalho impresso, mas nao renderiza `financeiro_shell_brand_logo_url` como `<img>`, diferente de Prestacao, Resumo e Balancete.
-   - Direcao: corrigir futuramente o template do Extrato para reaproveitar o bloco de logo institucional ja usado nos demais relatorios, sem alterar calculos.
+   - Correcao aplicada: o template do Extrato passou a reaproveitar a logo institucional via `<img>` quando configurada e manter o nome institucional como fallback quando nao houver logo; refinamentos complementares compactaram e reequilibraram o print, ajustando margem superior, contas selecionadas, hierarquia documental, contrato local de impressao e repeticao do cabecalho da tabela, sem alterar calculos.
    - Observacao: esta pendencia deve ser tratada separadamente da modelagem de tipo/disponibilidade de conta.
 
 ## 0.17. Balancete Institucional como relatorio proprio futuro

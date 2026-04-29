@@ -2,6 +2,21 @@
 
 Data: 2026-04-28
 
+## Logo institucional no Extrato impresso
+
+- corrigi pontualmente o cabecalho documental do Extrato para usar a logo institucional via `<img>` quando `financeiro_shell_brand_logo_url` estiver disponivel
+- mantive fallback textual com `financeiro_shell_brand_name` quando nao houver logo configurada
+- ajuste complementar: compactei o print do Extrato, reduzi a area inicial antes da tabela e garanti repeticao do cabecalho de colunas com `thead` em `table-header-group`
+- ajuste complementar: reequilibrei o print com margem superior explicita, cabecalho documental mais legivel, contas selecionadas em bloco proprio e titulos de coluna com mais destaque
+- ajuste complementar: reconstrui o cabecalho impresso para manter logo e nome institucional juntos, organizar titulo/periodo/emissao em bloco proprio e resumir as contas selecionadas no print
+- ajuste complementar: ampliei a margem superior do print, centralizei verticalmente os blocos do cabecalho e adicionei um espacador print-only no `thead` para dar respiro nas paginas seguintes
+- ajuste complementar: removi a frase explicativa do bloco de movimentacoes e suavizei linhas/bordas do print para aproximar o Extrato da tela validada
+- ajuste complementar: defini um contrato local de impressao do Extrato com margens, padding superior real e respiro de continuacao no `thead`, sem propagar para outros relatorios
+- ajuste complementar: estabilizei a tabela do Extrato com layout fixo, separadores verticais leves, truncamento de textos longos e exibicao monetaria sem `R$` apenas nas linhas da tabela
+- ajuste complementar: normalizei o contrato local de pagina para margens A4 14mm/12mm/14mm, reduzi o spacer do `thead` e adicionei respiro final inferior
+- ajuste complementar: substitui o respiro inferior baseado em `tbody::after` por `tfoot` real com `table-footer-group` e spacer proprio
+- nao alterei view, contexto, filtros, calculos, outros relatorios, models ou migrations
+
 ## Auditoria da logo no Extrato impresso
 
 - auditei o template real do Extrato (`conta_extrato.html`), o CSS de impressao, o contexto global de identidade institucional e comparei com Prestacao, Resumo e Balancete

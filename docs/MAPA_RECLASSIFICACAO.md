@@ -542,6 +542,8 @@ Status inicial: FUTURO REAL / REQUER AUDITORIA VISUAL
 
 Status apos auditoria: AUDITADO / REQUER CORRECAO PONTUAL NO TEMPLATE
 
+Status apos correcao: IMPLEMENTADO COM REFINAMENTO VISUAL / AGUARDANDO VALIDACAO VISUAL
+
 Motivo:
 Foi observado que o Extrato impresso parece reservar espaco para logo institucional, mas a logo nao aparece na impressao. Deve ser auditado separadamente da frente de tipo/disponibilidade de conta.
 
@@ -552,6 +554,12 @@ Achado da auditoria:
 
 Proxima microetapa recomendada:
 - adicionar ao cabecalho documental do Extrato o bloco de logo institucional ja usado nos demais relatorios, preservando fallback para nome institucional quando nao houver logo.
+
+Correcao aplicada:
+- o cabecalho impresso do Extrato passou a renderizar `financeiro_shell_brand_logo_url` como `<img>` e a manter `financeiro_shell_brand_name` apenas como fallback quando nao houver logo.
+- refinamento complementar compactou o cabecalho impresso e ajustou o `thead` para repetir os titulos das colunas em quebras de pagina.
+- refinamento complementar posterior reequilibrou margem superior, hierarquia documental, bloco de contas selecionadas e destaque do cabecalho da tabela.
+- refinamento posterior definiu contrato local de impressao para o Extrato, com margem/padding real e respiro no `thead` em paginas seguintes.
 
 Classificacao documental:
 - AJUSTE VISUAL DE RELATORIO / IMPRESSAO
