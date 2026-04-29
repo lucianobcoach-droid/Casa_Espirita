@@ -2,6 +2,17 @@
 
 Data: 2026-04-29
 
+## Baixa documental de pendencias implementadas do financeiro
+
+- auditei no codigo e nos documentos as pendencias antigas de favorecido duplicado, edicao de conta, logo no Extrato impresso, impressao da Prestacao/Fechamento, filtro de contas nas telas analiticas e regra geral de identificadores-chave
+- reclassifiquei `Favorecido duplicado por nome` como IMPLEMENTADO, incluindo cadastro/edicao e importacao auxiliar
+- reclassifiquei `Edicao de conta sem saldo inicial/data ja preenchidos` como IMPLEMENTADO
+- reclassifiquei a logo do Extrato impresso como IMPLEMENTADO / AGUARDANDO VALIDACAO VISUAL
+- reclassifiquei a padronizacao do filtro de contas como IMPLEMENTADO NAS TELAS ANALITICAS, mantendo a listagem de lancamentos como futuro separado
+- reclassifiquei a impressao da Prestacao/Fechamento como IMPLEMENTADO / AGUARDANDO VALIDACAO VISUAL
+- mantive a regra geral de identificadores-chave como DIRETRIZ IMPLEMENTADA / APLICACAO PROGRESSIVA FUTURA
+- nao alterei codigo funcional, regras financeiras, views, urls, models, forms, templates, migrations, testes ou CSS
+
 ## Auditoria de autenticacao, perfis e permissoes
 
 - auditei documentos e codigo relacionados a autenticacao, perfis e permissoes nos apps `configuracoes`, `financeiro` e `biblioteca`

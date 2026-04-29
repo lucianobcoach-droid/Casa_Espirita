@@ -83,17 +83,19 @@ Este bloco registra pendencias novas levantadas pela usuaria apos a correcao do 
    - Classificacao: REGRA DE NEGOCIO + MELHORIA FUNCIONAL progressiva.
    - Prioridade documental: ALTA como diretriz; execucao incremental por cadastro.
    - Direcao: aplicar progressivamente a regra de nao duplicar identificadores-chave, como codigo, nome ou equivalentes, em contas financeiras, categorias/subcategorias, centros de custo e demais cadastros atuais ou futuros.
-   - Observacao: nesta microetapa pratica, a implementacao fica restrita a favorecidos/pessoas financeiras.
+   - Status: diretriz implementada em `docs/REGRAS_NEGOCIO.md`; aplicacao pratica confirmada em favorecidos/pessoas financeiras. Demais cadastros permanecem em aplicacao progressiva futura.
 
 1. **Favorecido duplicado por nome**
    - Classificacao: BUG / correcao operacional + REGRA DE NEGOCIO.
    - Prioridade documental: ALTA.
    - Direcao: impedir duplicidade por nome normalizado, preservando dados existentes e avaliando tratamento de duplicados ja cadastrados.
+   - Status: implementado no cadastro/edicao e na importacao auxiliar de favorecidos por nome normalizado.
 
 2. **Edicao de conta deve trazer saldo inicial e data do saldo ja cadastrados**
    - Classificacao: BUG / correcao operacional.
    - Prioridade documental: ALTA.
    - Direcao: ao abrir edicao de conta, os campos de saldo inicial e data do saldo devem aparecer preenchidos com os valores atuais.
+   - Status: implementado no formulario de conta, com data em formato compativel com input HTML/date.
 
 3. **Conta inativa em novos lancamentos e relatorios historicos**
    - Classificacao: REGRA DE NEGOCIO + correcao operacional.

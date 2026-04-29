@@ -258,11 +258,18 @@ Documentos relacionados:
 
 Status inicial: FUTURO REAL / BUG OPERACIONAL
 
+Status apos baixa documental: IMPLEMENTADO
+
 Motivo:
 Foi levantado que o cadastro de favorecidos permite duplicidade por nome. Antes de implementar, e necessario conferir a regra atual de validacao, a existencia de duplicados ja cadastrados e a melhor normalizacao de nome.
 
+Achado da baixa:
+- `PessoaFinanceira.clean()` bloqueia duplicidade por nome normalizado e ignora o proprio registro na edicao.
+- A importacao auxiliar de favorecidos valida conflito por nome normalizado contra cadastro existente e contra linhas repetidas na propria planilha.
+- A regra permanente esta registrada em `docs/REGRAS_NEGOCIO.md`.
+
 Classificacao documental:
-- BUG / correcao operacional
+- IMPLEMENTADO
 - REGRA DE NEGOCIO
 
 Prioridade documental: ALTA
@@ -280,12 +287,19 @@ A regra-mae foi ampliada para todos os cadastros por identificadores-chave, mas 
 
 Status inicial: FUTURO REAL / APLICACAO PROGRESSIVA
 
+Status apos baixa documental: DIRETRIZ IMPLEMENTADA / APLICACAO PROGRESSIVA FUTURA
+
 Motivo:
 Foi definida regra geral de que cadastros do sistema nao devem duplicar identificadores-chave, como codigo, nome ou equivalentes, conforme a natureza de cada cadastro. A extensao para contas, categorias/subcategorias, centros de custo e cadastros futuros deve ocorrer em microetapas proprias.
 
+Achado da baixa:
+- A regra-mae esta registrada em `docs/REGRAS_NEGOCIO.md`.
+- A implementacao pratica confirmada nesta baixa esta restrita a favorecidos/pessoas financeiras.
+- Contas, categorias/subcategorias, centros de custo e demais cadastros permanecem em aplicacao progressiva futura.
+
 Classificacao documental:
-- REGRA DE NEGOCIO
-- MELHORIA FUNCIONAL progressiva
+- DIRETRIZ IMPLEMENTADA
+- FUTURO REAL / APLICACAO PROGRESSIVA
 
 Prioridade documental: ALTA como diretriz; execucao incremental por cadastro
 
@@ -299,11 +313,18 @@ Documentos relacionados:
 
 Status inicial: FUTURO REAL / BUG OPERACIONAL
 
+Status apos baixa documental: IMPLEMENTADO
+
 Motivo:
 Foi levantado que, ao atualizar dados da conta cadastrada, o formulario deve trazer saldo inicial e data do saldo ja cadastrados. Requer conferencia do formulario atual antes de qualquer correcao.
 
+Achado da baixa:
+- `ContaFinanceiraForm` inclui `saldo_inicial` e `data_saldo_inicial`.
+- `data_saldo_inicial` usa widget `DateInput(format='%Y-%m-%d', attrs={'type': 'date'})`, compativel com input HTML/date.
+- Ha teste cobrindo carregamento de saldo inicial/data na edicao e atualizacao desses valores.
+
 Classificacao documental:
-- BUG / correcao operacional
+- IMPLEMENTADO
 
 Prioridade documental: ALTA
 
@@ -428,12 +449,19 @@ Documentos relacionados:
 
 Status inicial: FUTURO REAL / PADRONIZACAO TRANSVERSAL
 
+Status apos baixa documental: IMPLEMENTADO NAS TELAS ANALITICAS / PENDENCIA FUTURA SEPARADA NA LISTAGEM DE LANCAMENTOS
+
 Motivo:
 Foi levantada melhoria para aplicar o padrao visual/comportamental do filtro de contas validado no Extrato em outras telas que possuam selecao de contas. Deve ser implementado futuramente em microetapas por tela ou conjunto minimo seguro.
 
+Achado da baixa:
+- `resumo.html`, `prestacao_contas.html` e `evolucao_categorias.html` usam o dropdown de contas com opcao "Todas as contas", busca local, selecao parcial e lista empilhada.
+- O comportamento comum do dropdown esta centralizado no shell do financeiro em `financeiro/base.html`.
+- A listagem de lancamentos permanece como pendencia propria de filtro multi-contas e nao deve ser misturada a esta baixa.
+
 Classificacao documental:
-- MELHORIA DE UX
-- PADRONIZACAO TRANSVERSAL
+- IMPLEMENTADO NAS TELAS ANALITICAS
+- FUTURO REAL para listagem de lancamentos
 
 Prioridade documental: MEDIA
 
@@ -448,11 +476,18 @@ Documentos relacionados:
 
 Status inicial: FUTURO REAL / AJUSTE VISUAL DE RELATORIO
 
+Status apos baixa documental: IMPLEMENTADO / AGUARDANDO VALIDACAO VISUAL POR USO REAL
+
 Motivo:
 Foi levantado que o PDF/impresso atual da Prestacao/Fechamento do periodo esta pouco compacto, com margens/espacamentos grandes e quebra de pagina ruim. O ajuste futuro deve tratar apenas layout de impressao, sem alterar calculos.
 
+Achado da baixa:
+- `prestacao_contas.html` possui bloco `@media print` com compactacao de margens, padding, tabelas, cabecalho documental, repeticao de `thead`/`tfoot` e regras de `break-inside`.
+- A implementacao esta registrada no roadmap como ajuste de compactacao do modo print/PDF sem alteracao de calculos.
+
 Classificacao documental:
-- AJUSTE VISUAL DE RELATORIO / IMPRESSAO
+- IMPLEMENTADO
+- AGUARDANDO VALIDACAO VISUAL
 
 Prioridade documental: MEDIA
 
@@ -652,9 +687,11 @@ Correcao aplicada:
 - refinamento complementar compactou o cabecalho impresso e ajustou o `thead` para repetir os titulos das colunas em quebras de pagina.
 - refinamento complementar posterior reequilibrou margem superior, hierarquia documental, bloco de contas selecionadas e destaque do cabecalho da tabela.
 - refinamento posterior definiu contrato local de impressao para o Extrato, com margem/padding real e respiro no `thead` em paginas seguintes.
+- baixa documental confirmou que `conta_extrato.html` renderiza a logo institucional via `<img>` quando existe `financeiro_shell_brand_logo_url` e mantem `financeiro_shell_brand_name` visivel no cabecalho.
 
 Classificacao documental:
-- AJUSTE VISUAL DE RELATORIO / IMPRESSAO
+- IMPLEMENTADO
+- AGUARDANDO VALIDACAO VISUAL
 
 Prioridade documental: MEDIA
 

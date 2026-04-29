@@ -2,6 +2,14 @@
 
 Data de atualizacao: 2026-04-29
 
+## Baixa documental de pendencias implementadas do financeiro
+
+- baixadas como implementadas pendencias antigas de favorecido duplicado por nome, edicao de conta com saldo inicial/data preenchidos e logo institucional no Extrato impresso
+- registrada baixa da regra geral de identificadores-chave como diretriz implementada, mantendo aplicacao progressiva futura para demais cadastros
+- registrada baixa da padronizacao do filtro de contas nas telas analiticas Resumo, Prestacao/Fechamento e Evolucao por categorias, mantendo a listagem de lancamentos como pendencia propria futura
+- registrada baixa do refinamento de impressao da Prestacao/Fechamento como implementado e aguardando validacao visual por uso real
+- nao houve alteracao funcional, codigo, views, urls, models, forms, templates, migrations, testes, CSS ou calculos financeiros
+
 ## Auditoria de autenticacao, perfis e permissoes
 
 - auditoria documental/tecnica concluida sem alteracao funcional de codigo
