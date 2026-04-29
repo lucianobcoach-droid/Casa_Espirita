@@ -1,11 +1,18 @@
 from datetime import date
 from decimal import Decimal
 
+from django.template.loader import get_template
 from django.test import RequestFactory, TestCase
+from django.urls import resolve, reverse
 
 from .forms import ContaFinanceiraForm, PessoaFinanceiraForm
-from .models import ContaFinanceira, LancamentoFinanceiro, PessoaFinanceira
-from .views import ExtratoFinanceiroView, PrestacaoContasFinanceiroView, montar_contexto_fechamento_periodo
+from .models import AssinaturaInstitucional, ContaFinanceira, LancamentoFinanceiro, PessoaFinanceira
+from .views import (
+    BalanceteInstitucionalFinanceiroView,
+    ExtratoFinanceiroView,
+    PrestacaoContasFinanceiroView,
+    montar_contexto_fechamento_periodo,
+)
 
 
 class ContaFinanceiraEdicaoFormTests(TestCase):
@@ -144,6 +151,107 @@ class PrestacaoContasTransferenciasEscopoTests(TestCase):
         self.assertEqual(contexto['saldo_final_consolidado'], Decimal('-60.00'))
         self.assertEqual(contexto['saldo_final_reconciliado'], Decimal('-60.00'))
         self.assertTrue(contexto['reconciliacao_saldo_consistente'])
+
+    def test_url_balancete_institucional_resolve_para_view_propria(self):
+        url = reverse('financeiro:balancete-institucional')
+
+        resolved = resolve(url)
+
+        self.assertEqual(url, '/financeiro/balancete-institucional/')
+        self.assertIs(resolved.func.view_class, BalanceteInstitucionalFinanceiroView)
+        self.assertIsNotNone(get_template('financeiro/balancete_institucional.html'))
+
+    def test_balancete_institucional_reaproveita_contexto_do_fechamento(self):
+        assinatura_1 = AssinaturaInstitucional.objects.create(
+            nome='Assinatura A',
+            assinatura_texto='Pessoa A',
+            cargo='Tesouraria',
+            ativo=True,
+            padrao=True,
+        )
+        assinatura_2 = AssinaturaInstitucional.objects.create(
+            nome='Assinatura B',
+            assinatura_texto='Pessoa B',
+            cargo='Diretoria',
+            ativo=True,
+        )
+        request = self.factory.get(
+            '/financeiro/balancete-institucional/',
+            data=[
+                ('data_inicial', '2026-03-01'),
+                ('data_final', '2026-03-31'),
+                ('contas', str(self.dinheiro.id)),
+                ('assinatura_1', str(assinatura_1.pk)),
+                ('assinatura_2', str(assinatura_2.pk)),
+            ],
+        )
+        view = BalanceteInstitucionalFinanceiroView()
+        view.request = request
+
+        contexto = view.get_context_data()
+
+        self.assertEqual(contexto['page_title'], 'Balancete Institucional')
+        self.assertEqual(contexto['saldo_final_consolidado'], Decimal('-60.00'))
+        self.assertEqual(contexto['saldo_final_reconciliado'], Decimal('-60.00'))
+        self.assertTrue(contexto['reconciliacao_saldo_consistente'])
+        self.assertEqual(contexto['assinatura_1'], assinatura_1)
+        self.assertEqual(contexto['assinatura_2'], assinatura_2)
+
+    def test_balancete_institucional_usa_fallback_de_assinaturas_sem_selecao(self):
+        assinatura_padrao = AssinaturaInstitucional.objects.create(
+            nome='Assinatura Padrao',
+            assinatura_texto='Pessoa Padrao',
+            cargo='Tesouraria',
+            ativo=True,
+            padrao=True,
+        )
+        assinatura_secundaria = AssinaturaInstitucional.objects.create(
+            nome='Assinatura Secundaria',
+            assinatura_texto='Pessoa Secundaria',
+            cargo='Presidencia',
+            ativo=True,
+        )
+        request = self.factory.get(
+            '/financeiro/balancete-institucional/',
+            data=[
+                ('data_inicial', '2026-03-01'),
+                ('data_final', '2026-03-31'),
+                ('contas', str(self.dinheiro.id)),
+            ],
+        )
+        view = BalanceteInstitucionalFinanceiroView()
+        view.request = request
+
+        contexto = view.get_context_data()
+
+        self.assertEqual(contexto['assinatura_1'], assinatura_padrao)
+        self.assertEqual(contexto['assinatura_2'], assinatura_secundaria)
+        self.assertNotEqual(contexto['assinatura_1'], contexto['assinatura_2'])
+
+    def test_balancete_institucional_mantem_rotulos_genericos_sem_duas_assinaturas(self):
+        assinatura_unica = AssinaturaInstitucional.objects.create(
+            nome='Assinatura Unica',
+            assinatura_texto='Pessoa Unica',
+            cargo='Tesouraria',
+            ativo=True,
+        )
+        request = self.factory.get(
+            '/financeiro/balancete-institucional/',
+            data=[
+                ('data_inicial', '2026-03-01'),
+                ('data_final', '2026-03-31'),
+                ('contas', str(self.dinheiro.id)),
+            ],
+        )
+        view = BalanceteInstitucionalFinanceiroView()
+        view.request = request
+
+        contexto = view.get_context_data()
+
+        self.assertEqual(contexto['assinatura_1'], assinatura_unica)
+        self.assertIsNone(contexto['assinatura_2'])
+        self.assertEqual(contexto['assinatura_1_label_generico'], 'Responsavel financeiro')
+        self.assertEqual(contexto['assinatura_2_label_generico'], 'Responsavel institucional')
 
 
 class ExtratoFinanceiroMultiplasContasTests(TestCase):

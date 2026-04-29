@@ -4169,6 +4169,64 @@ class PrestacaoContasFinanceiroView(FinanceiroPeriodoMixin, TemplateView):
         return context
 
 
+class BalanceteInstitucionalFinanceiroView(FinanceiroPeriodoMixin, TemplateView):
+    permissao_requerida = 'financeiro.prestacao_contas.visualizar'
+    template_name = 'financeiro/balancete_institucional.html'
+
+    def _parse_assinatura_id(self, nome_parametro: str) -> int | None:
+        valor = (self.request.GET.get(nome_parametro) or '').strip()
+        if not valor:
+            return None
+        try:
+            return int(valor)
+        except ValueError:
+            return None
+
+    def _resolver_assinaturas_balancete(
+        self,
+    ) -> tuple[list[AssinaturaInstitucional], AssinaturaInstitucional | None, AssinaturaInstitucional | None]:
+        assinaturas_disponiveis = list(
+            AssinaturaInstitucional.objects.filter(ativo=True).order_by('-padrao', 'nome', 'pk')
+        )
+        assinaturas_por_id = {assinatura.pk: assinatura for assinatura in assinaturas_disponiveis}
+
+        assinatura_1 = assinaturas_por_id.get(self._parse_assinatura_id('assinatura_1'))
+        assinatura_2 = assinaturas_por_id.get(self._parse_assinatura_id('assinatura_2'))
+
+        if assinatura_1 is None and assinaturas_disponiveis:
+            assinatura_1 = assinaturas_disponiveis[0]
+
+        if assinatura_2 is None:
+            assinatura_2 = next(
+                (
+                    assinatura
+                    for assinatura in assinaturas_disponiveis
+                    if assinatura_1 is None or assinatura.pk != assinatura_1.pk
+                ),
+                None,
+            )
+
+        return assinaturas_disponiveis, assinatura_1, assinatura_2
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['page_title'] = 'Balancete Institucional'
+        context.update(montar_contexto_fechamento_periodo(self))
+        assinaturas_disponiveis, assinatura_1, assinatura_2 = self._resolver_assinaturas_balancete()
+        context.update(
+            {
+                'assinaturas_disponiveis': assinaturas_disponiveis,
+                'assinatura_1': assinatura_1,
+                'assinatura_2': assinatura_2,
+                'assinatura_1_id': assinatura_1.pk if assinatura_1 else '',
+                'assinatura_2_id': assinatura_2.pk if assinatura_2 else '',
+                'assinatura_1_label_generico': 'Responsavel financeiro',
+                'assinatura_2_label_generico': 'Responsavel institucional',
+            }
+        )
+        return context
+
+
 class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
     permissao_requerida = 'financeiro.resumo_financeiro.visualizar'
     template_name = 'financeiro/evolucao_categorias.html'

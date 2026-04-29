@@ -2,6 +2,16 @@
 
 Data: 2026-04-28
 
+## MVP do Balancete Institucional
+
+- criei a rota `/financeiro/balancete-institucional/`, a view `BalanceteInstitucionalFinanceiroView` e o template proprio `balancete_institucional.html`
+- reaproveitei `montar_contexto_fechamento_periodo` para montar saldos, receitas, despesas, transferencias por escopo, reconciliacao e composicao final, sem duplicar calculo
+- adicionei link no menu de Relatorios e filtros essenciais com selecao de contas, periodo, opcoes e duas assinaturas via `AssinaturaInstitucional`
+- adicionei testes pontuais para resolucao da URL e contexto/reconciliacao do Balancete
+- ajuste complementar: refinei exclusivamente o CSS de print/PDF do Balancete para aumentar margens laterais, centralizar o documento e melhorar o respiro das tabelas/assinaturas sem alterar calculo, view, rota ou filtros
+- ajuste complementar: aumentei fonte/espacamento do print, reforcei a margem superior visual e cobri fallback de assinaturas para ausencia de selecao manual e para cenario com apenas uma assinatura ativa
+- nao alterei a Prestacao/Fechamento atual, Extrato, Resumo, Evolucao, models, migrations, importacao/exportacao ou regras de transferencia
+
 ## Base comum de calculo para Fechamento e futuro Balancete
 
 - criei o ponto comum `montar_contexto_fechamento_periodo` para concentrar o acesso a base de calculo/contexto do Fechamento

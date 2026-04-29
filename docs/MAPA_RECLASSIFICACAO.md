@@ -119,10 +119,10 @@ Documentos relacionados:
 
 ### 8. Balancete padrão
 
-Status inicial: FUTURO REAL
+Status inicial: PARCIALMENTE IMPLEMENTADO
 
 Motivo:
-Frente futura relacionada à apresentação contábil/gerencial consolidada, distinta dos relatórios já trabalhados como Resumo, Extrato e Fechamento do período.
+Frente relacionada à apresentação contábil/gerencial consolidada, distinta dos relatórios já trabalhados como Resumo, Extrato e Fechamento do período. O MVP do Balancete Institucional foi iniciado como relatório próprio, reaproveitando a base comum da Prestação/Fechamento; refinamentos de layout documental e evolução funcional permanecem acompanháveis em etapas futuras.
 
 Documentos relacionados:
 - docs/ROADMAP_FINANCEIRO.md

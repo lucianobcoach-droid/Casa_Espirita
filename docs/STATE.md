@@ -2,6 +2,15 @@
 
 Data de atualizacao: 2026-04-28
 
+## MVP do Balancete Institucional
+
+- foi criado o primeiro relatorio proprio `Balancete Institucional`, com rota, view, template documental e link no menu de Relatorios do financeiro
+- o Balancete reutiliza `montar_contexto_fechamento_periodo`, preservando a mesma base de calculo da Prestacao/Fechamento para saldos, receitas, despesas e transferencias por escopo
+- o MVP inclui filtros essenciais, fundo branco para impressao, secoes numeradas, composicao final e duas assinaturas selecionaveis a partir de `AssinaturaInstitucional`
+- ajuste complementar: o print/PDF do Balancete recebeu margens A4 mais equilibradas, largura documental centralizada e respiro lateral, sem alterar calculos, filtros, view ou rota
+- ajuste complementar: o print/PDF recebeu fonte/espacamento mais confortaveis, maior respiro superior e fallback de assinaturas para preencher automaticamente ate duas assinaturas ativas ou manter espacos genericos
+- nao houve alteracao de calculo financeiro, regra de transferencia, models, migrations, importacao/exportacao, Extrato, Resumo, Evolucao ou template da Prestacao/Fechamento
+
 ## Base comum de calculo para Fechamento e futuro Balancete
 
 - a logica de contexto/calculo do Fechamento passou a ter ponto tecnico comum em `montar_contexto_fechamento_periodo`, preparando reaproveitamento pelo futuro Balancete Institucional
