@@ -106,7 +106,8 @@ Este bloco registra pendencias novas levantadas pela usuaria apos a correcao do 
 4. **Favorecido em transferencia no Extrato**
    - Classificacao: MELHORIA DE UX + correcao operacional.
    - Prioridade documental: MEDIA.
-   - Direcao: em lancamentos de transferencia, o Extrato deve apresentar o favorecido como `Transferencia entre contas` quando nao houver favorecido operacional.
+   - Direcao: em lancamentos de transferencia, o Extrato deve apresentar o favorecido como `TRANSFERÊNCIA ENTRE CONTAS` quando nao houver favorecido operacional.
+   - Status: IMPLEMENTADO na apresentacao do Extrato, sem alterar calculo, saldo, importacao/exportacao ou outros relatorios.
 
 ### Melhorias operacionais
 

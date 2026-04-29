@@ -5875,6 +5875,13 @@ class ExtratoContaMixin(FinanceiroPermissaoMixin):
             return '-'
         return lancamento.conta.nome if lancamento.conta_id else '-'
 
+    def _resolver_favorecido_extrato(self, lancamento: LancamentoFinanceiro) -> str:
+        if lancamento.pessoa_id:
+            return lancamento.pessoa.nome
+        if lancamento.tipo == LancamentoFinanceiro.TipoLancamento.TRANSFERENCIA:
+            return 'TRANSFERÊNCIA ENTRE CONTAS'
+        return '-'
+
     def _chave_bloco_extrato(self, lancamento: LancamentoFinanceiro) -> str:
         grupo_rateio = (lancamento.grupo_rateio or '').strip()
         if lancamento.com_rateio and grupo_rateio:
@@ -5927,7 +5934,7 @@ class ExtratoContaMixin(FinanceiroPermissaoMixin):
                     'saldo_acumulado': saldo_acumulado,
                     'rateio_consolidado': len(bloco) > 1 and bool((lancamento_representante.grupo_rateio or '').strip()),
                     'quantidade_linhas_rateio': len(bloco),
-                    'favorecido_exibicao': lancamento_representante.pessoa.nome if lancamento_representante.pessoa else '-',
+                    'favorecido_exibicao': self._resolver_favorecido_extrato(lancamento_representante),
                     'observacoes_exibicao': observacoes or '-',
                 }
             )
@@ -5984,7 +5991,7 @@ class ExtratoContaMixin(FinanceiroPermissaoMixin):
                     'saldo_acumulado': saldo_acumulado,
                     'rateio_consolidado': len(bloco) > 1 and bool((lancamento_representante.grupo_rateio or '').strip()),
                     'quantidade_linhas_rateio': len(bloco),
-                    'favorecido_exibicao': lancamento_representante.pessoa.nome if lancamento_representante.pessoa else '-',
+                    'favorecido_exibicao': self._resolver_favorecido_extrato(lancamento_representante),
                     'observacoes_exibicao': observacoes or '-',
                     'conta_exibicao': self._resolver_conta_exibicao_escopo(selected_ids_set, lancamento_representante),
                 }

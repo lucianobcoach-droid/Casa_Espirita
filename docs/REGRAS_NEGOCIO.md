@@ -29,7 +29,7 @@ Este documento consolida regras permanentes do sistema. Ele não substitui o his
 - Valores vinculados ou indisponíveis não devem ser tratados como despesa operacional.
 - Quando a modelagem de disponibilidade for implementada, valores vinculados/indisponíveis devem ser separados do saldo disponível operacional nos relatórios que apresentarem saldo livre.
 - Integralização de capital é exemplo de valor patrimonial/vinculado: não é despesa operacional e não deve ser somada ao saldo livre disponível sem destaque.
-- Em transferências exibidas no Extrato, quando não houver favorecido operacional, a apresentação do favorecido deve usar o texto padronizado "Transferência entre contas".
+- Em transferências exibidas no Extrato, quando não houver favorecido operacional, a apresentação do favorecido deve usar o texto padronizado "TRANSFERÊNCIA ENTRE CONTAS".
 - Rateio deve preservar validação pelo valor total do documento e pode exibir saldo/diferença restante como apoio operacional ao usuário.
 
 ### Resultado operacional e composição de saldo

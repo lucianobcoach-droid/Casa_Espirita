@@ -671,6 +671,10 @@ class ExtratoFinanceiroMultiplasContasTests(TestCase):
             ['Dinheiro para caixa externo', 'Caixa externo para dinheiro'],
         )
         self.assertTrue(all(item['conta_exibicao'] for item in contexto_duas_contas['itens_extrato']))
+        self.assertEqual(
+            [item['favorecido_exibicao'] for item in contexto_duas_contas['itens_extrato']],
+            ['TRANSFERÊNCIA ENTRE CONTAS', 'TRANSFERÊNCIA ENTRE CONTAS'],
+        )
 
         self.assertEqual(contexto_todas['saldo_anterior'], Decimal('150.00'))
         self.assertEqual(contexto_todas['total_entradas_periodo'], Decimal('0.00'))

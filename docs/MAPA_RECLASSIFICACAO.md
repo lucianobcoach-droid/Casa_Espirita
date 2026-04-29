@@ -384,8 +384,10 @@ Documentos relacionados:
 
 Status inicial: FUTURO REAL
 
+Status apos microetapa funcional: IMPLEMENTADO
+
 Motivo:
-Foi levantado que, quando o lancamento for transferencia, o campo favorecido no Extrato deve aparecer como `Transferencia entre contas`. Requer ajuste visual pontual futuro sem alterar regra de saldo.
+Foi levantado que, quando o lancamento for transferencia, o campo favorecido no Extrato deve aparecer como `TRANSFERÊNCIA ENTRE CONTAS`. Ajuste implementado apenas na apresentacao do Extrato, preservando calculo, saldo e regra de transferencia.
 
 Classificacao documental:
 - MELHORIA DE UX

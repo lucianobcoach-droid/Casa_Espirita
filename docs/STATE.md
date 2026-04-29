@@ -2,6 +2,12 @@
 
 Data de atualizacao: 2026-04-29
 
+## Favorecido tecnico em transferencia no Extrato
+
+- transferencias exibidas no Extrato sem favorecido operacional agora mostram `TRANSFERÊNCIA ENTRE CONTAS` na coluna Favorecido
+- o ajuste ficou restrito a apresentacao do Extrato e preserva favorecido real quando houver pessoa vinculada
+- nao houve alteracao de calculo, saldo, regra de transferencia, importacao/exportacao, recibos, termo anual, Balancete ou outros relatorios
+
 ## Auditoria de importacao historica e cadastros auxiliares
 
 - auditoria documental/tecnica concluida sem alteracao funcional de codigo

@@ -2,6 +2,14 @@
 
 Data: 2026-04-29
 
+## Favorecido tecnico em transferencia no Extrato
+
+- ajustei a montagem dos itens do Extrato para exibir `TRANSFERÊNCIA ENTRE CONTAS` quando a movimentacao for transferencia sem favorecido operacional
+- preservei o favorecido real quando houver pessoa vinculada ao lancamento
+- adicionei teste pontual no Extrato multi-contas cobrindo a exibicao padronizada em transferencias
+- baixei documentalmente a pendencia como IMPLEMENTADO no `MAPA_RECLASSIFICACAO.md` e atualizei a regra permanente em `REGRAS_NEGOCIO.md`
+- nao alterei calculo financeiro, saldo, regra de transferencia, importacao/exportacao, recibos, termo anual, Balancete ou outros relatorios
+
 ## Auditoria de importacao historica e cadastros auxiliares
 
 - auditei documentos e codigo da frente de importacao/exportacao do financeiro, incluindo views, rotas, modelos/forms, template da central, backups tecnicos e comando de reset controlado
