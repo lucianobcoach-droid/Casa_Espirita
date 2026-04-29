@@ -2,6 +2,15 @@
 
 Data de atualizacao: 2026-04-29
 
+## Auditoria de autenticacao, perfis e permissoes
+
+- auditoria documental/tecnica concluida sem alteracao funcional de codigo
+- confirmado no codigo: login/logout, recuperacao/reset de senha, models de permissao/perfil, vinculo usuario-perfil, seed inicial de permissoes, mixins backend e template tags de permissao
+- confirmado no codigo: permissoes aplicadas aos apps `financeiro`, `biblioteca` e `configuracoes`, com menus/acoes condicionais nos templates principais
+- reclassificado no `MAPA_RECLASSIFICACAO.md` o item de autenticacao/perfis/permissoes como IMPLEMENTADO COM PENDENCIAS FUTURAS, retirando o estado generico de duvida
+- permanecem futuras as evolucoes de extras individuais, bloqueios individuais, preferencias por perfil/usuario, log de acesso e refinamento amplo da matriz
+- nao houve alteracao em views, urls, models, forms, templates, migrations, testes, banco de dados ou regras financeiras
+
 ## Baixa documental do Balancete e rotina de pendencias
 
 - consolidada rotina permanente de baixa documental de pendencias em `docs/ROTINA_BAIXA_PENDENCIAS.md`

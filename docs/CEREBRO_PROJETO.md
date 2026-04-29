@@ -143,19 +143,19 @@ Estas regras devem ser respeitadas em qualquer etapa:
 - nessa evolucao futura, quando o cadastro for de `Categoria`, o campo de vinculo hierarquico nao deve aparecer; quando o cadastro for de `Subcategoria`, o campo `Categoria` deve aparecer como vinculo obrigatorio ou explicitamente guiado
 - essa definicao e apenas diretriz futura de clareza operacional e nao representa implementacao funcional concluida na UI atual
 
-### 5.2. Diretriz estrutural futura de usuarios, perfis e permissoes
-- o projeto passa a registrar oficialmente como frente estrutural futura a camada de usuarios, autenticacao, perfis e permissoes
+### 5.2. Diretriz estrutural de usuarios, perfis e permissoes
+- a camada base de usuarios, autenticacao, perfis e permissoes ja existe no codigo e deve continuar como fundamento transversal do sistema
 - essa frente nao deve ser tratada como ajuste isolado do app `financeiro`
-- a autenticacao e o controle de acesso devem nascer como base transversal do sistema, preparados para convivio entre modulos atuais e futuros
+- a autenticacao e o controle de acesso devem permanecer como base transversal do sistema, preparados para convivio entre modulos atuais e futuros
 - deve existir separacao clara entre administracao global do sistema e administracoes ou cadastros especificos de cada modulo
-- o desenho futuro deve permitir permissoes por modulo, permissoes por acao e perfis/funcoes de acesso reutilizaveis
-- a proxima frente funcional prioritaria do sistema, apos a estabilizacao do `financeiro`, deve ser `permissoes/autenticacao`
-- a interface futura de configuracao de perfis deve ser hierarquica, organizando acesso em `Modulo` > `Tela/Recurso` > `Acao`
-- o desenho futuro tambem deve permitir centralizar cadastro de usuarios e controle de permissoes em camada comum do projeto
+- o desenho atual ja trabalha com permissoes por modulo, recurso e acao, associadas a perfis-base reutilizaveis
+- a interface funcional minima de perfis e usuarios ja existe em `configuracoes`; evolucoes futuras devem ampliar a administracao da matriz sem substituir abruptamente a base atual
+- a interface de configuracao de perfis deve preservar a leitura hierarquica em `Modulo` > `Tela/Recurso` > `Acao`
+- o desenho deve continuar centralizando cadastro de usuarios e controle de permissoes em camada comum do projeto
 - com a expansao para novos modulos, o projeto deve poder reorganizar o acesso administrativo global sem acoplar essa governanca a um modulo especifico
 - com a expansao para novos modulos, o projeto deve poder separar cadastros globais de cadastros especificos por modulo
 - tambem fica registrada como diretriz estrutural futura a possibilidade de unificacao de entidades compartilhadas, incluindo base comum de pessoas quando isso fizer sentido para o sistema como um todo
-- essa frente continua futura e nao deve ser misturada com microetapas locais de formulários, listagens, extratos ou refinamentos visuais isolados do `financeiro`
+- permanecem futuras as evolucoes de extras individuais, bloqueios individuais, preferencias por perfil/usuario, log de acesso e refinamento amplo da matriz
 
 ### 5.2.1. Diretriz estrutural futura de frequencia/recorrencia por competencia
 - fica registrada como frente estrutural futura do `financeiro` a camada de controle de frequencia/recorrencia por competencia

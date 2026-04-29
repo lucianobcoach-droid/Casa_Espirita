@@ -27,8 +27,33 @@ Classificações possíveis:
 
 Status inicial: DÚVIDA / REQUER CONFERÊNCIA NO CÓDIGO
 
+Status apos auditoria: IMPLEMENTADO COM PENDENCIAS FUTURAS
+
 Motivo:
 Há registros antigos tratando autenticação, perfis, permissões e matriz de acesso como frente estrutural. É necessário confirmar o que está implementado no código, o que está apenas documentado e o que ainda é futuro.
+
+Achado da auditoria:
+- login, logout e recuperacao/reset de senha existem em `configuracoes.urls` e `configuracoes.views`, usando as views padrao do Django com templates proprios
+- existem models de permissao/perfil/vinculo em `configuracoes.models`: `PermissaoSistema`, `PerfilAcesso`, `PerfilPermissaoSistema` e `UsuarioPerfilAcesso`
+- o vinculo usuario -> perfil-base existe como `OneToOneField` para o usuario Django
+- ha seed/carga inicial de perfis e permissoes em migrations, incluindo matriz para `financeiro`, `biblioteca`, `configuracoes` e admin tecnico
+- ha enforcement backend central em `configuracoes.permissoes.PermissaoSistemaMixin`, com mixins especificos em `financeiro`, `biblioteca` e `configuracoes`
+- ha template tags de permissao e renderizacao condicional de menus/acoes nos templates principais
+- o financeiro possui permissoes aplicadas nas views, relatorios, cadastros, importacao/exportacao, recibos, auditoria e acoes em lote
+- a biblioteca possui permissoes aplicadas nas views e menus de autores, livros, vendas e emprestimos
+- configuracoes possui permissoes aplicadas em `SiteConfig`, listagem/detalhe de perfis e listagem/edicao de vinculo usuario-perfil
+- existe matriz documental em `docs/MATRIZ_PERMISSOES.md`
+
+Classificacao documental:
+- IMPLEMENTADO COM PENDENCIAS FUTURAS
+- BAIXA DOCUMENTAL REALIZADA: retirado o estado generico de duvida/requer conferencia no codigo
+
+Pendencias futuras:
+- extras individuais por usuario e bloqueios individuais ainda permanecem futuros
+- log de acesso ao sistema permanece futuro
+- refinamento humano da matriz pode continuar como melhoria de governanca
+- preferencias por perfil/usuario permanecem futuras
+- administracao funcional avancada da matriz ainda pode evoluir alem da UI minima atual
 
 Documentos relacionados:
 - docs/CEREBRO_PROJETO.md

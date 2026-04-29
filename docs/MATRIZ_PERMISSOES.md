@@ -2,9 +2,15 @@
 
 ## Objetivo do documento
 
-Registrar a primeira versao formal da matriz hierarquica de permissoes do sistema Casa Espirita, no formato `Modulo > Tela/Recurso > Acao`, para orientar a futura implementacao de autenticacao, perfis e governanca de acesso sem antecipar codigo nesta etapa.
+Registrar a primeira versao formal da matriz hierarquica de permissoes do sistema Casa Espirita, no formato `Modulo > Tela/Recurso > Acao`, e orientar a manutencao da camada ja implementada de autenticacao, perfis e governanca de acesso.
 
 Este documento e protegido e deve ser atualizado apenas em microetapas explicitamente autorizadas, sempre por acrescimo, consolidacao ou ajuste cirurgico, preservando historico e cronologia.
+
+## Estado apos auditoria documental/tecnica
+
+- A base de autenticacao, perfis e permissoes esta implementada no codigo, com login/logout, reset de senha, models de perfil/permissao, vinculo usuario-perfil, seeds por migrations, mixins de backend e renderizacao condicional nos templates.
+- A matriz permanece como referencia documental para manutencao e evolucoes futuras.
+- Permanecem futuras as camadas de extras individuais por usuario, bloqueios individuais, preferencias por perfil/usuario, log de acesso e refinamento avancado da administracao da matriz.
 
 ## Premissas de modelagem de acesso
 

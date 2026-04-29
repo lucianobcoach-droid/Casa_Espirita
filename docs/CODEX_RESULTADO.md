@@ -2,6 +2,15 @@
 
 Data: 2026-04-29
 
+## Auditoria de autenticacao, perfis e permissoes
+
+- auditei documentos e codigo relacionados a autenticacao, perfis e permissoes nos apps `configuracoes`, `financeiro` e `biblioteca`
+- confirmei que login/logout e recuperacao/reset de senha estao implementados no app `configuracoes`
+- confirmei que existem models de permissao/perfil/vinculo, seed inicial por migrations, mixin central de permissao, mixins por app e template tags para renderizacao condicional
+- confirmei que o financeiro, a biblioteca e as configuracoes usam permissoes no backend e nos templates principais
+- atualizei `MAPA_RECLASSIFICACAO.md`, `STATE.md`, `CEREBRO_PROJETO.md` e `MATRIZ_PERMISSOES.md` para baixar a frente de duvida para IMPLEMENTADO COM PENDENCIAS FUTURAS
+- nao alterei codigo funcional, models, views, urls, forms, templates, migrations, testes, banco de dados ou regras financeiras
+
 ## Baixa documental do Balancete e rotina de pendencias
 
 - criei `docs/ROTINA_BAIXA_PENDENCIAS.md` com objetivo, status padronizados, criterios de baixa, documentos a atualizar, regras de seguranca e relacao com Git/GitHub
