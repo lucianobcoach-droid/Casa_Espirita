@@ -4193,26 +4193,30 @@ class BalanceteInstitucionalFinanceiroView(FinanceiroPeriodoMixin, TemplateView)
         assinatura_1 = assinaturas_por_id.get(self._parse_assinatura_id('assinatura_1'))
         assinatura_2 = assinaturas_por_id.get(self._parse_assinatura_id('assinatura_2'))
 
-        if assinatura_1 is None and assinaturas_disponiveis:
-            assinatura_1 = assinaturas_disponiveis[0]
-
-        if assinatura_2 is None:
-            assinatura_2 = next(
-                (
-                    assinatura
-                    for assinatura in assinaturas_disponiveis
-                    if assinatura_1 is None or assinatura.pk != assinatura_1.pk
-                ),
-                None,
-            )
-
         return assinaturas_disponiveis, assinatura_1, assinatura_2
+
+    def _montar_abrangencia_balancete(self, context: dict[str, object]) -> str:
+        quantidade_selecionada = context.get('quantidade_contas_selecionadas') or 0
+        contas_disponiveis = context.get('contas_disponiveis') or []
+        contas_selecionadas = context.get('contas_selecionadas') or []
+
+        if quantidade_selecionada == len(contas_disponiveis):
+            return 'Todas as contas financeiras'
+        if quantidade_selecionada == 1 and contas_selecionadas:
+            return contas_selecionadas[0].nome
+        return 'Contas selecionadas'
+
+    def _filtrar_composicao_documental(self, itens: list[dict[str, object]]) -> list[dict[str, object]]:
+        return [item for item in itens if item.get('saldo') != Decimal('0.00')]
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['page_title'] = 'Balancete Institucional'
         context.update(montar_contexto_fechamento_periodo(self))
         assinaturas_disponiveis, assinatura_1, assinatura_2 = self._resolver_assinaturas_balancete()
+        mostrar_contas_zeradas = bool(context.get('mostrar_contas_zeradas'))
+        composicao_inicial = context.get('composicao_inicial') or []
+        composicao_final = context.get('composicao_final') or []
         context.update(
             {
                 'assinaturas_disponiveis': assinaturas_disponiveis,
@@ -4220,8 +4224,18 @@ class BalanceteInstitucionalFinanceiroView(FinanceiroPeriodoMixin, TemplateView)
                 'assinatura_2': assinatura_2,
                 'assinatura_1_id': assinatura_1.pk if assinatura_1 else '',
                 'assinatura_2_id': assinatura_2.pk if assinatura_2 else '',
-                'assinatura_1_label_generico': 'Responsavel financeiro',
-                'assinatura_2_label_generico': 'Responsavel institucional',
+                'balancete_abrangencia_label': self._montar_abrangencia_balancete(context),
+                'balancete_contas_label_completo': context.get('contas_incluidas_label', 'Todas as contas'),
+                'balancete_composicao_inicial': (
+                    composicao_inicial
+                    if mostrar_contas_zeradas
+                    else self._filtrar_composicao_documental(composicao_inicial)
+                ),
+                'balancete_composicao_final': (
+                    composicao_final
+                    if mostrar_contas_zeradas
+                    else self._filtrar_composicao_documental(composicao_final)
+                ),
             }
         )
         return context

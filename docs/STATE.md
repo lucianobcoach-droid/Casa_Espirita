@@ -9,6 +9,14 @@ Data de atualizacao: 2026-04-28
 - o MVP inclui filtros essenciais, fundo branco para impressao, secoes numeradas, composicao final e duas assinaturas selecionaveis a partir de `AssinaturaInstitucional`
 - ajuste complementar: o print/PDF do Balancete recebeu margens A4 mais equilibradas, largura documental centralizada e respiro lateral, sem alterar calculos, filtros, view ou rota
 - ajuste complementar: o print/PDF recebeu fonte/espacamento mais confortaveis, maior respiro superior e fallback de assinaturas para preencher automaticamente ate duas assinaturas ativas ou manter espacos genericos
+- refinamento documental: o Balancete ganhou cabecalho mais institucional, abrangencia resumida no print, melhor uso da largura da folha e ocultacao padrao de contas zeradas apenas na apresentacao documental
+- ajuste complementar: o print passou a usar margens reais mais seguras e assinaturas reais deixaram de ser preenchidas automaticamente sem selecao manual
+- ajuste complementar: o documento impresso passou a ter margem visual garantida no wrapper `.balancete-documento`, o cabecalho impresso ficou sem abrangencia/lista de contas e assinaturas reais permanecem dependentes de selecao manual
+- ajuste complementar: a secao de assinaturas do Balancete agora so aparece quando houver assinatura selecionada, sem linhas ou rotulos genericos, e as margens laterais do wrapper impresso foram ampliadas
+- ajuste complementar: as margens laterais do wrapper impresso foram ampliadas novamente e a linha de contas consideradas foi removida tambem da tela normal do Balancete
+- ajuste complementar: as margens laterais do wrapper impresso do Balancete foram ampliadas para aproximadamente tres vezes o valor anterior
+- ajuste complementar: as laterais do wrapper impresso foram equilibradas para 24mm e a fonte do corpo impresso foi levemente ampliada
+- ajuste complementar: a fonte do corpo impresso do Balancete foi ampliada mais um pouco, preservando as laterais de 24mm
 - nao houve alteracao de calculo financeiro, regra de transferencia, models, migrations, importacao/exportacao, Extrato, Resumo, Evolucao ou template da Prestacao/Fechamento
 
 ## Base comum de calculo para Fechamento e futuro Balancete

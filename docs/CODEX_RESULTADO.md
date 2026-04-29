@@ -10,6 +10,14 @@ Data: 2026-04-28
 - adicionei testes pontuais para resolucao da URL e contexto/reconciliacao do Balancete
 - ajuste complementar: refinei exclusivamente o CSS de print/PDF do Balancete para aumentar margens laterais, centralizar o documento e melhorar o respiro das tabelas/assinaturas sem alterar calculo, view, rota ou filtros
 - ajuste complementar: aumentei fonte/espacamento do print, reforcei a margem superior visual e cobri fallback de assinaturas para ausencia de selecao manual e para cenario com apenas uma assinatura ativa
+- refinamento documental: reorganizei o cabecalho institucional, removi lista longa de contas do topo impresso, passei a usar abrangencia resumida, ampliei a largura util do documento e ocultei contas zeradas por padrao nos blocos de saldo do Balancete
+- ajuste complementar: corrigi o print para usar margens reais mais seguras e removi o preenchimento automatico de assinaturas reais quando o usuario nao seleciona assinatura manualmente
+- ajuste complementar: apliquei margem visual diretamente no wrapper `.balancete-documento`, removi a linha de abrangencia/contas do cabecalho impresso e mantive assinatura real apenas quando recebida por GET
+- ajuste complementar: removi a exibicao de linhas/rotulos genericos quando nao ha assinatura selecionada e ampliei as margens laterais do wrapper impresso do Balancete
+- ajuste complementar: ampliei de novo as laterais do wrapper impresso e removi a linha `Contas consideradas` tambem da tela normal do Balancete, sem mexer na regra de assinaturas
+- ajuste complementar: aumentei o padding lateral do wrapper impresso do Balancete para aproximadamente tres vezes o valor anterior, sem alterar cabecalho, assinaturas, view ou calculos
+- ajuste complementar: reduzi as laterais do wrapper impresso para 24mm e aumentei levemente a fonte do corpo do Balancete, sem alterar cabecalho, assinaturas, view ou calculos
+- ajuste complementar: aumentei mais um pouco a fonte do corpo impresso do Balancete, mantendo as margens laterais em 24mm e sem alterar cabecalho, assinaturas, view ou calculos
 - nao alterei a Prestacao/Fechamento atual, Extrato, Resumo, Evolucao, models, migrations, importacao/exportacao ou regras de transferencia
 
 ## Base comum de calculo para Fechamento e futuro Balancete
