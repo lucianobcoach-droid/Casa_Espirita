@@ -2,6 +2,15 @@
 
 Data de atualizacao: 2026-04-28
 
+## Auditoria de documentos por favorecido no financeiro
+
+- auditoria documental/tecnica concluida sem alteracao funcional de codigo
+- confirmado no codigo: historico por favorecido com rota, view, template e acao na listagem de favorecidos
+- confirmado no codigo: recibo individual, recibo em lote de mesmo favorecido e fluxo atual de recibos em lote agrupados por favorecido a partir da `lancamento_list`
+- confirmado no codigo: termo anual de quitacao por resultado filtrado da `lancamento_list`, com rota plural antiga mantida apenas como compatibilidade tecnica
+- a antiga direcao de relatorio anual por favorecido permanece classificada como historico/substituida pelo fluxo documental atual da listagem de lancamentos
+- nao houve alteracao em views, urls, templates, models, forms, calculos financeiros ou testes
+
 ## Logo institucional no Extrato impresso
 
 - o cabecalho impresso do Extrato passou a renderizar `financeiro_shell_brand_logo_url` como `<img>` quando houver logo institucional configurada

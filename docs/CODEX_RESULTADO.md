@@ -2,6 +2,15 @@
 
 Data: 2026-04-28
 
+## Auditoria de documentos por favorecido no financeiro
+
+- auditei rotas, views e templates relacionados a historico por favorecido, recibos por favorecido/em lote, termo anual de quitacao e acoes documentais na `lancamento_list`
+- confirmei que `PessoaFinanceiraHistoricoView`, `pessoa_historico.html` e a acao `Historico` em `pessoa_list.html` estao implementados
+- confirmei que os recibos em lote existem no codigo, com fluxo visivel atual agrupando os lancamentos selecionados por favorecido
+- confirmei que o termo anual de quitacao existe como acao da listagem de lancamentos baseada nos filtros atuais, e que a rota plural antiga redireciona para o fluxo unificado
+- atualizei o `MAPA_RECLASSIFICACAO.md` para retirar o status generico de duvida dos itens confirmados e classificar o relatorio anual antigo como historico/substituido pelo fluxo atual
+- nao alterei codigo funcional, templates, views, urls, models, forms, calculos ou testes
+
 ## Logo institucional no Extrato impresso
 
 - corrigi pontualmente o cabecalho documental do Extrato para usar a logo institucional via `<img>` quando `financeiro_shell_brand_logo_url` estiver disponivel

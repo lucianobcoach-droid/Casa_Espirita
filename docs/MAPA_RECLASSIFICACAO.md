@@ -41,8 +41,22 @@ Documentos relacionados:
 
 Status inicial: DÚVIDA / REQUER CONFERÊNCIA NO CÓDIGO
 
+Status apos auditoria: IMPLEMENTADO COM PENDÊNCIAS FUTURAS
+
 Motivo:
 A funcionalidade aparece como solicitação importante em chats e documentos. É necessário confirmar se já está totalmente implementada, parcialmente implementada ou ainda pendente.
+
+Achado da auditoria:
+- existe rota `financeiro:pessoa-historico` em `pessoas/<int:pk>/historico/`
+- existe view `PessoaFinanceiraHistoricoView` com filtros por periodo, tipo, status, conta e busca textual
+- existe template `pessoa_historico.html`
+- a listagem de favorecidos (`pessoa_list.html`) expõe ação `Historico` quando o usuario tem permissao de listar lancamentos
+
+Pendencias futuras:
+- exportacao especifica do historico, caso o uso real justifique
+
+Classificacao documental:
+- IMPLEMENTADO COM PENDÊNCIAS FUTURAS
 
 Documentos relacionados:
 - docs/CEREBRO_PROJETO.md
@@ -55,8 +69,22 @@ Documentos relacionados:
 
 Status inicial: DÚVIDA / REQUER CONFERÊNCIA NO CÓDIGO
 
+Status apos auditoria: IMPLEMENTADO COM PENDÊNCIAS FUTURAS
+
 Motivo:
 Há registros sobre recibo em lote, recibos por favorecido e documentos financeiros. Precisa ser conferido o estado real no código.
+
+Achado da auditoria:
+- existe recibo individual por lancamento em `financeiro:lancamento-recibo`
+- existe rota tecnica `financeiro:lancamento-recibo-lote` para recibo em lote de um mesmo favorecido
+- existe rota atual `financeiro:lancamento-recibos-por-favorecido`, que agrupa os lancamentos selecionados por favorecido e renderiza um ou mais recibos no mesmo documento
+- a `lancamento_list.html` expoe a acao visivel `Recibos em lote`; a view de acoes em lote redireciona para o fluxo agrupado por favorecido
+
+Pendencias futuras:
+- refinamentos documentais/visuais, PDF/anexos ou regras futuras de recorrencia, se aprovados em microetapas proprias
+
+Classificacao documental:
+- IMPLEMENTADO COM PENDÊNCIAS FUTURAS
 
 Documentos relacionados:
 - docs/STATE.md
@@ -69,8 +97,24 @@ Documentos relacionados:
 
 Status inicial: DÚVIDA / REQUER CONFERÊNCIA NO CÓDIGO
 
+Status apos auditoria: IMPLEMENTADO COM PENDÊNCIAS FUTURAS
+
 Motivo:
 Há registros sobre termo anual de quitação baseado nos filtros atuais da listagem financeira. Precisa confirmar se está implementado, validado e se ainda há pendências.
+
+Achado da auditoria:
+- existe rota `financeiro:lancamento-termo-anual-quitacao`
+- existe view `LancamentoFinanceiroTermoAnualQuitacaoView`
+- existe template compartilhado `lancamento_documentos_por_favorecido.html`
+- a acao `Termo anual de quitacao` parte da `lancamento_list.html` e usa o resultado filtrado atual
+- a rota plural `financeiro:lancamento-termos-anuais-quitacao-por-favorecido` permanece apenas como compatibilidade tecnica e redireciona para o fluxo unificado
+
+Classificacao documental:
+- IMPLEMENTADO COM PENDÊNCIAS FUTURAS
+
+Observacao sobre fluxo antigo:
+- a antiga direcao de `relatorio anual por favorecido` como tela propria foi substituida por acoes documentais na listagem de lancamentos
+- classificacao do fluxo antigo: HISTÓRICO / SUBSTITUÍDO POR FLUXO ATUAL
 
 Documentos relacionados:
 - docs/STATE.md
