@@ -423,6 +423,11 @@ Observacao:
   - importacao auxiliar de centros de custo
   - importacao auxiliar de categorias/subcategorias
 - backlog remanescente desta frente deve continuar visivel neste roadmap, sem rebaixar o que ja foi entregue no repositorio
+- auditoria documental/tecnica posterior classificou a frente como IMPLEMENTADO COM PENDENCIAS FUTURAS / AGUARDANDO HOMOLOGACAO:
+  - implementado no codigo: central de importacoes, modelos XLSX, importacao/exportacao comum de lancamentos, cadastros auxiliares, trava de dominio preenchido, validacao estrutural, validacao linha a linha, relatorio de inconsistencias e gravacao transacional all-or-nothing
+  - implementado no contrato comum: lancamentos simples, transferencias simples e rateio em ate `5` blocos na mesma linha
+  - permanecem futuras: preview antes de gravar, importacao parcial, tratamento avancado de duplicidades, preflight mais visivel e fluxo guiado para importacao historica ampla
+  - permanece aguardando homologacao: carga real com planilhas historicas da usuaria e massa completa de cadastros auxiliares
 
 ## 1. Escopo inicial mapeado
 

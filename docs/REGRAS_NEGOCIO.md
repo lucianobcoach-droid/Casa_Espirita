@@ -64,6 +64,9 @@ Este documento consolida regras permanentes do sistema. Ele não substitui o his
 - Apontar inconsistências com orientação clara.
 - Transferências devem ser tratadas como movimentação entre contas.
 - Categorias e favorecidos não devem ser generalizados sem validação.
+- Importacoes financeiras por planilha devem manter politica all-or-nothing: se qualquer linha ou campo estiver invalido, nada deve ser gravado.
+- Nova importacao operacional deve ocorrer apenas em dominio vazio; se o dominio ja tiver registros, o sistema deve bloquear a carga e orientar reset/limpeza controlada.
+- O fluxo comum de importacao de lancamentos aceita lancamentos simples, transferencias simples e rateio em ate 5 blocos na mesma linha; rateios maiores devem seguir caminho tecnico proprio ate existir modelagem funcional especifica.
 - Em importações por planilha, duplicidade de linha/código deve ser distinguida de conflito cadastral contra regras permanentes do cadastro.
 - Uma linha de cadastro importada só deve ser tratada como duplicada quando o código for igual a outro já cadastrado/repetido na planilha ou quando todos os dados relevantes coincidirem com cadastro/linha existente.
 - Quando a linha não for duplicada por esses critérios, mas violar regra permanente de cadastro, como nome normalizado já existente com código diferente, o erro deve ser tratado como conflito cadastral.

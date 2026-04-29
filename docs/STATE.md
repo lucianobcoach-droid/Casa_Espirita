@@ -2,6 +2,15 @@
 
 Data de atualizacao: 2026-04-29
 
+## Auditoria de importacao historica e cadastros auxiliares
+
+- auditoria documental/tecnica concluida sem alteracao funcional de codigo
+- confirmado no codigo: central de importacoes do financeiro, importacao/exportacao comum de lancamentos, modelos XLSX, importacoes auxiliares de contas/favorecidos/centros/categorias, validacao estrutural, validacao linha a linha, relatorio de inconsistencias, trava de dominio preenchido e gravacao transacional all-or-nothing
+- confirmado no codigo: lancamentos simples, transferencias simples e rateio em ate 5 blocos na mesma linha no contrato comum; rateios acima desse limite continuam por caminho tecnico de backup/restauracao
+- reclassificado no `MAPA_RECLASSIFICACAO.md` o item de importacao historica e cadastros auxiliares como IMPLEMENTADO COM PENDENCIAS FUTURAS / AGUARDANDO HOMOLOGACAO
+- permanecem futuras as frentes de preview antes de gravar, importacao parcial, preflight mais visivel, tratamento avancado de duplicidades e homologacao com planilhas historicas reais da usuaria
+- nao houve alteracao em views, urls, models, forms, templates, migrations, testes, CSS ou calculos financeiros
+
 ## Baixa documental de pendencias implementadas do financeiro
 
 - baixadas como implementadas pendencias antigas de favorecido duplicado por nome, edicao de conta com saldo inicial/data preenchidos e logo institucional no Extrato impresso

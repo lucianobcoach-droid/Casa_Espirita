@@ -2,6 +2,15 @@
 
 Data: 2026-04-29
 
+## Auditoria de importacao historica e cadastros auxiliares
+
+- auditei documentos e codigo da frente de importacao/exportacao do financeiro, incluindo views, rotas, modelos/forms, template da central, backups tecnicos e comando de reset controlado
+- confirmei implementados: central de importacoes, importacao/exportacao comum de lancamentos, modelos XLSX, cadastros auxiliares, trava de dominio vazio, validacao estrutural, validacao linha a linha com rotulos amigaveis, relatorio de inconsistencias e gravacao transacional all-or-nothing
+- confirmei suporte a lancamentos simples, transferencias simples e rateio em ate 5 blocos na mesma linha; rateios maiores permanecem limitacao conhecida do fluxo comum e dependem do caminho tecnico de backup/restauracao
+- reclassifiquei a frente no `MAPA_RECLASSIFICACAO.md` como IMPLEMENTADO COM PENDENCIAS FUTURAS / AGUARDANDO HOMOLOGACAO
+- mantive como futuras: preview operacional antes de gravar, importacao parcial, preflight mais visivel, tratamento avancado de duplicidades e homologacao com planilhas historicas reais
+- nao alterei codigo funcional, views, urls, models, forms, templates, migrations, testes, CSS ou calculos financeiros
+
 ## Baixa documental de pendencias implementadas do financeiro
 
 - auditei no codigo e nos documentos as pendencias antigas de favorecido duplicado, edicao de conta, logo no Extrato impresso, impressao da Prestacao/Fechamento, filtro de contas nas telas analiticas e regra geral de identificadores-chave

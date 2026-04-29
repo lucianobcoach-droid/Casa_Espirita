@@ -203,8 +203,18 @@ Documentos relacionados:
 
 Status inicial: PARCIALMENTE IMPLEMENTADO / REQUER CONFERÊNCIA NO CÓDIGO
 
+Status apos auditoria documental/tecnica: IMPLEMENTADO COM PENDENCIAS FUTURAS / AGUARDANDO HOMOLOGACAO
+
 Motivo:
 Há registros sobre importação, planilhas, categorias, favorecidos, contas e relatórios de inconsistência. É necessário separar o que já existe, o que foi testado e o que ainda precisa implementação.
+
+Auditoria no codigo confirmou que a central de importacoes do financeiro existe e cobre importacao comum de lancamentos, exportacao/modelo de lancamentos, cadastros auxiliares de contas, favorecidos, centros de custo e categorias/subcategorias, validacao estrutural da planilha, validacao linha a linha com rotulos amigaveis, trava de dominio preenchido e gravacao transacional all-or-nothing. O fluxo comum suporta lancamentos simples, transferencias simples e rateio em ate 5 blocos na mesma linha. Backup/restauracao tecnica de rateios e regras automaticas existem por comandos proprios.
+
+Baixa documental:
+- IMPLEMENTADO: central de importacoes, planilhas-modelo, importacao/exportacao comum de lancamentos, importacoes auxiliares, trava de dominio vazio, validacoes estruturais e por linha, relatorio de inconsistencias, mensagens amigaveis e gravacao transacional sem importacao parcial.
+- IMPLEMENTADO COM PENDENCIAS FUTURAS: duplicidades/conflitos possuem tratamento basico e seguro, mas podem evoluir para resolucao assistida; preflight existe como bloqueio/mensagem, mas pode ficar mais visivel.
+- FUTURO REAL: preview operacional antes de gravar, importacao parcial, tratamento avancado de duplicidades, fluxo especifico para rateios acima de 5 blocos no caminho comum e importacao historica guiada alem do contrato atual.
+- AGUARDANDO HOMOLOGACAO: uso real com planilhas historicas da usuaria e massa completa de cadastros auxiliares.
 
 Documentos relacionados:
 - docs/CEREBRO_PROJETO.md
