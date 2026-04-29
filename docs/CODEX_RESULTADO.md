@@ -2,6 +2,13 @@
 
 Data: 2026-04-28
 
+## Auditoria da regra de conta inativa
+
+- auditei modelo, forms, views, templates e fluxos de importacao/filtros relacionados a `ContaFinanceira.ativa`
+- diagnostico: novos lancamentos ainda podem selecionar contas inativas via form/autocomplete; edicao de lancamento antigo permanece viavel; importacao de lancamentos ja restringe contas a `ativa=True`
+- diagnostico: relatorios historicos preservam movimentos de contas inativas porque usam todas as contas, mas os filtros ainda nao limitam inativas ao criterio "com movimento no periodo"
+- nao implementei correcao funcional, nao alterei Python, templates ou calculos nesta microetapa
+
 ## MVP do Balancete Institucional
 
 - criei a rota `/financeiro/balancete-institucional/`, a view `BalanceteInstitucionalFinanceiroView` e o template proprio `balancete_institucional.html`

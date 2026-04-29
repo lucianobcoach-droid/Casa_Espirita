@@ -2,6 +2,12 @@
 
 Data de atualizacao: 2026-04-28
 
+## Auditoria da regra de conta inativa
+
+- auditoria concluida sem implementacao funcional: formularios/autocomplete de lancamentos ainda permitem contas inativas em novos lancamentos, enquanto a importacao de lancamentos ja usa apenas contas ativas
+- relatorios e filtros historicos usam contas sem filtrar por `ativa`, preservando historico, mas ainda exibem contas inativas mesmo sem movimento no periodo
+- proxima microetapa recomendada: ajustar criacao/clone/autocomplete para oferecer apenas contas ativas e preservar contas inativas ja vinculadas na edicao, depois refinar filtros historicos por movimento no periodo
+
 ## MVP do Balancete Institucional
 
 - foi criado o primeiro relatorio proprio `Balancete Institucional`, com rota, view, template documental e link no menu de Relatorios do financeiro

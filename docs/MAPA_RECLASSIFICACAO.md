@@ -248,8 +248,16 @@ Documentos relacionados:
 
 Status inicial: FUTURO REAL / REQUER CONFERENCIA NO CODIGO
 
+Status apos auditoria: AUDITADO / REQUER IMPLEMENTACAO
+
 Motivo:
 Foi definida a regra de que conta inativa nao deve aparecer para novos lancamentos, mas deve aparecer em relatorios historicos quando tiver movimento no periodo selecionado. Requer conferencia de formularios, filtros e relatorios.
+
+Achado da auditoria:
+- `LancamentoFinanceiroForm`, `LancamentoFinanceiroGrupoRateioForm` e `ContaFinanceiraAutocompleteView` ainda usam contas sem filtrar por `ativa`, permitindo conta inativa em novo lancamento e em conta destino de transferencia.
+- A edicao de lancamento antigo ainda funciona porque as contas inativas permanecem no queryset, mas uma correcao futura precisa preservar explicitamente a conta ja vinculada.
+- Relatorios e filtros historicos usam todas as contas, preservando movimentos antigos, mas ainda nao aplicam o refinamento de exibir inativas apenas quando tiverem movimento no periodo.
+- A importacao de lancamentos ja monta indice de contas com `ContaFinanceira.objects.filter(ativa=True)`.
 
 Classificacao documental:
 - REGRA DE NEGOCIO
