@@ -26,6 +26,7 @@ Este documento é o ponto de entrada rápido para qualquer chat, GPT ou Codex co
 - REGRAS_NEGOCIO.md: regras consolidadas do sistema.
 - PADRAO_UX_SISTEMA.md: padrão visual aprovado.
 - MATRIZ_PERMISSOES.md: regras de perfis e permissões.
+- ROTINA_GIT_GITHUB.md: rotina oficial de sincronização local x GitHub.
 
 ## Fluxo oficial
 
@@ -35,6 +36,7 @@ Este documento é o ponto de entrada rápido para qualquer chat, GPT ou Codex co
 4. Codex executa.
 5. Usuário testa.
 6. Resultado é registrado nos documentos base.
+7. Commit e push consolidam a etapa no GitHub; se houver commit local sem push, a próxima etapa deve ser sincronização Git/GitHub.
 
 ## Documentos auxiliares de governança
 

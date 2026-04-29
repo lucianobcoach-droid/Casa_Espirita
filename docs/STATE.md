@@ -2,6 +2,14 @@
 
 Data de atualizacao: 2026-04-28
 
+## Rotina oficial Git/GitHub
+
+- consolidada documentalmente a rotina de sincronizacao local x GitHub do projeto
+- GitHub remoto na branch `feat/reinicio-financeiro` passa a ficar registrado como memoria oficial compartilhada
+- commit local sem push fica registrado como pendencia de sincronizacao antes de nova microetapa funcional
+- criado `docs/ROTINA_GIT_GITHUB.md` com comandos PowerShell seguros e criterios para push ou parada
+- nao houve alteracao funcional, codigo, templates, models, migrations, calculos ou testes
+
 ## Auditoria de documentos por favorecido no financeiro
 
 - auditoria documental/tecnica concluida sem alteracao funcional de codigo

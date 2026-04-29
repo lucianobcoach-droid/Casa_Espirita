@@ -2,6 +2,14 @@
 
 Data: 2026-04-28
 
+## Rotina oficial Git/GitHub
+
+- registrei a governanca permanente de versionamento local x GitHub
+- criei `docs/ROTINA_GIT_GITHUB.md` com a rotina operacional segura para conferir branch, status, commits locais, commits remotos e executar push somente quando seguro
+- atualizei `AGENTS.md` para exigir informacao explicita de commit/push e tratar commit local sem push como pendencia de sincronizacao
+- atualizei `INDICE_PROJETO.md` e `CEREBRO_PROJETO.md` para apontar o GitHub remoto como memoria oficial compartilhada e registrar que etapa so fica consolidada apos commit e push
+- nao alterei codigo funcional, regras financeiras, views, urls, models, forms, templates ou testes
+
 ## Auditoria de documentos por favorecido no financeiro
 
 - auditei rotas, views e templates relacionados a historico por favorecido, recibos por favorecido/em lote, termo anual de quitacao e acoes documentais na `lancamento_list`

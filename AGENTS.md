@@ -17,6 +17,8 @@ Antes de qualquer alteração relevante, consultar os documentos em docs/.
 - Atualizar docs/STATE.md e docs/CODEX_RESULTADO.md ao final de cada etapa.
 - Atualizar docs/CEREBRO_PROJETO.md somente quando houver decisão permanente.
 - Ao finalizar, informar arquivos alterados, validações feitas e pendências.
+- Ao finalizar, informar claramente se houve commit e se houve push.
+- Commit local sem push não encerra oficialmente uma etapa; deve ser tratado como pendência de sincronização antes de nova microetapa.
 
 ## Uso de skills
 

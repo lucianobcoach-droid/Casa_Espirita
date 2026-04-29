@@ -36,6 +36,16 @@ Protocolo permanente de continuidade entre chats:
 - todo novo chat deve conduzir o trabalho em ordem exata de execucao
 - todo novo chat pode usar mensagens orientadoras proprias para preparar a continuidade, desde que preserve estas diretrizes estruturais do projeto
 
+### 1.2. Governanca permanente de versionamento local x GitHub
+
+- O GitHub remoto, na branch `feat/reinicio-financeiro`, e a memoria oficial compartilhada do projeto.
+- A pasta local pode conter avancos temporarios durante uma microetapa, mas esses avancos nao devem ser tratados como consolidados enquanto nao forem enviados ao GitHub.
+- Commit local sem push nao encerra oficialmente uma etapa; ele deve ser tratado como pendencia de sincronizacao.
+- Antes de iniciar nova microetapa funcional, se houver `Commit: sim` e `Push: nao`, a etapa obrigatoria seguinte deve ser sincronizar Git/GitHub.
+- O Codex deve informar sempre, no retorno final, se houve commit e se houve push.
+- Se houver divergencia entre GitHub, pasta local e chat, conferir o estado Git antes de decidir: branch atual, `git status --short`, commits locais pendentes e commits remotos pendentes.
+- A rotina operacional curta esta registrada em `docs/ROTINA_GIT_GITHUB.md`.
+
 ## 2. Objetivo do sistema
 O projeto **Casa Espirita** e um sistema em Django para apoiar a gestao da instituicao.
 
