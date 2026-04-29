@@ -1,6 +1,13 @@
 # STATE
 
-Data de atualizacao: 2026-04-28
+Data de atualizacao: 2026-04-29
+
+## Baixa documental do Balancete e rotina de pendencias
+
+- consolidada rotina permanente de baixa documental de pendencias em `docs/ROTINA_BAIXA_PENDENCIAS.md`
+- registrado que tarefas auditadas, implementadas, substituidas, descartadas ou parcialmente implementadas nao devem permanecer como duvida generica sem reclassificacao
+- registrada baixa detalhada do Balancete Institucional: MVP nao deve ser reaberto como criacao do zero; permanecem futuras as frentes de modelagem de tipo/disponibilidade de conta, composicao e acabamento documental validavel em uso real
+- nao houve alteracao funcional, codigo, templates, views, urls, models, forms, testes, CSS ou calculos financeiros
 
 ## Auditoria documental do Balancete Institucional
 

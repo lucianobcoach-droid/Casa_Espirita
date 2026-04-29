@@ -19,6 +19,7 @@ Antes de qualquer alteração relevante, consultar os documentos em docs/.
 - Ao finalizar, informar arquivos alterados, validações feitas e pendências.
 - Ao finalizar, informar claramente se houve commit e se houve push.
 - Commit local sem push não encerra oficialmente uma etapa; deve ser tratado como pendência de sincronização antes de nova microetapa.
+- Ao concluir tarefa ou auditoria, indicar se houve baixa documental e quais status foram atualizados nos documentos oficiais.
 
 ## Uso de skills
 

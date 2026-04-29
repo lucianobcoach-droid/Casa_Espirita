@@ -457,6 +457,7 @@ Classificacao documental:
 - PARCIALMENTE IMPLEMENTADO
 - AJUSTE VISUAL/DOCUMENTAL FUTURO
 - REQUER MODELAGEM para disponibilidade/tipo de conta
+- AGUARDANDO VALIDACAO VISUAL para acabamento documental do PDF/print
 
 Prioridade documental: MEDIA
 
@@ -466,6 +467,12 @@ Direcao revisada:
 - reaproveitar regra/base de calculo da Prestacao/Fechamento
 - evitar divergencia de calculo e duplicacao de regra financeira
 - preservar transparencia da composicao do saldo e regra de transferencias por escopo
+
+Baixa documental detalhada:
+- Implementado: relatorio proprio, sem substituir a Prestacao/Fechamento; uso da mesma base de calculo; fundo branco/documental; secoes numeradas; saldo inicial disponivel; receitas do periodo; despesas do periodo; fechamento do saldo disponivel; composicao do saldo disponivel; assinaturas condicionais; ate duas assinaturas selecionaveis; assinatura real somente quando selecionada; contas zeradas ocultas por padrao; transferencias tratadas por escopo sem virar receita/despesa operacional.
+- Implementado com validacao visual/uso real pendente: margens, fonte, quebra de pagina, acabamento documental do PDF/print e preferencia por caber em uma pagina quando o volume permitir.
+- Futuro / requer modelagem: tipo de conta, disponibilidade/vinculacao, mensagem explicativa de indisponibilidade por conta, separacao entre saldo disponivel e indisponivel/vinculado, integralizacao de capital como valor patrimonial/vinculado, modos de composicao detalhado por conta, consolidado por tipo, total consolidado e separacao disponivel/indisponivel.
+- Conclusao de baixa: o MVP do Balancete nao permanece pendente como bloco de criacao; o que segue aberto e evolucao futura de modelagem, composicao e acabamento documental.
 
 Documentos relacionados:
 - docs/ROADMAP_FINANCEIRO.md

@@ -27,6 +27,7 @@ Este documento é o ponto de entrada rápido para qualquer chat, GPT ou Codex co
 - PADRAO_UX_SISTEMA.md: padrão visual aprovado.
 - MATRIZ_PERMISSOES.md: regras de perfis e permissões.
 - ROTINA_GIT_GITHUB.md: rotina oficial de sincronização local x GitHub.
+- ROTINA_BAIXA_PENDENCIAS.md: rotina oficial para baixar e reclassificar pendências documentais.
 
 ## Fluxo oficial
 
@@ -42,6 +43,7 @@ Este documento é o ponto de entrada rápido para qualquer chat, GPT ou Codex co
 
 - AUDITORIA_DOCUMENTACAO.md: registra riscos, diagnóstico e diretrizes para reorganização segura da documentação.
 - MAPA_RECLASSIFICACAO.md: lista itens que precisam ser classificados como implementados, parcialmente implementados, futuros ou dúvida antes de qualquer reorganização maior.
+- ROTINA_BAIXA_PENDENCIAS.md: define status padronizados e critérios para encerrar, reclassificar ou manter pendências.
 
 ## Regra para escolha de próxima microetapa
 

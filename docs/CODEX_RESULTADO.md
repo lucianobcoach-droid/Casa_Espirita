@@ -1,6 +1,15 @@
 # CODEX_RESULTADO
 
-Data: 2026-04-28
+Data: 2026-04-29
+
+## Baixa documental do Balancete e rotina de pendencias
+
+- criei `docs/ROTINA_BAIXA_PENDENCIAS.md` com objetivo, status padronizados, criterios de baixa, documentos a atualizar, regras de seguranca e relacao com Git/GitHub
+- atualizei `AGENTS.md`, `INDICE_PROJETO.md` e `CEREBRO_PROJETO.md` para registrar a rotina permanente de baixa documental
+- registrei no `ROADMAP_FINANCEIRO.md` e no `MAPA_RECLASSIFICACAO.md` a baixa detalhada do Balancete Institucional contra o conceito acordado
+- classifiquei o MVP do Balancete como entregue em seu bloco principal, com validacao visual/uso real e modelagem futura ainda acompanhadas separadamente
+- atualizei o `STATE.md` com nota curta da consolidacao documental
+- nao alterei codigo funcional, regras financeiras, views, urls, models, forms, templates, testes ou CSS
 
 ## Auditoria documental do Balancete Institucional
 

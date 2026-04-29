@@ -53,6 +53,9 @@ Este bloco registra a revisao da direcao conceitual anterior. A Prestacao/Fecham
    - Assinaturas: o MVP permite selecao manual de assinaturas pelo cadastro existente; definicao de assinaturas padrao especificas para este documento permanece como ajuste futuro, se o uso real exigir.
    - Pendencias futuras vinculadas: tipo de conta, disponibilidade/vinculacao, separacao entre saldo disponivel e indisponivel e modos de composicao por conta/tipo/total consolidado.
    - Historico da decisao: a direcao anterior falava em evoluir a Prestacao/Fechamento para modelo tipo balancete; a direcao revisada mantem a Prestacao/Fechamento como relatorio analitico e separa o Balancete como documento proprio.
+   - Baixa documental detalhada: o MVP do Balancete nao deve ser reaberto como pendencia de criacao do zero. Ficam baixados como entregues: relatorio proprio, mesma base de calculo da Prestacao/Fechamento, fundo branco/documental, secoes numeradas, saldo inicial, receitas, despesas, fechamento, composicao do saldo, assinaturas condicionais selecionaveis, ocultacao padrao de contas zeradas e tratamento de transferencias por escopo sem classifica-las como receita/despesa.
+   - Aguardam validacao visual/uso real: margens, fonte, quebra de pagina, acabamento documental do PDF/print e capacidade de caber em uma pagina quando o volume permitir.
+   - Permanecem como futuro/modelagem: tipo de conta, disponibilidade/vinculacao, mensagem explicativa de indisponibilidade, separacao entre saldo disponivel e indisponivel/vinculado, integralizacao de capital como valor patrimonial/vinculado, modos de composicao por conta/tipo/total consolidado e eventual assinatura padrao especifica do Balancete.
 
 ## 0.16. Pendencias documentadas apos correcao da edicao de contas
 

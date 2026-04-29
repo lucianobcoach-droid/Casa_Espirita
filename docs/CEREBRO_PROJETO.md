@@ -46,6 +46,14 @@ Protocolo permanente de continuidade entre chats:
 - Se houver divergencia entre GitHub, pasta local e chat, conferir o estado Git antes de decidir: branch atual, `git status --short`, commits locais pendentes e commits remotos pendentes.
 - A rotina operacional curta esta registrada em `docs/ROTINA_GIT_GITHUB.md`.
 
+### 1.3. Governanca permanente de baixa documental de pendencias
+
+- Toda etapa concluida, auditada, substituida, descartada ou parcialmente implementada deve ser baixada documentalmente nos arquivos oficiais aplicaveis.
+- Itens ja auditados ou implementados nao devem permanecer indefinidamente como `DUVIDA`, `FUTURO REAL` ou `REQUER CONFERENCIA NO CODIGO` sem reclassificacao.
+- Antes de iniciar nova etapa grande, conferir se frentes ja concluidas nao continuam abertas no mapa/roadmap por falta de baixa documental.
+- Quando uma implementacao depender apenas de validacao visual ou teste da usuaria, classificar como `AGUARDANDO VALIDACAO VISUAL` ou `AGUARDANDO TESTE DO USUARIO`, em vez de reabrir a duvida tecnica.
+- A rotina operacional curta esta registrada em `docs/ROTINA_BAIXA_PENDENCIAS.md`.
+
 ## 2. Objetivo do sistema
 O projeto **Casa Espirita** e um sistema em Django para apoiar a gestao da instituicao.
 
