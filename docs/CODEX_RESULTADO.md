@@ -2,6 +2,13 @@
 
 Data: 2026-04-28
 
+## Registro documental de tipo/disponibilidade de conta
+
+- registrei no roadmap a frente futura de tipo de conta, disponibilidade/vinculacao, mensagem explicativa por conta e modos de composicao do Balancete
+- acrescentei diretrizes permanentes diferenciando conta ativa/inativa de conta disponivel/indisponivel e registrando integralizacao de capital como valor patrimonial/vinculado, nao despesa operacional
+- atualizei o mapa de reclassificacao com itens de acompanhamento para tipo de conta, disponibilidade, mensagem de indisponibilidade, composicao do Balancete e logo no Extrato impresso
+- nao alterei codigo, templates, models, migrations, calculos, Balancete ou Extrato nesta microetapa documental
+
 ## Auditoria da regra de conta inativa
 
 - auditei modelo, forms, views, templates e fluxos de importacao/filtros relacionados a `ContaFinanceira.ativa`

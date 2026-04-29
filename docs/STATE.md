@@ -2,6 +2,13 @@
 
 Data de atualizacao: 2026-04-28
 
+## Registro documental de tipo/disponibilidade de conta
+
+- registrada frente futura para tipo de conta financeira, disponibilidade/vinculacao de saldo, mensagem opcional de indisponibilidade e modos de composicao do Balancete
+- consolidado documentalmente que integralizacao de capital nao e despesa operacional e nao deve ser misturada ao saldo livre/disponivel sem destaque
+- registrada pendencia separada para auditar a logo institucional no Extrato impresso
+- nao houve implementacao, alteracao de codigo, templates, models, migrations, calculos ou relatorios nesta microetapa
+
 ## Auditoria da regra de conta inativa
 
 - auditoria concluida sem implementacao funcional: formularios/autocomplete de lancamentos ainda permitem contas inativas em novos lancamentos, enquanto a importacao de lancamentos ja usa apenas contas ativas

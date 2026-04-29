@@ -2,6 +2,39 @@
 
 Data: 2026-04-23
 
+## 0.18. Frente futura: tipo, disponibilidade de conta e composicao do Balancete
+
+Este bloco registra nova frente gerencial/patrimonial levantada pela usuaria. Nao representa implementacao concluida.
+
+1. **Tipo de conta financeira**
+   - Classificacao: FRENTE FUTURA FUNCIONAL / REGRA GERENCIAL.
+   - Prioridade documental: MEDIA.
+   - Direcao: evoluir o cadastro de contas para classificar tipo de conta, como conta corrente, poupanca, dinheiro/caixa, aplicacao financeira, integralizacao de capital, conta vinculada ou outros.
+   - Observacao: avaliar cadastro proprio de tipos de conta para manter o sistema aberto a outras instituicoes e empresas.
+
+2. **Disponibilidade ou vinculacao da conta**
+   - Classificacao: REGRA DE NEGOCIO / LEITURA GERENCIAL-PATRIMONIAL.
+   - Prioridade documental: ALTA para desenho futuro.
+   - Direcao: diferenciar conta ativa/inativa de conta disponivel/indisponivel. Ativa/inativa controla uso operacional em novos lancamentos; disponivel/indisponivel controla leitura gerencial do saldo.
+   - Mensagem explicativa: prever campo opcional por conta para justificar indisponibilidade/vinculacao em relatorios. Se vazio, nada deve aparecer.
+
+3. **Integralizacao de capital**
+   - Classificacao: REGRA GERENCIAL / PATRIMONIAL.
+   - Prioridade documental: ALTA para modelagem futura.
+   - Direcao: integralizacao de capital nao deve ser tratada como despesa operacional nem como saldo livre para uso imediato; deve compor patrimonio financeiro de forma destacada como valor vinculado/indisponivel, conforme modelagem futura.
+
+4. **Composicao do Balancete Institucional**
+   - Classificacao: MELHORIA FUNCIONAL DE RELATORIO / IMPRESSAO.
+   - Prioridade documental: MEDIA.
+   - Direcao: evoluir o Balancete para permitir modos de composicao final: detalhado por conta, consolidado por tipo de conta, apenas saldo total consolidado e possivelmente separando disponivel e indisponivel.
+   - Objetivo visual: reduzir poluicao e duplicacao entre fechamento consolidado e detalhamento, mantendo composicao por conta quando o usuario precisar conferir.
+
+5. **Logo no Extrato impresso**
+   - Classificacao: AJUSTE VISUAL DE RELATORIO / IMPRESSAO.
+   - Prioridade documental: MEDIA.
+   - Direcao: auditar futuramente por que a logo institucional nao aparece no Extrato impresso, apesar de haver espaco visual previsto.
+   - Observacao: esta pendencia deve ser tratada separadamente da modelagem de tipo/disponibilidade de conta.
+
 ## 0.17. Balancete Institucional como relatorio proprio futuro
 
 Este bloco registra a revisao da direcao conceitual anterior. A Prestacao/Fechamento atual permanece como relatorio analitico/gerencial ja validado; o Balancete Institucional deve nascer futuramente como relatorio proprio, com finalidade formal/documental. Nao representa implementacao concluida.

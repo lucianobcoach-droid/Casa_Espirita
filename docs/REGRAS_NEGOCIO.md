@@ -25,6 +25,10 @@ Este documento consolida regras permanentes do sistema. Ele não substitui o his
 - Número de documento deve existir; quando não preenchido, deve ser gerado automaticamente conforme regra do sistema.
 - Favorecido/pessoa financeira não deve permitir duplicidade por nome normalizado.
 - Conta inativa não deve aparecer como opção para novos lançamentos, mas deve permanecer disponível em relatórios históricos quando tiver movimento no período selecionado.
+- Conta ativa/inativa é regra operacional de uso em novos lançamentos; conta disponível/indisponível ou vinculada é regra gerencial/patrimonial de leitura do saldo.
+- Valores vinculados ou indisponíveis não devem ser tratados como despesa operacional.
+- Quando a modelagem de disponibilidade for implementada, valores vinculados/indisponíveis devem ser separados do saldo disponível operacional nos relatórios que apresentarem saldo livre.
+- Integralização de capital é exemplo de valor patrimonial/vinculado: não é despesa operacional e não deve ser somada ao saldo livre disponível sem destaque.
 - Em transferências exibidas no Extrato, quando não houver favorecido operacional, a apresentação do favorecido deve usar o texto padronizado "Transferência entre contas".
 - Rateio deve preservar validação pelo valor total do documento e pode exibir saldo/diferença restante como apoio operacional ao usuário.
 

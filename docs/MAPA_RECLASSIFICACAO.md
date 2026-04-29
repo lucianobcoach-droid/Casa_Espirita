@@ -457,6 +457,101 @@ Documentos relacionados:
 - docs/CEREBRO_PROJETO.md
 - docs/ROADMAP_FINANCEIRO.md
 
+---
+
+### 25. Tipo de conta financeira
+
+Status inicial: FUTURO REAL / REQUER MODELAGEM
+
+Motivo:
+Foi levantada necessidade de classificar contas por tipo, como conta corrente, poupanca, dinheiro/caixa, aplicacao financeira, integralizacao de capital, conta vinculada ou outros. Deve ser avaliado se o tipo sera cadastro proprio para manter abertura a outras instituicoes.
+
+Classificacao documental:
+- MELHORIA FUNCIONAL
+- REGRA GERENCIAL / PATRIMONIAL
+
+Prioridade documental: MEDIA
+
+Documentos relacionados:
+- docs/ROADMAP_FINANCEIRO.md
+- docs/CEREBRO_PROJETO.md
+
+---
+
+### 26. Disponibilidade ou vinculacao da conta
+
+Status inicial: FUTURO REAL / REQUER MODELAGEM
+
+Motivo:
+Foi levantada necessidade de indicar se o saldo de uma conta e disponivel para uso ou indisponivel/vinculado. Esta regra e diferente de conta ativa/inativa: ativa/inativa controla uso operacional; disponibilidade controla leitura gerencial do saldo.
+
+Classificacao documental:
+- REGRA DE NEGOCIO
+- LEITURA GERENCIAL / PATRIMONIAL
+
+Prioridade documental: ALTA
+
+Documentos relacionados:
+- docs/ROADMAP_FINANCEIRO.md
+- docs/REGRAS_NEGOCIO.md
+- docs/CEREBRO_PROJETO.md
+
+---
+
+### 27. Mensagem explicativa de indisponibilidade por conta
+
+Status inicial: FUTURO REAL / REQUER MODELAGEM
+
+Motivo:
+Foi levantada necessidade de campo opcional no cadastro de contas para justificar em relatorios por que determinado saldo esta indisponivel. Se o campo estiver vazio, nada deve aparecer no relatorio.
+
+Classificacao documental:
+- MELHORIA FUNCIONAL
+- MELHORIA DE UX EM RELATORIOS
+
+Prioridade documental: MEDIA
+
+Documentos relacionados:
+- docs/ROADMAP_FINANCEIRO.md
+- docs/REGRAS_NEGOCIO.md
+
+---
+
+### 28. Modos de composicao do Balancete Institucional
+
+Status inicial: FUTURO REAL / MELHORIA DE RELATORIO
+
+Motivo:
+Foi levantada necessidade de o Balancete permitir escolher entre composicao detalhada por conta, consolidada por tipo de conta ou apenas saldo total consolidado, possivelmente separando disponivel e indisponivel para reduzir poluicao visual.
+
+Classificacao documental:
+- MELHORIA FUNCIONAL DE RELATORIO
+- AJUSTE DOCUMENTAL / IMPRESSAO
+
+Prioridade documental: MEDIA
+
+Documentos relacionados:
+- docs/ROADMAP_FINANCEIRO.md
+- docs/CEREBRO_PROJETO.md
+
+---
+
+### 29. Logo institucional no Extrato impresso
+
+Status inicial: FUTURO REAL / REQUER AUDITORIA VISUAL
+
+Motivo:
+Foi observado que o Extrato impresso parece reservar espaco para logo institucional, mas a logo nao aparece na impressao. Deve ser auditado separadamente da frente de tipo/disponibilidade de conta.
+
+Classificacao documental:
+- AJUSTE VISUAL DE RELATORIO / IMPRESSAO
+
+Prioridade documental: MEDIA
+
+Documentos relacionados:
+- docs/ROADMAP_FINANCEIRO.md
+- docs/STATE.md
+
 ## Próxima ação recomendada
 
 A próxima microetapa documental deve conferir os itens acima contra o código e contra os documentos atuais, um grupo por vez, sem alterar funcionalidades.
