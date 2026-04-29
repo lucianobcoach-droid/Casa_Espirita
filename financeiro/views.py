@@ -5574,6 +5574,9 @@ class ContaFinanceiraAutocompleteView(FinanceiroAutocompleteView):
     model = ContaFinanceira
     search_fields = ('nome', 'descricao')
 
+    def get_queryset(self):
+        return super().get_queryset().filter(ativa=True)
+
 
 class CentroCustoAutocompleteView(FinanceiroAutocompleteView):
     permissao_requerida = 'financeiro.centros_custo.acessar_endpoints_auxiliares'
@@ -7746,13 +7749,15 @@ class LancamentoFinanceiroCloneView(LancamentoFinanceiroCreateView):
                 'valor': self.lancamento_origem.valor,
                 'data_competencia': self.lancamento_origem.data_competencia,
                 'data_pagamento': self.lancamento_origem.data_pagamento,
-                'conta': self.lancamento_origem.conta,
                 'observacoes': self.lancamento_origem.observacoes,
             }
         )
+        if self.lancamento_origem.conta.ativa:
+            initial['conta'] = self.lancamento_origem.conta
 
         if self.lancamento_origem.tipo == LancamentoFinanceiro.TipoLancamento.TRANSFERENCIA:
-            initial['conta_destino'] = self.lancamento_origem.conta_destino
+            if self.lancamento_origem.conta_destino and self.lancamento_origem.conta_destino.ativa:
+                initial['conta_destino'] = self.lancamento_origem.conta_destino
             return initial
 
         initial.update(
@@ -7837,12 +7842,6 @@ class LancamentoFinanceiroGrupoRateioCloneView(LancamentoFinanceiroCreateView):
                 'data_pagamento': lancamento_origem.data_pagamento,
                 'pessoa': lancamento_origem.pessoa,
                 'centro_custo': lancamento_origem.centro_custo,
-                'conta': lancamento_origem.conta,
-                'conta_destino': (
-                    lancamento_origem.conta_destino
-                    if lancamento_origem.tipo == LancamentoFinanceiro.TipoLancamento.TRANSFERENCIA
-                    else None
-                ),
                 'observacoes': lancamento_origem.observacoes,
                 'lancamento_com_rateio': True,
                 'valor_total_documento': sum(
@@ -7851,6 +7850,14 @@ class LancamentoFinanceiroGrupoRateioCloneView(LancamentoFinanceiroCreateView):
                 ),
             }
         )
+        if lancamento_origem.conta.ativa:
+            initial['conta'] = lancamento_origem.conta
+        if (
+            lancamento_origem.tipo == LancamentoFinanceiro.TipoLancamento.TRANSFERENCIA
+            and lancamento_origem.conta_destino
+            and lancamento_origem.conta_destino.ativa
+        ):
+            initial['conta_destino'] = lancamento_origem.conta_destino
         return initial
 
     def get_form(self, form_class=None):

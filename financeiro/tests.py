@@ -1,3 +1,4 @@
+import json
 from datetime import date
 from decimal import Decimal
 
@@ -5,11 +6,19 @@ from django.template.loader import get_template, render_to_string
 from django.test import RequestFactory, TestCase
 from django.urls import resolve, reverse
 
-from .forms import ContaFinanceiraForm, PessoaFinanceiraForm
-from .models import AssinaturaInstitucional, ContaFinanceira, LancamentoFinanceiro, PessoaFinanceira
+from .forms import ContaFinanceiraForm, LancamentoFinanceiroForm, PessoaFinanceiraForm
+from .models import (
+    AssinaturaInstitucional,
+    CategoriaFinanceira,
+    ContaFinanceira,
+    LancamentoFinanceiro,
+    PessoaFinanceira,
+)
 from .views import (
     BalanceteInstitucionalFinanceiroView,
+    ContaFinanceiraAutocompleteView,
     ExtratoFinanceiroView,
+    LancamentoFinanceiroCloneView,
     PrestacaoContasFinanceiroView,
     montar_contexto_fechamento_periodo,
 )
@@ -50,6 +59,153 @@ class ContaFinanceiraEdicaoFormTests(TestCase):
         conta_atualizada = form.save()
         self.assertEqual(conta_atualizada.saldo_inicial, Decimal('987.65'))
         self.assertEqual(conta_atualizada.data_saldo_inicial, date(2026, 4, 20))
+
+
+class LancamentoContaInativaTests(TestCase):
+    def setUp(self):
+        self.factory = RequestFactory()
+        self.conta_ativa = ContaFinanceira.objects.create(
+            nome='Conta ativa',
+            saldo_inicial=Decimal('0.00'),
+            data_saldo_inicial=date(2026, 1, 1),
+            ativa=True,
+        )
+        self.conta_destino_ativa = ContaFinanceira.objects.create(
+            nome='Conta destino ativa',
+            saldo_inicial=Decimal('0.00'),
+            data_saldo_inicial=date(2026, 1, 1),
+            ativa=True,
+        )
+        self.conta_inativa = ContaFinanceira.objects.create(
+            nome='Conta inativa',
+            saldo_inicial=Decimal('0.00'),
+            data_saldo_inicial=date(2026, 1, 1),
+            ativa=False,
+        )
+        self.pessoa = PessoaFinanceira.objects.create(codigo='P001', nome='Favorecido teste')
+        self.categoria_pai = CategoriaFinanceira.objects.create(
+            nome='Receitas',
+            tipo=CategoriaFinanceira.TipoCategoria.RECEITA,
+        )
+        self.categoria = CategoriaFinanceira.objects.create(
+            nome='Doacoes',
+            tipo=CategoriaFinanceira.TipoCategoria.RECEITA,
+            categoria_pai=self.categoria_pai,
+        )
+
+    def _dados_receita(self, conta):
+        return {
+            'descricao': 'Receita teste',
+            'tipo': LancamentoFinanceiro.TipoLancamento.RECEITA,
+            'status': LancamentoFinanceiro.StatusLancamento.QUITADO,
+            'valor': '50.00',
+            'data_competencia': '2026-03-01',
+            'data_pagamento': '2026-03-01',
+            'numero_documento': '',
+            'pessoa': str(self.pessoa.pk),
+            'categoria': str(self.categoria.pk),
+            'centro_custo': '',
+            'conta': str(conta.pk),
+            'conta_destino': '',
+            'observacoes': '',
+            'lancamento_com_rateio': '',
+            'salvar_como_regra_automatica': '',
+            'valor_total_documento': '',
+            'rateio_payload': '',
+        }
+
+    def test_novo_lancamento_nao_permite_conta_inativa(self):
+        form = LancamentoFinanceiroForm(data=self._dados_receita(self.conta_inativa))
+
+        self.assertFalse(form.is_valid())
+        self.assertIn('conta', form.errors)
+
+    def test_novo_lancamento_com_rateio_nao_permite_conta_inativa(self):
+        dados = self._dados_receita(self.conta_inativa)
+        dados.update(
+            {
+                'lancamento_com_rateio': 'on',
+                'valor': '',
+                'valor_total_documento': '50.00',
+                'rateio_payload': json.dumps([
+                    {'categoria': str(self.categoria.pk), 'valor': '30.00'},
+                    {'categoria': str(self.categoria.pk), 'valor': '20.00'},
+                ]),
+            }
+        )
+
+        form = LancamentoFinanceiroForm(data=dados)
+
+        self.assertFalse(form.is_valid())
+        self.assertIn('conta', form.errors)
+
+    def test_transferencia_nova_nao_permite_conta_destino_inativa(self):
+        dados = self._dados_receita(self.conta_ativa)
+        dados.update(
+            {
+                'tipo': LancamentoFinanceiro.TipoLancamento.TRANSFERENCIA,
+                'pessoa': '',
+                'categoria': '',
+                'conta_destino': str(self.conta_inativa.pk),
+            }
+        )
+
+        form = LancamentoFinanceiroForm(data=dados)
+
+        self.assertFalse(form.is_valid())
+        self.assertIn('conta_destino', form.errors)
+
+    def test_edicao_preserva_conta_inativa_ja_vinculada(self):
+        lancamento = LancamentoFinanceiro.objects.create(
+            descricao='Receita antiga',
+            tipo=LancamentoFinanceiro.TipoLancamento.RECEITA,
+            status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+            valor=Decimal('50.00'),
+            data_competencia=date(2026, 3, 1),
+            data_pagamento=date(2026, 3, 1),
+            pessoa=self.pessoa,
+            categoria=self.categoria,
+            conta=self.conta_inativa,
+        )
+        dados = self._dados_receita(self.conta_inativa)
+        dados['descricao'] = 'Receita antiga ajustada'
+        dados['numero_documento'] = lancamento.numero_documento
+
+        form = LancamentoFinanceiroForm(data=dados, instance=lancamento)
+
+        self.assertTrue(form.is_valid(), form.errors)
+
+    def test_clone_nao_reaproveita_conta_inativa_automaticamente(self):
+        lancamento = LancamentoFinanceiro.objects.create(
+            descricao='Receita antiga',
+            tipo=LancamentoFinanceiro.TipoLancamento.RECEITA,
+            status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+            valor=Decimal('50.00'),
+            data_competencia=date(2026, 3, 1),
+            data_pagamento=date(2026, 3, 1),
+            pessoa=self.pessoa,
+            categoria=self.categoria,
+            conta=self.conta_inativa,
+        )
+        view = LancamentoFinanceiroCloneView()
+        view.lancamento_origem = lancamento
+
+        initial = view.get_initial()
+
+        self.assertNotIn('conta', initial)
+
+    def test_autocomplete_contas_nao_retorna_inativas(self):
+        request = self.factory.get('/financeiro/autocomplete/contas/', {'q': 'Conta'})
+        view = ContaFinanceiraAutocompleteView()
+        view.request = request
+
+        response = view.get(request)
+        payload = json.loads(response.content)
+        labels = [item['label'] for item in payload['results']]
+
+        self.assertIn('Conta ativa', labels)
+        self.assertIn('Conta destino ativa', labels)
+        self.assertNotIn('Conta inativa', labels)
 
 
 class PrestacaoContasTransferenciasEscopoTests(TestCase):

@@ -6,6 +6,7 @@ from uuid import uuid4
 
 from django import forms
 from django.core.exceptions import ValidationError
+from django.db.models import Q
 from django.forms.models import construct_instance
 from django.urls import reverse_lazy
 
@@ -30,6 +31,12 @@ def categorias_vinculaveis_queryset(tipo: str | None = None, categoria_extra_id:
     if categoria_extra_id:
         queryset = queryset | CategoriaFinanceira.objects.filter(pk=categoria_extra_id)
     return queryset.order_by('tipo', 'nome')
+
+
+def contas_lancamento_queryset(*conta_extra_ids: int | str | None):
+    extras = [conta_id for conta_id in conta_extra_ids if conta_id]
+    queryset = ContaFinanceira.objects.filter(Q(ativa=True) | Q(pk__in=extras))
+    return queryset.order_by('nome')
 
 
 class ContaFinanceiraForm(forms.ModelForm):
@@ -182,6 +189,8 @@ class LancamentoFinanceiroForm(forms.ModelForm):
             tipo=tipo_atual,
             categoria_extra_id=categoria_inicial_id,
         )
+        self.fields['conta'].queryset = contas_lancamento_queryset(self.instance.conta_id)
+        self.fields['conta_destino'].queryset = contas_lancamento_queryset(self.instance.conta_destino_id)
         for field_name in ('data_competencia', 'data_pagamento'):
             self.fields[field_name].widget.format = '%Y-%m-%d'
             if self.is_bound:
@@ -481,6 +490,12 @@ class LancamentoFinanceiroGrupoRateioForm(forms.ModelForm):
         self.fields['data_pagamento'].required = True
         self.fields['data_pagamento'].error_messages['required'] = 'Informe a data de pagamento.'
         self.fields['tipo'].choices = [choice for choice in self.fields['tipo'].choices if choice[0] != '']
+        conta_extra_ids = {self.instance.conta_id, self.instance.conta_destino_id}
+        for lancamento in self.grupo_lancamentos:
+            conta_extra_ids.add(lancamento.conta_id)
+            conta_extra_ids.add(lancamento.conta_destino_id)
+        self.fields['conta'].queryset = contas_lancamento_queryset(*conta_extra_ids)
+        self.fields['conta_destino'].queryset = contas_lancamento_queryset(*conta_extra_ids)
         autocomplete_urls = {
             'pessoa': reverse_lazy('financeiro:autocomplete-pessoa'),
             'centro_custo': reverse_lazy('financeiro:autocomplete-centro-custo'),

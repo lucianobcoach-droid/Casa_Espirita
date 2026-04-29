@@ -8,6 +8,13 @@ Data de atualizacao: 2026-04-28
 - relatorios e filtros historicos usam contas sem filtrar por `ativa`, preservando historico, mas ainda exibem contas inativas mesmo sem movimento no periodo
 - proxima microetapa recomendada: ajustar criacao/clone/autocomplete para oferecer apenas contas ativas e preservar contas inativas ja vinculadas na edicao, depois refinar filtros historicos por movimento no periodo
 
+## Conta inativa em novos lancamentos
+
+- novos lancamentos e conta destino de transferencia passam a aceitar apenas contas ativas no formulario/autocomplete
+- edicao de lancamento antigo preserva a conta origem/destino ja vinculada, mesmo se inativa, sem abrir todas as inativas
+- clones passam a ser tratados como novos lancamentos: conta origem/destino inativa do original nao e reaproveitada automaticamente
+- filtros e relatorios historicos permanecem fora desta microetapa e seguem como pendencia separada
+
 ## MVP do Balancete Institucional
 
 - foi criado o primeiro relatorio proprio `Balancete Institucional`, com rota, view, template documental e link no menu de Relatorios do financeiro

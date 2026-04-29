@@ -9,6 +9,14 @@ Data: 2026-04-28
 - diagnostico: relatorios historicos preservam movimentos de contas inativas porque usam todas as contas, mas os filtros ainda nao limitam inativas ao criterio "com movimento no periodo"
 - nao implementei correcao funcional, nao alterei Python, templates ou calculos nesta microetapa
 
+## Conta inativa em novos lancamentos
+
+- restringi `conta` e `conta_destino` dos forms de lancamento para contas ativas em criacao, preservando apenas as contas ja vinculadas quando a edicao for de registro antigo
+- ajustei o autocomplete de contas para retornar somente contas ativas
+- ajustei clones para nao reaproveitar automaticamente conta origem/destino inativa do lancamento original
+- adicionei testes pontuais para novo lancamento, transferencia, rateio, edicao historica, clone e autocomplete
+- nao alterei relatorios, filtros historicos, importacao, models, migrations ou calculos
+
 ## MVP do Balancete Institucional
 
 - criei a rota `/financeiro/balancete-institucional/`, a view `BalanceteInstitucionalFinanceiroView` e o template proprio `balancete_institucional.html`
