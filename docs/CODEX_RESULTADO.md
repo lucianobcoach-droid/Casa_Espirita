@@ -2,6 +2,12 @@
 
 Data: 2026-04-28
 
+## Auditoria da logo no Extrato impresso
+
+- auditei o template real do Extrato (`conta_extrato.html`), o CSS de impressao, o contexto global de identidade institucional e comparei com Prestacao, Resumo e Balancete
+- diagnostico: o Extrato nao renderiza a logo como `<img>`; ele usa apenas `financeiro_shell_brand_name` no cabecalho impresso, embora `financeiro_shell_brand_logo_url` esteja disponivel pelo context processor
+- nao alterei codigo, templates, CSS, models, migrations, calculos ou relatorios nesta microetapa
+
 ## Registro documental de tipo/disponibilidade de conta
 
 - registrei no roadmap a frente futura de tipo de conta, disponibilidade/vinculacao, mensagem explicativa por conta e modos de composicao do Balancete

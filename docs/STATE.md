@@ -2,6 +2,12 @@
 
 Data de atualizacao: 2026-04-28
 
+## Auditoria da logo no Extrato impresso
+
+- auditoria concluida sem implementacao funcional: o Extrato impresso recebe o nome institucional pelo contexto global, mas o template `conta_extrato.html` nao renderiza `financeiro_shell_brand_logo_url` como imagem no cabecalho
+- Prestacao, Resumo e Balancete usam a logo institucional via `<img>` com o mesmo contexto global, indicando causa provavel no template do Extrato, nao em calculo, configuracao ou regra financeira
+- proxima microetapa recomendada: inserir no cabecalho documental do Extrato o mesmo bloco de logo institucional usado nos demais relatorios, mantendo fallback para nome quando nao houver logo
+
 ## Registro documental de tipo/disponibilidade de conta
 
 - registrada frente futura para tipo de conta financeira, disponibilidade/vinculacao de saldo, mensagem opcional de indisponibilidade e modos de composicao do Balancete

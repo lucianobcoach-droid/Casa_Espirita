@@ -540,8 +540,18 @@ Documentos relacionados:
 
 Status inicial: FUTURO REAL / REQUER AUDITORIA VISUAL
 
+Status apos auditoria: AUDITADO / REQUER CORRECAO PONTUAL NO TEMPLATE
+
 Motivo:
 Foi observado que o Extrato impresso parece reservar espaco para logo institucional, mas a logo nao aparece na impressao. Deve ser auditado separadamente da frente de tipo/disponibilidade de conta.
+
+Achado da auditoria:
+- `conta_extrato.html` nao renderiza `financeiro_shell_brand_logo_url` como `<img>` no cabecalho impresso.
+- Prestacao, Resumo e Balancete renderizam a logo institucional com a mesma variavel de contexto.
+- Causa provavel: lacuna no template do Extrato, nao CSS de print, calculo financeiro ou configuracao institucional.
+
+Proxima microetapa recomendada:
+- adicionar ao cabecalho documental do Extrato o bloco de logo institucional ja usado nos demais relatorios, preservando fallback para nome institucional quando nao houver logo.
 
 Classificacao documental:
 - AJUSTE VISUAL DE RELATORIO / IMPRESSAO
