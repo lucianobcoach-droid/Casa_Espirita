@@ -2,6 +2,14 @@
 
 Data de atualizacao: 2026-04-28
 
+## Auditoria documental do Balancete Institucional
+
+- auditoria concluida sem implementacao funcional: Balancete esta documentado como relatorio proprio e nao substitui a Prestacao/Fechamento
+- confirmado documentalmente que o MVP reutiliza a base comum de calculo da Prestacao/Fechamento e preserva fundo branco, aparencia documental, composicao final e selecao manual de assinaturas
+- reclassificados no mapa e no roadmap os pontos do Balancete como parcialmente implementados, com pendencias futuras de modelagem para tipo de conta, disponibilidade/vinculacao e modos de composicao
+- regras permanentes sobre integralizacao de capital como valor patrimonial/vinculado, nao despesa operacional, ja estavam registradas em `CEREBRO_PROJETO.md` e `REGRAS_NEGOCIO.md`
+- nao houve alteracao de codigo, views, templates, urls, models, forms, testes ou calculos financeiros
+
 ## Rotina oficial Git/GitHub
 
 - consolidada documentalmente a rotina de sincronizacao local x GitHub do projeto

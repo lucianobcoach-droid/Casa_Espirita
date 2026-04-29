@@ -39,10 +39,10 @@ Este bloco registra nova frente gerencial/patrimonial levantada pela usuaria. Na
 
 ## 0.17. Balancete Institucional como relatorio proprio futuro
 
-Este bloco registra a revisao da direcao conceitual anterior. A Prestacao/Fechamento atual permanece como relatorio analitico/gerencial ja validado; o Balancete Institucional deve nascer futuramente como relatorio proprio, com finalidade formal/documental. Nao representa implementacao concluida.
+Este bloco registra a revisao da direcao conceitual anterior. A Prestacao/Fechamento atual permanece como relatorio analitico/gerencial ja validado; o Balancete Institucional nasceu como relatorio proprio em MVP e permanece com evolucoes futuras documentais/gerenciais. Nao representa frente totalmente concluida.
 
 1. **Balancete Institucional**
-   - Classificacao: FRENTE FUTURA DE RELATORIO / IMPRESSAO.
+   - Classificacao: PARCIALMENTE IMPLEMENTADO + AJUSTE VISUAL/DOCUMENTAL FUTURO.
    - Prioridade documental: MEDIA.
    - Direcao revisada: criar relatorio proprio chamado `Balancete Institucional`, sem substituir a Prestacao/Fechamento atual.
    - Base de calculo: reutilizar a mesma regra/base de calculo da Prestacao/Fechamento, evitando divergencia de resultado e evitando duplicar regra financeira em dois lugares diferentes.
@@ -50,7 +50,8 @@ Este bloco registra a revisao da direcao conceitual anterior. A Prestacao/Fecham
    - Apresentacao: template/documento proprio, com fundo branco, linhas compactas, secoes numeradas, valores alinhados a direita, fechamento do saldo disponivel, composicao final do saldo e aparencia institucional.
    - Regras preservadas: manter receitas/despesas separadas, transferencias fora do resultado operacional e transferencias compondo saldo apenas quando necessarias conforme escopo de contas.
    - Impressao: priorizar uma pagina quando o volume permitir; quando o relatorio for grande, quebrar paginas de forma clara e organizada, sem assinatura ou blocos finais isolados de maneira ruim.
-   - Assinaturas: prever duas assinaturas, considerando o cadastro manual de assinaturas ja existente e futura definicao/selecao de duas assinaturas padrao para este documento.
+   - Assinaturas: o MVP permite selecao manual de assinaturas pelo cadastro existente; definicao de assinaturas padrao especificas para este documento permanece como ajuste futuro, se o uso real exigir.
+   - Pendencias futuras vinculadas: tipo de conta, disponibilidade/vinculacao, separacao entre saldo disponivel e indisponivel e modos de composicao por conta/tipo/total consolidado.
    - Historico da decisao: a direcao anterior falava em evoluir a Prestacao/Fechamento para modelo tipo balancete; a direcao revisada mantem a Prestacao/Fechamento como relatorio analitico e separa o Balancete como documento proprio.
 
 ## 0.16. Pendencias documentadas apos correcao da edicao de contas

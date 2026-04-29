@@ -2,6 +2,15 @@
 
 Data: 2026-04-28
 
+## Auditoria documental do Balancete Institucional
+
+- auditei os registros do Balancete em `CEREBRO_PROJETO.md`, `STATE.md`, `ROADMAP_FINANCEIRO.md`, `MAPA_RECLASSIFICACAO.md`, `REGRAS_NEGOCIO.md` e `CODEX_RESULTADO.md`
+- confirmei que as diretrizes permanentes ja registram o Balancete como relatorio proprio, sem substituir a Prestacao/Fechamento, reutilizando a mesma base de calculo
+- confirmei que fundo branco, aparencia documental, composicao final, assinaturas, tipo de conta, disponibilidade/vinculacao, integralizacao de capital e modos futuros de composicao ja estavam documentados
+- ajustei cirurgicamente o `ROADMAP_FINANCEIRO.md` e o `MAPA_RECLASSIFICACAO.md` para classificar o Balancete como parcialmente implementado, mantendo como futuras as evolucoes de modelagem e composicao
+- registrei nota curta no `STATE.md`
+- nao alterei codigo funcional, views, urls, models, forms, templates, testes, CSS ou calculos financeiros
+
 ## Rotina oficial Git/GitHub
 
 - registrei a governanca permanente de versionamento local x GitHub

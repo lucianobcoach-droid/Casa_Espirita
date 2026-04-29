@@ -442,12 +442,21 @@ Documentos relacionados:
 
 Status inicial: FUTURO REAL / FRENTE DE RELATORIO
 
+Status apos auditoria: PARCIALMENTE IMPLEMENTADO / AJUSTES FUTUROS
+
 Motivo:
 Foi revisada a direcao anterior: a Prestacao/Fechamento deve permanecer como relatorio analitico/gerencial, e o Balancete Institucional deve ser criado futuramente como relatorio proprio, formal/documental, reutilizando a mesma base de calculo da Prestacao/Fechamento.
 
+Achado da auditoria documental:
+- o Balancete ja existe como relatorio proprio, sem substituir a Prestacao/Fechamento
+- o MVP reutiliza a base comum de calculo preparada a partir da Prestacao/Fechamento
+- o documento ja nasceu com aparencia documental, fundo branco, composicao final do saldo e ajustes visuais de impressao registrados
+- permanecem futuras as evolucoes de modelo gerencial/patrimonial, especialmente tipo de conta, separacao entre disponivel/indisponivel e modos de composicao
+
 Classificacao documental:
-- FRENTE FUTURA DE RELATORIO / IMPRESSAO
-- AJUSTE VISUAL DOCUMENTAL
+- PARCIALMENTE IMPLEMENTADO
+- AJUSTE VISUAL/DOCUMENTAL FUTURO
+- REQUER MODELAGEM para disponibilidade/tipo de conta
 
 Prioridade documental: MEDIA
 
@@ -469,12 +478,19 @@ Documentos relacionados:
 
 Status inicial: FUTURO REAL
 
+Status apos auditoria: PARCIALMENTE IMPLEMENTADO / AJUSTE FUTURO
+
 Motivo:
 Foi levantada necessidade futura de permitir duas assinaturas no Balancete Institucional, aproveitando a base de cadastro manual de assinaturas ja existente e evoluindo para selecao ou definicao de duas assinaturas padrao para esse documento.
 
+Achado da auditoria documental:
+- o MVP do Balancete ja permite selecionar assinaturas a partir de `AssinaturaInstitucional`
+- a regra atual evita exibir assinatura real quando nao houver selecao manual
+- permanece futura a eventual definicao de assinaturas padrao especificas para o Balancete, se o uso real exigir
+
 Classificacao documental:
-- MELHORIA FUNCIONAL
-- AJUSTE DOCUMENTAL / IMPRESSAO
+- PARCIALMENTE IMPLEMENTADO
+- AJUSTE DOCUMENTAL / IMPRESSAO FUTURO
 
 Prioridade documental: MEDIA
 
