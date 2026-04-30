@@ -2,6 +2,13 @@
 
 Data de atualizacao: 2026-04-30
 
+## Filtros historicos de contas inativas
+
+- filtros historicos de contas passaram a listar contas ativas sempre e contas inativas apenas quando houver movimento no periodo/escopo considerado
+- a regra foi aplicada a base compartilhada de Resumo, Prestacao/Fechamento e Balancete, alem de Evolucao por categorias, Extratos, Historico por favorecido e listagem de lancamentos
+- o criterio de movimento considera conta origem e conta destino em transferencia, usando data de pagamento com fallback para competencia
+- nao houve alteracao de calculo financeiro, saldo, models, migrations, importacao/exportacao ou regras de novos lancamentos
+
 ## Refinamento visual da diferenca do rateio
 
 - ajuste complementar: o valor de `DIFERENCA A DETALHAR` foi movido para a propria grade do rateio, ficando alinhado visualmente com a coluna `Valor`

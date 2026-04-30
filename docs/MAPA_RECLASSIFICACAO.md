@@ -352,8 +352,10 @@ Status apos auditoria: AUDITADO / REQUER IMPLEMENTACAO
 
 Status apos implementacao parcial: PARCIALMENTE IMPLEMENTADO / REQUER FILTROS HISTORICOS
 
+Status apos refinamento de filtros historicos: IMPLEMENTADO
+
 Motivo:
-Foi definida a regra de que conta inativa nao deve aparecer para novos lancamentos, mas deve aparecer em relatorios historicos quando tiver movimento no periodo selecionado. Requer conferencia de formularios, filtros e relatorios.
+Foi definida a regra de que conta inativa nao deve aparecer para novos lancamentos, mas deve aparecer em filtros historicos quando tiver movimento no periodo/escopo selecionado.
 
 Achado da auditoria:
 - `LancamentoFinanceiroForm`, `LancamentoFinanceiroGrupoRateioForm` e `ContaFinanceiraAutocompleteView` ainda usam contas sem filtrar por `ativa`, permitindo conta inativa em novo lancamento e em conta destino de transferencia.
@@ -365,7 +367,7 @@ Implementacao parcial:
 - Forms e autocomplete de lancamentos passaram a oferecer apenas contas ativas para novos lancamentos e transferencias.
 - Edicao de lancamento antigo preserva apenas a conta inativa ja vinculada ao proprio registro.
 - Clone passa a limpar conta origem/destino inativa do original para revisao do usuario.
-- Permanece pendente a parte de filtros historicos de relatorios.
+- Filtros historicos de contas em consultas/relatorios passam a listar contas ativas sempre e contas inativas apenas quando houver movimento no periodo/escopo considerado.
 
 Classificacao documental:
 - REGRA DE NEGOCIO

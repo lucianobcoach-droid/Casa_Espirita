@@ -101,7 +101,7 @@ Este bloco registra pendencias novas levantadas pela usuaria apos a correcao do 
    - Classificacao: REGRA DE NEGOCIO + correcao operacional.
    - Prioridade documental: ALTA.
    - Direcao: conta inativa nao deve aparecer para novos lancamentos, mas deve continuar disponivel em relatorios quando tiver movimento no periodo selecionado.
-   - Status: parcialmente implementado; criacao/clone/autocomplete de lancamentos ja bloqueiam contas inativas e a edicao historica preserva a conta ja vinculada. Permanece pendente refinar filtros historicos para exibir inativas apenas quando houver movimento no periodo.
+   - Status: IMPLEMENTADO; criacao/clone/autocomplete de lancamentos bloqueiam contas inativas, edicao historica preserva conta ja vinculada e filtros historicos passam a exibir contas inativas apenas quando houver movimento no periodo/escopo considerado.
 
 4. **Favorecido em transferencia no Extrato**
    - Classificacao: MELHORIA DE UX + correcao operacional.

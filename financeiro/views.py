@@ -2611,6 +2611,67 @@ def _filtrar_lancamentos_por_parametros(queryset, parametros):
     return queryset
 
 
+def _normalizar_data_filtro_historico(valor) -> date | None:
+    if isinstance(valor, date):
+        return valor
+    valor = (valor or '').strip()
+    if not valor:
+        return None
+    try:
+        return date.fromisoformat(valor)
+    except ValueError:
+        return None
+
+
+def _ids_contas_com_movimento_historico(
+    *,
+    data_inicial=None,
+    data_final=None,
+    filtro_extra: Q | None = None,
+    status: str | None = None,
+) -> set[int]:
+    data_inicial_resolvida = _normalizar_data_filtro_historico(data_inicial)
+    data_final_resolvida = _normalizar_data_filtro_historico(data_final)
+    lancamentos = LancamentoFinanceiro.objects.annotate(
+        data_operacional=Coalesce('data_pagamento', 'data_competencia')
+    )
+    if data_inicial_resolvida:
+        lancamentos = lancamentos.filter(data_operacional__gte=data_inicial_resolvida)
+    if data_final_resolvida:
+        lancamentos = lancamentos.filter(data_operacional__lte=data_final_resolvida)
+    if status:
+        lancamentos = lancamentos.filter(status=status)
+    if filtro_extra is not None:
+        lancamentos = lancamentos.filter(filtro_extra)
+
+    contas_origem = set(
+        lancamentos.exclude(conta_id__isnull=True).values_list('conta_id', flat=True)
+    )
+    contas_destino = set(
+        lancamentos.exclude(conta_destino_id__isnull=True).values_list('conta_destino_id', flat=True)
+    )
+    return contas_origem | contas_destino
+
+
+def _contas_historicas_para_filtro(
+    *,
+    data_inicial=None,
+    data_final=None,
+    filtro_extra: Q | None = None,
+    status: str | None = None,
+) -> list[ContaFinanceira]:
+    contas_com_movimento = _ids_contas_com_movimento_historico(
+        data_inicial=data_inicial,
+        data_final=data_final,
+        filtro_extra=filtro_extra,
+        status=status,
+    )
+    return _ordenar_itens_insensivel(
+        ContaFinanceira.objects.filter(Q(ativa=True) | Q(pk__in=contas_com_movimento)),
+        'nome',
+    )
+
+
 def _montar_resumo_visual_rateio_lancamentos(linhas_rateio):
     partes = []
     for lancamento in linhas_rateio[:3]:
@@ -3672,10 +3733,15 @@ class FinanceiroPeriodoMixin(FinanceiroPermissaoMixin):
         ultimo_dia = hoje.replace(day=monthrange(hoje.year, hoje.month)[1])
         return primeiro_dia, ultimo_dia
 
-    def _parse_contas(self) -> tuple[list[ContaFinanceira], list[str], list[int]]:
-        contas_disponiveis = _ordenar_itens_insensivel(
-            ContaFinanceira.objects.all(),
-            'nome',
+    def _parse_contas(
+        self,
+        data_inicial: date | None = None,
+        data_final: date | None = None,
+    ) -> tuple[list[ContaFinanceira], list[str], list[int]]:
+        contas_disponiveis = _contas_historicas_para_filtro(
+            data_inicial=data_inicial,
+            data_final=data_final,
+            status=LancamentoFinanceiro.StatusLancamento.QUITADO,
         )
         contas_por_id = {conta.id: conta for conta in contas_disponiveis}
         selected_ids_raw = [valor.strip() for valor in self.request.GET.getlist('contas') if valor.strip()]
@@ -3929,8 +3995,8 @@ class FinanceiroPeriodoMixin(FinanceiroPermissaoMixin):
         return montar_contexto_fechamento_periodo(self)
 
     def _montar_contexto_fechamento_periodo_base(self) -> dict[str, object]:
-        contas_disponiveis, selected_ids_raw, selected_ids = self._parse_contas()
         data_inicial_raw, data_final_raw, data_inicial, data_final, periodo_error = self._parse_periodo()
+        contas_disponiveis, selected_ids_raw, selected_ids = self._parse_contas(data_inicial, data_final)
         mostrar_centro_custo = self._parse_checkbox('mostrar_centro_custo')
         exibir_transferencias = self._parse_checkbox('exibir_transferencias')
         mostrar_contas_zeradas = self._parse_checkbox('mostrar_contas_zeradas')
@@ -4361,10 +4427,14 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
             'periodo_error': periodo_comparativo_error if comparacao_solicitada else '',
         }
 
-    def _parse_contas(self) -> tuple[list[ContaFinanceira], list[str], list[int]]:
-        contas_disponiveis = _ordenar_itens_insensivel(
-            ContaFinanceira.objects.all(),
-            'nome',
+    def _parse_contas(
+        self,
+        data_inicial: date | None = None,
+        data_final: date | None = None,
+    ) -> tuple[list[ContaFinanceira], list[str], list[int]]:
+        contas_disponiveis = _contas_historicas_para_filtro(
+            data_inicial=data_inicial,
+            data_final=data_final,
         )
         selected_ids_raw = [valor for valor in self.request.GET.getlist('contas') if valor.strip()]
         selected_ids: list[int] = []
@@ -4542,7 +4612,6 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
         )
 
     def _build_contexto_base(self) -> dict[str, object]:
-        contas_disponiveis, selected_ids_raw, selected_ids = self._parse_contas()
         modo = (self.request.GET.get('modo') or self.modo_padrao).strip()
         if modo not in {item[0] for item in self.modos_disponiveis}:
             modo = self.modo_padrao
@@ -4556,6 +4625,12 @@ class EvolucaoCategoriasFinanceiroView(FinanceiroPermissaoMixin, TemplateView):
         itens_disponiveis_subcategorias = self._build_itens_disponiveis('subcategorias')
         data_inicial_raw, data_final_raw, data_inicial, data_final, periodo_error = self._parse_periodo()
         periodos_comparacao = self._parse_periodos_comparacao()
+        datas_iniciais_contas = [data for data in (data_inicial, periodos_comparacao['periodo_comparativo_resolvido'][0]) if data]
+        datas_finais_contas = [data for data in (data_final, periodos_comparacao['periodo_comparativo_resolvido'][1]) if data]
+        contas_disponiveis, selected_ids_raw, selected_ids = self._parse_contas(
+            min(datas_iniciais_contas) if datas_iniciais_contas else None,
+            max(datas_finais_contas) if datas_finais_contas else None,
+        )
         comparacao_periodos_reorganizada = False
         if (
             not periodo_error
@@ -6189,7 +6264,11 @@ class ExtratoFinanceiroView(ExtratoContaMixin, TemplateView):
         data_inicial = self.request.GET.get('data_inicial', '').strip()
         data_final = self.request.GET.get('data_final', '').strip()
         mostrar_observacao = self._parse_checkbox('exibir_observacao')
-        contas = ContaFinanceira.objects.order_by('nome')
+        contas = _contas_historicas_para_filtro(
+            data_inicial=data_inicial,
+            data_final=data_final,
+            status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+        )
         contas_selecionadas, contas_selecionadas_ids, todas_as_contas, selecao_informada = self._parse_contas_extrato(contas)
 
         context['page_title'] = 'Extratos'
@@ -6541,7 +6620,11 @@ class PessoaFinanceiraHistoricoView(FinanceiroPermissaoMixin, DetailView):
             {
                 'page_title': f'Historico do favorecido - {self.object.nome}',
                 'lancamentos_historico': lancamentos,
-                'contas_disponiveis': ContaFinanceira.objects.order_by('nome'),
+                'contas_disponiveis': _contas_historicas_para_filtro(
+                    data_inicial=_parse_data_iso(self.request.GET.get('data_inicial', '')),
+                    data_final=_parse_data_iso(self.request.GET.get('data_final', '')),
+                    filtro_extra=Q(pessoa=self.object),
+                ),
                 'tipo_choices': LancamentoFinanceiro.TipoLancamento.choices,
                 'status_choices': LancamentoFinanceiro.StatusLancamento.choices,
                 'filtros_historico_ativos': _request_possui_parametros_get(
@@ -6970,7 +7053,10 @@ class LancamentoFinanceiroListView(FinanceiroPermissaoMixin, ListView):
             self.request.GET.get('ordenacao')
         )
         por_pagina = _resolver_lancamentos_por_pagina(self.request)
-        context['contas_disponiveis'] = ContaFinanceira.objects.order_by('nome')
+        context['contas_disponiveis'] = _contas_historicas_para_filtro(
+            data_inicial=self.request.GET.get('data_inicial', ''),
+            data_final=self.request.GET.get('data_final', ''),
+        )
         context['pessoas_disponiveis'] = PessoaFinanceira.objects.order_by('nome')
         context['categorias_disponiveis'] = CategoriaFinanceira.objects.order_by('tipo', 'nome')
         lancamentos_visuais = _ordenar_lancamentos_visuais_listagem(

@@ -207,6 +207,62 @@ class LancamentoContaInativaTests(TestCase):
         self.assertIn('Conta destino ativa', labels)
         self.assertNotIn('Conta inativa', labels)
 
+    def test_filtros_historicos_mostram_inativa_apenas_com_movimento_no_periodo(self):
+        conta_inativa_sem_movimento = ContaFinanceira.objects.create(
+            nome='Conta inativa sem movimento',
+            saldo_inicial=Decimal('0.00'),
+            data_saldo_inicial=date(2026, 1, 1),
+            ativa=False,
+        )
+        conta_inativa_fora_periodo = ContaFinanceira.objects.create(
+            nome='Conta inativa fora do periodo',
+            saldo_inicial=Decimal('0.00'),
+            data_saldo_inicial=date(2026, 1, 1),
+            ativa=False,
+        )
+        LancamentoFinanceiro.objects.create(
+            descricao='Movimento inativo no periodo',
+            tipo=LancamentoFinanceiro.TipoLancamento.RECEITA,
+            status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+            valor=Decimal('80.00'),
+            data_competencia=date(2026, 3, 10),
+            data_pagamento=date(2026, 3, 10),
+            pessoa=self.pessoa,
+            categoria=self.categoria,
+            conta=self.conta_inativa,
+        )
+        LancamentoFinanceiro.objects.create(
+            descricao='Movimento inativo fora do periodo',
+            tipo=LancamentoFinanceiro.TipoLancamento.RECEITA,
+            status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+            valor=Decimal('90.00'),
+            data_competencia=date(2026, 2, 10),
+            data_pagamento=date(2026, 2, 10),
+            pessoa=self.pessoa,
+            categoria=self.categoria,
+            conta=conta_inativa_fora_periodo,
+        )
+
+        request = self.factory.get(
+            '/financeiro/prestacao-contas/',
+            data=[
+                ('data_inicial', '2026-03-01'),
+                ('data_final', '2026-03-31'),
+                ('contas', str(self.conta_inativa.pk)),
+            ],
+        )
+        view = PrestacaoContasFinanceiroView()
+        view.request = request
+
+        contexto = view._build_periodo_context()
+        nomes = [conta.nome for conta in contexto['contas_disponiveis']]
+
+        self.assertIn('Conta ativa', nomes)
+        self.assertIn('Conta inativa', nomes)
+        self.assertNotIn(conta_inativa_sem_movimento.nome, nomes)
+        self.assertNotIn(conta_inativa_fora_periodo.nome, nomes)
+        self.assertIn(str(self.conta_inativa.pk), contexto['contas_selecionadas_ids'])
+
 
 class PrestacaoContasTransferenciasEscopoTests(TestCase):
     def setUp(self):

@@ -2,6 +2,15 @@
 
 Data: 2026-04-30
 
+## Filtros historicos de contas inativas
+
+- criei helper para montar contas historicas de filtro com contas ativas sempre e contas inativas apenas quando houver movimento no periodo/escopo
+- apliquei o filtro na base compartilhada de Resumo, Prestacao/Fechamento e Balancete, em Evolucao por categorias, Extratos, Historico por favorecido e listagem de lancamentos
+- mantive o criterio de movimento por conta origem ou conta destino em transferencia, usando data de pagamento com fallback para competencia
+- adicionei teste pontual para confirmar conta ativa visivel, conta inativa com movimento no periodo visivel, conta inativa sem movimento/fora do periodo oculta e selecao historica preservada
+- baixei a pendencia no `MAPA_RECLASSIFICACAO.md` como IMPLEMENTADO e atualizei `ROADMAP_FINANCEIRO.md` e `REGRAS_NEGOCIO.md`
+- nao alterei calculo financeiro, saldo, models, migrations, importacao/exportacao ou regras de novos lancamentos
+
 ## Refinamento visual da diferenca do rateio
 
 - alinhei o valor de `DIFERENCA A DETALHAR` com a coluna de valores das linhas de rateio, usando uma linha de rodape da propria tabela
