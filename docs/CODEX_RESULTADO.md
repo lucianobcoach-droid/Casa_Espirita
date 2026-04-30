@@ -2,6 +2,14 @@
 
 Data: 2026-04-30
 
+## Homologacao local e melhoria futura do Extrato multi-contas
+
+- registrei a homologacao local da usuaria como OK para: listagem de lancamentos multi-contas, favorecido tecnico no Extrato, diferenca a detalhar no rateio e filtros historicos de contas inativas
+- acrescentei no roadmap uma melhoria futura para o Extrato multi-contas permitir, opcionalmente, detalhar transferencias internas em duas linhas operacionais para conferencia
+- registrei no mapa essa frente como FUTURO REAL / MELHORIA DE UX, sem marcar como erro da implementacao atual
+- preservei a regra atual do Extrato consolidado: transferencias internas ao escopo selecionado se anulam e nao inflam o saldo consolidado
+- nao alterei codigo funcional, views, templates, forms, tests, CSS, calculos financeiros, relatórios ou comportamento do Extrato
+
 ## Filtro multi-contas na listagem de lancamentos
 
 - implementei selecao de uma, varias ou todas as contas na listagem de lancamentos, reaproveitando o dropdown de contas ja usado no modulo financeiro

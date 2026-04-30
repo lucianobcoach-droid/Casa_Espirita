@@ -2,6 +2,12 @@
 
 Data de atualizacao: 2026-04-30
 
+## Homologacao local de melhorias recentes do financeiro
+
+- usuaria testou localmente e validou como OK: listagem de lancamentos com filtro multi-contas, favorecido tecnico `TRANSFERENCIA ENTRE CONTAS` no Extrato, bloco `DIFERENCA A DETALHAR` no rateio e filtro de contas inativas em consultas historicas
+- registrada melhoria futura para o Extrato multi-contas: opcao visual/analitica para detalhar transferencias internas entre contas selecionadas em duas linhas operacionais, sem alterar saldo consolidado, calculo financeiro ou regra atual de neutralizacao
+- nao houve alteracao funcional, codigo, views, templates, forms, tests, CSS, calculos financeiros ou comportamento do Extrato nesta microetapa documental
+
 ## Filtro multi-contas na listagem de lancamentos
 
 - a listagem de lancamentos passou a permitir filtro por uma, varias ou todas as contas

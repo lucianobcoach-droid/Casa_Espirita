@@ -717,6 +717,31 @@ Documentos relacionados:
 - docs/ROADMAP_FINANCEIRO.md
 - docs/STATE.md
 
+---
+
+### 30. Extrato multi-contas - detalhamento opcional de transferencias internas
+
+Status inicial: FUTURO REAL / MELHORIA DE UX
+
+Motivo:
+A usuaria homologou como correto o comportamento atual do Extrato consolidado, no qual transferencias internas ao escopo selecionado se anulam para nao inflar o saldo. Durante a validacao, foi identificada uma melhoria futura de conferencia operacional: oferecer opcao visual para detalhar essas transferencias internas em duas linhas, uma de saida da conta origem e outra de entrada na conta destino.
+
+Classificacao documental:
+- FUTURO REAL
+- MELHORIA DE UX
+- NAO E ERRO DA IMPLEMENTACAO ATUAL
+
+Regra preservada:
+- o comportamento padrao do Extrato permanece consolidado
+- transferencias internas ao escopo selecionado continuam se anulando no saldo
+- a melhoria futura nao deve alterar calculo financeiro, saldo, regra de transferencia, listagem de lancamentos, importacao/exportacao ou outros relatorios
+
+Prioridade documental: MEDIA
+
+Documentos relacionados:
+- docs/ROADMAP_FINANCEIRO.md
+- docs/STATE.md
+
 ## Próxima ação recomendada
 
 A próxima microetapa documental deve conferir os itens acima contra o código e contra os documentos atuais, um grupo por vez, sem alterar funcionalidades.

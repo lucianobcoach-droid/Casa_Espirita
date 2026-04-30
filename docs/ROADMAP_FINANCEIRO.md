@@ -123,9 +123,16 @@ Este bloco registra pendencias novas levantadas pela usuaria apos a correcao do 
    - Direcao: permitir selecionar mais de uma conta na listagem de lancamentos, reaproveitando a experiencia aprovada no Extrato multi-contas quando fizer sentido.
    - Status: IMPLEMENTADO; a listagem permite uma, varias ou todas as contas e inclui lancamentos cuja conta origem ou destino esteja no conjunto selecionado.
 
+7. **Extrato multi-contas — opcao para detalhar transferencias internas**
+   - Classificacao: FUTURO REAL / MELHORIA DE UX.
+   - Prioridade documental: MEDIA.
+   - Direcao: criar futuramente opcao visual no Extrato para exibir transferencias internas entre contas selecionadas em duas linhas operacionais: saida da conta origem e entrada na conta destino.
+   - Uso previsto: conferencia operacional quando a usuaria quiser enxergar o transito entre contas dentro do proprio escopo selecionado.
+   - Regra preservada: o comportamento padrao atual permanece correto para extrato consolidado; transferencias internas ao escopo selecionado se anulam, nao inflam saldo consolidado, nao alteram calculo financeiro e nao mudam a regra de transferencia.
+
 ### Frente futura grande
 
-7. **Tabelas personalizadas de controle**
+8. **Tabelas personalizadas de controle**
    - Classificacao: FRENTE FUTURA GRANDE.
    - Prioridade documental: FUTURA / BAIXA para execucao imediata.
    - Direcao: disponibilizar futuramente cadastros de controles configuraveis, como energia eletrica mensal, em que o usuario defina nome das colunas, formulas por celula e colunas com totalizadores.
