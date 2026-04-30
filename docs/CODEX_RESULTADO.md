@@ -2,6 +2,13 @@
 
 Data: 2026-04-30
 
+## Refinamento visual da diferenca do rateio
+
+- simplifiquei o apoio visual do rateio para manter apenas o card `DIFERENCA A DETALHAR`
+- removi da interface os cards de valor total do documento e total rateado
+- mantive atualizacao dinamica da diferenca, com vermelho quando houver diferenca e alerta textual apenas quando o rateio ultrapassar o total do documento
+- nao alterei validacao, persistencia, calculos financeiros, saldos, importacao/exportacao, relatorios, recibos, termos, Extrato, Balancete ou Prestacao
+
 ## Diferenca restante no rateio
 
 - adicionei resumo dinamico de fechamento no formulario de novo lancamento com rateio e na edicao coordenada do grupo
