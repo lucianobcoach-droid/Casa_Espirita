@@ -83,6 +83,46 @@
         line-height: 1.25;
     }
 
+    .financeiro-rateio-fechamento {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.65rem;
+        margin-top: 0.75rem;
+    }
+
+    .financeiro-rateio-fechamento-card {
+        padding: 0.65rem 0.75rem;
+        border: 1px solid #dbe7f3;
+        border-radius: 0.75rem;
+        background: #fff;
+    }
+
+    .financeiro-rateio-fechamento-label {
+        display: block;
+        margin-bottom: 0.16rem;
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+        color: #64748b;
+    }
+
+    .financeiro-rateio-fechamento-value {
+        display: block;
+        font-size: 0.92rem;
+        font-weight: 700;
+        line-height: 1.25;
+        color: #1f2937;
+    }
+
+    .financeiro-rateio-fechamento-status {
+        grid-column: 1 / -1;
+        margin: 0;
+        font-size: 0.76rem;
+        line-height: 1.35;
+        color: #64748b;
+    }
+
     .financeiro-rateio-section-kicker {
         display: inline-flex;
         align-items: center;
@@ -181,6 +221,7 @@
 
     @media screen and (max-width: 860px) {
         .financeiro-rateio-summary-grid,
+        .financeiro-rateio-fechamento,
         .financeiro-rateio-action-grid {
             grid-template-columns: minmax(0, 1fr);
         }
@@ -375,6 +416,21 @@
                             <tbody data-financeiro-rateio-body="true"></tbody>
                         </table>
                     </div>
+                    <div class="financeiro-rateio-fechamento" data-financeiro-rateio-fechamento="true">
+                        <div class="financeiro-rateio-fechamento-card">
+                            <span class="financeiro-rateio-fechamento-label">Valor total do documento</span>
+                            <span class="financeiro-rateio-fechamento-value" data-financeiro-rateio-total-documento="true">R$ 0,00</span>
+                        </div>
+                        <div class="financeiro-rateio-fechamento-card">
+                            <span class="financeiro-rateio-fechamento-label">Total rateado</span>
+                            <span class="financeiro-rateio-fechamento-value" data-financeiro-rateio-total-rateado="true">R$ 0,00</span>
+                        </div>
+                        <div class="financeiro-rateio-fechamento-card">
+                            <span class="financeiro-rateio-fechamento-label">Diferença restante</span>
+                            <span class="financeiro-rateio-fechamento-value" data-financeiro-rateio-diferenca="true">R$ 0,00</span>
+                        </div>
+                        <p class="financeiro-rateio-fechamento-status" data-financeiro-rateio-status="true">Informe o valor total e as linhas do rateio.</p>
+                    </div>
                 </div>
             </div>
         </section>
@@ -428,15 +484,64 @@
         const centroCustoWrapper = document.querySelector('[data-financeiro-centro-custo-wrapper="true"]');
         const dataCompetenciaField = document.querySelector('[name="data_competencia"]');
         const dataPagamentoField = document.querySelector('[name="data_pagamento"]');
+        const valorTotalField = document.querySelector('[name="valor_total_documento"]');
         const rateioBody = document.querySelector('[data-financeiro-rateio-body="true"]');
         const rateioAddButton = document.querySelector('[data-financeiro-rateio-add="true"]');
         const rateioPayloadField = document.querySelector('[name="rateio_payload"]');
+        const rateioTotalDocumentoText = document.querySelector('[data-financeiro-rateio-total-documento="true"]');
+        const rateioTotalRateadoText = document.querySelector('[data-financeiro-rateio-total-rateado="true"]');
+        const rateioDiferencaText = document.querySelector('[data-financeiro-rateio-diferenca="true"]');
+        const rateioStatusText = document.querySelector('[data-financeiro-rateio-status="true"]');
         const autocompleteFields = Array.from(document.querySelectorAll('[data-financeiro-autocomplete="true"]'));
         const rateioCategoriasNode = document.getElementById('financeiro-rateio-grupo-categorias');
         const rateioInicialNode = document.getElementById('financeiro-rateio-grupo-inicial');
         const rateioCategorias = rateioCategoriasNode ? JSON.parse(rateioCategoriasNode.textContent) : [];
         const rateioInicial = rateioInicialNode ? JSON.parse(rateioInicialNode.textContent) : [];
         let rateioRows = Array.isArray(rateioInicial) ? rateioInicial.slice() : [];
+
+        function parseMoedaParaCentavos(valor) {
+            const texto = (valor || '').toString().trim();
+            if (!texto) return 0;
+            const negativo = texto.startsWith('-');
+            let normalizado = texto.replace(/[^\d,.-]/g, '');
+            if (normalizado.includes(',') && normalizado.includes('.')) {
+                normalizado = normalizado.replace(/\./g, '').replace(',', '.');
+            } else if (normalizado.includes(',')) {
+                normalizado = normalizado.replace(',', '.');
+            }
+            const numero = Number(normalizado);
+            if (Number.isFinite(numero)) return Math.round(numero * 100);
+            const digitos = texto.replace(/\D/g, '');
+            if (!digitos) return 0;
+            return (negativo ? -1 : 1) * Number.parseInt(digitos, 10);
+        }
+
+        function formatarCentavosMoeda(centavos) {
+            const valor = Math.abs(centavos) / 100;
+            const formatado = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor);
+            return centavos < 0 ? `-${formatado}` : formatado;
+        }
+
+        function atualizarFechamentoRateio() {
+            if (!rateioTotalDocumentoText || !rateioTotalRateadoText || !rateioDiferencaText || !rateioStatusText) return;
+            const totalDocumento = parseMoedaParaCentavos(valorTotalField ? valorTotalField.value : '');
+            const totalRateado = rateioRows.reduce(function (total, row) {
+                return total + parseMoedaParaCentavos(row.valor || '');
+            }, 0);
+            const diferenca = totalDocumento - totalRateado;
+            rateioTotalDocumentoText.textContent = formatarCentavosMoeda(totalDocumento);
+            rateioTotalRateadoText.textContent = formatarCentavosMoeda(totalRateado);
+            rateioDiferencaText.textContent = formatarCentavosMoeda(diferenca);
+            if (!totalDocumento && !totalRateado) {
+                rateioStatusText.textContent = 'Informe o valor total e as linhas do rateio.';
+            } else if (diferenca === 0) {
+                rateioStatusText.textContent = 'Rateio fechado.';
+            } else if (diferenca > 0) {
+                rateioStatusText.textContent = 'Falta ratear.';
+            } else {
+                rateioStatusText.textContent = 'Rateio ultrapassou o total.';
+            }
+        }
 
         function createAutocomplete(select) {
             const control = select.parentElement;
@@ -614,6 +719,7 @@
             input.addEventListener('input', function () {
                 rateioRows[rowIndex].valor = input.value;
                 serializeRateioRows();
+                atualizarFechamentoRateio();
             });
             return input;
         }
@@ -647,6 +753,7 @@
                 tr.appendChild(acaoCell);
                 rateioBody.appendChild(tr);
             });
+            atualizarFechamentoRateio();
         }
 
         function syncCommonState() {
@@ -665,8 +772,10 @@
                 rateioRows.push({ id: '', categoria: '', valor: '' });
                 renderRateioRows();
                 serializeRateioRows();
+                atualizarFechamentoRateio();
             });
         }
+        if (valorTotalField) valorTotalField.addEventListener('input', atualizarFechamentoRateio);
         if (tipoField) tipoField.addEventListener('change', syncCommonState);
         if (dataCompetenciaField) {
             dataCompetenciaField.dataset.autoFilledCompetencia = dataCompetenciaField.value ? 'false' : 'true';

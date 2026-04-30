@@ -115,6 +115,7 @@ Este bloco registra pendencias novas levantadas pela usuaria apos a correcao do 
    - Classificacao: MELHORIA FUNCIONAL + MELHORIA DE UX.
    - Prioridade documental: MEDIA.
    - Direcao: no fluxo de lancamento com rateio, mostrar o valor que ainda falta para fechar o valor total do documento.
+   - Status: IMPLEMENTADO como apoio visual dinamico no formulario de novo lancamento com rateio e na edicao coordenada do grupo, sem alterar regra de validacao, saldos ou calculos.
 
 6. **Filtro multi-contas na listagem de lancamentos**
    - Classificacao: MELHORIA FUNCIONAL + MELHORIA DE UX.

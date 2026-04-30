@@ -1,6 +1,12 @@
 # STATE
 
-Data de atualizacao: 2026-04-29
+Data de atualizacao: 2026-04-30
+
+## Diferenca restante no rateio
+
+- o formulario de novo lancamento com rateio e a edicao coordenada do grupo passaram a exibir valor total do documento, total rateado e diferenca restante
+- a informacao e atualizada em tela conforme o usuario altera o valor total ou as linhas do rateio, indicando quando o rateio esta fechado, faltando ratear ou ultrapassando o total
+- a mudanca e apenas apoio visual/operacional e nao altera validacao, persistencia, calculos financeiros, saldos, importacao/exportacao, relatorios, recibos, termos, Balancete, Extrato ou Prestacao
 
 ## Favorecido tecnico em transferencia no Extrato
 

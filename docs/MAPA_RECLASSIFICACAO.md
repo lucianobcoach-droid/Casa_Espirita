@@ -405,8 +405,10 @@ Documentos relacionados:
 
 Status inicial: FUTURO REAL
 
+Status apos microetapa funcional: IMPLEMENTADO
+
 Motivo:
-Foi levantada melhoria para mostrar o valor que falta para fechar o valor total do documento em lancamentos com rateio.
+Foi levantada melhoria para mostrar o valor que falta para fechar o valor total do documento em lancamentos com rateio. Implementado como apoio visual/operacional no formulario de novo lancamento com rateio e na edicao coordenada do grupo, exibindo valor total do documento, total rateado e diferenca restante, sem alterar validacao, persistencia, saldos ou calculos financeiros consolidados.
 
 Classificacao documental:
 - MELHORIA FUNCIONAL

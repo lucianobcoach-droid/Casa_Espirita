@@ -1,6 +1,13 @@
 # CODEX_RESULTADO
 
-Data: 2026-04-29
+Data: 2026-04-30
+
+## Diferenca restante no rateio
+
+- adicionei resumo dinamico de fechamento no formulario de novo lancamento com rateio e na edicao coordenada do grupo
+- o resumo exibe valor total do documento, total rateado e diferenca restante, com mensagens simples para rateio fechado, faltando ratear ou ultrapassando o total
+- mantive a alteracao restrita ao apoio visual/operacional do rateio, sem alterar validacao, persistencia, calculos, saldos, importacao/exportacao ou relatorios
+- baixei a pendencia no `MAPA_RECLASSIFICACAO.md` como IMPLEMENTADO e atualizei o `ROADMAP_FINANCEIRO.md`
 
 ## Favorecido tecnico em transferencia no Extrato
 
