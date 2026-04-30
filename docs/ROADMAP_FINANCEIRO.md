@@ -121,6 +121,7 @@ Este bloco registra pendencias novas levantadas pela usuaria apos a correcao do 
    - Classificacao: MELHORIA FUNCIONAL + MELHORIA DE UX.
    - Prioridade documental: MEDIA.
    - Direcao: permitir selecionar mais de uma conta na listagem de lancamentos, reaproveitando a experiencia aprovada no Extrato multi-contas quando fizer sentido.
+   - Status: IMPLEMENTADO; a listagem permite uma, varias ou todas as contas e inclui lancamentos cuja conta origem ou destino esteja no conjunto selecionado.
 
 ### Frente futura grande
 

@@ -428,8 +428,10 @@ Documentos relacionados:
 
 Status inicial: FUTURO REAL
 
+Status apos microetapa funcional: IMPLEMENTADO
+
 Motivo:
-Foi levantada melhoria para permitir selecionar mais de uma conta na listagem de lancamentos, reaproveitando a experiencia validada no Extrato multi-contas.
+Foi levantada melhoria para permitir selecionar mais de uma conta na listagem de lancamentos, reaproveitando a experiencia validada no Extrato multi-contas. Implementado com selecao de uma, varias ou todas as contas, mantendo compatibilidade com o parametro antigo de conta unica e exibindo transferencias quando origem ou destino pertencem ao conjunto selecionado.
 
 Classificacao documental:
 - MELHORIA FUNCIONAL

@@ -2578,6 +2578,49 @@ AUXILIAR_IMPORTACAO_PROCESSADORES = {
 }
 
 
+def _parametros_getlist(parametros, nome: str) -> list[str]:
+    if hasattr(parametros, 'getlist'):
+        return [str(valor) for valor in parametros.getlist(nome)]
+    valor = parametros.get(nome, [])
+    if isinstance(valor, (list, tuple)):
+        return [str(item) for item in valor]
+    if valor in (None, ''):
+        return []
+    return [str(valor)]
+
+
+def _parametro_checkbox_ativo(parametros, nome: str) -> bool:
+    for valor in reversed(_parametros_getlist(parametros, nome)):
+        valor_normalizado = valor.strip().lower()
+        if valor_normalizado in {'1', 'true', 'on', 'yes'}:
+            return True
+        if valor_normalizado in {'0', 'false', 'off', 'no', ''}:
+            return False
+    return False
+
+
+def _parse_contas_lancamentos_parametros(parametros) -> tuple[list[int], list[str], bool]:
+    contas_raw = [valor.strip() for valor in _parametros_getlist(parametros, 'contas') if valor.strip()]
+    conta_unica = str(parametros.get('conta', '') or '').strip()
+    if conta_unica and not contas_raw:
+        contas_raw = [conta_unica]
+
+    selected_ids: list[int] = []
+    for valor in contas_raw:
+        try:
+            conta_id = int(valor)
+        except (TypeError, ValueError):
+            continue
+        if conta_id not in selected_ids:
+            selected_ids.append(conta_id)
+
+    todas_contas = _parametro_checkbox_ativo(parametros, 'todas_contas')
+    if todas_contas:
+        selected_ids = []
+
+    return selected_ids, [str(conta_id) for conta_id in selected_ids], todas_contas or not selected_ids
+
+
 def _filtrar_lancamentos_por_parametros(queryset, parametros):
     descricao = parametros.get('descricao', '').strip()
     numero_documento = parametros.get('numero_documento', '').strip()
@@ -2585,7 +2628,7 @@ def _filtrar_lancamentos_por_parametros(queryset, parametros):
     status = parametros.get('status', '').strip()
     data_inicial = parametros.get('data_inicial', '').strip()
     data_final = parametros.get('data_final', '').strip()
-    conta = parametros.get('conta', '').strip()
+    contas_ids, _, todas_contas = _parse_contas_lancamentos_parametros(parametros)
     pessoa = parametros.get('pessoa', '').strip()
     categoria = parametros.get('categoria', '').strip()
 
@@ -2601,8 +2644,8 @@ def _filtrar_lancamentos_por_parametros(queryset, parametros):
         queryset = queryset.filter(data_pagamento__gte=data_inicial)
     if data_final:
         queryset = queryset.filter(data_pagamento__lte=data_final)
-    if conta:
-        queryset = queryset.filter(Q(conta_id=conta) | Q(conta_destino_id=conta))
+    if contas_ids and not todas_contas:
+        queryset = queryset.filter(Q(conta_id__in=contas_ids) | Q(conta_destino_id__in=contas_ids))
     if pessoa:
         queryset = queryset.filter(pessoa_id=pessoa)
     if categoria:
@@ -7053,10 +7096,16 @@ class LancamentoFinanceiroListView(FinanceiroPermissaoMixin, ListView):
             self.request.GET.get('ordenacao')
         )
         por_pagina = _resolver_lancamentos_por_pagina(self.request)
+        contas_selecionadas_ids_raw, contas_selecionadas_ids, todas_contas_selecionadas = (
+            _parse_contas_lancamentos_parametros(self.request.GET)
+        )
         context['contas_disponiveis'] = _contas_historicas_para_filtro(
             data_inicial=self.request.GET.get('data_inicial', ''),
             data_final=self.request.GET.get('data_final', ''),
         )
+        context['contas_selecionadas_ids'] = contas_selecionadas_ids
+        context['todas_contas_selecionadas'] = todas_contas_selecionadas
+        context['quantidade_contas_selecionadas'] = len(contas_selecionadas_ids_raw)
         context['pessoas_disponiveis'] = PessoaFinanceira.objects.order_by('nome')
         context['categorias_disponiveis'] = CategoriaFinanceira.objects.order_by('tipo', 'nome')
         lancamentos_visuais = _ordenar_lancamentos_visuais_listagem(
@@ -7115,6 +7164,8 @@ class LancamentoFinanceiroListView(FinanceiroPermissaoMixin, ListView):
                 'data_inicial',
                 'data_final',
                 'conta',
+                'contas',
+                'todas_contas',
                 'pessoa',
                 'categoria',
             ),

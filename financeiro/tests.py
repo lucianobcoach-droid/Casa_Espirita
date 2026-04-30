@@ -3,6 +3,7 @@ from datetime import date
 from decimal import Decimal
 
 from django.template.loader import get_template, render_to_string
+from django.http import QueryDict
 from django.test import RequestFactory, TestCase
 from django.urls import resolve, reverse
 
@@ -20,6 +21,7 @@ from .views import (
     ExtratoFinanceiroView,
     LancamentoFinanceiroCloneView,
     PrestacaoContasFinanceiroView,
+    _filtrar_lancamentos_por_parametros,
     montar_contexto_fechamento_periodo,
 )
 
@@ -748,6 +750,120 @@ class ExtratoFinanceiroMultiplasContasTests(TestCase):
             'Selecione pelo menos uma conta para carregar o extrato.',
         )
         self.assertFalse(contexto_sem_contas['tem_extrato'])
+
+
+class LancamentoListMultiContasTests(TestCase):
+    def setUp(self):
+        self.conta_a = ContaFinanceira.objects.create(
+            nome='Conta A',
+            saldo_inicial=Decimal('0.00'),
+            data_saldo_inicial=date(2026, 1, 1),
+        )
+        self.conta_b = ContaFinanceira.objects.create(
+            nome='Conta B',
+            saldo_inicial=Decimal('0.00'),
+            data_saldo_inicial=date(2026, 1, 1),
+        )
+        self.conta_c = ContaFinanceira.objects.create(
+            nome='Conta C',
+            saldo_inicial=Decimal('0.00'),
+            data_saldo_inicial=date(2026, 1, 1),
+        )
+        self.pessoa = PessoaFinanceira.objects.create(codigo='P100', nome='Favorecido multi-conta')
+        categoria_pai = CategoriaFinanceira.objects.create(
+            nome='Receitas multi',
+            tipo=CategoriaFinanceira.TipoCategoria.RECEITA,
+        )
+        self.categoria = CategoriaFinanceira.objects.create(
+            nome='Doacoes multi',
+            tipo=CategoriaFinanceira.TipoCategoria.RECEITA,
+            categoria_pai=categoria_pai,
+        )
+        self.receita_a = self._criar_receita('Receita conta A', self.conta_a, '10.00')
+        self.receita_b = self._criar_receita('Receita conta B', self.conta_b, '20.00')
+        self.receita_c = self._criar_receita('Receita conta C', self.conta_c, '30.00')
+        self.transferencia_a_c = self._criar_transferencia('Transferencia A para C', self.conta_a, self.conta_c)
+        self.transferencia_c_b = self._criar_transferencia('Transferencia C para B', self.conta_c, self.conta_b)
+        self.transferencia_a_b = self._criar_transferencia('Transferencia A para B', self.conta_a, self.conta_b)
+
+    def _criar_receita(self, descricao, conta, valor, status=LancamentoFinanceiro.StatusLancamento.QUITADO):
+        return LancamentoFinanceiro.objects.create(
+            descricao=descricao,
+            tipo=LancamentoFinanceiro.TipoLancamento.RECEITA,
+            status=status,
+            valor=Decimal(valor),
+            data_competencia=date(2026, 3, 10),
+            data_pagamento=date(2026, 3, 10),
+            pessoa=self.pessoa,
+            categoria=self.categoria,
+            conta=conta,
+        )
+
+    def _criar_transferencia(self, descricao, origem, destino, status=LancamentoFinanceiro.StatusLancamento.QUITADO):
+        return LancamentoFinanceiro.objects.create(
+            descricao=descricao,
+            tipo=LancamentoFinanceiro.TipoLancamento.TRANSFERENCIA,
+            status=status,
+            valor=Decimal('5.00'),
+            data_competencia=date(2026, 3, 10),
+            data_pagamento=date(2026, 3, 10),
+            conta=origem,
+            conta_destino=destino,
+        )
+
+    def _filtrar(self, params):
+        query = QueryDict('', mutable=True)
+        for chave, valor in params:
+            query.appendlist(chave, valor)
+        queryset = _filtrar_lancamentos_por_parametros(LancamentoFinanceiro.objects.all(), query)
+        return set(queryset.values_list('descricao', flat=True))
+
+    def test_filtro_por_uma_conta_considera_origem_e_destino(self):
+        descricoes = self._filtrar([('contas', str(self.conta_a.pk))])
+
+        self.assertIn('Receita conta A', descricoes)
+        self.assertIn('Transferencia A para C', descricoes)
+        self.assertIn('Transferencia A para B', descricoes)
+        self.assertNotIn('Receita conta B', descricoes)
+        self.assertIn('Transferencia C para B', self._filtrar([('contas', str(self.conta_b.pk))]))
+
+    def test_filtro_por_duas_contas_inclui_transferencia_interna(self):
+        descricoes = self._filtrar([
+            ('contas', str(self.conta_a.pk)),
+            ('contas', str(self.conta_b.pk)),
+        ])
+
+        self.assertIn('Receita conta A', descricoes)
+        self.assertIn('Receita conta B', descricoes)
+        self.assertNotIn('Receita conta C', descricoes)
+        self.assertIn('Transferencia A para C', descricoes)
+        self.assertIn('Transferencia C para B', descricoes)
+        self.assertIn('Transferencia A para B', descricoes)
+
+    def test_filtro_todas_contas_preserva_comportamento_sem_recorte(self):
+        descricoes = self._filtrar([('todas_contas', '1')])
+
+        self.assertIn('Receita conta A', descricoes)
+        self.assertIn('Receita conta B', descricoes)
+        self.assertIn('Receita conta C', descricoes)
+        self.assertIn('Transferencia A para B', descricoes)
+
+    def test_filtro_multi_contas_combina_com_demais_filtros(self):
+        self._criar_receita('Receita aberta conta A', self.conta_a, '40.00', status=LancamentoFinanceiro.StatusLancamento.ABERTO)
+
+        descricoes = self._filtrar([
+            ('contas', str(self.conta_a.pk)),
+            ('contas', str(self.conta_b.pk)),
+            ('status', LancamentoFinanceiro.StatusLancamento.ABERTO),
+        ])
+
+        self.assertEqual(descricoes, {'Receita aberta conta A'})
+
+    def test_parametro_antigo_conta_unica_permanece_compativel(self):
+        descricoes = self._filtrar([('conta', str(self.conta_a.pk))])
+
+        self.assertIn('Receita conta A', descricoes)
+        self.assertNotIn('Receita conta B', descricoes)
 
 
 class PessoaFinanceiraDuplicidadeNomeTests(TestCase):

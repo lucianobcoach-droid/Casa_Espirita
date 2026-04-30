@@ -2,6 +2,14 @@
 
 Data de atualizacao: 2026-04-30
 
+## Filtro multi-contas na listagem de lancamentos
+
+- a listagem de lancamentos passou a permitir filtro por uma, varias ou todas as contas
+- a regra da listagem considera lancamentos cuja conta origem ou conta destino esteja no conjunto selecionado
+- transferencias internas entre contas selecionadas tambem aparecem na listagem, por ser uma leitura operacional/documental de lancamentos reais
+- foi preservada compatibilidade com o parametro antigo de conta unica e a exportacao da listagem segue reaproveitando os filtros ativos
+- nao houve alteracao de calculo financeiro, saldos, Extrato, Resumo, Prestacao/Fechamento, Balancete, Evolucao, importacao ou models
+
 ## Filtros historicos de contas inativas
 
 - filtros historicos de contas passaram a listar contas ativas sempre e contas inativas apenas quando houver movimento no periodo/escopo considerado

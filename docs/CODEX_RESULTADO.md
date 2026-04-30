@@ -2,6 +2,15 @@
 
 Data: 2026-04-30
 
+## Filtro multi-contas na listagem de lancamentos
+
+- implementei selecao de uma, varias ou todas as contas na listagem de lancamentos, reaproveitando o dropdown de contas ja usado no modulo financeiro
+- ajustei a filtragem para considerar conta origem e conta destino, preservando compatibilidade com o parametro antigo `conta`
+- mantive transferencias internas entre contas selecionadas visiveis na listagem, por se tratar de leitura operacional/documental dos lancamentos reais
+- adicionei testes pontuais para conta unica, duas contas, origem, destino, transferencia interna, todas as contas, combinacao com status e compatibilidade com parametro antigo
+- baixei a pendencia no `MAPA_RECLASSIFICACAO.md` como IMPLEMENTADO e atualizei `ROADMAP_FINANCEIRO.md` e `REGRAS_NEGOCIO.md`
+- nao alterei calculo financeiro, saldos, Extrato, Resumo, Prestacao/Fechamento, Balancete, Evolucao, importacao/exportacao ou models
+
 ## Filtros historicos de contas inativas
 
 - criei helper para montar contas historicas de filtro com contas ativas sempre e contas inativas apenas quando houver movimento no periodo/escopo
