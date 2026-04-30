@@ -7,9 +7,10 @@ Data: 2026-04-23
 Este bloco orienta a fila apos as auditorias, baixas documentais, correcoes funcionais e homologacoes locais recentes. Nao reabre itens ja homologados como pendencia ativa.
 
 - Homologado localmente: listagem de lancamentos com filtro multi-contas, favorecido tecnico `TRANSFERENCIA ENTRE CONTAS` no Extrato, bloco `DIFERENCA A DETALHAR` no rateio e contas inativas em consultas historicas.
-- Implementado com pendencias futuras ou homologacao ampla: Balancete Institucional, importacoes/cadastros auxiliares, autenticacao/perfis/permissoes e refinamentos de relatorios impressos sujeitos a uso real.
+- HOMOLOGACAO PROGRESSIVA REALIZADA: os fluxos principais do financeiro foram testados durante as microetapas, com validacoes locais associadas as entregas; nao e necessario repetir agora uma homologacao ponta a ponta completa de tudo que ja foi conferido.
+- Implementado com pendencias futuras ou acompanhamento de uso real: Balancete Institucional, importacoes/cadastros auxiliares, autenticacao/perfis/permissoes e refinamentos de relatorios impressos sujeitos a validacao por massa/volume real.
 - Futuro real mantido: opcao visual do Extrato multi-contas para detalhar transferencias internas em duas linhas, tipo/disponibilidade de conta, frequencia/recorrencia por competencia, contratos/parcelas/recorrencias, anexos, tabelas personalizadas de controle e expansao visual/transversal progressiva.
-- Proxima prioridade recomendada: homologacao ponta a ponta do financeiro local antes de iniciar frente grande de modelagem; se houver urgencia operacional, escolher uma nova pendencia pequena e isolada.
+- Proxima fase natural: uso real acompanhado do financeiro, com validacao de importacoes em planilhas historicas completas, relatorios impressos em volume real e rotina diaria da Casa; se houver urgencia operacional, escolher uma nova pendencia pequena e isolada.
 
 ## 0.18. Frente futura: tipo, disponibilidade de conta e composicao do Balancete
 

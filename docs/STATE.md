@@ -6,9 +6,10 @@ Data de atualizacao: 2026-04-30
 
 - Concluido/homologado recentemente: rotina Git/GitHub, rotina de baixa documental, documentos por favorecido, favorecido tecnico `TRANSFERENCIA ENTRE CONTAS` no Extrato, bloco `DIFERENCA A DETALHAR` no rateio, contas inativas em consultas historicas e filtro multi-contas na listagem de lancamentos.
 - Homologacao local da usuaria registrada como OK para quatro ajustes recentes: listagem de lancamentos multi-contas, favorecido tecnico no Extrato, diferenca a detalhar no rateio e contas inativas em consultas historicas.
+- HOMOLOGACAO PROGRESSIVA REALIZADA: os fluxos principais do financeiro foram testados localmente durante o desenvolvimento das microetapas, evitando necessidade de repetir agora uma homologacao ponta a ponta completa de tudo que ja foi conferido.
 - Implementado com pendencias futuras ou homologacao ampla: Balancete Institucional como MVP proprio com evolucoes futuras de tipo/disponibilidade de conta e modos de composicao; importacoes/cadastros auxiliares aguardando homologacao com massa real; autenticacao/perfis/permissoes com base implementada e evolucoes futuras; relatorios impressos sujeitos a validacao visual por uso real.
 - Futuro real registrado: opcao visual do Extrato multi-contas para detalhar transferencias internas em duas linhas, tipo/disponibilidade de conta, frequencia/recorrencia por competencia, contratos/parcelas/recorrencias, anexos, tabelas personalizadas de controle e expansao visual/transversal progressiva.
-- Proxima prioridade recomendada: realizar homologacao ponta a ponta do financeiro local antes de abrir frente grande de modelagem; alternativamente, escolher nova pendencia pequena se houver necessidade operacional imediata aprovada pela usuaria.
+- Proxima fase natural: uso real acompanhado do financeiro, mantendo validacao com massa definitiva para importacoes, planilhas historicas completas, relatorios impressos em volume real e rotina diaria da Casa.
 - Nao houve alteracao funcional neste checkpoint documental.
 
 ## Homologacao local de melhorias recentes do financeiro

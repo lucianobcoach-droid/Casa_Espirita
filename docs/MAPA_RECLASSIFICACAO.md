@@ -255,8 +255,15 @@ Documentos relacionados:
 
 Status inicial: FUTURO REAL
 
+Status apos decisao da usuaria: HOMOLOGACAO PROGRESSIVA REALIZADA / USO REAL ACOMPANHADO
+
 Motivo:
 Após vários ajustes funcionais e visuais, ainda é necessária uma rodada de teste completo local para validar fluxo real, especialmente antes de novas frentes grandes.
+
+Reclassificacao:
+- os fluxos principais do financeiro foram testados localmente de forma progressiva durante o desenvolvimento das microetapas
+- nao e necessario repetir agora uma homologacao ponta a ponta completa de tudo que ja foi testado e validado
+- permanecem como acompanhamento de uso real: importacoes com massa definitiva/planilhas historicas completas, relatorios impressos em volume real e rotina diaria da Casa
 
 Documentos relacionados:
 - docs/STATE.md

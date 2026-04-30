@@ -2,6 +2,14 @@
 
 Data: 2026-04-30
 
+## Homologacao progressiva do financeiro
+
+- registrei decisao documental de que a homologacao funcional do financeiro ocorreu de forma progressiva durante o desenvolvimento das microetapas
+- ajustei a classificacao da homologacao ponta a ponta para `HOMOLOGACAO PROGRESSIVA REALIZADA / USO REAL ACOMPANHADO`
+- mantive como acompanhamento futuro a validacao com massa definitiva, planilhas historicas completas, relatorios impressos em volume real e rotina diaria da Casa
+- preservei como homologados os ajustes ja testados localmente: listagem de lancamentos multi-contas, favorecido tecnico no Extrato, diferenca a detalhar no rateio e contas inativas em consultas historicas
+- nao alterei codigo funcional, views, urls, models, forms, templates, migrations, tests, CSS ou regras financeiras
+
 ## Checkpoint documental do financeiro
 
 - registrei checkpoint curto do estado atual do modulo financeiro apos auditorias, baixas documentais, correcoes funcionais e homologacoes locais recentes
