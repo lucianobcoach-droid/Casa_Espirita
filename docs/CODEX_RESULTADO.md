@@ -4,7 +4,8 @@ Data: 2026-04-30
 
 ## Refinamento visual da diferenca do rateio
 
-- simplifiquei o apoio visual do rateio para manter apenas o card `DIFERENCA A DETALHAR`
+- alinhei o valor de `DIFERENCA A DETALHAR` com a coluna de valores das linhas de rateio, usando uma linha de rodape da propria tabela
+- simplifiquei o apoio visual do rateio para manter apenas o bloco `DIFERENCA A DETALHAR`
 - removi da interface os cards de valor total do documento e total rateado
 - mantive atualizacao dinamica da diferenca, com vermelho quando houver diferenca e alerta textual apenas quando o rateio ultrapassar o total do documento
 - nao alterei validacao, persistencia, calculos financeiros, saldos, importacao/exportacao, relatorios, recibos, termos, Extrato, Balancete ou Prestacao

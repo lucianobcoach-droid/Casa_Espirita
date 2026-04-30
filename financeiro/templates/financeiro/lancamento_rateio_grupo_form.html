@@ -83,23 +83,15 @@
         line-height: 1.25;
     }
 
-    .financeiro-rateio-fechamento {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr);
-        gap: 0.45rem;
-        margin-top: 0.75rem;
-    }
-
-    .financeiro-rateio-fechamento-card {
-        padding: 0.65rem 0.75rem;
-        border: 1px solid #dbe7f3;
-        border-radius: 0.75rem;
+    .financeiro-rateio-fechamento td {
+        padding-top: 0.7rem;
+        border-top: 1px solid #dbe7f3;
         background: #fff;
+        vertical-align: middle;
     }
 
     .financeiro-rateio-fechamento-label {
         display: block;
-        margin-bottom: 0.16rem;
         font-size: 0.68rem;
         font-weight: 700;
         letter-spacing: 0.03em;
@@ -120,7 +112,7 @@
     }
 
     .financeiro-rateio-fechamento-status {
-        margin: 0;
+        margin: 0.35rem 0 0;
         font-size: 0.76rem;
         line-height: 1.35;
         color: #b42318;
@@ -224,7 +216,6 @@
 
     @media screen and (max-width: 860px) {
         .financeiro-rateio-summary-grid,
-        .financeiro-rateio-fechamento,
         .financeiro-rateio-action-grid {
             grid-template-columns: minmax(0, 1fr);
         }
@@ -417,15 +408,16 @@
                             <tr><th>Categoria</th><th>Valor</th><th class="has-text-right">Acao</th></tr>
                             </thead>
                             <tbody data-financeiro-rateio-body="true"></tbody>
+                            <tfoot class="financeiro-rateio-fechamento">
+                            <tr>
+                                <td><span class="financeiro-rateio-fechamento-label">DIFERENÇA A DETALHAR</span></td>
+                                <td><span class="financeiro-rateio-fechamento-value" data-financeiro-rateio-diferenca="true">R$ 0,00</span></td>
+                                <td></td>
+                            </tr>
+                            </tfoot>
                         </table>
                     </div>
-                    <div class="financeiro-rateio-fechamento" data-financeiro-rateio-fechamento="true">
-                        <div class="financeiro-rateio-fechamento-card">
-                            <span class="financeiro-rateio-fechamento-label">DIFERENÇA A DETALHAR</span>
-                            <span class="financeiro-rateio-fechamento-value" data-financeiro-rateio-diferenca="true">R$ 0,00</span>
-                        </div>
-                        <p class="financeiro-rateio-fechamento-status" data-financeiro-rateio-status="true" hidden></p>
-                    </div>
+                    <p class="financeiro-rateio-fechamento-status" data-financeiro-rateio-status="true" hidden></p>
                 </div>
             </div>
         </section>

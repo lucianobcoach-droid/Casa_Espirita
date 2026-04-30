@@ -4,7 +4,8 @@ Data de atualizacao: 2026-04-30
 
 ## Refinamento visual da diferenca do rateio
 
-- o apoio visual do rateio foi simplificado para exibir apenas `DIFERENCA A DETALHAR`
+- ajuste complementar: o valor de `DIFERENCA A DETALHAR` foi movido para a propria grade do rateio, ficando alinhado visualmente com a coluna `Valor`
+- o apoio visual do rateio foi simplificado para exibir apenas o bloco `DIFERENCA A DETALHAR`
 - os cards de valor total do documento e total rateado foram removidos da interface, mantendo o calculo dinamico da diferenca em tela
 - diferenca diferente de zero aparece em vermelho; alerta textual aparece somente quando o rateio ultrapassa o valor total do documento
 - a mudanca permanece restrita ao visual/UX do formulario, sem alterar validacao, persistencia, calculos financeiros, saldos, importacao/exportacao ou relatorios
