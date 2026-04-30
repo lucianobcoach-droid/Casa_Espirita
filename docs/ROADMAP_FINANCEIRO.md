@@ -2,6 +2,15 @@
 
 Data: 2026-04-23
 
+## 0.19. Checkpoint apos homologacao local do financeiro
+
+Este bloco orienta a fila apos as auditorias, baixas documentais, correcoes funcionais e homologacoes locais recentes. Nao reabre itens ja homologados como pendencia ativa.
+
+- Homologado localmente: listagem de lancamentos com filtro multi-contas, favorecido tecnico `TRANSFERENCIA ENTRE CONTAS` no Extrato, bloco `DIFERENCA A DETALHAR` no rateio e contas inativas em consultas historicas.
+- Implementado com pendencias futuras ou homologacao ampla: Balancete Institucional, importacoes/cadastros auxiliares, autenticacao/perfis/permissoes e refinamentos de relatorios impressos sujeitos a uso real.
+- Futuro real mantido: opcao visual do Extrato multi-contas para detalhar transferencias internas em duas linhas, tipo/disponibilidade de conta, frequencia/recorrencia por competencia, contratos/parcelas/recorrencias, anexos, tabelas personalizadas de controle e expansao visual/transversal progressiva.
+- Proxima prioridade recomendada: homologacao ponta a ponta do financeiro local antes de iniciar frente grande de modelagem; se houver urgencia operacional, escolher uma nova pendencia pequena e isolada.
+
 ## 0.18. Frente futura: tipo, disponibilidade de conta e composicao do Balancete
 
 Este bloco registra nova frente gerencial/patrimonial levantada pela usuaria. Nao representa implementacao concluida.

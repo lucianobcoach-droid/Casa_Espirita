@@ -2,6 +2,15 @@
 
 Data: 2026-04-30
 
+## Checkpoint documental do financeiro
+
+- registrei checkpoint curto do estado atual do modulo financeiro apos auditorias, baixas documentais, correcoes funcionais e homologacoes locais recentes
+- consolidei como homologados: filtro multi-contas na listagem de lancamentos, favorecido tecnico no Extrato, diferenca a detalhar no rateio e contas inativas em consultas historicas
+- destaquei como implementados com pendencias futuras ou homologacao ampla: Balancete Institucional, importacoes/cadastros auxiliares, autenticacao/perfis/permissoes e relatorios impressos sujeitos a validacao visual por uso real
+- registrei os principais futuros reais ainda abertos, incluindo a opcao visual do Extrato multi-contas para detalhar transferencias internas, tipo/disponibilidade de conta, recorrencia/frequencia, contratos/parcelas, anexos e tabelas personalizadas
+- indiquei como proxima prioridade recomendada a homologacao ponta a ponta do financeiro local antes de abrir frente grande de modelagem
+- nao alterei codigo funcional, regras financeiras, views, urls, models, forms, templates, migrations, tests ou CSS
+
 ## Homologacao local e melhoria futura do Extrato multi-contas
 
 - registrei a homologacao local da usuaria como OK para: listagem de lancamentos multi-contas, favorecido tecnico no Extrato, diferenca a detalhar no rateio e filtros historicos de contas inativas
