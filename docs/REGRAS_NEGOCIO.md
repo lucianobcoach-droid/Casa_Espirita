@@ -11,6 +11,9 @@ Este documento consolida regras permanentes do sistema. Ele não substitui o his
 - Execução realizada deve ser registrada em CODEX_RESULTADO.md.
 - Mudança de estado deve ser registrada em STATE.md.
 - Regra permanente deve ser registrada em CEREBRO_PROJETO.md ou neste documento.
+- Toda regra de negócio aprovada deve ser registrada em `docs/REGRAS_NEGOCIO.md`; regra importante não deve permanecer apenas no chat.
+- Uma regra de negócio reutilizável deve registrar comportamento esperado, exceções, impacto em cadastros, impacto em relatórios, racional da decisão e possibilidade de reaproveitamento em outros projetos.
+- Quando uma regra tiver potencial de replicação para outros sistemas, deve ser descrita de forma estruturada e genérica o bastante para orientar futura reutilização, sem ficar presa apenas ao caso atual da Casa Espírita.
 
 ## Financeiro
 
@@ -26,9 +29,10 @@ Este documento consolida regras permanentes do sistema. Ele não substitui o his
 - Favorecido/pessoa financeira não deve permitir duplicidade por nome normalizado.
 - Conta inativa não deve aparecer como opção para novos lançamentos; em filtros históricos, deve aparecer apenas quando tiver movimento no período/escopo selecionado.
 - Conta ativa/inativa é regra operacional de uso em novos lançamentos; conta disponível/indisponível ou vinculada é regra gerencial/patrimonial de leitura do saldo.
+- Uma conta pode estar ativa para uso operacional e, ainda assim, ter saldo total ou parcialmente indisponível/vinculado conforme sua natureza gerencial ou patrimonial.
 - Valores vinculados ou indisponíveis não devem ser tratados como despesa operacional.
 - Quando a modelagem de disponibilidade for implementada, valores vinculados/indisponíveis devem ser separados do saldo disponível operacional nos relatórios que apresentarem saldo livre.
-- Integralização de capital é exemplo de valor patrimonial/vinculado: não é despesa operacional e não deve ser somada ao saldo livre disponível sem destaque.
+- Integralização de capital é valor patrimonial/vinculado: não é despesa operacional, não deve ser somada ao saldo livre disponível sem destaque e deve compor o patrimônio financeiro fora do saldo operacional livre.
 - Em transferências exibidas no Extrato, quando não houver favorecido operacional, a apresentação do favorecido deve usar o texto padronizado "TRANSFERÊNCIA ENTRE CONTAS".
 - Rateio deve preservar validação pelo valor total do documento e pode exibir saldo/diferença restante como apoio operacional ao usuário.
 
@@ -45,6 +49,22 @@ Este documento consolida regras permanentes do sistema. Ele não substitui o his
 - Transferências com apenas uma ponta dentro do filtro devem aparecer nos totais necessários de entrada/saída por transferência para explicar a reconciliação do saldo.
 - A opção "Exibir transferências" controla somente detalhamento analítico/visual das transferências; não controla a inclusão das transferências no cálculo real do saldo.
 - O Balancete Institucional futuro deve reutilizar a mesma regra/base de cálculo da Prestação/Fechamento, sem cálculo divergente para saldos, receitas, despesas e transferências por escopo.
+
+### Balancete patrimonial, tipo de conta e disponibilidade
+
+- A evolução patrimonial do Balancete deve alterar leitura, classificação e apresentação do saldo, não a regra original de lançamentos, receitas, despesas, transferências ou cálculo financeiro.
+- A frente deve ser modelada documentalmente antes de qualquer implementação de models, migrations, formulários, views ou templates.
+- Tipos iniciais de conta a considerar: conta corrente, conta poupança, dinheiro/caixa, aplicação financeira, integralização de capital, conta vinculada/indisponível e outros.
+- O tipo de conta deve permitir agrupamento gerencial: contas do mesmo tipo podem ser somadas independentemente do banco, nome ou cadastro individual da conta.
+- Avaliar futuramente se o tipo de conta será cadastro próprio para permitir adaptação a outras instituições e projetos.
+- O Balancete deve poder exibir a composição do saldo em modos distintos:
+  - detalhado por conta, mostrando cada conta individualmente;
+  - consolidado por tipo de conta, somando contas do mesmo tipo;
+  - total consolidado, mostrando apenas o total geral quando o relatório precisar ser sintético;
+  - separado entre disponível e indisponível/vinculado, distinguindo saldo livre operacional de valores patrimoniais ou vinculados.
+- No modo consolidado por tipo, integralização de capital, aplicações financeiras e contas vinculadas/indisponíveis devem aparecer separadas quando existirem, para não poluir nem distorcer a leitura do saldo livre.
+- A conta poderá ter mensagem explicativa opcional de indisponibilidade/vinculação; se vazia, nada deve aparecer no relatório; se preenchida, poderá aparecer no Balancete ou relatório patrimonial para justificar o saldo indisponível.
+- O comportamento padrão atual do Balancete não deve ser refeito do zero: o MVP permanece base entregue, e a evolução patrimonial deve nascer como modelagem incremental.
 
 ## Relatórios e impressão
 

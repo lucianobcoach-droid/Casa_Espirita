@@ -618,6 +618,11 @@ Status inicial: FUTURO REAL / REQUER MODELAGEM
 Motivo:
 Foi levantada necessidade de classificar contas por tipo, como conta corrente, poupanca, dinheiro/caixa, aplicacao financeira, integralizacao de capital, conta vinculada ou outros. Deve ser avaliado se o tipo sera cadastro proprio para manter abertura a outras instituicoes.
 
+Especificacao futura:
+- exemplos iniciais: conta corrente, conta poupanca, dinheiro/caixa, aplicacao financeira, integralizacao de capital, conta vinculada/indisponivel e outros
+- avaliar cadastro proprio de tipos de conta para permitir adaptacao a outros projetos
+- o tipo de conta deve permitir agrupamento gerencial no Balancete patrimonial, somando contas do mesmo tipo independentemente do banco ou nome da conta
+
 Classificacao documental:
 - MELHORIA FUNCIONAL
 - REGRA GERENCIAL / PATRIMONIAL
@@ -636,6 +641,12 @@ Status inicial: FUTURO REAL / REQUER MODELAGEM
 
 Motivo:
 Foi levantada necessidade de indicar se o saldo de uma conta e disponivel para uso ou indisponivel/vinculado. Esta regra e diferente de conta ativa/inativa: ativa/inativa controla uso operacional; disponibilidade controla leitura gerencial do saldo.
+
+Especificacao futura:
+- conta ativa/inativa controla uso operacional em novos lancamentos
+- conta disponivel/indisponivel controla leitura gerencial e patrimonial do saldo
+- uma conta pode estar ativa e ainda assim ter saldo indisponivel/vinculado
+- integralizacao de capital deve ficar separada como valor patrimonial/vinculado, nao como despesa operacional
 
 Classificacao documental:
 - REGRA DE NEGOCIO
@@ -657,6 +668,11 @@ Status inicial: FUTURO REAL / REQUER MODELAGEM
 Motivo:
 Foi levantada necessidade de campo opcional no cadastro de contas para justificar em relatorios por que determinado saldo esta indisponivel. Se o campo estiver vazio, nada deve aparecer no relatorio.
 
+Especificacao futura:
+- campo opcional por conta
+- se vazio, nada aparece no Balancete ou relatorio patrimonial
+- se preenchido, pode aparecer como justificativa do saldo indisponivel/vinculado
+
 Classificacao documental:
 - MELHORIA FUNCIONAL
 - MELHORIA DE UX EM RELATORIOS
@@ -675,6 +691,14 @@ Status inicial: FUTURO REAL / MELHORIA DE RELATORIO
 
 Motivo:
 Foi levantada necessidade de o Balancete permitir escolher entre composicao detalhada por conta, consolidada por tipo de conta ou apenas saldo total consolidado, possivelmente separando disponivel e indisponivel para reduzir poluicao visual.
+
+Especificacao futura:
+- detalhado por conta: mostra cada conta individualmente
+- consolidado por tipo: soma contas do mesmo tipo, independentemente do banco ou nome da conta
+- total consolidado: mostra apenas o total geral quando o relatorio precisar ser sintetico
+- separado entre disponivel e indisponivel/vinculado: distingue saldo livre operacional de valores patrimoniais/vinculados
+- integralizacao de capital, aplicacoes financeiras e contas vinculadas/indisponiveis devem aparecer separadas quando existirem
+- deve reaproveitar a base de calculo do Fechamento/Prestacao, sem calculo proprio divergente
 
 Classificacao documental:
 - MELHORIA FUNCIONAL DE RELATORIO

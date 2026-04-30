@@ -54,6 +54,14 @@ Protocolo permanente de continuidade entre chats:
 - Quando uma implementacao depender apenas de validacao visual ou teste da usuaria, classificar como `AGUARDANDO VALIDACAO VISUAL` ou `AGUARDANDO TESTE DO USUARIO`, em vez de reabrir a duvida tecnica.
 - A rotina operacional curta esta registrada em `docs/ROTINA_BAIXA_PENDENCIAS.md`.
 
+### 1.4. Governanca permanente de regras de negocio reutilizaveis
+
+- Toda regra de negocio aprovada deve ser registrada em `docs/REGRAS_NEGOCIO.md`; regras importantes nao devem ficar apenas no chat.
+- Quando a regra for duradoura, transversal ou estrutural, tambem deve ser refletida neste `CEREBRO_PROJETO.md`.
+- O registro de uma regra deve separar comportamento esperado, excecoes, impacto em cadastros, impacto em relatorios, racional da decisao e possibilidade de reaproveitamento em outros projetos.
+- Quando uma regra tiver potencial de replicacao, a documentacao deve usar linguagem estruturada e reaproveitavel, evitando depender exclusivamente do caso especifico da Casa Espirita.
+- Nenhuma frente funcional relevante deve iniciar se a regra de negocio aprovada ainda estiver apenas no chat e nao tiver sido registrada nos documentos oficiais.
+
 ## 2. Objetivo do sistema
 O projeto **Casa Espirita** e um sistema em Django para apoiar a gestao da instituicao.
 
@@ -110,9 +118,13 @@ Estas regras devem ser respeitadas em qualquer etapa:
 - o Balancete Institucional deve reutilizar a mesma base/regra de calculo da Prestacao/Fechamento, evitando calculo divergente e evitando duplicar regra financeira em dois lugares diferentes
 - o Balancete Institucional deve ter template/documento proprio, com cabecalho compacto, titulo do periodo, secoes numeradas, valores alinhados a direita, fechamento do saldo disponivel, composicao final, fundo branco e duas assinaturas quando essa frente for implementada
 - o cadastro de contas deve evoluir futuramente para separar `ativa/inativa` de `disponivel/indisponivel`: conta ativa/inativa controla uso operacional em novos lancamentos; disponibilidade/vinculacao controla leitura gerencial e patrimonial do saldo
+- uma conta pode continuar ativa para lancamentos novos e, ao mesmo tempo, ter saldo indisponivel/vinculado para leitura gerencial, conforme sua natureza patrimonial
 - integralizacao de capital nao deve ser tratada como despesa operacional nem misturada ao saldo livre/disponivel sem destaque; a modelagem futura deve trata-la como valor patrimonial, vinculado ou indisponivel conforme a natureza da conta
+- integralizacao de capital deve compor o patrimonio financeiro fora do saldo operacional livre, com apresentacao separada no Balancete patrimonial
 - relatorios documentais, especialmente o Balancete Institucional, devem evitar misturar saldo disponivel operacional com valores indisponiveis/vinculados sem destaque claro
 - o Balancete Institucional deve poder evoluir para modos de composicao final por conta, por tipo de conta, por total consolidado e por separacao entre disponivel e indisponivel, preservando transparencia sem poluir o impresso
+- no modo consolidado por tipo de conta, contas do mesmo tipo devem ser somadas independentemente do banco, nome da conta ou cadastro individual, preservando grupos como conta corrente, poupanca, dinheiro/caixa, aplicacao financeira, integralizacao de capital e conta vinculada/indisponivel
+- a frente de Balancete patrimonial exige modelagem documental fechada antes de qualquer implementacao de models, migrations, views, forms, templates ou testes
 - quando a natureza `receita` / `despesa` ja estiver clara pelo contexto da tela, pelo agrupamento ou por indicador de tipo, a exibicao visivel da categoria deve preferir nome curto, sem prefixos textuais redundantes
 - no shell do `financeiro`, a sigla visual da marca deve preferir iniciais dinamicas derivadas do nome da `ConfiguracaoInstitucional` ativa/padrao, com fallback seguro para `CE` quando nao houver nome configurado
 - quando a frente incremental de refinamento visual entrar em retrabalho repetitivo sobre a mesma tela, o projeto pode abrir POC controlada de tema/base visual pronta e leve, desde que exista primeiro um ponto de restauracao seguro em Git

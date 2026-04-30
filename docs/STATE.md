@@ -2,6 +2,14 @@
 
 Data de atualizacao: 2026-04-30
 
+## Governanca de regras reutilizaveis e Balancete patrimonial
+
+- registrada regra permanente: toda regra de negocio aprovada deve ir para `docs/REGRAS_NEGOCIO.md`, com comportamento esperado, excecoes, impacto em cadastros, impacto em relatorios, racional da decisao e potencial de reaproveitamento
+- detalhada a frente futura de tipo/disponibilidade de conta e Balancete patrimonial, incluindo tipos iniciais de conta, diferenca entre ativa/inativa e disponivel/indisponivel, integralizacao de capital como valor patrimonial/vinculado e campo opcional de mensagem explicativa
+- especificados os modos futuros de composicao do Balancete: detalhado por conta, consolidado por tipo, total consolidado e separado entre disponivel e indisponivel/vinculado
+- registrada regra de seguranca: a evolucao patrimonial deve reaproveitar a base do Fechamento/Prestacao e alterar apenas classificacao/apresentacao do saldo, sem calculo proprio divergente
+- nao houve alteracao funcional, codigo, models, migrations, views, forms, templates, tests ou CSS
+
 ## Checkpoint do financeiro apos homologacao local
 
 - Concluido/homologado recentemente: rotina Git/GitHub, rotina de baixa documental, documentos por favorecido, favorecido tecnico `TRANSFERENCIA ENTRE CONTAS` no Extrato, bloco `DIFERENCA A DETALHAR` no rateio, contas inativas em consultas historicas e filtro multi-contas na listagem de lancamentos.

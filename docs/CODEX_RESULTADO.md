@@ -2,6 +2,15 @@
 
 Data: 2026-04-30
 
+## Regras reutilizaveis e especificacao do Balancete patrimonial
+
+- registrei governanca permanente para que toda regra de negocio aprovada seja documentada em `docs/REGRAS_NEGOCIO.md`
+- detalhei que regras reutilizaveis devem registrar comportamento esperado, excecoes, impactos em cadastros/relatorios, racional e possibilidade de reaproveitamento em outros projetos
+- especifiquei a frente futura de tipo/disponibilidade de conta e Balancete patrimonial, incluindo tipos iniciais, diferenca entre ativa/inativa e disponivel/indisponivel, integralizacao de capital e mensagem explicativa por conta
+- documentei modos futuros de exibicao do saldo: detalhado por conta, consolidado por tipo de conta, total consolidado e separado entre disponivel e indisponivel/vinculado
+- registrei a regra de agrupamento por tipo de conta e a seguranca de reaproveitar a base do Fechamento/Prestacao sem calculo divergente
+- nao alterei codigo funcional, models, migrations, views, forms, templates, tests, CSS ou regras financeiras executaveis
+
 ## Homologacao progressiva do financeiro
 
 - registrei decisao documental de que a homologacao funcional do financeiro ocorreu de forma progressiva durante o desenvolvimento das microetapas

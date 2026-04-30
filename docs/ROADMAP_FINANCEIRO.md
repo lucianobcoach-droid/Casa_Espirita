@@ -19,25 +19,32 @@ Este bloco registra nova frente gerencial/patrimonial levantada pela usuaria. Na
 1. **Tipo de conta financeira**
    - Classificacao: FRENTE FUTURA FUNCIONAL / REGRA GERENCIAL.
    - Prioridade documental: MEDIA.
-   - Direcao: evoluir o cadastro de contas para classificar tipo de conta, como conta corrente, poupanca, dinheiro/caixa, aplicacao financeira, integralizacao de capital, conta vinculada ou outros.
-   - Observacao: avaliar cadastro proprio de tipos de conta para manter o sistema aberto a outras instituicoes e empresas.
+   - Direcao: evoluir o cadastro de contas para classificar tipo de conta, com exemplos iniciais: conta corrente, conta poupanca, dinheiro/caixa, aplicacao financeira, integralizacao de capital, conta vinculada/indisponivel e outros.
+   - Observacao: avaliar cadastro proprio de tipos de conta para manter o sistema aberto a outras instituicoes, empresas e projetos futuros.
 
 2. **Disponibilidade ou vinculacao da conta**
    - Classificacao: REGRA DE NEGOCIO / LEITURA GERENCIAL-PATRIMONIAL.
    - Prioridade documental: ALTA para desenho futuro.
    - Direcao: diferenciar conta ativa/inativa de conta disponivel/indisponivel. Ativa/inativa controla uso operacional em novos lancamentos; disponivel/indisponivel controla leitura gerencial do saldo.
+   - Regra especifica: uma conta pode estar ativa para novos lancamentos e ainda assim ter saldo indisponivel/vinculado, conforme a natureza gerencial ou patrimonial.
    - Mensagem explicativa: prever campo opcional por conta para justificar indisponibilidade/vinculacao em relatorios. Se vazio, nada deve aparecer.
 
 3. **Integralizacao de capital**
    - Classificacao: REGRA GERENCIAL / PATRIMONIAL.
    - Prioridade documental: ALTA para modelagem futura.
-   - Direcao: integralizacao de capital nao deve ser tratada como despesa operacional nem como saldo livre para uso imediato; deve compor patrimonio financeiro de forma destacada como valor vinculado/indisponivel, conforme modelagem futura.
+   - Direcao: integralizacao de capital nao deve ser tratada como despesa operacional nem como saldo livre para uso imediato; deve compor patrimonio financeiro de forma destacada como valor vinculado/indisponivel, fora do saldo operacional livre.
 
 4. **Composicao do Balancete Institucional**
    - Classificacao: MELHORIA FUNCIONAL DE RELATORIO / IMPRESSAO.
    - Prioridade documental: MEDIA.
-   - Direcao: evoluir o Balancete para permitir modos de composicao final: detalhado por conta, consolidado por tipo de conta, apenas saldo total consolidado e possivelmente separando disponivel e indisponivel.
+   - Direcao: evoluir o Balancete para permitir modos de composicao final: detalhado por conta, consolidado por tipo de conta, total consolidado e separado entre disponivel e indisponivel/vinculado.
+   - Modo detalhado por conta: mostra cada conta individualmente.
+   - Modo consolidado por tipo: soma contas do mesmo tipo independentemente do banco ou nome da conta; exemplos de grupos: conta corrente, poupanca, dinheiro/caixa, aplicacao financeira, integralizacao de capital e conta vinculada/indisponivel.
+   - Modo total consolidado: mostra apenas o total geral quando a usuaria quiser relatorio mais sintetico.
+   - Modo disponivel x indisponivel/vinculado: separa saldo livre operacional de valores patrimoniais, vinculados ou indisponiveis.
    - Objetivo visual: reduzir poluicao e duplicacao entre fechamento consolidado e detalhamento, mantendo composicao por conta quando o usuario precisar conferir.
+   - Regra de seguranca: o Balancete patrimonial nao deve ter calculo proprio divergente; deve reaproveitar a base do Fechamento/Prestacao e mudar apenas classificacao/apresentacao do saldo.
+   - Pre-condicao: nenhuma implementacao desta frente deve iniciar antes de fechar a modelagem documental de tipo, disponibilidade, mensagem explicativa e modos de exibicao.
 
 5. **Logo no Extrato impresso**
    - Classificacao: AJUSTE VISUAL DE RELATORIO / IMPRESSAO.
