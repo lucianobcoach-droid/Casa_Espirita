@@ -216,7 +216,17 @@ Estas regras devem ser respeitadas em qualquer etapa:
 - como fase futura posterior ao MVP comum, a clonagem deve evoluir para lancamentos com rateio por grupo, tambem sem vinculo com o documento original, abrindo um novo lancamento/documento rateado ja preenchido para revisao manual
 - nessa futura clonagem de rateio, se o usuario alterar o `valor total do documento`, as linhas/categorias do rateio deverao ser ajustadas manualmente no proprio clone, sem sincronizacao automatica nem qualquer efeito sobre o grupo original
 
-### 5.1.6. Diretriz futura de importacao e exportacao de lancamentos
+### 5.1.6. Especificacao funcional futura do Balancete patrimonial
+- o Balancete patrimonial deve ser evolucao incremental do Balancete Institucional ja existente, nunca recriacao do zero
+- a base de calculo deve continuar vindo da mesma regra do Fechamento/Prestacao; a evolucao patrimonial so classifica e apresenta o saldo de forma mais rica
+- o cadastro de contas deve suportar futuramente tipo de conta, disponibilidade/vinculacao e mensagem explicativa opcional
+- tipos iniciais de conta a considerar: conta corrente, conta poupanca, dinheiro/caixa, aplicacao financeira, integralizacao de capital, conta vinculada/indisponivel e outros
+- modos de composicao do saldo: detalhado por conta, consolidado por tipo, total consolidado e separado entre disponivel e indisponivel/vinculado
+- agrupamento por tipo deve somar contas de mesmo tipo mesmo quando tiverem bancos ou nomes diferentes
+- integralizacao de capital deve ficar em grupo proprio patrimonial/vinculado, sem virar despesa e sem inflar saldo operacional livre
+- antes da implementacao tecnica, ainda precisam ser decididos: tipo como cadastro proprio ou lista fixa, disponibilidade total ou parcial, local da mensagem explicativa, modo padrao do Balancete e escopo de testes
+
+### 5.1.7. Diretriz futura de importacao e exportacao de lancamentos
 - fica registrada como backlog funcional futuro do `financeiro` a frente de importacao em massa e exportacao de lancamentos
 - na importacao, deve existir modelo de planilha/arquivo e validacao previa de colunas obrigatorias, tipos de dados e aderencia as regras de negocio ja existentes
 - a importacao futura tambem deve oferecer acao explicita para baixar uma planilha modelo no layout proprio do sistema, com colunas e ordem esperadas para preenchimento e posterior importacao

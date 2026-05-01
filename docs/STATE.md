@@ -8,6 +8,7 @@ Data de atualizacao: 2026-04-30
 - detalhada a frente futura de tipo/disponibilidade de conta e Balancete patrimonial, incluindo tipos iniciais de conta, diferenca entre ativa/inativa e disponivel/indisponivel, integralizacao de capital como valor patrimonial/vinculado e campo opcional de mensagem explicativa
 - especificados os modos futuros de composicao do Balancete: detalhado por conta, consolidado por tipo, total consolidado e separado entre disponivel e indisponivel/vinculado
 - registrada regra de seguranca: a evolucao patrimonial deve reaproveitar a base do Fechamento/Prestacao e alterar apenas classificacao/apresentacao do saldo, sem calculo proprio divergente
+- modelagem documental consolidada no roadmap: impactos futuros em cadastro de contas, Balancete, relatorios e regras de negocio foram separados das decisoes ainda pendentes antes da implementacao tecnica
 - nao houve alteracao funcional, codigo, models, migrations, views, forms, templates, tests ou CSS
 
 ## Checkpoint do financeiro apos homologacao local

@@ -9,6 +9,7 @@ Data: 2026-04-30
 - especifiquei a frente futura de tipo/disponibilidade de conta e Balancete patrimonial, incluindo tipos iniciais, diferenca entre ativa/inativa e disponivel/indisponivel, integralizacao de capital e mensagem explicativa por conta
 - documentei modos futuros de exibicao do saldo: detalhado por conta, consolidado por tipo de conta, total consolidado e separado entre disponivel e indisponivel/vinculado
 - registrei a regra de agrupamento por tipo de conta e a seguranca de reaproveitar a base do Fechamento/Prestacao sem calculo divergente
+- consolidei a modelagem funcional no roadmap, incluindo impactos futuros em cadastro de contas, Balancete, relatorios e regras de negocio, alem das decisoes pendentes antes da implementacao
 - nao alterei codigo funcional, models, migrations, views, forms, templates, tests, CSS ou regras financeiras executaveis
 
 ## Homologacao progressiva do financeiro

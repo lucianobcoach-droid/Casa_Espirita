@@ -2,6 +2,55 @@
 
 Data: 2026-04-23
 
+## 0.20. Especificacao funcional: tipo/disponibilidade de conta e Balancete patrimonial
+
+Esta frente permanece sem implementacao funcional. O objetivo e fechar a modelagem antes de qualquer alteracao em models, migrations, forms, views, templates, testes ou calculos.
+
+### Objetivo funcional
+
+Evoluir o Balancete Institucional para leitura patrimonial/gerencial do saldo, preservando o MVP atual como base e reaproveitando a mesma base de calculo do Fechamento/Prestacao.
+
+### Cadastro de contas - campos/conceitos futuros
+
+- Tipo de conta financeira: classificacao gerencial da conta. Tipos iniciais: conta corrente, conta poupanca, dinheiro/caixa, aplicacao financeira, integralizacao de capital, conta vinculada/indisponivel e outros.
+- Disponibilidade/vinculacao: leitura gerencial do saldo, separada de `ativa/inativa`. Conta ativa/inativa define se a conta pode ser usada em novos lancamentos; disponivel/indisponivel define se o saldo e livre ou vinculado.
+- Mensagem explicativa: texto opcional por conta para justificar indisponibilidade/vinculacao. Se vazio, nao deve aparecer no Balancete; se preenchido, pode aparecer em relatorio patrimonial.
+
+### Integralizacao de capital
+
+- Nao e despesa operacional.
+- Nao deve ser misturada ao saldo livre disponivel sem destaque.
+- Deve compor patrimonio financeiro em grupo proprio, como valor patrimonial/vinculado/indisponivel.
+
+### Modos de exibicao do saldo no Balancete
+
+- Detalhado por conta: mostra cada conta individualmente.
+- Consolidado por tipo de conta: agrupa e soma contas do mesmo tipo, independentemente de banco, nome ou cadastro individual.
+- Total consolidado: mostra apenas o total geral quando o documento precisar ser sintetico.
+- Disponivel x indisponivel/vinculado: separa saldo livre operacional de valores patrimoniais, vinculados ou indisponiveis.
+
+### Impactos futuros esperados
+
+- Cadastro de contas: incluir classificacao por tipo, disponibilidade/vinculacao e mensagem explicativa opcional.
+- Balancete Institucional: permitir escolher modo de composicao do saldo e apresentar integralizacao/indisponiveis sem poluir o documento.
+- Relatorios: preservar calculos atuais e alterar apenas classificacao/apresentacao quando a leitura patrimonial for solicitada.
+- Regras de negocio: manter separacao entre receita, despesa e transferencia; integralizacao nao vira despesa; saldo indisponivel nao vira saldo operacional livre.
+
+### Decisoes pendentes antes da implementacao
+
+- Definir se tipo de conta sera cadastro proprio ou lista fixa inicial.
+- Definir se disponibilidade sera estado simples da conta ou estrutura mais rica para disponibilidade parcial.
+- Definir se a mensagem explicativa fica na conta ou em uma configuracao patrimonial especifica.
+- Definir qual modo de exibicao sera padrao no Balancete patrimonial.
+- Definir como filtrar/ordenar grupos no impresso sem reintroduzir poluicao visual.
+- Definir escopo dos testes antes da implementacao tecnica.
+
+### Regra de seguranca
+
+- Nao criar calculo proprio para o Balancete patrimonial.
+- Nao alterar comportamento atual de lancamentos, Fechamento/Prestacao, Extrato ou Balancete MVP.
+- Implementar somente depois de nova microetapa funcional aprovada.
+
 ## 0.19. Checkpoint apos homologacao local do financeiro
 
 Este bloco orienta a fila apos as auditorias, baixas documentais, correcoes funcionais e homologacoes locais recentes. Nao reabre itens ja homologados como pendencia ativa.

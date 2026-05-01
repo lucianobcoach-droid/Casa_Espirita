@@ -615,6 +615,8 @@ Documentos relacionados:
 
 Status inicial: FUTURO REAL / REQUER MODELAGEM
 
+Status apos modelagem documental: MODELADO DOCUMENTALMENTE / REQUER IMPLEMENTACAO FUTURA
+
 Motivo:
 Foi levantada necessidade de classificar contas por tipo, como conta corrente, poupanca, dinheiro/caixa, aplicacao financeira, integralizacao de capital, conta vinculada ou outros. Deve ser avaliado se o tipo sera cadastro proprio para manter abertura a outras instituicoes.
 
@@ -638,6 +640,8 @@ Documentos relacionados:
 ### 26. Disponibilidade ou vinculacao da conta
 
 Status inicial: FUTURO REAL / REQUER MODELAGEM
+
+Status apos modelagem documental: MODELADO DOCUMENTALMENTE / REQUER IMPLEMENTACAO FUTURA
 
 Motivo:
 Foi levantada necessidade de indicar se o saldo de uma conta e disponivel para uso ou indisponivel/vinculado. Esta regra e diferente de conta ativa/inativa: ativa/inativa controla uso operacional; disponibilidade controla leitura gerencial do saldo.
@@ -665,6 +669,8 @@ Documentos relacionados:
 
 Status inicial: FUTURO REAL / REQUER MODELAGEM
 
+Status apos modelagem documental: MODELADO DOCUMENTALMENTE / REQUER IMPLEMENTACAO FUTURA
+
 Motivo:
 Foi levantada necessidade de campo opcional no cadastro de contas para justificar em relatorios por que determinado saldo esta indisponivel. Se o campo estiver vazio, nada deve aparecer no relatorio.
 
@@ -688,6 +694,8 @@ Documentos relacionados:
 ### 28. Modos de composicao do Balancete Institucional
 
 Status inicial: FUTURO REAL / MELHORIA DE RELATORIO
+
+Status apos modelagem documental: MODELADO DOCUMENTALMENTE / REQUER IMPLEMENTACAO FUTURA
 
 Motivo:
 Foi levantada necessidade de o Balancete permitir escolher entre composicao detalhada por conta, consolidada por tipo de conta ou apenas saldo total consolidado, possivelmente separando disponivel e indisponivel para reduzir poluicao visual.
