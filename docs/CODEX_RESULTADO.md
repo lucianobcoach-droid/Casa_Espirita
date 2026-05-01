@@ -2,6 +2,15 @@
 
 Data: 2026-04-30
 
+## Auditoria tecnica preparatoria do MVP patrimonial
+
+- auditei tecnicamente a base atual de contas, Balancete, Fechamento/Prestacao, templates, rotas, testes e importacao/exportacao relacionados a `ContaFinanceira`
+- confirmei que o model atual de conta ainda nao possui tipo, disponibilidade patrimonial nem mensagem explicativa; esses pontos continuam futuros
+- confirmei que o Balancete Institucional usa `BalanceteInstitucionalFinanceiroView` e reaproveita `montar_contexto_fechamento_periodo`, preservando a base comum do Fechamento/Prestacao
+- mapeei os arquivos candidatos para futura implementacao: `financeiro/models.py`, `forms.py`, `views.py`, `urls.py`, `tests.py`, templates de conta e Balancete, e pontos de importacao/exportacao auxiliar de contas
+- registrei que a proxima microetapa funcional minima deve tratar primeiro modelagem/cadastro simples de tipo de conta e campos simples em `ContaFinanceira`, sem alterar calculos ou relatorios fora do Balancete
+- nao alterei codigo funcional, models, migrations, forms, views, urls, templates, tests, CSS, banco de dados ou calculos financeiros
+
 ## Decisoes funcionais do MVP patrimonial
 
 - registrei as decisoes funcionais aprovadas para o MVP patrimonial antes de qualquer implementacao tecnica

@@ -2,6 +2,14 @@
 
 Data de atualizacao: 2026-04-30
 
+## Auditoria tecnica preparatoria do MVP patrimonial
+
+- auditoria tecnica concluida sem implementacao funcional: `ContaFinanceira` esta em `financeiro/models.py` com campos `nome`, `descricao`, `saldo_inicial`, `data_saldo_inicial`, `ativa`, `criado_em` e `atualizado_em`
+- cadastro/edicao de conta usa `ContaFinanceiraForm`, `conta_form.html`, `conta_list.html` e views `ContaFinanceiraList/Create/Update/Delete/Exportacao`; importacao auxiliar de contas usa colunas `nome`, `descricao`, `saldo_inicial`, `data_saldo_inicial` e `ativa`
+- Balancete Institucional e montado em `BalanceteInstitucionalFinanceiroView`, reaproveitando `montar_contexto_fechamento_periodo`; a composicao final atual vem de `composicao_final` e e exposta ao template como `balancete_composicao_final`
+- primeira implementacao funcional futura recomendada: criar model/cadastro simples de tipo de conta e adicionar campos simples em `ContaFinanceira`, com ajustes pontuais em form, templates de conta, importacao/exportacao auxiliar e testes, ainda sem mexer em calculo, Extrato, Fechamento/Prestacao ou regras de transferencia
+- riscos mapeados: migration de dados para contas existentes, compatibilidade da importacao/exportacao de contas, auditoria/snapshot de conta, ordenacao/exibicao patrimonial no Balancete e preservacao da base comum de calculo
+
 ## Decisoes funcionais do MVP patrimonial
 
 - registradas decisoes aprovadas para o MVP patrimonial futuro: tipo de conta financeira sera cadastro proprio simples; disponibilidade/vinculacao sera total por conta no MVP; mensagem explicativa ficara no cadastro da conta; modo padrao do Balancete patrimonial sera detalhado por conta, preservando leitura atual com separacao visual entre disponivel e indisponivel/vinculado quando aplicavel

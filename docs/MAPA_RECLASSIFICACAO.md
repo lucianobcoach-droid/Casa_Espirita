@@ -619,6 +619,8 @@ Status apos modelagem documental: MODELADO DOCUMENTALMENTE / REQUER IMPLEMENTACA
 
 Status apos decisao do MVP: DECISAO FUNCIONAL APROVADA / REQUER IMPLEMENTACAO FUTURA
 
+Status apos auditoria tecnica: AUDITADO TECNICAMENTE / PRONTO PARA SPEC FUNCIONAL
+
 Motivo:
 Foi levantada necessidade de classificar contas por tipo, como conta corrente, poupanca, dinheiro/caixa, aplicacao financeira, integralizacao de capital, conta vinculada ou outros. Deve ser avaliado se o tipo sera cadastro proprio para manter abertura a outras instituicoes.
 
@@ -626,6 +628,7 @@ Especificacao futura:
 - exemplos iniciais: conta corrente, conta poupanca, dinheiro/caixa, aplicacao financeira, integralizacao de capital, conta vinculada/indisponivel e outros
 - decisao aprovada: usar cadastro proprio simples de tipos de conta para permitir adaptacao a outros projetos
 - o tipo de conta deve permitir agrupamento gerencial no Balancete patrimonial, somando contas do mesmo tipo independentemente do banco ou nome da conta
+- auditoria tecnica: futura implementacao deve tocar `financeiro/models.py`, `forms.py`, views/templates de conta, importacao/exportacao auxiliar de contas e testes; Balancete deve entrar em microetapa separada ou posterior
 
 Classificacao documental:
 - MELHORIA FUNCIONAL
@@ -647,6 +650,8 @@ Status apos modelagem documental: MODELADO DOCUMENTALMENTE / REQUER IMPLEMENTACA
 
 Status apos decisao do MVP: DECISAO FUNCIONAL APROVADA / REQUER IMPLEMENTACAO FUTURA
 
+Status apos auditoria tecnica: AUDITADO TECNICAMENTE / PRONTO PARA SPEC FUNCIONAL
+
 Motivo:
 Foi levantada necessidade de indicar se o saldo de uma conta e disponivel para uso ou indisponivel/vinculado. Esta regra e diferente de conta ativa/inativa: ativa/inativa controla uso operacional; disponibilidade controla leitura gerencial do saldo.
 
@@ -656,6 +661,7 @@ Especificacao futura:
 - uma conta pode estar ativa e ainda assim ter saldo indisponivel/vinculado
 - decisao aprovada para o MVP: disponibilidade/vinculacao sera total por conta; disponibilidade parcial fica como evolucao futura
 - integralizacao de capital deve ficar separada como valor patrimonial/vinculado, nao como despesa operacional
+- auditoria tecnica: campo simples em `ContaFinanceira` e suficiente para o MVP; nao abrir disponibilidade parcial nem alterar calculo/saldo
 
 Classificacao documental:
 - REGRA DE NEGOCIO
@@ -678,6 +684,8 @@ Status apos modelagem documental: MODELADO DOCUMENTALMENTE / REQUER IMPLEMENTACA
 
 Status apos decisao do MVP: DECISAO FUNCIONAL APROVADA / REQUER IMPLEMENTACAO FUTURA
 
+Status apos auditoria tecnica: AUDITADO TECNICAMENTE / PRONTO PARA SPEC FUNCIONAL
+
 Motivo:
 Foi levantada necessidade de campo opcional no cadastro de contas para justificar em relatorios por que determinado saldo esta indisponivel. Se o campo estiver vazio, nada deve aparecer no relatorio.
 
@@ -685,6 +693,7 @@ Especificacao futura:
 - decisao aprovada: campo opcional no cadastro da conta
 - se vazio, nada aparece no Balancete ou relatorio patrimonial
 - se preenchido, pode aparecer como justificativa do saldo indisponivel/vinculado
+- auditoria tecnica: mensagem deve entrar no cadastro/form/template/listagem/exportacao/importacao de contas antes de ser exibida no Balancete
 
 Classificacao documental:
 - MELHORIA FUNCIONAL
@@ -706,6 +715,8 @@ Status apos modelagem documental: MODELADO DOCUMENTALMENTE / REQUER IMPLEMENTACA
 
 Status apos decisao do MVP: DECISAO FUNCIONAL APROVADA / REQUER IMPLEMENTACAO FUTURA
 
+Status apos auditoria tecnica: AUDITADO TECNICAMENTE / PRONTO PARA SPEC FUNCIONAL POSTERIOR
+
 Motivo:
 Foi levantada necessidade de o Balancete permitir escolher entre composicao detalhada por conta, consolidada por tipo de conta ou apenas saldo total consolidado, possivelmente separando disponivel e indisponivel para reduzir poluicao visual.
 
@@ -716,6 +727,7 @@ Especificacao futura:
 - separado entre disponivel e indisponivel/vinculado: opcao/filtro futuro para distinguir saldo livre operacional de valores patrimoniais/vinculados
 - integralizacao de capital, aplicacoes financeiras e contas vinculadas/indisponiveis devem aparecer separadas quando existirem
 - deve reaproveitar a base de calculo do Fechamento/Prestacao, sem calculo proprio divergente
+- auditoria tecnica: `BalanceteInstitucionalFinanceiroView` ja recebe `composicao_final` da base comum e expõe `balancete_composicao_final`; futura leitura patrimonial deve classificar/apresentar esses itens sem mudar `montar_contexto_fechamento_periodo`
 
 Classificacao documental:
 - MELHORIA FUNCIONAL DE RELATORIO

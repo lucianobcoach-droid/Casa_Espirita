@@ -55,6 +55,17 @@ Evoluir o Balancete Institucional para leitura patrimonial/gerencial do saldo, p
 - Definir como filtrar/ordenar grupos no impresso sem reintroduzir poluicao visual.
 - Definir escopo dos testes antes da implementacao tecnica.
 
+### Auditoria tecnica preparatoria
+
+- Estado real da conta: `ContaFinanceira` esta em `financeiro/models.py` e possui hoje `nome`, `descricao`, `saldo_inicial`, `data_saldo_inicial`, `ativa`, `criado_em` e `atualizado_em`; nao ha ainda tipo patrimonial, disponibilidade/vinculacao gerencial nem mensagem explicativa.
+- Cadastro de conta: `ContaFinanceiraForm`, `ContaFinanceiraListView`, `ContaFinanceiraCreateView`, `ContaFinanceiraUpdateView`, `ContaFinanceiraDeleteView`, `conta_form.html` e `conta_list.html` sao pontos diretos de impacto futuro.
+- Base compartilhada: `montar_contexto_fechamento_periodo` encapsula a base reutilizada por Resumo, Prestacao/Fechamento e Balancete; a futura leitura patrimonial nao deve alterar essa base de calculo.
+- Balancete: `BalanceteInstitucionalFinanceiroView` chama `montar_contexto_fechamento_periodo`, filtra composicoes documentais e envia `balancete_composicao_inicial`/`balancete_composicao_final` para `balancete_institucional.html`.
+- Importacao/exportacao: a importacao auxiliar de contas e a exportacao de contas usam contrato atual com `nome`, `descricao`, `saldo_inicial`, `data_saldo_inicial` e `ativa`; qualquer campo novo em conta exige ajuste controlado desse contrato.
+- Testes existentes: ha cobertura para form de edicao de conta, conta inativa, base de Fechamento/Prestacao, Balancete Institucional, composicao/contas zeradas e Extrato multi-contas; a futura implementacao precisa acrescentar testes especificos de tipo/disponibilidade/mensagem.
+- Recorte minimo recomendado: primeiro criar a estrutura simples de tipo de conta e campos patrimoniais da conta, com atualizacao de cadastro/listagem/importacao/exportacao auxiliar e testes; depois, em microetapa separada, aplicar a leitura patrimonial no Balancete.
+- Nao alterar no primeiro recorte: lancamentos, Extrato, Fechamento/Prestacao, importacao/exportacao de lancamentos, permissoes, regras de transferencia, saldos e calculo financeiro.
+
 ### Regra de seguranca
 
 - Nao criar calculo proprio para o Balancete patrimonial.
