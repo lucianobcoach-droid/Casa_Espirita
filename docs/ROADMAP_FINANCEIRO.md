@@ -4,7 +4,7 @@ Data: 2026-04-23
 
 ## 0.20. Especificacao funcional: tipo/disponibilidade de conta e Balancete patrimonial
 
-Esta frente permanece sem implementacao funcional. O objetivo e fechar a modelagem antes de qualquer alteracao em models, migrations, forms, views, templates, testes ou calculos.
+Base cadastral das contas financeiras implementada em primeira microetapa funcional. A leitura patrimonial no Balancete Institucional permanece futura e deve ser feita em microetapa separada, sem reabrir o MVP atual do Balancete nem alterar a base de calculo.
 
 ### Objetivo funcional
 
@@ -12,9 +12,9 @@ Evoluir o Balancete Institucional para leitura patrimonial/gerencial do saldo, p
 
 ### Cadastro de contas - campos/conceitos futuros
 
-- Tipo de conta financeira: classificacao gerencial da conta. Tipos iniciais: conta corrente, conta poupanca, dinheiro/caixa, aplicacao financeira, integralizacao de capital, conta vinculada/indisponivel e outros.
-- Disponibilidade/vinculacao: leitura gerencial do saldo, separada de `ativa/inativa`. Conta ativa/inativa define se a conta pode ser usada em novos lancamentos; disponivel/indisponivel define se o saldo e livre ou vinculado.
-- Mensagem explicativa: texto opcional por conta para justificar indisponibilidade/vinculacao. Se vazio, nao deve aparecer no Balancete; se preenchido, pode aparecer em relatorio patrimonial.
+- Implementado em contas: tipo de conta financeira como cadastro proprio simples; disponibilidade/vinculacao total por conta; mensagem explicativa opcional.
+- Tipos iniciais carregados por migration idempotente: conta corrente, conta poupanca, dinheiro/caixa, aplicacao financeira, integralizacao de capital, conta vinculada/indisponivel e outros.
+- Importacao/exportacao auxiliar de contas: contrato ampliado com os campos patrimoniais, preservando planilha legada de contas com defaults `outros` e `disponivel`.
 
 ### Integralizacao de capital
 
@@ -31,8 +31,8 @@ Evoluir o Balancete Institucional para leitura patrimonial/gerencial do saldo, p
 
 ### Impactos futuros esperados
 
-- Cadastro de contas: incluir classificacao por tipo, disponibilidade/vinculacao e mensagem explicativa opcional.
-- Balancete Institucional: permitir escolher modo de composicao do saldo e apresentar integralizacao/indisponiveis sem poluir o documento.
+- Cadastro de contas: base tecnica implementada; futura evolucao pode refinar administracao dos tipos se houver necessidade de tela propria.
+- Balancete Institucional: proxima frente funcional deve aplicar leitura patrimonial da composicao do saldo e apresentar integralizacao/indisponiveis sem poluir o documento.
 - Relatorios: preservar calculos atuais e alterar apenas classificacao/apresentacao quando a leitura patrimonial for solicitada.
 - Regras de negocio: manter separacao entre receita, despesa e transferencia; integralizacao nao vira despesa; saldo indisponivel nao vira saldo operacional livre.
 
@@ -45,25 +45,24 @@ Evoluir o Balancete Institucional para leitura patrimonial/gerencial do saldo, p
 - Mensagem explicativa de indisponibilidade/vinculacao ficara no cadastro da conta; se vazia, nao aparece no Balancete; se preenchida, pode aparecer no Balancete patrimonial ou relatorio equivalente.
 - Modo padrao do Balancete patrimonial sera detalhado por conta, preservando a leitura atual e adicionando separacao visual entre disponivel e indisponivel/vinculado quando aplicavel.
 - Modos mais sinteticos ou agrupados permanecem como opcoes futuras: consolidado por tipo de conta, total consolidado, separado por disponivel x indisponivel/vinculado e combinacoes justificadas pelo uso real.
-- Primeira implementacao futura deve ficar restrita a cadastro/modelagem de tipo de conta, campos simples no cadastro de conta para tipo/disponibilidade/mensagem, leitura patrimonial no Balancete Institucional e preservacao da base de calculo atual do Fechamento/Prestacao.
+- Primeira implementacao funcional de cadastro/modelagem de conta foi concluida; leitura patrimonial no Balancete Institucional permanece como proxima microetapa futura, preservando a base de calculo atual do Fechamento/Prestacao.
 - Fora do MVP: disponibilidade parcial, calculo patrimonial novo, alteracao de lancamentos, Extrato, Fechamento/Prestacao, importacao/exportacao, permissoes, regras de transferencia, saldos, controle por parcelas de saldo e automatizacao contabil avancada.
 
-### Decisoes ainda pendentes antes da implementacao
+### Decisoes ainda pendentes antes da leitura patrimonial no Balancete
 
-- Definir nomes finais de campos, rotulos e ordenacao visual da classificacao patrimonial.
-- Definir estrategia de carga inicial dos tipos sugeridos.
 - Definir como filtrar/ordenar grupos no impresso sem reintroduzir poluicao visual.
-- Definir escopo dos testes antes da implementacao tecnica.
+- Definir se a leitura inicial do Balancete apenas separa disponivel/indisponivel no modo detalhado ou tambem expõe seletor de modo ja no primeiro recorte.
+- Definir escopo dos testes especificos do Balancete patrimonial antes da proxima implementacao tecnica.
 
 ### Auditoria tecnica preparatoria
 
-- Estado real da conta: `ContaFinanceira` esta em `financeiro/models.py` e possui hoje `nome`, `descricao`, `saldo_inicial`, `data_saldo_inicial`, `ativa`, `criado_em` e `atualizado_em`; nao ha ainda tipo patrimonial, disponibilidade/vinculacao gerencial nem mensagem explicativa.
+- Estado real da conta: `ContaFinanceira` possui base patrimonial cadastral implementada com tipo de conta, disponibilidade/vinculacao total e mensagem explicativa opcional.
 - Cadastro de conta: `ContaFinanceiraForm`, `ContaFinanceiraListView`, `ContaFinanceiraCreateView`, `ContaFinanceiraUpdateView`, `ContaFinanceiraDeleteView`, `conta_form.html` e `conta_list.html` sao pontos diretos de impacto futuro.
 - Base compartilhada: `montar_contexto_fechamento_periodo` encapsula a base reutilizada por Resumo, Prestacao/Fechamento e Balancete; a futura leitura patrimonial nao deve alterar essa base de calculo.
 - Balancete: `BalanceteInstitucionalFinanceiroView` chama `montar_contexto_fechamento_periodo`, filtra composicoes documentais e envia `balancete_composicao_inicial`/`balancete_composicao_final` para `balancete_institucional.html`.
-- Importacao/exportacao: a importacao auxiliar de contas e a exportacao de contas usam contrato atual com `nome`, `descricao`, `saldo_inicial`, `data_saldo_inicial` e `ativa`; qualquer campo novo em conta exige ajuste controlado desse contrato.
-- Testes existentes: ha cobertura para form de edicao de conta, conta inativa, base de Fechamento/Prestacao, Balancete Institucional, composicao/contas zeradas e Extrato multi-contas; a futura implementacao precisa acrescentar testes especificos de tipo/disponibilidade/mensagem.
-- Recorte minimo recomendado: primeiro criar a estrutura simples de tipo de conta e campos patrimoniais da conta, com atualizacao de cadastro/listagem/importacao/exportacao auxiliar e testes; depois, em microetapa separada, aplicar a leitura patrimonial no Balancete.
+- Importacao/exportacao: a importacao auxiliar de contas e a exportacao de contas incluem `tipo_conta`, `disponibilidade` e `mensagem_indisponibilidade`; a importacao preserva planilha legada com defaults seguros.
+- Testes existentes: foram acrescentados testes especificos de tipo/disponibilidade/mensagem, importacao nova/legada e exportacao auxiliar de contas.
+- Recorte minimo recomendado agora: aplicar a leitura patrimonial no Balancete em microetapa separada.
 - Nao alterar no primeiro recorte: lancamentos, Extrato, Fechamento/Prestacao, importacao/exportacao de lancamentos, permissoes, regras de transferencia, saldos e calculo financeiro.
 
 ### Regra de seguranca

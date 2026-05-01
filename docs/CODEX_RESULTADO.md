@@ -2,6 +2,14 @@
 
 Data: 2026-04-30
 
+## Base cadastral patrimonial das contas financeiras
+
+- implementei `TipoContaFinanceira` como cadastro proprio simples e acrescentei em `ContaFinanceira` os campos de tipo, disponibilidade total e mensagem explicativa opcional
+- gerei migration com carga inicial idempotente dos tipos aprovados e default seguro para contas existentes
+- atualizei form, cadastro/listagem de contas e importacao/exportacao auxiliar de contas para contemplar os novos campos, preservando planilha legada de contas com defaults
+- adicionei testes especificos para tipos padrao, form de conta disponivel/indisponivel, mensagem opcional, importacao nova/legada e exportacao auxiliar
+- mantive Balancete, Fechamento/Prestacao, Extrato, lancamentos, rateios, saldos, transferencias, permissoes e calculos financeiros sem alteracao funcional
+
 ## Auditoria tecnica preparatoria do MVP patrimonial
 
 - auditei tecnicamente a base atual de contas, Balancete, Fechamento/Prestacao, templates, rotas, testes e importacao/exportacao relacionados a `ContaFinanceira`

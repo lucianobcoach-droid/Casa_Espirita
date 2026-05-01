@@ -621,14 +621,17 @@ Status apos decisao do MVP: DECISAO FUNCIONAL APROVADA / REQUER IMPLEMENTACAO FU
 
 Status apos auditoria tecnica: AUDITADO TECNICAMENTE / PRONTO PARA SPEC FUNCIONAL
 
+Status apos base cadastral: IMPLEMENTADO NA BASE DE CONTAS / BALANCETE PATRIMONIAL FUTURO
+
 Motivo:
 Foi levantada necessidade de classificar contas por tipo, como conta corrente, poupanca, dinheiro/caixa, aplicacao financeira, integralizacao de capital, conta vinculada ou outros. Deve ser avaliado se o tipo sera cadastro proprio para manter abertura a outras instituicoes.
 
 Especificacao futura:
 - exemplos iniciais: conta corrente, conta poupanca, dinheiro/caixa, aplicacao financeira, integralizacao de capital, conta vinculada/indisponivel e outros
 - decisao aprovada: usar cadastro proprio simples de tipos de conta para permitir adaptacao a outros projetos
+- implementado: model proprio simples de tipo de conta com carga inicial idempotente dos tipos aprovados
 - o tipo de conta deve permitir agrupamento gerencial no Balancete patrimonial, somando contas do mesmo tipo independentemente do banco ou nome da conta
-- auditoria tecnica: futura implementacao deve tocar `financeiro/models.py`, `forms.py`, views/templates de conta, importacao/exportacao auxiliar de contas e testes; Balancete deve entrar em microetapa separada ou posterior
+- cadastro/listagem/importacao/exportacao auxiliar de contas ja reconhecem o tipo; Balancete deve entrar em microetapa separada ou posterior
 
 Classificacao documental:
 - MELHORIA FUNCIONAL
@@ -652,6 +655,8 @@ Status apos decisao do MVP: DECISAO FUNCIONAL APROVADA / REQUER IMPLEMENTACAO FU
 
 Status apos auditoria tecnica: AUDITADO TECNICAMENTE / PRONTO PARA SPEC FUNCIONAL
 
+Status apos base cadastral: IMPLEMENTADO NA BASE DE CONTAS / LEITURA NO BALANCETE FUTURA
+
 Motivo:
 Foi levantada necessidade de indicar se o saldo de uma conta e disponivel para uso ou indisponivel/vinculado. Esta regra e diferente de conta ativa/inativa: ativa/inativa controla uso operacional; disponibilidade controla leitura gerencial do saldo.
 
@@ -660,8 +665,9 @@ Especificacao futura:
 - conta disponivel/indisponivel controla leitura gerencial e patrimonial do saldo
 - uma conta pode estar ativa e ainda assim ter saldo indisponivel/vinculado
 - decisao aprovada para o MVP: disponibilidade/vinculacao sera total por conta; disponibilidade parcial fica como evolucao futura
+- implementado: campo simples em `ContaFinanceira` classifica a conta como disponivel ou indisponivel/vinculada em seu saldo total
 - integralizacao de capital deve ficar separada como valor patrimonial/vinculado, nao como despesa operacional
-- auditoria tecnica: campo simples em `ContaFinanceira` e suficiente para o MVP; nao abrir disponibilidade parcial nem alterar calculo/saldo
+- nao houve alteracao de calculo, saldo, lancamentos ou transferencias; leitura no Balancete permanece futura
 
 Classificacao documental:
 - REGRA DE NEGOCIO
@@ -686,14 +692,17 @@ Status apos decisao do MVP: DECISAO FUNCIONAL APROVADA / REQUER IMPLEMENTACAO FU
 
 Status apos auditoria tecnica: AUDITADO TECNICAMENTE / PRONTO PARA SPEC FUNCIONAL
 
+Status apos base cadastral: IMPLEMENTADO NA BASE DE CONTAS / EXIBICAO NO BALANCETE FUTURA
+
 Motivo:
 Foi levantada necessidade de campo opcional no cadastro de contas para justificar em relatorios por que determinado saldo esta indisponivel. Se o campo estiver vazio, nada deve aparecer no relatorio.
 
 Especificacao futura:
 - decisao aprovada: campo opcional no cadastro da conta
+- implementado: mensagem opcional no cadastro/edicao/listagem/importacao/exportacao auxiliar de contas
 - se vazio, nada aparece no Balancete ou relatorio patrimonial
 - se preenchido, pode aparecer como justificativa do saldo indisponivel/vinculado
-- auditoria tecnica: mensagem deve entrar no cadastro/form/template/listagem/exportacao/importacao de contas antes de ser exibida no Balancete
+- exibicao no Balancete patrimonial permanece futura e deve ser feita sem alterar calculo
 
 Classificacao documental:
 - MELHORIA FUNCIONAL

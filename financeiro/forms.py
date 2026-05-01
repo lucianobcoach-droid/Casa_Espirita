@@ -18,6 +18,7 @@ from .models import (
     ContaFinanceira,
     LancamentoFinanceiro,
     PessoaFinanceira,
+    TipoContaFinanceira,
 )
 
 
@@ -40,6 +41,26 @@ def contas_lancamento_queryset(*conta_extra_ids: int | str | None):
 
 
 class ContaFinanceiraForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['tipo_conta'].queryset = TipoContaFinanceira.objects.filter(ativo=True).order_by('ordem', 'nome')
+        self.fields['tipo_conta'].required = False
+        self.fields['tipo_conta'].empty_label = 'Outros'
+        self.fields['disponibilidade'].required = False
+        self.fields['mensagem_indisponibilidade'].required = False
+
+    def clean_tipo_conta(self):
+        tipo_conta = self.cleaned_data.get('tipo_conta')
+        if tipo_conta:
+            return tipo_conta
+        return TipoContaFinanceira.objects.filter(codigo='outros').first()
+
+    def clean_disponibilidade(self):
+        return (
+            self.cleaned_data.get('disponibilidade')
+            or ContaFinanceira.DisponibilidadeConta.DISPONIVEL
+        )
+
     class Meta:
         model = ContaFinanceira
         fields = [
@@ -47,10 +68,22 @@ class ContaFinanceiraForm(forms.ModelForm):
             'descricao',
             'saldo_inicial',
             'data_saldo_inicial',
+            'tipo_conta',
+            'disponibilidade',
+            'mensagem_indisponibilidade',
             'ativa',
         ]
         widgets = {
             'data_saldo_inicial': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date'}),
+            'mensagem_indisponibilidade': forms.Textarea(attrs={'rows': 3}),
+        }
+        labels = {
+            'tipo_conta': 'Tipo de conta',
+            'disponibilidade': 'Disponibilidade',
+            'mensagem_indisponibilidade': 'Mensagem de indisponibilidade',
+        }
+        help_texts = {
+            'mensagem_indisponibilidade': 'Opcional. Use apenas quando a conta for vinculada ou indisponivel.',
         }
 
 

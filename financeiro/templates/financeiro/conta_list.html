@@ -53,6 +53,19 @@
         color: #94a3b8;
     }
 
+    .financeiro-conta-meta {
+        display: grid;
+        gap: 0.12rem;
+        color: #475569;
+        font-size: 0.84rem;
+        line-height: 1.25;
+    }
+
+    .financeiro-conta-meta-note {
+        color: #64748b;
+        font-size: 0.76rem;
+    }
+
     .financeiro-conta-balance {
         display: grid;
         gap: 0.12rem;
@@ -167,6 +180,8 @@
                 <tr>
                     <th>Nome</th>
                     <th>Descri&ccedil;&atilde;o</th>
+                    <th>Tipo</th>
+                    <th>Disponibilidade</th>
                     <th>Saldo inicial</th>
                     <th>Saldo atual (quitado)</th>
                     <th>Ativa</th>
@@ -185,6 +200,21 @@
                             {% else %}
                                 <span class="financeiro-conta-description is-empty">N&atilde;o informada</span>
                             {% endif %}
+                        </td>
+                        <td>
+                            {% if conta.tipo_conta %}
+                                {{ conta.tipo_conta.nome }}
+                            {% else %}
+                                Outros
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="financeiro-conta-meta">
+                                <span>{{ conta.get_disponibilidade_display }}</span>
+                                {% if conta.mensagem_indisponibilidade %}
+                                    <span class="financeiro-conta-meta-note">{{ conta.mensagem_indisponibilidade }}</span>
+                                {% endif %}
+                            </div>
                         </td>
                         <td>
                             <div class="financeiro-conta-balance">
@@ -220,7 +250,7 @@
                     </tr>
                 {% empty %}
                     <tr>
-                        <td colspan="{% if mostrar_acoes_conta %}6{% else %}5{% endif %}" class="financeiro-conta-empty">Nenhuma conta encontrada com os filtros atuais.</td>
+                        <td colspan="{% if mostrar_acoes_conta %}8{% else %}7{% endif %}" class="financeiro-conta-empty">Nenhuma conta encontrada com os filtros atuais.</td>
                     </tr>
                 {% endfor %}
                 </tbody>

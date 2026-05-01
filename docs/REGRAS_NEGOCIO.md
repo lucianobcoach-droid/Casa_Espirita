@@ -56,8 +56,8 @@ Este documento consolida regras permanentes do sistema. Ele não substitui o his
 - A frente deve ser modelada documentalmente antes de qualquer implementação de models, migrations, formulários, views ou templates.
 - Tipos iniciais de conta a considerar: conta corrente, conta poupança, dinheiro/caixa, aplicação financeira, integralização de capital, conta vinculada/indisponível e outros.
 - O tipo de conta deve permitir agrupamento gerencial: contas do mesmo tipo podem ser somadas independentemente do banco, nome ou cadastro individual da conta.
-- No MVP patrimonial futuro, tipo de conta financeira será cadastro próprio simples, e não lista fixa no código, para permitir adaptação a outras instituições, empresas e projetos futuros.
-- No MVP patrimonial futuro, disponibilidade/vinculação será total por conta: uma conta será classificada como disponível ou indisponível/vinculada em seu saldo total.
+- No MVP patrimonial, tipo de conta financeira é cadastro próprio simples, e não lista fixa no código, para permitir adaptação a outras instituições, empresas e projetos futuros.
+- No MVP patrimonial, disponibilidade/vinculação é total por conta: uma conta é classificada como disponível ou indisponível/vinculada em seu saldo total.
 - Disponibilidade parcial fica fora do MVP e permanece como evolução futura, pois exigiria modelagem mais complexa de parcelas de saldo.
 - A mensagem explicativa de indisponibilidade/vinculação ficará no cadastro da conta; se vazia, nada deve aparecer no Balancete; se preenchida, poderá aparecer no Balancete patrimonial ou relatório equivalente.
 - O modo padrão do Balancete patrimonial será detalhado por conta, preservando a leitura atual e adicionando separação visual entre disponível e indisponível/vinculado quando aplicável.

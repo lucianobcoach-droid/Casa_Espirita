@@ -2,6 +2,7 @@ import json
 from datetime import date
 from decimal import Decimal
 
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.template.loader import get_template, render_to_string
 from django.http import QueryDict
 from django.test import RequestFactory, TestCase
@@ -14,14 +15,18 @@ from .models import (
     ContaFinanceira,
     LancamentoFinanceiro,
     PessoaFinanceira,
+    TipoContaFinanceira,
 )
 from .views import (
     BalanceteInstitucionalFinanceiroView,
     ContaFinanceiraAutocompleteView,
     ExtratoFinanceiroView,
+    _gerar_arquivo_xlsx,
+    _linha_exportacao_cadastro_auxiliar,
     LancamentoFinanceiroCloneView,
     PrestacaoContasFinanceiroView,
     _filtrar_lancamentos_por_parametros,
+    _validar_conteudo_planilha_importacao_contas_xlsx,
     montar_contexto_fechamento_periodo,
 )
 
@@ -61,6 +66,133 @@ class ContaFinanceiraEdicaoFormTests(TestCase):
         conta_atualizada = form.save()
         self.assertEqual(conta_atualizada.saldo_inicial, Decimal('987.65'))
         self.assertEqual(conta_atualizada.data_saldo_inicial, date(2026, 4, 20))
+
+
+class ContaFinanceiraPatrimonialTests(TestCase):
+    def _upload_xlsx(self, linhas):
+        arquivo = _gerar_arquivo_xlsx([
+            ('Modelo', linhas),
+            ('Instrucoes', [['Item', 'Orientacao']]),
+        ])
+        return SimpleUploadedFile(
+            'contas.xlsx',
+            arquivo,
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        )
+
+    def test_tipos_padrao_estao_disponiveis(self):
+        codigos = set(TipoContaFinanceira.objects.values_list('codigo', flat=True))
+
+        self.assertIn('conta_corrente', codigos)
+        self.assertIn('conta_poupanca', codigos)
+        self.assertIn('dinheiro_caixa', codigos)
+        self.assertIn('aplicacao_financeira', codigos)
+        self.assertIn('integralizacao_capital', codigos)
+        self.assertIn('conta_vinculada_indisponivel', codigos)
+        self.assertIn('outros', codigos)
+
+    def test_form_permite_conta_indisponivel_com_mensagem(self):
+        tipo = TipoContaFinanceira.objects.get(codigo='aplicacao_financeira')
+        form = ContaFinanceiraForm(
+            data={
+                'nome': 'Aplicacao reserva',
+                'descricao': '',
+                'saldo_inicial': '1000.00',
+                'data_saldo_inicial': '2026-01-01',
+                'tipo_conta': str(tipo.pk),
+                'disponibilidade': ContaFinanceira.DisponibilidadeConta.INDISPONIVEL,
+                'mensagem_indisponibilidade': 'Reserva vinculada.',
+                'ativa': 'on',
+            }
+        )
+
+        self.assertTrue(form.is_valid(), form.errors)
+        conta = form.save()
+        self.assertEqual(conta.tipo_conta, tipo)
+        self.assertEqual(conta.disponibilidade, ContaFinanceira.DisponibilidadeConta.INDISPONIVEL)
+        self.assertEqual(conta.mensagem_indisponibilidade, 'Reserva vinculada.')
+
+    def test_form_usa_outros_e_disponivel_com_mensagem_opcional(self):
+        form = ContaFinanceiraForm(
+            data={
+                'nome': 'Conta operacional',
+                'descricao': '',
+                'saldo_inicial': '0.00',
+                'data_saldo_inicial': '2026-01-01',
+                'tipo_conta': '',
+                'disponibilidade': ContaFinanceira.DisponibilidadeConta.DISPONIVEL,
+                'mensagem_indisponibilidade': '',
+                'ativa': 'on',
+            }
+        )
+
+        self.assertTrue(form.is_valid(), form.errors)
+        conta = form.save()
+        self.assertEqual(conta.tipo_conta.codigo, 'outros')
+        self.assertEqual(conta.disponibilidade, ContaFinanceira.DisponibilidadeConta.DISPONIVEL)
+        self.assertEqual(conta.mensagem_indisponibilidade, '')
+
+    def test_importacao_contas_ler_campos_patrimoniais(self):
+        upload = self._upload_xlsx([
+            [
+                'nome',
+                'descricao',
+                'saldo_inicial',
+                'data_saldo_inicial',
+                'tipo_conta',
+                'disponibilidade',
+                'mensagem_indisponibilidade',
+                'ativa',
+            ],
+            [
+                'Reserva patrimonial',
+                '',
+                '100,00',
+                '01/01/2026',
+                'aplicacao_financeira',
+                'indisponivel',
+                'Valor vinculado.',
+                'true',
+            ],
+        ])
+
+        resultado = _validar_conteudo_planilha_importacao_contas_xlsx(upload)
+
+        self.assertEqual(resultado['linhas_validas'], 1)
+        registro = resultado['registros_validos'][0]
+        self.assertEqual(registro['tipo_conta'].codigo, 'aplicacao_financeira')
+        self.assertEqual(registro['disponibilidade'], ContaFinanceira.DisponibilidadeConta.INDISPONIVEL)
+        self.assertEqual(registro['mensagem_indisponibilidade'], 'Valor vinculado.')
+
+    def test_importacao_contas_legada_usa_defaults_patrimoniais(self):
+        upload = self._upload_xlsx([
+            ['nome', 'descricao', 'saldo_inicial', 'data_saldo_inicial', 'ativa'],
+            ['Conta legado', '', '50,00', '01/01/2026', 'true'],
+        ])
+
+        resultado = _validar_conteudo_planilha_importacao_contas_xlsx(upload)
+
+        self.assertEqual(resultado['linhas_validas'], 1)
+        registro = resultado['registros_validos'][0]
+        self.assertEqual(registro['tipo_conta'].codigo, 'outros')
+        self.assertEqual(registro['disponibilidade'], ContaFinanceira.DisponibilidadeConta.DISPONIVEL)
+        self.assertEqual(registro['mensagem_indisponibilidade'], '')
+
+    def test_exportacao_contas_inclui_campos_patrimoniais(self):
+        tipo = TipoContaFinanceira.objects.get(codigo='conta_corrente')
+        conta = ContaFinanceira.objects.create(
+            nome='Conta exportada',
+            saldo_inicial=Decimal('10.00'),
+            data_saldo_inicial=date(2026, 1, 1),
+            tipo_conta=tipo,
+            disponibilidade=ContaFinanceira.DisponibilidadeConta.INDISPONIVEL,
+            mensagem_indisponibilidade='Uso vinculado.',
+        )
+        linha = _linha_exportacao_cadastro_auxiliar('contas', conta)
+
+        self.assertEqual(linha[4], 'conta_corrente')
+        self.assertEqual(linha[5], ContaFinanceira.DisponibilidadeConta.INDISPONIVEL)
+        self.assertEqual(linha[6], 'Uso vinculado.')
 
 
 class LancamentoContaInativaTests(TestCase):

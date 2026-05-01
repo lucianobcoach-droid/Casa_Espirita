@@ -2,6 +2,14 @@
 
 Data de atualizacao: 2026-04-30
 
+## Base cadastral patrimonial das contas financeiras
+
+- implementada a base cadastral minima do MVP patrimonial em contas financeiras: cadastro proprio simples de tipo de conta, disponibilidade/vinculacao total por conta e mensagem explicativa opcional
+- cadastro, edicao e listagem de contas passaram a exibir os campos patrimoniais, sem alterar Balancete Institucional, Fechamento/Prestacao, Extrato, lancamentos, saldos, transferencias ou calculos financeiros
+- importacao/exportacao auxiliar de contas foi ampliada com `tipo_conta`, `disponibilidade` e `mensagem_indisponibilidade`, preservando leitura de planilha legada de contas com defaults seguros
+- migration criada com carga inicial idempotente dos tipos: conta corrente, conta poupanca, dinheiro/caixa, aplicacao financeira, integralizacao de capital, conta vinculada/indisponivel e outros; contas existentes recebem `outros` e `disponivel`
+- proxima microetapa funcional recomendada: aplicar a leitura patrimonial no Balancete Institucional, reaproveitando a base de calculo atual e sem criar calculo patrimonial divergente
+
 ## Auditoria tecnica preparatoria do MVP patrimonial
 
 - auditoria tecnica concluida sem implementacao funcional: `ContaFinanceira` esta em `financeiro/models.py` com campos `nome`, `descricao`, `saldo_inicial`, `data_saldo_inicial`, `ativa`, `criado_em` e `atualizado_em`

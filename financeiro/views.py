@@ -48,6 +48,7 @@ from .models import (
     LancamentoFinanceiro,
     PessoaFinanceira,
     RegraLancamentoFinanceiro,
+    TipoContaFinanceira,
     normalizar_nome_pessoa_financeira,
 )
 from .permissoes import FinanceiroPermissaoMixin, usuario_possui_permissao
@@ -554,18 +555,33 @@ CADASTRO_AUXILIAR_PLANILHAS_BASE = {
         'titulo': 'Contas financeiras',
         'arquivo': 'planilha_base_contas_financeiras.xlsx',
         'permissao': 'financeiro.contas.criar',
-        'colunas': ['nome', 'descricao', 'saldo_inicial', 'data_saldo_inicial', 'ativa'],
+        'colunas': [
+            'nome',
+            'descricao',
+            'saldo_inicial',
+            'data_saldo_inicial',
+            'tipo_conta',
+            'disponibilidade',
+            'mensagem_indisponibilidade',
+            'ativa',
+        ],
         'rotulos': {
             'nome': 'Nome',
             'descricao': 'Descricao',
             'saldo_inicial': 'Saldo inicial',
             'data_saldo_inicial': 'Data do saldo inicial',
+            'tipo_conta': 'Tipo de conta',
+            'disponibilidade': 'Disponibilidade',
+            'mensagem_indisponibilidade': 'Mensagem de indisponibilidade',
             'ativa': 'Ativa',
         },
         'orientacoes': {
             'nome': 'Use um nome unico e facil de reconhecer no modulo financeiro.',
             'saldo_inicial': 'Informe um valor numerico com virgula ou ponto decimal.',
             'data_saldo_inicial': 'Use uma data valida no formato dd/mm/aaaa.',
+            'tipo_conta': 'Use o codigo ou nome do tipo de conta. Se vazio, sera usado outros.',
+            'disponibilidade': 'Use disponivel ou indisponivel. Se vazio, sera usado disponivel.',
+            'mensagem_indisponibilidade': 'Opcional. Preencha apenas para conta indisponivel ou vinculada.',
             'ativa': 'Use true/false, sim/nao, 1/0 ou deixe em branco para considerar ativo.',
         },
         'instrucoes': [
@@ -573,6 +589,9 @@ CADASTRO_AUXILIAR_PLANILHAS_BASE = {
             ['Cabecalhos', 'Mantenha os nomes das colunas da aba Modelo exatamente como estao.'],
             ['Saldo inicial', 'Informe o saldo inicial com virgula ou ponto decimal.'],
             ['Data do saldo', 'Use dd/mm/aaaa. Se necessario, o sistema tambem pode ler AAAA-MM-DD.'],
+            ['Tipo de conta', 'Use o codigo ou nome do tipo de conta. Se vazio, o sistema usa outros.'],
+            ['Disponibilidade', 'Use disponivel ou indisponivel. A disponibilidade e total por conta nesta versao.'],
+            ['Mensagem de indisponibilidade', 'Campo opcional para justificar conta indisponivel ou vinculada.'],
             ['Ativa', 'Use true/false, sim/nao, 1/0 ou deixe em branco para considerar ativo.'],
         ],
         'descricao': 'Base de contas para vinculos financeiros e saldo inicial do ambiente.',
@@ -663,6 +682,14 @@ CADASTRO_AUXILIAR_PLANILHAS_BASE = {
         'sucesso': 'categorias e subcategorias',
     },
 }
+
+CONTAS_IMPORTACAO_COLUNAS_LEGADO = [
+    'nome',
+    'descricao',
+    'saldo_inicial',
+    'data_saldo_inicial',
+    'ativa',
+]
 
 CADASTRO_AUXILIAR_PLANILHAS_BASE_ORDEM = [
     {
@@ -816,6 +843,12 @@ def _formatar_booleano_exportacao_auxiliar(valor) -> str:
     return 'true' if valor else 'false'
 
 
+def _formatar_tipo_conta_exportacao(conta: ContaFinanceira) -> str:
+    if not conta.tipo_conta:
+        return ''
+    return conta.tipo_conta.codigo or conta.tipo_conta.nome
+
+
 def _linha_exportacao_cadastro_auxiliar(slug: str, registro) -> list[str]:
     if slug == 'contas':
         return [
@@ -823,6 +856,9 @@ def _linha_exportacao_cadastro_auxiliar(slug: str, registro) -> list[str]:
             registro.descricao or '',
             _formatar_decimal_exportacao_auxiliar(registro.saldo_inicial),
             _formatar_data_exportacao_auxiliar(registro.data_saldo_inicial),
+            _formatar_tipo_conta_exportacao(registro),
+            registro.disponibilidade or ContaFinanceira.DisponibilidadeConta.DISPONIVEL,
+            registro.mensagem_indisponibilidade or '',
             _formatar_booleano_exportacao_auxiliar(registro.ativa),
         ]
     if slug == 'pessoas':
@@ -1156,6 +1192,25 @@ def _parse_booleano_importacao(valor: str) -> bool | None:
     if valor_normalizado in {'false', '0', 'nao', 'nÃ£o', 'n', 'inativo'}:
         return False
     return None
+
+
+def _parse_disponibilidade_importacao_conta(valor: str) -> str | None:
+    valor_normalizado = _texto_ordenacao_insensivel(valor)
+    if not valor_normalizado:
+        return ContaFinanceira.DisponibilidadeConta.DISPONIVEL
+    if valor_normalizado in {'disponivel', 'livre'}:
+        return ContaFinanceira.DisponibilidadeConta.DISPONIVEL
+    if valor_normalizado in {'indisponivel', 'vinculada', 'vinculado', 'indisponivel/vinculada'}:
+        return ContaFinanceira.DisponibilidadeConta.INDISPONIVEL
+    return None
+
+
+def _tipos_conta_por_chave() -> dict[str, TipoContaFinanceira]:
+    tipos: dict[str, TipoContaFinanceira] = {}
+    for tipo in TipoContaFinanceira.objects.filter(ativo=True):
+        tipos[_normalizar_codigo_importacao(tipo.codigo)] = tipo
+        tipos[_normalizar_nome_importacao_lancamento(tipo.nome)] = tipo
+    return tipos
 
 
 def _validar_estrutura_planilha_modelo_xlsx(
@@ -2131,7 +2186,12 @@ def _registrar_erro_resultado_importacao_auxiliar(
 def _validar_conteudo_planilha_importacao_contas_xlsx(arquivo_importacao) -> dict[str, object]:
     slug = 'contas'
     resultado = _resultado_importacao_auxiliar_vazio(slug)
-    colunas = CADASTRO_AUXILIAR_PLANILHAS_BASE[slug]['colunas']
+    cabecalhos, _ = _obter_cabecalhos_planilha_modelo_xlsx(arquivo_importacao)
+    colunas = (
+        CONTAS_IMPORTACAO_COLUNAS_LEGADO
+        if cabecalhos == CONTAS_IMPORTACAO_COLUNAS_LEGADO
+        else CADASTRO_AUXILIAR_PLANILHAS_BASE[slug]['colunas']
+    )
     linhas_planilha = _xlsx_ler_dados_modelo_importacao_xlsx(arquivo_importacao, colunas)
     linhas_dados = linhas_planilha[1:] if linhas_planilha else []
 
@@ -2139,6 +2199,8 @@ def _validar_conteudo_planilha_importacao_contas_xlsx(arquivo_importacao) -> dic
         _normalizar_nome_importacao_lancamento(item.nome)
         for item in ContaFinanceira.objects.all().only('nome')
     }
+    tipos_por_chave = _tipos_conta_por_chave()
+    tipo_padrao = tipos_por_chave.get('outros')
     nomes_arquivo: set[str] = set()
 
     for linha, valores_linha in linhas_dados:
@@ -2153,11 +2215,21 @@ def _validar_conteudo_planilha_importacao_contas_xlsx(arquivo_importacao) -> dic
         descricao = (dados_linha.get('descricao') or '').strip()
         saldo_inicial_texto = (dados_linha.get('saldo_inicial') or '').strip()
         data_saldo_texto = (dados_linha.get('data_saldo_inicial') or '').strip()
+        tipo_conta_texto = (dados_linha.get('tipo_conta') or '').strip()
+        disponibilidade_texto = (dados_linha.get('disponibilidade') or '').strip()
+        mensagem_indisponibilidade = (dados_linha.get('mensagem_indisponibilidade') or '').strip()
         ativa_texto = (dados_linha.get('ativa') or '').strip()
 
         nome_normalizado = _normalizar_nome_importacao_lancamento(nome)
         saldo_inicial = _parse_decimal_importacao_lancamento(saldo_inicial_texto or '0')
         data_saldo_inicial = _parse_data_importacao_lancamento(data_saldo_texto)
+        tipo_conta = tipo_padrao
+        if tipo_conta_texto:
+            tipo_conta = (
+                tipos_por_chave.get(_normalizar_codigo_importacao(tipo_conta_texto))
+                or tipos_por_chave.get(_normalizar_nome_importacao_lancamento(tipo_conta_texto))
+            )
+        disponibilidade = _parse_disponibilidade_importacao_conta(disponibilidade_texto)
         ativa = _parse_booleano_importacao(ativa_texto)
 
         if not nome:
@@ -2175,6 +2247,12 @@ def _validar_conteudo_planilha_importacao_contas_xlsx(arquivo_importacao) -> dic
         elif data_saldo_inicial is None:
             _adicionar_erro_importacao(erros_linha, 'data_saldo_inicial', 'Use uma data valida no formato dd/mm/aaaa.')
 
+        if tipo_conta_texto and not tipo_conta:
+            _adicionar_erro_importacao(erros_linha, 'tipo_conta', 'Tipo de conta nao encontrado.')
+
+        if disponibilidade is None:
+            _adicionar_erro_importacao(erros_linha, 'disponibilidade', 'Use disponivel ou indisponivel.')
+
         if ativa is None:
             _adicionar_erro_importacao(erros_linha, 'ativa', 'Use true/false, sim/nao, 1/0 ou deixe em branco.')
 
@@ -2189,6 +2267,9 @@ def _validar_conteudo_planilha_importacao_contas_xlsx(arquivo_importacao) -> dic
             'descricao': descricao,
             'saldo_inicial': saldo_inicial or Decimal('0.00'),
             'data_saldo_inicial': data_saldo_inicial,
+            'tipo_conta': tipo_conta,
+            'disponibilidade': disponibilidade or ContaFinanceira.DisponibilidadeConta.DISPONIVEL,
+            'mensagem_indisponibilidade': mensagem_indisponibilidade,
             'ativa': ativa,
         })
 
@@ -5776,7 +5857,7 @@ class ContaFinanceiraListView(FinanceiroPermissaoMixin, ListView):
     context_object_name = 'contas'
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        queryset = super().get_queryset().select_related('tipo_conta')
         nome = self.request.GET.get('nome', '').strip()
         ativa = self.request.GET.get('ativa', '').strip()
         if nome:
@@ -7295,11 +7376,20 @@ class LancamentoFinanceiroImportacaoExportacaoView(FinanceiroPermissaoMixin, Tem
             arquivo_importacao,
             configuracao['colunas'],
         )
+        if slug == 'contas' and erros_estrutura:
+            arquivo_importacao.seek(0)
+            erros_estrutura_legado = _validar_estrutura_planilha_modelo_xlsx(
+                arquivo_importacao,
+                CONTAS_IMPORTACAO_COLUNAS_LEGADO,
+            )
+            if not erros_estrutura_legado:
+                erros_estrutura = []
         if erros_estrutura:
             for erro in erros_estrutura:
                 messages.error(request, erro)
             return self.get(request)
 
+        arquivo_importacao.seek(0)
         resultado_importacao_validacao = AUXILIAR_IMPORTACAO_PROCESSADORES[slug]['validar'](
             arquivo_importacao
         )
@@ -7489,7 +7579,7 @@ class ContaFinanceiraExportacaoView(FinanceiroPermissaoMixin, View):
     permissao_requerida = 'financeiro.contas.listar'
 
     def get(self, request, *args, **kwargs):
-        queryset = ContaFinanceira.objects.all()
+        queryset = ContaFinanceira.objects.select_related('tipo_conta').all()
         nome = request.GET.get('nome', '').strip()
         ativa = request.GET.get('ativa', '').strip()
         if nome:

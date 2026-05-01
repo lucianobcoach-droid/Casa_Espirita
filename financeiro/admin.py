@@ -8,13 +8,22 @@ from .models import (
     ContaFinanceira,
     LancamentoFinanceiro,
     PessoaFinanceira,
+    TipoContaFinanceira,
 )
+
+
+@admin.register(TipoContaFinanceira)
+class TipoContaFinanceiraAdmin(admin.ModelAdmin):
+    list_display = ('codigo', 'nome', 'ativo', 'ordem')
+    list_filter = ('ativo',)
+    search_fields = ('codigo', 'nome', 'descricao')
+    ordering = ('ordem', 'nome')
 
 
 @admin.register(ContaFinanceira)
 class ContaFinanceiraAdmin(admin.ModelAdmin):
-    list_display = ('nome', 'ativa', 'criado_em', 'atualizado_em')
-    list_filter = ('ativa',)
+    list_display = ('nome', 'tipo_conta', 'disponibilidade', 'ativa', 'criado_em', 'atualizado_em')
+    list_filter = ('tipo_conta', 'disponibilidade', 'ativa')
     search_fields = ('nome', 'descricao')
 
 

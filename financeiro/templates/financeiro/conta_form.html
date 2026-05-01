@@ -227,6 +227,47 @@
                         </div>
                     </div>
 
+                    <div class="financeiro-conta-form-grid-duo">
+                        <div class="field financeiro-conta-form-field">
+                            <label class="label" for="{{ form.tipo_conta.id_for_label }}">{{ form.tipo_conta.label }}</label>
+                            <div class="control">
+                                {{ form.tipo_conta }}
+                            </div>
+                            {% if form.tipo_conta.help_text %}
+                                <p class="help">{{ form.tipo_conta.help_text }}</p>
+                            {% endif %}
+                            {% for error in form.tipo_conta.errors %}
+                                <p class="help is-danger">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+
+                        <div class="field financeiro-conta-form-field">
+                            <label class="label" for="{{ form.disponibilidade.id_for_label }}">{{ form.disponibilidade.label }}</label>
+                            <div class="control">
+                                {{ form.disponibilidade }}
+                            </div>
+                            {% if form.disponibilidade.help_text %}
+                                <p class="help">{{ form.disponibilidade.help_text }}</p>
+                            {% endif %}
+                            {% for error in form.disponibilidade.errors %}
+                                <p class="help is-danger">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="field financeiro-conta-form-field">
+                        <label class="label" for="{{ form.mensagem_indisponibilidade.id_for_label }}">{{ form.mensagem_indisponibilidade.label }}</label>
+                        <div class="control">
+                            {{ form.mensagem_indisponibilidade }}
+                        </div>
+                        {% if form.mensagem_indisponibilidade.help_text %}
+                            <p class="help">{{ form.mensagem_indisponibilidade.help_text }}</p>
+                        {% endif %}
+                        {% for error in form.mensagem_indisponibilidade.errors %}
+                            <p class="help is-danger">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+
                     <div class="field financeiro-conta-form-field financeiro-conta-form-field-boolean">
                         <label class="label" for="{{ form.ativa.id_for_label }}">{{ form.ativa.label }}</label>
                         <div class="control">

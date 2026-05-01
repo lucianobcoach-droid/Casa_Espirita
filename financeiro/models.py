@@ -12,11 +12,46 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 
+class TipoContaFinanceira(models.Model):
+    codigo = models.CharField(max_length=50, unique=True)
+    nome = models.CharField(max_length=150)
+    descricao = models.TextField(blank=True)
+    ativo = models.BooleanField(default=True)
+    ordem = models.PositiveSmallIntegerField(default=0)
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['ordem', 'nome']
+        verbose_name = 'Tipo de conta financeira'
+        verbose_name_plural = 'Tipos de conta financeira'
+
+    def __str__(self) -> str:
+        return self.nome
+
+
 class ContaFinanceira(models.Model):
+    class DisponibilidadeConta(models.TextChoices):
+        DISPONIVEL = 'disponivel', 'Disponivel'
+        INDISPONIVEL = 'indisponivel', 'Indisponivel/vinculada'
+
     nome = models.CharField(max_length=150)
     descricao = models.TextField(blank=True)
     saldo_inicial = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
     data_saldo_inicial = models.DateField()
+    tipo_conta = models.ForeignKey(
+        TipoContaFinanceira,
+        blank=True,
+        null=True,
+        on_delete=models.PROTECT,
+        related_name='contas',
+    )
+    disponibilidade = models.CharField(
+        max_length=20,
+        choices=DisponibilidadeConta.choices,
+        default=DisponibilidadeConta.DISPONIVEL,
+    )
+    mensagem_indisponibilidade = models.TextField(blank=True)
     ativa = models.BooleanField(default=True)
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
