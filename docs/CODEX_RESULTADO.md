@@ -2,6 +2,16 @@
 
 Data: 2026-04-30
 
+## Decisoes funcionais do MVP patrimonial
+
+- registrei as decisoes funcionais aprovadas para o MVP patrimonial antes de qualquer implementacao tecnica
+- consolidei que o tipo de conta financeira deve ser cadastro proprio simples, com tipos iniciais sugeridos para carga futura
+- registrei que a disponibilidade/vinculacao sera total por conta no MVP, mantendo disponibilidade parcial como evolucao futura
+- registrei que a mensagem explicativa de indisponibilidade/vinculacao ficara no cadastro da conta e so aparecera no Balancete quando preenchida
+- defini documentalmente o modo padrao do Balancete patrimonial como detalhado por conta, com separacao visual entre disponivel e indisponivel/vinculado quando aplicavel
+- delimitei o escopo da primeira implementacao futura e o que fica fora do MVP, preservando a base de calculo do Fechamento/Prestacao
+- nao alterei codigo funcional, models, migrations, views, forms, templates, tests, CSS, banco de dados ou calculos financeiros
+
 ## Regras reutilizaveis e especificacao do Balancete patrimonial
 
 - registrei governanca permanente para que toda regra de negocio aprovada seja documentada em `docs/REGRAS_NEGOCIO.md`

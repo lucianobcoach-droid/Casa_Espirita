@@ -36,12 +36,22 @@ Evoluir o Balancete Institucional para leitura patrimonial/gerencial do saldo, p
 - Relatorios: preservar calculos atuais e alterar apenas classificacao/apresentacao quando a leitura patrimonial for solicitada.
 - Regras de negocio: manter separacao entre receita, despesa e transferencia; integralizacao nao vira despesa; saldo indisponivel nao vira saldo operacional livre.
 
-### Decisoes pendentes antes da implementacao
+### Decisoes aprovadas para o MVP patrimonial
 
-- Definir se tipo de conta sera cadastro proprio ou lista fixa inicial.
-- Definir se disponibilidade sera estado simples da conta ou estrutura mais rica para disponibilidade parcial.
-- Definir se a mensagem explicativa fica na conta ou em uma configuracao patrimonial especifica.
-- Definir qual modo de exibicao sera padrao no Balancete patrimonial.
+- Tipo de conta financeira sera cadastro proprio simples, e nao lista fixa no codigo, para permitir adaptacao a outras instituicoes, empresas e projetos futuros sem nova migracao apenas para novos tipos.
+- Tipos iniciais sugeridos para carga inicial futura: conta corrente, conta poupanca, dinheiro/caixa, aplicacao financeira, integralizacao de capital, conta vinculada/indisponivel e outros.
+- Disponibilidade/vinculacao sera total por conta no MVP: uma conta sera classificada como disponivel ou indisponivel/vinculada em seu saldo total.
+- Disponibilidade parcial fica fora do MVP e permanece como evolucao futura, por exigir modelagem mais complexa de parcelas de saldo.
+- Mensagem explicativa de indisponibilidade/vinculacao ficara no cadastro da conta; se vazia, nao aparece no Balancete; se preenchida, pode aparecer no Balancete patrimonial ou relatorio equivalente.
+- Modo padrao do Balancete patrimonial sera detalhado por conta, preservando a leitura atual e adicionando separacao visual entre disponivel e indisponivel/vinculado quando aplicavel.
+- Modos mais sinteticos ou agrupados permanecem como opcoes futuras: consolidado por tipo de conta, total consolidado, separado por disponivel x indisponivel/vinculado e combinacoes justificadas pelo uso real.
+- Primeira implementacao futura deve ficar restrita a cadastro/modelagem de tipo de conta, campos simples no cadastro de conta para tipo/disponibilidade/mensagem, leitura patrimonial no Balancete Institucional e preservacao da base de calculo atual do Fechamento/Prestacao.
+- Fora do MVP: disponibilidade parcial, calculo patrimonial novo, alteracao de lancamentos, Extrato, Fechamento/Prestacao, importacao/exportacao, permissoes, regras de transferencia, saldos, controle por parcelas de saldo e automatizacao contabil avancada.
+
+### Decisoes ainda pendentes antes da implementacao
+
+- Definir nomes finais de campos, rotulos e ordenacao visual da classificacao patrimonial.
+- Definir estrategia de carga inicial dos tipos sugeridos.
 - Definir como filtrar/ordenar grupos no impresso sem reintroduzir poluicao visual.
 - Definir escopo dos testes antes da implementacao tecnica.
 

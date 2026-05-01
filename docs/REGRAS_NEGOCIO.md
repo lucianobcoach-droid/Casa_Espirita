@@ -56,14 +56,17 @@ Este documento consolida regras permanentes do sistema. Ele não substitui o his
 - A frente deve ser modelada documentalmente antes de qualquer implementação de models, migrations, formulários, views ou templates.
 - Tipos iniciais de conta a considerar: conta corrente, conta poupança, dinheiro/caixa, aplicação financeira, integralização de capital, conta vinculada/indisponível e outros.
 - O tipo de conta deve permitir agrupamento gerencial: contas do mesmo tipo podem ser somadas independentemente do banco, nome ou cadastro individual da conta.
-- Avaliar futuramente se o tipo de conta será cadastro próprio para permitir adaptação a outras instituições e projetos.
+- No MVP patrimonial futuro, tipo de conta financeira será cadastro próprio simples, e não lista fixa no código, para permitir adaptação a outras instituições, empresas e projetos futuros.
+- No MVP patrimonial futuro, disponibilidade/vinculação será total por conta: uma conta será classificada como disponível ou indisponível/vinculada em seu saldo total.
+- Disponibilidade parcial fica fora do MVP e permanece como evolução futura, pois exigiria modelagem mais complexa de parcelas de saldo.
+- A mensagem explicativa de indisponibilidade/vinculação ficará no cadastro da conta; se vazia, nada deve aparecer no Balancete; se preenchida, poderá aparecer no Balancete patrimonial ou relatório equivalente.
+- O modo padrão do Balancete patrimonial será detalhado por conta, preservando a leitura atual e adicionando separação visual entre disponível e indisponível/vinculado quando aplicável.
 - O Balancete deve poder exibir a composição do saldo em modos distintos:
   - detalhado por conta, mostrando cada conta individualmente;
   - consolidado por tipo de conta, somando contas do mesmo tipo;
   - total consolidado, mostrando apenas o total geral quando o relatório precisar ser sintético;
   - separado entre disponível e indisponível/vinculado, distinguindo saldo livre operacional de valores patrimoniais ou vinculados.
 - No modo consolidado por tipo, integralização de capital, aplicações financeiras e contas vinculadas/indisponíveis devem aparecer separadas quando existirem, para não poluir nem distorcer a leitura do saldo livre.
-- A conta poderá ter mensagem explicativa opcional de indisponibilidade/vinculação; se vazia, nada deve aparecer no relatório; se preenchida, poderá aparecer no Balancete ou relatório patrimonial para justificar o saldo indisponível.
 - O comportamento padrão atual do Balancete não deve ser refeito do zero: o MVP permanece base entregue, e a evolução patrimonial deve nascer como modelagem incremental.
 
 ## Relatórios e impressão

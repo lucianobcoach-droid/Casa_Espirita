@@ -2,6 +2,14 @@
 
 Data de atualizacao: 2026-04-30
 
+## Decisoes funcionais do MVP patrimonial
+
+- registradas decisoes aprovadas para o MVP patrimonial futuro: tipo de conta financeira sera cadastro proprio simples; disponibilidade/vinculacao sera total por conta no MVP; mensagem explicativa ficara no cadastro da conta; modo padrao do Balancete patrimonial sera detalhado por conta, preservando leitura atual com separacao visual entre disponivel e indisponivel/vinculado quando aplicavel
+- tipos iniciais sugeridos para carga inicial futura: conta corrente, conta poupanca, dinheiro/caixa, aplicacao financeira, integralizacao de capital, conta vinculada/indisponivel e outros
+- primeira implementacao futura deve ficar restrita a cadastro/modelagem de tipo de conta, campos simples no cadastro de conta para tipo/disponibilidade/mensagem e leitura patrimonial no Balancete Institucional, preservando a base de calculo atual do Fechamento/Prestacao
+- ficam fora do MVP: disponibilidade parcial, calculo patrimonial novo, alteracao de lancamentos, Extrato, Fechamento/Prestacao, importacao/exportacao, permissoes, regras de transferencia, saldos, controle por parcelas de saldo e automatizacao contabil avancada
+- esta microetapa foi apenas documental; nao houve alteracao funcional, codigo, models, migrations, views, forms, templates, tests, CSS, banco de dados ou calculos financeiros
+
 ## Governanca de regras reutilizaveis e Balancete patrimonial
 
 - registrada regra permanente: toda regra de negocio aprovada deve ir para `docs/REGRAS_NEGOCIO.md`, com comportamento esperado, excecoes, impacto em cadastros, impacto em relatorios, racional da decisao e potencial de reaproveitamento

@@ -224,7 +224,9 @@ Estas regras devem ser respeitadas em qualquer etapa:
 - modos de composicao do saldo: detalhado por conta, consolidado por tipo, total consolidado e separado entre disponivel e indisponivel/vinculado
 - agrupamento por tipo deve somar contas de mesmo tipo mesmo quando tiverem bancos ou nomes diferentes
 - integralizacao de capital deve ficar em grupo proprio patrimonial/vinculado, sem virar despesa e sem inflar saldo operacional livre
-- antes da implementacao tecnica, ainda precisam ser decididos: tipo como cadastro proprio ou lista fixa, disponibilidade total ou parcial, local da mensagem explicativa, modo padrao do Balancete e escopo de testes
+- decisoes aprovadas para o MVP: tipo de conta sera cadastro proprio simples; disponibilidade/vinculacao sera total por conta; mensagem explicativa ficara no cadastro da conta; modo padrao do Balancete patrimonial sera detalhado por conta, com separacao visual entre disponivel e indisponivel/vinculado quando aplicavel
+- ficam fora do MVP: disponibilidade parcial, calculo patrimonial novo, alteracao de lancamentos, Extrato, Fechamento/Prestacao, importacao/exportacao, permissoes, regras de transferencia, saldos, controle por parcelas de saldo e automatizacao contabil avancada
+- antes da implementacao tecnica, ainda precisam ser definidos nomes finais de campos/rotulos, estrategia de carga inicial dos tipos, ordenacao dos grupos no impresso e escopo de testes
 
 ### 5.1.7. Diretriz futura de importacao e exportacao de lancamentos
 - fica registrada como backlog funcional futuro do `financeiro` a frente de importacao em massa e exportacao de lancamentos
