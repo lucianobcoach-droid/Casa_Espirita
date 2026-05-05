@@ -4444,3 +4444,11 @@ Objetivo da etapa:
 - preservar os documentos existentes sem apagar histórico.
 
 Não houve alteração de código funcional nesta etapa.
+
+## Microetapa: UX de filtros dependentes no Balancete
+
+- ajuste aplicado apenas no frontend do Balancete Institucional para exibir/ocultar imediatamente o filtro `Detalhar patrimônio vinculado` ao trocar `Formato do Balancete`
+- implementação feita com script local no template, sem criar JS global e sem alterar lógica financeira
+- filtros ficaram com comportamento imediato na tela, e a geração do relatório continua dependente apenas do clique em `Atualizar balancete`
+- validações e testes da suíte `financeiro.tests` executados nesta etapa
+- sem alteração de cálculo, saldos, regras de negócio financeira, models ou migrations

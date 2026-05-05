@@ -3222,3 +3222,12 @@ Foi criada e versionada a estrutura mínima de governança do projeto:
 - docs/REGRAS_NEGOCIO.md, como consolidação objetiva das regras permanentes.
 
 Essa estrutura não altera o funcionamento do sistema Django. Ela organiza a forma de condução do projeto, reduz dependência de chats longos e estabelece uma base mais segura para continuidade entre conversas, GPT e Codex.
+
+## Ajuste de UX nos filtros dependentes do Balancete
+
+- o filtro principal `Formato do Balancete` passou a controlar imediatamente a exibição do filtro dependente `Detalhar patrimônio vinculado` no próprio frontend, sem exigir submit prévio
+- a regra de exibição ficou:
+  - `operacional_patrimonio`: filtro dependente visível
+  - `operacional` e `financeiro_completo`: filtro dependente oculto
+- a mudança foi implementada com script local no template do balancete e atributos `id/data-*` específicos para controle de visibilidade
+- não houve alteração de cálculo financeiro, saldos, regras patrimoniais, models ou migrations

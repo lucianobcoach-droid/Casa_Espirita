@@ -1202,6 +1202,25 @@ class PrestacaoContasTransferenciasEscopoTests(TestCase):
 
         self.assertIn('Formato do Balancete', html)
         self.assertNotIn('Exibir vinculadas/indisponiveis', html)
+        self.assertIn('id="balancete-formato"', html)
+        self.assertIn('data-balancete-formato', html)
+        self.assertIn('id="balancete-filtro-detalhar-patrimonio"', html)
+        self.assertIn('data-balancete-filtro-patrimonio', html)
+        self.assertIn('function atualizarVisibilidadeFiltroPatrimonio()', html)
+
+    def test_balancete_institucional_oculta_filtro_patrimonio_fora_do_formato_dependente(self):
+        request, contexto = self._contexto_balancete(
+            [
+                ('data_inicial', '2026-03-01'),
+                ('data_final', '2026-03-31'),
+                ('contas', str(self.dinheiro.id)),
+                ('formato_balancete', 'operacional'),
+            ]
+        )
+        html = self._render_balancete(request, contexto)
+
+        self.assertIn('id="balancete-filtro-detalhar-patrimonio"', html)
+        self.assertIn('hidden', html.split('id="balancete-filtro-detalhar-patrimonio"', 1)[1].split('>', 1)[0])
 
     def test_balancete_institucional_operacional_patrimonio_mostra_bloco_separado(self):
         self.banco.disponibilidade = ContaFinanceira.DisponibilidadeConta.INDISPONIVEL
@@ -1225,6 +1244,10 @@ class PrestacaoContasTransferenciasEscopoTests(TestCase):
         self.assertTrue(contexto['balancete_mostrar_bloco_patrimonial'])
         self.assertFalse(contexto['balancete_detalhar_patrimonio_vinculado'])
         self.assertIn('Detalhar patrimonio vinculado', html)
+        self.assertNotIn(
+            'id="balancete-filtro-detalhar-patrimonio" data-balancete-filtro-patrimonio hidden',
+            html,
+        )
         self.assertIn('6. INFORMACAO PATRIMONIAL COMPLEMENTAR', documento_html)
         self.assertIn('Saldo atual vinculado/indisponivel', documento_html)
         self.assertNotIn('Saldo inicial vinculado/indisponivel', documento_html)

@@ -411,7 +411,7 @@
                 <div class="column is-12-mobile is-6-tablet is-3-desktop">
                     <label class="label">Formato do Balancete</label>
                     <div class="select is-fullwidth">
-                        <select name="formato_balancete">
+                        <select name="formato_balancete" id="balancete-formato" data-balancete-formato>
                             {% for valor, rotulo in balancete_formatos %}
                                 <option value="{{ valor }}" {% if valor == balancete_formato %}selected{% endif %}>{{ rotulo }}</option>
                             {% endfor %}
@@ -428,18 +428,16 @@
                         </select>
                     </div>
                 </div>
-                {% if balancete_mostrar_filtro_detalhar_patrimonio %}
-                <div class="column is-12-mobile is-6-tablet is-3-desktop">
+                <div class="column is-12-mobile is-6-tablet is-3-desktop" id="balancete-filtro-detalhar-patrimonio" data-balancete-filtro-patrimonio {% if not balancete_mostrar_filtro_detalhar_patrimonio %}hidden{% endif %}>
                     <label class="label">Detalhar patrimonio vinculado</label>
                     <div class="select is-fullwidth">
-                        <select name="detalhar_patrimonio_vinculado">
+                        <select name="detalhar_patrimonio_vinculado" data-balancete-filtro-patrimonio-select>
                             {% for valor, rotulo in balancete_opcoes_booleanas %}
                                 <option value="{{ valor }}" {% if valor == balancete_detalhar_patrimonio_vinculado|yesno:'1,0' %}selected{% endif %}>{{ rotulo }}</option>
                             {% endfor %}
                         </select>
                     </div>
                 </div>
-                {% endif %}
                 <div class="column is-12-mobile is-6-tablet is-4-desktop">
                     <label class="label">Assinatura 1</label>
                     <div class="select is-fullwidth">
@@ -735,4 +733,22 @@
         </article>
     {% endif %}
 </div>
+<script>
+    (function () {
+        var formatoSelect = document.querySelector('[data-balancete-formato]');
+        var filtroPatrimonio = document.querySelector('[data-balancete-filtro-patrimonio]');
+
+        if (!formatoSelect || !filtroPatrimonio) {
+            return;
+        }
+
+        function atualizarVisibilidadeFiltroPatrimonio() {
+            var mostrar = formatoSelect.value === 'operacional_patrimonio';
+            filtroPatrimonio.hidden = !mostrar;
+        }
+
+        formatoSelect.addEventListener('change', atualizarVisibilidadeFiltroPatrimonio);
+        atualizarVisibilidadeFiltroPatrimonio();
+    })();
+</script>
 {% endblock %}
