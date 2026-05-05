@@ -74,6 +74,9 @@ Este documento consolida regras permanentes do sistema. Ele não substitui o his
 - Os filtros de composicao e exibicao de vinculadas/indisponiveis nao devem aparecer como metadados no cabecalho impresso do Balancete.
 - O mesmo modo de composicao do Balancete deve valer para o saldo inicial e para o saldo final: se a leitura for por conta, as duas pontas devem ser por conta; se for por tipo, as duas pontas devem ser por tipo; se for consolidada, as duas pontas devem ser consolidadas.
 - A sequencia documental do Balancete deve seguir a ordem: saldo inicial financeiro, entradas do periodo, saidas do periodo, resumo operacional do periodo, composicao do saldo final e assinaturas.
+- A proxima arquitetura funcional do Balancete deve ser orientada por `Formato do Balancete`, com tres opcoes: `Operacional`, `Operacional + patrimonio vinculado` e `Financeiro completo`.
+- Filtros complementares do Balancete devem ser dependentes do formato selecionado; o sistema nao deve exibir filtros que nao fazem sentido para o formato ativo.
+- No formato `Operacional`, o relatorio representa apenas o universo disponivel; no formato `Operacional + patrimonio vinculado`, o bloco patrimonial deve vir separado do resumo operacional; no formato `Financeiro completo`, a leitura deve ser total da instituicao.
 - O Balancete deve poder exibir a composição do saldo em modos distintos:
   - detalhado por conta, mostrando cada conta individualmente;
   - consolidado por tipo de conta, somando contas do mesmo tipo;

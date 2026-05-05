@@ -123,6 +123,7 @@ Estas regras devem ser respeitadas em qualquer etapa:
 - integralizacao de capital deve compor o patrimonio financeiro fora do saldo operacional livre, com apresentacao separada no Balancete patrimonial
 - relatorios documentais, especialmente o Balancete Institucional, devem evitar misturar saldo disponivel operacional com valores indisponiveis/vinculados sem destaque claro
 - o Balancete Institucional deve poder evoluir para modos de composicao final por conta, por tipo de conta, por total consolidado e por separacao entre disponivel e indisponivel, preservando transparencia sem poluir o impresso
+- a arquitetura funcional do Balancete deve ser orientada por `Formato do Balancete` (`Operacional`, `Operacional + patrimonio vinculado`, `Financeiro completo`), com filtros complementares dependentes do formato e sem combinacoes soltas de filtros que misturem intencoes
 - no modo consolidado por tipo de conta, contas do mesmo tipo devem ser somadas independentemente do banco, nome da conta ou cadastro individual, preservando grupos como conta corrente, poupanca, dinheiro/caixa, aplicacao financeira, integralizacao de capital e conta vinculada/indisponivel
 - a frente de Balancete patrimonial exige modelagem documental fechada antes de qualquer implementacao de models, migrations, views, forms, templates ou testes
 - quando a natureza `receita` / `despesa` ja estiver clara pelo contexto da tela, pelo agrupamento ou por indicador de tipo, a exibicao visivel da categoria deve preferir nome curto, sem prefixos textuais redundantes

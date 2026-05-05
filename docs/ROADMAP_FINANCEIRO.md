@@ -58,6 +58,9 @@ Evoluir o Balancete Institucional para leitura patrimonial/gerencial do saldo, p
 
 ### Status apos a simplificacao dos filtros do Balancete
 
+- Nova diretriz funcional aprovada: o Balancete deve ser orientado por `Formato do Balancete` (Operacional, Operacional + patrimonio vinculado, Financeiro completo), com filtros complementares dependentes do formato.
+- O filtro solto `Exibir vinculadas/indisponiveis` deixa de ser eixo principal da experiencia e deve ser absorvido pela selecao de formato na futura implementacao.
+- Proxima etapa recomendada: abrir SPEC funcional exclusiva para implementar a arquitetura por formatos e filtros dependentes sem alterar base de calculo.
 - A separacao detalhada entre saldo disponivel operacional e saldo indisponivel/vinculado ja foi implementada no Balancete Institucional, sem alterar a base de calculo.
 - Mensagem explicativa opcional ja pode aparecer de forma discreta para contas indisponiveis/vinculadas.
 - O filtro `Modelo do relatorio` foi removido por redundancia.

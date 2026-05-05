@@ -4,6 +4,13 @@ Data de atualizacao: 2026-04-30
 
 ## Simplificacao dos filtros do Balancete patrimonial
 
+- arquitetura funcional aprovada para proxima evolucao do Balancete: filtro principal `Formato do Balancete` com tres opcoes (`Operacional`, `Operacional + patrimonio vinculado`, `Financeiro completo`)
+- o filtro antigo `Exibir contas vinculadas/indisponiveis` passa a ser substituido por filtros dependentes do formato escolhido
+- formato `Operacional`: mostra apenas universo disponivel, sem bloco vinculado e sem mensagens patrimoniais
+- formato `Operacional + patrimonio vinculado`: mantém resumo operacional separado e adiciona bloco patrimonial complementar em seguida
+- formato `Financeiro completo`: mostra leitura financeira total da instituicao, com disponivel e vinculado no mesmo universo financeiro
+- regra permanente de UX funcional: nao exibir filtros que nao fazem sentido para o formato selecionado
+- esta etapa foi apenas documental; nao houve alteracao de codigo nem mudanca de comportamento atual do Balancete
 - quando `Exibir vinculadas/indisponiveis = Nao`, o Balancete passou a representar apenas o saldo disponivel operacional em todo o documento
 - nesse modo, saldo indisponivel/vinculado, contas indisponiveis e mensagens explicativas dessas contas deixam de aparecer em qualquer bloco do relatorio
 - transferencias entre saldo disponivel e saldo vinculado/indisponivel passaram a aparecer no resumo operacional como movimentacao especifica de fronteira do saldo disponivel, sem virar receita ou despesa operacional

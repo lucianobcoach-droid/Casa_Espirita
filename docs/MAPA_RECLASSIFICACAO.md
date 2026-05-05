@@ -756,6 +756,7 @@ Especificacao futura:
 - implementado no Balancete: sequencia documental corrigida para saldo inicial, entradas, saidas, resumo operacional, composicao do saldo final e assinaturas
 - implementado no Balancete: remocao do aviso textual sobre contas vinculadas/indisponiveis ocultas
 - implementado no Balancete: quando vinculadas/indisponiveis ficam ocultas, o documento passa a representar apenas o saldo disponivel operacional; transferencias entre disponivel e indisponivel aparecem no resumo como movimentacao especifica de fronteira, sem virar receita ou despesa operacional
+- decisao funcional aprovada para proxima evolucao: substituir filtro solto de vinculadas por arquitetura orientada por `Formato do Balancete` com tres formatos (Operacional, Operacional + patrimonio vinculado, Financeiro completo) e filtros dependentes por formato
 - integralizacao de capital, contas investimento e contas vinculadas/indisponiveis devem aparecer separadas quando existirem
 - deve reaproveitar a base de calculo do Fechamento/Prestacao, sem calculo proprio divergente
 - implementado no recorte atual: `BalanceteInstitucionalFinanceiroView` classifica a `balancete_composicao_final` por disponibilidade e modo de composicao sem mudar `montar_contexto_fechamento_periodo`; permanecem futuros apenas refinamentos avancados de ordenacao, legibilidade e expansoes adicionais se o uso real justificar
