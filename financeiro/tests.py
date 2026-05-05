@@ -834,7 +834,7 @@ class PrestacaoContasTransferenciasEscopoTests(TestCase):
         self.banco.disponibilidade = ContaFinanceira.DisponibilidadeConta.INDISPONIVEL
         self.banco.saldo_inicial = Decimal('20.00')
         self.banco.mensagem_indisponibilidade = 'Saldo vinculado para reserva institucional.'
-        self.banco.save(update_fields=['disponibilidade', 'saldo_inicial'])
+        self.banco.save(update_fields=['disponibilidade', 'saldo_inicial', 'mensagem_indisponibilidade'])
         self.dinheiro.saldo_inicial = Decimal('10.00')
         self.dinheiro.save(update_fields=['saldo_inicial'])
 
@@ -862,9 +862,52 @@ class PrestacaoContasTransferenciasEscopoTests(TestCase):
             contexto['balancete_inicial_total_apresentado_rotulo'],
             'Saldo inicial disponivel operacional',
         )
+        self.assertTrue(contexto['balancete_modo_saldo_disponivel'])
+        self.assertEqual(
+            contexto['balancete_transferencias_disponiveis_resumo']['saida_para_indisponivel'],
+            Decimal('100.00'),
+        )
         self.assertNotIn('Contas vinculadas/indisponiveis nao exibidas nesta composicao.', html)
         self.assertNotIn('Saldo vinculado para reserva institucional.', html)
+        self.assertNotIn('Saldo indisponivel/vinculado', documento_html)
         self.assertNotIn('Saldo total financeiro', documento_html)
+        self.assertIn('(-) Transferencias para saldo vinculado/indisponivel', documento_html)
+        self.assertIn('(=) Saldo disponivel final', documento_html)
+
+    def test_balancete_institucional_resume_transferencia_de_indisponivel_para_disponivel(self):
+        self.banco.disponibilidade = ContaFinanceira.DisponibilidadeConta.INDISPONIVEL
+        self.banco.saldo_inicial = Decimal('90.00')
+        self.banco.save(update_fields=['disponibilidade', 'saldo_inicial'])
+        self._criar_transferencia(
+            'Banco para dinheiro',
+            self.banco,
+            self.dinheiro,
+            '40.00',
+        )
+
+        request, contexto = self._contexto_balancete(
+            [
+                ('data_inicial', '2026-03-01'),
+                ('data_final', '2026-03-31'),
+                ('contas', str(self.dinheiro.id)),
+                ('contas', str(self.banco.id)),
+                ('composicao_saldo', 'detalhada'),
+                ('exibir_indisponiveis', '0'),
+            ]
+        )
+        html = self._render_balancete(request, contexto)
+        documento_html = self._documento_balancete_html(html)
+
+        self.assertEqual(
+            contexto['balancete_transferencias_disponiveis_resumo']['entrada_de_indisponivel'],
+            Decimal('40.00'),
+        )
+        self.assertIn(
+            '(+) Transferencias de saldo vinculado/indisponivel para disponivel',
+            documento_html,
+        )
+        self.assertNotIn('Saldo total financeiro', documento_html)
+        self.assertNotIn('Saldo indisponivel/vinculado', documento_html)
 
     def test_balancete_institucional_permite_modo_detalhado_por_conta(self):
         self.banco.disponibilidade = ContaFinanceira.DisponibilidadeConta.INDISPONIVEL
@@ -1096,6 +1139,28 @@ class PrestacaoContasTransferenciasEscopoTests(TestCase):
             '',
         )
         self.assertNotIn('<tr class="balancete-message-row">', documento_html)
+
+    def test_balancete_institucional_mantem_transferencias_entre_disponiveis_fora_do_resumo_vinculado(self):
+        request, contexto = self._contexto_balancete(
+            [
+                ('data_inicial', '2026-03-01'),
+                ('data_final', '2026-03-31'),
+                ('contas', str(self.dinheiro.id)),
+                ('contas', str(self.banco.id)),
+                ('composicao_saldo', 'tipo'),
+                ('exibir_indisponiveis', '0'),
+            ]
+        )
+        html = self._render_balancete(request, contexto)
+        documento_html = self._documento_balancete_html(html)
+
+        self.assertFalse(contexto['balancete_transferencias_disponiveis_resumo']['saida_para_indisponivel'])
+        self.assertFalse(contexto['balancete_transferencias_disponiveis_resumo']['entrada_de_indisponivel'])
+        self.assertNotIn('Transferencias para saldo vinculado/indisponivel', documento_html)
+        self.assertNotIn(
+            'Transferencias de saldo vinculado/indisponivel para disponivel',
+            documento_html,
+        )
 
     def test_prestacao_contas_nao_ganha_chaves_de_leitura_patrimonial(self):
         contexto = self._contexto([self.dinheiro, self.banco], exibir_transferencias=True)

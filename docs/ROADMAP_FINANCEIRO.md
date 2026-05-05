@@ -67,7 +67,8 @@ Evoluir o Balancete Institucional para leitura patrimonial/gerencial do saldo, p
 - O mesmo modo de composicao agora vale para saldo inicial e saldo final.
 - Os filtros de composicao e vinculadas/indisponiveis deixaram de aparecer como metadados no cabecalho impresso.
 - A sequencia documental do Balancete foi corrigida para abrir por saldo inicial, seguir por entradas e saidas, trazer o resumo operacional depois e fechar com a composicao do saldo final.
-- Quando vinculadas/indisponiveis ficam ocultas, o Balancete nao mostra mais aviso textual sobre elas; a diferenciacao fica apenas na propria composicao apresentada e nos rotulos correspondentes.
+- Quando vinculadas/indisponiveis ficam ocultas, o Balancete nao mostra mais aviso textual sobre elas; nesse modo, o documento inteiro passa a representar apenas o saldo disponivel operacional.
+- Transferencias entre saldo disponivel e saldo vinculado/indisponivel passam a aparecer no resumo operacional como movimentacao especifica de fronteira, sem virar receita ou despesa operacional.
 - Permanecem como futuros apenas refinamentos adicionais de ordenacao, agrupamento, acabamento documental e eventuais modos extras justificados pelo uso real.
 
 ### Auditoria tecnica preparatoria

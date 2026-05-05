@@ -4,6 +4,10 @@ Data de atualizacao: 2026-04-30
 
 ## Simplificacao dos filtros do Balancete patrimonial
 
+- quando `Exibir vinculadas/indisponiveis = Nao`, o Balancete passou a representar apenas o saldo disponivel operacional em todo o documento
+- nesse modo, saldo indisponivel/vinculado, contas indisponiveis e mensagens explicativas dessas contas deixam de aparecer em qualquer bloco do relatorio
+- transferencias entre saldo disponivel e saldo vinculado/indisponivel passaram a aparecer no resumo operacional como movimentacao especifica de fronteira do saldo disponivel, sem virar receita ou despesa operacional
+- quando `Exibir vinculadas/indisponiveis = Sim`, o Balancete continua representando o saldo financeiro total com leitura patrimonial completa
 - o filtro `Modelo do relatorio` foi removido do Balancete Institucional por redundancia
 - o filtro separado `Detalhar saldo inicial por conta` tambem foi removido por redundancia
 - a leitura pratica do documento passou a ser controlada diretamente por duas escolhas: composicao do saldo e exibir/ocultar contas vinculadas/indisponiveis

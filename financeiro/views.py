@@ -4642,6 +4642,250 @@ class BalanceteInstitucionalFinanceiroView(FinanceiroPeriodoMixin, TemplateView)
             'balancete_total_financeiro': subtotal_disponivel + subtotal_indisponivel,
         }
 
+    def _resumir_transferencias_modo_disponivel(
+        self,
+        *,
+        data_inicial: date | None,
+        data_final: date | None,
+        contas_disponiveis_ids: list[int],
+        contas_indisponiveis_ids: list[int],
+        contas_selecionadas_ids: list[int],
+    ) -> dict[str, Decimal]:
+        totais = {
+            'entrada_de_fora': Decimal('0.00'),
+            'saida_para_fora': Decimal('0.00'),
+            'entrada_de_indisponivel': Decimal('0.00'),
+            'saida_para_indisponivel': Decimal('0.00'),
+        }
+        if not data_inicial or not data_final or not contas_selecionadas_ids:
+            return totais
+
+        contas_disponiveis_set = set(contas_disponiveis_ids)
+        contas_indisponiveis_set = set(contas_indisponiveis_ids)
+        contas_selecionadas_set = set(contas_selecionadas_ids)
+        transferencias = list(
+            LancamentoFinanceiro.objects.filter(
+                Q(conta_id__in=contas_selecionadas_set) | Q(conta_destino_id__in=contas_selecionadas_set),
+                status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+                tipo=LancamentoFinanceiro.TipoLancamento.TRANSFERENCIA,
+            )
+            .annotate(data_operacional=Coalesce('data_pagamento', 'data_competencia'))
+            .filter(data_operacional__gte=data_inicial, data_operacional__lte=data_final)
+            .only('valor', 'conta_id', 'conta_destino_id')
+        )
+
+        for lancamento in transferencias:
+            origem_disponivel = lancamento.conta_id in contas_disponiveis_set
+            destino_disponivel = lancamento.conta_destino_id in contas_disponiveis_set
+            origem_indisponivel = lancamento.conta_id in contas_indisponiveis_set
+            destino_indisponivel = lancamento.conta_destino_id in contas_indisponiveis_set
+            origem_selecionada = lancamento.conta_id in contas_selecionadas_set
+            destino_selecionada = lancamento.conta_destino_id in contas_selecionadas_set
+
+            if origem_disponivel and destino_indisponivel:
+                totais['saida_para_indisponivel'] += lancamento.valor
+            elif origem_indisponivel and destino_disponivel:
+                totais['entrada_de_indisponivel'] += lancamento.valor
+            elif origem_disponivel and not destino_selecionada:
+                totais['saida_para_fora'] += lancamento.valor
+            elif destino_disponivel and not origem_selecionada:
+                totais['entrada_de_fora'] += lancamento.valor
+
+        return totais
+
+    def _montar_contexto_apresentado_balancete(
+        self,
+        *,
+        context: dict[str, object],
+        exibir_indisponiveis: bool,
+        classificacao_patrimonial_inicial: dict[str, object],
+        classificacao_patrimonial_final: dict[str, object],
+    ) -> dict[str, object]:
+        data_inicial_raw, data_final_raw, data_inicial, data_final, _periodo_error = self._parse_periodo()
+        contas_selecionadas = context.get('contas_selecionadas') or []
+        contas_selecionadas_ids = [conta.id for conta in contas_selecionadas]
+        contas_disponiveis_ids = [
+            conta.id
+            for conta in contas_selecionadas
+            if getattr(
+                conta,
+                'disponibilidade',
+                ContaFinanceira.DisponibilidadeConta.DISPONIVEL,
+            )
+            != ContaFinanceira.DisponibilidadeConta.INDISPONIVEL
+        ]
+        contas_indisponiveis_ids = [
+            conta.id
+            for conta in contas_selecionadas
+            if getattr(
+                conta,
+                'disponibilidade',
+                ContaFinanceira.DisponibilidadeConta.DISPONIVEL,
+            )
+            == ContaFinanceira.DisponibilidadeConta.INDISPONIVEL
+        ]
+
+        if exibir_indisponiveis:
+            saldo_inicial_apresentado = context.get('saldo_inicial_consolidado', Decimal('0.00'))
+            saldo_final_apresentado = context.get('saldo_final_reconciliado', Decimal('0.00'))
+            resumo_linhas = [
+                {
+                    'label': '(+) Saldo inicial financeiro',
+                    'valor': saldo_inicial_apresentado,
+                    'total': False,
+                },
+                {
+                    'label': '(+) Entradas do periodo',
+                    'valor': context.get('total_receitas_periodo', Decimal('0.00')),
+                    'total': False,
+                },
+                {
+                    'label': '(-) Saidas do periodo',
+                    'valor': context.get('total_despesas_periodo', Decimal('0.00')),
+                    'total': False,
+                },
+            ]
+            if context.get('total_entradas_outras_contas'):
+                resumo_linhas.append(
+                    {
+                        'label': '(+) Entradas de outras contas da instituicao',
+                        'valor': context['total_entradas_outras_contas'],
+                        'total': False,
+                    }
+                )
+            if context.get('total_saidas_outras_contas'):
+                resumo_linhas.append(
+                    {
+                        'label': '(-) Saidas para outras contas da instituicao',
+                        'valor': context['total_saidas_outras_contas'],
+                        'total': False,
+                    }
+                )
+            resumo_linhas.append(
+                {
+                    'label': '(=) Saldo final financeiro',
+                    'valor': saldo_final_apresentado,
+                    'total': True,
+                }
+            )
+            return {
+                'balancete_receitas_por_categoria_apresentadas': context.get('receitas_por_categoria', []),
+                'balancete_total_entradas_apresentadas': context.get(
+                    'total_receitas_por_categoria',
+                    Decimal('0.00'),
+                ),
+                'balancete_despesas_por_categoria_apresentadas': context.get('despesas_por_categoria', []),
+                'balancete_total_saidas_apresentadas': context.get(
+                    'total_despesas_por_categoria',
+                    Decimal('0.00'),
+                ),
+                'balancete_resumo_operacional_linhas': resumo_linhas,
+                'balancete_resumo_consistente': context.get('reconciliacao_saldo_consistente', True),
+                'balancete_modo_saldo_disponivel': False,
+            }
+
+        receitas_disponiveis, despesas_disponiveis, total_receitas_disponiveis, total_despesas_disponiveis = (
+            self._lancamentos_receitas_despesas(data_inicial, data_final, contas_disponiveis_ids)
+            if data_inicial and data_final
+            else ([], [], Decimal('0.00'), Decimal('0.00'))
+        )
+        receitas_por_categoria, total_receitas_por_categoria = self._agrupar_por_campo(
+            receitas_disponiveis,
+            'categoria',
+            'Sem categoria',
+            label_key='categoria',
+        )
+        despesas_por_categoria, total_despesas_por_categoria = self._agrupar_por_campo(
+            despesas_disponiveis,
+            'categoria',
+            'Sem categoria',
+            label_key='categoria',
+        )
+        transferencias_disponiveis = self._resumir_transferencias_modo_disponivel(
+            data_inicial=data_inicial,
+            data_final=data_final,
+            contas_disponiveis_ids=contas_disponiveis_ids,
+            contas_indisponiveis_ids=contas_indisponiveis_ids,
+            contas_selecionadas_ids=contas_selecionadas_ids,
+        )
+        saldo_inicial_disponivel = classificacao_patrimonial_inicial['balancete_subtotal_disponivel']
+        saldo_final_disponivel = classificacao_patrimonial_final['balancete_subtotal_disponivel']
+        saldo_final_disponivel_reconciliado = (
+            saldo_inicial_disponivel
+            + total_receitas_disponiveis
+            - total_despesas_disponiveis
+            + transferencias_disponiveis['entrada_de_fora']
+            - transferencias_disponiveis['saida_para_fora']
+            + transferencias_disponiveis['entrada_de_indisponivel']
+            - transferencias_disponiveis['saida_para_indisponivel']
+        )
+        resumo_linhas = [
+            {
+                'label': '(+) Saldo disponivel inicial',
+                'valor': saldo_inicial_disponivel,
+                'total': False,
+            },
+            {
+                'label': '(+) Entradas do periodo',
+                'valor': total_receitas_disponiveis,
+                'total': False,
+            },
+            {
+                'label': '(-) Saidas do periodo',
+                'valor': total_despesas_disponiveis,
+                'total': False,
+            },
+        ]
+        if transferencias_disponiveis['entrada_de_fora']:
+            resumo_linhas.append(
+                {
+                    'label': '(+) Entradas de outras contas da instituicao',
+                    'valor': transferencias_disponiveis['entrada_de_fora'],
+                    'total': False,
+                }
+            )
+        if transferencias_disponiveis['saida_para_fora']:
+            resumo_linhas.append(
+                {
+                    'label': '(-) Saidas para outras contas da instituicao',
+                    'valor': transferencias_disponiveis['saida_para_fora'],
+                    'total': False,
+                }
+            )
+        if transferencias_disponiveis['saida_para_indisponivel']:
+            resumo_linhas.append(
+                {
+                    'label': '(-) Transferencias para saldo vinculado/indisponivel',
+                    'valor': transferencias_disponiveis['saida_para_indisponivel'],
+                    'total': False,
+                }
+            )
+        if transferencias_disponiveis['entrada_de_indisponivel']:
+            resumo_linhas.append(
+                {
+                    'label': '(+) Transferencias de saldo vinculado/indisponivel para disponivel',
+                    'valor': transferencias_disponiveis['entrada_de_indisponivel'],
+                    'total': False,
+                }
+            )
+        resumo_linhas.append(
+            {
+                'label': '(=) Saldo disponivel final',
+                'valor': saldo_final_disponivel_reconciliado,
+                'total': True,
+            }
+        )
+        return {
+            'balancete_receitas_por_categoria_apresentadas': receitas_por_categoria,
+            'balancete_total_entradas_apresentadas': total_receitas_por_categoria,
+            'balancete_despesas_por_categoria_apresentadas': despesas_por_categoria,
+            'balancete_total_saidas_apresentadas': total_despesas_por_categoria,
+            'balancete_resumo_operacional_linhas': resumo_linhas,
+            'balancete_resumo_consistente': saldo_final_disponivel_reconciliado == saldo_final_disponivel,
+            'balancete_modo_saldo_disponivel': True,
+            'balancete_transferencias_disponiveis_resumo': transferencias_disponiveis,
+        }
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['page_title'] = 'Balancete Institucional'
@@ -4748,6 +4992,14 @@ class BalanceteInstitucionalFinanceiroView(FinanceiroPeriodoMixin, TemplateView)
         )
         context.update(classificacao_patrimonial)
         context.update(apresentacao_patrimonial)
+        context.update(
+            self._montar_contexto_apresentado_balancete(
+                context=context,
+                exibir_indisponiveis=exibir_indisponiveis,
+                classificacao_patrimonial_inicial=classificacao_patrimonial_inicial,
+                classificacao_patrimonial_final=classificacao_patrimonial,
+            )
+        )
         return context
 
 

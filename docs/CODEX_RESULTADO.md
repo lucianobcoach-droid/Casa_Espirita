@@ -4,6 +4,11 @@ Data: 2026-04-30
 
 ## Refinamento do Balancete por publico e composicao
 
+- corrigi a leitura do Balancete quando `Exibir vinculadas/indisponiveis = Nao`: o documento passa a representar apenas o saldo disponivel operacional
+- nesse modo, saldo indisponivel/vinculado, contas indisponiveis e mensagens explicativas dessas contas ficam totalmente fora da apresentacao
+- transferencias entre conta disponivel e conta vinculada/indisponivel passaram a aparecer no resumo operacional como movimentacao especifica de fronteira do saldo disponivel, sem virar receita nem despesa operacional
+- preservei o modo completo quando `Exibir vinculadas/indisponiveis = Sim`, mantendo saldo disponivel, saldo indisponivel/vinculado, saldo financeiro total e mensagens apenas para contas efetivamente exibidas
+
 - corrigi a sequencia documental do Balancete para abrir com `Saldo inicial financeiro`, seguir com `Entradas do periodo`, `Saidas do periodo`, `Resumo operacional do periodo`, `Composicao do saldo final` e `Assinaturas`
 - tirei a composicao do saldo inicial de dentro do resumo e mantive inicio e fim obedecendo ao mesmo filtro `Composicao do saldo`
 - removi a mensagem `Contas vinculadas/indisponiveis nao exibidas nesta composicao...` quando a opcao de exibir vinculadas/indisponiveis esta desligada
