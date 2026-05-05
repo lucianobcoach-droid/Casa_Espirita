@@ -745,10 +745,13 @@ Foi levantada necessidade de o Balancete permitir escolher entre composicao deta
 Especificacao futura:
 - decisao aprovada para o MVP: modo padrao detalhado por conta, preservando leitura atual com separacao visual entre disponivel e indisponivel/vinculado quando aplicavel
 - implementado no Balancete: modo detalhado por conta com separacao visual entre disponivel e indisponivel/vinculado e total financeiro preservado
-- ajuste posterior validado: o filtro `Modelo do relatorio` foi removido por redundancia; a diferenca pratica do documento passou a ser controlada diretamente pelos filtros de composicao do saldo, exibicao de vinculadas/indisponiveis e detalhamento do saldo inicial
+- ajuste posterior validado: o filtro `Modelo do relatorio` foi removido por redundancia
+- ajuste posterior validado: o filtro separado de detalhamento do saldo inicial foi removido por redundancia
+- ajuste posterior validado: a diferenca pratica do documento passou a ser controlada diretamente pelos filtros de composicao do saldo e exibicao de vinculadas/indisponiveis
 - implementado no Balancete: consolidado por tipo de conta para somar contas do mesmo tipo, independentemente do banco ou nome da conta
 - implementado no Balancete: total consolidado para leitura mais sintetica
 - implementado no Balancete: opcao para exibir ou ocultar contas vinculadas/indisponiveis sem alterar calculo
+- implementado no Balancete: o mesmo modo de composicao passou a valer para saldo inicial e saldo final
 - implementado no Balancete: ocultacao dos metadados desses filtros no cabecalho impresso, mantendo apenas informacoes institucionais e do periodo
 - integralizacao de capital, contas investimento e contas vinculadas/indisponiveis devem aparecer separadas quando existirem
 - deve reaproveitar a base de calculo do Fechamento/Prestacao, sem calculo proprio divergente

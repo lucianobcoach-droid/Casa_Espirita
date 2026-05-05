@@ -4,8 +4,13 @@ Data: 2026-04-30
 
 ## Refinamento do Balancete por publico e composicao
 
+- removi o filtro separado `Detalhar saldo inicial por conta`, pois ele ficou redundante diante do proprio filtro `Composicao do saldo`
+- alinhei a apresentacao do saldo inicial ao mesmo modo da composicao final: detalhada por conta, consolidada por tipo de conta ou total consolidado
+- mantive a opcao de exibir/ocultar vinculadas/indisponiveis valendo para as duas pontas, sem alterar calculo financeiro, saldo, lancamentos, Extrato ou Fechamento/Prestacao
+- preservei o resumo financeiro sintetico e passei a usar o mesmo criterio patrimonial para a composicao inicial e final quando a apresentacao detalhada aparece no documento
+
 - removi do Balancete o filtro `Modelo do relatorio`, pois a distincao pratica entre as leituras ficou melhor resolvida pelos filtros reais de composicao, exibicao de vinculadas/indisponiveis e detalhamento do saldo inicial
-- mantive os filtros `Composicao do saldo`, `Exibir vinculadas/indisponiveis` e `Detalhar saldo inicial por conta`, com padrao de composicao em `Consolidada por tipo de conta`
+- mantive os filtros `Composicao do saldo` e `Exibir vinculadas/indisponiveis`, com padrao de composicao em `Consolidada por tipo de conta`
 - retirei do cabecalho impresso a exposicao desses filtros, deixando o documento mais institucional e limpo
 - ajustei a observacao de ocultacao para aparecer apenas quando as contas vinculadas/indisponiveis nao sao exibidas, usando a redacao `nesta composicao`
 - preservei a compactacao do impresso e a sequencia documental, sem alterar calculo financeiro, saldo, lancamentos, Extrato ou Fechamento/Prestacao
@@ -13,7 +18,7 @@ Data: 2026-04-30
 - na etapa anterior, havia sido adicionada a camada de modelos por publico; nesta microetapa, ela foi simplificada e absorvida pelos filtros diretos realmente uteis
 - implementei tres modos de composicao do saldo final: detalhada por conta, consolidada por tipo de conta e total consolidado
 - acrescentei opcao para exibir ou ocultar contas vinculadas/indisponiveis apenas no documento, sem alterar calculo financeiro ou saldo final real
-- tornei opcional o detalhamento do saldo inicial e reorganizei o impresso para reduzir repeticao entre resumo e composicao patrimonial
+- removi o controle separado do saldo inicial e reorganizei o impresso para reduzir repeticao entre resumo e composicao patrimonial
 - compacteI o layout do Balancete com fonte menor, menos padding e sequencia documental mais direta, buscando melhor aproveitamento de uma pagina quando o volume permitir
 - mantive Fechamento/Prestacao, Extrato, lancamentos, transferencias, saldos e base de calculo sem alteracao funcional
 

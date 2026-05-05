@@ -65,10 +65,10 @@ Este documento consolida regras permanentes do sistema. Ele não substitui o his
 - O modo padrão do Balancete patrimonial será detalhado por conta, preservando a leitura atual e adicionando separação visual entre disponível e indisponível/vinculado quando aplicável.
 - No recorte inicial já implementado, o Balancete Institucional separa a composição final entre saldo disponível operacional e saldo indisponível/vinculado sem alterar cálculo, saldo por conta ou reconciliação.
 - O saldo total financeiro do Balancete deve continuar igual à composição final já calculada pela base compartilhada; a separação patrimonial é apenas classificatória.
-- No Balancete, a diferenca pratica de leitura deve ser controlada diretamente pelos filtros de composicao do saldo, exibicao de vinculadas/indisponiveis e detalhamento do saldo inicial, sem depender de um filtro redundante de modelo do relatorio.
+- No Balancete, a diferenca pratica de leitura deve ser controlada diretamente pelos filtros de composicao do saldo e exibicao de vinculadas/indisponiveis, sem depender de filtros redundantes de modelo do relatorio ou detalhamento separado do saldo inicial.
 - Quando contas vinculadas/indisponiveis forem ocultadas na composicao patrimonial, o documento deve deixar claro que a composicao exibida representa apenas o saldo disponivel operacional.
-- Os filtros de composicao, exibicao de vinculadas/indisponiveis e detalhamento do saldo inicial nao devem aparecer como metadados no cabecalho impresso do Balancete.
-- O detalhamento do saldo inicial no Balancete pode ser opcional para reduzir redundância documental, sem alterar a base financeira do resumo do período.
+- Os filtros de composicao e exibicao de vinculadas/indisponiveis nao devem aparecer como metadados no cabecalho impresso do Balancete.
+- O mesmo modo de composicao do Balancete deve valer para o saldo inicial e para o saldo final: se a leitura for por conta, as duas pontas devem ser por conta; se for por tipo, as duas pontas devem ser por tipo; se for consolidada, as duas pontas devem ser consolidadas.
 - O Balancete deve poder exibir a composição do saldo em modos distintos:
   - detalhado por conta, mostrando cada conta individualmente;
   - consolidado por tipo de conta, somando contas do mesmo tipo;

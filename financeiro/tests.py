@@ -795,10 +795,12 @@ class PrestacaoContasTransferenciasEscopoTests(TestCase):
         tipo_caixa = TipoContaFinanceira.objects.get(codigo='dinheiro_caixa')
         tipo_corrente = TipoContaFinanceira.objects.get(codigo='conta_corrente')
         self.dinheiro.tipo_conta = tipo_caixa
-        self.dinheiro.save(update_fields=['tipo_conta'])
+        self.dinheiro.saldo_inicial = Decimal('10.00')
+        self.dinheiro.save(update_fields=['tipo_conta', 'saldo_inicial'])
         self.banco.tipo_conta = tipo_corrente
         self.banco.disponibilidade = ContaFinanceira.DisponibilidadeConta.INDISPONIVEL
-        self.banco.save(update_fields=['tipo_conta', 'disponibilidade'])
+        self.banco.saldo_inicial = Decimal('20.00')
+        self.banco.save(update_fields=['tipo_conta', 'disponibilidade', 'saldo_inicial'])
 
         _, contexto = self._contexto_balancete(
             [
@@ -811,7 +813,6 @@ class PrestacaoContasTransferenciasEscopoTests(TestCase):
 
         self.assertEqual(contexto['balancete_composicao_saldo'], 'tipo')
         self.assertTrue(contexto['balancete_exibir_indisponiveis'])
-        self.assertFalse(contexto['balancete_exibir_saldo_inicial_detalhado'])
         self.assertEqual(
             [item['rotulo'] for item in contexto['balancete_grupos_apresentacao'][0]['itens']],
             ['Dinheiro/caixa'],
@@ -820,10 +821,21 @@ class PrestacaoContasTransferenciasEscopoTests(TestCase):
             [item['rotulo'] for item in contexto['balancete_grupos_apresentacao'][1]['itens']],
             ['Conta corrente'],
         )
+        self.assertEqual(
+            [item['rotulo'] for item in contexto['balancete_inicial_grupos_apresentacao'][0]['itens']],
+            ['Dinheiro/caixa'],
+        )
+        self.assertEqual(
+            [item['rotulo'] for item in contexto['balancete_inicial_grupos_apresentacao'][1]['itens']],
+            ['Conta corrente'],
+        )
 
     def test_balancete_institucional_oculta_indisponiveis_quando_filtro_desligado(self):
         self.banco.disponibilidade = ContaFinanceira.DisponibilidadeConta.INDISPONIVEL
-        self.banco.save(update_fields=['disponibilidade'])
+        self.banco.saldo_inicial = Decimal('20.00')
+        self.banco.save(update_fields=['disponibilidade', 'saldo_inicial'])
+        self.dinheiro.saldo_inicial = Decimal('10.00')
+        self.dinheiro.save(update_fields=['saldo_inicial'])
 
         request, contexto = self._contexto_balancete(
             [
@@ -843,12 +855,21 @@ class PrestacaoContasTransferenciasEscopoTests(TestCase):
         self.assertTrue(contexto['balancete_ocultou_indisponiveis'])
         self.assertFalse(contexto['balancete_exibe_total_financeiro'])
         self.assertEqual(contexto['balancete_total_apresentado_rotulo'], 'Saldo disponivel operacional')
+        self.assertTrue(contexto['balancete_inicial_ocultou_indisponiveis'])
+        self.assertFalse(contexto['balancete_inicial_exibe_total_financeiro'])
+        self.assertEqual(
+            contexto['balancete_inicial_total_apresentado_rotulo'],
+            'Saldo inicial disponivel operacional',
+        )
         self.assertIn('Contas vinculadas/indisponiveis nao exibidas nesta composicao.', html)
         self.assertNotIn('Saldo total financeiro', documento_html)
 
     def test_balancete_institucional_permite_modo_detalhado_por_conta(self):
         self.banco.disponibilidade = ContaFinanceira.DisponibilidadeConta.INDISPONIVEL
-        self.banco.save(update_fields=['disponibilidade'])
+        self.banco.saldo_inicial = Decimal('20.00')
+        self.banco.save(update_fields=['disponibilidade', 'saldo_inicial'])
+        self.dinheiro.saldo_inicial = Decimal('10.00')
+        self.dinheiro.save(update_fields=['saldo_inicial'])
 
         _, contexto = self._contexto_balancete(
             [
@@ -867,6 +888,14 @@ class PrestacaoContasTransferenciasEscopoTests(TestCase):
         )
         self.assertEqual(
             [item['rotulo'] for item in contexto['balancete_grupos_apresentacao'][1]['itens']],
+            ['Banco'],
+        )
+        self.assertEqual(
+            [item['rotulo'] for item in contexto['balancete_inicial_grupos_apresentacao'][0]['itens']],
+            ['Dinheiro'],
+        )
+        self.assertEqual(
+            [item['rotulo'] for item in contexto['balancete_inicial_grupos_apresentacao'][1]['itens']],
             ['Banco'],
         )
 
@@ -905,10 +934,21 @@ class PrestacaoContasTransferenciasEscopoTests(TestCase):
             [item['rotulo'] for item in contexto['balancete_grupos_apresentacao'][1]['itens']],
             ['Integralizacao de capital'],
         )
+        self.assertEqual(
+            [item['rotulo'] for item in contexto['balancete_inicial_grupos_apresentacao'][0]['itens']],
+            ['Conta investimento'],
+        )
+        self.assertEqual(
+            [item['rotulo'] for item in contexto['balancete_inicial_grupos_apresentacao'][1]['itens']],
+            ['Integralizacao de capital'],
+        )
 
     def test_balancete_institucional_permite_modo_total_consolidado(self):
         self.banco.disponibilidade = ContaFinanceira.DisponibilidadeConta.INDISPONIVEL
-        self.banco.save(update_fields=['disponibilidade'])
+        self.banco.saldo_inicial = Decimal('20.00')
+        self.banco.save(update_fields=['disponibilidade', 'saldo_inicial'])
+        self.dinheiro.saldo_inicial = Decimal('10.00')
+        self.dinheiro.save(update_fields=['saldo_inicial'])
 
         _, contexto = self._contexto_balancete(
             [
@@ -923,7 +963,10 @@ class PrestacaoContasTransferenciasEscopoTests(TestCase):
         self.assertEqual(contexto['balancete_composicao_saldo'], 'total')
         self.assertTrue(all(not grupo['itens'] for grupo in contexto['balancete_grupos_apresentacao']))
         self.assertTrue(contexto['balancete_exibe_total_financeiro'])
-        self.assertEqual(contexto['balancete_total_apresentado'], Decimal('40.00'))
+        self.assertEqual(contexto['balancete_total_apresentado'], Decimal('70.00'))
+        self.assertTrue(all(not grupo['itens'] for grupo in contexto['balancete_inicial_grupos_apresentacao']))
+        self.assertTrue(contexto['balancete_inicial_exibe_total_financeiro'])
+        self.assertEqual(contexto['balancete_inicial_total_apresentado'], Decimal('30.00'))
 
     def test_balancete_institucional_ignora_parametro_legado_de_modelo(self):
         _, contexto = self._contexto_balancete(
@@ -938,7 +981,10 @@ class PrestacaoContasTransferenciasEscopoTests(TestCase):
         self.assertEqual(contexto['balancete_composicao_saldo'], 'tipo')
         self.assertTrue(contexto['balancete_exibir_indisponiveis'])
 
-    def test_balancete_institucional_permite_exibir_saldo_inicial_detalhado(self):
+    def test_balancete_institucional_ignora_parametro_legado_de_saldo_inicial_detalhado(self):
+        tipo_caixa = TipoContaFinanceira.objects.get(codigo='dinheiro_caixa')
+        self.dinheiro.tipo_conta = tipo_caixa
+        self.dinheiro.save(update_fields=['tipo_conta'])
         _, contexto = self._contexto_balancete(
             [
                 ('data_inicial', '2026-03-01'),
@@ -949,10 +995,10 @@ class PrestacaoContasTransferenciasEscopoTests(TestCase):
             ]
         )
 
-        self.assertTrue(contexto['balancete_exibir_saldo_inicial_detalhado'])
+        self.assertEqual(contexto['balancete_composicao_saldo'], 'tipo')
         self.assertEqual(
-            [item['conta'] for item in contexto['balancete_composicao_inicial']],
-            [self.dinheiro],
+            [item['rotulo'] for item in contexto['balancete_inicial_grupos_apresentacao'][0]['itens']],
+            ['Dinheiro/caixa'],
         )
 
     def test_balancete_institucional_nao_imprime_metadados_dos_filtros_novos(self):

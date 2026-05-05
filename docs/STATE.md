@@ -5,12 +5,13 @@ Data de atualizacao: 2026-04-30
 ## Simplificacao dos filtros do Balancete patrimonial
 
 - o filtro `Modelo do relatorio` foi removido do Balancete Institucional por redundancia
-- a leitura pratica do documento passou a ser controlada diretamente por tres escolhas: composicao do saldo, exibir/ocultar contas vinculadas/indisponiveis e detalhar ou nao o saldo inicial por conta
+- o filtro separado `Detalhar saldo inicial por conta` tambem foi removido por redundancia
+- a leitura pratica do documento passou a ser controlada diretamente por duas escolhas: composicao do saldo e exibir/ocultar contas vinculadas/indisponiveis
 - a composicao do saldo permanece com tres modos: detalhada por conta, consolidada por tipo de conta e total consolidado; o padrao atual passou a ser `Consolidada por tipo de conta`
+- o mesmo filtro `Composicao do saldo` agora comanda tanto o saldo inicial quanto o saldo final: se for por conta, as duas pontas ficam por conta; se for por tipo, as duas pontas ficam por tipo; se for consolidado, as duas pontas ficam consolidadas
 - a opcao de exibir ou ocultar contas vinculadas/indisponiveis continua apenas documental/visual e nao altera calculo, saldo final financeiro, lancamentos ou transferencias
 - quando as contas vinculadas/indisponiveis ficam ocultas, o Balancete deixa claro que a composicao exibida e apenas do saldo disponivel operacional e mostra observacao discreta sobre a ocultacao
-- o filtro de saldo inicial detalhado foi mantido como complemento opcional de conferencia, com foco em reduzir redundancia no impresso quando desligado
-- os filtros de composicao, vinculadas/indisponiveis e saldo inicial detalhado deixaram de aparecer como metadados no cabecalho impresso
+- os filtros de composicao e vinculadas/indisponiveis deixaram de aparecer como metadados no cabecalho impresso
 - o layout impresso foi mantido compacto, com fonte menor, menos espacamento vertical e sequencia documental mais direta, buscando caber em uma pagina quando o volume permitir
 
 ## Leitura patrimonial no Balancete Institucional

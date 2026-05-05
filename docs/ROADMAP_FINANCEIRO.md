@@ -60,9 +60,12 @@ Evoluir o Balancete Institucional para leitura patrimonial/gerencial do saldo, p
 
 - A separacao detalhada entre saldo disponivel operacional e saldo indisponivel/vinculado ja foi implementada no Balancete Institucional, sem alterar a base de calculo.
 - Mensagem explicativa opcional ja pode aparecer de forma discreta para contas indisponiveis/vinculadas.
-- O filtro `Modelo do relatorio` foi removido por redundancia; a diferenca pratica do documento passou a ser controlada diretamente por `Composicao do saldo`, `Exibir vinculadas/indisponiveis` e `Detalhar saldo inicial por conta`.
+- O filtro `Modelo do relatorio` foi removido por redundancia.
+- O filtro separado `Detalhar saldo inicial por conta` tambem foi removido por redundancia.
+- A diferenca pratica do documento passou a ser controlada diretamente por `Composicao do saldo` e `Exibir vinculadas/indisponiveis`.
 - Foram implementados os modos `Detalhada por conta`, `Consolidada por tipo de conta` e `Total consolidado`, com padrao atual em `Consolidada por tipo de conta`.
-- Os filtros de composicao, vinculadas/indisponiveis e saldo inicial detalhado deixaram de aparecer como metadados no cabecalho impresso.
+- O mesmo modo de composicao agora vale para saldo inicial e saldo final.
+- Os filtros de composicao e vinculadas/indisponiveis deixaram de aparecer como metadados no cabecalho impresso.
 - Quando vinculadas/indisponiveis ficam ocultas, o Balancete mostra observacao discreta especificando que elas nao estao exibidas naquela composicao, sem rotular o saldo disponivel como saldo total financeiro.
 - Permanecem como futuros apenas refinamentos adicionais de ordenacao, agrupamento, acabamento documental e eventuais modos extras justificados pelo uso real.
 

@@ -428,16 +428,6 @@
                         </select>
                     </div>
                 </div>
-                <div class="column is-12-mobile is-6-tablet is-3-desktop">
-                    <label class="label">Detalhar saldo inicial por conta</label>
-                    <div class="select is-fullwidth">
-                        <select name="exibir_saldo_inicial_detalhado">
-                            {% for valor, rotulo in balancete_opcoes_booleanas %}
-                                <option value="{{ valor }}" {% if valor == balancete_exibir_saldo_inicial_detalhado_valor %}selected{% endif %}>{{ rotulo }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
                 <div class="column is-12-mobile is-6-tablet is-4-desktop">
                     <label class="label">Assinatura 1</label>
                     <div class="select is-fullwidth">
@@ -529,27 +519,51 @@
                 {% if not reconciliacao_saldo_consistente %}
                     <p class="balancete-note">Atencao: o saldo final reconciliado difere da composicao final calculada.</p>
                 {% endif %}
-                {% if balancete_exibir_saldo_inicial_detalhado %}
+                {% if balancete_inicial_grupos_apresentacao %}
+                    <p class="balancete-note">{{ balancete_inicial_titulo_composicao }}</p>
                     <table class="balancete-table" style="margin-top: 0.28rem;">
                         <tbody>
-                        {% for item in balancete_composicao_inicial %}
-                            <tr>
-                                <td>{{ item.conta.nome }}</td>
-                                <td><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ item.saldo|br_money }}</span></span></td>
+                        {% for grupo in balancete_inicial_grupos_apresentacao %}
+                            {% if grupo.mostrar_itens %}
+                                <tr class="balancete-group-row">
+                                    <td>{{ grupo.rotulo }}</td>
+                                    <td></td>
+                                </tr>
+                                {% for item in grupo.itens %}
+                                    <tr>
+                                        <td>{{ item.rotulo }}</td>
+                                        <td><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ item.saldo|br_money }}</span></span></td>
+                                    </tr>
+                                    {% if item.mensagem_indisponibilidade %}
+                                        <tr class="balancete-message-row">
+                                            <td>{{ item.mensagem_indisponibilidade }}</td>
+                                            <td></td>
+                                        </tr>
+                                    {% endif %}
+                                {% endfor %}
+                            {% endif %}
+                            <tr class="balancete-subtotal-row">
+                                <td>{{ grupo.subtotal_rotulo }}</td>
+                                <td><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ grupo.subtotal|br_money }}</span></span></td>
                             </tr>
                         {% empty %}
                             <tr>
-                                <td colspan="2">Nao houve saldo inicial detalhado para as contas abrangidas.</td>
+                                <td colspan="2">Nao houve saldo inicial apresentado para as contas abrangidas.</td>
                             </tr>
                         {% endfor %}
                         </tbody>
-                        <tfoot>
-                        <tr>
-                            <th>Detalhamento do saldo inicial</th>
-                            <th><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_inicial_consolidado|br_money }}</span></span></th>
-                        </tr>
-                        </tfoot>
+                        {% if balancete_inicial_exibe_total_financeiro %}
+                            <tfoot>
+                            <tr class="balancete-total-financeiro-row">
+                                <th>{{ balancete_inicial_total_apresentado_rotulo }}</th>
+                                <th><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ balancete_inicial_total_apresentado|br_money }}</span></span></th>
+                            </tr>
+                            </tfoot>
+                        {% endif %}
                     </table>
+                    {% if balancete_inicial_nota_indisponiveis_ocultas %}
+                        <p class="balancete-note">{{ balancete_inicial_nota_indisponiveis_ocultas }}</p>
+                    {% endif %}
                 {% endif %}
             </section>
 
