@@ -50,7 +50,7 @@ Este documento consolida regras permanentes do sistema. Ele não substitui o his
 - No Fechamento do período / Prestação de contas, transferências internas ao escopo selecionado não precisam aparecer como entrada/saída nem como linha zerada; totais zerados de transferências externas ao escopo também não devem aparecer.
 - Transferências com apenas uma ponta dentro do filtro devem aparecer nos totais necessários de entrada/saída por transferência para explicar a reconciliação do saldo.
 - A opção "Exibir transferências" controla somente detalhamento analítico/visual das transferências; não controla a inclusão das transferências no cálculo real do saldo.
-- O Balancete Institucional futuro deve reutilizar a mesma regra/base de cálculo da Prestação/Fechamento, sem cálculo divergente para saldos, receitas, despesas e transferências por escopo.
+- O Balancete Institucional deve reutilizar a mesma regra/base de cálculo da Prestação/Fechamento, sem cálculo divergente para saldos, receitas, despesas e transferências por escopo.
 
 ### Balancete patrimonial, tipo de conta e disponibilidade
 
@@ -63,6 +63,8 @@ Este documento consolida regras permanentes do sistema. Ele não substitui o his
 - Disponibilidade parcial fica fora do MVP e permanece como evolução futura, pois exigiria modelagem mais complexa de parcelas de saldo.
 - A mensagem explicativa de indisponibilidade/vinculação ficará no cadastro da conta; se vazia, nada deve aparecer no Balancete; se preenchida, poderá aparecer no Balancete patrimonial ou relatório equivalente.
 - O modo padrão do Balancete patrimonial será detalhado por conta, preservando a leitura atual e adicionando separação visual entre disponível e indisponível/vinculado quando aplicável.
+- No recorte inicial já implementado, o Balancete Institucional separa a composição final entre saldo disponível operacional e saldo indisponível/vinculado sem alterar cálculo, saldo por conta ou reconciliação.
+- O saldo total financeiro do Balancete deve continuar igual à composição final já calculada pela base compartilhada; a separação patrimonial é apenas classificatória.
 - O Balancete deve poder exibir a composição do saldo em modos distintos:
   - detalhado por conta, mostrando cada conta individualmente;
   - consolidado por tipo de conta, somando contas do mesmo tipo;

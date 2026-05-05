@@ -2,6 +2,14 @@
 
 Data: 2026-04-30
 
+## Leitura patrimonial no Balancete Institucional
+
+- apliquei a leitura patrimonial apenas no Balancete Institucional, reaproveitando a composicao final ja calculada pela base compartilhada do Fechamento/Prestacao
+- separei a apresentacao do saldo final entre saldo disponivel operacional e saldo indisponivel/vinculado, preservando o modo detalhado por conta
+- mantive o saldo total financeiro igual ao total final ja calculado, sem alterar lancamentos, saldos, transferencias, Extrato, Fechamento/Prestacao ou calculo financeiro
+- passei a exibir mensagem explicativa discreta apenas para contas indisponiveis/vinculadas com `mensagem_indisponibilidade` preenchida
+- adicionei testes para classificacao por disponibilidade, integralizacao indisponivel, mensagem opcional e isolamento da leitura patrimonial fora da Prestacao
+
 ## Ajuste de nomenclatura dos tipos padrao de conta
 
 - ajustei a nomenclatura do tipo com codigo `aplicacao_financeira` para exibir `Conta investimento`

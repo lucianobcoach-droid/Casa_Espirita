@@ -746,6 +746,105 @@ class PrestacaoContasTransferenciasEscopoTests(TestCase):
         self.assertIn('Dinheiro', contexto['balancete_contas_label_completo'])
         self.assertIn('Banco', contexto['balancete_contas_label_completo'])
 
+    def test_balancete_institucional_classifica_saldo_final_por_disponibilidade(self):
+        self.dinheiro.disponibilidade = ContaFinanceira.DisponibilidadeConta.DISPONIVEL
+        self.dinheiro.save(update_fields=['disponibilidade'])
+        self.banco.disponibilidade = ContaFinanceira.DisponibilidadeConta.INDISPONIVEL
+        self.banco.mensagem_indisponibilidade = 'Saldo vinculado para reserva institucional.'
+        self.banco.save(update_fields=['disponibilidade', 'mensagem_indisponibilidade'])
+        request = self.factory.get(
+            '/financeiro/balancete-institucional/',
+            data=[
+                ('data_inicial', '2026-03-01'),
+                ('data_final', '2026-03-31'),
+                ('contas', str(self.dinheiro.id)),
+                ('contas', str(self.banco.id)),
+            ],
+        )
+        view = BalanceteInstitucionalFinanceiroView()
+        view.request = request
+
+        contexto = view.get_context_data()
+        html = self._render_balancete(request, contexto)
+
+        self.assertEqual(
+            [item['conta'] for item in contexto['balancete_composicao_disponivel']],
+            [self.dinheiro],
+        )
+        self.assertEqual(
+            [item['conta'] for item in contexto['balancete_composicao_indisponivel']],
+            [self.banco],
+        )
+        self.assertEqual(contexto['balancete_subtotal_disponivel'], Decimal('-60.00'))
+        self.assertEqual(contexto['balancete_subtotal_indisponivel'], Decimal('100.00'))
+        self.assertEqual(contexto['balancete_total_financeiro'], Decimal('40.00'))
+        self.assertEqual(contexto['balancete_total_financeiro'], contexto['saldo_final_consolidado'])
+        self.assertIn('Saldo disponivel operacional', html)
+        self.assertIn('Saldo indisponivel/vinculado', html)
+        self.assertIn('Saldo vinculado para reserva institucional.', html)
+
+    def test_balancete_institucional_classifica_integralizacao_indisponivel(self):
+        tipo_integralizacao = TipoContaFinanceira.objects.get(codigo='integralizacao_capital')
+        conta_integralizacao = ContaFinanceira.objects.create(
+            nome='Integralizacao cooperativa',
+            saldo_inicial=Decimal('120.00'),
+            data_saldo_inicial=date(2026, 1, 1),
+            tipo_conta=tipo_integralizacao,
+            disponibilidade=ContaFinanceira.DisponibilidadeConta.INDISPONIVEL,
+        )
+        request = self.factory.get(
+            '/financeiro/balancete-institucional/',
+            data=[
+                ('data_inicial', '2026-03-01'),
+                ('data_final', '2026-03-31'),
+                ('contas', str(conta_integralizacao.id)),
+            ],
+        )
+        view = BalanceteInstitucionalFinanceiroView()
+        view.request = request
+
+        contexto = view.get_context_data()
+
+        self.assertEqual(contexto['balancete_composicao_disponivel'], [])
+        self.assertEqual(
+            [item['conta'] for item in contexto['balancete_composicao_indisponivel']],
+            [conta_integralizacao],
+        )
+        self.assertEqual(contexto['balancete_subtotal_indisponivel'], Decimal('120.00'))
+        self.assertEqual(contexto['balancete_total_financeiro'], Decimal('120.00'))
+
+    def test_balancete_institucional_nao_exibe_mensagem_vazia(self):
+        self.banco.disponibilidade = ContaFinanceira.DisponibilidadeConta.INDISPONIVEL
+        self.banco.mensagem_indisponibilidade = '   '
+        self.banco.save(update_fields=['disponibilidade', 'mensagem_indisponibilidade'])
+        request = self.factory.get(
+            '/financeiro/balancete-institucional/',
+            data=[
+                ('data_inicial', '2026-03-01'),
+                ('data_final', '2026-03-31'),
+                ('contas', str(self.banco.id)),
+            ],
+        )
+        view = BalanceteInstitucionalFinanceiroView()
+        view.request = request
+
+        contexto = view.get_context_data()
+        html = self._render_balancete(request, contexto)
+        documento_html = self._documento_balancete_html(html)
+
+        self.assertEqual(
+            contexto['balancete_composicao_indisponivel'][0]['mensagem_indisponibilidade'],
+            '',
+        )
+        self.assertNotIn('<tr class="balancete-message-row">', documento_html)
+
+    def test_prestacao_contas_nao_ganha_chaves_de_leitura_patrimonial(self):
+        contexto = self._contexto([self.dinheiro, self.banco], exibir_transferencias=True)
+
+        self.assertEqual(contexto['saldo_final_consolidado'], Decimal('40.00'))
+        self.assertNotIn('balancete_composicao_disponivel', contexto)
+        self.assertNotIn('balancete_composicao_indisponivel', contexto)
+
 
 class ExtratoFinanceiroMultiplasContasTests(TestCase):
     def setUp(self):

@@ -142,6 +142,34 @@
         line-height: 1.35;
     }
 
+    .balancete-group-row td,
+    .balancete-subtotal-row td,
+    .balancete-total-financeiro-row td {
+        font-weight: 700;
+    }
+
+    .balancete-group-row td {
+        padding-top: 0.5rem;
+        border-bottom-color: #d6dde7;
+        color: #111827;
+    }
+
+    .balancete-subtotal-row td,
+    .balancete-total-financeiro-row td {
+        border-top: 1px solid #d6dde7;
+    }
+
+    .balancete-total-financeiro-row td {
+        border-bottom: 0;
+    }
+
+    .balancete-message-row td {
+        padding-top: 0;
+        font-size: 0.82rem;
+        color: #4b5563;
+        border-bottom-color: #f4f6f8;
+    }
+
     .balancete-signatures {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
@@ -422,7 +450,7 @@
                 </div>
             </header>
             <section class="balancete-section">
-                <h3 class="balancete-section-title">1. SALDO INICIAL DISPONIVEL</h3>
+                <h3 class="balancete-section-title">1. SALDO INICIAL FINANCEIRO</h3>
                 <table class="balancete-table">
                     <tbody>
                     {% for item in balancete_composicao_inicial %}
@@ -432,13 +460,13 @@
                         </tr>
                     {% empty %}
                         <tr>
-                            <td colspan="2">Nao houve saldo inicial disponivel para as contas abrangidas.</td>
+                            <td colspan="2">Nao houve saldo inicial financeiro para as contas abrangidas.</td>
                         </tr>
                     {% endfor %}
                     </tbody>
                     <tfoot>
                     <tr>
-                        <th>Total do saldo inicial</th>
+                        <th>Total do saldo inicial financeiro</th>
                         <th><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_inicial_consolidado|br_money }}</span></span></th>
                     </tr>
                     </tfoot>
@@ -494,11 +522,11 @@
             </section>
 
             <section class="balancete-section">
-                <h3 class="balancete-section-title">4. FECHAMENTO DO SALDO DISPONIVEL</h3>
+                <h3 class="balancete-section-title">4. FECHAMENTO DO SALDO FINANCEIRO</h3>
                 <table class="balancete-table">
                     <tbody>
                     <tr>
-                        <td>(+) Saldo inicial disponivel</td>
+                        <td>(+) Saldo inicial financeiro</td>
                         <td><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_inicial_consolidado|br_money }}</span></span></td>
                     </tr>
                     <tr>
@@ -522,7 +550,7 @@
                         </tr>
                     {% endif %}
                     <tr class="balancete-total-row">
-                        <td>(=) Saldo final disponivel</td>
+                        <td>(=) Saldo final financeiro</td>
                         <td><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_final_reconciliado|br_money }}</span></span></td>
                     </tr>
                     </tbody>
@@ -534,24 +562,59 @@
 
             <div class="balancete-print-final">
                 <section class="balancete-section">
-                    <h3 class="balancete-section-title">5. COMPOSICAO DO SALDO DISPONIVEL</h3>
+                    <h3 class="balancete-section-title">5. COMPOSICAO DO SALDO FINANCEIRO</h3>
                     <table class="balancete-table">
                         <tbody>
-                        {% for item in balancete_composicao_final %}
-                            <tr>
-                                <td>{{ item.conta.nome }}</td>
-                                <td><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ item.saldo|br_money }}</span></span></td>
+                        {% if balancete_composicao_disponivel %}
+                            <tr class="balancete-group-row">
+                                <td>Saldo disponivel operacional</td>
+                                <td></td>
                             </tr>
-                        {% empty %}
-                            <tr>
-                                <td colspan="2">Nao houve saldo final disponivel para as contas abrangidas.</td>
+                            {% for item in balancete_composicao_disponivel %}
+                                <tr>
+                                    <td>{{ item.conta.nome }}</td>
+                                    <td><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ item.saldo|br_money }}</span></span></td>
+                                </tr>
+                            {% endfor %}
+                            <tr class="balancete-subtotal-row">
+                                <td>Subtotal disponivel operacional</td>
+                                <td><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ balancete_subtotal_disponivel|br_money }}</span></span></td>
                             </tr>
-                        {% endfor %}
+                        {% endif %}
+
+                        {% if balancete_composicao_indisponivel %}
+                            <tr class="balancete-group-row">
+                                <td>Saldo indisponivel/vinculado</td>
+                                <td></td>
+                            </tr>
+                            {% for item in balancete_composicao_indisponivel %}
+                                <tr>
+                                    <td>{{ item.conta.nome }}</td>
+                                    <td><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ item.saldo|br_money }}</span></span></td>
+                                </tr>
+                                {% if item.mensagem_indisponibilidade %}
+                                    <tr class="balancete-message-row">
+                                        <td>{{ item.mensagem_indisponibilidade }}</td>
+                                        <td></td>
+                                    </tr>
+                                {% endif %}
+                            {% endfor %}
+                            <tr class="balancete-subtotal-row">
+                                <td>Subtotal indisponivel/vinculado</td>
+                                <td><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ balancete_subtotal_indisponivel|br_money }}</span></span></td>
+                            </tr>
+                        {% endif %}
+
+                        {% if not balancete_composicao_disponivel and not balancete_composicao_indisponivel %}
+                            <tr>
+                                <td colspan="2">Nao houve saldo final para as contas abrangidas.</td>
+                            </tr>
+                        {% endif %}
                         </tbody>
                         <tfoot>
-                        <tr>
-                            <th>Total disponivel final</th>
-                            <th><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_final_consolidado|br_money }}</span></span></th>
+                        <tr class="balancete-total-financeiro-row">
+                            <th>Saldo total financeiro</th>
+                            <th><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ balancete_total_financeiro|br_money }}</span></span></th>
                         </tr>
                         </tfoot>
                     </table>

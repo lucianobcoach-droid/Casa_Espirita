@@ -2,6 +2,15 @@
 
 Data de atualizacao: 2026-04-30
 
+## Leitura patrimonial no Balancete Institucional
+
+- o Balancete Institucional passou a separar a composicao do saldo final entre saldo disponivel operacional e saldo indisponivel/vinculado, mantendo o modo detalhado por conta
+- a classificacao usa os campos patrimoniais ja existentes em `ContaFinanceira`, com fallback seguro para `disponivel` quando a conta nao informar disponibilidade
+- contas indisponiveis/vinculadas podem exibir mensagem explicativa discreta no Balancete quando `mensagem_indisponibilidade` estiver preenchida
+- integralizacao de capital continua podendo ser cadastrada normalmente; sua leitura no Balancete depende de `disponibilidade`, sem regra paralela de calculo
+- o saldo total financeiro do Balancete permanece igual a composicao final ja calculada pela base compartilhada do Fechamento/Prestacao
+- modos avancados, como consolidado por tipo e total sintetico, continuam como futuro real
+
 ## Base cadastral patrimonial das contas financeiras
 
 - ajuste de nomenclatura aplicado: o tipo padrao com codigo `aplicacao_financeira` passa a ser exibido como `Conta investimento`; `Integralizacao de capital` permanece como nomenclatura oficial
@@ -10,7 +19,7 @@ Data de atualizacao: 2026-04-30
 - cadastro, edicao e listagem de contas passaram a exibir os campos patrimoniais, sem alterar Balancete Institucional, Fechamento/Prestacao, Extrato, lancamentos, saldos, transferencias ou calculos financeiros
 - importacao/exportacao auxiliar de contas foi ampliada com `tipo_conta`, `disponibilidade` e `mensagem_indisponibilidade`, preservando leitura de planilha legada de contas com defaults seguros
 - migration criada com carga inicial idempotente dos tipos: conta corrente, conta poupanca, dinheiro/caixa, conta investimento, integralizacao de capital, conta vinculada/indisponivel e outros; contas existentes recebem `outros` e `disponivel`
-- proxima microetapa funcional recomendada: aplicar a leitura patrimonial no Balancete Institucional, reaproveitando a base de calculo atual e sem criar calculo patrimonial divergente
+- proxima microetapa funcional recomendada: avaliar modos avancados de exibicao patrimonial no Balancete, como consolidado por tipo, apenas se o uso real justificar e sem criar calculo divergente
 
 ## Auditoria tecnica preparatoria do MVP patrimonial
 

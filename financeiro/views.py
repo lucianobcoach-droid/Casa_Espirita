@@ -4399,6 +4399,45 @@ class BalanceteInstitucionalFinanceiroView(FinanceiroPeriodoMixin, TemplateView)
     def _filtrar_composicao_documental(self, itens: list[dict[str, object]]) -> list[dict[str, object]]:
         return [item for item in itens if item.get('saldo') != Decimal('0.00')]
 
+    def _classificar_composicao_patrimonial(
+        self,
+        itens: list[dict[str, object]],
+    ) -> dict[str, object]:
+        composicao_disponivel: list[dict[str, object]] = []
+        composicao_indisponivel: list[dict[str, object]] = []
+        subtotal_disponivel = Decimal('0.00')
+        subtotal_indisponivel = Decimal('0.00')
+
+        for item in itens:
+            conta = item.get('conta')
+            saldo = item.get('saldo') or Decimal('0.00')
+            disponibilidade = getattr(
+                conta,
+                'disponibilidade',
+                ContaFinanceira.DisponibilidadeConta.DISPONIVEL,
+            )
+            item_classificado = {
+                **item,
+                'mensagem_indisponibilidade': (
+                    getattr(conta, 'mensagem_indisponibilidade', '') or ''
+                ).strip(),
+            }
+
+            if disponibilidade == ContaFinanceira.DisponibilidadeConta.INDISPONIVEL:
+                composicao_indisponivel.append(item_classificado)
+                subtotal_indisponivel += saldo
+            else:
+                composicao_disponivel.append(item_classificado)
+                subtotal_disponivel += saldo
+
+        return {
+            'balancete_composicao_disponivel': composicao_disponivel,
+            'balancete_composicao_indisponivel': composicao_indisponivel,
+            'balancete_subtotal_disponivel': subtotal_disponivel,
+            'balancete_subtotal_indisponivel': subtotal_indisponivel,
+            'balancete_total_financeiro': subtotal_disponivel + subtotal_indisponivel,
+        }
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['page_title'] = 'Balancete Institucional'
@@ -4407,6 +4446,11 @@ class BalanceteInstitucionalFinanceiroView(FinanceiroPeriodoMixin, TemplateView)
         mostrar_contas_zeradas = bool(context.get('mostrar_contas_zeradas'))
         composicao_inicial = context.get('composicao_inicial') or []
         composicao_final = context.get('composicao_final') or []
+        balancete_composicao_final = (
+            composicao_final
+            if mostrar_contas_zeradas
+            else self._filtrar_composicao_documental(composicao_final)
+        )
         context.update(
             {
                 'assinaturas_disponiveis': assinaturas_disponiveis,
@@ -4421,13 +4465,10 @@ class BalanceteInstitucionalFinanceiroView(FinanceiroPeriodoMixin, TemplateView)
                     if mostrar_contas_zeradas
                     else self._filtrar_composicao_documental(composicao_inicial)
                 ),
-                'balancete_composicao_final': (
-                    composicao_final
-                    if mostrar_contas_zeradas
-                    else self._filtrar_composicao_documental(composicao_final)
-                ),
+                'balancete_composicao_final': balancete_composicao_final,
             }
         )
+        context.update(self._classificar_composicao_patrimonial(balancete_composicao_final))
         return context
 
 
