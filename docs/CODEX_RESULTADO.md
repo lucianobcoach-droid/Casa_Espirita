@@ -2,6 +2,13 @@
 
 Data: 2026-04-30
 
+## Ajuste de nomenclatura dos tipos padrao de conta
+
+- ajustei a nomenclatura do tipo com codigo `aplicacao_financeira` para exibir `Conta investimento`
+- mantive `Integralizacao de capital` como nomenclatura oficial, sem barra nem complemento `conta capital`
+- registrei que a conta de integralizacao pode ser cadastrada normalmente e que a futura separacao no Balancete sera determinada por `disponibilidade`
+- nao alterei Balancete, Fechamento/Prestacao, Extrato, lancamentos, saldos, transferencias, importacao/exportacao de lancamentos ou calculos financeiros
+
 ## Base cadastral patrimonial das contas financeiras
 
 - implementei `TipoContaFinanceira` como cadastro proprio simples e acrescentei em `ContaFinanceira` os campos de tipo, disponibilidade total e mensagem explicativa opcional

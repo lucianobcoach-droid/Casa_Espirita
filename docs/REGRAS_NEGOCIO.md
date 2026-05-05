@@ -33,6 +33,8 @@ Este documento consolida regras permanentes do sistema. Ele não substitui o his
 - Valores vinculados ou indisponíveis não devem ser tratados como despesa operacional.
 - Quando a modelagem de disponibilidade for implementada, valores vinculados/indisponíveis devem ser separados do saldo disponível operacional nos relatórios que apresentarem saldo livre.
 - Integralização de capital é valor patrimonial/vinculado: não é despesa operacional, não deve ser somada ao saldo livre disponível sem destaque e deve compor o patrimônio financeiro fora do saldo operacional livre.
+- A conta de integralização pode ser cadastrada normalmente como conta financeira; sua leitura futura como disponível ou indisponível/vinculada no Balancete patrimonial deve ser definida pelo campo `disponibilidade`.
+- Para integralização que não pode ser movimentada até encerramento ou resgate, orientar o cadastro com tipo `Integralização de capital`, disponibilidade `Indisponível/vinculada` e mensagem opcional explicando a vinculação conforme regra da instituição.
 - Em transferências exibidas no Extrato, quando não houver favorecido operacional, a apresentação do favorecido deve usar o texto padronizado "TRANSFERÊNCIA ENTRE CONTAS".
 - Rateio deve preservar validação pelo valor total do documento e pode exibir saldo/diferença restante como apoio operacional ao usuário.
 
@@ -54,7 +56,7 @@ Este documento consolida regras permanentes do sistema. Ele não substitui o his
 
 - A evolução patrimonial do Balancete deve alterar leitura, classificação e apresentação do saldo, não a regra original de lançamentos, receitas, despesas, transferências ou cálculo financeiro.
 - A frente deve ser modelada documentalmente antes de qualquer implementação de models, migrations, formulários, views ou templates.
-- Tipos iniciais de conta a considerar: conta corrente, conta poupança, dinheiro/caixa, aplicação financeira, integralização de capital, conta vinculada/indisponível e outros.
+- Tipos iniciais de conta a considerar: conta corrente, conta poupança, dinheiro/caixa, conta investimento, integralização de capital, conta vinculada/indisponível e outros.
 - O tipo de conta deve permitir agrupamento gerencial: contas do mesmo tipo podem ser somadas independentemente do banco, nome ou cadastro individual da conta.
 - No MVP patrimonial, tipo de conta financeira é cadastro próprio simples, e não lista fixa no código, para permitir adaptação a outras instituições, empresas e projetos futuros.
 - No MVP patrimonial, disponibilidade/vinculação é total por conta: uma conta é classificada como disponível ou indisponível/vinculada em seu saldo total.
@@ -66,7 +68,7 @@ Este documento consolida regras permanentes do sistema. Ele não substitui o his
   - consolidado por tipo de conta, somando contas do mesmo tipo;
   - total consolidado, mostrando apenas o total geral quando o relatório precisar ser sintético;
   - separado entre disponível e indisponível/vinculado, distinguindo saldo livre operacional de valores patrimoniais ou vinculados.
-- No modo consolidado por tipo, integralização de capital, aplicações financeiras e contas vinculadas/indisponíveis devem aparecer separadas quando existirem, para não poluir nem distorcer a leitura do saldo livre.
+- No modo consolidado por tipo, integralização de capital, contas investimento e contas vinculadas/indisponíveis devem aparecer separadas quando existirem, para não poluir nem distorcer a leitura do saldo livre.
 - O comportamento padrão atual do Balancete não deve ser refeito do zero: o MVP permanece base entregue, e a evolução patrimonial deve nascer como modelagem incremental.
 
 ## Relatórios e impressão

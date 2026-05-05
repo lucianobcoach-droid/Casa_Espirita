@@ -4,10 +4,12 @@ Data de atualizacao: 2026-04-30
 
 ## Base cadastral patrimonial das contas financeiras
 
+- ajuste de nomenclatura aplicado: o tipo padrao com codigo `aplicacao_financeira` passa a ser exibido como `Conta investimento`; `Integralizacao de capital` permanece como nomenclatura oficial
+- conta de integralizacao pode ser cadastrada normalmente como conta financeira; no futuro Balancete patrimonial, sua separacao como disponivel ou indisponivel/vinculada dependera do campo `disponibilidade`
 - implementada a base cadastral minima do MVP patrimonial em contas financeiras: cadastro proprio simples de tipo de conta, disponibilidade/vinculacao total por conta e mensagem explicativa opcional
 - cadastro, edicao e listagem de contas passaram a exibir os campos patrimoniais, sem alterar Balancete Institucional, Fechamento/Prestacao, Extrato, lancamentos, saldos, transferencias ou calculos financeiros
 - importacao/exportacao auxiliar de contas foi ampliada com `tipo_conta`, `disponibilidade` e `mensagem_indisponibilidade`, preservando leitura de planilha legada de contas com defaults seguros
-- migration criada com carga inicial idempotente dos tipos: conta corrente, conta poupanca, dinheiro/caixa, aplicacao financeira, integralizacao de capital, conta vinculada/indisponivel e outros; contas existentes recebem `outros` e `disponivel`
+- migration criada com carga inicial idempotente dos tipos: conta corrente, conta poupanca, dinheiro/caixa, conta investimento, integralizacao de capital, conta vinculada/indisponivel e outros; contas existentes recebem `outros` e `disponivel`
 - proxima microetapa funcional recomendada: aplicar a leitura patrimonial no Balancete Institucional, reaproveitando a base de calculo atual e sem criar calculo patrimonial divergente
 
 ## Auditoria tecnica preparatoria do MVP patrimonial
@@ -21,7 +23,7 @@ Data de atualizacao: 2026-04-30
 ## Decisoes funcionais do MVP patrimonial
 
 - registradas decisoes aprovadas para o MVP patrimonial futuro: tipo de conta financeira sera cadastro proprio simples; disponibilidade/vinculacao sera total por conta no MVP; mensagem explicativa ficara no cadastro da conta; modo padrao do Balancete patrimonial sera detalhado por conta, preservando leitura atual com separacao visual entre disponivel e indisponivel/vinculado quando aplicavel
-- tipos iniciais sugeridos para carga inicial futura: conta corrente, conta poupanca, dinheiro/caixa, aplicacao financeira, integralizacao de capital, conta vinculada/indisponivel e outros
+- tipos iniciais sugeridos para carga inicial futura: conta corrente, conta poupanca, dinheiro/caixa, conta investimento, integralizacao de capital, conta vinculada/indisponivel e outros
 - primeira implementacao futura deve ficar restrita a cadastro/modelagem de tipo de conta, campos simples no cadastro de conta para tipo/disponibilidade/mensagem e leitura patrimonial no Balancete Institucional, preservando a base de calculo atual do Fechamento/Prestacao
 - ficam fora do MVP: disponibilidade parcial, calculo patrimonial novo, alteracao de lancamentos, Extrato, Fechamento/Prestacao, importacao/exportacao, permissoes, regras de transferencia, saldos, controle por parcelas de saldo e automatizacao contabil avancada
 - esta microetapa foi apenas documental; nao houve alteracao funcional, codigo, models, migrations, views, forms, templates, tests, CSS, banco de dados ou calculos financeiros

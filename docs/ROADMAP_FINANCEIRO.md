@@ -13,7 +13,7 @@ Evoluir o Balancete Institucional para leitura patrimonial/gerencial do saldo, p
 ### Cadastro de contas - campos/conceitos futuros
 
 - Implementado em contas: tipo de conta financeira como cadastro proprio simples; disponibilidade/vinculacao total por conta; mensagem explicativa opcional.
-- Tipos iniciais carregados por migration idempotente: conta corrente, conta poupanca, dinheiro/caixa, aplicacao financeira, integralizacao de capital, conta vinculada/indisponivel e outros.
+- Tipos iniciais carregados por migration idempotente: conta corrente, conta poupanca, dinheiro/caixa, conta investimento, integralizacao de capital, conta vinculada/indisponivel e outros.
 - Importacao/exportacao auxiliar de contas: contrato ampliado com os campos patrimoniais, preservando planilha legada de contas com defaults `outros` e `disponivel`.
 
 ### Integralizacao de capital
@@ -21,6 +21,8 @@ Evoluir o Balancete Institucional para leitura patrimonial/gerencial do saldo, p
 - Nao e despesa operacional.
 - Nao deve ser misturada ao saldo livre disponivel sem destaque.
 - Deve compor patrimonio financeiro em grupo proprio, como valor patrimonial/vinculado/indisponivel.
+- A conta de integralizacao pode ser cadastrada normalmente como conta financeira; a futura separacao no Balancete patrimonial deve ser definida pelo campo `disponibilidade`.
+- Orientacao operacional: quando o valor nao puder ser movimentado ate encerramento/resgate, usar tipo `Integralizacao de capital`, disponibilidade `Indisponivel/vinculada` e mensagem opcional explicando a vinculacao conforme regra da instituicao.
 
 ### Modos de exibicao do saldo no Balancete
 
@@ -39,7 +41,7 @@ Evoluir o Balancete Institucional para leitura patrimonial/gerencial do saldo, p
 ### Decisoes aprovadas para o MVP patrimonial
 
 - Tipo de conta financeira sera cadastro proprio simples, e nao lista fixa no codigo, para permitir adaptacao a outras instituicoes, empresas e projetos futuros sem nova migracao apenas para novos tipos.
-- Tipos iniciais sugeridos para carga inicial futura: conta corrente, conta poupanca, dinheiro/caixa, aplicacao financeira, integralizacao de capital, conta vinculada/indisponivel e outros.
+- Tipos iniciais sugeridos para carga inicial futura: conta corrente, conta poupanca, dinheiro/caixa, conta investimento, integralizacao de capital, conta vinculada/indisponivel e outros.
 - Disponibilidade/vinculacao sera total por conta no MVP: uma conta sera classificada como disponivel ou indisponivel/vinculada em seu saldo total.
 - Disponibilidade parcial fica fora do MVP e permanece como evolucao futura, por exigir modelagem mais complexa de parcelas de saldo.
 - Mensagem explicativa de indisponibilidade/vinculacao ficara no cadastro da conta; se vazia, nao aparece no Balancete; se preenchida, pode aparecer no Balancete patrimonial ou relatorio equivalente.
@@ -88,7 +90,7 @@ Este bloco registra nova frente gerencial/patrimonial levantada pela usuaria. Na
 1. **Tipo de conta financeira**
    - Classificacao: FRENTE FUTURA FUNCIONAL / REGRA GERENCIAL.
    - Prioridade documental: MEDIA.
-   - Direcao: evoluir o cadastro de contas para classificar tipo de conta, com exemplos iniciais: conta corrente, conta poupanca, dinheiro/caixa, aplicacao financeira, integralizacao de capital, conta vinculada/indisponivel e outros.
+   - Direcao: evoluir o cadastro de contas para classificar tipo de conta, com exemplos iniciais: conta corrente, conta poupanca, dinheiro/caixa, conta investimento, integralizacao de capital, conta vinculada/indisponivel e outros.
    - Observacao: avaliar cadastro proprio de tipos de conta para manter o sistema aberto a outras instituicoes, empresas e projetos futuros.
 
 2. **Disponibilidade ou vinculacao da conta**
@@ -108,7 +110,7 @@ Este bloco registra nova frente gerencial/patrimonial levantada pela usuaria. Na
    - Prioridade documental: MEDIA.
    - Direcao: evoluir o Balancete para permitir modos de composicao final: detalhado por conta, consolidado por tipo de conta, total consolidado e separado entre disponivel e indisponivel/vinculado.
    - Modo detalhado por conta: mostra cada conta individualmente.
-   - Modo consolidado por tipo: soma contas do mesmo tipo independentemente do banco ou nome da conta; exemplos de grupos: conta corrente, poupanca, dinheiro/caixa, aplicacao financeira, integralizacao de capital e conta vinculada/indisponivel.
+   - Modo consolidado por tipo: soma contas do mesmo tipo independentemente do banco ou nome da conta; exemplos de grupos: conta corrente, poupanca, dinheiro/caixa, conta investimento, integralizacao de capital e conta vinculada/indisponivel.
    - Modo total consolidado: mostra apenas o total geral quando a usuaria quiser relatorio mais sintetico.
    - Modo disponivel x indisponivel/vinculado: separa saldo livre operacional de valores patrimoniais, vinculados ou indisponiveis.
    - Objetivo visual: reduzir poluicao e duplicacao entre fechamento consolidado e detalhamento, mantendo composicao por conta quando o usuario precisar conferir.

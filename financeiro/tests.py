@@ -82,6 +82,7 @@ class ContaFinanceiraPatrimonialTests(TestCase):
 
     def test_tipos_padrao_estao_disponiveis(self):
         codigos = set(TipoContaFinanceira.objects.values_list('codigo', flat=True))
+        nomes_por_codigo = dict(TipoContaFinanceira.objects.values_list('codigo', 'nome'))
 
         self.assertIn('conta_corrente', codigos)
         self.assertIn('conta_poupanca', codigos)
@@ -90,6 +91,8 @@ class ContaFinanceiraPatrimonialTests(TestCase):
         self.assertIn('integralizacao_capital', codigos)
         self.assertIn('conta_vinculada_indisponivel', codigos)
         self.assertIn('outros', codigos)
+        self.assertEqual(nomes_por_codigo['aplicacao_financeira'], 'Conta investimento')
+        self.assertEqual(nomes_por_codigo['integralizacao_capital'], 'Integralizacao de capital')
 
     def test_form_permite_conta_indisponivel_com_mensagem(self):
         tipo = TipoContaFinanceira.objects.get(codigo='aplicacao_financeira')

@@ -624,12 +624,13 @@ Status apos auditoria tecnica: AUDITADO TECNICAMENTE / PRONTO PARA SPEC FUNCIONA
 Status apos base cadastral: IMPLEMENTADO NA BASE DE CONTAS / BALANCETE PATRIMONIAL FUTURO
 
 Motivo:
-Foi levantada necessidade de classificar contas por tipo, como conta corrente, poupanca, dinheiro/caixa, aplicacao financeira, integralizacao de capital, conta vinculada ou outros. Deve ser avaliado se o tipo sera cadastro proprio para manter abertura a outras instituicoes.
+Foi levantada necessidade de classificar contas por tipo, como conta corrente, poupanca, dinheiro/caixa, conta investimento, integralizacao de capital, conta vinculada ou outros. Deve ser avaliado se o tipo sera cadastro proprio para manter abertura a outras instituicoes.
 
 Especificacao futura:
-- exemplos iniciais: conta corrente, conta poupanca, dinheiro/caixa, aplicacao financeira, integralizacao de capital, conta vinculada/indisponivel e outros
+- exemplos iniciais: conta corrente, conta poupanca, dinheiro/caixa, conta investimento, integralizacao de capital, conta vinculada/indisponivel e outros
 - decisao aprovada: usar cadastro proprio simples de tipos de conta para permitir adaptacao a outros projetos
 - implementado: model proprio simples de tipo de conta com carga inicial idempotente dos tipos aprovados
+- ajuste de nomenclatura: o codigo `aplicacao_financeira` permanece, mas o nome exibido passa a ser `Conta investimento`
 - o tipo de conta deve permitir agrupamento gerencial no Balancete patrimonial, somando contas do mesmo tipo independentemente do banco ou nome da conta
 - cadastro/listagem/importacao/exportacao auxiliar de contas ja reconhecem o tipo; Balancete deve entrar em microetapa separada ou posterior
 
@@ -667,6 +668,7 @@ Especificacao futura:
 - decisao aprovada para o MVP: disponibilidade/vinculacao sera total por conta; disponibilidade parcial fica como evolucao futura
 - implementado: campo simples em `ContaFinanceira` classifica a conta como disponivel ou indisponivel/vinculada em seu saldo total
 - integralizacao de capital deve ficar separada como valor patrimonial/vinculado, nao como despesa operacional
+- conta de integralizacao pode ser cadastrada normalmente; no futuro Balancete, a separacao como saldo disponivel ou indisponivel/vinculado dependera do campo `disponibilidade`
 - nao houve alteracao de calculo, saldo, lancamentos ou transferencias; leitura no Balancete permanece futura
 
 Classificacao documental:
@@ -734,7 +736,7 @@ Especificacao futura:
 - consolidado por tipo: opcao futura para somar contas do mesmo tipo, independentemente do banco ou nome da conta
 - total consolidado: opcao futura para mostrar apenas o total geral quando o relatorio precisar ser sintetico
 - separado entre disponivel e indisponivel/vinculado: opcao/filtro futuro para distinguir saldo livre operacional de valores patrimoniais/vinculados
-- integralizacao de capital, aplicacoes financeiras e contas vinculadas/indisponiveis devem aparecer separadas quando existirem
+- integralizacao de capital, contas investimento e contas vinculadas/indisponiveis devem aparecer separadas quando existirem
 - deve reaproveitar a base de calculo do Fechamento/Prestacao, sem calculo proprio divergente
 - auditoria tecnica: `BalanceteInstitucionalFinanceiroView` ja recebe `composicao_final` da base comum e expõe `balancete_composicao_final`; futura leitura patrimonial deve classificar/apresentar esses itens sem mudar `montar_contexto_fechamento_periodo`
 
