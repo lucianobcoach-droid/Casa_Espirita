@@ -3241,3 +3241,20 @@ Essa estrutura não altera o funcionamento do sistema Django. Ela organiza a for
   - `operacional_patrimonio`: visivel
   - `financeiro_completo`: oculto
 - ajuste exclusivamente de UX, sem alteracao de calculo financeiro, saldos ou regras de negocio
+## Aceite final funcional e de UX do Balancete Institucional
+
+- a usuaria validou o Balancete Institucional como aprovado funcionalmente e em UX
+- arquitetura por `Formato do Balancete` validada com tres formatos ativos:
+  - `Operacional`
+  - `Operacional + patrimonio vinculado`
+  - `Financeiro completo`
+- filtro antigo `Exibir contas vinculadas/indisponiveis` permanece fora da interface
+- filtros complementares permanecem dependentes do formato selecionado
+- o filtro `Detalhar patrimonio vinculado` foi validado para aparecer somente em `operacional_patrimonio`, com exibicao/ocultacao imediata ao trocar o formato
+- regra consolidada:
+  - formato `Operacional`: universo de saldo operacional disponivel, sem mistura com patrimonio vinculado
+  - formato `Operacional + patrimonio vinculado`: bloco operacional + bloco patrimonial separado
+  - formato `Financeiro completo`: leitura financeira total da instituicao
+- transferencias entre operacional e vinculado permanecem como movimentacao de fronteira (nao viram receita/despesa operacional)
+- nao houve alteracao de calculo financeiro, saldos, lancamentos, Extrato, Fechamento/Prestacao ou demais relatorios
+- novos refinamentos dessa logica do Balancete ficam condicionados a nova decisao explicita da usuaria

@@ -603,3 +603,10 @@ O Codex atua como executor técnico: altera código/documentos conforme SPEC apr
 O usuário atua como aprovador, testador e decisor final.
 
 Regra permanente: se houver divergência entre chat, documentos e código, o código representa o estado real do sistema, e os documentos devem ser corrigidos sem apagar o histórico.
+## Congelamento estrutural - Balancete Institucional (recorte validado)
+
+- fica registrado o aceite final funcional e de UX da usuaria para o recorte atual do Balancete Institucional
+- arquitetura validada: `Formato do Balancete` com tres formatos (`Operacional`, `Operacional + patrimonio vinculado`, `Financeiro completo`)
+- regra permanente desta fase: patrimonio vinculado nao deve ser misturado ao resumo operacional; no formato gerencial ele aparece em bloco separado; no formato completo a leitura e total da instituicao
+- filtro dependente `Detalhar patrimonio vinculado` so deve aparecer quando o formato selecionado for `Operacional + patrimonio vinculado`
+- novos ajustes de logica funcional/UX dessa frente so devem ocorrer mediante nova decisao explicita da usuaria

@@ -919,3 +919,21 @@ Diretrizes:
 - só mover ou arquivar conteúdo após validação do usuário.
 
 Essa frente deve ser tratada como melhoria de governança/documentação, sem impacto direto no funcionamento do sistema financeiro.
+## 14. Balancete Institucional - aceite final do recorte atual
+
+- status consolidado: IMPLEMENTADO E APROVADO PELA USUARIA (FUNCIONAL + UX)
+- formatos aprovados:
+  - `Operacional`
+  - `Operacional + patrimonio vinculado`
+  - `Financeiro completo`
+- filtros aprovados no recorte atual:
+  - filtro principal `Formato do Balancete`
+  - composicao do saldo conforme formato
+  - `Detalhar patrimonio vinculado` apenas no formato `operacional_patrimonio`
+- regra consolidada:
+  - patrimonio vinculado nao se mistura ao resumo operacional
+  - transferencias entre operacional e vinculado seguem como movimentacao de fronteira (nao receita/despesa operacional)
+- confirmacao de seguranca:
+  - sem alteracao de calculo financeiro, saldos, lancamentos, Extrato, Fechamento/Prestacao e demais relatorios
+- governanca:
+  - nao reabrir a logica funcional/UX desse recorte do Balancete sem nova decisao explicita da usuaria

@@ -4463,3 +4463,16 @@ Não houve alteração de código funcional nesta etapa.
   - `financeiro_completo`: filtro oculto
 - teste reforcado para validar estado inicial renderizado por formato (nao apenas existencia do script)
 - sem alteracao de calculo financeiro, saldos, regras financeiras, models ou migrations
+## Microetapa: aceite final funcional e de UX do Balancete Institucional
+
+- etapa exclusivamente documental para registrar aceite final da usuaria apos validacao pratica
+- aceite consolidado:
+  - arquitetura por `Formato do Balancete` aprovada
+  - tres formatos aprovados (`Operacional`, `Operacional + patrimonio vinculado`, `Financeiro completo`)
+  - filtro antigo de exibicao de vinculadas permanece removido da interface
+  - filtro dependente `Detalhar patrimonio vinculado` aprovado com exibicao somente em `operacional_patrimonio` e troca imediata ao mudar o formato
+- regra funcional consolidada:
+  - saldo operacional nao se mistura ao patrimonio vinculado no resumo operacional
+  - transferencias entre operacional e vinculado seguem como movimentacao especifica de fronteira, sem virar receita/despesa operacional
+- congelamento registrado: nao reabrir a logica do Balancete sem nova decisao explicita da usuaria
+- sem alteracao de codigo, calculo financeiro, saldos, lancamentos, Extrato, Fechamento/Prestacao ou demais relatorios

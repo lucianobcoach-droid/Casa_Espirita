@@ -846,3 +846,23 @@ Prioridade sugerida de conferência:
 3. importação;
 4. padronização visual;
 5. frequência/recorrência futura.
+
+---
+
+### 31. Balancete Institucional - aceite final funcional e UX
+
+Status inicial: IMPLEMENTADO COM PENDENCIAS FUTURAS
+
+Status final: IMPLEMENTADO E APROVADO PELA USUARIA
+
+Consolidacao:
+- arquitetura por `Formato do Balancete` aprovada no uso real
+- formatos ativos e aprovados: `Operacional`, `Operacional + patrimonio vinculado`, `Financeiro completo`
+- filtro antigo de vinculadas removido da interface e nao reintroduzido
+- filtro dependente `Detalhar patrimonio vinculado` aprovado para aparecer somente em `operacional_patrimonio`, com troca imediata ao alterar formato
+- patrimonio vinculado segue separado do resumo operacional
+- transferencias entre operacional e vinculado seguem como movimentacao de fronteira, sem virar receita/despesa operacional
+- sem alteracao de calculo financeiro, saldos ou demais relatorios
+
+Governanca:
+- nao reabrir essa logica sem nova decisao explicita da usuaria
