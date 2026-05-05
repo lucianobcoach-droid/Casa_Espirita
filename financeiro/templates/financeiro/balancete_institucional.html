@@ -428,7 +428,12 @@
                         </select>
                     </div>
                 </div>
-                <div class="column is-12-mobile is-6-tablet is-3-desktop" id="balancete-filtro-detalhar-patrimonio" data-balancete-filtro-patrimonio {% if not balancete_mostrar_filtro_detalhar_patrimonio %}hidden{% endif %}>
+                <div
+                    class="column is-12-mobile is-6-tablet is-3-desktop {% if not balancete_mostrar_filtro_detalhar_patrimonio %}is-hidden{% endif %}"
+                    id="balancete-filtro-detalhar-patrimonio"
+                    data-balancete-filtro-patrimonio
+                    {% if not balancete_mostrar_filtro_detalhar_patrimonio %}hidden style="display: none;"{% endif %}
+                >
                     <label class="label">Detalhar patrimonio vinculado</label>
                     <div class="select is-fullwidth">
                         <select name="detalhar_patrimonio_vinculado" data-balancete-filtro-patrimonio-select>
@@ -745,6 +750,8 @@
         function atualizarVisibilidadeFiltroPatrimonio() {
             var mostrar = formatoSelect.value === 'operacional_patrimonio';
             filtroPatrimonio.hidden = !mostrar;
+            filtroPatrimonio.classList.toggle('is-hidden', !mostrar);
+            filtroPatrimonio.style.display = mostrar ? '' : 'none';
         }
 
         formatoSelect.addEventListener('change', atualizarVisibilidadeFiltroPatrimonio);

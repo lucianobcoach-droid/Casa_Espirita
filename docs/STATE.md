@@ -3231,3 +3231,13 @@ Essa estrutura não altera o funcionamento do sistema Django. Ela organiza a for
   - `operacional` e `financeiro_completo`: filtro dependente oculto
 - a mudança foi implementada com script local no template do balancete e atributos `id/data-*` específicos para controle de visibilidade
 - não houve alteração de cálculo financeiro, saldos, regras patrimoniais, models ou migrations
+## Correcao do bug real de visibilidade do filtro patrimonial
+
+- a validacao real mostrou que a etapa anterior nao ocultou o filtro de forma confiavel em todos os formatos
+- causa provavel: o atributo `hidden` isolado nao foi suficiente no layout atual para garantir ocultacao visual consistente
+- correcao aplicada: reforco de visibilidade com `hidden` + classe `is-hidden` + `style="display: none;"`, controlados por script local no carregamento e na troca de `Formato do Balancete`
+- regra final aplicada:
+  - `operacional`: oculto
+  - `operacional_patrimonio`: visivel
+  - `financeiro_completo`: oculto
+- ajuste exclusivamente de UX, sem alteracao de calculo financeiro, saldos ou regras de negocio

@@ -4452,3 +4452,14 @@ Não houve alteração de código funcional nesta etapa.
 - filtros ficaram com comportamento imediato na tela, e a geração do relatório continua dependente apenas do clique em `Atualizar balancete`
 - validações e testes da suíte `financeiro.tests` executados nesta etapa
 - sem alteração de cálculo, saldos, regras de negócio financeira, models ou migrations
+## Microetapa: correcao real da visibilidade do filtro patrimonial
+
+- a validacao pratica da usuaria confirmou que a etapa anterior nao ocultou o filtro dependente de forma efetiva
+- causa provavel identificada: `hidden` isolado nao garantiu ocultacao visual robusta no layout atual
+- correcao implementada no template com controle combinado (`hidden`, `is-hidden` e `display: none`) no estado inicial e no evento de mudanca do `Formato do Balancete`
+- regra final validada:
+  - `operacional`: filtro oculto
+  - `operacional_patrimonio`: filtro visivel
+  - `financeiro_completo`: filtro oculto
+- teste reforcado para validar estado inicial renderizado por formato (nao apenas existencia do script)
+- sem alteracao de calculo financeiro, saldos, regras financeiras, models ou migrations

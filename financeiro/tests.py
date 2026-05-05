@@ -1220,7 +1220,24 @@ class PrestacaoContasTransferenciasEscopoTests(TestCase):
         html = self._render_balancete(request, contexto)
 
         self.assertIn('id="balancete-filtro-detalhar-patrimonio"', html)
-        self.assertIn('hidden', html.split('id="balancete-filtro-detalhar-patrimonio"', 1)[1].split('>', 1)[0])
+        bloco = html.split('id="balancete-filtro-detalhar-patrimonio"', 1)[1].split('>', 1)[0]
+        self.assertIn('hidden', bloco)
+        self.assertIn('display: none;', bloco)
+
+    def test_balancete_institucional_oculta_filtro_patrimonio_no_financeiro_completo(self):
+        request, contexto = self._contexto_balancete(
+            [
+                ('data_inicial', '2026-03-01'),
+                ('data_final', '2026-03-31'),
+                ('contas', str(self.dinheiro.id)),
+                ('formato_balancete', 'financeiro_completo'),
+            ]
+        )
+        html = self._render_balancete(request, contexto)
+        bloco = html.split('id="balancete-filtro-detalhar-patrimonio"', 1)[1].split('>', 1)[0]
+
+        self.assertIn('hidden', bloco)
+        self.assertIn('display: none;', bloco)
 
     def test_balancete_institucional_operacional_patrimonio_mostra_bloco_separado(self):
         self.banco.disponibilidade = ContaFinanceira.DisponibilidadeConta.INDISPONIVEL
@@ -1244,10 +1261,10 @@ class PrestacaoContasTransferenciasEscopoTests(TestCase):
         self.assertTrue(contexto['balancete_mostrar_bloco_patrimonial'])
         self.assertFalse(contexto['balancete_detalhar_patrimonio_vinculado'])
         self.assertIn('Detalhar patrimonio vinculado', html)
-        self.assertNotIn(
-            'id="balancete-filtro-detalhar-patrimonio" data-balancete-filtro-patrimonio hidden',
-            html,
-        )
+        bloco = html.split('id="balancete-filtro-detalhar-patrimonio"', 1)[1].split('>', 1)[0]
+        self.assertNotIn('hidden', bloco)
+        self.assertNotIn('is-hidden', bloco)
+        self.assertNotIn('display: none;', bloco)
         self.assertIn('6. INFORMACAO PATRIMONIAL COMPLEMENTAR', documento_html)
         self.assertIn('Saldo atual vinculado/indisponivel', documento_html)
         self.assertNotIn('Saldo inicial vinculado/indisponivel', documento_html)
