@@ -456,6 +456,12 @@ class PrestacaoContasTransferenciasEscopoTests(TestCase):
     def _documento_balancete_html(self, html):
         return html.split('<article class="balancete-document balancete-documento">', 1)[1]
 
+    def _contexto_balancete(self, params):
+        request = self.factory.get('/financeiro/balancete-institucional/', data=params)
+        view = BalanceteInstitucionalFinanceiroView()
+        view.request = request
+        return request, view.get_context_data()
+
     def test_transferencias_compõem_saldo_por_escopo_sem_inflar_resultado(self):
         contexto_dinheiro_fechado = self._contexto([self.dinheiro])
         contexto_dinheiro_aberto = self._contexto([self.dinheiro], exibir_transferencias=True)
@@ -586,7 +592,7 @@ class PrestacaoContasTransferenciasEscopoTests(TestCase):
         self.assertEqual(contexto['assinatura_2_id'], '')
         html = self._render_balancete(request, contexto)
         documento_html = self._documento_balancete_html(html)
-        self.assertNotIn('6. ASSINATURAS', documento_html)
+        self.assertNotIn('5. ASSINATURAS', documento_html)
         self.assertNotIn('Assinatura Padrao', documento_html)
         self.assertNotIn('Assinatura Secundaria', documento_html)
         self.assertNotIn('Responsavel financeiro', documento_html)
@@ -616,7 +622,7 @@ class PrestacaoContasTransferenciasEscopoTests(TestCase):
         self.assertEqual(contexto['assinatura_1'], assinatura_unica)
         self.assertIsNone(contexto['assinatura_2'])
         html = self._render_balancete(request, contexto)
-        self.assertIn('6. ASSINATURAS', html)
+        self.assertIn('5. ASSINATURAS', html)
         self.assertIn('Pessoa Unica', html)
         self.assertNotIn('Responsavel institucional', html)
 
@@ -735,6 +741,7 @@ class PrestacaoContasTransferenciasEscopoTests(TestCase):
                 ('data_final', '2026-03-31'),
                 ('contas', str(self.dinheiro.id)),
                 ('contas', str(self.banco.id)),
+                ('composicao_saldo', 'detalhada'),
             ],
         )
         view = BalanceteInstitucionalFinanceiroView()
@@ -759,6 +766,7 @@ class PrestacaoContasTransferenciasEscopoTests(TestCase):
                 ('data_final', '2026-03-31'),
                 ('contas', str(self.dinheiro.id)),
                 ('contas', str(self.banco.id)),
+                ('composicao_saldo', 'detalhada'),
             ],
         )
         view = BalanceteInstitucionalFinanceiroView()
@@ -782,6 +790,161 @@ class PrestacaoContasTransferenciasEscopoTests(TestCase):
         self.assertIn('Saldo disponivel operacional', html)
         self.assertIn('Saldo indisponivel/vinculado', html)
         self.assertIn('Saldo vinculado para reserva institucional.', html)
+
+    def test_balancete_institucional_modelo_diretoria_e_padrao_por_tipo(self):
+        tipo_caixa = TipoContaFinanceira.objects.get(codigo='dinheiro_caixa')
+        tipo_corrente = TipoContaFinanceira.objects.get(codigo='conta_corrente')
+        self.dinheiro.tipo_conta = tipo_caixa
+        self.dinheiro.save(update_fields=['tipo_conta'])
+        self.banco.tipo_conta = tipo_corrente
+        self.banco.disponibilidade = ContaFinanceira.DisponibilidadeConta.INDISPONIVEL
+        self.banco.save(update_fields=['tipo_conta', 'disponibilidade'])
+
+        _, contexto = self._contexto_balancete(
+            [
+                ('data_inicial', '2026-03-01'),
+                ('data_final', '2026-03-31'),
+                ('contas', str(self.dinheiro.id)),
+                ('contas', str(self.banco.id)),
+            ]
+        )
+
+        self.assertEqual(contexto['balancete_modelo_relatorio'], 'diretoria')
+        self.assertEqual(contexto['balancete_composicao_saldo'], 'tipo')
+        self.assertTrue(contexto['balancete_exibir_indisponiveis'])
+        self.assertFalse(contexto['balancete_exibir_saldo_inicial_detalhado'])
+        self.assertEqual(
+            [item['rotulo'] for item in contexto['balancete_grupos_apresentacao'][0]['itens']],
+            ['Dinheiro/caixa'],
+        )
+        self.assertEqual(
+            [item['rotulo'] for item in contexto['balancete_grupos_apresentacao'][1]['itens']],
+            ['Conta corrente'],
+        )
+
+    def test_balancete_institucional_modelo_contribuinte_oculta_indisponiveis_por_padrao(self):
+        self.banco.disponibilidade = ContaFinanceira.DisponibilidadeConta.INDISPONIVEL
+        self.banco.save(update_fields=['disponibilidade'])
+
+        request, contexto = self._contexto_balancete(
+            [
+                ('data_inicial', '2026-03-01'),
+                ('data_final', '2026-03-31'),
+                ('contas', str(self.dinheiro.id)),
+                ('contas', str(self.banco.id)),
+                ('modelo_relatorio', 'contribuinte'),
+            ]
+        )
+        html = self._render_balancete(request, contexto)
+        documento_html = self._documento_balancete_html(html)
+
+        self.assertEqual(contexto['balancete_modelo_relatorio'], 'contribuinte')
+        self.assertEqual(contexto['balancete_composicao_saldo'], 'total')
+        self.assertFalse(contexto['balancete_exibir_indisponiveis'])
+        self.assertTrue(contexto['balancete_ocultou_indisponiveis'])
+        self.assertFalse(contexto['balancete_exibe_total_financeiro'])
+        self.assertEqual(contexto['balancete_total_apresentado_rotulo'], 'Saldo disponivel operacional')
+        self.assertIn('Contas vinculadas/indisponiveis nao exibidas neste modelo.', html)
+        self.assertNotIn('Saldo total financeiro', documento_html)
+
+    def test_balancete_institucional_permite_modo_detalhado_por_conta(self):
+        self.banco.disponibilidade = ContaFinanceira.DisponibilidadeConta.INDISPONIVEL
+        self.banco.save(update_fields=['disponibilidade'])
+
+        _, contexto = self._contexto_balancete(
+            [
+                ('data_inicial', '2026-03-01'),
+                ('data_final', '2026-03-31'),
+                ('contas', str(self.dinheiro.id)),
+                ('contas', str(self.banco.id)),
+                ('modelo_relatorio', 'diretoria'),
+                ('composicao_saldo', 'detalhada'),
+            ]
+        )
+
+        self.assertEqual(contexto['balancete_composicao_saldo'], 'detalhada')
+        self.assertEqual(
+            [item['rotulo'] for item in contexto['balancete_grupos_apresentacao'][0]['itens']],
+            ['Dinheiro'],
+        )
+        self.assertEqual(
+            [item['rotulo'] for item in contexto['balancete_grupos_apresentacao'][1]['itens']],
+            ['Banco'],
+        )
+
+    def test_balancete_institucional_agrupa_conta_investimento_e_integralizacao_por_tipo(self):
+        tipo_investimento = TipoContaFinanceira.objects.get(codigo='aplicacao_financeira')
+        tipo_integralizacao = TipoContaFinanceira.objects.get(codigo='integralizacao_capital')
+        conta_investimento = ContaFinanceira.objects.create(
+            nome='Investimento A',
+            saldo_inicial=Decimal('30.00'),
+            data_saldo_inicial=date(2026, 1, 1),
+            tipo_conta=tipo_investimento,
+        )
+        conta_integralizacao = ContaFinanceira.objects.create(
+            nome='Integralizacao B',
+            saldo_inicial=Decimal('70.00'),
+            data_saldo_inicial=date(2026, 1, 1),
+            tipo_conta=tipo_integralizacao,
+            disponibilidade=ContaFinanceira.DisponibilidadeConta.INDISPONIVEL,
+        )
+
+        _, contexto = self._contexto_balancete(
+            [
+                ('data_inicial', '2026-03-01'),
+                ('data_final', '2026-03-31'),
+                ('contas', str(conta_investimento.id)),
+                ('contas', str(conta_integralizacao.id)),
+                ('modelo_relatorio', 'diretoria'),
+                ('composicao_saldo', 'tipo'),
+            ]
+        )
+
+        self.assertEqual(
+            [item['rotulo'] for item in contexto['balancete_grupos_apresentacao'][0]['itens']],
+            ['Conta investimento'],
+        )
+        self.assertEqual(
+            [item['rotulo'] for item in contexto['balancete_grupos_apresentacao'][1]['itens']],
+            ['Integralizacao de capital'],
+        )
+
+    def test_balancete_institucional_permite_modo_total_consolidado(self):
+        self.banco.disponibilidade = ContaFinanceira.DisponibilidadeConta.INDISPONIVEL
+        self.banco.save(update_fields=['disponibilidade'])
+
+        _, contexto = self._contexto_balancete(
+            [
+                ('data_inicial', '2026-03-01'),
+                ('data_final', '2026-03-31'),
+                ('contas', str(self.dinheiro.id)),
+                ('contas', str(self.banco.id)),
+                ('modelo_relatorio', 'diretoria'),
+                ('composicao_saldo', 'total'),
+            ]
+        )
+
+        self.assertEqual(contexto['balancete_composicao_saldo'], 'total')
+        self.assertTrue(all(not grupo['itens'] for grupo in contexto['balancete_grupos_apresentacao']))
+        self.assertTrue(contexto['balancete_exibe_total_financeiro'])
+        self.assertEqual(contexto['balancete_total_apresentado'], Decimal('40.00'))
+
+    def test_balancete_institucional_permite_exibir_saldo_inicial_detalhado(self):
+        _, contexto = self._contexto_balancete(
+            [
+                ('data_inicial', '2026-03-01'),
+                ('data_final', '2026-03-31'),
+                ('contas', str(self.dinheiro.id)),
+                ('mostrar_contas_zeradas', '1'),
+                ('exibir_saldo_inicial_detalhado', '1'),
+            ]
+        )
+
+        self.assertTrue(contexto['balancete_exibir_saldo_inicial_detalhado'])
+        self.assertEqual(
+            [item['conta'] for item in contexto['balancete_composicao_inicial']],
+            [self.dinheiro],
+        )
 
     def test_balancete_institucional_classifica_integralizacao_indisponivel(self):
         tipo_integralizacao = TipoContaFinanceira.objects.get(codigo='integralizacao_capital')

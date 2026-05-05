@@ -735,18 +735,22 @@ Status apos auditoria tecnica: AUDITADO TECNICAMENTE / PRONTO PARA SPEC FUNCIONA
 
 Status apos leitura patrimonial inicial: PARCIALMENTE IMPLEMENTADO
 
+Status apos refinamento por publico e composicao: IMPLEMENTADO COM PENDENCIAS FUTURAS
+
 Motivo:
 Foi levantada necessidade de o Balancete permitir escolher entre composicao detalhada por conta, consolidada por tipo de conta ou apenas saldo total consolidado, possivelmente separando disponivel e indisponivel para reduzir poluicao visual.
 
 Especificacao futura:
 - decisao aprovada para o MVP: modo padrao detalhado por conta, preservando leitura atual com separacao visual entre disponivel e indisponivel/vinculado quando aplicavel
 - implementado no Balancete: modo detalhado por conta com separacao visual entre disponivel e indisponivel/vinculado e total financeiro preservado
-- consolidado por tipo: opcao futura para somar contas do mesmo tipo, independentemente do banco ou nome da conta
-- total consolidado: opcao futura para mostrar apenas o total geral quando o relatorio precisar ser sintetico
-- separado entre disponivel e indisponivel/vinculado: opcao/filtro futuro para distinguir saldo livre operacional de valores patrimoniais/vinculados
+- implementado no Balancete: modelo `Completo para diretoria`, com defaults de composicao patrimonial mais ampla e exibição de vinculadas/indisponiveis
+- implementado no Balancete: modelo `Simplificado para contribuinte`, com defaults mais sintéticos e ocultacao visual de vinculadas/indisponiveis
+- implementado no Balancete: consolidado por tipo de conta para somar contas do mesmo tipo, independentemente do banco ou nome da conta
+- implementado no Balancete: total consolidado para leitura mais sintetica
+- implementado no Balancete: opcao para exibir ou ocultar contas vinculadas/indisponiveis sem alterar calculo
 - integralizacao de capital, contas investimento e contas vinculadas/indisponiveis devem aparecer separadas quando existirem
 - deve reaproveitar a base de calculo do Fechamento/Prestacao, sem calculo proprio divergente
-- implementado no recorte inicial: `BalanceteInstitucionalFinanceiroView` classifica a `balancete_composicao_final` por disponibilidade sem mudar `montar_contexto_fechamento_periodo`; permanecem futuros apenas os modos consolidados e avancados
+- implementado no recorte atual: `BalanceteInstitucionalFinanceiroView` classifica a `balancete_composicao_final` por disponibilidade, publico e modo de composicao sem mudar `montar_contexto_fechamento_periodo`; permanecem futuros apenas refinamentos avancados de ordenacao, legibilidade e expansoes adicionais se o uso real justificar
 
 Classificacao documental:
 - MELHORIA FUNCIONAL DE RELATORIO

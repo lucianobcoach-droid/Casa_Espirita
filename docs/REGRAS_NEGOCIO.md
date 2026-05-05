@@ -65,6 +65,10 @@ Este documento consolida regras permanentes do sistema. Ele não substitui o his
 - O modo padrão do Balancete patrimonial será detalhado por conta, preservando a leitura atual e adicionando separação visual entre disponível e indisponível/vinculado quando aplicável.
 - No recorte inicial já implementado, o Balancete Institucional separa a composição final entre saldo disponível operacional e saldo indisponível/vinculado sem alterar cálculo, saldo por conta ou reconciliação.
 - O saldo total financeiro do Balancete deve continuar igual à composição final já calculada pela base compartilhada; a separação patrimonial é apenas classificatória.
+- O Balancete pode oferecer modelos de apresentação por público, desde que a diferença entre eles seja apenas de exposição visual, classificação e nível de detalhe, sem alterar cálculo ou saldo real.
+- No modelo simplificado para contribuinte, contas vinculadas/indisponíveis podem ficar ocultas por padrão; quando isso ocorrer, o documento deve deixar claro que a composição exibida representa apenas o saldo disponível operacional.
+- No modelo completo para diretoria, a composição patrimonial pode exibir contas disponíveis e vinculadas/indisponíveis, em leitura detalhada por conta, consolidada por tipo ou total consolidado.
+- O detalhamento do saldo inicial no Balancete pode ser opcional para reduzir redundância documental, sem alterar a base financeira do resumo do período.
 - O Balancete deve poder exibir a composição do saldo em modos distintos:
   - detalhado por conta, mostrando cada conta individualmente;
   - consolidado por tipo de conta, somando contas do mesmo tipo;

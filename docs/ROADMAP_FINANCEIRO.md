@@ -60,7 +60,8 @@ Evoluir o Balancete Institucional para leitura patrimonial/gerencial do saldo, p
 
 - A separacao detalhada entre saldo disponivel operacional e saldo indisponivel/vinculado ja foi implementada no Balancete Institucional, sem alterar a base de calculo.
 - Mensagem explicativa opcional ja pode aparecer de forma discreta para contas indisponiveis/vinculadas.
-- Permanecem futuros o seletor de modos, o consolidado por tipo de conta, o total consolidado sintetico e ordenacoes patrimoniais complementares no impresso.
+- Foram implementados dois modelos de apresentacao por publico (`Completo para diretoria` e `Simplificado para contribuinte`), com seletor de composicao do saldo, opcao de exibir/ocultar vinculadas e saldo inicial detalhado opcional.
+- Foram implementados os modos `Detalhada por conta`, `Consolidada por tipo de conta` e `Total consolidado`, mantendo como futuros apenas refinamentos adicionais de ordenacao, agrupamento e eventuais modos extras.
 
 ### Auditoria tecnica preparatoria
 

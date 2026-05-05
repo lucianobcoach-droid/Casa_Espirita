@@ -2,6 +2,15 @@
 
 Data: 2026-04-30
 
+## Refinamento do Balancete por publico e composicao
+
+- adicionei ao Balancete os modelos `Simplificado para contribuinte` e `Completo para diretoria`, com defaults diferentes de exibicao e composicao
+- implementei tres modos de composicao do saldo final: detalhada por conta, consolidada por tipo de conta e total consolidado
+- acrescentei opcao para exibir ou ocultar contas vinculadas/indisponiveis apenas no documento, sem alterar calculo financeiro ou saldo final real
+- tornei opcional o detalhamento do saldo inicial e reorganizei o impresso para reduzir repeticao entre resumo e composicao patrimonial
+- compacteI o layout do Balancete com fonte menor, menos padding e sequencia documental mais direta, buscando melhor aproveitamento de uma pagina quando o volume permitir
+- mantive Fechamento/Prestacao, Extrato, lancamentos, transferencias, saldos e base de calculo sem alteracao funcional
+
 ## Leitura patrimonial no Balancete Institucional
 
 - apliquei a leitura patrimonial apenas no Balancete Institucional, reaproveitando a composicao final ja calculada pela base compartilhada do Fechamento/Prestacao

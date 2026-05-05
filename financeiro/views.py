@@ -4362,6 +4362,68 @@ class PrestacaoContasFinanceiroView(FinanceiroPeriodoMixin, TemplateView):
 class BalanceteInstitucionalFinanceiroView(FinanceiroPeriodoMixin, TemplateView):
     permissao_requerida = 'financeiro.prestacao_contas.visualizar'
     template_name = 'financeiro/balancete_institucional.html'
+    MODELO_CONTRIBUINTE = 'contribuinte'
+    MODELO_DIRETORIA = 'diretoria'
+    COMPOSICAO_DETALHADA = 'detalhada'
+    COMPOSICAO_TIPO = 'tipo'
+    COMPOSICAO_TOTAL = 'total'
+
+    modelos_relatorio = (
+        (MODELO_CONTRIBUINTE, 'Simplificado para contribuinte'),
+        (MODELO_DIRETORIA, 'Completo para diretoria'),
+    )
+    modos_composicao = (
+        (COMPOSICAO_DETALHADA, 'Detalhada por conta'),
+        (COMPOSICAO_TIPO, 'Consolidada por tipo de conta'),
+        (COMPOSICAO_TOTAL, 'Total consolidado'),
+    )
+    opcoes_booleanas = (
+        ('1', 'Sim'),
+        ('0', 'Nao'),
+    )
+
+    def _parse_choice_param(self, nome_parametro: str, valores_validos: set[str], default: str) -> str:
+        valor = (self.request.GET.get(nome_parametro) or '').strip().lower()
+        if valor in valores_validos:
+            return valor
+        return default
+
+    def _parse_boolean_select_param(self, nome_parametro: str, default: bool) -> bool:
+        valor = (self.request.GET.get(nome_parametro) or '').strip().lower()
+        if not valor:
+            return default
+        if valor in {'1', 'true', 'on', 'yes', 'sim'}:
+            return True
+        if valor in {'0', 'false', 'off', 'no', 'nao'}:
+            return False
+        return default
+
+    def _parse_modelo_relatorio(self) -> str:
+        return self._parse_choice_param(
+            'modelo_relatorio',
+            {self.MODELO_CONTRIBUINTE, self.MODELO_DIRETORIA},
+            self.MODELO_DIRETORIA,
+        )
+
+    def _parse_composicao_saldo(self, modelo_relatorio: str) -> str:
+        default = (
+            self.COMPOSICAO_TOTAL
+            if modelo_relatorio == self.MODELO_CONTRIBUINTE
+            else self.COMPOSICAO_TIPO
+        )
+        return self._parse_choice_param(
+            'composicao_saldo',
+            {self.COMPOSICAO_DETALHADA, self.COMPOSICAO_TIPO, self.COMPOSICAO_TOTAL},
+            default,
+        )
+
+    def _parse_exibir_indisponiveis(self, modelo_relatorio: str) -> bool:
+        default = modelo_relatorio == self.MODELO_DIRETORIA
+        return self._parse_boolean_select_param('exibir_indisponiveis', default)
+
+    def _parse_exibir_saldo_inicial_detalhado(self, modelo_relatorio: str) -> bool:
+        default = False if modelo_relatorio == self.MODELO_CONTRIBUINTE else False
+        return self._parse_boolean_select_param('exibir_saldo_inicial_detalhado', default)
 
     def _parse_assinatura_id(self, nome_parametro: str) -> int | None:
         valor = (self.request.GET.get(nome_parametro) or '').strip()
@@ -4398,6 +4460,139 @@ class BalanceteInstitucionalFinanceiroView(FinanceiroPeriodoMixin, TemplateView)
 
     def _filtrar_composicao_documental(self, itens: list[dict[str, object]]) -> list[dict[str, object]]:
         return [item for item in itens if item.get('saldo') != Decimal('0.00')]
+
+    def _rotulo_tipo_conta(self, conta: ContaFinanceira | None) -> tuple[int, str]:
+        tipo_conta = getattr(conta, 'tipo_conta', None)
+        if tipo_conta:
+            return getattr(tipo_conta, 'ordem', 9999), (getattr(tipo_conta, 'nome', '') or '').strip() or 'Outros'
+        return 9999, 'Outros'
+
+    def _agrupar_composicao_por_tipo(self, itens: list[dict[str, object]]) -> list[dict[str, object]]:
+        agrupados: dict[tuple[int, str], Decimal] = {}
+        for item in itens:
+            conta = item.get('conta')
+            saldo = item.get('saldo') or Decimal('0.00')
+            chave = self._rotulo_tipo_conta(conta)
+            agrupados[chave] = agrupados.get(chave, Decimal('0.00')) + saldo
+
+        itens_agrupados = [
+            {
+                'rotulo': nome_tipo,
+                'saldo': saldo,
+                'mensagem_indisponibilidade': '',
+            }
+            for (ordem, nome_tipo), saldo in sorted(
+                agrupados.items(),
+                key=lambda item: (item[0][0], item[0][1].lower()),
+            )
+        ]
+        return itens_agrupados
+
+    def _montar_grupo_apresentacao(
+        self,
+        *,
+        rotulo: str,
+        subtotal_rotulo: str,
+        itens: list[dict[str, object]],
+        subtotal: Decimal,
+        modo_composicao: str,
+        mostrar_mensagens: bool,
+    ) -> dict[str, object]:
+        if modo_composicao == self.COMPOSICAO_DETALHADA:
+            itens_apresentados = [
+                {
+                    'rotulo': item['conta'].nome,
+                    'saldo': item['saldo'],
+                    'mensagem_indisponibilidade': (
+                        item.get('mensagem_indisponibilidade', '') if mostrar_mensagens else ''
+                    ),
+                }
+                for item in itens
+            ]
+        elif modo_composicao == self.COMPOSICAO_TIPO:
+            itens_apresentados = self._agrupar_composicao_por_tipo(itens)
+        else:
+            itens_apresentados = []
+
+        return {
+            'rotulo': rotulo,
+            'subtotal_rotulo': subtotal_rotulo,
+            'subtotal': subtotal,
+            'itens': itens_apresentados,
+            'mostrar_itens': modo_composicao != self.COMPOSICAO_TOTAL,
+        }
+
+    def _montar_apresentacao_patrimonial(
+        self,
+        *,
+        composicao_disponivel: list[dict[str, object]],
+        composicao_indisponivel: list[dict[str, object]],
+        subtotal_disponivel: Decimal,
+        subtotal_indisponivel: Decimal,
+        modo_composicao: str,
+        exibir_indisponiveis: bool,
+    ) -> dict[str, object]:
+        grupos: list[dict[str, object]] = []
+        ocultou_indisponiveis = bool(composicao_indisponivel) and not exibir_indisponiveis
+
+        if composicao_disponivel or subtotal_disponivel != Decimal('0.00'):
+            grupos.append(
+                self._montar_grupo_apresentacao(
+                    rotulo='Saldo disponivel operacional',
+                    subtotal_rotulo=(
+                        'Total disponivel operacional'
+                        if modo_composicao == self.COMPOSICAO_TOTAL
+                        else 'Subtotal disponivel operacional'
+                    ),
+                    itens=composicao_disponivel,
+                    subtotal=subtotal_disponivel,
+                    modo_composicao=modo_composicao,
+                    mostrar_mensagens=False,
+                )
+            )
+
+        if exibir_indisponiveis and (composicao_indisponivel or subtotal_indisponivel != Decimal('0.00')):
+            grupos.append(
+                self._montar_grupo_apresentacao(
+                    rotulo='Saldo indisponivel/vinculado',
+                    subtotal_rotulo=(
+                        'Total indisponivel/vinculado'
+                        if modo_composicao == self.COMPOSICAO_TOTAL
+                        else 'Subtotal indisponivel/vinculado'
+                    ),
+                    itens=composicao_indisponivel,
+                    subtotal=subtotal_indisponivel,
+                    modo_composicao=modo_composicao,
+                    mostrar_mensagens=modo_composicao == self.COMPOSICAO_DETALHADA,
+                )
+            )
+
+        return {
+            'balancete_grupos_apresentacao': grupos,
+            'balancete_ocultou_indisponiveis': ocultou_indisponiveis,
+            'balancete_exibe_total_financeiro': not ocultou_indisponiveis,
+            'balancete_total_apresentado': (
+                subtotal_disponivel
+                if ocultou_indisponiveis
+                else subtotal_disponivel + subtotal_indisponivel
+            ),
+            'balancete_total_apresentado_rotulo': (
+                'Saldo disponivel operacional'
+                if ocultou_indisponiveis
+                else 'Saldo total financeiro'
+            ),
+            'balancete_nota_indisponiveis_ocultas': (
+                'Contas vinculadas/indisponiveis nao exibidas neste modelo. '
+                'O resumo financeiro acima continua considerando o universo selecionado.'
+                if ocultou_indisponiveis
+                else ''
+            ),
+            'balancete_titulo_composicao': (
+                '4. COMPOSICAO DO SALDO APRESENTADO'
+                if ocultou_indisponiveis
+                else '4. COMPOSICAO PATRIMONIAL DO SALDO FINAL'
+            ),
+        }
 
     def _classificar_composicao_patrimonial(
         self,
@@ -4442,6 +4637,10 @@ class BalanceteInstitucionalFinanceiroView(FinanceiroPeriodoMixin, TemplateView)
         context = super().get_context_data(**kwargs)
         context['page_title'] = 'Balancete Institucional'
         context.update(montar_contexto_fechamento_periodo(self))
+        modelo_relatorio = self._parse_modelo_relatorio()
+        composicao_saldo = self._parse_composicao_saldo(modelo_relatorio)
+        exibir_indisponiveis = self._parse_exibir_indisponiveis(modelo_relatorio)
+        exibir_saldo_inicial_detalhado = self._parse_exibir_saldo_inicial_detalhado(modelo_relatorio)
         assinaturas_disponiveis, assinatura_1, assinatura_2 = self._resolver_assinaturas_balancete()
         mostrar_contas_zeradas = bool(context.get('mostrar_contas_zeradas'))
         composicao_inicial = context.get('composicao_inicial') or []
@@ -4451,6 +4650,15 @@ class BalanceteInstitucionalFinanceiroView(FinanceiroPeriodoMixin, TemplateView)
             if mostrar_contas_zeradas
             else self._filtrar_composicao_documental(composicao_final)
         )
+        classificacao_patrimonial = self._classificar_composicao_patrimonial(balancete_composicao_final)
+        apresentacao_patrimonial = self._montar_apresentacao_patrimonial(
+            composicao_disponivel=classificacao_patrimonial['balancete_composicao_disponivel'],
+            composicao_indisponivel=classificacao_patrimonial['balancete_composicao_indisponivel'],
+            subtotal_disponivel=classificacao_patrimonial['balancete_subtotal_disponivel'],
+            subtotal_indisponivel=classificacao_patrimonial['balancete_subtotal_indisponivel'],
+            modo_composicao=composicao_saldo,
+            exibir_indisponiveis=exibir_indisponiveis,
+        )
         context.update(
             {
                 'assinaturas_disponiveis': assinaturas_disponiveis,
@@ -4458,6 +4666,25 @@ class BalanceteInstitucionalFinanceiroView(FinanceiroPeriodoMixin, TemplateView)
                 'assinatura_2': assinatura_2,
                 'assinatura_1_id': assinatura_1.pk if assinatura_1 else '',
                 'assinatura_2_id': assinatura_2.pk if assinatura_2 else '',
+                'balancete_modelos_relatorio': self.modelos_relatorio,
+                'balancete_modos_composicao': self.modos_composicao,
+                'balancete_opcoes_booleanas': self.opcoes_booleanas,
+                'balancete_modelo_relatorio': modelo_relatorio,
+                'balancete_composicao_saldo': composicao_saldo,
+                'balancete_exibir_indisponiveis': exibir_indisponiveis,
+                'balancete_exibir_indisponiveis_valor': '1' if exibir_indisponiveis else '0',
+                'balancete_exibir_saldo_inicial_detalhado': exibir_saldo_inicial_detalhado,
+                'balancete_exibir_saldo_inicial_detalhado_valor': (
+                    '1' if exibir_saldo_inicial_detalhado else '0'
+                ),
+                'balancete_modelo_relatorio_label': dict(self.modelos_relatorio).get(
+                    modelo_relatorio,
+                    'Completo para diretoria',
+                ),
+                'balancete_composicao_saldo_label': dict(self.modos_composicao).get(
+                    composicao_saldo,
+                    'Consolidada por tipo de conta',
+                ),
                 'balancete_abrangencia_label': self._montar_abrangencia_balancete(context),
                 'balancete_contas_label_completo': context.get('contas_incluidas_label', 'Todas as contas'),
                 'balancete_composicao_inicial': (
@@ -4468,7 +4695,8 @@ class BalanceteInstitucionalFinanceiroView(FinanceiroPeriodoMixin, TemplateView)
                 'balancete_composicao_final': balancete_composicao_final,
             }
         )
-        context.update(self._classificar_composicao_patrimonial(balancete_composicao_final))
+        context.update(classificacao_patrimonial)
+        context.update(apresentacao_patrimonial)
         return context
 
 
