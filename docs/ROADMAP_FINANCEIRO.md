@@ -56,12 +56,15 @@ Evoluir o Balancete Institucional para leitura patrimonial/gerencial do saldo, p
 - Definir se a leitura inicial do Balancete apenas separa disponivel/indisponivel no modo detalhado ou tambem expõe seletor de modo ja no primeiro recorte.
 - Definir escopo dos testes especificos do Balancete patrimonial antes da proxima implementacao tecnica.
 
-### Status apos a leitura patrimonial inicial do Balancete
+### Status apos a simplificacao dos filtros do Balancete
 
 - A separacao detalhada entre saldo disponivel operacional e saldo indisponivel/vinculado ja foi implementada no Balancete Institucional, sem alterar a base de calculo.
 - Mensagem explicativa opcional ja pode aparecer de forma discreta para contas indisponiveis/vinculadas.
-- Foram implementados dois modelos de apresentacao por publico (`Completo para diretoria` e `Simplificado para contribuinte`), com seletor de composicao do saldo, opcao de exibir/ocultar vinculadas e saldo inicial detalhado opcional.
-- Foram implementados os modos `Detalhada por conta`, `Consolidada por tipo de conta` e `Total consolidado`, mantendo como futuros apenas refinamentos adicionais de ordenacao, agrupamento e eventuais modos extras.
+- O filtro `Modelo do relatorio` foi removido por redundancia; a diferenca pratica do documento passou a ser controlada diretamente por `Composicao do saldo`, `Exibir vinculadas/indisponiveis` e `Detalhar saldo inicial por conta`.
+- Foram implementados os modos `Detalhada por conta`, `Consolidada por tipo de conta` e `Total consolidado`, com padrao atual em `Consolidada por tipo de conta`.
+- Os filtros de composicao, vinculadas/indisponiveis e saldo inicial detalhado deixaram de aparecer como metadados no cabecalho impresso.
+- Quando vinculadas/indisponiveis ficam ocultas, o Balancete mostra observacao discreta especificando que elas nao estao exibidas naquela composicao, sem rotular o saldo disponivel como saldo total financeiro.
+- Permanecem como futuros apenas refinamentos adicionais de ordenacao, agrupamento, acabamento documental e eventuais modos extras justificados pelo uso real.
 
 ### Auditoria tecnica preparatoria
 

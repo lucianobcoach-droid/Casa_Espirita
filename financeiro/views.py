@@ -4362,16 +4362,9 @@ class PrestacaoContasFinanceiroView(FinanceiroPeriodoMixin, TemplateView):
 class BalanceteInstitucionalFinanceiroView(FinanceiroPeriodoMixin, TemplateView):
     permissao_requerida = 'financeiro.prestacao_contas.visualizar'
     template_name = 'financeiro/balancete_institucional.html'
-    MODELO_CONTRIBUINTE = 'contribuinte'
-    MODELO_DIRETORIA = 'diretoria'
     COMPOSICAO_DETALHADA = 'detalhada'
     COMPOSICAO_TIPO = 'tipo'
     COMPOSICAO_TOTAL = 'total'
-
-    modelos_relatorio = (
-        (MODELO_CONTRIBUINTE, 'Simplificado para contribuinte'),
-        (MODELO_DIRETORIA, 'Completo para diretoria'),
-    )
     modos_composicao = (
         (COMPOSICAO_DETALHADA, 'Detalhada por conta'),
         (COMPOSICAO_TIPO, 'Consolidada por tipo de conta'),
@@ -4398,32 +4391,18 @@ class BalanceteInstitucionalFinanceiroView(FinanceiroPeriodoMixin, TemplateView)
             return False
         return default
 
-    def _parse_modelo_relatorio(self) -> str:
-        return self._parse_choice_param(
-            'modelo_relatorio',
-            {self.MODELO_CONTRIBUINTE, self.MODELO_DIRETORIA},
-            self.MODELO_DIRETORIA,
-        )
-
-    def _parse_composicao_saldo(self, modelo_relatorio: str) -> str:
-        default = (
-            self.COMPOSICAO_TOTAL
-            if modelo_relatorio == self.MODELO_CONTRIBUINTE
-            else self.COMPOSICAO_TIPO
-        )
+    def _parse_composicao_saldo(self) -> str:
         return self._parse_choice_param(
             'composicao_saldo',
             {self.COMPOSICAO_DETALHADA, self.COMPOSICAO_TIPO, self.COMPOSICAO_TOTAL},
-            default,
+            self.COMPOSICAO_TIPO,
         )
 
-    def _parse_exibir_indisponiveis(self, modelo_relatorio: str) -> bool:
-        default = modelo_relatorio == self.MODELO_DIRETORIA
-        return self._parse_boolean_select_param('exibir_indisponiveis', default)
+    def _parse_exibir_indisponiveis(self) -> bool:
+        return self._parse_boolean_select_param('exibir_indisponiveis', True)
 
-    def _parse_exibir_saldo_inicial_detalhado(self, modelo_relatorio: str) -> bool:
-        default = False if modelo_relatorio == self.MODELO_CONTRIBUINTE else False
-        return self._parse_boolean_select_param('exibir_saldo_inicial_detalhado', default)
+    def _parse_exibir_saldo_inicial_detalhado(self) -> bool:
+        return self._parse_boolean_select_param('exibir_saldo_inicial_detalhado', False)
 
     def _parse_assinatura_id(self, nome_parametro: str) -> int | None:
         valor = (self.request.GET.get(nome_parametro) or '').strip()
@@ -4582,7 +4561,7 @@ class BalanceteInstitucionalFinanceiroView(FinanceiroPeriodoMixin, TemplateView)
                 else 'Saldo total financeiro'
             ),
             'balancete_nota_indisponiveis_ocultas': (
-                'Contas vinculadas/indisponiveis nao exibidas neste modelo. '
+                'Contas vinculadas/indisponiveis nao exibidas nesta composicao. '
                 'O resumo financeiro acima continua considerando o universo selecionado.'
                 if ocultou_indisponiveis
                 else ''
@@ -4637,10 +4616,9 @@ class BalanceteInstitucionalFinanceiroView(FinanceiroPeriodoMixin, TemplateView)
         context = super().get_context_data(**kwargs)
         context['page_title'] = 'Balancete Institucional'
         context.update(montar_contexto_fechamento_periodo(self))
-        modelo_relatorio = self._parse_modelo_relatorio()
-        composicao_saldo = self._parse_composicao_saldo(modelo_relatorio)
-        exibir_indisponiveis = self._parse_exibir_indisponiveis(modelo_relatorio)
-        exibir_saldo_inicial_detalhado = self._parse_exibir_saldo_inicial_detalhado(modelo_relatorio)
+        composicao_saldo = self._parse_composicao_saldo()
+        exibir_indisponiveis = self._parse_exibir_indisponiveis()
+        exibir_saldo_inicial_detalhado = self._parse_exibir_saldo_inicial_detalhado()
         assinaturas_disponiveis, assinatura_1, assinatura_2 = self._resolver_assinaturas_balancete()
         mostrar_contas_zeradas = bool(context.get('mostrar_contas_zeradas'))
         composicao_inicial = context.get('composicao_inicial') or []
@@ -4666,20 +4644,14 @@ class BalanceteInstitucionalFinanceiroView(FinanceiroPeriodoMixin, TemplateView)
                 'assinatura_2': assinatura_2,
                 'assinatura_1_id': assinatura_1.pk if assinatura_1 else '',
                 'assinatura_2_id': assinatura_2.pk if assinatura_2 else '',
-                'balancete_modelos_relatorio': self.modelos_relatorio,
                 'balancete_modos_composicao': self.modos_composicao,
                 'balancete_opcoes_booleanas': self.opcoes_booleanas,
-                'balancete_modelo_relatorio': modelo_relatorio,
                 'balancete_composicao_saldo': composicao_saldo,
                 'balancete_exibir_indisponiveis': exibir_indisponiveis,
                 'balancete_exibir_indisponiveis_valor': '1' if exibir_indisponiveis else '0',
                 'balancete_exibir_saldo_inicial_detalhado': exibir_saldo_inicial_detalhado,
                 'balancete_exibir_saldo_inicial_detalhado_valor': (
                     '1' if exibir_saldo_inicial_detalhado else '0'
-                ),
-                'balancete_modelo_relatorio_label': dict(self.modelos_relatorio).get(
-                    modelo_relatorio,
-                    'Completo para diretoria',
                 ),
                 'balancete_composicao_saldo_label': dict(self.modos_composicao).get(
                     composicao_saldo,

@@ -409,16 +409,6 @@
                     </div>
                 </div>
                 <div class="column is-12-mobile is-6-tablet is-3-desktop">
-                    <label class="label">Modelo do relatorio</label>
-                    <div class="select is-fullwidth">
-                        <select name="modelo_relatorio">
-                            {% for valor, rotulo in balancete_modelos_relatorio %}
-                                <option value="{{ valor }}" {% if valor == balancete_modelo_relatorio %}selected{% endif %}>{{ rotulo }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
-                <div class="column is-12-mobile is-6-tablet is-3-desktop">
                     <label class="label">Composicao do saldo</label>
                     <div class="select is-fullwidth">
                         <select name="composicao_saldo">
@@ -439,7 +429,7 @@
                     </div>
                 </div>
                 <div class="column is-12-mobile is-6-tablet is-3-desktop">
-                    <label class="label">Exibir saldo inicial detalhado</label>
+                    <label class="label">Detalhar saldo inicial por conta</label>
                     <div class="select is-fullwidth">
                         <select name="exibir_saldo_inicial_detalhado">
                             {% for valor, rotulo in balancete_opcoes_booleanas %}
@@ -498,8 +488,6 @@
                     <h2 class="balancete-title">BALANCETE INSTITUCIONAL</h2>
                     <p class="balancete-subtitle">Periodo: {{ periodo_label|default:'Nao informado' }}</p>
                     <div class="balancete-meta-stack">
-                        <p class="balancete-meta">Modelo: {{ balancete_modelo_relatorio_label }}</p>
-                        <p class="balancete-meta">Composicao: {{ balancete_composicao_saldo_label }}</p>
                         <p class="balancete-meta">Emitido em: {% now "d/m/Y H:i" %}</p>
                     </div>
                 </div>

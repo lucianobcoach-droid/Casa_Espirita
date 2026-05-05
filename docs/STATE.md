@@ -2,16 +2,16 @@
 
 Data de atualizacao: 2026-04-30
 
-## Refinamento do Balancete por publico e modo de composicao
+## Simplificacao dos filtros do Balancete patrimonial
 
-- o Balancete Institucional passou a oferecer dois modelos de apresentacao: `Completo para diretoria` e `Simplificado para contribuinte`
-- no modelo de diretoria, o padrao atual passou a ser composicao `Consolidada por tipo de conta`, com contas vinculadas/indisponiveis exibidas
-- no modelo de contribuinte, o padrao atual passou a ser composicao em `Total consolidado`, com contas vinculadas/indisponiveis ocultas por padrao
-- foi adicionada opcao para exibir ou ocultar contas vinculadas/indisponiveis sem alterar calculo, saldo final financeiro, lancamentos ou transferencias
-- quando as contas vinculadas/indisponiveis ficam ocultas, o Balancete deixa claro que a composicao exibida e apenas do saldo disponivel operacional e nao rotula esse valor como saldo total financeiro
-- a composicao final agora pode ser exibida em tres modos: detalhada por conta, consolidada por tipo de conta e total consolidado
-- o saldo inicial detalhado virou opcional no Balancete, ajudando a reduzir redundancia no impresso
-- o layout impresso foi compactado com fonte menor, menos espacamento vertical e sequencia documental mais direta, buscando caber em uma pagina quando o volume permitir
+- o filtro `Modelo do relatorio` foi removido do Balancete Institucional por redundancia
+- a leitura pratica do documento passou a ser controlada diretamente por tres escolhas: composicao do saldo, exibir/ocultar contas vinculadas/indisponiveis e detalhar ou nao o saldo inicial por conta
+- a composicao do saldo permanece com tres modos: detalhada por conta, consolidada por tipo de conta e total consolidado; o padrao atual passou a ser `Consolidada por tipo de conta`
+- a opcao de exibir ou ocultar contas vinculadas/indisponiveis continua apenas documental/visual e nao altera calculo, saldo final financeiro, lancamentos ou transferencias
+- quando as contas vinculadas/indisponiveis ficam ocultas, o Balancete deixa claro que a composicao exibida e apenas do saldo disponivel operacional e mostra observacao discreta sobre a ocultacao
+- o filtro de saldo inicial detalhado foi mantido como complemento opcional de conferencia, com foco em reduzir redundancia no impresso quando desligado
+- os filtros de composicao, vinculadas/indisponiveis e saldo inicial detalhado deixaram de aparecer como metadados no cabecalho impresso
+- o layout impresso foi mantido compacto, com fonte menor, menos espacamento vertical e sequencia documental mais direta, buscando caber em uma pagina quando o volume permitir
 
 ## Leitura patrimonial no Balancete Institucional
 
@@ -20,7 +20,7 @@ Data de atualizacao: 2026-04-30
 - contas indisponiveis/vinculadas podem exibir mensagem explicativa discreta no Balancete quando `mensagem_indisponibilidade` estiver preenchida
 - integralizacao de capital continua podendo ser cadastrada normalmente; sua leitura no Balancete depende de `disponibilidade`, sem regra paralela de calculo
 - o saldo total financeiro do Balancete permanece igual a composicao final ja calculada pela base compartilhada do Fechamento/Prestacao
-- modos avancados, como consolidado por tipo e total sintetico, continuam como futuro real
+- os modos `Consolidada por tipo de conta` e `Total consolidado` ja estao disponiveis; permanecem como futuro apenas refinamentos adicionais de leitura, ordenacao e compactacao por uso real
 
 ## Base cadastral patrimonial das contas financeiras
 

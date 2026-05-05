@@ -4,7 +4,13 @@ Data: 2026-04-30
 
 ## Refinamento do Balancete por publico e composicao
 
-- adicionei ao Balancete os modelos `Simplificado para contribuinte` e `Completo para diretoria`, com defaults diferentes de exibicao e composicao
+- removi do Balancete o filtro `Modelo do relatorio`, pois a distincao pratica entre as leituras ficou melhor resolvida pelos filtros reais de composicao, exibicao de vinculadas/indisponiveis e detalhamento do saldo inicial
+- mantive os filtros `Composicao do saldo`, `Exibir vinculadas/indisponiveis` e `Detalhar saldo inicial por conta`, com padrao de composicao em `Consolidada por tipo de conta`
+- retirei do cabecalho impresso a exposicao desses filtros, deixando o documento mais institucional e limpo
+- ajustei a observacao de ocultacao para aparecer apenas quando as contas vinculadas/indisponiveis nao sao exibidas, usando a redacao `nesta composicao`
+- preservei a compactacao do impresso e a sequencia documental, sem alterar calculo financeiro, saldo, lancamentos, Extrato ou Fechamento/Prestacao
+
+- na etapa anterior, havia sido adicionada a camada de modelos por publico; nesta microetapa, ela foi simplificada e absorvida pelos filtros diretos realmente uteis
 - implementei tres modos de composicao do saldo final: detalhada por conta, consolidada por tipo de conta e total consolidado
 - acrescentei opcao para exibir ou ocultar contas vinculadas/indisponiveis apenas no documento, sem alterar calculo financeiro ou saldo final real
 - tornei opcional o detalhamento do saldo inicial e reorganizei o impresso para reduzir repeticao entre resumo e composicao patrimonial
