@@ -409,7 +409,17 @@
                     </div>
                 </div>
                 <div class="column is-12-mobile is-6-tablet is-3-desktop">
-                    <label class="label">Composicao do saldo</label>
+                    <label class="label">Formato do Balancete</label>
+                    <div class="select is-fullwidth">
+                        <select name="formato_balancete">
+                            {% for valor, rotulo in balancete_formatos %}
+                                <option value="{{ valor }}" {% if valor == balancete_formato %}selected{% endif %}>{{ rotulo }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="column is-12-mobile is-6-tablet is-3-desktop">
+                    <label class="label">{{ balancete_label_composicao }}</label>
                     <div class="select is-fullwidth">
                         <select name="composicao_saldo">
                             {% for valor, rotulo in balancete_modos_composicao %}
@@ -418,16 +428,18 @@
                         </select>
                     </div>
                 </div>
+                {% if balancete_mostrar_filtro_detalhar_patrimonio %}
                 <div class="column is-12-mobile is-6-tablet is-3-desktop">
-                    <label class="label">Exibir vinculadas/indisponiveis</label>
+                    <label class="label">Detalhar patrimonio vinculado</label>
                     <div class="select is-fullwidth">
-                        <select name="exibir_indisponiveis">
+                        <select name="detalhar_patrimonio_vinculado">
                             {% for valor, rotulo in balancete_opcoes_booleanas %}
-                                <option value="{{ valor }}" {% if valor == balancete_exibir_indisponiveis_valor %}selected{% endif %}>{{ rotulo }}</option>
+                                <option value="{{ valor }}" {% if valor == balancete_detalhar_patrimonio_vinculado|yesno:'1,0' %}selected{% endif %}>{{ rotulo }}</option>
                             {% endfor %}
                         </select>
                     </div>
                 </div>
+                {% endif %}
                 <div class="column is-12-mobile is-6-tablet is-4-desktop">
                     <label class="label">Assinatura 1</label>
                     <div class="select is-fullwidth">
@@ -483,7 +495,7 @@
                 </div>
             </header>
             <section class="balancete-section">
-                <h3 class="balancete-section-title">1. SALDO INICIAL FINANCEIRO</h3>
+                <h3 class="balancete-section-title">{{ balancete_titulo_saldo_inicial }}</h3>
                 <table class="balancete-table">
                     <tbody>
                         {% for grupo in balancete_inicial_grupos_apresentacao %}
@@ -511,7 +523,7 @@
                             </tr>
                         {% empty %}
                             <tr>
-                                <td>Saldo inicial financeiro</td>
+                                <td>{{ balancete_label_saldo_inicial_fallback }}</td>
                                 <td><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ balancete_inicial_total_apresentado|br_money }}</span></span></td>
                             </tr>
                         {% endfor %}
@@ -529,7 +541,7 @@
 
             <div class="balancete-print-final">
                 <section class="balancete-section">
-                    <h3 class="balancete-section-title">2. ENTRADAS DO PERIODO</h3>
+                    <h3 class="balancete-section-title">{{ balancete_titulo_entradas }}</h3>
                     <table class="balancete-table">
                         <tbody>
                         {% for item in balancete_receitas_por_categoria_apresentadas %}
@@ -553,7 +565,7 @@
                 </section>
 
                 <section class="balancete-section">
-                    <h3 class="balancete-section-title">3. SAIDAS DO PERIODO</h3>
+                    <h3 class="balancete-section-title">{{ balancete_titulo_saidas }}</h3>
                     <table class="balancete-table">
                         <tbody>
                         {% for item in balancete_despesas_por_categoria_apresentadas %}
@@ -577,7 +589,7 @@
                 </section>
 
                 <section class="balancete-section">
-                    <h3 class="balancete-section-title">4. RESUMO OPERACIONAL DO PERIODO</h3>
+                    <h3 class="balancete-section-title">{{ balancete_titulo_resumo }}</h3>
                     <table class="balancete-table balancete-summary-table">
                         <tbody>
                             {% for linha in balancete_resumo_operacional_linhas %}
@@ -594,7 +606,7 @@
                 </section>
 
                 <section class="balancete-section">
-                    <h3 class="balancete-section-title">5. COMPOSICAO DO SALDO FINAL</h3>
+                    <h3 class="balancete-section-title">{{ balancete_titulo_composicao_final }}</h3>
                     <table class="balancete-table">
                         <tbody>
                         {% for grupo in balancete_grupos_apresentacao %}
@@ -638,6 +650,50 @@
                     </table>
                 </section>
 
+                {% if balancete_mostrar_bloco_patrimonial %}
+                <section class="balancete-section">
+                    <h3 class="balancete-section-title">{{ balancete_titulo_bloco_patrimonial }}</h3>
+                    <table class="balancete-table balancete-summary-table">
+                        <tbody>
+                            {% for linha in balancete_patrimonio_linhas %}
+                                <tr{% if linha.total %} class="balancete-total-row"{% endif %}>
+                                    <td>{{ linha.label }}</td>
+                                    <td><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ linha.valor|br_money }}</span></span></td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% if balancete_detalhar_patrimonio_vinculado %}
+                    <table class="balancete-table">
+                        <tbody>
+                            {% if balancete_patrimonio_grupo_atual.mostrar_itens %}
+                                <tr class="balancete-group-row">
+                                    <td>{{ balancete_patrimonio_grupo_atual.rotulo }}</td>
+                                    <td></td>
+                                </tr>
+                                {% for item in balancete_patrimonio_grupo_atual.itens %}
+                                    <tr>
+                                        <td>{{ item.rotulo }}</td>
+                                        <td><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ item.saldo|br_money }}</span></span></td>
+                                    </tr>
+                                    {% if item.mensagem_indisponibilidade %}
+                                        <tr class="balancete-message-row">
+                                            <td>{{ item.mensagem_indisponibilidade }}</td>
+                                            <td></td>
+                                        </tr>
+                                    {% endif %}
+                                {% endfor %}
+                            {% endif %}
+                            <tr class="balancete-subtotal-row">
+                                <td>{{ balancete_patrimonio_grupo_atual.subtotal_rotulo }}</td>
+                                <td><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ balancete_patrimonio_grupo_atual.subtotal|br_money }}</span></span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    {% endif %}
+                </section>
+                {% endif %}
+
                 {% if exibir_transferencias and transferencias_periodo %}
                     <section class="balancete-section no-print">
                         <h3 class="balancete-section-title">Transferencias exibidas para conferencia</h3>
@@ -656,7 +712,7 @@
 
                 {% if assinatura_1 or assinatura_2 %}
                 <section class="balancete-section">
-                    <h3 class="balancete-section-title">6. ASSINATURAS</h3>
+                    <h3 class="balancete-section-title">{{ balancete_titulo_assinaturas }}</h3>
                     <div class="balancete-signatures">
                         {% if assinatura_1 %}
                         <div class="balancete-signature">

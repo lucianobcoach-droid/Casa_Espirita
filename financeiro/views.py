@@ -4362,9 +4362,17 @@ class PrestacaoContasFinanceiroView(FinanceiroPeriodoMixin, TemplateView):
 class BalanceteInstitucionalFinanceiroView(FinanceiroPeriodoMixin, TemplateView):
     permissao_requerida = 'financeiro.prestacao_contas.visualizar'
     template_name = 'financeiro/balancete_institucional.html'
+    FORMATO_OPERACIONAL = 'operacional'
+    FORMATO_OPERACIONAL_PATRIMONIO = 'operacional_patrimonio'
+    FORMATO_FINANCEIRO_COMPLETO = 'financeiro_completo'
     COMPOSICAO_DETALHADA = 'detalhada'
     COMPOSICAO_TIPO = 'tipo'
     COMPOSICAO_TOTAL = 'total'
+    formatos_balancete = (
+        (FORMATO_OPERACIONAL, 'Operacional'),
+        (FORMATO_OPERACIONAL_PATRIMONIO, 'Operacional + patrimonio vinculado'),
+        (FORMATO_FINANCEIRO_COMPLETO, 'Financeiro completo'),
+    )
     modos_composicao = (
         (COMPOSICAO_DETALHADA, 'Detalhada por conta'),
         (COMPOSICAO_TIPO, 'Consolidada por tipo de conta'),
@@ -4398,8 +4406,35 @@ class BalanceteInstitucionalFinanceiroView(FinanceiroPeriodoMixin, TemplateView)
             self.COMPOSICAO_TIPO,
         )
 
+    def _parse_formato_balancete(self) -> str:
+        formato = self._parse_choice_param(
+            'formato_balancete',
+            {
+                self.FORMATO_OPERACIONAL,
+                self.FORMATO_OPERACIONAL_PATRIMONIO,
+                self.FORMATO_FINANCEIRO_COMPLETO,
+            },
+            '',
+        )
+        if formato:
+            return formato
+
+        for nome_parametro in ('exibir_vinculadas', 'exibir_indisponiveis'):
+            valor = (self.request.GET.get(nome_parametro) or '').strip().lower()
+            if not valor:
+                continue
+            if valor in {'0', 'false', 'off', 'no', 'nao'}:
+                return self.FORMATO_OPERACIONAL
+            if valor in {'1', 'true', 'on', 'yes', 'sim'}:
+                return self.FORMATO_FINANCEIRO_COMPLETO
+
+        return self.FORMATO_OPERACIONAL
+
     def _parse_exibir_indisponiveis(self) -> bool:
-        return self._parse_boolean_select_param('exibir_indisponiveis', True)
+        return self._parse_formato_balancete() == self.FORMATO_FINANCEIRO_COMPLETO
+
+    def _parse_detalhar_patrimonio_vinculado(self) -> bool:
+        return self._parse_boolean_select_param('detalhar_patrimonio_vinculado', False)
 
     def _parse_assinatura_id(self, nome_parametro: str) -> int | None:
         valor = (self.request.GET.get(nome_parametro) or '').strip()
@@ -4603,6 +4638,26 @@ class BalanceteInstitucionalFinanceiroView(FinanceiroPeriodoMixin, TemplateView)
             'balancete_titulo_composicao': apresentacao['titulo_composicao'],
         }
 
+    def _montar_grupo_patrimonio_complementar(
+        self,
+        *,
+        itens: list[dict[str, object]],
+        subtotal: Decimal,
+        modo_composicao: str,
+    ) -> dict[str, object]:
+        return self._montar_grupo_apresentacao(
+            rotulo='Patrimonio vinculado/indisponivel',
+            subtotal_rotulo=(
+                'Total vinculado/indisponivel'
+                if modo_composicao == self.COMPOSICAO_TOTAL
+                else 'Subtotal vinculado/indisponivel'
+            ),
+            itens=itens,
+            subtotal=subtotal,
+            modo_composicao=modo_composicao,
+            mostrar_mensagens=modo_composicao == self.COMPOSICAO_DETALHADA,
+        )
+
     def _classificar_composicao_patrimonial(
         self,
         itens: list[dict[str, object]],
@@ -4697,11 +4752,11 @@ class BalanceteInstitucionalFinanceiroView(FinanceiroPeriodoMixin, TemplateView)
         self,
         *,
         context: dict[str, object],
-        exibir_indisponiveis: bool,
+        formato_balancete: str,
         classificacao_patrimonial_inicial: dict[str, object],
         classificacao_patrimonial_final: dict[str, object],
     ) -> dict[str, object]:
-        data_inicial_raw, data_final_raw, data_inicial, data_final, _periodo_error = self._parse_periodo()
+        _data_inicial_raw, _data_final_raw, data_inicial, data_final, _periodo_error = self._parse_periodo()
         contas_selecionadas = context.get('contas_selecionadas') or []
         contas_selecionadas_ids = [conta.id for conta in contas_selecionadas]
         contas_disponiveis_ids = [
@@ -4724,13 +4779,14 @@ class BalanceteInstitucionalFinanceiroView(FinanceiroPeriodoMixin, TemplateView)
             )
             == ContaFinanceira.DisponibilidadeConta.INDISPONIVEL
         ]
+        exibir_indisponiveis = formato_balancete == self.FORMATO_FINANCEIRO_COMPLETO
 
         if exibir_indisponiveis:
             saldo_inicial_apresentado = context.get('saldo_inicial_consolidado', Decimal('0.00'))
             saldo_final_apresentado = context.get('saldo_final_reconciliado', Decimal('0.00'))
             resumo_linhas = [
                 {
-                    'label': '(+) Saldo inicial financeiro',
+                    'label': '(+) Saldo financeiro inicial',
                     'valor': saldo_inicial_apresentado,
                     'total': False,
                 },
@@ -4763,7 +4819,7 @@ class BalanceteInstitucionalFinanceiroView(FinanceiroPeriodoMixin, TemplateView)
                 )
             resumo_linhas.append(
                 {
-                    'label': '(=) Saldo final financeiro',
+                    'label': '(=) Saldo financeiro final',
                     'valor': saldo_final_apresentado,
                     'total': True,
                 }
@@ -4886,12 +4942,111 @@ class BalanceteInstitucionalFinanceiroView(FinanceiroPeriodoMixin, TemplateView)
             'balancete_transferencias_disponiveis_resumo': transferencias_disponiveis,
         }
 
+    def _montar_contexto_formato_balancete(
+        self,
+        *,
+        formato_balancete: str,
+        composicao_saldo: str,
+        detalhar_patrimonio_vinculado: bool,
+        context: dict[str, object],
+        classificacao_patrimonial_inicial: dict[str, object],
+        classificacao_patrimonial_final: dict[str, object],
+    ) -> dict[str, object]:
+        if formato_balancete == self.FORMATO_FINANCEIRO_COMPLETO:
+            return {
+                'balancete_formato_label': 'Financeiro completo',
+                'balancete_label_composicao': 'Composicao do saldo financeiro',
+                'balancete_titulo_saldo_inicial': '1. SALDO FINANCEIRO INICIAL',
+                'balancete_titulo_entradas': '2. ENTRADAS DO PERIODO',
+                'balancete_titulo_saidas': '3. SAIDAS DO PERIODO',
+                'balancete_titulo_resumo': '4. RESUMO FINANCEIRO DO PERIODO',
+                'balancete_titulo_composicao_final': '5. COMPOSICAO DO SALDO FINANCEIRO FINAL',
+                'balancete_titulo_assinaturas': '6. ASSINATURAS',
+                'balancete_label_saldo_inicial_fallback': 'Saldo financeiro inicial',
+                'balancete_mostrar_filtro_detalhar_patrimonio': False,
+                'balancete_mostrar_bloco_patrimonial': False,
+                'balancete_detalhar_patrimonio_vinculado': False,
+            }
+
+        base = {
+            'balancete_label_composicao': 'Composicao do saldo operacional',
+            'balancete_titulo_saldo_inicial': '1. SALDO OPERACIONAL ANTERIOR',
+            'balancete_titulo_entradas': '2. ENTRADAS OPERACIONAIS',
+            'balancete_titulo_saidas': '3. SAIDAS OPERACIONAIS',
+            'balancete_titulo_resumo': '4. RESUMO OPERACIONAL DO PERIODO',
+            'balancete_titulo_composicao_final': '5. COMPOSICAO DO SALDO OPERACIONAL ATUAL',
+            'balancete_label_saldo_inicial_fallback': 'Saldo operacional anterior',
+            'balancete_mostrar_filtro_detalhar_patrimonio': False,
+            'balancete_mostrar_bloco_patrimonial': False,
+            'balancete_detalhar_patrimonio_vinculado': False,
+        }
+        if formato_balancete == self.FORMATO_OPERACIONAL:
+            return {
+                **base,
+                'balancete_formato_label': 'Operacional',
+                'balancete_titulo_assinaturas': '6. ASSINATURAS',
+            }
+
+        transferencias_disponiveis = context.get('balancete_transferencias_disponiveis_resumo') or {
+            'saida_para_indisponivel': Decimal('0.00'),
+            'entrada_de_indisponivel': Decimal('0.00'),
+        }
+        patrimonio_linhas = [
+            {
+                'label': 'Saldo atual vinculado/indisponivel',
+                'valor': classificacao_patrimonial_final['balancete_subtotal_indisponivel'],
+                'total': True,
+            }
+        ]
+        if detalhar_patrimonio_vinculado:
+            patrimonio_linhas = [
+                {
+                    'label': 'Saldo inicial vinculado/indisponivel',
+                    'valor': classificacao_patrimonial_inicial['balancete_subtotal_indisponivel'],
+                    'total': False,
+                },
+                {
+                    'label': 'Entradas para saldo vinculado/indisponivel',
+                    'valor': transferencias_disponiveis['saida_para_indisponivel'],
+                    'total': False,
+                },
+                {
+                    'label': 'Saidas do saldo vinculado/indisponivel',
+                    'valor': transferencias_disponiveis['entrada_de_indisponivel'],
+                    'total': False,
+                },
+                {
+                    'label': 'Saldo atual vinculado/indisponivel',
+                    'valor': classificacao_patrimonial_final['balancete_subtotal_indisponivel'],
+                    'total': True,
+                },
+            ]
+
+        grupo_patrimonial = self._montar_grupo_patrimonio_complementar(
+            itens=classificacao_patrimonial_final['balancete_composicao_indisponivel'],
+            subtotal=classificacao_patrimonial_final['balancete_subtotal_indisponivel'],
+            modo_composicao=composicao_saldo,
+        )
+        return {
+            **base,
+            'balancete_formato_label': 'Operacional + patrimonio vinculado',
+            'balancete_titulo_assinaturas': '7. ASSINATURAS',
+            'balancete_mostrar_filtro_detalhar_patrimonio': True,
+            'balancete_mostrar_bloco_patrimonial': True,
+            'balancete_detalhar_patrimonio_vinculado': detalhar_patrimonio_vinculado,
+            'balancete_titulo_bloco_patrimonial': '6. INFORMACAO PATRIMONIAL COMPLEMENTAR',
+            'balancete_patrimonio_linhas': patrimonio_linhas,
+            'balancete_patrimonio_grupo_atual': grupo_patrimonial,
+        }
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['page_title'] = 'Balancete Institucional'
         context.update(montar_contexto_fechamento_periodo(self))
+        formato_balancete = self._parse_formato_balancete()
         composicao_saldo = self._parse_composicao_saldo()
-        exibir_indisponiveis = self._parse_exibir_indisponiveis()
+        detalhar_patrimonio_vinculado = self._parse_detalhar_patrimonio_vinculado()
+        exibir_indisponiveis = formato_balancete == self.FORMATO_FINANCEIRO_COMPLETO
         assinaturas_disponiveis, assinatura_1, assinatura_2 = self._resolver_assinaturas_balancete()
         mostrar_contas_zeradas = bool(context.get('mostrar_contas_zeradas'))
         composicao_inicial = context.get('composicao_inicial') or []
@@ -4916,8 +5071,8 @@ class BalanceteInstitucionalFinanceiroView(FinanceiroPeriodoMixin, TemplateView)
             subtotal_indisponivel=classificacao_patrimonial_inicial['balancete_subtotal_indisponivel'],
             modo_composicao=composicao_saldo,
             exibir_indisponiveis=exibir_indisponiveis,
-            rotulo_total_oculto='Saldo inicial disponivel operacional',
-            rotulo_total_completo='Saldo inicial financeiro',
+            rotulo_total_oculto='Saldo operacional anterior',
+            rotulo_total_completo='Saldo financeiro inicial',
             titulo_quando_oculto='Composicao do saldo inicial apresentado',
             titulo_quando_completo='Composicao patrimonial do saldo inicial',
         )
@@ -4937,6 +5092,8 @@ class BalanceteInstitucionalFinanceiroView(FinanceiroPeriodoMixin, TemplateView)
                 'assinatura_2': assinatura_2,
                 'assinatura_1_id': assinatura_1.pk if assinatura_1 else '',
                 'assinatura_2_id': assinatura_2.pk if assinatura_2 else '',
+                'balancete_formatos': self.formatos_balancete,
+                'balancete_formato': formato_balancete,
                 'balancete_modos_composicao': self.modos_composicao,
                 'balancete_opcoes_booleanas': self.opcoes_booleanas,
                 'balancete_composicao_saldo': composicao_saldo,
@@ -4995,7 +5152,17 @@ class BalanceteInstitucionalFinanceiroView(FinanceiroPeriodoMixin, TemplateView)
         context.update(
             self._montar_contexto_apresentado_balancete(
                 context=context,
-                exibir_indisponiveis=exibir_indisponiveis,
+                formato_balancete=formato_balancete,
+                classificacao_patrimonial_inicial=classificacao_patrimonial_inicial,
+                classificacao_patrimonial_final=classificacao_patrimonial,
+            )
+        )
+        context.update(
+            self._montar_contexto_formato_balancete(
+                formato_balancete=formato_balancete,
+                composicao_saldo=composicao_saldo,
+                detalhar_patrimonio_vinculado=detalhar_patrimonio_vinculado,
+                context=context,
                 classificacao_patrimonial_inicial=classificacao_patrimonial_inicial,
                 classificacao_patrimonial_final=classificacao_patrimonial,
             )

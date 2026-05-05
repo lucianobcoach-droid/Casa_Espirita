@@ -4,6 +4,12 @@ Data: 2026-04-30
 
 ## Refinamento do Balancete por publico e composicao
 
+- implementei a arquitetura do Balancete por `Formato do Balancete`, substituindo o filtro solto de vinculadas/indisponiveis por tres formatos reais de uso: `Operacional`, `Operacional + patrimonio vinculado` e `Financeiro completo`
+- no formato `Operacional`, o relatorio agora mostra apenas o universo disponivel e continua tratando transferencias com saldo vinculado como movimentacao especifica de fronteira
+- no formato `Operacional + patrimonio vinculado`, acrescentei bloco patrimonial complementar separado do resumo operacional, com opcao de detalhamento do patrimonio vinculado
+- no formato `Financeiro completo`, mantive a leitura total da instituicao e removi da interface qualquer dependencia do filtro antigo de exibir/ocultar vinculadas
+- mantive o mesmo filtro de composicao para saldo inicial e saldo final dentro do formato ativo e preservei a base de calculo do Fechamento/Prestacao sem alteracao funcional
+
 - registrei documentalmente a nova arquitetura funcional do Balancete por `Formato do Balancete`, com tres formatos: `Operacional`, `Operacional + patrimonio vinculado` e `Financeiro completo`
 - registrei que os filtros complementares passam a ser dependentes do formato escolhido e que o filtro antigo `Exibir contas vinculadas/indisponiveis` deve ser substituido por essa logica orientada por intencao
 - formalizei que, no formato operacional, transferencias entre disponivel e vinculado entram no resumo como movimentacao especifica de fronteira e nao como receita/despesa operacional

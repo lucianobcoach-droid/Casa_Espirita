@@ -77,6 +77,7 @@ Este documento consolida regras permanentes do sistema. Ele não substitui o his
 - A proxima arquitetura funcional do Balancete deve ser orientada por `Formato do Balancete`, com tres opcoes: `Operacional`, `Operacional + patrimonio vinculado` e `Financeiro completo`.
 - Filtros complementares do Balancete devem ser dependentes do formato selecionado; o sistema nao deve exibir filtros que nao fazem sentido para o formato ativo.
 - No formato `Operacional`, o relatorio representa apenas o universo disponivel; no formato `Operacional + patrimonio vinculado`, o bloco patrimonial deve vir separado do resumo operacional; no formato `Financeiro completo`, a leitura deve ser total da instituicao.
+- O filtro antigo de exibir/ocultar vinculadas nao deve permanecer como controle principal da experiencia; quando houver necessidade de patrimonio vinculado no Balancete, a intencao do usuario deve ser definida pelo `Formato do Balancete`.
 - O Balancete deve poder exibir a composição do saldo em modos distintos:
   - detalhado por conta, mostrando cada conta individualmente;
   - consolidado por tipo de conta, somando contas do mesmo tipo;

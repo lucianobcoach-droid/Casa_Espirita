@@ -4,6 +4,12 @@ Data de atualizacao: 2026-04-30
 
 ## Simplificacao dos filtros do Balancete patrimonial
 
+- implementada a arquitetura funcional por `Formato do Balancete`, com tres formatos: `Operacional`, `Operacional + patrimonio vinculado` e `Financeiro completo`
+- o filtro antigo `Exibir contas vinculadas/indisponiveis` saiu da interface; a experiencia passa a ser orientada pelo formato principal e por filtros complementares dependentes
+- no formato `Operacional`, o documento fecha apenas pelo saldo disponivel operacional
+- no formato `Operacional + patrimonio vinculado`, o bloco operacional permanece separado e o patrimonio vinculado aparece em bloco complementar proprio, com detalhamento opcional
+- no formato `Financeiro completo`, o Balancete representa a leitura financeira total da instituicao, com saldo disponivel, saldo vinculado e saldo total financeiro
+- a mudanca foi apenas de apresentacao/classificacao do Balancete; nao houve alteracao da base de calculo nem dos demais relatorios
 - arquitetura funcional aprovada para proxima evolucao do Balancete: filtro principal `Formato do Balancete` com tres opcoes (`Operacional`, `Operacional + patrimonio vinculado`, `Financeiro completo`)
 - o filtro antigo `Exibir contas vinculadas/indisponiveis` passa a ser substituido por filtros dependentes do formato escolhido
 - formato `Operacional`: mostra apenas universo disponivel, sem bloco vinculado e sem mensagens patrimoniais
