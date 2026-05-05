@@ -10,9 +10,17 @@ Data de atualizacao: 2026-04-30
 - a composicao do saldo permanece com tres modos: detalhada por conta, consolidada por tipo de conta e total consolidado; o padrao atual passou a ser `Consolidada por tipo de conta`
 - o mesmo filtro `Composicao do saldo` agora comanda tanto o saldo inicial quanto o saldo final: se for por conta, as duas pontas ficam por conta; se for por tipo, as duas pontas ficam por tipo; se for consolidado, as duas pontas ficam consolidadas
 - a opcao de exibir ou ocultar contas vinculadas/indisponiveis continua apenas documental/visual e nao altera calculo, saldo final financeiro, lancamentos ou transferencias
-- quando as contas vinculadas/indisponiveis ficam ocultas, o Balancete deixa claro que a composicao exibida e apenas do saldo disponivel operacional e mostra observacao discreta sobre a ocultacao
+- quando as contas vinculadas/indisponiveis ficam ocultas, o Balancete deixa claro isso pelos rotulos da composicao apresentada, sem aviso textual adicional chamando atencao para as contas ocultas
 - os filtros de composicao e vinculadas/indisponiveis deixaram de aparecer como metadados no cabecalho impresso
 - o layout impresso foi mantido compacto, com fonte menor, menos espacamento vertical e sequencia documental mais direta, buscando caber em uma pagina quando o volume permitir
+
+## Correcao da sequencia documental do Balancete
+
+- o Balancete Institucional deixou de comecar por `Resumo financeiro do periodo`
+- a sequencia documental foi corrigida para: `Saldo inicial financeiro`, `Entradas do periodo`, `Saidas do periodo`, `Resumo operacional do periodo`, `Composicao do saldo final` e `Assinaturas`
+- a composicao do saldo inicial deixou de ficar misturada dentro do resumo e passou a abrir o documento como bloco proprio
+- o resumo operacional passou a vir depois de entradas e saidas, mantendo a base financeira ja calculada e sem alterar reconciliacao
+- a mensagem `Contas vinculadas/indisponiveis nao exibidas nesta composicao...` foi removida quando as contas indisponiveis/vinculadas ficam ocultas
 
 ## Leitura patrimonial no Balancete Institucional
 

@@ -622,7 +622,7 @@ class PrestacaoContasTransferenciasEscopoTests(TestCase):
         self.assertEqual(contexto['assinatura_1'], assinatura_unica)
         self.assertIsNone(contexto['assinatura_2'])
         html = self._render_balancete(request, contexto)
-        self.assertIn('5. ASSINATURAS', html)
+        self.assertIn('6. ASSINATURAS', html)
         self.assertIn('Pessoa Unica', html)
         self.assertNotIn('Responsavel institucional', html)
 
@@ -833,6 +833,7 @@ class PrestacaoContasTransferenciasEscopoTests(TestCase):
     def test_balancete_institucional_oculta_indisponiveis_quando_filtro_desligado(self):
         self.banco.disponibilidade = ContaFinanceira.DisponibilidadeConta.INDISPONIVEL
         self.banco.saldo_inicial = Decimal('20.00')
+        self.banco.mensagem_indisponibilidade = 'Saldo vinculado para reserva institucional.'
         self.banco.save(update_fields=['disponibilidade', 'saldo_inicial'])
         self.dinheiro.saldo_inicial = Decimal('10.00')
         self.dinheiro.save(update_fields=['saldo_inicial'])
@@ -861,7 +862,8 @@ class PrestacaoContasTransferenciasEscopoTests(TestCase):
             contexto['balancete_inicial_total_apresentado_rotulo'],
             'Saldo inicial disponivel operacional',
         )
-        self.assertIn('Contas vinculadas/indisponiveis nao exibidas nesta composicao.', html)
+        self.assertNotIn('Contas vinculadas/indisponiveis nao exibidas nesta composicao.', html)
+        self.assertNotIn('Saldo vinculado para reserva institucional.', html)
         self.assertNotIn('Saldo total financeiro', documento_html)
 
     def test_balancete_institucional_permite_modo_detalhado_por_conta(self):
@@ -1017,6 +1019,28 @@ class PrestacaoContasTransferenciasEscopoTests(TestCase):
         self.assertNotIn('Composicao:', documento_html)
         self.assertNotIn('Exibir vinculadas/indisponiveis', documento_html)
         self.assertNotIn('Detalhar saldo inicial por conta', documento_html)
+
+    def test_balancete_institucional_organiza_blocos_na_ordem_documental(self):
+        request, contexto = self._contexto_balancete(
+            [
+                ('data_inicial', '2026-03-01'),
+                ('data_final', '2026-03-31'),
+                ('contas', str(self.dinheiro.id)),
+            ]
+        )
+        html = self._render_balancete(request, contexto)
+
+        ordem = [
+            '1. SALDO INICIAL FINANCEIRO',
+            '2. ENTRADAS DO PERIODO',
+            '3. SAIDAS DO PERIODO',
+            '4. RESUMO OPERACIONAL DO PERIODO',
+            '5. COMPOSICAO DO SALDO FINAL',
+        ]
+        posicoes = [html.index(texto) for texto in ordem]
+
+        self.assertNotIn('1. RESUMO FINANCEIRO DO PERIODO', html)
+        self.assertEqual(posicoes, sorted(posicoes))
 
     def test_balancete_institucional_classifica_integralizacao_indisponivel(self):
         tipo_integralizacao = TipoContaFinanceira.objects.get(codigo='integralizacao_capital')

@@ -483,46 +483,9 @@
                 </div>
             </header>
             <section class="balancete-section">
-                <h3 class="balancete-section-title">1. RESUMO FINANCEIRO DO PERIODO</h3>
-                <table class="balancete-table balancete-summary-table">
+                <h3 class="balancete-section-title">1. SALDO INICIAL FINANCEIRO</h3>
+                <table class="balancete-table">
                     <tbody>
-                        <tr>
-                            <td>(+) Saldo inicial financeiro</td>
-                            <td><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_inicial_consolidado|br_money }}</span></span></td>
-                        </tr>
-                        <tr>
-                            <td>(+) Receitas do periodo</td>
-                            <td><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ total_receitas_periodo|br_money }}</span></span></td>
-                        </tr>
-                        <tr>
-                            <td>(-) Despesas do periodo</td>
-                            <td><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ total_despesas_periodo|br_money }}</span></span></td>
-                        </tr>
-                        {% if total_entradas_outras_contas %}
-                            <tr>
-                                <td>(+) Entradas de outras contas da instituicao</td>
-                                <td><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ total_entradas_outras_contas|br_money }}</span></span></td>
-                            </tr>
-                        {% endif %}
-                        {% if total_saidas_outras_contas %}
-                            <tr>
-                                <td>(-) Saidas para outras contas da instituicao</td>
-                                <td><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ total_saidas_outras_contas|br_money }}</span></span></td>
-                            </tr>
-                        {% endif %}
-                        <tr class="balancete-total-row">
-                            <td>(=) Saldo final financeiro</td>
-                            <td><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_final_reconciliado|br_money }}</span></span></td>
-                        </tr>
-                    </tbody>
-                </table>
-                {% if not reconciliacao_saldo_consistente %}
-                    <p class="balancete-note">Atencao: o saldo final reconciliado difere da composicao final calculada.</p>
-                {% endif %}
-                {% if balancete_inicial_grupos_apresentacao %}
-                    <p class="balancete-note">{{ balancete_inicial_titulo_composicao }}</p>
-                    <table class="balancete-table" style="margin-top: 0.28rem;">
-                        <tbody>
                         {% for grupo in balancete_inicial_grupos_apresentacao %}
                             {% if grupo.mostrar_itens %}
                                 <tr class="balancete-group-row">
@@ -548,7 +511,8 @@
                             </tr>
                         {% empty %}
                             <tr>
-                                <td colspan="2">Nao houve saldo inicial apresentado para as contas abrangidas.</td>
+                                <td>Saldo inicial financeiro</td>
+                                <td><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_inicial_consolidado|br_money }}</span></span></td>
                             </tr>
                         {% endfor %}
                         </tbody>
@@ -564,12 +528,11 @@
                     {% if balancete_inicial_nota_indisponiveis_ocultas %}
                         <p class="balancete-note">{{ balancete_inicial_nota_indisponiveis_ocultas }}</p>
                     {% endif %}
-                {% endif %}
             </section>
 
             <div class="balancete-print-final">
                 <section class="balancete-section">
-                    <h3 class="balancete-section-title">2. RECEITAS DO PERIODO</h3>
+                    <h3 class="balancete-section-title">2. ENTRADAS DO PERIODO</h3>
                     <table class="balancete-table">
                         <tbody>
                         {% for item in receitas_por_categoria %}
@@ -585,7 +548,7 @@
                         </tbody>
                         <tfoot>
                         <tr>
-                            <th>Total de receitas</th>
+                            <th>Total de entradas</th>
                             <th><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ total_receitas_por_categoria|br_money }}</span></span></th>
                         </tr>
                         </tfoot>
@@ -593,7 +556,7 @@
                 </section>
 
                 <section class="balancete-section">
-                    <h3 class="balancete-section-title">3. DESPESAS DO PERIODO</h3>
+                    <h3 class="balancete-section-title">3. SAIDAS DO PERIODO</h3>
                     <table class="balancete-table">
                         <tbody>
                         {% for item in despesas_por_categoria %}
@@ -609,7 +572,7 @@
                         </tbody>
                         <tfoot>
                         <tr>
-                            <th>Total de despesas</th>
+                            <th>Total de saidas</th>
                             <th><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ total_despesas_por_categoria|br_money }}</span></span></th>
                         </tr>
                         </tfoot>
@@ -617,7 +580,46 @@
                 </section>
 
                 <section class="balancete-section">
-                    <h3 class="balancete-section-title">{{ balancete_titulo_composicao }}</h3>
+                    <h3 class="balancete-section-title">4. RESUMO OPERACIONAL DO PERIODO</h3>
+                    <table class="balancete-table balancete-summary-table">
+                        <tbody>
+                            <tr>
+                                <td>(+) Saldo inicial financeiro</td>
+                                <td><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_inicial_consolidado|br_money }}</span></span></td>
+                            </tr>
+                            <tr>
+                                <td>(+) Entradas do periodo</td>
+                                <td><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ total_receitas_periodo|br_money }}</span></span></td>
+                            </tr>
+                            <tr>
+                                <td>(-) Saidas do periodo</td>
+                                <td><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ total_despesas_periodo|br_money }}</span></span></td>
+                            </tr>
+                            {% if total_entradas_outras_contas %}
+                                <tr>
+                                    <td>(+) Entradas de outras contas da instituicao</td>
+                                    <td><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ total_entradas_outras_contas|br_money }}</span></span></td>
+                                </tr>
+                            {% endif %}
+                            {% if total_saidas_outras_contas %}
+                                <tr>
+                                    <td>(-) Saidas para outras contas da instituicao</td>
+                                    <td><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ total_saidas_outras_contas|br_money }}</span></span></td>
+                                </tr>
+                            {% endif %}
+                            <tr class="balancete-total-row">
+                                <td>(=) Saldo final financeiro</td>
+                                <td><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ saldo_final_reconciliado|br_money }}</span></span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    {% if not reconciliacao_saldo_consistente %}
+                        <p class="balancete-note">Atencao: o saldo final reconciliado difere da composicao final calculada.</p>
+                    {% endif %}
+                </section>
+
+                <section class="balancete-section">
+                    <h3 class="balancete-section-title">5. COMPOSICAO DO SALDO FINAL</h3>
                     <table class="balancete-table">
                         <tbody>
                         {% for grupo in balancete_grupos_apresentacao %}
@@ -681,7 +683,7 @@
 
                 {% if assinatura_1 or assinatura_2 %}
                 <section class="balancete-section">
-                    <h3 class="balancete-section-title">5. ASSINATURAS</h3>
+                    <h3 class="balancete-section-title">6. ASSINATURAS</h3>
                     <div class="balancete-signatures">
                         {% if assinatura_1 %}
                         <div class="balancete-signature">

@@ -4562,10 +4562,7 @@ class BalanceteInstitucionalFinanceiroView(FinanceiroPeriodoMixin, TemplateView)
                 else rotulo_total_completo
             ),
             'nota_indisponiveis_ocultas': (
-                'Contas vinculadas/indisponiveis nao exibidas nesta composicao. '
-                'O resumo financeiro acima continua considerando o universo selecionado.'
-                if ocultou_indisponiveis
-                else ''
+                ''
             ),
             'titulo_composicao': (
                 titulo_quando_oculto

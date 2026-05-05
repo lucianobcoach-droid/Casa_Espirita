@@ -67,8 +67,10 @@ Este documento consolida regras permanentes do sistema. Ele não substitui o his
 - O saldo total financeiro do Balancete deve continuar igual à composição final já calculada pela base compartilhada; a separação patrimonial é apenas classificatória.
 - No Balancete, a diferenca pratica de leitura deve ser controlada diretamente pelos filtros de composicao do saldo e exibicao de vinculadas/indisponiveis, sem depender de filtros redundantes de modelo do relatorio ou detalhamento separado do saldo inicial.
 - Quando contas vinculadas/indisponiveis forem ocultadas na composicao patrimonial, o documento deve deixar claro que a composicao exibida representa apenas o saldo disponivel operacional.
+- Quando contas vinculadas/indisponiveis forem ocultadas, o Balancete nao deve exibir aviso textual chamando atencao para a ocultacao; a diferenca deve aparecer apenas na propria composicao apresentada e nos rotulos aplicados.
 - Os filtros de composicao e exibicao de vinculadas/indisponiveis nao devem aparecer como metadados no cabecalho impresso do Balancete.
 - O mesmo modo de composicao do Balancete deve valer para o saldo inicial e para o saldo final: se a leitura for por conta, as duas pontas devem ser por conta; se for por tipo, as duas pontas devem ser por tipo; se for consolidada, as duas pontas devem ser consolidadas.
+- A sequencia documental do Balancete deve seguir a ordem: saldo inicial financeiro, entradas do periodo, saidas do periodo, resumo operacional do periodo, composicao do saldo final e assinaturas.
 - O Balancete deve poder exibir a composição do saldo em modos distintos:
   - detalhado por conta, mostrando cada conta individualmente;
   - consolidado por tipo de conta, somando contas do mesmo tipo;

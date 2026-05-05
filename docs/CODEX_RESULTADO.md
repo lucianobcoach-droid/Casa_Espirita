@@ -4,6 +4,11 @@ Data: 2026-04-30
 
 ## Refinamento do Balancete por publico e composicao
 
+- corrigi a sequencia documental do Balancete para abrir com `Saldo inicial financeiro`, seguir com `Entradas do periodo`, `Saidas do periodo`, `Resumo operacional do periodo`, `Composicao do saldo final` e `Assinaturas`
+- tirei a composicao do saldo inicial de dentro do resumo e mantive inicio e fim obedecendo ao mesmo filtro `Composicao do saldo`
+- removi a mensagem `Contas vinculadas/indisponiveis nao exibidas nesta composicao...` quando a opcao de exibir vinculadas/indisponiveis esta desligada
+- preservei a opcao de mostrar mensagens explicativas apenas para contas indisponiveis/vinculadas que estejam efetivamente sendo exibidas no documento
+
 - removi o filtro separado `Detalhar saldo inicial por conta`, pois ele ficou redundante diante do proprio filtro `Composicao do saldo`
 - alinhei a apresentacao do saldo inicial ao mesmo modo da composicao final: detalhada por conta, consolidada por tipo de conta ou total consolidado
 - mantive a opcao de exibir/ocultar vinculadas/indisponiveis valendo para as duas pontas, sem alterar calculo financeiro, saldo, lancamentos, Extrato ou Fechamento/Prestacao
