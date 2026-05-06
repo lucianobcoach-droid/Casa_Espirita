@@ -4585,3 +4585,13 @@ Não houve alteração de código funcional nesta etapa.
 - favorecido nao recorrente ou rateio sem subcategoria controlada continuam sem exigir competencias
 - clone de rateio continua sem copiar competencias automaticamente
 - sem alteracao de calculo financeiro, saldos, Balancete, Extrato, Fechamento/Prestacao ou demais relatorios existentes
+
+## Microetapa: registro de pendencias apos competencias no rateio
+
+- etapa exclusivamente documental, sem alteracao de codigo
+- nova frente registrada: auditoria acionavel (backlog com SPEC propria obrigatoria)
+- pendencia registrada na listagem de lancamentos: ausencia de acoes esperadas (exclusao/recibo) em alguns casos, com necessidade de auditoria tecnica/UX dedicada
+- regra recomendada registrada para proxima implementacao: impedir duplicidade de mes/ano dentro do mesmo lancamento e da mesma subcategoria controlada, em simples e rateio
+- mensagem orientativa sugerida para essa validacao futura:
+  - `Ja existe uma competencia informada para este mes/ano. Agrupe o valor em uma unica linha.`
+- regra de exclusao atual reafirmada: alocacoes de competencia continuam em cascade com a linha/lancamento vinculado

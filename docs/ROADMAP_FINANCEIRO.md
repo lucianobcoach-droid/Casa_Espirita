@@ -1039,3 +1039,20 @@ Leituras gerenciais:
 - create com rateio e edicao coordenada do grupo passaram a persistir/remover alocacoes de forma coerente com as linhas finais do grupo
 - clone de rateio continua sem copiar competencias automaticamente
 - permanecem para as proximas microetapas: matriz mensal com valores, matriz sem valores derivada e termo por favorecido
+
+## 20. Pendencias novas apos rateio controlado
+
+- **Auditoria acionavel**: FUTURO/BACKLOG, com SPEC propria obrigatoria antes de implementacao
+  - links da auditoria para objeto auditado quando existir
+  - navegacao direta para lancamento/pessoa/categoria/documento relacionado
+  - leitura de antes/depois em formato claro
+  - indicacao explicita de objeto excluido
+  - estudo de desfazer/restaurar apenas com seguranca forte, permissao dedicada e trilha da reversao
+- **Listagem de lancamentos - acoes faltantes**: pendencia funcional/UX para auditoria tecnica
+  - usuaria observou ausencia de acoes esperadas (exclusao/recibo) em alguns lancamentos
+  - nao corrigir sem primeiro mapear recorte tecnico (rateio, competencia, linha controlada ou outro)
+- **Competencias duplicadas no mesmo lancamento/subcategoria**: regra recomendada para proxima implementacao
+  - manter soma entre multiplos lancamentos na matriz futura
+  - bloquear repeticao de mes/ano dentro do mesmo lancamento e mesma subcategoria controlada
+  - mensagem sugerida:
+    - `Ja existe uma competencia informada para este mes/ano. Agrupe o valor em uma unica linha.`

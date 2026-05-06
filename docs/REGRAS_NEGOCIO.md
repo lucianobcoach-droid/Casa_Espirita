@@ -132,6 +132,10 @@ Este documento consolida regras permanentes do sistema. Ele não substitui o his
 - No recorte cadastral minimo ja entregue, a marcacao de subcategoria controlada fica em `CategoriaFinanceira.controla_recorrencia_competencia`, com default `False` para nao incluir subcategorias antigas automaticamente.
 - Itens do mesmo recebimento com subcategorias nao recorrentes (livro, camisa, doacao avulsa etc.) ficam fora da frequencia, mesmo quando o favorecido for recorrente.
 - Multiplos lancamentos para a mesma pessoa/subcategoria/competencia devem ser somados na matriz; nao devem ser bloqueados automaticamente como duplicidade.
+- Dentro do mesmo lancamento e da mesma subcategoria controlada, mes/ano de competencia duplicado deve ser bloqueado em validacao futura, para evitar ambiguidade de leitura.
+- Mensagem recomendada para essa validacao futura:
+  - `Ja existe uma competencia informada para este mes/ano. Agrupe o valor em uma unica linha.`
 - Em clone comum, competencias existentes nao devem ser copiadas automaticamente para o novo lancamento.
 - Em clone de rateio, competencias tambem nao devem ser copiadas automaticamente para evitar duplicidade de quitacao por competencia.
 - No MVP inicial, nao abrir modulo separado de baixa; manter o fluxo no proprio lancamento e tratar termo por favorecido como segunda onda apos validacao da matriz.
+- Alocacoes de competencia vinculadas ao lancamento/linha controlada seguem exclusao por cascade; qualquer necessidade de restauracao futura deve ser tratada na frente de auditoria acionavel, nao na regra atual de competencias.

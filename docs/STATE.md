@@ -3399,3 +3399,14 @@ Riscos principais antes de migration:
 - exclusao da linha/lancamento continua removendo as alocacoes vinculadas por cascade
 - ainda nao existe matriz mensal com valores, matriz sem valores ou termo por favorecido
 - nao houve alteracao de calculo financeiro, saldos, Balancete, Extrato, Fechamento/Prestacao ou demais relatorios existentes
+
+## Novas pendencias apos competencias no rateio controlado
+
+- frente futura registrada: **auditoria acionavel** (pendente de SPEC propria), com necessidade de:
+  - navegacao direta do registro de auditoria para o objeto/documento auditado quando existir
+  - leitura clara de antes/depois
+  - sinalizacao explicita quando o objeto auditado ja tiver sido excluido
+  - estudo de desfazer/restaurar apenas com seguranca forte, trilha de reversao e permissoes especificas
+- pendencia funcional/UX registrada: usuaria observou ausencia de acoes esperadas (exclusao/recibo) em alguns lancamentos da listagem; ficou definido auditar tecnicamente esse recorte antes de qualquer correcao
+- regra recomendada registrada para proxima etapa funcional: bloquear mes/ano duplicado dentro do mesmo lancamento e da mesma subcategoria controlada (simples e rateio), orientando consolidacao do valor em linha unica
+- regra atual preservada: alocacoes seguem exclusao por cascade junto da linha/lancamento; qualquer restauracao futura fica no escopo da frente de auditoria acionavel, nao na regra atual de competencias

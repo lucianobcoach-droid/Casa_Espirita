@@ -118,3 +118,23 @@ Criar um mapa de reclassificação dos itens do ROADMAP_FINANCEIRO.md e do CEREB
 - dúvida que exige conferência no código.
 
 Essa etapa deve continuar sendo apenas documental.
+
+## Complemento de backlog - auditoria acionavel (pos-rateio controlado)
+
+Foi registrada uma pendencia transversal para a frente de auditoria:
+
+- hoje a auditoria mostra eventos, mas ainda nao oferece acao direta para abrir o objeto/documento auditado
+- tambem nao existe mecanismo de desfazer/restaurar alteracoes com governanca forte
+
+Direcao de classificacao:
+
+- manter como FUTURO/BACKLOG com SPEC propria antes de implementacao
+- incluir no escopo futuro:
+  - link para objeto auditado quando existir
+  - indicacao clara de objeto excluido
+  - visao antes/depois mais operacional
+  - estudo de reversao com permissao dedicada e trilha da propria reversao
+
+Risco principal:
+
+- qualquer reversao pode afetar calculo financeiro, saldos, recibos, competencias, rateios e documentos emitidos; por isso, nao deve ser implementada sem modelagem de seguranca especifica.

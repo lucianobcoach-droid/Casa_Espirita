@@ -966,3 +966,36 @@ Consolidacao:
 
 Proxima etapa recomendada:
 - implementar a matriz mensal com valores a partir das alocacoes ja registradas
+
+### 37. Auditoria acionavel (transversal)
+
+Status: FUTURO/BACKLOG - REQUER SPEC PROPRIA
+
+Consolidacao:
+- necessidade registrada para toda a auditoria, nao apenas lancamentos
+- objetivo futuro: permitir navegar do evento auditado para o objeto/documento relacionado quando ainda existir
+- quando o objeto nao existir mais, auditoria deve sinalizar exclusao de forma clara
+- desfazer/restaurar so pode ser avaliado com trilha de reversao, permissao dedicada e regras fortes de seguranca
+
+Riscos:
+- reversao pode impactar calculo financeiro, saldos, recibos, competencias, rateios e documentos emitidos
+- sem snapshot suficiente, exclusao pode nao ser restauravel com seguranca
+
+### 38. Listagem de lancamentos - acoes faltantes (exclusao/recibo)
+
+Status: AGUARDANDO AUDITORIA TECNICA/UX
+
+Consolidacao:
+- usuaria observou ausencia de acoes esperadas em alguns lancamentos da listagem
+- pendencia registrada para auditoria funcional antes de correcao
+- recorte tecnico ainda precisa identificar se ocorre em rateio, competencias, linhas controladas ou outro caso
+
+### 39. Competencias duplicadas no mesmo lancamento/subcategoria
+
+Status: REGRA RECOMENDADA - PENDENTE DE IMPLEMENTACAO
+
+Consolidacao:
+- matriz futura deve continuar somando multiplos lancamentos da mesma pessoa/subcategoria/competencia
+- dentro do mesmo lancamento e mesma subcategoria controlada, repetir o mesmo mes/ano deve ser bloqueado
+- mensagem sugerida:
+  - `Ja existe uma competencia informada para este mes/ano. Agrupe o valor em uma unica linha.`
