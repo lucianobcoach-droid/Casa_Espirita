@@ -11,6 +11,7 @@ from django.forms.models import construct_instance
 from django.urls import reverse_lazy
 
 from .models import (
+    AlocacaoCompetenciaFinanceira,
     AssinaturaInstitucional,
     CategoriaFinanceira,
     ConfiguracaoInstitucional,
@@ -216,11 +217,13 @@ class LancamentoFinanceiroForm(forms.ModelForm):
         help_text='Usado apenas para validar o fechamento do rateio nesta etapa.',
     )
     rateio_payload = forms.CharField(required=False, widget=forms.HiddenInput())
+    competencias_payload = forms.CharField(required=False, widget=forms.HiddenInput())
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._rateio_group_token = self.instance.grupo_rateio or uuid4().hex
         self.rateio_linhas_iniciais = []
+        self.competencias_linhas_iniciais = []
         tipo_atual = self._get_tipo_atual()
         categoria_inicial = self.initial.get('categoria') or self.instance.categoria
         categoria_inicial_id = getattr(categoria_inicial, 'pk', categoria_inicial)
@@ -260,13 +263,35 @@ class LancamentoFinanceiroForm(forms.ModelForm):
             self.fields['salvar_como_regra_automatica'].widget = forms.HiddenInput()
             self.fields['valor_total_documento'].widget = forms.HiddenInput()
             self.fields['rateio_payload'].widget = forms.HiddenInput()
-        elif self.is_bound:
+        if self.is_bound:
             self.rateio_linhas_iniciais = self._parse_rateio_payload(self.data.get('rateio_payload', ''))
+            self.competencias_linhas_iniciais = self._parse_competencias_payload(
+                self.data.get('competencias_payload', '')
+            )
         else:
-            self.rateio_linhas_iniciais = [
-                {'categoria': '', 'valor': ''},
-                {'categoria': '', 'valor': ''},
-            ]
+            if self.instance.pk:
+                self.competencias_linhas_iniciais = [
+                    {
+                        'mes': str(alocacao.mes_competencia),
+                        'ano': str(alocacao.ano_competencia),
+                        'valor': f'{alocacao.valor_alocado:.2f}',
+                    }
+                    for alocacao in self.instance.alocacoes_competencia.order_by(
+                        'ano_competencia',
+                        'mes_competencia',
+                        'pk',
+                    )
+                ]
+            else:
+                self.rateio_linhas_iniciais = [
+                    {'categoria': '', 'valor': ''},
+                    {'categoria': '', 'valor': ''},
+                ]
+        self.competencias_bloco_visivel = bool(
+            self.competencias_linhas_iniciais or (
+                self.instance.pk and self.instance.usa_controle_competencia()
+            )
+        )
         autocomplete_urls = {
             'pessoa': reverse_lazy('financeiro:autocomplete-pessoa'),
             'categoria': reverse_lazy('financeiro:autocomplete-categoria'),
@@ -313,6 +338,127 @@ class LancamentoFinanceiroForm(forms.ModelForm):
                 }
             )
         return linhas
+
+    def _parse_competencias_payload(self, payload: str) -> list[dict[str, str]]:
+        if not payload:
+            return []
+        try:
+            data = json.loads(payload)
+        except json.JSONDecodeError:
+            return []
+        if not isinstance(data, list):
+            return []
+
+        linhas: list[dict[str, str]] = []
+        for item in data:
+            if not isinstance(item, dict):
+                continue
+            linhas.append(
+                {
+                    'mes': str(item.get('mes', '') or '').strip(),
+                    'ano': str(item.get('ano', '') or '').strip(),
+                    'valor': str(item.get('valor', '') or '').strip(),
+                }
+            )
+        return linhas
+
+    def _lancamento_requer_competencias(
+        self,
+        cleaned_data: dict,
+        *,
+        lancamento_com_rateio: bool,
+    ) -> bool:
+        if lancamento_com_rateio:
+            return False
+
+        tipo = cleaned_data.get('tipo')
+        pessoa = cleaned_data.get('pessoa')
+        categoria = cleaned_data.get('categoria')
+        return bool(
+            tipo in {
+                LancamentoFinanceiro.TipoLancamento.RECEITA,
+                LancamentoFinanceiro.TipoLancamento.DESPESA,
+            }
+            and pessoa
+            and categoria
+            and pessoa.contribuinte_recorrente
+            and categoria.controla_recorrencia_competencia
+            and categoria.permite_vinculo_em_lancamento
+        )
+
+    def _validar_competencias(self, cleaned_data: dict) -> None:
+        linhas_brutas = self._parse_competencias_payload(cleaned_data.get('competencias_payload', ''))
+        self.competencias_linhas_iniciais = linhas_brutas or [{'mes': '', 'ano': '', 'valor': ''}]
+
+        if not linhas_brutas:
+            self.add_error(
+                'competencias_payload',
+                'Informe ao menos uma competencia atendida.',
+            )
+            cleaned_data['competencias_linhas'] = []
+            return
+
+        linhas_validas: list[dict[str, object]] = []
+        soma_competencias = Decimal('0.00')
+        for indice, linha in enumerate(linhas_brutas, start=1):
+            mes_raw = linha.get('mes', '')
+            ano_raw = linha.get('ano', '')
+            valor_raw = linha.get('valor', '')
+            if not mes_raw and not ano_raw and not valor_raw:
+                continue
+
+            try:
+                mes = int(mes_raw)
+            except (TypeError, ValueError):
+                self.add_error('competencias_payload', f'Linha {indice}: informe um mes valido.')
+                continue
+
+            try:
+                ano = int(ano_raw)
+            except (TypeError, ValueError):
+                self.add_error('competencias_payload', f'Linha {indice}: informe um ano valido.')
+                continue
+
+            try:
+                valor = Decimal(valor_raw)
+            except (InvalidOperation, TypeError):
+                self.add_error('competencias_payload', f'Linha {indice}: informe um valor valido.')
+                continue
+
+            if mes < 1 or mes > 12:
+                self.add_error('competencias_payload', f'Linha {indice}: o mes precisa ficar entre 1 e 12.')
+                continue
+
+            if ano < 1900 or ano > 9999:
+                self.add_error('competencias_payload', f'Linha {indice}: informe um ano valido.')
+                continue
+
+            if valor <= Decimal('0.00'):
+                self.add_error('competencias_payload', f'Linha {indice}: o valor precisa ser positivo.')
+                continue
+
+            linhas_validas.append(
+                {
+                    'mes_competencia': mes,
+                    'ano_competencia': ano,
+                    'valor_alocado': valor,
+                }
+            )
+            soma_competencias += valor
+
+        if not linhas_validas:
+            self.add_error('competencias_payload', 'Informe ao menos uma competencia atendida.')
+            cleaned_data['competencias_linhas'] = []
+            return
+
+        valor_controlado = cleaned_data.get('valor')
+        if valor_controlado is None or soma_competencias != valor_controlado:
+            self.add_error(
+                'competencias_payload',
+                'A soma das competencias deve ser igual ao valor controlado do lancamento.',
+            )
+
+        cleaned_data['competencias_linhas'] = linhas_validas
 
     def _limpar_rateio(self, cleaned_data: dict) -> None:
         cleaned_data['lancamento_com_rateio'] = False
@@ -439,6 +585,15 @@ class LancamentoFinanceiroForm(forms.ModelForm):
             if not cleaned_data.get('valor'):
                 self.add_error('valor', 'Informe o valor do lancamento.')
             self._limpar_rateio(cleaned_data)
+
+        cleaned_data['competencias_requeridas'] = self._lancamento_requer_competencias(
+            cleaned_data,
+            lancamento_com_rateio=lancamento_com_rateio,
+        )
+        if cleaned_data['competencias_requeridas']:
+            self._validar_competencias(cleaned_data)
+        else:
+            cleaned_data['competencias_linhas'] = []
         return cleaned_data
 
     def _post_clean(self):
@@ -499,6 +654,25 @@ class LancamentoFinanceiroForm(forms.ModelForm):
             'data_pagamento': forms.DateInput(attrs={'type': 'date'}),
             'observacoes': forms.Textarea(attrs={'rows': 4}),
         }
+
+    def save(self, commit=True):
+        instance = super().save(commit=commit)
+        if not commit:
+            return instance
+
+        if self.cleaned_data.get('competencias_requeridas'):
+            competencias_linhas = self.cleaned_data.get('competencias_linhas') or []
+            instance.alocacoes_competencia.all().delete()
+            for linha in competencias_linhas:
+                AlocacaoCompetenciaFinanceira.objects.create(
+                    lancamento=instance,
+                    categoria=instance.categoria,
+                    **linha,
+                )
+        else:
+            instance.alocacoes_competencia.all().delete()
+
+        return instance
 
 
 class LancamentoFinanceiroGrupoRateioForm(forms.ModelForm):

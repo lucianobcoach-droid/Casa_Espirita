@@ -2,6 +2,7 @@ import json
 from datetime import date
 from decimal import Decimal
 
+from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.template.loader import get_template, render_to_string
 from django.http import QueryDict
@@ -10,6 +11,7 @@ from django.urls import resolve, reverse
 
 from .forms import CategoriaFinanceiraForm, ContaFinanceiraForm, LancamentoFinanceiroForm, PessoaFinanceiraForm
 from .models import (
+    AlocacaoCompetenciaFinanceira,
     AssinaturaInstitucional,
     CategoriaFinanceira,
     ContaFinanceira,
@@ -1788,3 +1790,268 @@ class FrequenciaMensalBaseCadastralTests(TestCase):
 
         self.assertIn('Controla frequ', html)
         self.assertIn('Sim', html)
+
+
+class AlocacaoCompetenciaFinanceiraTests(TestCase):
+    def setUp(self):
+        self.conta = ContaFinanceira.objects.create(
+            nome='Conta recorrencia',
+            saldo_inicial=Decimal('0.00'),
+            data_saldo_inicial=date(2026, 1, 1),
+        )
+        self.pessoa_recorrente = PessoaFinanceira.objects.create(
+            codigo='P950',
+            nome='Contribuinte recorrente',
+            contribuinte_recorrente=True,
+        )
+        self.pessoa_avulsa = PessoaFinanceira.objects.create(
+            codigo='P951',
+            nome='Pessoa avulsa',
+            contribuinte_recorrente=False,
+        )
+        self.categoria_receita_pai = CategoriaFinanceira.objects.create(
+            nome='Receitas recorrentes',
+            tipo=CategoriaFinanceira.TipoCategoria.RECEITA,
+        )
+        self.categoria_controlada = CategoriaFinanceira.objects.create(
+            nome='Contribuicao mensal',
+            tipo=CategoriaFinanceira.TipoCategoria.RECEITA,
+            categoria_pai=self.categoria_receita_pai,
+            controla_recorrencia_competencia=True,
+        )
+        self.categoria_nao_controlada = CategoriaFinanceira.objects.create(
+            nome='Venda de livros',
+            tipo=CategoriaFinanceira.TipoCategoria.RECEITA,
+            categoria_pai=self.categoria_receita_pai,
+            controla_recorrencia_competencia=False,
+        )
+
+    def _dados_lancamento(self, **overrides):
+        dados = {
+            'descricao': 'Recebimento recorrente',
+            'tipo': LancamentoFinanceiro.TipoLancamento.RECEITA,
+            'status': LancamentoFinanceiro.StatusLancamento.QUITADO,
+            'valor': '100.00',
+            'data_competencia': '2026-03-10',
+            'data_pagamento': '2026-03-10',
+            'numero_documento': '',
+            'pessoa': str(self.pessoa_recorrente.pk),
+            'categoria': str(self.categoria_controlada.pk),
+            'centro_custo': '',
+            'conta': str(self.conta.pk),
+            'conta_destino': '',
+            'observacoes': '',
+            'lancamento_com_rateio': '',
+            'salvar_como_regra_automatica': '',
+            'valor_total_documento': '',
+            'rateio_payload': '',
+            'competencias_payload': json.dumps([
+                {'mes': '1', 'ano': '2026', 'valor': '50.00'},
+                {'mes': '2', 'ano': '2026', 'valor': '50.00'},
+            ]),
+        }
+        dados.update(overrides)
+        return dados
+
+    def _criar_lancamento_controlado(self, valor='100.00'):
+        return LancamentoFinanceiro.objects.create(
+            descricao='Recebimento recorrente salvo',
+            tipo=LancamentoFinanceiro.TipoLancamento.RECEITA,
+            status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+            valor=Decimal(valor),
+            data_competencia=date(2026, 3, 10),
+            data_pagamento=date(2026, 3, 10),
+            pessoa=self.pessoa_recorrente,
+            categoria=self.categoria_controlada,
+            conta=self.conta,
+        )
+
+    def test_model_permite_criar_alocacao_valida(self):
+        lancamento = self._criar_lancamento_controlado()
+        alocacao = AlocacaoCompetenciaFinanceira(
+            lancamento=lancamento,
+            categoria=self.categoria_controlada,
+            ano_competencia=2026,
+            mes_competencia=3,
+            valor_alocado=Decimal('100.00'),
+        )
+
+        alocacao.full_clean()
+
+    def test_model_nao_aceita_mes_invalido(self):
+        lancamento = self._criar_lancamento_controlado()
+        alocacao = AlocacaoCompetenciaFinanceira(
+            lancamento=lancamento,
+            categoria=self.categoria_controlada,
+            ano_competencia=2026,
+            mes_competencia=13,
+            valor_alocado=Decimal('100.00'),
+        )
+
+        with self.assertRaises(ValidationError):
+            alocacao.full_clean()
+
+    def test_model_nao_aceita_valor_zerado_ou_negativo(self):
+        lancamento = self._criar_lancamento_controlado()
+        alocacao = AlocacaoCompetenciaFinanceira(
+            lancamento=lancamento,
+            categoria=self.categoria_controlada,
+            ano_competencia=2026,
+            mes_competencia=3,
+            valor_alocado=Decimal('0.00'),
+        )
+
+        with self.assertRaises(ValidationError):
+            alocacao.full_clean()
+
+    def test_exclusao_do_lancamento_remove_alocacoes(self):
+        lancamento = self._criar_lancamento_controlado()
+        AlocacaoCompetenciaFinanceira.objects.create(
+            lancamento=lancamento,
+            categoria=self.categoria_controlada,
+            ano_competencia=2026,
+            mes_competencia=3,
+            valor_alocado=Decimal('100.00'),
+        )
+
+        lancamento.delete()
+
+        self.assertFalse(AlocacaoCompetenciaFinanceira.objects.exists())
+
+    def test_lancamento_simples_salva_competencias_quando_regras_batem(self):
+        form = LancamentoFinanceiroForm(data=self._dados_lancamento())
+
+        self.assertTrue(form.is_valid(), form.errors)
+        lancamento = form.save()
+
+        self.assertEqual(lancamento.alocacoes_competencia.count(), 2)
+        self.assertEqual(
+            list(
+                lancamento.alocacoes_competencia.values_list(
+                    'mes_competencia',
+                    'ano_competencia',
+                    'valor_alocado',
+                )
+            ),
+            [
+                (1, 2026, Decimal('50.00')),
+                (2, 2026, Decimal('50.00')),
+            ],
+        )
+
+    def test_lancamento_simples_bloqueia_soma_divergente(self):
+        form = LancamentoFinanceiroForm(
+            data=self._dados_lancamento(
+                competencias_payload=json.dumps([
+                    {'mes': '1', 'ano': '2026', 'valor': '30.00'},
+                    {'mes': '2', 'ano': '2026', 'valor': '50.00'},
+                ])
+            )
+        )
+
+        self.assertFalse(form.is_valid())
+        self.assertIn(
+            'A soma das competencias deve ser igual ao valor controlado do lancamento.',
+            form.errors['competencias_payload'],
+        )
+
+    def test_lancamento_sem_pessoa_recorrente_nao_exige_competencias(self):
+        dados = self._dados_lancamento(
+            pessoa=str(self.pessoa_avulsa.pk),
+            competencias_payload='',
+        )
+        form = LancamentoFinanceiroForm(data=dados)
+
+        self.assertTrue(form.is_valid(), form.errors)
+        lancamento = form.save()
+        self.assertEqual(lancamento.alocacoes_competencia.count(), 0)
+
+    def test_lancamento_sem_subcategoria_controlada_nao_exige_competencias(self):
+        dados = self._dados_lancamento(
+            categoria=str(self.categoria_nao_controlada.pk),
+            competencias_payload='',
+        )
+        form = LancamentoFinanceiroForm(data=dados)
+
+        self.assertTrue(form.is_valid(), form.errors)
+        lancamento = form.save()
+        self.assertEqual(lancamento.alocacoes_competencia.count(), 0)
+
+    def test_multiplas_competencias_no_mesmo_lancamento_sao_permitidas(self):
+        form = LancamentoFinanceiroForm(
+            data=self._dados_lancamento(
+                valor='120.00',
+                competencias_payload=json.dumps([
+                    {'mes': '1', 'ano': '2026', 'valor': '20.00'},
+                    {'mes': '2', 'ano': '2026', 'valor': '50.00'},
+                    {'mes': '3', 'ano': '2026', 'valor': '50.00'},
+                ]),
+            )
+        )
+
+        self.assertTrue(form.is_valid(), form.errors)
+        lancamento = form.save()
+        self.assertEqual(lancamento.alocacoes_competencia.count(), 3)
+
+    def test_clone_nao_precarrega_competencias(self):
+        lancamento = self._criar_lancamento_controlado()
+        AlocacaoCompetenciaFinanceira.objects.create(
+            lancamento=lancamento,
+            categoria=self.categoria_controlada,
+            ano_competencia=2026,
+            mes_competencia=1,
+            valor_alocado=Decimal('100.00'),
+        )
+        view = LancamentoFinanceiroCloneView()
+        view.lancamento_origem = lancamento
+
+        initial = view.get_initial()
+        form = LancamentoFinanceiroForm(initial=initial)
+
+        self.assertEqual(form.competencias_linhas_iniciais, [])
+        self.assertFalse(form.competencias_bloco_visivel)
+
+    def test_edicao_carrega_competencias_existentes(self):
+        lancamento = self._criar_lancamento_controlado()
+        AlocacaoCompetenciaFinanceira.objects.create(
+            lancamento=lancamento,
+            categoria=self.categoria_controlada,
+            ano_competencia=2026,
+            mes_competencia=1,
+            valor_alocado=Decimal('40.00'),
+        )
+        AlocacaoCompetenciaFinanceira.objects.create(
+            lancamento=lancamento,
+            categoria=self.categoria_controlada,
+            ano_competencia=2026,
+            mes_competencia=2,
+            valor_alocado=Decimal('60.00'),
+        )
+
+        form = LancamentoFinanceiroForm(instance=lancamento)
+
+        self.assertEqual(
+            form.competencias_linhas_iniciais,
+            [
+                {'mes': '1', 'ano': '2026', 'valor': '40.00'},
+                {'mes': '2', 'ano': '2026', 'valor': '60.00'},
+            ],
+        )
+        self.assertTrue(form.competencias_bloco_visivel)
+
+    def test_rateio_permanece_valido_sem_exigir_competencias_nesta_etapa(self):
+        dados = self._dados_lancamento(
+            valor='',
+            categoria='',
+            lancamento_com_rateio='on',
+            valor_total_documento='130.00',
+            rateio_payload=json.dumps([
+                {'categoria': str(self.categoria_controlada.pk), 'valor': '100.00'},
+                {'categoria': str(self.categoria_nao_controlada.pk), 'valor': '30.00'},
+            ]),
+            competencias_payload='',
+        )
+        form = LancamentoFinanceiroForm(data=dados)
+
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertFalse(form.cleaned_data['competencias_requeridas'])

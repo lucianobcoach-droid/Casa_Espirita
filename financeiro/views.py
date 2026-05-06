@@ -127,6 +127,20 @@ EVOLUCAO_CATEGORIAS_SERIES_CORES = (
 )
 
 
+def _contexto_competencia_lancamento() -> dict[str, list[int]]:
+    return {
+        'competencia_pessoas_recorrentes_ids': list(
+            PessoaFinanceira.objects.filter(contribuinte_recorrente=True).values_list('pk', flat=True)
+        ),
+        'competencia_categorias_controladas_ids': list(
+            CategoriaFinanceira.objects.filter(
+                controla_recorrencia_competencia=True,
+                categoria_pai__isnull=False,
+            ).values_list('pk', flat=True)
+        ),
+    }
+
+
 def _auditoria_usuario(request):
     usuario = getattr(request, 'user', None)
     if usuario and getattr(usuario, 'is_authenticated', False):
@@ -8703,6 +8717,7 @@ class LancamentoFinanceiroCreateView(FinanceiroFormMixin, CreateView):
             {'id': categoria.pk, 'label': str(categoria), 'tipo': categoria.tipo}
             for categoria in categorias_vinculaveis_queryset()
         ]
+        context.update(_contexto_competencia_lancamento())
         return context
 
     def form_valid(self, form):
@@ -8959,6 +8974,7 @@ class LancamentoFinanceiroUpdateView(FinanceiroFormMixin, UpdateView):
             {'id': categoria.pk, 'label': str(categoria), 'tipo': categoria.tipo}
             for categoria in categorias_vinculaveis_queryset()
         ]
+        context.update(_contexto_competencia_lancamento())
         return context
 
     def form_valid(self, form):

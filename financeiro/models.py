@@ -7,6 +7,7 @@ from uuid import uuid4
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -386,6 +387,19 @@ class LancamentoFinanceiro(models.Model):
     def __str__(self) -> str:
         return self.descricao
 
+    def usa_controle_competencia(self) -> bool:
+        return bool(
+            self.tipo in {
+                self.TipoLancamento.RECEITA,
+                self.TipoLancamento.DESPESA,
+            }
+            and self.pessoa_id
+            and self.categoria_id
+            and self.pessoa.contribuinte_recorrente
+            and self.categoria.controla_recorrencia_competencia
+            and self.categoria.permite_vinculo_em_lancamento
+        )
+
     def clean(self) -> None:
         errors: dict[str, list[str] | str] = {}
         transferencia = self.tipo == self.TipoLancamento.TRANSFERENCIA
@@ -483,6 +497,72 @@ class LancamentoFinanceiro(models.Model):
             self.numero_documento = self._gerar_numero_documento()
         self.full_clean()
         super().save(*args, **kwargs)
+
+
+class AlocacaoCompetenciaFinanceira(models.Model):
+    lancamento = models.ForeignKey(
+        LancamentoFinanceiro,
+        on_delete=models.CASCADE,
+        related_name='alocacoes_competencia',
+    )
+    categoria = models.ForeignKey(
+        CategoriaFinanceira,
+        on_delete=models.PROTECT,
+        related_name='alocacoes_competencia',
+    )
+    ano_competencia = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1900), MaxValueValidator(9999)],
+    )
+    mes_competencia = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(12)],
+    )
+    valor_alocado = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal('0.01'))],
+    )
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['ano_competencia', 'mes_competencia', 'pk']
+        verbose_name = 'Alocacao de competencia financeira'
+        verbose_name_plural = 'Alocacoes de competencia financeira'
+
+    def __str__(self) -> str:
+        return (
+            f'{self.lancamento.descricao} - '
+            f'{self.mes_competencia:02d}/{self.ano_competencia} - '
+            f'{self.valor_alocado}'
+        )
+
+    def clean(self) -> None:
+        super().clean()
+        errors: dict[str, str] = {}
+
+        if self.valor_alocado <= Decimal('0.00'):
+            errors['valor_alocado'] = 'O valor alocado precisa ser positivo.'
+
+        if self.lancamento_id and self.categoria_id:
+            if self.lancamento.tipo == LancamentoFinanceiro.TipoLancamento.TRANSFERENCIA:
+                errors['lancamento'] = 'Transferencia nao usa alocacao de competencia.'
+
+            if self.lancamento.categoria_id != self.categoria_id:
+                errors['categoria'] = (
+                    'A subcategoria da alocacao precisa ser igual a subcategoria do lancamento.'
+                )
+
+            if not self.categoria.controla_recorrencia_competencia:
+                errors['categoria'] = 'A subcategoria informada nao controla recorrencia por competencia.'
+
+            if not self.categoria.permite_vinculo_em_lancamento:
+                errors['categoria'] = 'A alocacao de competencia exige uma subcategoria valida.'
+
+            if not self.lancamento.pessoa_id or not self.lancamento.pessoa.contribuinte_recorrente:
+                errors['lancamento'] = 'A alocacao exige favorecido recorrente vinculado ao lancamento.'
+
+        if errors:
+            raise ValidationError(errors)
 
 
 class RegraLancamentoFinanceiro(models.Model):

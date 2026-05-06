@@ -1,6 +1,20 @@
 # STATE
 
-Data de atualizacao: 2026-04-30
+Data de atualizacao: 2026-05-06
+
+## Alocacao de competencias mensais no lancamento
+
+- implementada a estrutura `AlocacaoCompetenciaFinanceira` como filha de `LancamentoFinanceiro`, com `categoria`, `mes_competencia`, `ano_competencia` e `valor_alocado`
+- a regra funcional desta microetapa ficou assim:
+  - em lancamento simples, quando `PessoaFinanceira.contribuinte_recorrente=True` e a subcategoria controla recorrencia por competencia, o formulario passa a exigir o bloco `Competencias atendidas`
+  - a soma das competencias informadas precisa fechar exatamente com o valor controlado do lancamento
+  - mes invalido, ano invalido e valor nao positivo bloqueiam o salvamento
+- em edicao, competencias existentes voltam carregadas; em exclusao, as alocacoes saem junto por `CASCADE`
+- em clone comum, as competencias nao sao copiadas automaticamente para evitar duplicidade de quitacao/competencia
+- para rateio, a estrutura ficou preparada, mas a primeira gravacao do grupo continua sem captura de competencias nesta etapa; o fluxo atual nao foi quebrado nem passou a usar indevidamente o valor total do documento em recebimentos mistos
+- ainda nao ha matriz mensal, matriz sem valores, termo por favorecido nem modulo separado de baixa
+- nao houve alteracao de calculo financeiro, saldos, Balancete, Extrato, Fechamento/Prestacao ou relatorios existentes
+- proxima microetapa recomendada: implementar a captura segura de competencias por item controlado no fluxo de rateio e abrir a base da futura matriz mensal com valores
 
 ## SPEC consolidada - contribuicao mensal por competencia (sem implementacao)
 

@@ -124,8 +124,12 @@ Este documento consolida regras permanentes do sistema. Ele não substitui o his
 - Pessoa/favorecido recorrente define expectativa de presenca na matriz; pessoa nao recorrente nao entra como esperada no relatorio.
 - No recorte cadastral minimo ja entregue, a marcacao de recorrencia fica em `PessoaFinanceira.contribuinte_recorrente`, com default `False` para preservar base existente.
 - Em lancamento simples, se a subcategoria controlar frequencia, a alocacao de competencia usa apenas o valor desse lancamento/subcategoria.
+- Na primeira implementacao funcional da alocacao, o formulario de lancamento exige `Competencias atendidas` apenas quando houver favorecido recorrente + subcategoria controlada em lancamento simples.
+- Cada competencia atendida deve registrar `mes/ano + valor`, e a soma das alocacoes precisa ser igual ao valor controlado do lancamento.
 - Em lancamento com rateio, a frequencia nao pode usar automaticamente o valor total do documento: so entra o valor do item de rateio vinculado a subcategoria que controla frequencia.
+- Nesta microetapa, o rateio ficou apenas preparado para essa regra; a criacao inicial do grupo nao captura competencias para evitar fechamento incorreto pelo valor bruto do documento.
 - No recorte cadastral minimo ja entregue, a marcacao de subcategoria controlada fica em `CategoriaFinanceira.controla_recorrencia_competencia`, com default `False` para nao incluir subcategorias antigas automaticamente.
 - Itens do mesmo recebimento com subcategorias nao recorrentes (livro, camisa, doacao avulsa etc.) ficam fora da frequencia, mesmo quando o favorecido for recorrente.
 - Multiplos lancamentos para a mesma pessoa/subcategoria/competencia devem ser somados na matriz; nao devem ser bloqueados automaticamente como duplicidade.
+- Em clone comum, competencias existentes nao devem ser copiadas automaticamente para o novo lancamento.
 - No MVP inicial, nao abrir modulo separado de baixa; manter o fluxo no proprio lancamento e tratar termo por favorecido como segunda onda apos validacao da matriz.

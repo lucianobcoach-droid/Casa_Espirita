@@ -1005,3 +1005,16 @@ Leituras gerenciais:
   - `CategoriaFinanceira.controla_recorrencia_competencia` (default `False`)
 - exposicao concluida em formulario/listagem/admin e importacao/exportacao auxiliar de pessoas e categorias
 - permanece para as proximas microetapas: alocacao de competencia, matriz com valores, matriz sem valores e termo por favorecido
+
+## 18. Frequencia por competencia - alocacao vinculada ao lancamento
+
+- etapa funcional concluida para lancamento simples
+- model criado: `AlocacaoCompetenciaFinanceira`
+- regra entregue:
+  - cada alocacao guarda `categoria`, `mes_competencia`, `ano_competencia` e `valor_alocado`
+  - um lancamento pode ter varias competencias
+  - a soma das competencias deve fechar com o valor controlado do lancamento
+  - a exigencia so aparece quando favorecido recorrente + subcategoria controlada estiverem presentes
+- edicao recarrega competencias existentes; exclusao do lancamento remove as alocacoes; clone comum nao copia competencias
+- rateio ficou apenas preparado nesta etapa: sem usar valor total do documento para recebimento misto e sem abrir ainda captura por item na criacao inicial do grupo
+- permanecem para as proximas microetapas: alocacao segura por item rateado e matriz mensal com valores

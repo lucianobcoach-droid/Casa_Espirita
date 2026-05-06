@@ -1,6 +1,16 @@
 # CODEX_RESULTADO
 
-Data: 2026-04-30
+Data: 2026-05-06
+
+## Microetapa: alocacao de competencias mensais no lancamento
+
+- implementei o model `AlocacaoCompetenciaFinanceira` ligado a `LancamentoFinanceiro`, com subcategoria controlada, mes/ano da competencia e valor alocado
+- no formulario de lancamento comum, o bloco `Competencias atendidas` agora aparece quando o favorecido e recorrente e a subcategoria controla recorrencia por competencia
+- a soma das competencias passou a ser validada contra o valor controlado do lancamento; soma divergente retorna erro claro e bloqueia o salvamento
+- em edicao, as competencias cadastradas voltam preenchidas; em clone comum, elas nao sao carregadas para evitar duplicidade de competencia
+- mantive o rateio sem improviso: a modelagem ficou pronta para uso futuro por item controlado, mas a criacao inicial do grupo rateado nao passou a capturar competencias nesta microetapa
+- criei migration propria e testes de model/form/cascade/clone/rateio para sustentar a evolucao futura
+- nao alterei calculo financeiro, saldos, Balancete, Extrato, Fechamento/Prestacao, importacao de lancamentos nem relatorios novos
 
 ## Consolidacao de SPEC - controle de contribuicao mensal por competencia
 

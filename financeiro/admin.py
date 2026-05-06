@@ -3,6 +3,7 @@ from __future__ import annotations
 from django.contrib import admin
 
 from .models import (
+    AlocacaoCompetenciaFinanceira,
     CategoriaFinanceira,
     CentroCusto,
     ContaFinanceira,
@@ -63,3 +64,11 @@ class LancamentoFinanceiroAdmin(admin.ModelAdmin):
     list_filter = ('tipo', 'status', 'data_competencia', 'data_pagamento', 'conta')
     search_fields = ('descricao', 'numero_documento', 'observacoes')
     autocomplete_fields = ('pessoa', 'categoria', 'centro_custo', 'conta', 'conta_destino')
+
+
+@admin.register(AlocacaoCompetenciaFinanceira)
+class AlocacaoCompetenciaFinanceiraAdmin(admin.ModelAdmin):
+    list_display = ('lancamento', 'categoria', 'mes_competencia', 'ano_competencia', 'valor_alocado')
+    list_filter = ('categoria', 'ano_competencia', 'mes_competencia')
+    search_fields = ('lancamento__descricao', 'categoria__nome', 'lancamento__numero_documento')
+    autocomplete_fields = ('lancamento', 'categoria')

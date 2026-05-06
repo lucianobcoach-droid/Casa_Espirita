@@ -923,3 +923,18 @@ Consolidacao:
 
 Proxima etapa recomendada:
 - modelagem/implementacao da alocacao de competencia (mes/ano + valor) vinculada ao lancamento/subcategoria controlada
+
+### 35. Frequencia por competencia - alocacao mensal vinculada ao lancamento
+
+Status: IMPLEMENTADO PARCIALMENTE (LANCAMENTO SIMPLES), COM RATEIO AINDA PREPARADO
+
+Consolidacao:
+- model `AlocacaoCompetenciaFinanceira` criado como estrutura filha de `LancamentoFinanceiro`
+- lancamento simples recorrente/controlado agora aceita uma ou mais competencias com `mes/ano + valor`
+- soma das alocacoes passou a fechar com o valor controlado do lancamento
+- clone comum nao copia competencias automaticamente
+- exclusao do lancamento remove as alocacoes vinculadas
+- o fluxo de rateio nao foi quebrado, mas a captura por item controlado no create inicial do grupo permanece pendente para evitar uso indevido do valor total do documento
+
+Proxima etapa recomendada:
+- implementar captura/validacao de competencias por item controlado no fluxo de rateio e preparar a futura matriz mensal com valores
