@@ -461,6 +461,7 @@ class LancamentoFinanceiroForm(forms.ModelForm):
 
         linhas_validas: list[dict[str, object]] = []
         soma_competencias = Decimal('0.00')
+        competencias_vistas: set[tuple[int, int]] = set()
         for indice, linha in enumerate(linhas_brutas, start=1):
             mes_raw = linha.get('mes', '')
             ano_raw = linha.get('ano', '')
@@ -498,6 +499,15 @@ class LancamentoFinanceiroForm(forms.ModelForm):
                 self.add_error(field_name, f'{line_prefix}Linha {indice}: o valor precisa ser positivo.')
                 continue
 
+            competencia_key = (ano, mes)
+            if competencia_key in competencias_vistas:
+                self.add_error(
+                    field_name,
+                    f'{line_prefix}Ja existe uma competencia informada para este mes/ano. Agrupe o valor em uma unica linha.',
+                )
+                continue
+
+            competencias_vistas.add(competencia_key)
             linhas_validas.append(
                 {
                     'mes_competencia': mes,
@@ -922,6 +932,7 @@ class LancamentoFinanceiroGrupoRateioForm(forms.ModelForm):
 
         linhas_validas: list[dict[str, object]] = []
         soma_competencias = Decimal('0.00')
+        competencias_vistas: set[tuple[int, int]] = set()
         for indice, linha in enumerate(linhas_brutas, start=1):
             mes_raw = linha.get('mes', '')
             ano_raw = linha.get('ano', '')
@@ -962,6 +973,15 @@ class LancamentoFinanceiroGrupoRateioForm(forms.ModelForm):
                 self.add_error('competencias_rateio_payload', f'{categoria}: Linha {indice}: o valor precisa ser positivo.')
                 continue
 
+            competencia_key = (ano, mes)
+            if competencia_key in competencias_vistas:
+                self.add_error(
+                    'competencias_rateio_payload',
+                    f'{categoria}: Ja existe uma competencia informada para este mes/ano. Agrupe o valor em uma unica linha.',
+                )
+                continue
+
+            competencias_vistas.add(competencia_key)
             linhas_validas.append(
                 {
                     'mes_competencia': mes,

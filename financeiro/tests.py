@@ -2021,21 +2021,33 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
         lancamento = form.save()
         self.assertEqual(lancamento.alocacoes_competencia.count(), 0)
 
-    def test_multiplas_competencias_no_mesmo_lancamento_sao_permitidas(self):
+    def test_lancamento_simples_bloqueia_competencia_duplicada_no_mesmo_mes_ano(self):
         form = LancamentoFinanceiroForm(
             data=self._dados_lancamento(
-                valor='120.00',
                 competencias_payload=json.dumps([
-                    {'mes': '1', 'ano': '2026', 'valor': '20.00'},
-                    {'mes': '2', 'ano': '2026', 'valor': '50.00'},
-                    {'mes': '3', 'ano': '2026', 'valor': '50.00'},
+                    {'mes': '1', 'ano': '2026', 'valor': '50.00'},
+                    {'mes': '1', 'ano': '2026', 'valor': '50.00'},
                 ]),
             )
         )
 
-        self.assertTrue(form.is_valid(), form.errors)
-        lancamento = form.save()
-        self.assertEqual(lancamento.alocacoes_competencia.count(), 3)
+        self.assertFalse(form.is_valid())
+        self.assertIn(
+            'Ja existe uma competencia informada para este mes/ano. Agrupe o valor em uma unica linha.',
+            form.errors['competencias_payload'],
+        )
+
+    def test_lancamento_simples_permite_competencias_iguais_em_lancamentos_diferentes(self):
+        form_primeiro = LancamentoFinanceiroForm(data=self._dados_lancamento())
+        self.assertTrue(form_primeiro.is_valid(), form_primeiro.errors)
+        primeiro = form_primeiro.save()
+
+        form_segundo = LancamentoFinanceiroForm(data=self._dados_lancamento(numero_documento='DOC-002'))
+        self.assertTrue(form_segundo.is_valid(), form_segundo.errors)
+        segundo = form_segundo.save()
+
+        self.assertEqual(primeiro.alocacoes_competencia.count(), 2)
+        self.assertEqual(segundo.alocacoes_competencia.count(), 2)
 
     def test_clone_nao_precarrega_competencias(self):
         lancamento = self._criar_lancamento_controlado()
@@ -2123,6 +2135,57 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
         self.assertIn(
             f'A soma das competencias deve ser igual ao valor controlado da subcategoria no rateio: {self.categoria_controlada}.',
             form.errors['competencias_rateio_payload'],
+        )
+
+    def test_rateio_bloqueia_competencia_duplicada_na_mesma_subcategoria_controlada(self):
+        dados = self._dados_rateio(
+            competencias_rateio_payload=json.dumps({
+                str(self.categoria_controlada.pk): [
+                    {'mes': '1', 'ano': '2026', 'valor': '50.00'},
+                    {'mes': '1', 'ano': '2026', 'valor': '50.00'},
+                ]
+            }),
+        )
+        form = LancamentoFinanceiroForm(data=dados)
+
+        self.assertFalse(form.is_valid())
+        self.assertIn(
+            f'{self.categoria_controlada}: Ja existe uma competencia informada para este mes/ano. Agrupe o valor em uma unica linha.',
+            form.errors['competencias_rateio_payload'],
+        )
+
+    def test_rateio_permite_mes_ano_igual_em_subcategorias_controladas_diferentes(self):
+        outra_categoria_controlada = CategoriaFinanceira.objects.create(
+            nome='Contribuicao assistencial',
+            tipo=CategoriaFinanceira.TipoCategoria.RECEITA,
+            categoria_pai=self.categoria_receita_pai,
+            controla_recorrencia_competencia=True,
+        )
+        dados = self._dados_rateio(
+            valor_total_documento='100.00',
+            rateio_payload=json.dumps([
+                {'categoria': str(self.categoria_controlada.pk), 'valor': '60.00'},
+                {'categoria': str(outra_categoria_controlada.pk), 'valor': '40.00'},
+            ]),
+            competencias_rateio_payload=json.dumps({
+                str(self.categoria_controlada.pk): [
+                    {'mes': '1', 'ano': '2026', 'valor': '60.00'},
+                ],
+                str(outra_categoria_controlada.pk): [
+                    {'mes': '1', 'ano': '2026', 'valor': '40.00'},
+                ],
+            }),
+        )
+        form = LancamentoFinanceiroForm(data=dados)
+
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(
+            form.cleaned_data['competencias_rateio_por_categoria'][self.categoria_controlada.pk],
+            [{'mes_competencia': 1, 'ano_competencia': 2026, 'valor_alocado': Decimal('60.00')}],
+        )
+        self.assertEqual(
+            form.cleaned_data['competencias_rateio_por_categoria'][outra_categoria_controlada.pk],
+            [{'mes_competencia': 1, 'ano_competencia': 2026, 'valor_alocado': Decimal('40.00')}],
         )
 
     def test_rateio_sem_pessoa_recorrente_nao_exige_competencias(self):
@@ -2364,6 +2427,73 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
 
         self.assertEqual(response.status_code, 302)
         self.assertFalse(AlocacaoCompetenciaFinanceira.objects.exists())
+
+    def test_rateio_edicao_bloqueia_competencia_duplicada_na_mesma_subcategoria(self):
+        grupo_rateio = 'grp-dup'
+        lancamento_controlado = LancamentoFinanceiro.objects.create(
+            descricao='Recebimento rateado',
+            tipo=LancamentoFinanceiro.TipoLancamento.RECEITA,
+            status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+            valor=Decimal('100.00'),
+            data_competencia=date(2026, 3, 10),
+            data_pagamento=date(2026, 3, 10),
+            numero_documento='100326-004',
+            pessoa=self.pessoa_recorrente,
+            categoria=self.categoria_controlada,
+            conta=self.conta,
+            com_rateio=True,
+            grupo_rateio=grupo_rateio,
+        )
+        lancamento_nao_controlado = LancamentoFinanceiro.objects.create(
+            descricao='Recebimento rateado',
+            tipo=LancamentoFinanceiro.TipoLancamento.RECEITA,
+            status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+            valor=Decimal('30.00'),
+            data_competencia=date(2026, 3, 10),
+            data_pagamento=date(2026, 3, 10),
+            numero_documento='100326-004',
+            pessoa=self.pessoa_recorrente,
+            categoria=self.categoria_nao_controlada,
+            conta=self.conta,
+            com_rateio=True,
+            grupo_rateio=grupo_rateio,
+        )
+
+        dados = {
+            'descricao': 'Recebimento rateado',
+            'tipo': LancamentoFinanceiro.TipoLancamento.RECEITA,
+            'status': LancamentoFinanceiro.StatusLancamento.QUITADO,
+            'data_competencia': '2026-03-10',
+            'data_pagamento': '2026-03-10',
+            'numero_documento': '100326-004',
+            'pessoa': str(self.pessoa_recorrente.pk),
+            'centro_custo': '',
+            'conta': str(self.conta.pk),
+            'conta_destino': '',
+            'observacoes': '',
+            'valor_total_documento': '130.00',
+            'rateio_payload': json.dumps([
+                {'id': str(lancamento_controlado.pk), 'categoria': str(self.categoria_controlada.pk), 'valor': '100.00'},
+                {'id': str(lancamento_nao_controlado.pk), 'categoria': str(self.categoria_nao_controlada.pk), 'valor': '30.00'},
+            ]),
+            'competencias_rateio_payload': json.dumps({
+                str(self.categoria_controlada.pk): [
+                    {'mes': '1', 'ano': '2026', 'valor': '50.00'},
+                    {'mes': '1', 'ano': '2026', 'valor': '50.00'},
+                ],
+            }),
+        }
+        form = LancamentoFinanceiroGrupoRateioForm(
+            data=dados,
+            instance=lancamento_controlado,
+            grupo_lancamentos=[lancamento_controlado, lancamento_nao_controlado],
+        )
+
+        self.assertFalse(form.is_valid())
+        self.assertIn(
+            f'{self.categoria_controlada}: Ja existe uma competencia informada para este mes/ano. Agrupe o valor em uma unica linha.',
+            form.errors['competencias_rateio_payload'],
+        )
 
 
 class LancamentoListagemAcoesTests(TestCase):

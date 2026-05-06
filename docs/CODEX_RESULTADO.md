@@ -4698,3 +4698,19 @@ Não houve alteração de código funcional nesta etapa.
   - proibido executar fixtures/scripts manuais em banco real sem contingencia
   - testes continuam no banco de teste isolado
 - microetapa exclusivamente documental: sem alteracao de codigo, sem alteracao de banco e sem impacto funcional
+
+## Microetapa: bloqueio de competencia duplicada no mesmo lancamento
+
+- implementada validacao para impedir duplicidade de `mes/ano` dentro do mesmo lancamento e da mesma subcategoria controlada
+- a regra passou a valer em tres pontos do fluxo:
+  - lancamento simples com `competencias_payload`
+  - criacao de lancamento com rateio controlado
+  - edicao de grupo rateado com `LancamentoFinanceiroGrupoRateioForm`
+- mensagem aplicada:
+  - `Ja existe uma competencia informada para este mes/ano. Agrupe o valor em uma unica linha.`
+- comportamento preservado:
+  - competencias iguais em lancamentos diferentes continuam permitidas
+  - no rateio, o mesmo `mes/ano` continua permitido em subcategorias controladas diferentes
+  - validacao de soma segue fechando contra o valor controlado do lancamento/subcategoria, sem mudanca de calculo
+- cobertura de testes ajustada para bloquear duplicidade no simples e no rateio, manter permissao de repeticao entre lancamentos diferentes e confirmar nao regressao da etapa anterior
+- sem alteracao de models, migrations, calculos financeiros, saldos, relatorios ou banco real; nenhum arquivo SQLite foi alterado/versionado

@@ -3506,3 +3506,23 @@ Riscos principais antes de migration:
   - sempre gerar backup antes de diagnostico/limpeza local
   - manter execucao de testes no banco de teste isolado
 - esta microetapa foi exclusivamente documental, sem alteracao de codigo, calculos, saldos, lancamentos ou relatorios
+
+## Bloqueio de competencia mensal duplicada no mesmo lancamento
+
+- a validacao de alocacao por competencia passou a bloquear duplicidade de `mes/ano` dentro do mesmo lancamento e da mesma subcategoria controlada
+- a regra vale para:
+  - lancamento simples com competencia
+  - lancamento rateado com item/subcategoria controlada
+  - edicao de grupo rateado no formulario especifico de rateio
+- mensagem padrao adotada:
+  - `Ja existe uma competencia informada para este mes/ano. Agrupe o valor em uma unica linha.`
+- no rateio, a duplicidade e validada separadamente por subcategoria controlada; o mesmo `mes/ano` continua permitido em subcategorias controladas diferentes no mesmo grupo
+- entre lancamentos diferentes, competencias iguais continuam permitidas; a matriz futura segue autorizada a somar esses valores por pessoa/subcategoria/competencia
+- a validacao de soma permaneceu inalterada: depois de remover ambiguidades de duplicidade, a soma ainda precisa fechar com o valor controlado do lancamento simples ou da subcategoria controlada no rateio
+- cobertura de testes reforcada para:
+  - bloquear duplicidade em lancamento simples
+  - permitir mesma competencia em lancamentos diferentes
+  - bloquear duplicidade na mesma subcategoria controlada do rateio
+  - permitir mesmo `mes/ano` em subcategorias controladas diferentes
+  - bloquear duplicidade tambem no formulario de edicao do grupo rateado
+- sem alteracao de calculo financeiro, saldos, relatorios, migrations ou banco real; nenhum arquivo SQLite foi alterado/versionado nesta etapa
