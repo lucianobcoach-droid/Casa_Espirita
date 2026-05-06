@@ -2,6 +2,21 @@
 
 Data de atualizacao: 2026-05-06
 
+## Validacao da alocacao de competencias no lancamento simples
+
+- validacao local da usuaria registrada como aprovada para o recorte de lancamento simples
+- confirmado em uso real:
+  - bloco `Competencias atendidas` aparece quando favorecido e recorrente e a subcategoria controla recorrencia por competencia
+  - cadastro de competencias por `mes/ano + valor` funciona
+  - salvamento ocorre quando a soma fecha com o valor controlado do lancamento
+  - divergencia de soma bloqueia o salvamento com erro de validacao
+- confirmado no comportamento da etapa:
+  - edicao recarrega competencias ja registradas
+  - clone comum nao copia competencias automaticamente
+  - ainda nao existe matriz mensal (com valores ou sem valores)
+  - rateio permanece pendente para captura por item controlado em microetapa futura
+- nao houve alteracao de calculo financeiro, saldos, Balancete, Extrato, Fechamento/Prestacao ou demais relatorios
+
 ## Alocacao de competencias mensais no lancamento
 
 - implementada a estrutura `AlocacaoCompetenciaFinanceira` como filha de `LancamentoFinanceiro`, com `categoria`, `mes_competencia`, `ano_competencia` e `valor_alocado`

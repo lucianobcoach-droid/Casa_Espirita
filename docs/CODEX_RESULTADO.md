@@ -2,6 +2,22 @@
 
 Data: 2026-05-06
 
+## Microetapa documental: validacao da alocacao de competencias mensais
+
+- etapa exclusivamente documental, sem alteracao de codigo
+- registrado aceite da usuaria para a alocacao de competencias no lancamento simples
+- validado:
+  - exibicao condicional do bloco `Competencias atendidas`
+  - registro por `mes/ano + valor`
+  - salvamento com soma fechada
+  - bloqueio com soma divergente
+- registrado tambem:
+  - edicao recarrega competencias existentes
+  - clone comum nao copia competencias
+  - rateio por item controlado permanece pendente
+  - ainda nao ha matriz mensal
+- confirmado que nao houve alteracao de calculo financeiro, saldos ou relatorios existentes
+
 ## Microetapa: alocacao de competencias mensais no lancamento
 
 - implementei o model `AlocacaoCompetenciaFinanceira` ligado a `LancamentoFinanceiro`, com subcategoria controlada, mes/ano da competencia e valor alocado

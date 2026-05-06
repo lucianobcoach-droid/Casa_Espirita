@@ -935,6 +935,13 @@ Consolidacao:
 - clone comum nao copia competencias automaticamente
 - exclusao do lancamento remove as alocacoes vinculadas
 - o fluxo de rateio nao foi quebrado, mas a captura por item controlado no create inicial do grupo permanece pendente para evitar uso indevido do valor total do documento
+- validacao da usuaria registrada como aprovada para o recorte de lancamento simples
+- confirmado no aceite:
+  - exibicao condicional do bloco de competencias
+  - salvamento com soma fechada
+  - bloqueio com soma divergente
+  - edicao recarregando competencias existentes
+  - clone sem copiar competencias automaticamente
 
 Proxima etapa recomendada:
 - implementar captura/validacao de competencias por item controlado no fluxo de rateio e preparar a futura matriz mensal com valores

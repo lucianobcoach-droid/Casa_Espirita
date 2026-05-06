@@ -1018,3 +1018,9 @@ Leituras gerenciais:
 - edicao recarrega competencias existentes; exclusao do lancamento remove as alocacoes; clone comum nao copia competencias
 - rateio ficou apenas preparado nesta etapa: sem usar valor total do documento para recebimento misto e sem abrir ainda captura por item na criacao inicial do grupo
 - permanecem para as proximas microetapas: alocacao segura por item rateado e matriz mensal com valores
+- validacao da usuaria registrada:
+  - recorte de lancamento simples aprovado em uso local
+  - soma de competencias fechando com valor controlado aprovada
+  - divergencia de soma bloqueando salvamento aprovada
+  - edicao com recarga de competencias e clone sem copia de competencias aprovados
+  - sem alteracao de calculo, saldos e relatorios existentes
