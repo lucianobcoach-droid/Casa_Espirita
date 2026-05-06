@@ -2,6 +2,15 @@
 
 Data de atualizacao: 2026-04-30
 
+## Correcao de identificacao de contas no cabecalho do Extrato impresso
+
+- corrigida a apresentacao de `Contas selecionadas` no cabecalho impresso/PDF do Extrato
+- quando houver uma unica conta selecionada, o cabecalho passa a exibir o nome da conta (ex.: `Sicredi Investimento`), em vez de apenas `1 conta selecionada`
+- quando houver 2 ou 3 contas selecionadas, o cabecalho exibe os nomes das contas
+- quando houver mais de 3 contas selecionadas, o cabecalho usa resumo enxuto no formato `X contas selecionadas`
+- quando todas as contas estiverem selecionadas, permanece a identificacao `Todas as contas financeiras`
+- alteracao restrita a apresentacao/documentacao do Extrato; sem mudanca de calculo, saldo, lancamentos, Balancete, Fechamento/Prestacao ou demais relatorios
+
 ## Simplificacao dos filtros do Balancete patrimonial
 
 - implementada a arquitetura funcional por `Formato do Balancete`, com tres formatos: `Operacional`, `Operacional + patrimonio vinculado` e `Financeiro completo`

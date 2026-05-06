@@ -1396,6 +1396,14 @@ class ExtratoFinanceiroMultiplasContasTests(TestCase):
         view.request = request
         return view.get_context_data()
 
+    def _render_extrato(self, params):
+        request = self.factory.get('/financeiro/extratos/', data=params)
+        request.resolver_match = resolve('/financeiro/extratos/')
+        view = ExtratoFinanceiroView()
+        view.request = request
+        context = view.get_context_data()
+        return render_to_string('financeiro/conta_extrato.html', context, request=request), context
+
     def test_extrato_respeita_escopo_de_contas(self):
         periodo = {
             'data_inicial': '2026-03-01',
@@ -1474,6 +1482,61 @@ class ExtratoFinanceiroMultiplasContasTests(TestCase):
             'Selecione pelo menos uma conta para carregar o extrato.',
         )
         self.assertFalse(contexto_sem_contas['tem_extrato'])
+
+    def test_extrato_cabecalho_mostra_nome_quando_ha_uma_conta(self):
+        html, contexto = self._render_extrato(
+            {
+                'data_inicial': '2026-03-01',
+                'data_final': '2026-03-31',
+                'contas': str(self.dinheiro.id),
+            }
+        )
+
+        self.assertEqual(contexto['extrato_contas_selecionadas_label'], 'Dinheiro')
+        self.assertIn('Contas selecionadas:</strong>', html)
+        self.assertIn('Dinheiro', html)
+        self.assertNotIn('1 conta selecionada', html)
+        self.assertEqual(contexto['saldo_final'], Decimal('160.00'))
+
+    def test_extrato_cabecalho_mostra_nomes_ate_tres_contas(self):
+        html, contexto = self._render_extrato(
+            [
+                ('data_inicial', '2026-03-01'),
+                ('data_final', '2026-03-31'),
+                ('contas', str(self.dinheiro.id)),
+                ('contas', str(self.banco.id)),
+                ('contas', str(self.caixa_externo.id)),
+            ]
+        )
+
+        self.assertEqual(
+            contexto['extrato_contas_selecionadas_label'],
+            'Dinheiro, Banco, Caixa externo',
+        )
+        self.assertIn('Dinheiro, Banco, Caixa externo', html)
+        self.assertNotIn('3 contas selecionadas', html)
+        self.assertEqual(contexto['saldo_final'], Decimal('150.00'))
+
+    def test_extrato_cabecalho_resume_quando_ha_muitas_contas(self):
+        conta_extra = ContaFinanceira.objects.create(
+            nome='Carteira',
+            saldo_inicial=Decimal('25.00'),
+            data_saldo_inicial=date(2026, 1, 1),
+        )
+        html, contexto = self._render_extrato(
+            [
+                ('data_inicial', '2026-03-01'),
+                ('data_final', '2026-03-31'),
+                ('contas', str(self.dinheiro.id)),
+                ('contas', str(self.banco.id)),
+                ('contas', str(self.caixa_externo.id)),
+                ('contas', str(conta_extra.id)),
+            ]
+        )
+
+        self.assertEqual(contexto['extrato_contas_selecionadas_label'], '4 contas selecionadas')
+        self.assertIn('4 contas selecionadas', html)
+        self.assertEqual(contexto['saldo_final'], Decimal('175.00'))
 
 
 class LancamentoListMultiContasTests(TestCase):

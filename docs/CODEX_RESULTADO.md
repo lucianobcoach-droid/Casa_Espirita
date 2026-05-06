@@ -2,6 +2,16 @@
 
 Data: 2026-04-30
 
+## Correcao do cabecalho de contas selecionadas no Extrato impresso
+
+- corrigi o cabecalho do Extrato impresso/PDF para mostrar identificacao clara das contas selecionadas
+- com uma unica conta selecionada, o cabecalho agora exibe o nome da conta, removendo a identificacao generica `1 conta selecionada`
+- com 2 ou 3 contas selecionadas, o cabecalho exibe os nomes das contas
+- com mais de 3 contas selecionadas, o cabecalho usa resumo `X contas selecionadas` para evitar poluicao visual
+- mantive comportamento seguro para todas as contas selecionadas (`Todas as contas financeiras`)
+- adicionei testes para cobranca de cabecalho (1 conta, ate 3 contas por nome, muitas contas com resumo) e preservacao dos saldos finais esperados
+- nao houve alteracao de calculo financeiro, saldo, lancamentos, transferencias, Balancete, Fechamento/Prestacao ou importacao/exportacao
+
 ## Refinamento do Balancete por publico e composicao
 
 - implementei a arquitetura do Balancete por `Formato do Balancete`, substituindo o filtro solto de vinculadas/indisponiveis por tres formatos reais de uso: `Operacional`, `Operacional + patrimonio vinculado` e `Financeiro completo`

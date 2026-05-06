@@ -1166,19 +1166,7 @@
                                     <div class="financeiro-extrato-print-meta only-print">
                                         <div class="financeiro-extrato-print-contas">
                                             <strong>Contas selecionadas:</strong>
-                                            {% if extrato_todas_contas %}
-                                                Todas as contas financeiras
-                                            {% elif show_conta_filter %}
-                                                {% if contas_selecionadas_ids|length == 1 %}
-                                                    1 conta selecionada
-                                                {% elif contas_selecionadas_ids %}
-                                                    {{ contas_selecionadas_ids|length }} contas selecionadas
-                                                {% else %}
-                                                    Conforme filtros aplicados
-                                                {% endif %}
-                                            {% else %}
-                                                Conta {{ conta_label }}
-                                            {% endif %}
+                                            {{ extrato_contas_selecionadas_label|default:contas_label|default:conta_label|default:'Conforme filtros aplicados' }}
                                         </div>
                                     </div>
 

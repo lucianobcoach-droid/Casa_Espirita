@@ -6721,6 +6721,23 @@ class ContaFinanceiraDeleteView(FinanceiroDeleteMixin):
 
 
 class ExtratoContaMixin(FinanceiroPermissaoMixin):
+    def _montar_label_contas_selecionadas(
+        self,
+        contas: list[ContaFinanceira],
+        *,
+        todas_as_contas: bool = False,
+    ) -> str:
+        if todas_as_contas:
+            return 'Todas as contas financeiras'
+        quantidade = len(contas)
+        if quantidade <= 0:
+            return 'Conforme filtros aplicados'
+        if quantidade == 1:
+            return contas[0].nome
+        if quantidade <= 3:
+            return ', '.join(conta.nome for conta in contas)
+        return f'{quantidade} contas selecionadas'
+
     def _formatar_data_rotulo(self, valor: str) -> str:
         if not valor:
             return ''
@@ -6990,6 +7007,7 @@ class ExtratoContaMixin(FinanceiroPermissaoMixin):
             'quantidade_movimentos': len(itens_extrato),
             'conta_label': conta.nome,
             'contas_label': conta.nome,
+            'extrato_contas_selecionadas_label': conta.nome,
             'tem_extrato': True,
             'extrato_multiplas_contas': False,
             'extrato_todas_contas': False,
@@ -7042,6 +7060,10 @@ class ExtratoContaMixin(FinanceiroPermissaoMixin):
             if todas_as_contas
             else ', '.join(conta.nome for conta in contas)
         )
+        extrato_contas_selecionadas_label = self._montar_label_contas_selecionadas(
+            contas,
+            todas_as_contas=todas_as_contas,
+        )
 
         return {
             'conta': contas[0] if len(contas) == 1 else None,
@@ -7062,6 +7084,7 @@ class ExtratoContaMixin(FinanceiroPermissaoMixin):
             'quantidade_movimentos': len(itens_extrato),
             'conta_label': contas_label,
             'contas_label': contas_label,
+            'extrato_contas_selecionadas_label': extrato_contas_selecionadas_label,
             'tem_extrato': True,
             'extrato_multiplas_contas': len(contas) > 1,
             'extrato_todas_contas': todas_as_contas,
