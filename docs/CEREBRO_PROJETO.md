@@ -179,6 +179,8 @@ Estas regras devem ser respeitadas em qualquer etapa:
 - a frequencia deve permanecer independente do valor exato pago, permitindo acompanhamento de recorrencia mesmo quando houver variacao monetaria
 - essa estrutura deve nascer de forma generica o bastante para atender outras categorias recorrentes, como contas de consumo, sem ficar presa apenas ao relacionamento com favorecidos
 - como desdobramento futuro dessa frente, o sistema deve poder oferecer relatorio gerencial em matriz mensal com valores por competencia, matriz mensal sem valores com indicador visual de frequencia e termo de quitacao em lote por favorecido contendo competencias feitas ou nao, valor medio contribuido, valor total no periodo e periodo selecionado
+- a unidade minima recomendada para implementacao dessa frente e uma alocacao de competencia com `mes/ano + valor`, e nao checkbox puro de meses
+- em lancamento com rateio, a frequencia deve considerar somente a parte/subcategoria que controla frequencia; o valor total bruto do documento nao deve ser usado automaticamente como base da competencia quando houver itens nao recorrentes no mesmo recebimento
 
 ### 5.1.3. Diretriz consolidada de simplificacao da navegacao do financeiro
 - a navegacao lateral persistente do `financeiro` deixou de ser a direcao principal do modulo

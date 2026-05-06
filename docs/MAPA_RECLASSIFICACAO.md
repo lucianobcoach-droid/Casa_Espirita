@@ -891,6 +891,8 @@ Status anterior: FUTURO REAL
 
 Status apos auditoria desta microetapa: PRONTA PARA SPEC FUNCIONAL (COM DECISOES PENDENTES)
 
+Status apos consolidacao de SPEC: SPEC FUNCIONAL/TÉCNICA CONSOLIDADA (AGUARDANDO MICROETAPA DE IMPLEMENTACAO)
+
 Consolidacao:
 - regra ja modelada em documentos oficiais, sem implementacao tecnica no codigo
 - frente deve nascer como estrutura generica de recorrencia por competencia, sem acoplamento exclusivo a contribuicao
@@ -901,3 +903,9 @@ Pendencias de decisao da usuaria:
 - competencia-base do MVP
 - escopo de status (`quitado` apenas ou `quitado + aberto` com distincao)
 - consolidacao de multiplos lancamentos no mesmo mes
+
+Consolidacao adicional da SPEC:
+- unidade minima recomendada: alocacao de competencia (`mes/ano + valor`)
+- regra de rateio: considerar apenas a parte/subcategoria que controla frequencia; nao usar valor total do documento em recebimentos mistos
+- matriz com valores como base e matriz sem valores derivada
+- termo por favorecido mantido como segunda onda

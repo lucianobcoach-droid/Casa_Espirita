@@ -2,6 +2,17 @@
 
 Data de atualizacao: 2026-04-30
 
+## SPEC consolidada - contribuicao mensal por competencia (sem implementacao)
+
+- consolidada SPEC funcional/tecnica para a futura frente de controle de frequencia por competencia
+- decisao registrada: nao usar checkbox puro como fonte principal; adotar alocacao de competencia com `mes/ano + valor`
+- decisao registrada: manter lancamento financeiro como origem do dinheiro no MVP, sem modulo separado de baixa nesta primeira onda
+- vinculo tecnico recomendado: estrutura filha/intermediaria de alocacao de competencia que funcione para lancamento simples e lancamento com rateio
+- regra consolidada para rateio: quando houver itens recorrentes e nao recorrentes no mesmo documento, a frequencia considera apenas o valor da subcategoria que controla frequencia, nao o valor total do lancamento
+- matriz com valores definida como base; matriz sem valores deve ser derivada dela
+- termo por favorecido permanece como segunda onda apos validacao da matriz
+- etapa exclusivamente documental/técnica preparatoria, sem alteracao de codigo, migrations, calculo financeiro ou relatorios atuais
+
 ## Correcao de identificacao de contas no cabecalho do Extrato impresso
 
 - corrigida a apresentacao de `Contas selecionadas` no cabecalho impresso/PDF do Extrato

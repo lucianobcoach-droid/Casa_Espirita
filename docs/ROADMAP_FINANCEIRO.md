@@ -968,3 +968,32 @@ Dependencias/decisoes pendentes da usuaria:
 - regra de consolidacao quando houver multiplos lancamentos no mesmo mes
 - subcategoria inicial obrigatoria para contribuicao mensal
 - se termo por favorecido entra no MVP inicial ou na etapa seguinte
+
+### SPEC funcional/técnica consolidada (pre-implementacao)
+
+Decisoes de modelagem para implementacao futura:
+- nao usar checkbox puro como fonte do controle de competencia;
+- adotar alocacao de competencia com `mes/ano + valor` como unidade minima;
+- manter lancamento financeiro como origem do dinheiro no MVP;
+- nao abrir modulo separado de baixa na primeira onda.
+
+Vinculo tecnico recomendado:
+- usar estrutura filha/intermediaria de alocacao de competencia, ligada ao lancamento e com referencia explicita da subcategoria que controla frequencia;
+- essa estrutura deve atender lancamento simples e lancamento com rateio sem depender do valor total bruto do documento.
+
+Regra para lancamento simples:
+- quando favorecido recorrente + subcategoria controlada, permitir registrar competencias atendidas com valor por competencia;
+- soma das alocacoes deve fechar com o valor relevante daquele trecho controlado.
+
+Regra para lancamento com rateio:
+- so entra no controle o item/parte com subcategoria marcada como controla frequencia;
+- a competencia nao deve usar automaticamente o valor total do lancamento quando houver itens nao recorrentes no mesmo documento.
+
+Regra para recebimento misto (contribuicao + livro/camisa/doacao avulsa):
+- apenas a parte de subcategoria controlada alimenta frequencia;
+- partes nao controladas ficam fora da matriz, mesmo para favorecido recorrente.
+
+Leituras gerenciais:
+- matriz com valores vem primeiro;
+- matriz sem valores deriva da matriz com valores;
+- termo por favorecido fica para segunda onda, apos validacao da matriz.

@@ -2,6 +2,17 @@
 
 Data: 2026-04-30
 
+## Consolidacao de SPEC - controle de contribuicao mensal por competencia
+
+- etapa exclusivamente documental/tecnica, sem implementacao funcional
+- consolidei a SPEC do MVP de competencia mensal considerando lancamento simples e lancamento com rateio
+- fechei a direcao de modelagem para nao usar checkbox puro e adotar alocacao por competencia com `mes/ano + valor`
+- fechei a regra de rateio: frequencia usa apenas o valor da parte/subcategoria que controla frequencia, sem reaproveitar automaticamente o valor total do documento
+- registrei que matriz com valores e a base e matriz sem valores deriva dela
+- registrei que o lancamento financeiro segue como origem do dinheiro no MVP e que modulo separado de baixa nao entra na primeira onda
+- termo por favorecido ficou documentado como segunda onda apos validacao da matriz
+- nao houve alteracao de codigo, models, migrations, views, forms, templates, tests, CSS, calculos financeiros ou comportamento dos relatorios atuais
+
 ## Correcao do cabecalho de contas selecionadas no Extrato impresso
 
 - corrigi o cabecalho do Extrato impresso/PDF para mostrar identificacao clara das contas selecionadas
