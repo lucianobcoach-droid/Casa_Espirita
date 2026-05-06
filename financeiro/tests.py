@@ -2573,6 +2573,11 @@ class LancamentoListagemAcoesTests(TestCase):
             1,
         )
 
+        response_get = self.client.get(
+            reverse('financeiro:lancamento-rateio-delete', kwargs={'grupo_rateio': self.grupo_rateio})
+        )
+        self.assertEqual(response_get.status_code, 200)
+
         response = self.client.post(
             reverse('financeiro:lancamento-rateio-delete', kwargs={'grupo_rateio': self.grupo_rateio})
         )
@@ -2586,3 +2591,32 @@ class LancamentoListagemAcoesTests(TestCase):
                 lancamento__grupo_rateio=self.grupo_rateio
             ).exists()
         )
+
+    def test_exclusao_de_grupo_rateado_bloqueia_get_sem_permissao(self):
+        self._login_com_permissoes(
+            'user-rateio-sem-excluir',
+            [
+                'financeiro.lancamentos.listar',
+                'financeiro.lancamentos.editar',
+                'financeiro.lancamentos.editar_rateio',
+            ],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:lancamento-rateio-delete', kwargs={'grupo_rateio': self.grupo_rateio})
+        )
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_exclusao_simples_continua_funcionando_com_mesma_permissao(self):
+        self._login_com_permissoes(
+            'user-delete-simples-ok',
+            [
+                'financeiro.lancamentos.excluir',
+            ],
+        )
+
+        response_get = self.client.get(
+            reverse('financeiro:lancamento-delete', kwargs={'pk': self.lancamento_simples.pk})
+        )
+        self.assertEqual(response_get.status_code, 200)

@@ -4611,3 +4611,16 @@ Não houve alteração de código funcional nesta etapa.
   - ocultacao de `Excluir` quando a permissao nao existe
   - exclusao de grupo removendo linhas e alocacoes vinculadas
 - sem alteracao de calculo financeiro, saldos, regras de competencia/rateio, Balancete, Extrato, Fechamento/Prestacao ou demais relatorios
+
+## Microetapa: alinhamento da permissao na exclusao de rateio
+
+- investigacao confirmou alinhamento de regra: exclusao simples e exclusao de grupo rateado usam `financeiro.lancamentos.excluir`
+- o catalogo de permissoes segue com esse codigo ativo e vinculado aos perfis administrativos previstos na matriz
+- ajuste aplicado para evitar discrepancia de UX/permissao:
+  - a view da listagem passou a gerar `recibo_url` e `excluir_url` apenas quando a permissao correspondente existe no usuario autenticado
+  - o template passou a renderizar os botoes a partir dessas URLs autorizadas
+- testes reforcados para cobrir:
+  - GET/POST de exclusao de grupo rateado com permissao
+  - bloqueio 403 sem permissao
+  - manutencao da exclusao simples sob a mesma permissao
+- sem alteracao de calculo financeiro, saldos, regras de rateio/competencia ou relatorios do modulo

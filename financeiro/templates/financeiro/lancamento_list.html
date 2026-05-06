@@ -1312,7 +1312,7 @@
                         <td class="actions-cell no-print" data-lancamento-actions-col>
                             <div class="financeiro-lancamento-actions-grid">
                                 <div class="financeiro-lancamento-action-slot">
-                                    {% if pode_emitir_recibo and lancamento_visual.recibo_url %}
+                                    {% if lancamento_visual.recibo_url %}
                                         <a
                                             class="button is-small is-info is-light financeiro-lancamento-icon-button"
                                             href="{{ lancamento_visual.recibo_url }}"
@@ -1389,7 +1389,7 @@
                                     {% endif %}
                                 </div>
                                 <div class="financeiro-lancamento-action-slot">
-                                    {% if pode_excluir_lancamento and lancamento_visual.excluir_url %}
+                                    {% if lancamento_visual.excluir_url %}
                                         <a
                                             class="button is-small is-danger is-light financeiro-lancamento-icon-button"
                                             href="{{ lancamento_visual.excluir_url }}"

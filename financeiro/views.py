@@ -8051,6 +8051,14 @@ class LancamentoFinanceiroListView(FinanceiroPermissaoMixin, ListView):
             _montar_lancamentos_visuais_listagem(context['lancamentos']),
             ordenacao_atual,
         )
+        pode_emitir_recibo = usuario_possui_permissao(
+            self.request.user,
+            'financeiro.lancamentos.emitir_recibo',
+        )
+        pode_excluir_lancamento = usuario_possui_permissao(
+            self.request.user,
+            'financeiro.lancamentos.excluir',
+        )
         return_to = self.request.get_full_path()
         filtros_retorno = self.request.GET.urlencode()
         recibo_favorecido_url_base = reverse('financeiro:lancamento-recibos-por-favorecido')
@@ -8058,7 +8066,7 @@ class LancamentoFinanceiroListView(FinanceiroPermissaoMixin, ListView):
         for lancamento_visual in lancamentos_visuais:
             lancamento = lancamento_visual['representante']
             recibo_url = ''
-            if lancamento.tipo == LancamentoFinanceiro.TipoLancamento.RECEITA:
+            if pode_emitir_recibo and lancamento.tipo == LancamentoFinanceiro.TipoLancamento.RECEITA:
                 if lancamento_visual.get('eh_rateio'):
                     linhas_rateio = lancamento_visual.get('linhas_rateio') or []
                     pessoas_rateio_ids = {linha.pessoa_id for linha in linhas_rateio}
@@ -8078,17 +8086,19 @@ class LancamentoFinanceiroListView(FinanceiroPermissaoMixin, ListView):
                     recibo_url = reverse('financeiro:lancamento-recibo', kwargs={'pk': lancamento.pk})
             lancamento_visual['recibo_url'] = recibo_url
 
-            if lancamento_visual.get('eh_rateio'):
-                grupo_rateio = (lancamento.grupo_rateio or '').strip()
-                excluir_url = (
-                    reverse('financeiro:lancamento-rateio-delete', kwargs={'grupo_rateio': grupo_rateio})
-                    if grupo_rateio
-                    else ''
-                )
-            else:
-                excluir_url = reverse('financeiro:lancamento-delete', kwargs={'pk': lancamento.pk})
-            if excluir_url and return_to:
-                excluir_url = f'{excluir_url}?{urlencode({"return_to": return_to})}'
+            excluir_url = ''
+            if pode_excluir_lancamento:
+                if lancamento_visual.get('eh_rateio'):
+                    grupo_rateio = (lancamento.grupo_rateio or '').strip()
+                    excluir_url = (
+                        reverse('financeiro:lancamento-rateio-delete', kwargs={'grupo_rateio': grupo_rateio})
+                        if grupo_rateio
+                        else ''
+                    )
+                else:
+                    excluir_url = reverse('financeiro:lancamento-delete', kwargs={'pk': lancamento.pk})
+                if excluir_url and return_to:
+                    excluir_url = f'{excluir_url}?{urlencode({"return_to": return_to})}'
             lancamento_visual['excluir_url'] = excluir_url
 
             componentes_resumo = _componentes_resumo_lancamento_visual_listagem(

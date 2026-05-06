@@ -3423,3 +3423,15 @@ Riscos principais antes de migration:
   - sem permissao `financeiro.lancamentos.excluir`, o botao `Excluir` continua oculto
   - regras de permissao de `recibo`, `clonar` e `editar` permanecem inalteradas
 - sem alteracao de calculo financeiro, saldos, regras de rateio, Balancete, Extrato, Fechamento/Prestacao ou demais relatorios
+
+## Alinhamento de permissao na exclusao de grupo rateado
+
+- auditoria da etapa confirmou que a rota de exclusao de grupo rateado e a exclusao simples usam o mesmo codigo de permissao: `financeiro.lancamentos.excluir`
+- no catalogo atual, esse codigo existe e esta ativo; os perfis-base com esse acesso continuam `administrador-geral` e `gestao-administrativa`
+- para eliminar qualquer risco de divergencia entre botao e backend, a listagem passou a montar `recibo_url` e `excluir_url` somente quando a permissao real do usuario estiver presente
+- com isso, a renderizacao de acoes passa a depender da mesma verificacao de permissao usada no backend da rota protegida
+- cobertura de testes reforcada:
+  - usuario com permissao: acessa GET/POST de exclusao de grupo rateado
+  - usuario sem permissao: nao recebe botao e GET direto da URL segue bloqueado (403)
+  - exclusao simples continua acessivel com a mesma permissao
+- sem alteracao de calculo financeiro, saldos, rateio financeiro, competencias, Balancete, Extrato ou Fechamento/Prestacao
