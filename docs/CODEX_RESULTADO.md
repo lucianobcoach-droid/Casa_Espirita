@@ -4492,3 +4492,14 @@ Não houve alteração de código funcional nesta etapa.
   2) validacao visual final de relatorios impressos em volume real (com foco no Extrato)
   3) auditoria preparatoria da frente de frequencia/recorrencia por competencia
 - sem alteracao de codigo, calculo financeiro, saldos, lancamentos, Extrato, Fechamento/Prestacao ou regras de negocio aprovadas
+## Microetapa: auditoria e consolidacao do MVP de contribuicao mensal por competencia
+
+- etapa exclusivamente documental/técnica preparatória, sem implementação
+- auditoria confirmou que a frente está modelada em `CEREBRO_PROJETO.md`, `ROADMAP_FINANCEIRO.md` e `MAPA_RECLASSIFICACAO.md`, mas ainda sem campos/fluxo funcional no código
+- consolidado do MVP recomendado:
+  1) flags mínimas em favorecido e subcategoria
+  2) matriz mensal com valores por competência
+  3) matriz sem valores (indicador de frequência)
+  4) termo por favorecido em segunda etapa
+- decisões pendentes da usuária registradas para fechamento da SPEC funcional
+- sem alteração de código, models, migrations, forms, views, urls, templates, tests, CSS ou cálculos financeiros

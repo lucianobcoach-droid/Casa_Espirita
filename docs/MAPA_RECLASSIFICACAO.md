@@ -882,3 +882,22 @@ Resumo:
 
 Observacao:
 - este item e de governanca/backlog; nao representa implementacao funcional
+
+---
+
+### 33. Controle de contribuicao mensal / frequencia por competencia
+
+Status anterior: FUTURO REAL
+
+Status apos auditoria desta microetapa: PRONTA PARA SPEC FUNCIONAL (COM DECISOES PENDENTES)
+
+Consolidacao:
+- regra ja modelada em documentos oficiais, sem implementacao tecnica no codigo
+- frente deve nascer como estrutura generica de recorrencia por competencia, sem acoplamento exclusivo a contribuicao
+- primeira onda recomendada: flags minimas em favorecido e subcategoria + matriz mensal com valores
+- segunda onda recomendada: matriz sem valores e termo por favorecido
+
+Pendencias de decisao da usuaria:
+- competencia-base do MVP
+- escopo de status (`quitado` apenas ou `quitado + aberto` com distincao)
+- consolidacao de multiplos lancamentos no mesmo mes

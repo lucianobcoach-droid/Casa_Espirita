@@ -3277,3 +3277,33 @@ Essa estrutura não altera o funcionamento do sistema Django. Ela organiza a for
   - Risco documental ou divergencia a conferir:
     - `ROADMAP_FINANCEIRO.md` ainda cita como pendente a revisao de modos avancados do Balancete em blocos historicos antigos; considerar historico, sem tratar como fila ativa enquanto o recorte aprovado estiver congelado
 - recomendacao imediata: proxima microetapa deve ser auditoria documental/tecnica curta de importacoes em uso real (homologacao de planilhas historicas), sem mudanca funcional
+## Auditoria documental do MVP de contribuicao mensal por competencia
+
+- frente auditada: controle de contribuicao mensal/frequencia por competencia
+- estado atual consolidado: modelada/documentada, sem implementacao funcional no codigo
+- regra-base ja registrada: combinar `pessoa/favorecido recorrente` com `subcategoria que controla frequencia`, usando competencia mensal explicita e estrutura generica para outras recorrencias alem de contribuicao
+- limites da etapa: nenhuma alteracao de codigo, migrations, calculos financeiros, Balancete, importacao ou relatorios existentes
+
+Classificacao da frente:
+- pronta para SPEC funcional, com decisoes pendentes da usuaria sobre recorte do MVP
+
+MVP recomendado (futuras microetapas):
+1) base cadastral minima:
+   - flag de recorrencia no cadastro de pessoa/favorecido
+   - flag de controle de frequencia no cadastro de subcategoria
+2) matriz mensal com valores (primeira entrega de relatorio):
+   - linhas por favorecido recorrente
+   - colunas por competencia mensal
+   - celula com valor contribuido por competencia
+3) matriz mensal sem valores (foco em frequencia):
+   - indicador visual de presenca/ausencia por competencia
+4) termo/relatorio por favorecido (segunda onda):
+   - contribuicoes feitas/nao feitas
+   - valor medio e valor total no periodo
+
+Riscos principais antes de migration:
+- escolha da referencia de competencia (`data_competencia` x `data_pagamento`) e impacto em reconciliacao
+- duplicidade de lancamentos no mesmo favorecido/subcategoria/mes
+- contribuicoes parciais/multiplas no mesmo mes
+- comportamento para favorecido inativo e para subcategoria desativada
+- risco de misturar esta frente com Balancete ou importacao (escopos congelados/separados)

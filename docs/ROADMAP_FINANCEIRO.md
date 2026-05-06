@@ -945,3 +945,26 @@ Essa frente deve ser tratada como melhoria de governança/documentação, sem im
   2. validacao visual final de relatorios impressos em volume real, com foco no Extrato
   3. auditoria preparatoria da frente futura de frequencia/recorrencia por competencia
 - observacao de governanca: enquanto nao houver nova decisao explicita da usuaria, nao reabrir logica funcional do Balancete
+## 16. Auditoria e consolidacao do MVP - contribuicao mensal/frequencia por competencia
+
+Status consolidado: MODELADA/DOCUMENTADA, SEM IMPLEMENTACAO FUNCIONAL
+
+Direcao validada para futura implementacao:
+- frente generica por recorrencia mensal, nao exclusiva de "contribuicao"
+- eixo de controle: `pessoa/favorecido recorrente` + `subcategoria com controle de frequencia`
+- competencia mensal explicita como base de leitura gerencial
+- relatorios futuros em duas visoes: matriz com valores e matriz sem valores
+- termo por favorecido como segunda onda, sem misturar no primeiro patch
+
+Recorte minimo recomendado:
+1. campos/flags minimos em pessoa e subcategoria
+2. matriz mensal com valores por competencia
+3. matriz sem valores (indicador de frequencia)
+4. termo por favorecido (lote) em etapa posterior
+
+Dependencias/decisoes pendentes da usuaria:
+- competencia oficial do MVP: `data_competencia` ou `data_pagamento`
+- considerar apenas `quitado` ou tambem `aberto` com marcacao visual
+- regra de consolidacao quando houver multiplos lancamentos no mesmo mes
+- subcategoria inicial obrigatoria para contribuicao mensal
+- se termo por favorecido entra no MVP inicial ou na etapa seguinte
