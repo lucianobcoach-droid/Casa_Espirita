@@ -3484,3 +3484,25 @@ Riscos principais antes de migration:
   - a listagem abriu com `200` e deixou de exibir os padroes sinteticos removidos
 - causa provavel: criacao manual/interativa de fixtures inspiradas em `financeiro/tests.py` fora do banco de teste; nao ha evidencia de falha do `manage.py test`, que continuou executando em base isolada
 - nesta microetapa nao houve alteracao de codigo funcional; apenas limpeza local de dados confirmadamente sinteticos e registro documental do incidente
+
+## Fechamento do incidente de banco local (diagnostico final validado)
+
+- a conclusao final do incidente foi validada pela usuaria em diagnostico SQLite de leitura: o banco correto em uso e o `db.sqlite3` atual, com dados reais preservados
+- contagens confirmadas no `db.sqlite3` atual:
+  - `financeiro_lancamentofinanceiro = 2193`
+  - `financeiro_pessoafinanceira = 358`
+  - `financeiro_contafinanceira = 11`
+  - `financeiro_categoriafinanceira = 71`
+- comparacao consolidada dos candidatos locais:
+  - `db.sqlite3`: banco real recuperado/confirmado e em uso correto no sistema
+  - `db.sqlite3_BACKUP_ANTES_LIMPEZA_TESTES.sqlite3`: continha apenas 4 lancamentos sinteticos de teste
+  - `db-Luciano.sqlite3`: continha 0 lancamentos e foi descartado como candidato de restauracao
+- diretriz operacional consolidada para este incidente:
+  - manter `db.sqlite3` atual como base correta
+  - nao usar `db-Luciano.sqlite3` para restauracao
+  - preservar o backup validado informado pela usuaria: `db.sqlite3_BACKUP_VALIDADO_2193_LANCAMENTOS.sqlite3`
+- governanca reforcada:
+  - nunca executar script/fixture manual em banco real sem backup previo
+  - sempre gerar backup antes de diagnostico/limpeza local
+  - manter execucao de testes no banco de teste isolado
+- esta microetapa foi exclusivamente documental, sem alteracao de codigo, calculos, saldos, lancamentos ou relatorios

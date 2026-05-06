@@ -4676,3 +4676,25 @@ Não houve alteração de código funcional nesta etapa.
   - `P-LIST`, `Conta listagem` e `Receita simples` deixaram de aparecer no HTML da tela
   - demais cadastros reais permaneceram no banco
 - nenhuma alteracao de codigo funcional foi necessaria nesta etapa; a baixa foi local/documental, sem mexer em calculo, saldos, rateio, competencias ou relatorios
+
+## Microetapa: correcao documental da conclusao do incidente de banco local
+
+- a usuaria confirmou em diagnostico SQLite de leitura que o `db.sqlite3` atual contem os dados reais e voltou a abrir corretamente no sistema
+- contagens finais registradas como fonte de verdade operacional:
+  - `financeiro_lancamentofinanceiro = 2193`
+  - `financeiro_pessoafinanceira = 358`
+  - `financeiro_contafinanceira = 11`
+  - `financeiro_categoriafinanceira = 71`
+- comparacao final de bancos locais:
+  - `db.sqlite3` = banco correto em uso
+  - `db.sqlite3_BACKUP_ANTES_LIMPEZA_TESTES.sqlite3` = continha apenas 4 lancamentos sinteticos/teste
+  - `db-Luciano.sqlite3` = continha 0 lancamentos e foi descartado para restauracao
+- conclusao operacional consolidada:
+  - manter `db.sqlite3` atual
+  - nao usar `db-Luciano.sqlite3` para restaurar dados
+  - preservar backup validado com base real: `db.sqlite3_BACKUP_VALIDADO_2193_LANCAMENTOS.sqlite3`
+- reforco de governanca registrado:
+  - backup obrigatorio antes de qualquer diagnostico/limpeza local
+  - proibido executar fixtures/scripts manuais em banco real sem contingencia
+  - testes continuam no banco de teste isolado
+- microetapa exclusivamente documental: sem alteracao de codigo, sem alteracao de banco e sem impacto funcional
