@@ -951,3 +951,18 @@ Consolidacao:
 
 Proxima etapa recomendada:
 - implementar captura/validacao de competencias por item controlado no fluxo de rateio e preparar a futura matriz mensal com valores
+
+### 36. Frequencia por competencia - rateio controlado
+
+Status: IMPLEMENTADO
+
+Consolidacao:
+- o fluxo de rateio agora captura competencias apenas para a subcategoria controlada do grupo
+- a validacao compara a soma das competencias com o valor consolidado dessa subcategoria, sem usar o valor bruto total do documento
+- itens nao controlados do mesmo documento continuam fora da frequencia
+- favorecido nao recorrente ou grupo sem item controlado nao exigem competencias
+- create com rateio e edicao coordenada do grupo persistem/removem alocacoes conforme as linhas finais do grupo
+- clone de rateio permanece sem copiar competencias automaticamente
+
+Proxima etapa recomendada:
+- implementar a matriz mensal com valores a partir das alocacoes ja registradas

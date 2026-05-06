@@ -127,9 +127,11 @@ Este documento consolida regras permanentes do sistema. Ele não substitui o his
 - Na primeira implementacao funcional da alocacao, o formulario de lancamento exige `Competencias atendidas` apenas quando houver favorecido recorrente + subcategoria controlada em lancamento simples.
 - Cada competencia atendida deve registrar `mes/ano + valor`, e a soma das alocacoes precisa ser igual ao valor controlado do lancamento.
 - Em lancamento com rateio, a frequencia nao pode usar automaticamente o valor total do documento: so entra o valor do item de rateio vinculado a subcategoria que controla frequencia.
-- Nesta microetapa, o rateio ficou apenas preparado para essa regra; a criacao inicial do grupo nao captura competencias para evitar fechamento incorreto pelo valor bruto do documento.
+- No rateio implementado, a soma das competencias deve fechar por subcategoria controlada do grupo, e nao pelo valor bruto total do documento.
+- Itens nao controlados do mesmo rateio continuam fora da frequencia e nao recebem alocacao de competencia.
 - No recorte cadastral minimo ja entregue, a marcacao de subcategoria controlada fica em `CategoriaFinanceira.controla_recorrencia_competencia`, com default `False` para nao incluir subcategorias antigas automaticamente.
 - Itens do mesmo recebimento com subcategorias nao recorrentes (livro, camisa, doacao avulsa etc.) ficam fora da frequencia, mesmo quando o favorecido for recorrente.
 - Multiplos lancamentos para a mesma pessoa/subcategoria/competencia devem ser somados na matriz; nao devem ser bloqueados automaticamente como duplicidade.
 - Em clone comum, competencias existentes nao devem ser copiadas automaticamente para o novo lancamento.
+- Em clone de rateio, competencias tambem nao devem ser copiadas automaticamente para evitar duplicidade de quitacao por competencia.
 - No MVP inicial, nao abrir modulo separado de baixa; manter o fluxo no proprio lancamento e tratar termo por favorecido como segunda onda apos validacao da matriz.

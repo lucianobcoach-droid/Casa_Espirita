@@ -3386,3 +3386,16 @@ Riscos principais antes de migration:
   - importacao/exportacao auxiliar de pessoas e categorias, com compatibilidade para base nova
 - nao houve implementacao de matriz mensal, alocacao de competencia ou termo por favorecido
 - nao houve alteracao de calculo financeiro, lancamentos, saldos, Balancete, Extrato ou Fechamento/Prestacao
+
+## Competencias mensais no fluxo de rateio controlado
+
+- a captura de competencias passou a funcionar tambem no fluxo de rateio, reaproveitando `AlocacaoCompetenciaFinanceira` sem criar model nova
+- a alocacao continua vinculada ao `LancamentoFinanceiro` persistido, e no rateio cada competencia fica presa apenas a linha/subcategoria controlada do grupo
+- a soma das competencias do rateio agora e validada por item/subcategoria controlada, e nao pelo valor bruto total do documento
+- itens nao controlados do mesmo documento (livro, camisa, doacao avulsa etc.) continuam fora da frequencia e nao recebem alocacao
+- quando o favorecido nao e recorrente, ou quando nao existe item controlado no rateio, o fluxo segue sem exigir competencias
+- a criacao com rateio e a edicao coordenada do grupo passaram a persistir/remover alocacoes de forma coerente com as linhas finais do grupo
+- clone de rateio continua sem copiar competencias automaticamente
+- exclusao da linha/lancamento continua removendo as alocacoes vinculadas por cascade
+- ainda nao existe matriz mensal com valores, matriz sem valores ou termo por favorecido
+- nao houve alteracao de calculo financeiro, saldos, Balancete, Extrato, Fechamento/Prestacao ou demais relatorios existentes

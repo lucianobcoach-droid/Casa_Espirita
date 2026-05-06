@@ -1027,3 +1027,15 @@ Leituras gerenciais:
   - divergencia de soma bloqueando salvamento aprovada
   - edicao com recarga de competencias e clone sem copia de competencias aprovados
   - sem alteracao de calculo, saldos e relatorios existentes
+
+## 19. Frequencia por competencia - rateio controlado
+
+- etapa funcional concluida para captura e validacao por item/subcategoria controlada no rateio
+- regra entregue:
+  - o valor bruto total do documento nao entra como base da competencia em recebimento misto
+  - cada subcategoria controlada do rateio fecha suas competencias apenas contra o proprio valor consolidado
+  - itens nao controlados do mesmo rateio ficam fora da frequencia
+  - favorecido nao recorrente ou rateio sem subcategoria controlada nao exigem competencias
+- create com rateio e edicao coordenada do grupo passaram a persistir/remover alocacoes de forma coerente com as linhas finais do grupo
+- clone de rateio continua sem copiar competencias automaticamente
+- permanecem para as proximas microetapas: matriz mensal com valores, matriz sem valores derivada e termo por favorecido

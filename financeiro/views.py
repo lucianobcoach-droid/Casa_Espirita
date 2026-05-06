@@ -141,6 +141,25 @@ def _contexto_competencia_lancamento() -> dict[str, list[int]]:
     }
 
 
+def _salvar_alocacoes_competencia_rateio(
+    lancamentos: list[LancamentoFinanceiro],
+    competencias_por_categoria: dict[int, list[dict[str, object]]] | None,
+) -> None:
+    competencias_por_categoria = competencias_por_categoria or {}
+    for lancamento in lancamentos:
+        if not lancamento.usa_controle_competencia():
+            lancamento.alocacoes_competencia.all().delete()
+            continue
+
+        linhas_competencia = competencias_por_categoria.get(lancamento.categoria_id, [])
+        lancamento.alocacoes_competencia.all().delete()
+        for linha in linhas_competencia:
+            lancamento.alocacoes_competencia.create(
+                categoria=lancamento.categoria,
+                **linha,
+            )
+
+
 def _auditoria_usuario(request):
     usuario = getattr(request, 'user', None)
     if usuario and getattr(usuario, 'is_authenticated', False):
@@ -8735,6 +8754,7 @@ class LancamentoFinanceiroCreateView(FinanceiroFormMixin, CreateView):
             return response
 
         rateio_linhas = form.cleaned_data.get('rateio_linhas') or []
+        competencias_rateio_por_categoria = form.cleaned_data.get('competencias_rateio_por_categoria') or {}
         grupo_rateio = form.cleaned_data.get('grupo_rateio') or uuid4().hex
         numero_documento = (form.cleaned_data.get('numero_documento') or '').strip()
 
@@ -8768,6 +8788,11 @@ class LancamentoFinanceiroCreateView(FinanceiroFormMixin, CreateView):
                     valor=linha['valor'],
                 )
                 lancamentos_criados.append(lancamento)
+            _salvar_alocacoes_competencia_rateio(
+                lancamentos_criados,
+                competencias_rateio_por_categoria,
+            )
+            for lancamento in lancamentos_criados:
                 _registrar_auditoria_lancamento(
                     request=self.request,
                     acao=AuditoriaFinanceiro.AcaoAuditoria.CREATE,
@@ -9100,11 +9125,13 @@ class LancamentoFinanceiroGrupoRateioUpdateView(FinanceiroFormMixin, UpdateView)
             Decimal('0.00'),
         )
         context['grupo_rateio_linha_representativa'] = grupo_lancamentos[0]
+        context.update(_contexto_competencia_lancamento())
         return context
 
     def form_valid(self, form):
         grupo_lancamentos = self._get_grupo_lancamentos()
         rateio_linhas = form.cleaned_data.get('rateio_linhas') or []
+        competencias_rateio_por_categoria = form.cleaned_data.get('competencias_rateio_por_categoria') or {}
         dados_comuns = {
             'descricao': form.cleaned_data['descricao'],
             'tipo': form.cleaned_data['tipo'],
@@ -9181,6 +9208,11 @@ class LancamentoFinanceiroGrupoRateioUpdateView(FinanceiroFormMixin, UpdateView)
                     usuario=_auditoria_usuario(self.request),
                     campos_alterados=_build_auditoria_payload(antes, None),
                 )
+
+            _salvar_alocacoes_competencia_rateio(
+                lancamentos_finais,
+                competencias_rateio_por_categoria,
+            )
 
         self.object = lancamentos_finais[0]
         messages.success(

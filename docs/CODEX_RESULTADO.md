@@ -4575,3 +4575,13 @@ Não houve alteração de código funcional nesta etapa.
 - importacao/exportacao auxiliar de `pessoas` e `categorias` atualizada para incluir os novos campos
 - migration criada para manter compatibilidade dos dados existentes com defaults seguros
 - sem alteracao de calculo financeiro, saldos, Balancete, Extrato, Fechamento/Prestacao e regras de lancamento
+
+## Microetapa: competencias mensais no rateio controlado
+
+- implementada a captura de `Competencias atendidas` tambem no fluxo de rateio, sem criar matriz mensal
+- a regra passou a comparar a soma das competencias apenas com o valor da subcategoria controlada no rateio, e nao com o valor bruto total do documento
+- recebimentos mistos permanecem seguros: so a parte da subcategoria controlada entra na frequencia; itens nao controlados continuam fora
+- a criacao inicial com rateio e a edicao coordenada do grupo passaram a persistir/remover alocacoes conforme as linhas finais controladas
+- favorecido nao recorrente ou rateio sem subcategoria controlada continuam sem exigir competencias
+- clone de rateio continua sem copiar competencias automaticamente
+- sem alteracao de calculo financeiro, saldos, Balancete, Extrato, Fechamento/Prestacao ou demais relatorios existentes

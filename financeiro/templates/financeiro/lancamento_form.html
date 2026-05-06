@@ -406,6 +406,26 @@
                     </div>
                 {% endif %}
 
+                {% if not form.instance.pk %}
+                    <div
+                        class="financeiro-tabler-row"
+                        data-financeiro-competencias-rateio-box="true"
+                        {% if not form.competencias_rateio_bloco_visivel %}hidden{% endif %}
+                        style="{% if not form.competencias_rateio_bloco_visivel %}display: none;{% endif %}"
+                    >
+                        <div class="financeiro-competencia-box">
+                            <div class="financeiro-tabler-subhead">
+                                <div>
+                                    <p class="financeiro-tabler-subtitle">Competências atendidas da subcategoria controlada</p>
+                                    <p class="financeiro-tabler-meta">Cada subcategoria controlada do rateio fecha suas competências contra o próprio valor rateado.</p>
+                                </div>
+                            </div>
+                            {% for error in form.competencias_rateio_payload.errors %}<p class="help is-danger mb-2">{{ error }}</p>{% endfor %}
+                            <div data-financeiro-competencia-rateio-groups="true"></div>
+                        </div>
+                    </div>
+                {% endif %}
+
                 <div
                     class="financeiro-tabler-row"
                     data-financeiro-competencias-box="true"
@@ -495,6 +515,7 @@
 {{ rateio_categoria_opcoes|json_script:'financeiro-rateio-categorias' }}
 {{ form.rateio_linhas_iniciais|json_script:'financeiro-rateio-inicial' }}
 {{ form.competencias_linhas_iniciais|json_script:'financeiro-competencias-inicial' }}
+{{ form.competencias_rateio_iniciais|json_script:'financeiro-competencias-rateio-inicial' }}
 {{ competencia_pessoas_recorrentes_ids|json_script:'financeiro-competencia-pessoas' }}
 {{ competencia_categorias_controladas_ids|json_script:'financeiro-competencia-categorias' }}
 <script>
@@ -524,6 +545,9 @@
         const competenciaBody = document.querySelector('[data-financeiro-competencia-body="true"]');
         const competenciaAddButton = document.querySelector('[data-financeiro-competencia-add="true"]');
         const competenciasPayloadField = document.querySelector('[name="competencias_payload"]');
+        const competenciaRateioBox = document.querySelector('[data-financeiro-competencias-rateio-box="true"]');
+        const competenciaRateioGroups = document.querySelector('[data-financeiro-competencia-rateio-groups="true"]');
+        const competenciasRateioPayloadField = document.querySelector('[name="competencias_rateio_payload"]');
         const rateioDiferencaText = document.querySelector('[data-financeiro-rateio-diferenca="true"]');
         const rateioStatusText = document.querySelector('[data-financeiro-rateio-status="true"]');
         const autocompleteFields = Array.from(document.querySelectorAll('[data-financeiro-autocomplete="true"]'));
@@ -541,12 +565,14 @@
         const rateioCategoriasNode = document.getElementById('financeiro-rateio-categorias');
         const rateioInicialNode = document.getElementById('financeiro-rateio-inicial');
         const competenciasInicialNode = document.getElementById('financeiro-competencias-inicial');
+        const competenciasRateioInicialNode = document.getElementById('financeiro-competencias-rateio-inicial');
         const competenciaPessoasNode = document.getElementById('financeiro-competencia-pessoas');
         const competenciaCategoriasNode = document.getElementById('financeiro-competencia-categorias');
         const quickCreateButtons = Array.from(document.querySelectorAll('[data-financeiro-quick-create]'));
         const rateioCategorias = rateioCategoriasNode ? JSON.parse(rateioCategoriasNode.textContent) : [];
         const rateioInicial = rateioInicialNode ? JSON.parse(rateioInicialNode.textContent) : [];
         const competenciasInicial = competenciasInicialNode ? JSON.parse(competenciasInicialNode.textContent) : [];
+        const competenciasRateioInicial = competenciasRateioInicialNode ? JSON.parse(competenciasRateioInicialNode.textContent) : {};
         const competenciaPessoasRecorrentes = new Set(
             competenciaPessoasNode ? JSON.parse(competenciaPessoasNode.textContent).map(String) : []
         );
@@ -555,6 +581,7 @@
         );
         let rateioRows = Array.isArray(rateioInicial) ? rateioInicial.slice() : [];
         let competenciasRows = Array.isArray(competenciasInicial) ? competenciasInicial.slice() : [];
+        let competenciasRateioByCategoria = JSON.parse(JSON.stringify(competenciasRateioInicial || {}));
         let regraSugestaoRequestId = 0;
         let regraSugestaoAtivadaPorUsuario = false;
         let regraSugestaoAplicacaoEmAndamento = false;
@@ -1087,6 +1114,53 @@
             }));
         }
 
+        function cloneCompetenciaRows(rows) {
+            if (!Array.isArray(rows)) return [];
+            return rows.map(function (row) {
+                return {
+                    mes: row.mes || '',
+                    ano: row.ano || '',
+                    valor: row.valor || '',
+                };
+            });
+        }
+
+        function getRateioCategoriaMeta(categoriaId) {
+            return rateioCategorias.find(function (categoria) {
+                return String(categoria.id) === String(categoriaId);
+            }) || null;
+        }
+
+        function getRateioLinhasControladasConsolidadas() {
+            if (!pessoaRecorrenteSelecionada()) return [];
+            const consolidadas = {};
+            rateioRows.forEach(function (row) {
+                const categoriaId = String(row.categoria || '');
+                if (!categoriaId || !competenciaCategoriasControladas.has(categoriaId)) return;
+                const categoriaMeta = getRateioCategoriaMeta(categoriaId);
+                if (!categoriaMeta) return;
+                if (!consolidadas[categoriaId]) {
+                    consolidadas[categoriaId] = {
+                        categoriaId: categoriaId,
+                        label: categoriaMeta.label,
+                        valorCentavos: 0,
+                    };
+                }
+                consolidadas[categoriaId].valorCentavos += parseMoedaParaCentavos(row.valor || '');
+            });
+            return Object.values(consolidadas);
+        }
+
+        function serializeCompetenciasRateio() {
+            if (!competenciasRateioPayloadField) return;
+            const payload = {};
+            getRateioLinhasControladasConsolidadas().forEach(function (grupo) {
+                const categoriaId = String(grupo.categoriaId);
+                payload[categoriaId] = cloneCompetenciaRows(competenciasRateioByCategoria[categoriaId]);
+            });
+            competenciasRateioPayloadField.value = JSON.stringify(payload);
+        }
+
         function createRateioCategoriaSelect(selectedValue, rowIndex) {
             const wrapper = document.createElement('div');
             wrapper.className = 'financeiro-rateio-select';
@@ -1107,6 +1181,7 @@
             select.addEventListener('change', function () {
                 rateioRows[rowIndex].categoria = select.value;
                 serializeRateioRows();
+                syncCompetenciasRateioState();
             });
             wrapper.appendChild(select);
             return wrapper;
@@ -1128,6 +1203,7 @@
                 rateioRows[rowIndex].valor = normalizarMoedaParaDecimal(digitosAtualizados);
                 serializeRateioRows();
                 atualizarFechamentoRateio();
+                syncCompetenciasRateioState();
             });
             return input;
         }
@@ -1162,6 +1238,7 @@
                     rateioRows.splice(index, 1);
                     renderRateioRows();
                     serializeRateioRows();
+                    syncCompetenciasRateioState();
                 });
                 acaoCell.appendChild(removeButton);
                 tr.appendChild(acaoCell);
@@ -1297,6 +1374,172 @@
             });
         }
 
+        function competenciasRateioAplicaveis() {
+            const tipoAtual = tipoField ? tipoField.value : '';
+            const rateioNovoAtivo = !!rateioToggle && rateioToggle.type === 'checkbox' && rateioToggle.checked;
+            return (
+                rateioNovoAtivo
+                && !pessoaField.disabled
+                && (tipoAtual === 'receita' || tipoAtual === 'despesa')
+                && pessoaRecorrenteSelecionada()
+                && getRateioLinhasControladasConsolidadas().length > 0
+            );
+        }
+
+        function createCompetenciaRateioMesSelect(categoriaId, selectedValue, rowIndex) {
+            const select = document.createElement('select');
+            select.className = 'form-select';
+            const emptyOption = document.createElement('option');
+            emptyOption.value = '';
+            emptyOption.textContent = 'Selecione';
+            select.appendChild(emptyOption);
+            [
+                ['1', 'Janeiro'],
+                ['2', 'Fevereiro'],
+                ['3', 'Março'],
+                ['4', 'Abril'],
+                ['5', 'Maio'],
+                ['6', 'Junho'],
+                ['7', 'Julho'],
+                ['8', 'Agosto'],
+                ['9', 'Setembro'],
+                ['10', 'Outubro'],
+                ['11', 'Novembro'],
+                ['12', 'Dezembro'],
+            ].forEach(function (item) {
+                const option = document.createElement('option');
+                option.value = item[0];
+                option.textContent = item[1];
+                if (String(selectedValue || '') === item[0]) option.selected = true;
+                select.appendChild(option);
+            });
+            select.addEventListener('change', function () {
+                competenciasRateioByCategoria[categoriaId][rowIndex].mes = select.value;
+                serializeCompetenciasRateio();
+            });
+            return select;
+        }
+
+        function createCompetenciaRateioAnoInput(categoriaId, selectedValue, rowIndex) {
+            const input = document.createElement('input');
+            input.type = 'number';
+            input.min = '1900';
+            input.max = '9999';
+            input.step = '1';
+            input.className = 'form-control';
+            input.value = selectedValue || '';
+            input.addEventListener('input', function () {
+                competenciasRateioByCategoria[categoriaId][rowIndex].ano = input.value;
+                serializeCompetenciasRateio();
+            });
+            return input;
+        }
+
+        function createCompetenciaRateioValorInput(categoriaId, selectedValue, rowIndex) {
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.inputMode = 'numeric';
+            input.autocomplete = 'off';
+            input.className = 'form-control';
+            const digitos = (selectedValue || '').toString().replace(/\D/g, '');
+            input.value = formatarMoedaPtBr(digitos);
+            competenciasRateioByCategoria[categoriaId][rowIndex].valor = normalizarMoedaParaDecimal(digitos);
+            input.addEventListener('input', function () {
+                const digitosAtualizados = input.value.replace(/\D/g, '');
+                input.value = formatarMoedaPtBr(digitosAtualizados);
+                competenciasRateioByCategoria[categoriaId][rowIndex].valor = normalizarMoedaParaDecimal(digitosAtualizados);
+                serializeCompetenciasRateio();
+            });
+            return input;
+        }
+
+        function renderCompetenciasRateioGroups() {
+            if (!competenciaRateioGroups) return;
+            competenciaRateioGroups.innerHTML = '';
+            const grupos = getRateioLinhasControladasConsolidadas();
+            if (!grupos.length) {
+                serializeCompetenciasRateio();
+                return;
+            }
+
+            grupos.forEach(function (grupo) {
+                const categoriaId = String(grupo.categoriaId);
+                if (!Array.isArray(competenciasRateioByCategoria[categoriaId]) || !competenciasRateioByCategoria[categoriaId].length) {
+                    competenciasRateioByCategoria[categoriaId] = [{ mes: '', ano: '', valor: '' }];
+                }
+
+                const wrapper = document.createElement('div');
+                wrapper.className = 'mb-4';
+
+                const header = document.createElement('div');
+                header.className = 'financeiro-tabler-subhead';
+                const headerCopy = document.createElement('div');
+                const title = document.createElement('p');
+                title.className = 'financeiro-tabler-subtitle';
+                title.textContent = `Competências — ${grupo.label}`;
+                const meta = document.createElement('p');
+                meta.className = 'financeiro-tabler-meta';
+                meta.textContent = `Valor controlado: ${formatarCentavosMoeda(grupo.valorCentavos)}`;
+                headerCopy.appendChild(title);
+                headerCopy.appendChild(meta);
+                const addButton = document.createElement('button');
+                addButton.type = 'button';
+                addButton.className = 'btn btn-outline-primary btn-sm';
+                addButton.textContent = 'Adicionar competência';
+                addButton.addEventListener('click', function () {
+                    competenciasRateioByCategoria[categoriaId].push({ mes: '', ano: '', valor: '' });
+                    renderCompetenciasRateioGroups();
+                    serializeCompetenciasRateio();
+                });
+                header.appendChild(headerCopy);
+                header.appendChild(addButton);
+                wrapper.appendChild(header);
+
+                const tableWrapper = document.createElement('div');
+                tableWrapper.className = 'table-responsive';
+                const table = document.createElement('table');
+                table.className = 'table table-vcenter financeiro-competencia-table';
+                table.innerHTML = '<thead><tr><th>Mês</th><th>Ano</th><th>Valor</th><th class="text-end">Ação</th></tr></thead>';
+                const tbody = document.createElement('tbody');
+
+                competenciasRateioByCategoria[categoriaId].forEach(function (row, index) {
+                    const tr = document.createElement('tr');
+
+                    const mesCell = document.createElement('td');
+                    mesCell.appendChild(createCompetenciaRateioMesSelect(categoriaId, row.mes, index));
+                    tr.appendChild(mesCell);
+
+                    const anoCell = document.createElement('td');
+                    anoCell.appendChild(createCompetenciaRateioAnoInput(categoriaId, row.ano, index));
+                    tr.appendChild(anoCell);
+
+                    const valorCell = document.createElement('td');
+                    valorCell.appendChild(createCompetenciaRateioValorInput(categoriaId, row.valor, index));
+                    tr.appendChild(valorCell);
+
+                    const acaoCell = document.createElement('td');
+                    acaoCell.className = 'text-end';
+                    const removeButton = document.createElement('button');
+                    removeButton.type = 'button';
+                    removeButton.className = 'btn btn-sm btn-outline-secondary';
+                    removeButton.textContent = 'Remover';
+                    removeButton.addEventListener('click', function () {
+                        competenciasRateioByCategoria[categoriaId].splice(index, 1);
+                        renderCompetenciasRateioGroups();
+                        serializeCompetenciasRateio();
+                    });
+                    acaoCell.appendChild(removeButton);
+                    tr.appendChild(acaoCell);
+                    tbody.appendChild(tr);
+                });
+
+                table.appendChild(tbody);
+                tableWrapper.appendChild(table);
+                wrapper.appendChild(tableWrapper);
+                competenciaRateioGroups.appendChild(wrapper);
+            });
+        }
+
         function syncCompetenciasState() {
             if (!competenciaBox) return;
             const visible = competenciasAplicaveis();
@@ -1305,6 +1548,19 @@
             if (visible) {
                 renderCompetenciaRows();
                 serializeCompetenciaRows();
+            }
+        }
+
+        function syncCompetenciasRateioState() {
+            if (!competenciaRateioBox) return;
+            const visible = competenciasRateioAplicaveis();
+            competenciaRateioBox.hidden = !visible;
+            competenciaRateioBox.style.display = visible ? '' : 'none';
+            if (visible) {
+                renderCompetenciasRateioGroups();
+                serializeCompetenciasRateio();
+            } else if (competenciasRateioPayloadField) {
+                competenciasRateioPayloadField.value = JSON.stringify({});
             }
         }
 
@@ -1346,6 +1602,7 @@
                 serializeRateioRows();
             }
             syncCompetenciasState();
+            syncCompetenciasRateioState();
         }
 
         autocompleteFields.forEach(createAutocomplete);
@@ -1365,6 +1622,7 @@
                     rateioRows.push({ categoria: '', valor: '' });
                     renderRateioRows();
                     serializeRateioRows();
+                    syncCompetenciasRateioState();
                 });
             }
         }
@@ -1389,6 +1647,7 @@
         if (pessoaField) pessoaField.addEventListener('change', loadPessoaHistorico);
         if (pessoaField) pessoaField.addEventListener('change', handleRegraSugestaoTrigger);
         if (pessoaField) pessoaField.addEventListener('change', syncCompetenciasState);
+        if (pessoaField) pessoaField.addEventListener('change', syncCompetenciasRateioState);
         if (categoriaField) categoriaField.addEventListener('change', syncCompetenciasState);
         if (tipoField) {
             tipoField.addEventListener('change', function () {
@@ -1418,6 +1677,7 @@
                     serializeRateioRows();
                 }
                 serializeCompetenciaRows();
+                serializeCompetenciasRateio();
             });
         }
         if (rateioToggle) rateioToggle.addEventListener('change', syncRateioState);
@@ -1439,6 +1699,7 @@
         if (formElement) {
             formElement.addEventListener('submit', serializeRateioRows);
             formElement.addEventListener('submit', serializeCompetenciaRows);
+            formElement.addEventListener('submit', serializeCompetenciasRateio);
         }
         syncDataCompetenciaFromPagamento();
         const params = new URLSearchParams(window.location.search);
@@ -1463,6 +1724,7 @@
         loadPessoaHistorico();
         syncRateioState();
         syncCompetenciasState();
+        syncCompetenciasRateioState();
 
         const quickCreateRoutes = {
             pessoa: '{% url "financeiro:pessoa-create" %}',
