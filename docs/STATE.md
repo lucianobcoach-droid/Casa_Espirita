@@ -3459,3 +3459,28 @@ Riscos principais antes de migration:
   - `financeiro.lancamentos.listar` continua sendo a unica permissao exigida para abrir a listagem
   - ausencia de `excluir` ou `emitir_recibo` apenas oculta botoes e nao bloqueia a pagina
 - sem alteracao de codigo financeiro, calculo, saldos, rateio, competencias, Balancete, Extrato ou Fechamento/Prestacao
+
+## Limpeza segura de dados sinteticos na base local
+
+- houve confirmacao de contaminacao local visivel na listagem real com padroes sinteticos vindos da frente de testes da listagem:
+  - favorecido `P-LIST - Favorecido listagem`
+  - conta `Conta listagem`
+  - categorias `Receitas listagem`, `Contribuicao listagem` e `Livro listagem`
+  - lancamentos `LIST-001`, `LIST-002`, `LIST-003` e grupo `grp-list-acoes`
+  - usuario tecnico local `debug-list`
+- o arquivo de backup `db.sqlite3_BACKUP_ANTES_LIMPEZA_TESTES.sqlite3` foi confirmado antes de qualquer remocao, mas a comparacao mostrou que ele ja continha a mesma contaminacao; portanto ele preserva o estado anterior a limpeza, nao um estado limpo
+- consulta de leitura confirmou que os 4 lancamentos ativos do banco eram exatamente o conjunto sintetico suspeito, sem outros lancamentos financeiros no `db.sqlite3` atual
+- a limpeza local foi executada em transacao unica e com filtros explicitos, removendo somente:
+  - 4 `LancamentoFinanceiro` sinteticos
+  - 1 `PessoaFinanceira` sintetica (`P-LIST`)
+  - 1 `ContaFinanceira` sintetica (`Conta listagem`)
+  - 3 `CategoriaFinanceira` sinteticas ligadas ao grupo de listagem
+  - 1 usuario tecnico sintetico (`debug-list`)
+- a primeira tentativa de limpeza foi revertida automaticamente por `ProtectedError` ao tentar apagar a categoria pai antes das filhas; a remocao final respeitou a ordem segura (filhas -> pai), sem efeito parcial
+- dados reais preservados:
+  - pessoas reais continuaram presentes na base (`358` apos a limpeza)
+  - contas reais continuaram presentes (`11`)
+  - categorias reais continuaram presentes (`71`)
+  - a listagem abriu com `200` e deixou de exibir os padroes sinteticos removidos
+- causa provavel: criacao manual/interativa de fixtures inspiradas em `financeiro/tests.py` fora do banco de teste; nao ha evidencia de falha do `manage.py test`, que continuou executando em base isolada
+- nesta microetapa nao houve alteracao de codigo funcional; apenas limpeza local de dados confirmadamente sinteticos e registro documental do incidente

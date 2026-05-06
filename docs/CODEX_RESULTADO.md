@@ -4649,3 +4649,30 @@ Não houve alteração de código funcional nesta etapa.
   - `financeiro.lancamentos.listar` abre a tela
   - falta de `emitir_recibo` e/ou `excluir` apenas oculta as acoes elegiveis
 - nao foi necessario reverter a logica recente de `Recibo`/`Excluir`; a exclusao de grupo rateado permaneceu protegida por `financeiro.lancamentos.excluir`
+
+## Microetapa: limpeza segura de dados sinteticos na listagem real
+
+- a investigacao encontrou no codigo de testes exatamente os padroes exibidos na base local:
+  - `P-LIST`, `Favorecido listagem`, `Conta listagem`
+  - `Receitas listagem`, `Contribuicao listagem`, `Livro listagem`
+  - `LIST-001`, `LIST-002`, `LIST-003`, `grp-list-acoes`
+- leitura do `db.sqlite3` confirmou contaminacao local real:
+  - 1 pessoa sintetica
+  - 1 conta sintetica
+  - 3 categorias sinteticas
+  - 4 lancamentos sinteticos
+  - 1 usuario tecnico sintetico (`debug-list`)
+- comparacao com `db.sqlite3_BACKUP_ANTES_LIMPEZA_TESTES.sqlite3` mostrou que o backup foi tirado ja com a contaminacao presente; ele preserva o estado antes da limpeza, mas nao um estado limpo anterior
+- a suite oficial `py manage.py test financeiro.tests` continuou executando em banco de teste isolado, sem evidenciar uso do `db.sqlite3` real; por isso, a causa provavel ficou registrada como criacao manual/interativa de fixtures inspiradas nos testes, e nao falha do runner automatizado
+- limpeza local aplicada com transacao unica e filtros explicitos:
+  - exclusao dos 4 lancamentos sinteticos
+  - exclusao da pessoa `P-LIST`
+  - exclusao da conta `Conta listagem`
+  - exclusao das 3 categorias sinteticas ligadas a esse conjunto
+  - exclusao do usuario `debug-list`
+- a primeira tentativa falhou com `ProtectedError` ao apagar a categoria pai antes das filhas; como a operacao estava em transacao, nada ficou parcialmente removido
+- validacao final:
+  - listagem abriu com `200`
+  - `P-LIST`, `Conta listagem` e `Receita simples` deixaram de aparecer no HTML da tela
+  - demais cadastros reais permaneceram no banco
+- nenhuma alteracao de codigo funcional foi necessaria nesta etapa; a baixa foi local/documental, sem mexer em calculo, saldos, rateio, competencias ou relatorios
