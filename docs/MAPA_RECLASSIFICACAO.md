@@ -866,3 +866,19 @@ Consolidacao:
 
 Governanca:
 - nao reabrir essa logica sem nova decisao explicita da usuaria
+
+---
+
+### 32. Proximas pendencias do financeiro apos aceite do Balancete
+
+Status: LEVANTADO E CLASSIFICADO DOCUMENTALMENTE
+
+Resumo:
+- o Balancete Institucional sai da fila ativa e fica congelado no recorte aprovado
+- a fila imediata recomendada passa a priorizar:
+  1) homologacao real de importacoes
+  2) validacao visual final de relatorios impressos em volume real (Extrato)
+  3) auditoria preparatoria de frequencia/recorrencia por competencia
+
+Observacao:
+- este item e de governanca/backlog; nao representa implementacao funcional

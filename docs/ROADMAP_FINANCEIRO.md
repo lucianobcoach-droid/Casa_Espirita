@@ -937,3 +937,11 @@ Essa frente deve ser tratada como melhoria de governança/documentação, sem im
   - sem alteracao de calculo financeiro, saldos, lancamentos, Extrato, Fechamento/Prestacao e demais relatorios
 - governanca:
   - nao reabrir a logica funcional/UX desse recorte do Balancete sem nova decisao explicita da usuaria
+## 15. Fila recomendada apos aceite final do Balancete Institucional
+
+- frente Balancete: ENCERRADA E APROVADA (funcional + UX), com logica congelada no recorte atual
+- proximas pendencias recomendadas, em ordem:
+  1. homologacao real de importacoes com planilhas historicas completas (lancamentos e cadastros auxiliares)
+  2. validacao visual final de relatorios impressos em volume real, com foco no Extrato
+  3. auditoria preparatoria da frente futura de frequencia/recorrencia por competencia
+- observacao de governanca: enquanto nao houver nova decisao explicita da usuaria, nao reabrir logica funcional do Balancete

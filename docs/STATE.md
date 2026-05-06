@@ -3258,3 +3258,22 @@ Essa estrutura não altera o funcionamento do sistema Django. Ela organiza a for
 - transferencias entre operacional e vinculado permanecem como movimentacao de fronteira (nao viram receita/despesa operacional)
 - nao houve alteracao de calculo financeiro, saldos, lancamentos, Extrato, Fechamento/Prestacao ou demais relatorios
 - novos refinamentos dessa logica do Balancete ficam condicionados a nova decisao explicita da usuaria
+## Levantamento de pendencias do financeiro apos aceite final do Balancete
+
+- frente encerrada e congelada: Balancete Institucional aprovado funcionalmente e em UX; nao reabrir logica sem nova decisao explicita da usuaria
+- classificacao consolidada de proximas pendencias:
+  - Implementado, mas requer validacao da usuaria:
+    - logo institucional no Extrato impresso em uso real de volume (`AGUARDANDO VALIDACAO VISUAL`)
+    - importacoes com massa historica real e cadastros auxiliares em rotina completa (`AGUARDANDO HOMOLOGACAO`)
+  - Modelado/documentado, mas nao implementado:
+    - frequencia/recorrencia por competencia
+    - contratos, parcelas e recorrencias
+    - anexos de comprovantes
+  - Pendente tecnico recomendado:
+    - detalhamento opcional de transferencias internas no Extrato multi-contas (sem alterar consolidado padrao)
+  - Futuro/backlog nao prioritario agora:
+    - tabelas personalizadas de controle
+    - evolucoes avancadas de extras/bloqueios individuais de permissao e log de acesso
+  - Risco documental ou divergencia a conferir:
+    - `ROADMAP_FINANCEIRO.md` ainda cita como pendente a revisao de modos avancados do Balancete em blocos historicos antigos; considerar historico, sem tratar como fila ativa enquanto o recorte aprovado estiver congelado
+- recomendacao imediata: proxima microetapa deve ser auditoria documental/tecnica curta de importacoes em uso real (homologacao de planilhas historicas), sem mudanca funcional

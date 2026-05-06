@@ -4476,3 +4476,19 @@ Não houve alteração de código funcional nesta etapa.
   - transferencias entre operacional e vinculado seguem como movimentacao especifica de fronteira, sem virar receita/despesa operacional
 - congelamento registrado: nao reabrir a logica do Balancete sem nova decisao explicita da usuaria
 - sem alteracao de codigo, calculo financeiro, saldos, lancamentos, Extrato, Fechamento/Prestacao ou demais relatorios
+## Microetapa: levantamento e classificacao das proximas pendencias do financeiro
+
+- etapa exclusivamente documental/backlog apos aceite final do Balancete Institucional
+- consolidado como frente encerrada: Balancete aprovado funcionalmente e em UX, com logica congelada no recorte atual
+- pendencias classificadas em seis grupos:
+  - implementado e aprovado
+  - implementado, mas requer validacao da usuaria
+  - modelado/documentado, mas nao implementado
+  - pendente tecnico recomendado
+  - futuro/backlog nao prioritario
+  - risco documental/divergencia a conferir
+- recomendacao de fila curta:
+  1) homologacao real de importacoes (planilhas historicas completas e cadastros auxiliares)
+  2) validacao visual final de relatorios impressos em volume real (com foco no Extrato)
+  3) auditoria preparatoria da frente de frequencia/recorrencia por competencia
+- sem alteracao de codigo, calculo financeiro, saldos, lancamentos, Extrato, Fechamento/Prestacao ou regras de negocio aprovadas
