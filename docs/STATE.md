@@ -2,6 +2,22 @@
 
 Data de atualizacao: 2026-05-06
 
+## Frente futura registrada: tabelas de controle personalizadas
+
+- registrada como frente futura separada, classificada em backlog e sem implementacao nesta etapa
+- objetivo futuro: permitir tabelas configuraveis para controles internos da Casa, reduzindo dependencia de planilhas externas
+- recursos desejados para especificacao futura:
+  - criacao de tabelas personalizadas
+  - colunas configuraveis com tipos de coluna
+  - formulas controladas entre colunas
+  - linhas de controle com consolidacoes basicas
+  - possibilidade futura de vinculo com financeiro, pessoas, categorias ou outras entidades
+- regra de seguranca desta etapa:
+  - nao implementar agora
+  - nao misturar com a frente atual de frequencia por competencia
+  - exigir auditoria e SPEC propria antes de qualquer modelagem, model ou migration
+- riscos ja registrados para analise futura: alta complexidade, risco de virar "Excel dentro do sistema", necessidade de limites de formula por seguranca, permissoes, trilha de auditoria, backup/exportacao e separacao entre dado operacional e financeiro oficial
+
 ## Validacao da alocacao de competencias no lancamento simples
 
 - validacao local da usuaria registrada como aprovada para o recorte de lancamento simples

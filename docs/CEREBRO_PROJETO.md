@@ -269,8 +269,10 @@ Estas regras devem ser respeitadas em qualquer etapa:
 ### 5.6. Diretriz futura de tabelas personalizadas de controle
 - fica registrada como frente futura grande a possibilidade de controles configuraveis por tabela, como energia eletrica mensal ou outros acompanhamentos operacionais recorrentes
 - essa frente deve permitir, em desenho futuro proprio, que o usuario defina nome das colunas, formulas por celula e colunas com totalizadores
+- essa frente deve prever suporte a tipos de coluna, linhas de controle e relacoes opcionais com entidades existentes (financeiro, pessoas, categorias), sem acoplamento automatico inicial
 - essa frente nao deve ser misturada com correcoes imediatas do financeiro, pois envolve estrutura propria de configuracao, validacao de formulas, persistencia e experiencia de edicao tabular
-- antes de qualquer implementacao, essa frente deve passar por desenho funcional separado, avaliando seguranca das formulas, auditoria, permissao, exportacao e relacao com lancamentos financeiros reais
+- essa frente nao deve ser misturada com a frente de frequencia mensal por competencia; ambas devem seguir trilhas independentes de especificacao
+- antes de qualquer implementacao, essa frente deve passar por auditoria e desenho funcional separado, avaliando seguranca das formulas, auditoria, permissao, backup/exportacao e relacao com lancamentos financeiros reais
 
 ## 6. Estado funcional ja validado
 Ate o momento, esta validado que:

@@ -2,6 +2,22 @@
 
 Data: 2026-05-06
 
+## Microetapa documental: frente futura de tabelas de controle personalizadas
+
+- etapa exclusivamente documental, sem alteracao de codigo
+- consolidado registro da nova frente futura `Tabelas de controle personalizadas` como backlog separado da frente de frequencia por competencia
+- direcao registrada para fase futura:
+  - criacao de tabelas configuraveis
+  - colunas personalizadas com tipos de coluna
+  - formulas controladas entre colunas
+  - linhas de controle para uso interno
+  - possibilidade futura de vinculo com financeiro/pessoas/categorias, sem acoplamento imediato
+- regra de governanca registrada:
+  - nao implementar nesta etapa
+  - nao misturar com frequencia mensal por competencia
+  - abrir auditoria e SPEC propria antes de qualquer modelagem/migration
+- riscos documentados: complexidade alta, risco de "Excel dentro do sistema", limites de formula por seguranca, necessidade de permissoes e auditoria de alteracoes, estrategia de backup/exportacao e risco de misturar dado operacional com financeiro oficial
+
 ## Microetapa documental: validacao da alocacao de competencias mensais
 
 - etapa exclusivamente documental, sem alteracao de codigo

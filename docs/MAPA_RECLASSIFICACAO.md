@@ -459,6 +459,12 @@ Status inicial: FUTURO REAL / FRENTE FUTURA GRANDE
 Motivo:
 Foi levantada frente futura para controles configuraveis, como energia eletrica mensal, com colunas definidas pelo usuario, formulas por celula e totalizadores. Deve ser tratada separadamente das correcoes imediatas do financeiro.
 
+Consolidacao desta baixa documental:
+- manter classificada como `FUTURO/BACKLOG` (sem implementacao nesta etapa)
+- manter separada da frente de frequencia mensal por competencia
+- exigir auditoria e SPEC propria antes de qualquer modelagem/migration
+- riscos registrados para etapa futura: alta complexidade, risco de virar "Excel dentro do sistema", limites de formula por seguranca, permissoes, trilha de auditoria, backup/exportacao e separacao entre dado operacional e financeiro oficial
+
 Classificacao documental:
 - FRENTE FUTURA GRANDE
 

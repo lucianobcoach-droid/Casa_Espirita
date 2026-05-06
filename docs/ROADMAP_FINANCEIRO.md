@@ -244,8 +244,11 @@ Este bloco registra pendencias novas levantadas pela usuaria apos a correcao do 
 8. **Tabelas personalizadas de controle**
    - Classificacao: FRENTE FUTURA GRANDE.
    - Prioridade documental: FUTURA / BAIXA para execucao imediata.
-   - Direcao: disponibilizar futuramente cadastros de controles configuraveis, como energia eletrica mensal, em que o usuario defina nome das colunas, formulas por celula e colunas com totalizadores.
-   - Observacao: esta frente deve ser desenhada separadamente das correcoes imediatas do financeiro, pois envolve modelo estrutural proprio, validacao de formulas e experiencia de configuracao.
+   - Direcao: disponibilizar futuramente tabelas configuraveis para controles internos, com colunas personalizadas, tipos de coluna, formulas controladas entre colunas e linhas de controle.
+   - Possivel evolucao: vinculo opcional com entidades existentes (financeiro, pessoas, categorias), apenas apos definicao de governanca dessa integracao.
+   - Observacao de escopo: esta frente e separada da frente de frequencia por competencia e nao deve ser implementada agora.
+   - Pre-condicao obrigatoria: abrir auditoria e SPEC propria antes de qualquer modelagem, model ou migration.
+   - Riscos principais para fase futura: complexidade alta, risco de virar "Excel dentro do sistema", necessidade de limites de formula por seguranca, controle de permissoes, trilha de auditoria e estrategia de backup/exportacao.
 
 ## 0.13. Base analitica consolidada e retomada da padronizacao visual
 
