@@ -1312,10 +1312,10 @@
                         <td class="actions-cell no-print" data-lancamento-actions-col>
                             <div class="financeiro-lancamento-actions-grid">
                                 <div class="financeiro-lancamento-action-slot">
-                                    {% if pode_emitir_recibo and not lancamento_visual.eh_rateio and lancamento.tipo == 'receita' %}
+                                    {% if pode_emitir_recibo and lancamento_visual.recibo_url %}
                                         <a
                                             class="button is-small is-info is-light financeiro-lancamento-icon-button"
-                                            href="{% url 'financeiro:lancamento-recibo' lancamento.pk %}"
+                                            href="{{ lancamento_visual.recibo_url }}"
                                             title="Recibo"
                                             aria-label="Recibo"
                                         >
@@ -1389,12 +1389,10 @@
                                     {% endif %}
                                 </div>
                                 <div class="financeiro-lancamento-action-slot">
-                                    {% if lancamento_visual.eh_rateio or not pode_excluir_lancamento %}
-                                        <span class="financeiro-lancamento-action-placeholder" aria-hidden="true"></span>
-                                    {% else %}
+                                    {% if pode_excluir_lancamento and lancamento_visual.excluir_url %}
                                         <a
                                             class="button is-small is-danger is-light financeiro-lancamento-icon-button"
-                                            href="{% url 'financeiro:lancamento-delete' lancamento.pk %}?return_to={{ request.get_full_path|urlencode }}"
+                                            href="{{ lancamento_visual.excluir_url }}"
                                             title="Excluir"
                                             aria-label="Excluir"
                                         >
@@ -1407,6 +1405,8 @@
                                             </svg>
                                             <span class="financeiro-sr-only">Excluir</span>
                                         </a>
+                                    {% else %}
+                                        <span class="financeiro-lancamento-action-placeholder" aria-hidden="true"></span>
                                     {% endif %}
                                 </div>
                             </div>

@@ -8051,8 +8051,46 @@ class LancamentoFinanceiroListView(FinanceiroPermissaoMixin, ListView):
             _montar_lancamentos_visuais_listagem(context['lancamentos']),
             ordenacao_atual,
         )
+        return_to = self.request.get_full_path()
+        filtros_retorno = self.request.GET.urlencode()
+        recibo_favorecido_url_base = reverse('financeiro:lancamento-recibos-por-favorecido')
         conta_referencia_id = _resolver_conta_referencia_lancamentos_listagem(self.request)
         for lancamento_visual in lancamentos_visuais:
+            lancamento = lancamento_visual['representante']
+            recibo_url = ''
+            if lancamento.tipo == LancamentoFinanceiro.TipoLancamento.RECEITA:
+                if lancamento_visual.get('eh_rateio'):
+                    linhas_rateio = lancamento_visual.get('linhas_rateio') or []
+                    pessoas_rateio_ids = {linha.pessoa_id for linha in linhas_rateio}
+                    tipos_rateio = {linha.tipo for linha in linhas_rateio}
+                    if (
+                        linhas_rateio
+                        and None not in pessoas_rateio_ids
+                        and len(pessoas_rateio_ids) == 1
+                        and tipos_rateio == {LancamentoFinanceiro.TipoLancamento.RECEITA}
+                    ):
+                        ids_csv = ','.join(str(linha.pk) for linha in linhas_rateio)
+                        query_params = {'ids': ids_csv}
+                        if filtros_retorno:
+                            query_params['filtros'] = filtros_retorno
+                        recibo_url = f'{recibo_favorecido_url_base}?{urlencode(query_params)}'
+                else:
+                    recibo_url = reverse('financeiro:lancamento-recibo', kwargs={'pk': lancamento.pk})
+            lancamento_visual['recibo_url'] = recibo_url
+
+            if lancamento_visual.get('eh_rateio'):
+                grupo_rateio = (lancamento.grupo_rateio or '').strip()
+                excluir_url = (
+                    reverse('financeiro:lancamento-rateio-delete', kwargs={'grupo_rateio': grupo_rateio})
+                    if grupo_rateio
+                    else ''
+                )
+            else:
+                excluir_url = reverse('financeiro:lancamento-delete', kwargs={'pk': lancamento.pk})
+            if excluir_url and return_to:
+                excluir_url = f'{excluir_url}?{urlencode({"return_to": return_to})}'
+            lancamento_visual['excluir_url'] = excluir_url
+
             componentes_resumo = _componentes_resumo_lancamento_visual_listagem(
                 lancamento_visual,
                 conta_referencia_id=conta_referencia_id,
@@ -9633,6 +9671,78 @@ class LancamentoFinanceiroRecibosPorFavorecidoView(FinanceiroPermissaoMixin, Tem
             'recibo_multigrupo': True,
         }
         return self.render_to_response(context)
+
+
+class LancamentoFinanceiroGrupoRateioDeleteView(FinanceiroReturnToMixin, FinanceiroPermissaoMixin, TemplateView):
+    permissao_requerida = 'financeiro.lancamentos.excluir'
+    template_name = 'financeiro/confirm_delete.html'
+    page_title = 'Excluir grupo de rateio'
+    success_url = reverse_lazy('financeiro:lancamento-list')
+
+    def _linhas_grupo(self) -> list[LancamentoFinanceiro]:
+        grupo_rateio = (self.kwargs.get('grupo_rateio') or '').strip()
+        if not grupo_rateio:
+            return []
+        return list(
+            LancamentoFinanceiro.objects.filter(
+                com_rateio=True,
+                grupo_rateio=grupo_rateio,
+            )
+            .select_related('categoria')
+            .order_by('data_pagamento', 'data_competencia', 'pk')
+        )
+
+    def _resolve_success_url(self) -> str:
+        return self._get_return_to_url() or str(self.success_url)
+
+    def _resolve_cancel_url(self) -> str:
+        return self._get_return_to_url() or str(self.success_url)
+
+    def _object_label_grupo(self, linhas_grupo: list[LancamentoFinanceiro]) -> str:
+        linha_representante = linhas_grupo[0]
+        valor_total = sum((linha.valor for linha in linhas_grupo), Decimal('0.00'))
+        return (
+            f'{linha_representante.descricao} '
+            f'({len(linhas_grupo)} linha(s), total {_formatar_moeda_brl(valor_total)})'
+        )
+
+    def get(self, request, *args, **kwargs):
+        linhas_grupo = self._linhas_grupo()
+        if not linhas_grupo:
+            messages.error(request, 'Grupo de rateio nao encontrado para exclusao.')
+            return redirect(self._resolve_success_url())
+        context = {
+            'page_title': self.page_title,
+            'cancel_url': self._resolve_cancel_url(),
+            'return_to': self._get_return_to_url(),
+            'object_label': self._object_label_grupo(linhas_grupo),
+        }
+        return self.render_to_response(context)
+
+    def post(self, request, *args, **kwargs):
+        linhas_grupo = self._linhas_grupo()
+        if not linhas_grupo:
+            messages.error(request, 'Grupo de rateio nao encontrado para exclusao.')
+            return redirect(self._resolve_success_url())
+
+        with transaction.atomic():
+            for lancamento in linhas_grupo:
+                antes = _snapshot_lancamento(lancamento)
+                registro_id = lancamento.pk
+                lancamento.delete()
+                AuditoriaFinanceiro.objects.create(
+                    acao=AuditoriaFinanceiro.AcaoAuditoria.DELETE,
+                    modelo='LancamentoFinanceiro',
+                    registro_id=registro_id,
+                    usuario=_auditoria_usuario(request),
+                    campos_alterados=_build_auditoria_payload(antes, None),
+                )
+
+        messages.success(
+            request,
+            f'Grupo de rateio excluido com sucesso ({len(linhas_grupo)} linha(s)).',
+        )
+        return redirect(self._resolve_success_url())
 
 
 class LancamentoFinanceiroTermoAnualQuitacaoView(FinanceiroPermissaoMixin, TemplateView):

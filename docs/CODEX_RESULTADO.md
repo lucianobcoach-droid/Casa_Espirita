@@ -4595,3 +4595,19 @@ Não houve alteração de código funcional nesta etapa.
 - mensagem orientativa sugerida para essa validacao futura:
   - `Ja existe uma competencia informada para este mes/ano. Agrupe o valor em uma unica linha.`
 - regra de exclusao atual reafirmada: alocacoes de competencia continuam em cascade com a linha/lancamento vinculado
+
+## Microetapa: correcao das acoes na listagem de lancamentos
+
+- causa raiz confirmada: o template da listagem escondia `recibo` e `excluir` para linhas `eh_rateio`, por condicao fixa, mesmo quando a usuaria tinha permissao e a linha agrupada era elegivel
+- ajuste aplicado na listagem:
+  - URLs de `recibo` e `excluir` passaram a ser resolvidas no backend por tipo de linha visual (simples x rateio)
+  - lancamentos simples, inclusive com competencia mensal, continuam com as acoes esperadas quando permitidas
+  - lancamentos rateados/agrupados passaram a exibir:
+    - recibo de grupo por favorecido (quando todas as linhas do grupo forem receitas e com favorecido)
+    - exclusao de grupo por rota dedicada de confirmacao/exclusao
+- nova rota funcional: exclusao de grupo rateado com transacao unica e auditoria por linha excluida
+- cobertura de testes adicionada:
+  - acoes completas em simples, simples com competencia e rateio
+  - ocultacao de `Excluir` quando a permissao nao existe
+  - exclusao de grupo removendo linhas e alocacoes vinculadas
+- sem alteracao de calculo financeiro, saldos, regras de competencia/rateio, Balancete, Extrato, Fechamento/Prestacao ou demais relatorios

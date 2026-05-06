@@ -2,6 +2,7 @@ import json
 from datetime import date
 from decimal import Decimal
 
+from django.contrib.auth import get_user_model
 from django.contrib.messages.storage.fallback import FallbackStorage
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.core.exceptions import ValidationError
@@ -42,6 +43,7 @@ from .views import (
     _validar_conteudo_planilha_importacao_contas_xlsx,
     montar_contexto_fechamento_periodo,
 )
+from configuracoes.models import PerfilAcesso, PermissaoSistema, UsuarioPerfilAcesso
 
 
 class ContaFinanceiraEdicaoFormTests(TestCase):
@@ -2362,3 +2364,225 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
 
         self.assertEqual(response.status_code, 302)
         self.assertFalse(AlocacaoCompetenciaFinanceira.objects.exists())
+
+
+class LancamentoListagemAcoesTests(TestCase):
+    def setUp(self):
+        self.conta = ContaFinanceira.objects.create(
+            nome='Conta listagem',
+            saldo_inicial=Decimal('0.00'),
+            data_saldo_inicial=date(2026, 1, 1),
+        )
+        self.pessoa = PessoaFinanceira.objects.create(
+            codigo='P-LIST',
+            nome='Favorecido listagem',
+            contribuinte_recorrente=True,
+        )
+        self.categoria_receita_pai = CategoriaFinanceira.objects.create(
+            nome='Receitas listagem',
+            tipo=CategoriaFinanceira.TipoCategoria.RECEITA,
+        )
+        self.categoria_controlada = CategoriaFinanceira.objects.create(
+            nome='Contribuicao listagem',
+            tipo=CategoriaFinanceira.TipoCategoria.RECEITA,
+            categoria_pai=self.categoria_receita_pai,
+            controla_recorrencia_competencia=True,
+        )
+        self.categoria_nao_controlada = CategoriaFinanceira.objects.create(
+            nome='Livro listagem',
+            tipo=CategoriaFinanceira.TipoCategoria.RECEITA,
+            categoria_pai=self.categoria_receita_pai,
+            controla_recorrencia_competencia=False,
+        )
+
+        self.lancamento_simples = LancamentoFinanceiro.objects.create(
+            descricao='Receita simples',
+            tipo=LancamentoFinanceiro.TipoLancamento.RECEITA,
+            status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+            valor=Decimal('80.00'),
+            data_competencia=date(2026, 4, 1),
+            data_pagamento=date(2026, 4, 1),
+            numero_documento='LIST-001',
+            pessoa=self.pessoa,
+            categoria=self.categoria_nao_controlada,
+            conta=self.conta,
+        )
+        self.lancamento_competencia = LancamentoFinanceiro.objects.create(
+            descricao='Receita com competencia',
+            tipo=LancamentoFinanceiro.TipoLancamento.RECEITA,
+            status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+            valor=Decimal('100.00'),
+            data_competencia=date(2026, 4, 2),
+            data_pagamento=date(2026, 4, 2),
+            numero_documento='LIST-002',
+            pessoa=self.pessoa,
+            categoria=self.categoria_controlada,
+            conta=self.conta,
+        )
+        AlocacaoCompetenciaFinanceira.objects.create(
+            lancamento=self.lancamento_competencia,
+            categoria=self.categoria_controlada,
+            ano_competencia=2026,
+            mes_competencia=4,
+            valor_alocado=Decimal('100.00'),
+        )
+
+        self.grupo_rateio = 'grp-list-acoes'
+        self.rateio_controlado = LancamentoFinanceiro.objects.create(
+            descricao='Receita rateada',
+            tipo=LancamentoFinanceiro.TipoLancamento.RECEITA,
+            status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+            valor=Decimal('100.00'),
+            data_competencia=date(2026, 4, 3),
+            data_pagamento=date(2026, 4, 3),
+            numero_documento='LIST-003',
+            pessoa=self.pessoa,
+            categoria=self.categoria_controlada,
+            conta=self.conta,
+            com_rateio=True,
+            grupo_rateio=self.grupo_rateio,
+        )
+        self.rateio_nao_controlado = LancamentoFinanceiro.objects.create(
+            descricao='Receita rateada',
+            tipo=LancamentoFinanceiro.TipoLancamento.RECEITA,
+            status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+            valor=Decimal('30.00'),
+            data_competencia=date(2026, 4, 3),
+            data_pagamento=date(2026, 4, 3),
+            numero_documento='LIST-003',
+            pessoa=self.pessoa,
+            categoria=self.categoria_nao_controlada,
+            conta=self.conta,
+            com_rateio=True,
+            grupo_rateio=self.grupo_rateio,
+        )
+        AlocacaoCompetenciaFinanceira.objects.create(
+            lancamento=self.rateio_controlado,
+            categoria=self.categoria_controlada,
+            ano_competencia=2026,
+            mes_competencia=4,
+            valor_alocado=Decimal('100.00'),
+        )
+
+    def _garantir_permissao(self, codigo: str) -> PermissaoSistema:
+        permissao = PermissaoSistema.objects.filter(codigo=codigo).first()
+        if permissao:
+            return permissao
+        partes = codigo.split('.')
+        modulo = partes[0] if len(partes) > 0 else 'financeiro'
+        recurso = partes[1] if len(partes) > 1 else 'geral'
+        acao = '.'.join(partes[2:]) if len(partes) > 2 else 'acessar'
+        return PermissaoSistema.objects.create(
+            codigo=codigo,
+            nome=codigo,
+            modulo=modulo,
+            recurso=recurso,
+            acao=acao,
+            ativo=True,
+        )
+
+    def _login_com_permissoes(self, username: str, codigos_permissao: list[str]):
+        user_model = get_user_model()
+        usuario = user_model.objects.create_user(
+            username=username,
+            password='senha-forte-123',
+            email=f'{username}@teste.local',
+            is_active=True,
+        )
+        perfil = PerfilAcesso.objects.create(
+            codigo=f'perfil-{username}',
+            nome=f'Perfil {username}',
+            ativo=True,
+        )
+        for codigo in codigos_permissao:
+            perfil.permissoes.add(self._garantir_permissao(codigo))
+        UsuarioPerfilAcesso.objects.create(usuario=usuario, perfil=perfil)
+        self.client.force_login(usuario)
+
+    def test_listagem_exibe_acoes_completas_para_simples_competencia_e_rateio(self):
+        self._login_com_permissoes(
+            'user-acoes-completas',
+            [
+                'financeiro.lancamentos.listar',
+                'financeiro.lancamentos.emitir_recibo',
+                'financeiro.lancamentos.clonar',
+                'financeiro.lancamentos.editar',
+                'financeiro.lancamentos.editar_rateio',
+                'financeiro.lancamentos.excluir',
+            ],
+        )
+
+        response = self.client.get(reverse('financeiro:lancamento-list'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, reverse('financeiro:lancamento-recibo', kwargs={'pk': self.lancamento_simples.pk}))
+        self.assertContains(response, reverse('financeiro:lancamento-delete', kwargs={'pk': self.lancamento_simples.pk}))
+        self.assertContains(response, reverse('financeiro:lancamento-recibo', kwargs={'pk': self.lancamento_competencia.pk}))
+        self.assertContains(response, reverse('financeiro:lancamento-delete', kwargs={'pk': self.lancamento_competencia.pk}))
+        self.assertContains(
+            response,
+            reverse('financeiro:lancamento-rateio-update', kwargs={'grupo_rateio': self.grupo_rateio}),
+        )
+        self.assertContains(
+            response,
+            reverse('financeiro:lancamento-rateio-delete', kwargs={'grupo_rateio': self.grupo_rateio}),
+        )
+        ids_rateio_csv = ','.join(
+            str(pk) for pk in sorted([self.rateio_controlado.pk, self.rateio_nao_controlado.pk])
+        )
+        self.assertContains(
+            response,
+            f'{reverse("financeiro:lancamento-recibos-por-favorecido")}?ids={ids_rateio_csv.replace(",", "%2C")}',
+        )
+
+    def test_listagem_sem_permissao_excluir_oculta_excluir_e_mantem_recibo(self):
+        self._login_com_permissoes(
+            'user-acoes-sem-excluir',
+            [
+                'financeiro.lancamentos.listar',
+                'financeiro.lancamentos.emitir_recibo',
+                'financeiro.lancamentos.clonar',
+                'financeiro.lancamentos.editar',
+                'financeiro.lancamentos.editar_rateio',
+            ],
+        )
+
+        response = self.client.get(reverse('financeiro:lancamento-list'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, reverse('financeiro:lancamento-recibo', kwargs={'pk': self.lancamento_simples.pk}))
+        self.assertContains(
+            response,
+            f'{reverse("financeiro:lancamento-recibos-por-favorecido")}?ids={self.rateio_controlado.pk}%2C{self.rateio_nao_controlado.pk}',
+        )
+        self.assertNotContains(response, reverse('financeiro:lancamento-delete', kwargs={'pk': self.lancamento_simples.pk}))
+        self.assertNotContains(
+            response,
+            reverse('financeiro:lancamento-rateio-delete', kwargs={'grupo_rateio': self.grupo_rateio}),
+        )
+
+    def test_exclusao_de_grupo_rateado_remove_linhas_e_competencias(self):
+        self._login_com_permissoes(
+            'user-rateio-delete',
+            [
+                'financeiro.lancamentos.excluir',
+            ],
+        )
+        self.assertEqual(
+            AlocacaoCompetenciaFinanceira.objects.filter(lancamento=self.rateio_controlado).count(),
+            1,
+        )
+
+        response = self.client.post(
+            reverse('financeiro:lancamento-rateio-delete', kwargs={'grupo_rateio': self.grupo_rateio})
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(
+            LancamentoFinanceiro.objects.filter(grupo_rateio=self.grupo_rateio).exists()
+        )
+        self.assertFalse(
+            AlocacaoCompetenciaFinanceira.objects.filter(
+                lancamento__grupo_rateio=self.grupo_rateio
+            ).exists()
+        )

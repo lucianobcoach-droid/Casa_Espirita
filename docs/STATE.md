@@ -3410,3 +3410,16 @@ Riscos principais antes de migration:
 - pendencia funcional/UX registrada: usuaria observou ausencia de acoes esperadas (exclusao/recibo) em alguns lancamentos da listagem; ficou definido auditar tecnicamente esse recorte antes de qualquer correcao
 - regra recomendada registrada para proxima etapa funcional: bloquear mes/ano duplicado dentro do mesmo lancamento e da mesma subcategoria controlada (simples e rateio), orientando consolidacao do valor em linha unica
 - regra atual preservada: alocacoes seguem exclusao por cascade junto da linha/lancamento; qualquer restauracao futura fica no escopo da frente de auditoria acionavel, nao na regra atual de competencias
+
+## Correcao das acoes faltantes na listagem de lancamentos
+
+- causa encontrada: o template da listagem bloqueava explicitamente `recibo` e `excluir` quando a linha visual era `eh_rateio`, mantendo apenas `clonar/editar` no bloco agrupado
+- correcao aplicada:
+  - a listagem passou a calcular `recibo_url` e `excluir_url` por linha visual (simples e rateio) no backend
+  - lancamento simples (com ou sem competencias): manteve `Recibo`, `Clonar`, `Editar` e `Excluir` quando as permissoes existem
+  - lancamento rateado/agrupado: passou a exibir recibo de grupo por favorecido (quando elegivel) e exclusao do grupo rateado por rota propria
+- a exclusao de grupo rateado ganhou confirmacao dedicada e remove todas as linhas do grupo em transacao unica, mantendo trilha de auditoria por lancamento excluido
+- impacto de permissao preservado:
+  - sem permissao `financeiro.lancamentos.excluir`, o botao `Excluir` continua oculto
+  - regras de permissao de `recibo`, `clonar` e `editar` permanecem inalteradas
+- sem alteracao de calculo financeiro, saldos, regras de rateio, Balancete, Extrato, Fechamento/Prestacao ou demais relatorios
