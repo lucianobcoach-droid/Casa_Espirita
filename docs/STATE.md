@@ -3446,3 +3446,16 @@ Riscos principais antes de migration:
   - usuario com `listar`, mas sem `emitir_recibo` e sem `excluir`, acessa a tela normalmente
   - usuario sem `listar` continua bloqueado
 - sem alteracao de calculo financeiro, saldos, rateio, competencias, Balancete, Extrato ou Fechamento/Prestacao
+
+## Correcao emergencial do bloqueio da listagem
+
+- nova auditoria confirmou que os commits `d0001c5` e `1f97bcd` nao alteraram a permissao-base da `LancamentoFinanceiroListView`; a view segue exigindo apenas `financeiro.lancamentos.listar`
+- o bloqueio real observado em `/financeiro/` e `/financeiro/lancamentos/` vinha do estado local de acesso: nao havia vinculo `UsuarioPerfilAcesso` persistido para o usuario principal autenticado
+- como a camada funcional da V1 nao concede bypass automatico por `is_superuser`, usuario logado sem perfil-base continua recebendo `403` mesmo com o catalogo de permissoes correto
+- restauracao aplicada localmente:
+  - o usuario principal foi religado a um perfil-base valido (`administrador-geral`)
+  - a validacao HTTP local via Django voltou `200` para `/financeiro/lancamentos/` com `HTTP_HOST=127.0.0.1`
+- regra preservada:
+  - `financeiro.lancamentos.listar` continua sendo a unica permissao exigida para abrir a listagem
+  - ausencia de `excluir` ou `emitir_recibo` apenas oculta botoes e nao bloqueia a pagina
+- sem alteracao de codigo financeiro, calculo, saldos, rateio, competencias, Balancete, Extrato ou Fechamento/Prestacao

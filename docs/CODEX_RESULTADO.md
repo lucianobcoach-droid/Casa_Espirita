@@ -4636,3 +4636,16 @@ Não houve alteração de código funcional nesta etapa.
   - ocultacao de `Recibo`/`Excluir` quando essas permissoes nao existem
   - bloqueio `403` para usuario sem `financeiro.lancamentos.listar`
 - sem alteracao de calculo financeiro, saldos, regras de rateio/competencia ou relatorios do modulo
+
+## Microetapa: correcao emergencial do bloqueio da listagem
+
+- nova auditoria com foco no 403 da propria rota confirmou que os commits `d0001c5` e `1f97bcd` nao mudaram a permissao-base da listagem; `LancamentoFinanceiroListView` continuou exigindo `financeiro.lancamentos.listar`
+- a causa concreta do bloqueio no ambiente local foi de dados funcionais: nao havia nenhum `UsuarioPerfilAcesso` persistido, inclusive para o usuario principal utilizado nos acessos reais
+- como a V1 mantem deny-by-default sem bypass funcional para superusuario, o usuario logado ficava bloqueado em `/financeiro/lancamentos/` mesmo com a matriz e o catalogo corretos
+- restauracao operacional aplicada:
+  - religacao do usuario principal local ao perfil-base `administrador-geral`
+  - smoke test HTTP local com `HTTP_HOST=127.0.0.1` retornando `200` para a listagem
+- a regra funcional permaneceu a mesma:
+  - `financeiro.lancamentos.listar` abre a tela
+  - falta de `emitir_recibo` e/ou `excluir` apenas oculta as acoes elegiveis
+- nao foi necessario reverter a logica recente de `Recibo`/`Excluir`; a exclusao de grupo rateado permaneceu protegida por `financeiro.lancamentos.excluir`
