@@ -283,6 +283,22 @@
                     </div>
 
                     <div class="field financeiro-pessoa-form-field financeiro-pessoa-form-field-boolean">
+                        <label class="label" for="{{ form.contribuinte_recorrente.id_for_label }}">{{ form.contribuinte_recorrente.label }}</label>
+                        <div class="control">
+                            <label class="financeiro-pessoa-form-checkbox" for="{{ form.contribuinte_recorrente.id_for_label }}">
+                                {{ form.contribuinte_recorrente }}
+                                <span class="financeiro-pessoa-form-checkbox-label">{{ form.contribuinte_recorrente.label }}</span>
+                            </label>
+                        </div>
+                        {% if form.contribuinte_recorrente.help_text %}
+                            <p class="help">{{ form.contribuinte_recorrente.help_text }}</p>
+                        {% endif %}
+                        {% for error in form.contribuinte_recorrente.errors %}
+                            <p class="help is-danger">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+
+                    <div class="field financeiro-pessoa-form-field financeiro-pessoa-form-field-boolean">
                         <label class="label" for="{{ form.ativo.id_for_label }}">{{ form.ativo.label }}</label>
                         <div class="control">
                             <label class="financeiro-pessoa-form-checkbox" for="{{ form.ativo.id_for_label }}">

@@ -601,7 +601,17 @@ CADASTRO_AUXILIAR_PLANILHAS_BASE = {
         'titulo': 'Favorecidos financeiros',
         'arquivo': 'planilha_base_pessoas_financeiras.xlsx',
         'permissao': 'financeiro.pessoas.criar',
-        'colunas': ['codigo', 'nome', 'tipo_pessoa', 'documento', 'telefone', 'email', 'observacoes', 'ativo'],
+        'colunas': [
+            'codigo',
+            'nome',
+            'tipo_pessoa',
+            'documento',
+            'telefone',
+            'email',
+            'observacoes',
+            'contribuinte_recorrente',
+            'ativo',
+        ],
         'rotulos': {
             'codigo': 'Codigo',
             'nome': 'Nome',
@@ -610,6 +620,7 @@ CADASTRO_AUXILIAR_PLANILHAS_BASE = {
             'telefone': 'Telefone',
             'email': 'E-mail',
             'observacoes': 'Observacoes',
+            'contribuinte_recorrente': 'Contribuinte recorrente',
             'ativo': 'Ativo',
         },
         'orientacoes': {
@@ -617,6 +628,9 @@ CADASTRO_AUXILIAR_PLANILHAS_BASE = {
             'nome': 'Use um nome unico para evitar ambiguidade na importacao de lancamentos.',
             'tipo_pessoa': 'Use fisica ou juridica. O campo pode ficar em branco quando nao se aplicar.',
             'email': 'Preencha um e-mail valido ou deixe em branco.',
+            'contribuinte_recorrente': (
+                'Use true/false, sim/nao, 1/0 ou deixe em branco para considerar nao recorrente.'
+            ),
             'ativo': 'Use true/false, sim/nao, 1/0 ou deixe em branco para considerar ativo.',
         },
         'instrucoes': [
@@ -624,6 +638,10 @@ CADASTRO_AUXILIAR_PLANILHAS_BASE = {
             ['Codigo', 'Preencha um codigo unico e estavel para cada favorecido.'],
             ['Tipo de favorecido', 'Use fisica ou juridica. O campo pode ficar em branco quando nao se aplicar.'],
             ['Contato', 'Documento, telefone e email sao opcionais e podem ficar em branco.'],
+            [
+                'Contribuinte recorrente',
+                'Opcional. Use true para quem deve participar do controle mensal por competencia no futuro.',
+            ],
             ['Ativo', 'Use true/false, sim/nao, 1/0 ou deixe em branco para considerar ativo.'],
         ],
         'descricao': 'Favorecidos e contrapartes usados por receitas e despesas.',
@@ -657,11 +675,19 @@ CADASTRO_AUXILIAR_PLANILHAS_BASE = {
         'titulo': 'Categorias e subcategorias',
         'arquivo': 'planilha_base_categorias_financeiras.xlsx',
         'permissao': 'financeiro.categorias.criar',
-        'colunas': ['nome', 'tipo', 'categoria_pai_nome', 'mensagem_recibo', 'ativo'],
+        'colunas': [
+            'nome',
+            'tipo',
+            'categoria_pai_nome',
+            'controla_recorrencia_competencia',
+            'mensagem_recibo',
+            'ativo',
+        ],
         'rotulos': {
             'nome': 'Nome',
             'tipo': 'Tipo',
             'categoria_pai_nome': 'Categoria pai',
+            'controla_recorrencia_competencia': 'Controla recorrencia por competencia',
             'mensagem_recibo': 'Mensagem de recibo',
             'ativo': 'Ativo',
         },
@@ -669,12 +695,19 @@ CADASTRO_AUXILIAR_PLANILHAS_BASE = {
             'nome': 'Use nomes unicos por tipo para evitar ambiguidade nos lancamentos.',
             'tipo': 'Use receita ou despesa.',
             'categoria_pai_nome': 'Deixe em branco nas categorias pai e preencha o nome exato da categoria pai nas subcategorias.',
+            'controla_recorrencia_competencia': (
+                'Use true/false, sim/nao, 1/0 ou deixe em branco para considerar nao controlada.'
+            ),
             'ativo': 'Use true/false, sim/nao, 1/0 ou deixe em branco para considerar ativo.',
         },
         'instrucoes': [
             ['Finalidade', 'Use esta planilha-base para preparar categorias pai e subcategorias do financeiro.'],
             ['Tipo', 'Use receita ou despesa.'],
             ['Hierarquia', 'Deixe categoria_pai_nome em branco nas categorias pai e preencha o nome exato da categoria pai nas subcategorias.'],
+            [
+                'Controle de recorrencia',
+                'Marque true apenas para subcategorias que devem entrar no controle mensal por competencia.',
+            ],
             ['Ordem interna', 'Liste primeiro as categorias pai e depois as subcategorias para facilitar a futura carga sequencial.'],
             ['Mensagem de recibo', 'Preencha apenas quando quiser uma mensagem final especifica para recibos dessa categoria.'],
         ],
@@ -870,6 +903,7 @@ def _linha_exportacao_cadastro_auxiliar(slug: str, registro) -> list[str]:
             registro.telefone or '',
             registro.email or '',
             registro.observacoes or '',
+            _formatar_booleano_exportacao_auxiliar(registro.contribuinte_recorrente),
             _formatar_booleano_exportacao_auxiliar(registro.ativo),
         ]
     if slug == 'centros-custo':
@@ -883,6 +917,7 @@ def _linha_exportacao_cadastro_auxiliar(slug: str, registro) -> list[str]:
             registro.nome,
             (registro.tipo or '').lower(),
             registro.categoria_pai.nome if registro.categoria_pai_id else '',
+            _formatar_booleano_exportacao_auxiliar(registro.controla_recorrencia_competencia),
             registro.mensagem_recibo or '',
             _formatar_booleano_exportacao_auxiliar(registro.ativo),
         ]
@@ -2310,10 +2345,15 @@ def _validar_conteudo_planilha_importacao_pessoas_xlsx(arquivo_importacao) -> di
         telefone = (dados_linha.get('telefone') or '').strip()
         email = (dados_linha.get('email') or '').strip()
         observacoes = (dados_linha.get('observacoes') or '').strip()
+        contribuinte_recorrente_texto = (dados_linha.get('contribuinte_recorrente') or '').strip()
         ativo_texto = (dados_linha.get('ativo') or '').strip()
 
         codigo_normalizado = _normalizar_codigo_importacao(codigo)
         nome_normalizado = normalizar_nome_pessoa_financeira(nome)
+        if contribuinte_recorrente_texto:
+            contribuinte_recorrente = _parse_booleano_importacao(contribuinte_recorrente_texto)
+        else:
+            contribuinte_recorrente = False
         ativo = _parse_booleano_importacao(ativo_texto)
 
         if not codigo:
@@ -2333,6 +2373,13 @@ def _validar_conteudo_planilha_importacao_pessoas_xlsx(arquivo_importacao) -> di
         if tipo_pessoa and tipo_pessoa not in tipos_validos:
             _adicionar_erro_importacao(erros_linha, 'tipo_pessoa', 'Use fisica ou juridica.')
 
+        if contribuinte_recorrente_texto and contribuinte_recorrente is None:
+            _adicionar_erro_importacao(
+                erros_linha,
+                'contribuinte_recorrente',
+                'Use true/false, sim/nao, 1/0 ou deixe em branco.',
+            )
+
         if ativo is None:
             _adicionar_erro_importacao(erros_linha, 'ativo', 'Use true/false, sim/nao, 1/0 ou deixe em branco.')
 
@@ -2344,6 +2391,7 @@ def _validar_conteudo_planilha_importacao_pessoas_xlsx(arquivo_importacao) -> di
             telefone=telefone,
             email=email,
             observacoes=observacoes,
+            contribuinte_recorrente=contribuinte_recorrente,
             ativo=True if ativo is None else ativo,
         )
         try:
@@ -2368,6 +2416,7 @@ def _validar_conteudo_planilha_importacao_pessoas_xlsx(arquivo_importacao) -> di
             'telefone': telefone,
             'email': email,
             'observacoes': observacoes,
+            'contribuinte_recorrente': contribuinte_recorrente,
             'ativo': ativo,
         })
 
@@ -2482,11 +2531,16 @@ def _validar_conteudo_planilha_importacao_categorias_xlsx(arquivo_importacao) ->
         nome = (dados_linha.get('nome') or '').strip()
         tipo = (dados_linha.get('tipo') or '').strip().lower()
         categoria_pai_nome = (dados_linha.get('categoria_pai_nome') or '').strip()
+        controla_recorrencia_texto = (dados_linha.get('controla_recorrencia_competencia') or '').strip()
         mensagem_recibo = (dados_linha.get('mensagem_recibo') or '').strip()
         ativo_texto = (dados_linha.get('ativo') or '').strip()
 
         nome_normalizado = _normalizar_nome_importacao_lancamento(nome)
         categoria_pai_normalizada = _normalizar_nome_importacao_lancamento(categoria_pai_nome)
+        if controla_recorrencia_texto:
+            controla_recorrencia_competencia = _parse_booleano_importacao(controla_recorrencia_texto)
+        else:
+            controla_recorrencia_competencia = False
         ativo = _parse_booleano_importacao(ativo_texto)
         chave_categoria = (tipo, nome_normalizado)
 
@@ -2497,6 +2551,13 @@ def _validar_conteudo_planilha_importacao_categorias_xlsx(arquivo_importacao) ->
             _adicionar_erro_importacao(erros_linha, 'tipo', 'Informe o tipo da categoria.')
         elif tipo not in tipos_validos:
             _adicionar_erro_importacao(erros_linha, 'tipo', 'Use receita ou despesa.')
+
+        if controla_recorrencia_texto and controla_recorrencia_competencia is None:
+            _adicionar_erro_importacao(
+                erros_linha,
+                'controla_recorrencia_competencia',
+                'Use true/false, sim/nao, 1/0 ou deixe em branco.',
+            )
 
         if ativo is None:
             _adicionar_erro_importacao(erros_linha, 'ativo', 'Use true/false, sim/nao, 1/0 ou deixe em branco.')
@@ -2530,6 +2591,7 @@ def _validar_conteudo_planilha_importacao_categorias_xlsx(arquivo_importacao) ->
             'nome': nome,
             'tipo': tipo,
             'categoria_pai_nome': categoria_pai_nome,
+            'controla_recorrencia_competencia': controla_recorrencia_competencia,
             'mensagem_recibo': mensagem_recibo,
             'ativo': ativo,
         })
@@ -2591,6 +2653,7 @@ def _importar_categorias_validadas(registros: list[dict[str, object]], request) 
                 nome=registro['nome'],
                 tipo=registro['tipo'],
                 categoria_pai=categoria_pai,
+                controla_recorrencia_competencia=registro['controla_recorrencia_competencia'],
                 mensagem_recibo=registro['mensagem_recibo'],
                 ativo=registro['ativo'],
             )

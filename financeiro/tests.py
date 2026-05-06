@@ -8,7 +8,7 @@ from django.http import QueryDict
 from django.test import RequestFactory, TestCase
 from django.urls import resolve, reverse
 
-from .forms import ContaFinanceiraForm, LancamentoFinanceiroForm, PessoaFinanceiraForm
+from .forms import CategoriaFinanceiraForm, ContaFinanceiraForm, LancamentoFinanceiroForm, PessoaFinanceiraForm
 from .models import (
     AssinaturaInstitucional,
     CategoriaFinanceira,
@@ -1695,3 +1695,96 @@ class PessoaFinanceiraDuplicidadeNomeTests(TestCase):
 
         self.assertFalse(form.is_valid())
         self.assertIn('Já existe um favorecido cadastrado com este nome.', form.errors['nome'])
+class FrequenciaMensalBaseCadastralTests(TestCase):
+    def setUp(self):
+        self.factory = RequestFactory()
+
+    def test_pessoa_financeira_default_contribuinte_recorrente_false(self):
+        pessoa = PessoaFinanceira.objects.create(codigo='P900', nome='Pessoa teste')
+
+        self.assertFalse(pessoa.contribuinte_recorrente)
+
+    def test_categoria_financeira_default_controla_recorrencia_false(self):
+        categoria = CategoriaFinanceira.objects.create(
+            nome='Contribuicao mensal',
+            tipo=CategoriaFinanceira.TipoCategoria.RECEITA,
+        )
+
+        self.assertFalse(categoria.controla_recorrencia_competencia)
+
+    def test_form_pessoa_permite_marcar_contribuinte_recorrente(self):
+        form = PessoaFinanceiraForm(
+            data={
+                'codigo': 'P901',
+                'nome': 'Pessoa recorrente',
+                'tipo_pessoa': '',
+                'documento': '',
+                'telefone': '',
+                'email': '',
+                'observacoes': '',
+                'contribuinte_recorrente': 'on',
+                'ativo': 'on',
+            }
+        )
+
+        self.assertTrue(form.is_valid(), form.errors)
+        pessoa = form.save()
+        self.assertTrue(pessoa.contribuinte_recorrente)
+
+    def test_form_categoria_permite_marcar_controle_recorrencia(self):
+        form = CategoriaFinanceiraForm(
+            data={
+                'nome': 'Contribuicao mensal',
+                'tipo': CategoriaFinanceira.TipoCategoria.RECEITA,
+                'categoria_pai': '',
+                'controla_recorrencia_competencia': 'on',
+                'mensagem_recibo': '',
+                'ativo': 'on',
+            }
+        )
+
+        self.assertTrue(form.is_valid(), form.errors)
+        categoria = form.save()
+        self.assertTrue(categoria.controla_recorrencia_competencia)
+
+    def test_template_pessoa_list_mostra_indicador_recorrente(self):
+        pessoa = PessoaFinanceira.objects.create(
+            codigo='P902',
+            nome='Pessoa recorrente listagem',
+            contribuinte_recorrente=True,
+        )
+        request = self.factory.get('/financeiro/pessoas/')
+        request.user = type('UserStub', (), {'is_authenticated': False})()
+        html = render_to_string(
+            'financeiro/pessoa_list.html',
+            {
+                'pessoas': [pessoa],
+                'exportacao_pessoas_url': '/financeiro/pessoas/exportar/',
+                'request': request,
+            },
+            request=request,
+        )
+
+        self.assertIn('Recorrente', html)
+        self.assertIn('Sim', html)
+
+    def test_template_categoria_list_mostra_indicador_controle_frequencia(self):
+        categoria = CategoriaFinanceira.objects.create(
+            nome='Contribuicao mensal',
+            tipo=CategoriaFinanceira.TipoCategoria.RECEITA,
+            controla_recorrencia_competencia=True,
+        )
+        request = self.factory.get('/financeiro/categorias/')
+        request.user = type('UserStub', (), {'is_authenticated': False})()
+        html = render_to_string(
+            'financeiro/categoria_list.html',
+            {
+                'categorias': [categoria],
+                'exportacao_categorias_url': '/financeiro/categorias/exportar/',
+                'request': request,
+            },
+            request=request,
+        )
+
+        self.assertIn('Controla frequ', html)
+        self.assertIn('Sim', html)

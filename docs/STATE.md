@@ -3327,3 +3327,17 @@ Riscos principais antes de migration:
 - contribuicoes parciais/multiplas no mesmo mes
 - comportamento para favorecido inativo e para subcategoria desativada
 - risco de misturar esta frente com Balancete ou importacao (escopos congelados/separados)
+
+## Base cadastral minima de frequencia mensal por competencia
+
+- implementada a base cadastral preparatoria da frente de frequencia/competencia no modulo financeiro
+- novos campos:
+  - `PessoaFinanceira.contribuinte_recorrente` (default `False`)
+  - `CategoriaFinanceira.controla_recorrencia_competencia` (default `False`)
+- os campos foram expostos em:
+  - formularios de pessoa/favorecido e categoria/subcategoria
+  - listagens de pessoa/favorecido e categoria/subcategoria
+  - admin dos dois cadastros
+  - importacao/exportacao auxiliar de pessoas e categorias, com compatibilidade para base nova
+- nao houve implementacao de matriz mensal, alocacao de competencia ou termo por favorecido
+- nao houve alteracao de calculo financeiro, lancamentos, saldos, Balancete, Extrato ou Fechamento/Prestacao

@@ -997,3 +997,11 @@ Leituras gerenciais:
 - matriz com valores vem primeiro;
 - matriz sem valores deriva da matriz com valores;
 - termo por favorecido fica para segunda onda, apos validacao da matriz.
+## 17. Frequencia por competencia - base cadastral minima
+
+- etapa funcional minima concluida apenas em cadastros
+- campos criados:
+  - `PessoaFinanceira.contribuinte_recorrente` (default `False`)
+  - `CategoriaFinanceira.controla_recorrencia_competencia` (default `False`)
+- exposicao concluida em formulario/listagem/admin e importacao/exportacao auxiliar de pessoas e categorias
+- permanece para as proximas microetapas: alocacao de competencia, matriz com valores, matriz sem valores e termo por favorecido

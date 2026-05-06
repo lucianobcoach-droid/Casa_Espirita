@@ -118,10 +118,12 @@ class PessoaFinanceiraForm(forms.ModelForm):
             'telefone',
             'email',
             'observacoes',
+            'contribuinte_recorrente',
             'ativo',
         ]
         labels = {
             'tipo_pessoa': 'Tipo favorecido',
+            'contribuinte_recorrente': 'Contribuinte recorrente',
         }
 
 
@@ -132,6 +134,7 @@ class CategoriaFinanceiraForm(forms.ModelForm):
             'nome',
             'tipo',
             'categoria_pai',
+            'controla_recorrencia_competencia',
             'mensagem_recibo',
             'ativo',
         ]
@@ -144,6 +147,9 @@ class CategoriaFinanceiraForm(forms.ModelForm):
             ),
         }
         help_texts = {
+            'controla_recorrencia_competencia': (
+                'Marque quando esta subcategoria deve entrar no controle de recorrencia por competencia.'
+            ),
             'mensagem_recibo': (
                 'Opcional. Quando preenchida, substitui a mensagem padrao simples do recibo para esta categoria.'
             ),

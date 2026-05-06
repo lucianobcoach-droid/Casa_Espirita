@@ -4524,3 +4524,12 @@ Não houve alteração de código funcional nesta etapa.
   4) termo por favorecido em segunda etapa
 - decisões pendentes da usuária registradas para fechamento da SPEC funcional
 - sem alteração de código, models, migrations, forms, views, urls, templates, tests, CSS ou cálculos financeiros
+## Microetapa: base cadastral minima de frequencia mensal por competencia
+
+- implementacao funcional restrita aos cadastros, sem alterar lancamentos e sem criar matriz
+- criado campo booleano `contribuinte_recorrente` em `PessoaFinanceira` (default `False`)
+- criado campo booleano `controla_recorrencia_competencia` em `CategoriaFinanceira` (default `False`)
+- campos expostos em formularios, listagens e admin
+- importacao/exportacao auxiliar de `pessoas` e `categorias` atualizada para incluir os novos campos
+- migration criada para manter compatibilidade dos dados existentes com defaults seguros
+- sem alteracao de calculo financeiro, saldos, Balancete, Extrato, Fechamento/Prestacao e regras de lancamento

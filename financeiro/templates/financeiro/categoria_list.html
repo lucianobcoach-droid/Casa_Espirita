@@ -147,6 +147,7 @@
                     <th>Nome</th>
                     <th>Tipo</th>
                     <th>Categoria pai</th>
+                    <th>Controla frequ&ecirc;ncia</th>
                     <th>Ativo</th>
                     {% if mostrar_acoes_categoria %}
                         <th class="no-print">A&ccedil;&otilde;es</th>
@@ -166,6 +167,11 @@
                             {% endif %}
                         </td>
                         <td>
+                            <span class="financeiro-categoria-status{% if categoria.controla_recorrencia_competencia %} is-active{% endif %}">
+                                {% if categoria.controla_recorrencia_competencia %}Sim{% else %}N&atilde;o{% endif %}
+                            </span>
+                        </td>
+                        <td>
                             <span class="financeiro-categoria-status{% if categoria.ativo %} is-active{% endif %}">
                                 {% if categoria.ativo %}Sim{% else %}N&atilde;o{% endif %}
                             </span>
@@ -183,7 +189,7 @@
                     </tr>
                 {% empty %}
                     <tr>
-                        <td colspan="{% if mostrar_acoes_categoria %}5{% else %}4{% endif %}" class="financeiro-categoria-empty">Nenhuma categoria encontrada com os filtros atuais.</td>
+                        <td colspan="{% if mostrar_acoes_categoria %}6{% else %}5{% endif %}" class="financeiro-categoria-empty">Nenhuma categoria encontrada com os filtros atuais.</td>
                     </tr>
                 {% endfor %}
                 </tbody>

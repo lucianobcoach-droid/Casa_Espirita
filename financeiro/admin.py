@@ -36,15 +36,15 @@ class CentroCustoAdmin(admin.ModelAdmin):
 
 @admin.register(PessoaFinanceira)
 class PessoaFinanceiraAdmin(admin.ModelAdmin):
-    list_display = ('codigo', 'nome', 'tipo_pessoa', 'documento', 'ativo')
-    list_filter = ('tipo_pessoa', 'ativo')
+    list_display = ('codigo', 'nome', 'tipo_pessoa', 'contribuinte_recorrente', 'documento', 'ativo')
+    list_filter = ('tipo_pessoa', 'contribuinte_recorrente', 'ativo')
     search_fields = ('codigo', 'nome', 'documento', 'telefone', 'email')
 
 
 @admin.register(CategoriaFinanceira)
 class CategoriaFinanceiraAdmin(admin.ModelAdmin):
-    list_display = ('nome', 'tipo', 'categoria_pai', 'ativo')
-    list_filter = ('tipo', 'ativo')
+    list_display = ('nome', 'tipo', 'categoria_pai', 'controla_recorrencia_competencia', 'ativo')
+    list_filter = ('tipo', 'controla_recorrencia_competencia', 'ativo')
     search_fields = ('nome',)
 
 

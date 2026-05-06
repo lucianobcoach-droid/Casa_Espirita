@@ -132,6 +132,7 @@ class PessoaFinanceira(models.Model):
     telefone = models.CharField(max_length=30, blank=True)
     email = models.EmailField(blank=True)
     observacoes = models.TextField(blank=True)
+    contribuinte_recorrente = models.BooleanField(default=False)
     ativo = models.BooleanField(default=True)
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
@@ -187,6 +188,7 @@ class CategoriaFinanceira(models.Model):
         blank=True,
         null=True,
     )
+    controla_recorrencia_competencia = models.BooleanField(default=False)
     mensagem_recibo = models.TextField(blank=True)
     ativo = models.BooleanField(default=True)
     criado_em = models.DateTimeField(auto_now_add=True)

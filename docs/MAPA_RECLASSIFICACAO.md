@@ -909,3 +909,17 @@ Consolidacao adicional da SPEC:
 - regra de rateio: considerar apenas a parte/subcategoria que controla frequencia; nao usar valor total do documento em recebimentos mistos
 - matriz com valores como base e matriz sem valores derivada
 - termo por favorecido mantido como segunda onda
+
+### 34. Frequencia por competencia - base cadastral minima implementada
+
+Status: IMPLEMENTADO (BASE CADASTRAL), COM IMPLEMENTACAO FUNCIONAL PRINCIPAL PENDENTE
+
+Consolidacao:
+- campo `contribuinte_recorrente` criado em `PessoaFinanceira` (default `False`)
+- campo `controla_recorrencia_competencia` criado em `CategoriaFinanceira` (default `False`)
+- interface administrativa e operacional atualizada para marcar/desmarcar os dois controles
+- importacao/exportacao auxiliar de pessoas/categorias atualizada para os novos campos
+- sem alteracao de lancamentos, calculos, saldos, Balancete, Extrato e Fechamento/Prestacao
+
+Proxima etapa recomendada:
+- modelagem/implementacao da alocacao de competencia (mes/ano + valor) vinculada ao lancamento/subcategoria controlada
