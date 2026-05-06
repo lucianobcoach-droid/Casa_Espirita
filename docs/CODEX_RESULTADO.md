@@ -4624,3 +4624,15 @@ Não houve alteração de código funcional nesta etapa.
   - bloqueio 403 sem permissao
   - manutencao da exclusao simples sob a mesma permissao
 - sem alteracao de calculo financeiro, saldos, regras de rateio/competencia ou relatorios do modulo
+
+## Microetapa: restauracao do acesso a listagem de lancamentos
+
+- a investigacao confirmou que a listagem principal continua exigindo `financeiro.lancamentos.listar`; a regressao percebida nao veio de troca de permissao na `LancamentoFinanceiroListView`
+- o catalogo funcional permanece correto para essa leitura: `financeiro.lancamentos.listar` existe e segue vinculado aos perfis `administrador-geral`, `gestao-administrativa`, `operador-financeiro` e `consulta-visualizacao`
+- causa operacional identificada na base local: usuario autenticado sem vinculo `UsuarioPerfilAcesso` nao recebe permissao funcional nenhuma e, por desenho da V1, fica bloqueado com `403`
+- a listagem permaneceu acessivel para quem tem `listar`, mesmo sem `emitir_recibo` e sem `excluir`; nesses cenarios os botoes sensiveis so deixam de ser renderizados
+- a bateria de testes passou a cobrir explicitamente:
+  - acesso `200` com apenas `financeiro.lancamentos.listar`
+  - ocultacao de `Recibo`/`Excluir` quando essas permissoes nao existem
+  - bloqueio `403` para usuario sem `financeiro.lancamentos.listar`
+- sem alteracao de calculo financeiro, saldos, regras de rateio/competencia ou relatorios do modulo

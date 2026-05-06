@@ -2561,6 +2561,43 @@ class LancamentoListagemAcoesTests(TestCase):
             reverse('financeiro:lancamento-rateio-delete', kwargs={'grupo_rateio': self.grupo_rateio}),
         )
 
+    def test_listagem_com_apenas_permissao_listar_abre_sem_recibo_ou_excluir(self):
+        self._login_com_permissoes(
+            'user-apenas-listar',
+            [
+                'financeiro.lancamentos.listar',
+                'financeiro.lancamentos.clonar',
+                'financeiro.lancamentos.editar',
+                'financeiro.lancamentos.editar_rateio',
+            ],
+        )
+
+        response = self.client.get(reverse('financeiro:lancamento-list'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, reverse('financeiro:lancamento-recibo', kwargs={'pk': self.lancamento_simples.pk}))
+        self.assertNotContains(response, reverse('financeiro:lancamento-delete', kwargs={'pk': self.lancamento_simples.pk}))
+        self.assertNotContains(
+            response,
+            reverse('financeiro:lancamento-rateio-delete', kwargs={'grupo_rateio': self.grupo_rateio}),
+        )
+
+    def test_listagem_sem_permissao_listar_permanece_bloqueada(self):
+        self._login_com_permissoes(
+            'user-sem-listar',
+            [
+                'financeiro.lancamentos.emitir_recibo',
+                'financeiro.lancamentos.clonar',
+                'financeiro.lancamentos.editar',
+                'financeiro.lancamentos.editar_rateio',
+                'financeiro.lancamentos.excluir',
+            ],
+        )
+
+        response = self.client.get(reverse('financeiro:lancamento-list'))
+
+        self.assertEqual(response.status_code, 403)
+
     def test_exclusao_de_grupo_rateado_remove_linhas_e_competencias(self):
         self._login_com_permissoes(
             'user-rateio-delete',

@@ -3435,3 +3435,14 @@ Riscos principais antes de migration:
   - usuario sem permissao: nao recebe botao e GET direto da URL segue bloqueado (403)
   - exclusao simples continua acessivel com a mesma permissao
 - sem alteracao de calculo financeiro, saldos, rateio financeiro, competencias, Balancete, Extrato ou Fechamento/Prestacao
+
+## Restauracao de acesso a listagem de lancamentos
+
+- a auditoria desta microetapa confirmou que o acesso a `/financeiro/lancamentos/` continua protegido por `financeiro.lancamentos.listar`; a etapa anterior nao trocou essa permissao
+- o catalogo oficial segue consistente: `financeiro.lancamentos.listar` existe, esta ativo e pertence aos perfis `administrador-geral`, `gestao-administrativa`, `operador-financeiro` e `consulta-visualizacao`
+- a causa encontrada para o bloqueio da usuaria foi operacional/local: usuario autenticado sem `UsuarioPerfilAcesso` vinculado recebe `403` por regra deny-by-default da camada funcional
+- a listagem foi mantida com acesso normal para quem possui `financeiro.lancamentos.listar`, mesmo sem `emitir_recibo` ou `excluir`; nesses casos os botoes apenas ficam ocultos
+- cobertura de testes reforcada para garantir:
+  - usuario com `listar`, mas sem `emitir_recibo` e sem `excluir`, acessa a tela normalmente
+  - usuario sem `listar` continua bloqueado
+- sem alteracao de calculo financeiro, saldos, rateio, competencias, Balancete, Extrato ou Fechamento/Prestacao
