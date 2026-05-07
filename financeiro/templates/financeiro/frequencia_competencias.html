@@ -1,0 +1,350 @@
+{% extends 'financeiro/base.html' %}
+{% load financeiro_format %}
+{% block title %}{{ page_title }}{% endblock %}
+{% block content %}
+<style>
+    .financeiro-frequencia-page {
+        display: grid;
+        gap: 1rem;
+        min-width: 0;
+    }
+
+    .financeiro-frequencia-hero {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1.1rem 1.2rem;
+        border: 1px solid rgba(203, 213, 225, 0.92);
+        border-radius: 1.05rem;
+        background:
+            radial-gradient(circle at top right, rgba(191, 219, 254, 0.28), transparent 34%),
+            linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+        box-shadow: 0 16px 34px rgba(15, 23, 42, 0.05);
+    }
+
+    .financeiro-frequencia-title {
+        margin: 0 0 0.28rem;
+        color: #0f172a;
+        font-size: 1.68rem;
+        line-height: 1.1;
+    }
+
+    .financeiro-frequencia-subtitle {
+        max-width: 54rem;
+        color: #475569;
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+
+    .financeiro-frequencia-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.45rem;
+        margin-top: 0.7rem;
+    }
+
+    .financeiro-frequencia-meta-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.32rem;
+        padding: 0.36rem 0.68rem;
+        border: 1px solid #dbe6f1;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.92);
+        color: #475569;
+        font-size: 0.78rem;
+        box-shadow: 0 4px 10px rgba(15, 23, 42, 0.03);
+    }
+
+    .financeiro-frequencia-meta-item strong {
+        color: #1e293b;
+    }
+
+    .financeiro-frequencia-panel {
+        border: 1px solid rgba(203, 213, 225, 0.86);
+        border-radius: 1rem;
+        background: #fff;
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.045);
+        overflow: hidden;
+    }
+
+    .financeiro-frequencia-panel .filters-box {
+        margin-bottom: 0;
+        border: 0;
+        border-radius: 0;
+        background: linear-gradient(180deg, #fbfcfe 0%, #f8fafc 100%);
+    }
+
+    .financeiro-frequencia-panel-header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.85rem;
+        padding: 0.95rem 1rem 0;
+    }
+
+    .financeiro-frequencia-panel-title {
+        margin: 0;
+        color: #0f172a;
+        font-size: 1rem;
+        font-weight: 800;
+    }
+
+    .financeiro-frequencia-panel-note {
+        margin: 0.28rem 0 0;
+        color: #64748b;
+        font-size: 0.82rem;
+        line-height: 1.45;
+    }
+
+    .financeiro-frequencia-table-wrap {
+        padding: 0 1rem 1rem;
+    }
+
+    .financeiro-frequencia-table {
+        min-width: max-content;
+        font-size: 0.88rem;
+    }
+
+    .financeiro-frequencia-table thead th {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        background: #f8fafc;
+    }
+
+    .financeiro-frequencia-table th:first-child,
+    .financeiro-frequencia-table td:first-child {
+        position: sticky;
+        left: 0;
+        z-index: 2;
+        background: inherit;
+    }
+
+    .financeiro-frequencia-table thead th:first-child,
+    .financeiro-frequencia-table tfoot th:first-child {
+        z-index: 3;
+        background: #f8fafc;
+    }
+
+    .financeiro-frequencia-row-person {
+        min-width: 16rem;
+        background: #fff;
+    }
+
+    .financeiro-frequencia-cell,
+    .financeiro-frequencia-total {
+        min-width: 7rem;
+        text-align: right;
+        white-space: nowrap;
+    }
+
+    .financeiro-frequencia-empty {
+        color: #94a3b8;
+        text-align: center;
+    }
+
+    .financeiro-frequencia-total {
+        font-weight: 700;
+    }
+
+    .financeiro-frequencia-table tfoot tr {
+        background: #eef4fb;
+    }
+
+    .financeiro-frequencia-table tfoot th,
+    .financeiro-frequencia-table tfoot td {
+        font-weight: 800;
+    }
+
+    @media (max-width: 768px) {
+        .financeiro-frequencia-hero {
+            padding: 1rem;
+        }
+
+        .financeiro-frequencia-title {
+            font-size: 1.42rem;
+        }
+
+        .financeiro-frequencia-table-wrap {
+            padding: 0 0.75rem 0.9rem;
+        }
+    }
+</style>
+
+<div class="financeiro-frequencia-page">
+    <section class="financeiro-frequencia-hero">
+        <div>
+            <h1 class="financeiro-frequencia-title">Frequencia por competencia</h1>
+            <p class="financeiro-frequencia-subtitle">
+                Matriz mensal com valores alocados por competencia para pessoas recorrentes e subcategorias controladas.
+            </p>
+            <div class="financeiro-frequencia-meta">
+                <span class="financeiro-frequencia-meta-item"><strong>Fonte:</strong> AlocacaoCompetenciaFinanceira</span>
+                <span class="financeiro-frequencia-meta-item"><strong>Status:</strong> {{ status_label }}</span>
+                {% if periodo_competencia_label %}
+                    <span class="financeiro-frequencia-meta-item"><strong>Periodo:</strong> {{ periodo_competencia_label }}</span>
+                {% endif %}
+                {% if categoria_filtro_label %}
+                    <span class="financeiro-frequencia-meta-item"><strong>Subcategoria:</strong> {{ categoria_filtro_label }}</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="financeiro-page-header-actions">
+            <a class="button is-light" href="{% url 'financeiro:home' %}">Voltar ao financeiro</a>
+        </div>
+    </section>
+
+    <section class="financeiro-frequencia-panel">
+        <form method="get" class="filters-box">
+            <div class="columns is-multiline">
+                <div class="column is-6-tablet is-3-desktop">
+                    <label class="label" for="id_mes_inicial">Competencia inicial - mes</label>
+                    <div class="select is-fullwidth">
+                        <select id="id_mes_inicial" name="mes_inicial">
+                            {% for item in meses_opcoes %}
+                                <option value="{{ item.valor }}" {% if mes_inicial == item.valor|stringformat:'s' %}selected{% endif %}>{{ item.rotulo }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="column is-6-tablet is-2-desktop">
+                    <label class="label" for="id_ano_inicial">Ano inicial</label>
+                    <input class="input" id="id_ano_inicial" type="number" name="ano_inicial" min="1900" max="9999" value="{{ ano_inicial }}">
+                </div>
+                <div class="column is-6-tablet is-3-desktop">
+                    <label class="label" for="id_mes_final">Competencia final - mes</label>
+                    <div class="select is-fullwidth">
+                        <select id="id_mes_final" name="mes_final">
+                            {% for item in meses_opcoes %}
+                                <option value="{{ item.valor }}" {% if mes_final == item.valor|stringformat:'s' %}selected{% endif %}>{{ item.rotulo }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="column is-6-tablet is-2-desktop">
+                    <label class="label" for="id_ano_final">Ano final</label>
+                    <input class="input" id="id_ano_final" type="number" name="ano_final" min="1900" max="9999" value="{{ ano_final }}">
+                </div>
+                <div class="column is-6-tablet is-4-desktop">
+                    <label class="label" for="id_categoria">Subcategoria controlada</label>
+                    <div class="select is-fullwidth">
+                        <select id="id_categoria" name="categoria">
+                            <option value="">Todas controladas</option>
+                            {% for categoria in categorias_controladas %}
+                                <option value="{{ categoria.pk }}" {% if categoria_selecionada == categoria.pk|stringformat:'s' %}selected{% endif %}>{{ categoria.nome }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="column is-6-tablet is-3-desktop">
+                    <label class="label" for="id_status">Status</label>
+                    <div class="select is-fullwidth">
+                        <select id="id_status" name="status">
+                            {% for valor, rotulo in status_opcoes %}
+                                <option value="{{ valor }}" {% if status_selecionado == valor %}selected{% endif %}>{{ rotulo }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <p class="help">Todos considera quitados e em aberto.</p>
+                </div>
+                <div class="column is-12-tablet is-2-desktop">
+                    <label class="label">&nbsp;</label>
+                    <div class="buttons">
+                        <button class="button is-primary is-fullwidth" type="submit">Atualizar</button>
+                    </div>
+                </div>
+                <div class="column is-12-tablet is-2-desktop">
+                    <label class="label">&nbsp;</label>
+                    <div class="buttons">
+                        <a class="button is-light is-fullwidth" href="{% url 'financeiro:frequencia-competencias' %}">Limpar</a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </section>
+
+    {% if periodo_error %}
+        <div class="notification is-danger">{{ periodo_error }}</div>
+    {% endif %}
+
+    <section class="financeiro-frequencia-panel">
+        <div class="financeiro-frequencia-panel-header">
+            <div>
+                <h2 class="financeiro-frequencia-panel-title">Matriz mensal com valores</h2>
+                <p class="financeiro-frequencia-panel-note">
+                    Linhas para favorecidos recorrentes, colunas por competencia mensal e totais por favorecido, por mes e geral.
+                </p>
+            </div>
+            <div class="financeiro-frequencia-meta">
+                <span class="financeiro-frequencia-meta-item"><strong>Favorecidos:</strong> {{ quantidade_favorecidos }}</span>
+                <span class="financeiro-frequencia-meta-item"><strong>Competencias:</strong> {{ quantidade_competencias|default:0 }}</span>
+                <span class="financeiro-frequencia-meta-item"><strong>Total geral:</strong> R$ {{ total_geral|br_money }}</span>
+            </div>
+        </div>
+
+        <div class="financeiro-frequencia-table-wrap">
+            <div class="table-wrapper">
+                <table class="table is-fullwidth is-striped is-hoverable financeiro-table financeiro-frequencia-table">
+                    <thead>
+                        <tr>
+                            <th>Favorecido</th>
+                            {% for coluna in competencias_colunas %}
+                                <th class="financeiro-frequencia-cell">{{ coluna.label }}</th>
+                            {% endfor %}
+                            <th class="financeiro-frequencia-total">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for linha in matriz_linhas %}
+                            <tr>
+                                <td class="financeiro-frequencia-row-person">
+                                    <strong>{{ linha.pessoa.nome }}</strong>
+                                    <span class="financeiro-meta">{{ linha.pessoa.codigo }}</span>
+                                </td>
+                                {% for valor in linha.valores %}
+                                    <td class="financeiro-frequencia-cell">
+                                        {% if valor %}
+                                            R$ {{ valor|br_money }}
+                                        {% else %}
+                                            <span class="financeiro-frequencia-empty">-</span>
+                                        {% endif %}
+                                    </td>
+                                {% endfor %}
+                                <td class="financeiro-frequencia-total">R$ {{ linha.total|br_money }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="{{ competencias_colunas|length|add:2 }}" class="has-text-centered">
+                                    Nenhum favorecido recorrente disponivel para a matriz.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th>Total por mes</th>
+                            {% for total_mes in totais_colunas %}
+                                <td class="financeiro-frequencia-cell">
+                                    {% if total_mes %}
+                                        R$ {{ total_mes|br_money }}
+                                    {% else %}
+                                        <span class="financeiro-frequencia-empty">-</span>
+                                    {% endif %}
+                                </td>
+                            {% endfor %}
+                            <td class="financeiro-frequencia-total">R$ {{ total_geral|br_money }}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            {% if matriz_vazia and not periodo_error %}
+                <p class="help">Nenhuma alocacao encontrada para os filtros informados. Os favorecidos recorrentes continuam listados para evidenciar meses sem valor.</p>
+            {% endif %}
+        </div>
+    </section>
+</div>
+{% endblock %}

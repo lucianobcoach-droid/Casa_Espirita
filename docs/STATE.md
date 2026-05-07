@@ -3537,3 +3537,34 @@ Riscos principais antes de migration:
   - edicao de grupo rateado
 - quando todas as linhas estao validas, a validacao de soma continua obrigatoria e inalterada
 - sem alteracao de calculo financeiro, saldos, relatorios ou banco real; nenhum arquivo SQLite foi alterado/versionado
+
+## Primeira matriz mensal com valores por competencia
+
+- implementada a tela `Frequencia por competencia` em `/financeiro/frequencia-competencias/`
+- permissao reutilizada da camada de relatorios: `financeiro.resumo_financeiro.visualizar`
+- fonte oficial dos dados:
+  - `AlocacaoCompetenciaFinanceira`
+  - nunca o valor bruto total do lancamento
+  - nunca o valor total consolidado do grupo rateado
+- filtros entregues:
+  - competencia inicial (mes/ano)
+  - competencia final (mes/ano)
+  - subcategoria controlada (`Todas controladas` ou uma subcategoria)
+  - status (`Todos`, `Quitados`, `Em aberto`)
+- regra de leitura:
+  - linhas = favorecidos recorrentes (`contribuinte_recorrente=True`), inclusive sem alocacao no periodo
+  - colunas = todas as competencias mensais no intervalo selecionado
+  - celulas = soma dos `valor_alocado` daquela pessoa na competencia
+  - totais = por favorecido, por mes e geral
+- consolidacoes entregues:
+  - multiplos lancamentos da mesma pessoa na mesma competencia sao somados na celula
+  - itens nao controlados do rateio permanecem fora da matriz
+  - alocacao inconsistente ligada a favorecido nao recorrente fica ignorada no MVP
+  - status `Todos` considera `quitado + aberto`; `cancelado` fica fora desta leitura inicial
+- navegacao adicionada no grupo `Relatorios` do menu financeiro e na home secundaria do modulo
+- limites iniciais:
+  - periodo maximo de 24 competencias por consulta
+  - matriz sem valores/check-X ainda nao implementada
+  - termo por favorecido ainda nao implementado
+  - sem exportacao e sem impressao refinada nesta microetapa
+- sem alteracao de calculo financeiro, saldos, relatorios existentes, migrations ou banco real; nenhum arquivo SQLite foi alterado/versionado

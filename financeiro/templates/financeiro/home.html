@@ -91,6 +91,9 @@
                     <a class="financeiro-shortcut" href="{% url 'financeiro:resumo' %}">
                         <span class="financeiro-shortcut-label">Resumo do periodo</span>
                     </a>
+                    <a class="financeiro-shortcut" href="{% url 'financeiro:frequencia-competencias' %}">
+                        <span class="financeiro-shortcut-label">Frequencia por competencia</span>
+                    </a>
                 {% endif %}
                 {% if pode_visualizar_prestacao %}
                     <a class="financeiro-shortcut" href="{% url 'financeiro:prestacao-contas' %}">

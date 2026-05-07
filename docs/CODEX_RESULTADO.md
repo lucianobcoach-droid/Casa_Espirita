@@ -4722,3 +4722,32 @@ Não houve alteração de código funcional nesta etapa.
 - a regra vale para lancamento simples e rateio controlado (criacao e edicao de grupo)
 - validacao de soma permanece ativa quando as linhas sao validas
 - sem alteracao de models, migrations, calculos financeiros, saldos, relatorios ou banco real; nenhum arquivo SQLite foi alterado/versionado
+
+## Microetapa: primeira matriz mensal com valores por competencia
+
+- implementada a tela `Frequencia por competencia` em `/financeiro/frequencia-competencias/`
+- permissao reaproveitada: `financeiro.resumo_financeiro.visualizar`
+- fonte unica da matriz:
+  - `AlocacaoCompetenciaFinanceira`
+  - sem uso de checkbox
+  - sem uso de valor bruto do lancamento ou do grupo rateado
+- filtros entregues:
+  - competencia inicial/final por mes e ano
+  - subcategoria controlada (uma ou todas)
+  - status (`Todos`, `Quitados`, `Em aberto`)
+- comportamento entregue:
+  - linhas com todos os favorecidos recorrentes, mesmo sem valor no periodo
+  - colunas para todas as competencias mensais do intervalo
+  - celulas somando `valor_alocado` por pessoa/competencia
+  - totais por favorecido, por mes e total geral
+  - multiplos lancamentos da mesma pessoa/subcategoria/competencia consolidados na mesma celula
+  - item nao controlado do rateio mantido fora da matriz
+  - alocacoes inconsistentes de favorecido nao recorrente ignoradas no MVP
+- navegacao adicionada no menu de `Relatorios` e na home secundaria do modulo financeiro
+- cobertura de testes adicionada para permissao, linhas recorrentes sem alocacao, filtro de status, filtro por subcategoria, soma por competencia e exclusao de nao controlados
+- fora desta etapa:
+  - matriz sem valores/check-X
+  - termo por favorecido
+  - exportacao
+  - impressao refinada
+- sem alteracao de models, migrations, calculos financeiros, saldos, relatorios existentes ou banco real; nenhum arquivo SQLite foi alterado/versionado

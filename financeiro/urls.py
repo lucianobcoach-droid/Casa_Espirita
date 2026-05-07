@@ -37,6 +37,7 @@ from .views import (
     ExtratoFinanceiroView,
     FinanceiroHomeView,
     BalanceteInstitucionalFinanceiroView,
+    FrequenciaCompetenciasView,
     LancamentoFinanceiroCreateView,
     LancamentoFinanceiroCloneView,
     LancamentoFinanceiroAcoesLoteView,
@@ -82,6 +83,7 @@ urlpatterns = [
         name='balancete-institucional',
     ),
     path('resumo/', ResumoFinanceiroView.as_view(), name='resumo'),
+    path('frequencia-competencias/', FrequenciaCompetenciasView.as_view(), name='frequencia-competencias'),
     path('evolucao-categorias/', EvolucaoCategoriasFinanceiroView.as_view(), name='evolucao-categorias'),
     path('autocomplete/pessoas/', PessoaFinanceiraAutocompleteView.as_view(), name='autocomplete-pessoa'),
     path(

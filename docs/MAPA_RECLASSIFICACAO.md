@@ -965,7 +965,7 @@ Consolidacao:
 - clone de rateio permanece sem copiar competencias automaticamente
 
 Proxima etapa recomendada:
-- implementar a matriz mensal com valores a partir das alocacoes ja registradas
+- implementar a matriz sem valores derivada da matriz com valores e manter termo por favorecido para a etapa seguinte
 
 ### 37. Auditoria acionavel (transversal)
 
@@ -992,10 +992,37 @@ Consolidacao:
 
 ### 39. Competencias duplicadas no mesmo lancamento/subcategoria
 
-Status: REGRA RECOMENDADA - PENDENTE DE IMPLEMENTACAO
+Status: IMPLEMENTADO
 
 Consolidacao:
 - matriz futura deve continuar somando multiplos lancamentos da mesma pessoa/subcategoria/competencia
 - dentro do mesmo lancamento e mesma subcategoria controlada, repetir o mesmo mes/ano deve ser bloqueado
 - mensagem sugerida:
   - `Ja existe uma competencia informada para este mes/ano. Agrupe o valor em uma unica linha.`
+
+### 40. Frequencia por competencia - primeira matriz mensal com valores
+
+Status: IMPLEMENTADO
+
+Consolidacao:
+- nova tela `Frequencia por competencia` criada em `/financeiro/frequencia-competencias/`
+- fonte unica da matriz: `AlocacaoCompetenciaFinanceira`
+- favorecidos recorrentes aparecem como linhas mesmo sem valor no periodo
+- colunas cobrem todas as competencias mensais do intervalo selecionado
+- celulas somam `valor_alocado` por pessoa/competencia
+- totais entregues:
+  - por favorecido
+  - por mes
+  - total geral
+- filtros entregues:
+  - competencia inicial/final
+  - subcategoria controlada
+  - status (`Todos`, `Quitados`, `Em aberto`)
+- recortes mantidos:
+  - item nao controlado do rateio segue fora
+  - favorecido nao recorrente fica fora por padrao
+  - matriz sem valores/check-X ainda pendente
+  - termo por favorecido ainda pendente
+
+Proxima etapa recomendada:
+- implementar a matriz sem valores derivada da base ja entregue e manter termo por favorecido para a onda seguinte

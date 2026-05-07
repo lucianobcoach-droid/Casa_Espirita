@@ -39,6 +39,7 @@ from .forms import (
     categorias_vinculaveis_queryset,
 )
 from .models import (
+    AlocacaoCompetenciaFinanceira,
     AssinaturaInstitucional,
     AuditoriaFinanceiro,
     CategoriaFinanceira,
@@ -115,6 +116,20 @@ MESES_PT_BR = (
     'Novembro',
     'Dezembro',
 )
+MESES_PT_BR_ABREV = (
+    'Jan',
+    'Fev',
+    'Mar',
+    'Abr',
+    'Mai',
+    'Jun',
+    'Jul',
+    'Ago',
+    'Set',
+    'Out',
+    'Nov',
+    'Dez',
+)
 EVOLUCAO_CATEGORIAS_SERIES_CORES = (
     '#1f5fbf',
     '#b73a32',
@@ -139,6 +154,26 @@ def _contexto_competencia_lancamento() -> dict[str, list[int]]:
             ).values_list('pk', flat=True)
         ),
     }
+
+
+def _rotulo_competencia_mensal(ano: int, mes: int) -> str:
+    return f'{MESES_PT_BR_ABREV[mes - 1]}/{ano}'
+
+
+def _iterar_competencias_mensais(inicio: date, fim: date) -> list[tuple[int, int]]:
+    competencias: list[tuple[int, int]] = []
+    ano_atual = inicio.year
+    mes_atual = inicio.month
+
+    while (ano_atual, mes_atual) <= (fim.year, fim.month):
+        competencias.append((ano_atual, mes_atual))
+        if mes_atual == 12:
+            ano_atual += 1
+            mes_atual = 1
+        else:
+            mes_atual += 1
+
+    return competencias
 
 
 def _salvar_alocacoes_competencia_rateio(
@@ -4441,6 +4476,256 @@ class ResumoFinanceiroView(FinanceiroPeriodoMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         context['page_title'] = 'Resumo do Periodo'
         context.update(self._build_periodo_context())
+        return context
+
+
+class FrequenciaCompetenciasView(FinanceiroPermissaoMixin, TemplateView):
+    permissao_requerida = 'financeiro.resumo_financeiro.visualizar'
+    template_name = 'financeiro/frequencia_competencias.html'
+    STATUS_TODOS = 'todos'
+    STATUS_QUITADOS = 'quitado'
+    STATUS_ABERTOS = 'aberto'
+    MAX_COMPETENCIAS = 24
+    status_opcoes = (
+        (STATUS_TODOS, 'Todos'),
+        (STATUS_QUITADOS, 'Quitados'),
+        (STATUS_ABERTOS, 'Em aberto'),
+    )
+
+    def _periodo_padrao(self) -> tuple[date, date]:
+        hoje = date.today()
+        competencia_atual = hoje.replace(day=1)
+        return competencia_atual, competencia_atual
+
+    def _parse_competencia_periodo(
+        self,
+    ) -> tuple[dict[str, str], date | None, date | None, str]:
+        competencia_inicial_padrao, competencia_final_padrao = self._periodo_padrao()
+        valores = {
+            'mes_inicial': (self.request.GET.get('mes_inicial') or '').strip(),
+            'ano_inicial': (self.request.GET.get('ano_inicial') or '').strip(),
+            'mes_final': (self.request.GET.get('mes_final') or '').strip(),
+            'ano_final': (self.request.GET.get('ano_final') or '').strip(),
+        }
+
+        if not any(valores.values()):
+            valores = {
+                'mes_inicial': str(competencia_inicial_padrao.month),
+                'ano_inicial': str(competencia_inicial_padrao.year),
+                'mes_final': str(competencia_final_padrao.month),
+                'ano_final': str(competencia_final_padrao.year),
+            }
+
+        if not all(valores.values()):
+            return valores, None, None, 'Informe competencia inicial e competencia final.'
+
+        try:
+            competencia_inicial = date(
+                int(valores['ano_inicial']),
+                int(valores['mes_inicial']),
+                1,
+            )
+            competencia_final = date(
+                int(valores['ano_final']),
+                int(valores['mes_final']),
+                1,
+            )
+        except ValueError:
+            return valores, None, None, 'Periodo de competencia invalido. Revise mes e ano informados.'
+
+        if competencia_inicial > competencia_final:
+            return valores, None, None, 'A competencia inicial nao pode ser maior que a competencia final.'
+
+        competencias = _iterar_competencias_mensais(competencia_inicial, competencia_final)
+        if len(competencias) > self.MAX_COMPETENCIAS:
+            return (
+                valores,
+                None,
+                None,
+                'Selecione no maximo 24 competencias mensais por consulta.',
+            )
+
+        return valores, competencia_inicial, competencia_final, ''
+
+    def _parse_status(self) -> str:
+        status = (self.request.GET.get('status') or '').strip().lower()
+        if status in {
+            self.STATUS_TODOS,
+            self.STATUS_QUITADOS,
+            self.STATUS_ABERTOS,
+        }:
+            return status
+        return self.STATUS_TODOS
+
+    def _status_lancamentos_queryset(self, status: str) -> list[str]:
+        if status == self.STATUS_QUITADOS:
+            return [LancamentoFinanceiro.StatusLancamento.QUITADO]
+        if status == self.STATUS_ABERTOS:
+            return [LancamentoFinanceiro.StatusLancamento.ABERTO]
+        return [
+            LancamentoFinanceiro.StatusLancamento.QUITADO,
+            LancamentoFinanceiro.StatusLancamento.ABERTO,
+        ]
+
+    def _categorias_controladas_queryset(self):
+        return CategoriaFinanceira.objects.filter(
+            controla_recorrencia_competencia=True,
+            categoria_pai__isnull=False,
+        ).order_by('nome')
+
+    def _parse_categoria_controlada(
+        self,
+        categorias_controladas: list[CategoriaFinanceira],
+    ) -> tuple[str, CategoriaFinanceira | None, str]:
+        categoria_raw = (self.request.GET.get('categoria') or '').strip()
+        if not categoria_raw:
+            return '', None, ''
+
+        categorias_por_id = {str(categoria.pk): categoria for categoria in categorias_controladas}
+        categoria = categorias_por_id.get(categoria_raw)
+        if categoria is None:
+            return categoria_raw, None, 'Selecione uma subcategoria controlada valida para a matriz.'
+        return categoria_raw, categoria, ''
+
+    def _build_matrix_context(self) -> dict[str, object]:
+        categorias_controladas = list(self._categorias_controladas_queryset())
+        categoria_raw, categoria_selecionada, categoria_error = self._parse_categoria_controlada(
+            categorias_controladas
+        )
+        periodo_vals, competencia_inicial, competencia_final, periodo_error = self._parse_competencia_periodo()
+        status_selecionado = self._parse_status()
+        pessoas_recorrentes = list(
+            PessoaFinanceira.objects.filter(contribuinte_recorrente=True).order_by('nome', 'pk')
+        )
+
+        context: dict[str, object] = {
+            'page_title': 'Frequencia por competencia',
+            'categorias_controladas': categorias_controladas,
+            'categoria_selecionada': categoria_raw,
+            'status_opcoes': self.status_opcoes,
+            'status_selecionado': status_selecionado,
+            'meses_opcoes': [
+                {'valor': indice + 1, 'rotulo': nome}
+                for indice, nome in enumerate(MESES_PT_BR)
+            ],
+            **periodo_vals,
+            'competencias_colunas': [],
+            'matriz_linhas': [],
+            'totais_colunas': [],
+            'total_geral': Decimal('0.00'),
+            'quantidade_favorecidos': len(pessoas_recorrentes),
+            'filtros_ativos': bool(self.request.GET),
+            'status_label': dict(self.status_opcoes).get(status_selecionado, 'Todos'),
+            'periodo_error': periodo_error or categoria_error,
+        }
+
+        if not categorias_controladas and not context['periodo_error']:
+            context['periodo_error'] = (
+                'Nao ha subcategorias controladas por competencia cadastradas para gerar a matriz.'
+            )
+            return context
+
+        if context['periodo_error'] or not competencia_inicial or not competencia_final:
+            return context
+
+        competencias = _iterar_competencias_mensais(competencia_inicial, competencia_final)
+        competencias_colunas = [
+            {
+                'ano': ano,
+                'mes': mes,
+                'label': _rotulo_competencia_mensal(ano, mes),
+            }
+            for ano, mes in competencias
+        ]
+
+        categoria_ids = (
+            [categoria_selecionada.pk]
+            if categoria_selecionada is not None
+            else [categoria.pk for categoria in categorias_controladas]
+        )
+        valores_agregados = (
+            AlocacaoCompetenciaFinanceira.objects.filter(
+                categoria_id__in=categoria_ids,
+                categoria__controla_recorrencia_competencia=True,
+                lancamento__pessoa__contribuinte_recorrente=True,
+                lancamento__status__in=self._status_lancamentos_queryset(status_selecionado),
+            )
+            .filter(
+                Q(ano_competencia__gt=competencia_inicial.year)
+                | Q(
+                    ano_competencia=competencia_inicial.year,
+                    mes_competencia__gte=competencia_inicial.month,
+                )
+            )
+            .filter(
+                Q(ano_competencia__lt=competencia_final.year)
+                | Q(
+                    ano_competencia=competencia_final.year,
+                    mes_competencia__lte=competencia_final.month,
+                )
+            )
+            .values('lancamento__pessoa_id', 'ano_competencia', 'mes_competencia')
+            .annotate(total=Sum('valor_alocado'))
+            .order_by()
+        )
+
+        valores_por_favorecido_competencia: dict[tuple[int, int, int], Decimal] = {}
+        for item in valores_agregados:
+            chave = (
+                item['lancamento__pessoa_id'],
+                item['ano_competencia'],
+                item['mes_competencia'],
+            )
+            valores_por_favorecido_competencia[chave] = item['total'] or Decimal('0.00')
+
+        totais_colunas: list[Decimal] = []
+        for ano, mes in competencias:
+            total_mes = sum(
+                (
+                    valores_por_favorecido_competencia.get((pessoa.pk, ano, mes), Decimal('0.00'))
+                    for pessoa in pessoas_recorrentes
+                ),
+                Decimal('0.00'),
+            )
+            totais_colunas.append(total_mes)
+
+        matriz_linhas: list[dict[str, object]] = []
+        for pessoa in pessoas_recorrentes:
+            valores_linha = [
+                valores_por_favorecido_competencia.get((pessoa.pk, ano, mes), Decimal('0.00'))
+                for ano, mes in competencias
+            ]
+            matriz_linhas.append(
+                {
+                    'pessoa': pessoa,
+                    'valores': valores_linha,
+                    'total': sum(valores_linha, Decimal('0.00')),
+                }
+            )
+
+        context.update(
+            {
+                'competencias_colunas': competencias_colunas,
+                'matriz_linhas': matriz_linhas,
+                'totais_colunas': totais_colunas,
+                'total_geral': sum(totais_colunas, Decimal('0.00')),
+                'quantidade_competencias': len(competencias_colunas),
+                'quantidade_favorecidos': len(matriz_linhas),
+                'categoria_filtro_label': (
+                    str(categoria_selecionada) if categoria_selecionada else 'Todas controladas'
+                ),
+                'periodo_competencia_label': (
+                    f'{_rotulo_competencia_mensal(competencia_inicial.year, competencia_inicial.month)} '
+                    f'a {_rotulo_competencia_mensal(competencia_final.year, competencia_final.month)}'
+                ),
+                'matriz_vazia': not any(item['total'] for item in matriz_linhas),
+            }
+        )
+        return context
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(self._build_matrix_context())
         return context
 
 

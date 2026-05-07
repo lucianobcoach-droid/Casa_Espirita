@@ -2514,6 +2514,346 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
         )
 
 
+class FrequenciaCompetenciasViewTests(TestCase):
+    def setUp(self):
+        self.conta = ContaFinanceira.objects.create(
+            nome='Conta matriz',
+            saldo_inicial=Decimal('0.00'),
+            data_saldo_inicial=date(2026, 1, 1),
+        )
+        self.pessoa_joao = PessoaFinanceira.objects.create(
+            codigo='P-MAT-001',
+            nome='Joao Matriz',
+            contribuinte_recorrente=True,
+        )
+        self.pessoa_maria = PessoaFinanceira.objects.create(
+            codigo='P-MAT-002',
+            nome='Maria Matriz',
+            contribuinte_recorrente=True,
+        )
+        self.pessoa_sem_alocacao = PessoaFinanceira.objects.create(
+            codigo='P-MAT-003',
+            nome='Beatriz Sem Alocacao',
+            contribuinte_recorrente=True,
+        )
+        self.pessoa_nao_recorrente = PessoaFinanceira.objects.create(
+            codigo='P-MAT-004',
+            nome='Carlos Avulso',
+            contribuinte_recorrente=False,
+        )
+        self.categoria_receita_pai = CategoriaFinanceira.objects.create(
+            nome='Receitas matriz',
+            tipo=CategoriaFinanceira.TipoCategoria.RECEITA,
+        )
+        self.categoria_controlada_1 = CategoriaFinanceira.objects.create(
+            nome='Contribuicao mensal matriz',
+            tipo=CategoriaFinanceira.TipoCategoria.RECEITA,
+            categoria_pai=self.categoria_receita_pai,
+            controla_recorrencia_competencia=True,
+        )
+        self.categoria_controlada_2 = CategoriaFinanceira.objects.create(
+            nome='Campanha recorrente matriz',
+            tipo=CategoriaFinanceira.TipoCategoria.RECEITA,
+            categoria_pai=self.categoria_receita_pai,
+            controla_recorrencia_competencia=True,
+        )
+        self.categoria_nao_controlada = CategoriaFinanceira.objects.create(
+            nome='Livro matriz',
+            tipo=CategoriaFinanceira.TipoCategoria.RECEITA,
+            categoria_pai=self.categoria_receita_pai,
+            controla_recorrencia_competencia=False,
+        )
+
+        self._criar_lancamento_com_alocacao(
+            pessoa=self.pessoa_joao,
+            categoria=self.categoria_controlada_1,
+            status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+            numero_documento='MAT-001',
+            valor_lancamento='120.00',
+            mes_competencia=1,
+            ano_competencia=2026,
+            valor_alocado='70.00',
+            data_base=date(2026, 1, 5),
+        )
+        self._criar_lancamento_com_alocacao(
+            pessoa=self.pessoa_joao,
+            categoria=self.categoria_controlada_1,
+            status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+            numero_documento='MAT-002',
+            valor_lancamento='60.00',
+            mes_competencia=1,
+            ano_competencia=2026,
+            valor_alocado='30.00',
+            data_base=date(2026, 1, 15),
+        )
+        self._criar_lancamento_com_alocacao(
+            pessoa=self.pessoa_joao,
+            categoria=self.categoria_controlada_1,
+            status=LancamentoFinanceiro.StatusLancamento.ABERTO,
+            numero_documento='MAT-003',
+            valor_lancamento='40.00',
+            mes_competencia=2,
+            ano_competencia=2026,
+            valor_alocado='40.00',
+            data_base=date(2026, 2, 10),
+        )
+        self._criar_lancamento_com_alocacao(
+            pessoa=self.pessoa_maria,
+            categoria=self.categoria_controlada_2,
+            status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+            numero_documento='MAT-004',
+            valor_lancamento='80.00',
+            mes_competencia=2,
+            ano_competencia=2026,
+            valor_alocado='80.00',
+            data_base=date(2026, 2, 14),
+        )
+        self.rateio_controlado = self._criar_lancamento_com_alocacao(
+            pessoa=self.pessoa_joao,
+            categoria=self.categoria_controlada_1,
+            status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+            numero_documento='MAT-005',
+            valor_lancamento='100.00',
+            mes_competencia=3,
+            ano_competencia=2026,
+            valor_alocado='100.00',
+            data_base=date(2026, 3, 20),
+            com_rateio=True,
+            grupo_rateio='grp-matriz',
+        )
+        LancamentoFinanceiro.objects.create(
+            descricao='Receita rateada matriz',
+            tipo=LancamentoFinanceiro.TipoLancamento.RECEITA,
+            status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+            valor=Decimal('30.00'),
+            data_competencia=date(2026, 3, 20),
+            data_pagamento=date(2026, 3, 20),
+            numero_documento='MAT-005',
+            pessoa=self.pessoa_joao,
+            categoria=self.categoria_nao_controlada,
+            conta=self.conta,
+            com_rateio=True,
+            grupo_rateio='grp-matriz',
+        )
+        self._criar_lancamento_com_alocacao(
+            pessoa=self.pessoa_nao_recorrente,
+            categoria=self.categoria_controlada_1,
+            status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+            numero_documento='MAT-006',
+            valor_lancamento='90.00',
+            mes_competencia=1,
+            ano_competencia=2026,
+            valor_alocado='90.00',
+            data_base=date(2026, 1, 25),
+        )
+
+    def _criar_lancamento_com_alocacao(
+        self,
+        *,
+        pessoa,
+        categoria,
+        status,
+        numero_documento,
+        valor_lancamento,
+        mes_competencia,
+        ano_competencia,
+        valor_alocado,
+        data_base,
+        com_rateio=False,
+        grupo_rateio='',
+    ):
+        lancamento = LancamentoFinanceiro.objects.create(
+            descricao='Lancamento matriz',
+            tipo=LancamentoFinanceiro.TipoLancamento.RECEITA,
+            status=status,
+            valor=Decimal(valor_lancamento),
+            data_competencia=data_base,
+            data_pagamento=data_base,
+            numero_documento=numero_documento,
+            pessoa=pessoa,
+            categoria=categoria,
+            conta=self.conta,
+            com_rateio=com_rateio,
+            grupo_rateio=grupo_rateio,
+        )
+        AlocacaoCompetenciaFinanceira.objects.create(
+            lancamento=lancamento,
+            categoria=categoria,
+            ano_competencia=ano_competencia,
+            mes_competencia=mes_competencia,
+            valor_alocado=Decimal(valor_alocado),
+        )
+        return lancamento
+
+    def _garantir_permissao(self, codigo: str) -> PermissaoSistema:
+        permissao = PermissaoSistema.objects.filter(codigo=codigo).first()
+        if permissao:
+            return permissao
+        partes = codigo.split('.')
+        modulo = partes[0] if len(partes) > 0 else 'financeiro'
+        recurso = partes[1] if len(partes) > 1 else 'geral'
+        acao = '.'.join(partes[2:]) if len(partes) > 2 else 'acessar'
+        return PermissaoSistema.objects.create(
+            codigo=codigo,
+            nome=codigo,
+            modulo=modulo,
+            recurso=recurso,
+            acao=acao,
+            ativo=True,
+        )
+
+    def _login_com_permissoes(self, username: str, codigos_permissao: list[str]):
+        user_model = get_user_model()
+        usuario = user_model.objects.create_user(
+            username=username,
+            password='senha-forte-123',
+            email=f'{username}@teste.local',
+            is_active=True,
+        )
+        perfil = PerfilAcesso.objects.create(
+            codigo=f'perfil-{username}',
+            nome=f'Perfil {username}',
+            ativo=True,
+        )
+        for codigo in codigos_permissao:
+            perfil.permissoes.add(self._garantir_permissao(codigo))
+        UsuarioPerfilAcesso.objects.create(usuario=usuario, perfil=perfil)
+        self.client.force_login(usuario)
+
+    def _parametros_base(self, **overrides):
+        params = {
+            'mes_inicial': '1',
+            'ano_inicial': '2026',
+            'mes_final': '3',
+            'ano_final': '2026',
+            'categoria': '',
+            'status': 'todos',
+        }
+        params.update(overrides)
+        return params
+
+    def _linha_por_nome(self, response, nome: str):
+        for linha in response.context['matriz_linhas']:
+            if linha['pessoa'].nome == nome:
+                return linha
+        self.fail(f'Linha nao encontrada para {nome}.')
+
+    def test_matriz_bloqueia_usuario_sem_permissao(self):
+        self._login_com_permissoes('user-matriz-sem-permissao', ['financeiro.lancamentos.listar'])
+
+        response = self.client.get(
+            reverse('financeiro:frequencia-competencias'),
+            self._parametros_base(),
+        )
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_matriz_permite_usuario_com_permissao_e_lista_recorrente_sem_alocacao(self):
+        self._login_com_permissoes(
+            'user-matriz-ok',
+            ['financeiro.resumo_financeiro.visualizar'],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:frequencia-competencias'),
+            self._parametros_base(),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Joao Matriz')
+        self.assertContains(response, 'Maria Matriz')
+        self.assertContains(response, 'Beatriz Sem Alocacao')
+        self.assertNotContains(response, 'Carlos Avulso')
+
+    def test_matriz_soma_alocacoes_por_competencia_e_ignora_item_nao_controlado(self):
+        self._login_com_permissoes(
+            'user-matriz-soma',
+            ['financeiro.resumo_financeiro.visualizar'],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:frequencia-competencias'),
+            self._parametros_base(),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        linha_joao = self._linha_por_nome(response, 'Joao Matriz')
+        self.assertEqual(
+            linha_joao['valores'],
+            [Decimal('100.00'), Decimal('40.00'), Decimal('100.00')],
+        )
+        self.assertEqual(linha_joao['total'], Decimal('240.00'))
+        self.assertNotContains(response, 'R$ 130,00')
+
+    def test_matriz_gera_colunas_totais_e_total_geral_do_periodo(self):
+        self._login_com_permissoes(
+            'user-matriz-totais',
+            ['financeiro.resumo_financeiro.visualizar'],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:frequencia-competencias'),
+            self._parametros_base(),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            [coluna['label'] for coluna in response.context['competencias_colunas']],
+            ['Jan/2026', 'Fev/2026', 'Mar/2026'],
+        )
+        self.assertEqual(
+            response.context['totais_colunas'],
+            [Decimal('100.00'), Decimal('120.00'), Decimal('100.00')],
+        )
+        self.assertEqual(response.context['total_geral'], Decimal('320.00'))
+
+    def test_matriz_filtra_status_quitado_e_aberto(self):
+        self._login_com_permissoes(
+            'user-matriz-status',
+            ['financeiro.resumo_financeiro.visualizar'],
+        )
+
+        response_quitado = self.client.get(
+            reverse('financeiro:frequencia-competencias'),
+            self._parametros_base(status='quitado'),
+        )
+        response_aberto = self.client.get(
+            reverse('financeiro:frequencia-competencias'),
+            self._parametros_base(status='aberto'),
+        )
+
+        self.assertEqual(response_quitado.status_code, 200)
+        self.assertEqual(response_aberto.status_code, 200)
+        self.assertEqual(
+            self._linha_por_nome(response_quitado, 'Joao Matriz')['valores'],
+            [Decimal('100.00'), Decimal('0.00'), Decimal('100.00')],
+        )
+        self.assertEqual(response_quitado.context['total_geral'], Decimal('280.00'))
+        self.assertEqual(
+            self._linha_por_nome(response_aberto, 'Joao Matriz')['valores'],
+            [Decimal('0.00'), Decimal('40.00'), Decimal('0.00')],
+        )
+        self.assertEqual(response_aberto.context['total_geral'], Decimal('40.00'))
+
+    def test_matriz_filtra_subcategoria_controlada_selecionada(self):
+        self._login_com_permissoes(
+            'user-matriz-categoria',
+            ['financeiro.resumo_financeiro.visualizar'],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:frequencia-competencias'),
+            self._parametros_base(categoria=str(self.categoria_controlada_1.pk)),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            self._linha_por_nome(response, 'Maria Matriz')['valores'],
+            [Decimal('0.00'), Decimal('0.00'), Decimal('0.00')],
+        )
+        self.assertEqual(response.context['total_geral'], Decimal('240.00'))
+
+
 class LancamentoListagemAcoesTests(TestCase):
     def setUp(self):
         self.conta = ContaFinanceira.objects.create(

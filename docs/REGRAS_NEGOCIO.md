@@ -136,6 +136,11 @@ Este documento consolida regras permanentes do sistema. Ele não substitui o his
 - A validacao de duplicidade vale tanto para lancamento simples quanto para rateio controlado, sempre no escopo da mesma subcategoria controlada.
 - Mensagem adotada para essa validacao:
   - `Ja existe uma competencia informada para este mes/ano. Agrupe o valor em uma unica linha.`
+- Na primeira matriz mensal com valores, a fonte oficial de leitura e `AlocacaoCompetenciaFinanceira`, nunca o valor bruto total do lancamento ou do grupo rateado.
+- A matriz com valores deve listar favorecidos recorrentes mesmo sem alocacao no periodo, para evidenciar meses vazios; favorecido nao recorrente fica fora por padrao no MVP.
+- As colunas da matriz devem ser geradas por competencia mensal explicita no intervalo selecionado, e as celulas devem somar os valores alocados daquela pessoa na mesma competencia.
+- A primeira versao da matriz aceita filtro por competencia inicial/final, subcategoria controlada e status do lancamento (`Todos`, `Quitados`, `Em aberto`).
+- No filtro de status da matriz, `Todos` considera apenas `quitado` e `aberto`; `cancelado` fica fora da leitura gerencial desta tela.
 - Em clone comum, competencias existentes nao devem ser copiadas automaticamente para o novo lancamento.
 - Em clone de rateio, competencias tambem nao devem ser copiadas automaticamente para evitar duplicidade de quitacao por competencia.
 - No MVP inicial, nao abrir modulo separado de baixa; manter o fluxo no proprio lancamento e tratar termo por favorecido como segunda onda apos validacao da matriz.

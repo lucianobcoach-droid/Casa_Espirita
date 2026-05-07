@@ -1038,7 +1038,7 @@ Leituras gerenciais:
   - favorecido nao recorrente ou rateio sem subcategoria controlada nao exigem competencias
 - create com rateio e edicao coordenada do grupo passaram a persistir/remover alocacoes de forma coerente com as linhas finais do grupo
 - clone de rateio continua sem copiar competencias automaticamente
-- permanecem para as proximas microetapas: matriz mensal com valores, matriz sem valores derivada e termo por favorecido
+- permanecem para as proximas microetapas: matriz sem valores derivada e termo por favorecido
 
 ## 20. Pendencias novas apos rateio controlado
 
@@ -1056,3 +1056,27 @@ Leituras gerenciais:
   - bloquear repeticao de mes/ano dentro do mesmo lancamento e mesma subcategoria controlada
   - mensagem sugerida:
     - `Ja existe uma competencia informada para este mes/ano. Agrupe o valor em uma unica linha.`
+
+## 21. Frequencia por competencia - primeira matriz mensal com valores
+
+- etapa funcional concluida para a primeira leitura gerencial por competencia
+- tela criada:
+  - `/financeiro/frequencia-competencias/`
+- fonte de dados:
+  - `AlocacaoCompetenciaFinanceira`
+- regra entregue:
+  - linhas com favorecidos recorrentes, inclusive sem alocacao no periodo
+  - colunas com todas as competencias mensais entre o inicio e o fim selecionados
+  - celulas somando `valor_alocado` por pessoa/competencia
+  - totais por favorecido, por mes e total geral
+  - filtro por subcategoria controlada (`todas` ou uma subcategoria)
+  - filtro por status (`Todos`, `Quitados`, `Em aberto`)
+  - em `Todos`, a leitura soma `quitado + aberto` e nao inclui `cancelado`
+- recortes preservados:
+  - item nao controlado do rateio permanece fora da matriz
+  - favorecido nao recorrente fica fora por padrao, mesmo se existir alocacao inconsistente
+  - matriz sem valores/check-X ainda nao implementada
+  - termo por favorecido ainda nao implementado
+
+Proxima etapa recomendada:
+- implementar a matriz sem valores derivada da matriz com valores e deixar o termo por favorecido para a microetapa seguinte
