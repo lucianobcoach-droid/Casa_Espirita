@@ -3526,3 +3526,14 @@ Riscos principais antes de migration:
   - permitir mesmo `mes/ano` em subcategorias controladas diferentes
   - bloquear duplicidade tambem no formulario de edicao do grupo rateado
 - sem alteracao de calculo financeiro, saldos, relatorios, migrations ou banco real; nenhum arquivo SQLite foi alterado/versionado nesta etapa
+
+## Ajuste da mensagem de soma com erro de linha em competencias
+
+- a validacao de competencias foi ajustada para priorizar erros especificos de linha (mes/ano/valor invalidos, valor nao positivo ou duplicidade)
+- quando existe erro de linha, a validacao agregada de soma nao e exibida para aquela mesma lista de competencias, evitando mensagem indevida
+- regra aplicada em:
+  - lancamento simples
+  - lancamento com rateio controlado na criacao
+  - edicao de grupo rateado
+- quando todas as linhas estao validas, a validacao de soma continua obrigatoria e inalterada
+- sem alteracao de calculo financeiro, saldos, relatorios ou banco real; nenhum arquivo SQLite foi alterado/versionado

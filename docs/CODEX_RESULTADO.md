@@ -4714,3 +4714,11 @@ Não houve alteração de código funcional nesta etapa.
   - validacao de soma segue fechando contra o valor controlado do lancamento/subcategoria, sem mudanca de calculo
 - cobertura de testes ajustada para bloquear duplicidade no simples e no rateio, manter permissao de repeticao entre lancamentos diferentes e confirmar nao regressao da etapa anterior
 - sem alteracao de models, migrations, calculos financeiros, saldos, relatorios ou banco real; nenhum arquivo SQLite foi alterado/versionado
+
+## Microetapa: evita erro de soma quando ha erro de linha em competencias
+
+- corrigida a validacao para nao emitir erro agregado de soma quando a lista de competencias ja contem erro de linha (inclusive duplicidade de mes/ano)
+- exemplo corrigido: `50 + 60` no mesmo `mes/ano` agora mostra apenas erro de duplicidade, sem erro de soma indevido
+- a regra vale para lancamento simples e rateio controlado (criacao e edicao de grupo)
+- validacao de soma permanece ativa quando as linhas sao validas
+- sem alteracao de models, migrations, calculos financeiros, saldos, relatorios ou banco real; nenhum arquivo SQLite foi alterado/versionado

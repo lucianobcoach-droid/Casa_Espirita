@@ -454,14 +454,15 @@ class LancamentoFinanceiroForm(forms.ModelForm):
         field_name: str,
         empty_message: str,
         line_prefix: str = '',
-    ) -> tuple[list[dict[str, object]], Decimal]:
+    ) -> tuple[list[dict[str, object]], Decimal, bool]:
         if not linhas_brutas:
             self.add_error(field_name, empty_message)
-            return [], Decimal('0.00')
+            return [], Decimal('0.00'), True
 
         linhas_validas: list[dict[str, object]] = []
         soma_competencias = Decimal('0.00')
         competencias_vistas: set[tuple[int, int]] = set()
+        houve_erro_linha = False
         for indice, linha in enumerate(linhas_brutas, start=1):
             mes_raw = linha.get('mes', '')
             ano_raw = linha.get('ano', '')
@@ -473,30 +474,36 @@ class LancamentoFinanceiroForm(forms.ModelForm):
                 mes = int(mes_raw)
             except (TypeError, ValueError):
                 self.add_error(field_name, f'{line_prefix}Linha {indice}: informe um mes valido.')
+                houve_erro_linha = True
                 continue
 
             try:
                 ano = int(ano_raw)
             except (TypeError, ValueError):
                 self.add_error(field_name, f'{line_prefix}Linha {indice}: informe um ano valido.')
+                houve_erro_linha = True
                 continue
 
             try:
                 valor = Decimal(valor_raw)
             except (InvalidOperation, TypeError):
                 self.add_error(field_name, f'{line_prefix}Linha {indice}: informe um valor valido.')
+                houve_erro_linha = True
                 continue
 
             if mes < 1 or mes > 12:
                 self.add_error(field_name, f'{line_prefix}Linha {indice}: o mes precisa ficar entre 1 e 12.')
+                houve_erro_linha = True
                 continue
 
             if ano < 1900 or ano > 9999:
                 self.add_error(field_name, f'{line_prefix}Linha {indice}: informe um ano valido.')
+                houve_erro_linha = True
                 continue
 
             if valor <= Decimal('0.00'):
                 self.add_error(field_name, f'{line_prefix}Linha {indice}: o valor precisa ser positivo.')
+                houve_erro_linha = True
                 continue
 
             competencia_key = (ano, mes)
@@ -505,6 +512,7 @@ class LancamentoFinanceiroForm(forms.ModelForm):
                     field_name,
                     f'{line_prefix}Ja existe uma competencia informada para este mes/ano. Agrupe o valor em uma unica linha.',
                 )
+                houve_erro_linha = True
                 continue
 
             competencias_vistas.add(competencia_key)
@@ -519,14 +527,14 @@ class LancamentoFinanceiroForm(forms.ModelForm):
 
         if not linhas_validas:
             self.add_error(field_name, empty_message)
-            return [], Decimal('0.00')
+            return [], Decimal('0.00'), True
 
-        return linhas_validas, soma_competencias
+        return linhas_validas, soma_competencias, houve_erro_linha
 
     def _validar_competencias(self, cleaned_data: dict) -> None:
         linhas_brutas = self._parse_competencias_payload(cleaned_data.get('competencias_payload', ''))
         self.competencias_linhas_iniciais = linhas_brutas or [{'mes': '', 'ano': '', 'valor': ''}]
-        linhas_validas, soma_competencias = self._validar_competencias_linhas(
+        linhas_validas, soma_competencias, houve_erro_linha = self._validar_competencias_linhas(
             linhas_brutas,
             field_name='competencias_payload',
             empty_message='Informe ao menos uma competencia atendida.',
@@ -536,7 +544,7 @@ class LancamentoFinanceiroForm(forms.ModelForm):
             return
 
         valor_controlado = cleaned_data.get('valor')
-        if valor_controlado is None or soma_competencias != valor_controlado:
+        if not houve_erro_linha and (valor_controlado is None or soma_competencias != valor_controlado):
             self.add_error(
                 'competencias_payload',
                 'A soma das competencias deve ser igual ao valor controlado do lancamento.',
@@ -566,7 +574,7 @@ class LancamentoFinanceiroForm(forms.ModelForm):
             categoria = linha['categoria']
             categoria_key = str(categoria.pk)
             linhas_brutas = competencias_por_categoria_brutas.get(categoria_key, [])
-            linhas_validas, soma_competencias = self._validar_competencias_linhas(
+            linhas_validas, soma_competencias, houve_erro_linha = self._validar_competencias_linhas(
                 linhas_brutas,
                 field_name='competencias_rateio_payload',
                 empty_message=f'Informe ao menos uma competencia atendida para a subcategoria "{categoria}".',
@@ -576,7 +584,7 @@ class LancamentoFinanceiroForm(forms.ModelForm):
                 continue
 
             valor_controlado = linha['valor']
-            if soma_competencias != valor_controlado:
+            if not houve_erro_linha and soma_competencias != valor_controlado:
                 self.add_error(
                     'competencias_rateio_payload',
                     f'A soma das competencias deve ser igual ao valor controlado da subcategoria no rateio: {categoria}.',
@@ -922,17 +930,18 @@ class LancamentoFinanceiroGrupoRateioForm(forms.ModelForm):
         linhas_brutas: list[dict[str, str]],
         *,
         categoria: CategoriaFinanceira,
-    ) -> tuple[list[dict[str, object]], Decimal]:
+    ) -> tuple[list[dict[str, object]], Decimal, bool]:
         if not linhas_brutas:
             self.add_error(
                 'competencias_rateio_payload',
                 f'Informe ao menos uma competencia atendida para a subcategoria "{categoria}".',
             )
-            return [], Decimal('0.00')
+            return [], Decimal('0.00'), True
 
         linhas_validas: list[dict[str, object]] = []
         soma_competencias = Decimal('0.00')
         competencias_vistas: set[tuple[int, int]] = set()
+        houve_erro_linha = False
         for indice, linha in enumerate(linhas_brutas, start=1):
             mes_raw = linha.get('mes', '')
             ano_raw = linha.get('ano', '')
@@ -944,18 +953,21 @@ class LancamentoFinanceiroGrupoRateioForm(forms.ModelForm):
                 mes = int(mes_raw)
             except (TypeError, ValueError):
                 self.add_error('competencias_rateio_payload', f'{categoria}: Linha {indice}: informe um mes valido.')
+                houve_erro_linha = True
                 continue
 
             try:
                 ano = int(ano_raw)
             except (TypeError, ValueError):
                 self.add_error('competencias_rateio_payload', f'{categoria}: Linha {indice}: informe um ano valido.')
+                houve_erro_linha = True
                 continue
 
             try:
                 valor = Decimal(valor_raw)
             except (InvalidOperation, TypeError):
                 self.add_error('competencias_rateio_payload', f'{categoria}: Linha {indice}: informe um valor valido.')
+                houve_erro_linha = True
                 continue
 
             if mes < 1 or mes > 12:
@@ -963,14 +975,17 @@ class LancamentoFinanceiroGrupoRateioForm(forms.ModelForm):
                     'competencias_rateio_payload',
                     f'{categoria}: Linha {indice}: o mes precisa ficar entre 1 e 12.',
                 )
+                houve_erro_linha = True
                 continue
 
             if ano < 1900 or ano > 9999:
                 self.add_error('competencias_rateio_payload', f'{categoria}: Linha {indice}: informe um ano valido.')
+                houve_erro_linha = True
                 continue
 
             if valor <= Decimal('0.00'):
                 self.add_error('competencias_rateio_payload', f'{categoria}: Linha {indice}: o valor precisa ser positivo.')
+                houve_erro_linha = True
                 continue
 
             competencia_key = (ano, mes)
@@ -979,6 +994,7 @@ class LancamentoFinanceiroGrupoRateioForm(forms.ModelForm):
                     'competencias_rateio_payload',
                     f'{categoria}: Ja existe uma competencia informada para este mes/ano. Agrupe o valor em uma unica linha.',
                 )
+                houve_erro_linha = True
                 continue
 
             competencias_vistas.add(competencia_key)
@@ -996,8 +1012,8 @@ class LancamentoFinanceiroGrupoRateioForm(forms.ModelForm):
                 'competencias_rateio_payload',
                 f'Informe ao menos uma competencia atendida para a subcategoria "{categoria}".',
             )
-            return [], Decimal('0.00')
-        return linhas_validas, soma_competencias
+            return [], Decimal('0.00'), True
+        return linhas_validas, soma_competencias, houve_erro_linha
 
     def clean(self):
         cleaned_data = super().clean()
@@ -1116,13 +1132,13 @@ class LancamentoFinanceiroGrupoRateioForm(forms.ModelForm):
         competencias_rateio_por_categoria: dict[int, list[dict[str, object]]] = {}
         for linha in linhas_controladas:
             categoria = linha['categoria']
-            linhas_competencia, soma_competencias = self._validar_competencias_linhas_rateio(
+            linhas_competencia, soma_competencias, houve_erro_linha = self._validar_competencias_linhas_rateio(
                 competencias_brutas.get(str(categoria.pk), []),
                 categoria=categoria,
             )
             if not linhas_competencia:
                 continue
-            if soma_competencias != linha['valor']:
+            if not houve_erro_linha and soma_competencias != linha['valor']:
                 self.add_error(
                     'competencias_rateio_payload',
                     f'A soma das competencias deve ser igual ao valor controlado da subcategoria no rateio: {categoria}.',

@@ -2024,9 +2024,10 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
     def test_lancamento_simples_bloqueia_competencia_duplicada_no_mesmo_mes_ano(self):
         form = LancamentoFinanceiroForm(
             data=self._dados_lancamento(
+                valor='110.00',
                 competencias_payload=json.dumps([
                     {'mes': '1', 'ano': '2026', 'valor': '50.00'},
-                    {'mes': '1', 'ano': '2026', 'valor': '50.00'},
+                    {'mes': '1', 'ano': '2026', 'valor': '60.00'},
                 ]),
             )
         )
@@ -2034,6 +2035,10 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
         self.assertFalse(form.is_valid())
         self.assertIn(
             'Ja existe uma competencia informada para este mes/ano. Agrupe o valor em uma unica linha.',
+            form.errors['competencias_payload'],
+        )
+        self.assertNotIn(
+            'A soma das competencias deve ser igual ao valor controlado do lancamento.',
             form.errors['competencias_payload'],
         )
 
@@ -2139,10 +2144,15 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
 
     def test_rateio_bloqueia_competencia_duplicada_na_mesma_subcategoria_controlada(self):
         dados = self._dados_rateio(
+            rateio_payload=json.dumps([
+                {'categoria': str(self.categoria_controlada.pk), 'valor': '110.00'},
+                {'categoria': str(self.categoria_nao_controlada.pk), 'valor': '30.00'},
+            ]),
+            valor_total_documento='140.00',
             competencias_rateio_payload=json.dumps({
                 str(self.categoria_controlada.pk): [
                     {'mes': '1', 'ano': '2026', 'valor': '50.00'},
-                    {'mes': '1', 'ano': '2026', 'valor': '50.00'},
+                    {'mes': '1', 'ano': '2026', 'valor': '60.00'},
                 ]
             }),
         )
@@ -2151,6 +2161,10 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
         self.assertFalse(form.is_valid())
         self.assertIn(
             f'{self.categoria_controlada}: Ja existe uma competencia informada para este mes/ano. Agrupe o valor em uma unica linha.',
+            form.errors['competencias_rateio_payload'],
+        )
+        self.assertNotIn(
+            f'A soma das competencias deve ser igual ao valor controlado da subcategoria no rateio: {self.categoria_controlada}.',
             form.errors['competencias_rateio_payload'],
         )
 
@@ -2492,6 +2506,10 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
         self.assertFalse(form.is_valid())
         self.assertIn(
             f'{self.categoria_controlada}: Ja existe uma competencia informada para este mes/ano. Agrupe o valor em uma unica linha.',
+            form.errors['competencias_rateio_payload'],
+        )
+        self.assertNotIn(
+            f'A soma das competencias deve ser igual ao valor controlado da subcategoria no rateio: {self.categoria_controlada}.',
             form.errors['competencias_rateio_payload'],
         )
 
