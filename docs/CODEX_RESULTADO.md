@@ -4751,3 +4751,23 @@ Não houve alteração de código funcional nesta etapa.
   - exportacao
   - impressao refinada
 - sem alteracao de models, migrations, calculos financeiros, saldos, relatorios existentes ou banco real; nenhum arquivo SQLite foi alterado/versionado
+
+## Microetapa: matriz sem valores / frequencia visual
+
+- a usuaria validou a matriz com valores em uso real e a mesma tela `/financeiro/frequencia-competencias/` passou a oferecer tambem o filtro `Formato da matriz`
+- opcoes entregues:
+  - `Com valores`
+  - `Sem valores (frequencia)`
+- a nova visualizacao nao cria regra paralela: ela deriva da mesma agregacao de `AlocacaoCompetenciaFinanceira` ja usada na matriz monetaria
+- regra visual adotada:
+  - `✓` verde quando existe valor alocado maior que zero na competencia filtrada
+  - `×` vermelho quando nao existe contribuicao naquela competencia
+- totais do modo sem valores:
+  - por favorecido = quantidade de competencias com contribuicao
+  - por mes = quantidade de favorecidos com contribuicao
+  - total geral = total de ocorrencias positivas na matriz
+- os filtros de periodo, subcategoria controlada e status continuam respeitados nos dois formatos
+- a mesma permissao `financeiro.resumo_financeiro.visualizar` continua protegendo a tela
+- cobertura de testes adicionada para modo padrao com valores, indicadores positivos/negativos, totais de frequencia e respeito aos filtros no modo sem valores
+- impressao ainda nao foi implementada; a proxima etapa registrada e preparar a matriz para caber na mesma pagina, reaproveitando margens e padrao de impressao do modulo
+- sem alteracao de models, migrations, calculos financeiros, saldos, relatorios existentes ou banco real; nenhum arquivo SQLite foi alterado/versionado

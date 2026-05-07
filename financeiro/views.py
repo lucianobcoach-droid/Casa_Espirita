@@ -4485,11 +4485,17 @@ class FrequenciaCompetenciasView(FinanceiroPermissaoMixin, TemplateView):
     STATUS_TODOS = 'todos'
     STATUS_QUITADOS = 'quitado'
     STATUS_ABERTOS = 'aberto'
+    FORMATO_VALORES = 'valores'
+    FORMATO_FREQUENCIA = 'frequencia'
     MAX_COMPETENCIAS = 24
     status_opcoes = (
         (STATUS_TODOS, 'Todos'),
         (STATUS_QUITADOS, 'Quitados'),
         (STATUS_ABERTOS, 'Em aberto'),
+    )
+    formato_opcoes = (
+        (FORMATO_VALORES, 'Com valores'),
+        (FORMATO_FREQUENCIA, 'Sem valores (frequencia)'),
     )
 
     def _periodo_padrao(self) -> tuple[date, date]:
@@ -4557,6 +4563,12 @@ class FrequenciaCompetenciasView(FinanceiroPermissaoMixin, TemplateView):
             return status
         return self.STATUS_TODOS
 
+    def _parse_formato_matriz(self) -> str:
+        formato = (self.request.GET.get('formato_matriz') or '').strip().lower()
+        if formato in {self.FORMATO_VALORES, self.FORMATO_FREQUENCIA}:
+            return formato
+        return self.FORMATO_VALORES
+
     def _status_lancamentos_queryset(self, status: str) -> list[str]:
         if status == self.STATUS_QUITADOS:
             return [LancamentoFinanceiro.StatusLancamento.QUITADO]
@@ -4594,6 +4606,7 @@ class FrequenciaCompetenciasView(FinanceiroPermissaoMixin, TemplateView):
         )
         periodo_vals, competencia_inicial, competencia_final, periodo_error = self._parse_competencia_periodo()
         status_selecionado = self._parse_status()
+        formato_matriz = self._parse_formato_matriz()
         pessoas_recorrentes = list(
             PessoaFinanceira.objects.filter(contribuinte_recorrente=True).order_by('nome', 'pk')
         )
@@ -4604,6 +4617,8 @@ class FrequenciaCompetenciasView(FinanceiroPermissaoMixin, TemplateView):
             'categoria_selecionada': categoria_raw,
             'status_opcoes': self.status_opcoes,
             'status_selecionado': status_selecionado,
+            'formato_opcoes': self.formato_opcoes,
+            'formato_matriz': formato_matriz,
             'meses_opcoes': [
                 {'valor': indice + 1, 'rotulo': nome}
                 for indice, nome in enumerate(MESES_PT_BR)
@@ -4613,6 +4628,8 @@ class FrequenciaCompetenciasView(FinanceiroPermissaoMixin, TemplateView):
             'matriz_linhas': [],
             'totais_colunas': [],
             'total_geral': Decimal('0.00'),
+            'totais_frequencia': [],
+            'total_geral_frequencia': 0,
             'quantidade_favorecidos': len(pessoas_recorrentes),
             'filtros_ativos': bool(self.request.GET),
             'status_label': dict(self.status_opcoes).get(status_selecionado, 'Todos'),
@@ -4695,13 +4712,21 @@ class FrequenciaCompetenciasView(FinanceiroPermissaoMixin, TemplateView):
                 valores_por_favorecido_competencia.get((pessoa.pk, ano, mes), Decimal('0.00'))
                 for ano, mes in competencias
             ]
+            presencas_linha = [valor > Decimal('0.00') for valor in valores_linha]
             matriz_linhas.append(
                 {
                     'pessoa': pessoa,
                     'valores': valores_linha,
+                    'presencas': presencas_linha,
                     'total': sum(valores_linha, Decimal('0.00')),
+                    'total_frequencia': sum(1 for presente in presencas_linha if presente),
                 }
             )
+
+        totais_frequencia = [
+            sum(1 for linha in matriz_linhas if linha['presencas'][indice])
+            for indice in range(len(competencias_colunas))
+        ]
 
         context.update(
             {
@@ -4709,6 +4734,8 @@ class FrequenciaCompetenciasView(FinanceiroPermissaoMixin, TemplateView):
                 'matriz_linhas': matriz_linhas,
                 'totais_colunas': totais_colunas,
                 'total_geral': sum(totais_colunas, Decimal('0.00')),
+                'totais_frequencia': totais_frequencia,
+                'total_geral_frequencia': sum(totais_frequencia),
                 'quantidade_competencias': len(competencias_colunas),
                 'quantidade_favorecidos': len(matriz_linhas),
                 'categoria_filtro_label': (

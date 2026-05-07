@@ -141,6 +141,9 @@ Este documento consolida regras permanentes do sistema. Ele não substitui o his
 - As colunas da matriz devem ser geradas por competencia mensal explicita no intervalo selecionado, e as celulas devem somar os valores alocados daquela pessoa na mesma competencia.
 - A primeira versao da matriz aceita filtro por competencia inicial/final, subcategoria controlada e status do lancamento (`Todos`, `Quitados`, `Em aberto`).
 - No filtro de status da matriz, `Todos` considera apenas `quitado` e `aberto`; `cancelado` fica fora da leitura gerencial desta tela.
+- A matriz sem valores deve ser apenas uma visualizacao derivada da matriz com valores: contribuicao existente (`valor_alocado > 0`) vira indicador positivo, ausencia de contribuicao vira indicador negativo.
+- No modo sem valores, o total por favorecido deve contar competencias com contribuicao no periodo, o total por mes deve contar favorecidos com contribuicao naquela competencia e o total geral deve contar ocorrencias positivas na matriz.
+- A impressao da matriz deve ficar para etapa posterior, sem abrir nova fonte de dados nem nova regra de negocio para frequencia.
 - Em clone comum, competencias existentes nao devem ser copiadas automaticamente para o novo lancamento.
 - Em clone de rateio, competencias tambem nao devem ser copiadas automaticamente para evitar duplicidade de quitacao por competencia.
 - No MVP inicial, nao abrir modulo separado de baixa; manter o fluxo no proprio lancamento e tratar termo por favorecido como segunda onda apos validacao da matriz.

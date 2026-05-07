@@ -2765,6 +2765,22 @@ class FrequenciaCompetenciasViewTests(TestCase):
         self.assertContains(response, 'Beatriz Sem Alocacao')
         self.assertNotContains(response, 'Carlos Avulso')
 
+    def test_matriz_abre_em_formato_com_valores_por_padrao(self):
+        self._login_com_permissoes(
+            'user-matriz-formato-padrao',
+            ['financeiro.resumo_financeiro.visualizar'],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:frequencia-competencias'),
+            self._parametros_base(),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['formato_matriz'], 'valores')
+        self.assertContains(response, 'Matriz mensal com valores')
+        self.assertContains(response, 'R$ 100,00')
+
     def test_matriz_soma_alocacoes_por_competencia_e_ignora_item_nao_controlado(self):
         self._login_com_permissoes(
             'user-matriz-soma',
@@ -2806,6 +2822,68 @@ class FrequenciaCompetenciasViewTests(TestCase):
             [Decimal('100.00'), Decimal('120.00'), Decimal('100.00')],
         )
         self.assertEqual(response.context['total_geral'], Decimal('320.00'))
+
+    def test_matriz_frequencia_exibe_indicadores_e_totais_por_ocorrencia(self):
+        self._login_com_permissoes(
+            'user-matriz-frequencia',
+            ['financeiro.resumo_financeiro.visualizar'],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:frequencia-competencias'),
+            self._parametros_base(formato_matriz='frequencia'),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['formato_matriz'], 'frequencia')
+        linha_joao = self._linha_por_nome(response, 'Joao Matriz')
+        linha_maria = self._linha_por_nome(response, 'Maria Matriz')
+        linha_beatriz = self._linha_por_nome(response, 'Beatriz Sem Alocacao')
+        self.assertEqual(linha_joao['presencas'], [True, True, True])
+        self.assertEqual(linha_joao['total_frequencia'], 3)
+        self.assertEqual(linha_maria['presencas'], [False, True, False])
+        self.assertEqual(linha_maria['total_frequencia'], 1)
+        self.assertEqual(linha_beatriz['presencas'], [False, False, False])
+        self.assertEqual(linha_beatriz['total_frequencia'], 0)
+        self.assertEqual(response.context['totais_frequencia'], [1, 2, 1])
+        self.assertEqual(response.context['total_geral_frequencia'], 4)
+        self.assertContains(response, 'aria-label="Com contribuicao"', count=4)
+        self.assertContains(response, 'aria-label="Sem contribuicao"', count=5)
+        self.assertContains(response, '4 ocorrencias')
+
+    def test_matriz_frequencia_respeita_filtros_de_status_categoria_e_periodo(self):
+        self._login_com_permissoes(
+            'user-matriz-frequencia-filtros',
+            ['financeiro.resumo_financeiro.visualizar'],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:frequencia-competencias'),
+            self._parametros_base(
+                mes_inicial='2',
+                ano_inicial='2026',
+                mes_final='3',
+                ano_final='2026',
+                categoria=str(self.categoria_controlada_1.pk),
+                status='quitado',
+                formato_matriz='frequencia',
+            ),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            [coluna['label'] for coluna in response.context['competencias_colunas']],
+            ['Fev/2026', 'Mar/2026'],
+        )
+        linha_joao = self._linha_por_nome(response, 'Joao Matriz')
+        linha_maria = self._linha_por_nome(response, 'Maria Matriz')
+        linha_beatriz = self._linha_por_nome(response, 'Beatriz Sem Alocacao')
+        self.assertEqual(linha_joao['presencas'], [False, True])
+        self.assertEqual(linha_joao['total_frequencia'], 1)
+        self.assertEqual(linha_maria['presencas'], [False, False])
+        self.assertEqual(linha_beatriz['presencas'], [False, False])
+        self.assertEqual(response.context['totais_frequencia'], [0, 1])
+        self.assertEqual(response.context['total_geral_frequencia'], 1)
 
     def test_matriz_filtra_status_quitado_e_aberto(self):
         self._login_com_permissoes(

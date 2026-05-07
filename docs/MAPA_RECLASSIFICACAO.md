@@ -1026,3 +1026,27 @@ Consolidacao:
 
 Proxima etapa recomendada:
 - implementar a matriz sem valores derivada da base ja entregue e manter termo por favorecido para a onda seguinte
+
+### 41. Frequencia por competencia - matriz sem valores derivada
+
+Status: IMPLEMENTADO
+
+Consolidacao:
+- a tela `/financeiro/frequencia-competencias/` passou a alternar entre matriz com valores e matriz sem valores/frequencia visual
+- a nova leitura continua derivada de `AlocacaoCompetenciaFinanceira`, sem controle paralelo
+- regra visual consolidada:
+  - `✓` quando ha contribuicao no mes filtrado
+  - `×` quando nao ha contribuicao
+- totais entregues no modo sem valores:
+  - por favorecido = quantidade de competencias positivas
+  - por mes = quantidade de favorecidos com contribuicao
+  - total geral = total de ocorrencias positivas
+- filtros preservados:
+  - competencia inicial/final
+  - subcategoria controlada
+  - status (`Todos`, `Quitados`, `Em aberto`)
+- impressao ainda nao implementada
+- termo por favorecido ainda nao implementado
+
+Proxima etapa recomendada:
+- preparar a impressao da matriz com tentativa de acomodar todas as colunas na mesma pagina, reaproveitando margens e padrao de impressao do modulo

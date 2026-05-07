@@ -1080,3 +1080,21 @@ Leituras gerenciais:
 
 Proxima etapa recomendada:
 - implementar a matriz sem valores derivada da matriz com valores e deixar o termo por favorecido para a microetapa seguinte
+
+## 22. Frequencia por competencia - matriz sem valores derivada
+
+- etapa funcional concluida para a segunda visualizacao da mesma tela `Frequencia por competencia`
+- regra entregue:
+  - filtro `Formato da matriz` com opcoes `Com valores` e `Sem valores (frequencia)`
+  - modo sem valores derivado da mesma base `AlocacaoCompetenciaFinanceira`
+  - `✓` verde quando ha contribuicao na competencia filtrada
+  - `×` vermelho quando nao ha contribuicao
+  - totais de frequencia por favorecido, por mes e geral
+  - filtros de periodo, subcategoria controlada e status preservados
+- recortes preservados:
+  - nenhuma impressao implementada nesta etapa
+  - nenhum termo por favorecido implementado nesta etapa
+  - nenhuma exportacao implementada nesta etapa
+
+Proxima etapa recomendada:
+- preparar a impressao da matriz tentando acomodar todas as colunas na mesma pagina, reaproveitando margens e padrao de impressao ja usados no sistema

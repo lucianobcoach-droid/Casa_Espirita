@@ -151,6 +151,35 @@
         font-weight: 700;
     }
 
+    .financeiro-frequencia-frequency-cell,
+    .financeiro-frequencia-frequency-total {
+        min-width: 6rem;
+        text-align: center;
+        white-space: nowrap;
+    }
+
+    .financeiro-frequencia-indicator {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.7rem;
+        height: 1.7rem;
+        border-radius: 999px;
+        font-size: 1rem;
+        font-weight: 800;
+        line-height: 1;
+    }
+
+    .financeiro-frequencia-indicator-positive {
+        color: #166534;
+        background: #dcfce7;
+    }
+
+    .financeiro-frequencia-indicator-negative {
+        color: #b91c1c;
+        background: #fee2e2;
+    }
+
     .financeiro-frequencia-table tfoot tr {
         background: #eef4fb;
     }
@@ -180,11 +209,12 @@
         <div>
             <h1 class="financeiro-frequencia-title">Frequencia por competencia</h1>
             <p class="financeiro-frequencia-subtitle">
-                Matriz mensal com valores alocados por competencia para pessoas recorrentes e subcategorias controladas.
+                Matriz mensal derivada das alocacoes de competencia, com leitura em valores ou em frequencia visual para pessoas recorrentes e subcategorias controladas.
             </p>
             <div class="financeiro-frequencia-meta">
                 <span class="financeiro-frequencia-meta-item"><strong>Fonte:</strong> AlocacaoCompetenciaFinanceira</span>
                 <span class="financeiro-frequencia-meta-item"><strong>Status:</strong> {{ status_label }}</span>
+                <span class="financeiro-frequencia-meta-item"><strong>Formato:</strong> {% if formato_matriz == 'frequencia' %}Sem valores{% else %}Com valores{% endif %}</span>
                 {% if periodo_competencia_label %}
                     <span class="financeiro-frequencia-meta-item"><strong>Periodo:</strong> {{ periodo_competencia_label }}</span>
                 {% endif %}
@@ -251,6 +281,16 @@
                     </div>
                     <p class="help">Todos considera quitados e em aberto.</p>
                 </div>
+                <div class="column is-6-tablet is-3-desktop">
+                    <label class="label" for="id_formato_matriz">Formato da matriz</label>
+                    <div class="select is-fullwidth">
+                        <select id="id_formato_matriz" name="formato_matriz">
+                            {% for valor, rotulo in formato_opcoes %}
+                                <option value="{{ valor }}" {% if formato_matriz == valor %}selected{% endif %}>{{ rotulo }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
                 <div class="column is-12-tablet is-2-desktop">
                     <label class="label">&nbsp;</label>
                     <div class="buttons">
@@ -274,15 +314,32 @@
     <section class="financeiro-frequencia-panel">
         <div class="financeiro-frequencia-panel-header">
             <div>
-                <h2 class="financeiro-frequencia-panel-title">Matriz mensal com valores</h2>
+                <h2 class="financeiro-frequencia-panel-title">
+                    {% if formato_matriz == 'frequencia' %}
+                        Matriz mensal sem valores
+                    {% else %}
+                        Matriz mensal com valores
+                    {% endif %}
+                </h2>
                 <p class="financeiro-frequencia-panel-note">
-                    Linhas para favorecidos recorrentes, colunas por competencia mensal e totais por favorecido, por mes e geral.
+                    {% if formato_matriz == 'frequencia' %}
+                        Linhas para favorecidos recorrentes, colunas por competencia mensal e leitura visual de contribuicao por mes.
+                    {% else %}
+                        Linhas para favorecidos recorrentes, colunas por competencia mensal e totais por favorecido, por mes e geral.
+                    {% endif %}
                 </p>
             </div>
             <div class="financeiro-frequencia-meta">
                 <span class="financeiro-frequencia-meta-item"><strong>Favorecidos:</strong> {{ quantidade_favorecidos }}</span>
                 <span class="financeiro-frequencia-meta-item"><strong>Competencias:</strong> {{ quantidade_competencias|default:0 }}</span>
-                <span class="financeiro-frequencia-meta-item"><strong>Total geral:</strong> R$ {{ total_geral|br_money }}</span>
+                <span class="financeiro-frequencia-meta-item">
+                    <strong>Total geral:</strong>
+                    {% if formato_matriz == 'frequencia' %}
+                        {{ total_geral_frequencia }} ocorrencias
+                    {% else %}
+                        R$ {{ total_geral|br_money }}
+                    {% endif %}
+                </span>
             </div>
         </div>
 
@@ -293,7 +350,7 @@
                         <tr>
                             <th>Favorecido</th>
                             {% for coluna in competencias_colunas %}
-                                <th class="financeiro-frequencia-cell">{{ coluna.label }}</th>
+                                <th class="{% if formato_matriz == 'frequencia' %}financeiro-frequencia-frequency-cell{% else %}financeiro-frequencia-cell{% endif %}">{{ coluna.label }}</th>
                             {% endfor %}
                             <th class="financeiro-frequencia-total">Total</th>
                         </tr>
@@ -305,16 +362,29 @@
                                     <strong>{{ linha.pessoa.nome }}</strong>
                                     <span class="financeiro-meta">{{ linha.pessoa.codigo }}</span>
                                 </td>
-                                {% for valor in linha.valores %}
-                                    <td class="financeiro-frequencia-cell">
-                                        {% if valor %}
-                                            R$ {{ valor|br_money }}
-                                        {% else %}
-                                            <span class="financeiro-frequencia-empty">-</span>
-                                        {% endif %}
-                                    </td>
-                                {% endfor %}
-                                <td class="financeiro-frequencia-total">R$ {{ linha.total|br_money }}</td>
+                                {% if formato_matriz == 'frequencia' %}
+                                    {% for presenca in linha.presencas %}
+                                        <td class="financeiro-frequencia-frequency-cell">
+                                            {% if presenca %}
+                                                <span class="financeiro-frequencia-indicator financeiro-frequencia-indicator-positive" title="Com contribuicao" aria-label="Com contribuicao">✓</span>
+                                            {% else %}
+                                                <span class="financeiro-frequencia-indicator financeiro-frequencia-indicator-negative" title="Sem contribuicao" aria-label="Sem contribuicao">×</span>
+                                            {% endif %}
+                                        </td>
+                                    {% endfor %}
+                                    <td class="financeiro-frequencia-total">{{ linha.total_frequencia }}/{{ quantidade_competencias|default:0 }}</td>
+                                {% else %}
+                                    {% for valor in linha.valores %}
+                                        <td class="financeiro-frequencia-cell">
+                                            {% if valor %}
+                                                R$ {{ valor|br_money }}
+                                            {% else %}
+                                                <span class="financeiro-frequencia-empty">-</span>
+                                            {% endif %}
+                                        </td>
+                                    {% endfor %}
+                                    <td class="financeiro-frequencia-total">R$ {{ linha.total|br_money }}</td>
+                                {% endif %}
                             </tr>
                         {% empty %}
                             <tr>
@@ -327,16 +397,29 @@
                     <tfoot>
                         <tr>
                             <th>Total por mes</th>
-                            {% for total_mes in totais_colunas %}
-                                <td class="financeiro-frequencia-cell">
-                                    {% if total_mes %}
-                                        R$ {{ total_mes|br_money }}
-                                    {% else %}
-                                        <span class="financeiro-frequencia-empty">-</span>
-                                    {% endif %}
-                                </td>
-                            {% endfor %}
-                            <td class="financeiro-frequencia-total">R$ {{ total_geral|br_money }}</td>
+                            {% if formato_matriz == 'frequencia' %}
+                                {% for total_mes in totais_frequencia %}
+                                    <td class="financeiro-frequencia-frequency-cell">
+                                        {% if total_mes %}
+                                            {{ total_mes }}
+                                        {% else %}
+                                            <span class="financeiro-frequencia-empty">-</span>
+                                        {% endif %}
+                                    </td>
+                                {% endfor %}
+                                <td class="financeiro-frequencia-total">{{ total_geral_frequencia }} ocorrencias</td>
+                            {% else %}
+                                {% for total_mes in totais_colunas %}
+                                    <td class="financeiro-frequencia-cell">
+                                        {% if total_mes %}
+                                            R$ {{ total_mes|br_money }}
+                                        {% else %}
+                                            <span class="financeiro-frequencia-empty">-</span>
+                                        {% endif %}
+                                    </td>
+                                {% endfor %}
+                                <td class="financeiro-frequencia-total">R$ {{ total_geral|br_money }}</td>
+                            {% endif %}
                         </tr>
                     </tfoot>
                 </table>

@@ -3140,6 +3140,27 @@ Com filtro por periodo:
 
 ## Primeiro enforcement backend de permissoes no modulo financeiro
 
+## Frequencia por competencia - matriz sem valores derivada
+
+- a matriz com valores ja validada pela usuaria em uso real passou a oferecer tambem o formato `Sem valores (frequencia)` na mesma tela `/financeiro/frequencia-competencias/`
+- a derivacao continua vindo da mesma base agregada de `AlocacaoCompetenciaFinanceira`, sem criar controle paralelo, sem checkbox manual e sem usar valor bruto do lancamento ou do grupo rateado
+- o filtro novo `Formato da matriz` alterna entre:
+  - `Com valores` (modo monetario ja homologado)
+  - `Sem valores (frequencia)` (modo visual)
+- no modo sem valores:
+  - celula com valor alocado maior que zero exibe indicador positivo `✓`
+  - celula sem valor exibe indicador negativo `×`
+  - os mesmos filtros de periodo, subcategoria controlada e status continuam ativos
+  - `Todos` segue considerando apenas `quitado + aberto`
+- totais entregues no modo sem valores:
+  - total por favorecido = quantidade de competencias com contribuicao no periodo
+  - total por mes = quantidade de favorecidos com contribuicao naquela competencia
+  - total geral = total de ocorrencias positivas na matriz
+- a tela continua listando favorecidos recorrentes mesmo sem alocacao no periodo, agora com leitura visual negativa nos meses vazios
+- impressao da matriz ainda nao foi implementada nesta microetapa
+- proxima microetapa recomendada: preparar a impressao da matriz tentando acomodar todas as colunas na mesma pagina, reaproveitando margens e padrao de impressao ja usados no sistema
+- nao houve alteracao em models, migrations, calculos financeiros, saldos, relatorios existentes ou banco real; nenhum arquivo SQLite foi alterado/versionado
+
 - foi criada a camada reutilizavel `financeiro/permissoes.py` com `FinanceiroPermissaoMixin`, integrando `LoginRequiredMixin` e o helper central `usuario_possui_permissao()` do app `configuracoes`
 - o mixin exige usuario autenticado, valida a permissao funcional por codigo canonico em `get_permissao_requerida()` e responde com HTTP 403 e mensagem simples quando o usuario autenticado nao tem a permissao exigida ou nao possui perfil-base ativo
 - o enforcement backend foi aplicado nas views principais do `financeiro`, cobrindo home secundaria, listagens, cadastros, edicoes, exclusoes, extratos, resumo, prestacao de contas, auditoria, importacao/exportacao, download de modelo/inconsistencias, clone comum, clone/edicao de rateio, recibo, acoes em lote e endpoints auxiliares de autocomplete/historico/sugestoes
