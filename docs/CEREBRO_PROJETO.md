@@ -181,6 +181,13 @@ Estas regras devem ser respeitadas em qualquer etapa:
 - como desdobramento futuro dessa frente, o sistema deve poder oferecer relatorio gerencial em matriz mensal com valores por competencia, matriz mensal sem valores com indicador visual de frequencia e termo de quitacao em lote por favorecido contendo competencias feitas ou nao, valor medio contribuido, valor total no periodo e periodo selecionado
 - a unidade minima recomendada para implementacao dessa frente e uma alocacao de competencia com `mes/ano + valor`, e nao checkbox puro de meses
 - em lancamento com rateio, a frequencia deve considerar somente a parte/subcategoria que controla frequencia; o valor total bruto do documento nao deve ser usado automaticamente como base da competencia quando houver itens nao recorrentes no mesmo recebimento
+- como desdobramento futuro de UX dessa mesma frente, o sistema pode oferecer um `Assistente inteligente de competencias`, desde que ele funcione apenas como camada assistida sobre os payloads ja existentes de competencias
+- nesse assistente futuro, a regra conceitual obrigatoria e:
+  - ausencia de valor no mes = `sem quitacao registrada`
+  - valor previamente alocado no mes = `ja possui contribuicao`
+  - valor preenchido no mes atual = gatilho principal da competencia atendida
+- esse assistente nao deve criar nova fonte de persistencia nem substituir o modo manual; ele deve coexistir com o fluxo manual atual como fallback/base segura
+- a implementacao desse assistente deve ocorrer em microetapa propria e manter a regra de que o rateio trabalha apenas por subcategoria controlada, nunca pelo valor bruto total do documento
 
 ### 5.1.3. Diretriz consolidada de simplificacao da navegacao do financeiro
 - a navegacao lateral persistente do `financeiro` deixou de ser a direcao principal do modulo

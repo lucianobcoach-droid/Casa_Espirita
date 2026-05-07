@@ -1121,3 +1121,40 @@ Consolidacao:
 
 Frente futura relacionada (sem implementacao):
 - `Assistente inteligente de competencias` permanece como backlog com SPEC propria obrigatoria antes de mexer em forms/models/templates
+
+### 46. Assistente inteligente de competencias
+
+Status: SPEC FUNCIONAL CONSOLIDADA / AGUARDANDO MICROETAPA DE IMPLEMENTACAO
+
+Consolidacao:
+- a frente deixou de estar apenas como ideia/pendencia generica e passou a ter SPEC funcional fechada para o MVP
+- premissas aprovadas e registradas:
+  - assistente aparece apenas com favorecido recorrente + subcategoria controlada
+  - no rateio, trabalha apenas por subcategoria controlada
+  - meses sugeridos: ultimos 5, mes atual e proximos 5
+  - ausencia de valor no mes = `sem quitacao registrada`
+  - mes com valor alocado = `ja possui contribuicao`
+  - valor preenchido no mes e o gatilho da competencia atendida
+  - checkbox nao e obrigatorio quando o valor ja representa a competencia
+  - modo manual atual permanece
+- desenho tecnico consolidado:
+  - o assistente deve preencher os payloads ja existentes
+  - nao deve criar nova fonte de dados nem novo fluxo de salvamento
+  - deve respeitar soma fechando com o valor controlado e a validacao de duplicidade ja existente
+- fora do MVP:
+  - observacao/complemento por competencia
+  - alteracao de model/migration
+  - baixa separada
+  - historico individual por competencia
+  - termo por favorecido
+  - mudancas na matriz
+
+Riscos:
+- confusao entre contribuicao previa e lancamento atual
+- poluicao excessiva do formulario
+- quebra do fechamento de soma
+- quebra do rateio controlado
+- reintroducao de leitura incorreta de `em aberto`
+
+Proxima microetapa recomendada:
+- implementar o MVP do assistente reaproveitando `competencias_payload` e `competencias_rateio_payload`, com o modo manual preservado

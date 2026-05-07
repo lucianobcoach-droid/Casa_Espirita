@@ -4866,3 +4866,40 @@ Não houve alteração de código funcional nesta etapa.
   - sem dependencia obrigatoria de checkbox quando o valor ja estiver preenchido
   - modo manual atual preservado
   - complemento/observacao por competencia fica para SPEC propria
+
+## Microetapa documental: SPEC funcional do Assistente inteligente de competencias
+
+- microetapa exclusivamente documental/tecnica, sem alteracao de codigo funcional, model, migration, form, view, template ou teste
+- consultei os documentos-base e os pontos tecnicos de `models/forms/views/templates/tests` apenas para embasar a SPEC no fluxo real ja implementado
+- conclusao central da SPEC:
+  - o futuro assistente deve ser camada de UX sobre o fluxo atual de competencias
+  - ele nao deve criar nova fonte de dados
+  - ele deve apenas montar os payloads atuais:
+    - `competencias_payload` no lancamento simples
+    - `competencias_rateio_payload` no rateio
+- desenho funcional consolidado para o MVP futuro:
+  - manter o bloco manual atual como base segura
+  - adicionar um bloco de `Sugestao rapida de competencias`
+  - sugerir 11 competencias por padrao: ultimos 5 meses, mes atual e proximos 5
+  - permitir valor por mes como gatilho da competencia atendida
+  - mostrar quando o mes ja possui contribuicao anterior e, de preferencia, o valor ja alocado como referencia
+  - nao usar `em aberto` como estado automatico para meses sem valor
+- comportamento fechado na SPEC:
+  - lancamento simples: uma grade para a subcategoria controlada do lancamento
+  - rateio: uma grade por subcategoria controlada, sem usar valor bruto do documento
+  - edicao simples e edicao coordenada do grupo devem carregar competencias ja salvas
+  - clone continua sem copiar competencias automaticamente
+- riscos e limites registrados:
+  - confusao entre contribuicao previa e valor do lancamento atual
+  - risco de poluir o formulario
+  - necessidade de manter soma fechando com valor controlado
+  - necessidade de nao quebrar o rateio controlado
+  - complemento/observacao por competencia fora do MVP por exigir SPEC propria e possivel alteracao de model
+- arquivos provaveis para futura microetapa de implementacao registrados na SPEC:
+  - `financeiro/forms.py`
+  - `financeiro/views.py`
+  - `financeiro/tests.py`
+  - `financeiro/templates/financeiro/lancamento_form.html`
+  - `financeiro/templates/financeiro/lancamento_rateio_grupo_form.html`
+- proxima microetapa recomendada registrada:
+  - implementar o MVP do assistente reaproveitando os payloads atuais e preservando integralmente o modo manual

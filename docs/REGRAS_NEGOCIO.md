@@ -148,6 +148,13 @@ Este documento consolida regras permanentes do sistema. Ele não substitui o his
 - No impresso da matriz, as competencias devem usar cabecalho compacto `MM/AAAA`, e a coluna `Favorecido` deve permanecer legivel, com protecao contra quebra letra por letra.
 - Na leitura da frequencia por competencia, ausencia de valor alocado em um mes nao deve ser tratada automaticamente como status `em aberto`; deve ser lida como `sem quitacao registrada`.
 - Para a frente futura de assistencia de competencias, o preenchimento de valor no mes deve ser o gatilho principal da competencia atendida/quitada, sem dependencia obrigatoria de checkbox.
+- Na futura UX assistida de competencias, o assistente deve aparecer apenas quando houver favorecido recorrente e subcategoria controlada; fora desse contexto, o fluxo atual/manual deve permanecer inalterado.
+- Na futura UX assistida de competencias, o assistente do rateio deve operar por subcategoria controlada e nunca pelo valor bruto total do documento.
+- Na futura UX assistida de competencias, a grade padrao recomendada de sugestao deve cobrir ultimos 5 meses, mes atual e proximos 5.
+- Na futura UX assistida de competencias, `sem valor alocado` deve ser lido como `sem quitacao registrada`, e nao como `em aberto` automatico.
+- Na futura UX assistida de competencias, `valor alocado existente` deve ser lido como `ja possui contribuicao` / `ja quitado`, sem impedir novo complemento em outro lancamento.
+- Na futura UX assistida de competencias, o assistente deve ser apenas camada de preenchimento dos payloads atuais (`competencias_payload` e `competencias_rateio_payload`), sem criar nova fonte de persistencia nem duplicar validacoes.
+- Na futura UX assistida de competencias, o modo manual atual deve continuar disponivel como base segura e fallback operacional.
 - Em clone comum, competencias existentes nao devem ser copiadas automaticamente para o novo lancamento.
 - Em clone de rateio, competencias tambem nao devem ser copiadas automaticamente para evitar duplicidade de quitacao por competencia.
 - No MVP inicial, nao abrir modulo separado de baixa; manter o fluxo no proprio lancamento e tratar termo por favorecido como segunda onda apos validacao da matriz.

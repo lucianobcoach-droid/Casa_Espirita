@@ -1168,3 +1168,106 @@ Proxima etapa recomendada:
 
 Proxima etapa recomendada:
 - abrir SPEC propria do `Assistente inteligente de competencias` antes de qualquer mudanca em forms/models/templates
+
+## 27. Assistente inteligente de competencias - SPEC funcional consolidada
+
+- etapa documental concluida: SPEC funcional do MVP futuro definida, sem implementacao nesta microetapa
+
+### Objetivo do MVP futuro
+
+- reduzir digitacao manual de competencias sem alterar a regra financeira ja validada
+- manter o modo manual atual como fallback/base segura
+- adicionar camada assistida sobre os payloads atuais, sem criar nova fonte de salvamento
+
+### Regra de exibicao do assistente
+
+- lancamento simples:
+  - exibir apenas quando houver favorecido recorrente + subcategoria controlada
+- rateio:
+  - exibir apenas para cada subcategoria controlada do grupo
+  - item nao controlado continua fora da frequencia
+  - nao usar valor bruto total do documento
+- se pessoa nao for recorrente ou se a subcategoria nao controlar competencia:
+  - manter comportamento atual sem assistente
+
+### Grade sugerida do MVP
+
+- mostrar por padrao:
+  - ultimos 5 meses
+  - mes atual
+  - proximos 5 meses
+- por mes, a SPEC recomenda exibir:
+  - competencia
+  - estado visual
+  - campo de valor
+  - referencia opcional do valor ja alocado anteriormente naquela pessoa/subcategoria/competencia
+
+### Estados conceituais aprovados
+
+- `Sem quitacao registrada`:
+  - nao ha valor alocado previo naquela competencia
+- `Ja possui contribuicao`:
+  - ja ha valor alocado previo naquela competencia
+- `Informado neste lancamento`:
+  - usuario digitou valor no mes no formulario atual
+
+Observacao:
+- a UX nao deve usar `Em aberto` como estado automatico para mes sem registro
+
+### Regra de inclusao da competencia
+
+- valor positivo preenchido no mes = inclui a competencia no payload do lancamento atual
+- mes vazio = nao inclui
+- zero/negativo = continua sujeito as validacoes existentes
+- soma dos meses informados deve continuar fechando com o valor controlado do lancamento ou da subcategoria controlada do rateio
+
+### Integracao tecnica recomendada
+
+- nao criar novo model
+- nao criar nova persistencia
+- nao duplicar validacoes
+- o assistente deve montar:
+  - `competencias_payload` no simples
+  - `competencias_rateio_payload` no rateio
+- validacoes de soma, duplicidade e escopo por subcategoria controlada continuam centralizadas no backend atual
+
+### Edicao e clone
+
+- edicao simples:
+  - carregar competencias ja salvas no mesmo bloco assistido/manual
+- edicao coordenada do grupo:
+  - carregar competencias ja salvas por subcategoria controlada
+- clone:
+  - continua sem copiar competencias automaticamente
+
+### Fora do MVP
+
+- observacao/complemento por competencia
+- qualquer alteracao de model/migration
+- modulo proprio de baixa
+- historico individual por competencia
+- alertas automaticos
+- calculo de inadimplencia
+- importacao/exportacao de competencias
+- termo por favorecido
+- mudancas na matriz
+
+### Riscos principais
+
+- usuario confundir contribuicao anterior com o valor do lancamento atual
+- usuario preencher valor em mes ja contribuido e interpretar isso como duplicidade proibida, quando na verdade a matriz soma multiplos lancamentos
+- poluicao excessiva do formulario
+- quebra da validacao de soma do valor controlado
+- quebra do rateio controlado se o assistente fugir dos payloads atuais
+- tentacao de transformar `sem quitacao registrada` em `em aberto`
+
+### Arquivos provaveis para a futura implementacao
+
+- `financeiro/forms.py`
+- `financeiro/views.py`
+- `financeiro/tests.py`
+- `financeiro/templates/financeiro/lancamento_form.html`
+- `financeiro/templates/financeiro/lancamento_rateio_grupo_form.html`
+
+Proxima etapa recomendada:
+- implementar o MVP do assistente, primeiro no lancamento simples e no fluxo de rateio/edicao, reaproveitando os payloads atuais e preservando o modo manual

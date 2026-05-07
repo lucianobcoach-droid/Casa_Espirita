@@ -3681,3 +3681,59 @@ Riscos principais antes de migration:
 - governanca da frente:
   - nao implementar sem SPEC dedicada
   - qualquer evolucao deve ser tratada em microetapa propria por impactar formulario de lancamento e fluxo de rateio
+
+## SPEC funcional consolidada - Assistente inteligente de competencias
+
+- microetapa exclusivamente documental concluida para desenhar o MVP futuro do assistente, sem alteracao de codigo funcional
+- objetivo do MVP futuro:
+  - manter o modo manual atual de competencias como base segura
+  - adicionar um bloco de `Sugestao rapida de competencias` sobre o fluxo ja existente
+  - reaproveitar os mesmos payloads e validacoes atuais (`competencias_payload` e `competencias_rateio_payload`)
+- regra de exibicao proposta:
+  - lancamento simples: assistente aparece apenas quando houver favorecido recorrente + subcategoria controlada
+  - rateio: assistente aparece apenas para cada subcategoria controlada do grupo
+  - pessoa nao recorrente, subcategoria nao controlada e item nao controlado de rateio continuam sem assistente
+- grade sugerida para o MVP:
+  - ultimos 5 meses
+  - mes atual
+  - proximos 5 meses
+- estados conceituais aprovados para a UX:
+  - `sem quitacao registrada` = nao ha valor alocado previo naquela pessoa/subcategoria/competencia
+  - `ja possui contribuicao` = ja existe valor alocado previo naquela pessoa/subcategoria/competencia
+  - `informado neste lancamento` = usuario digitou valor no mes no formulario atual
+- regra central preservada:
+  - o valor preenchido no mes e o gatilho da competencia atendida
+  - mes vazio nao entra no payload
+  - valor zero ou negativo continua sujeito as validacoes ja existentes
+  - a soma dos meses informados precisa continuar fechando com o valor controlado do lancamento ou da subcategoria controlada do rateio
+- comportamento esperado no MVP:
+  - lancamento simples: uma grade para a subcategoria controlada do lancamento
+  - rateio: uma grade por subcategoria controlada do grupo, sem usar o valor bruto total do documento
+  - edicao: carregar competencias ja salvas no mesmo bloco assistido/manual
+  - clone: continua sem copiar competencias automaticamente
+- decisao funcional recomendada para referencia visual:
+  - mostrar no assistente o valor ja alocado anteriormente naquela competencia como apoio
+  - ainda assim permitir novo valor no mes, pois a matriz futura soma multiplos lancamentos
+- integracao tecnica consolidada para futura implementacao:
+  - o assistente deve apenas montar/preencher os payloads atuais
+  - nao deve criar nova fonte de dados nem novo fluxo de salvamento
+  - validacoes de soma, duplicidade e rateio controlado devem continuar centralizadas no backend atual
+- fora do MVP:
+  - observacao/complemento por competencia
+  - alteracao de model ou migration
+  - modulo proprio de baixa
+  - historico individual por competencia
+  - alerta automatico
+  - calculo de inadimplencia
+  - importacao/exportacao de competencias
+  - termo por favorecido
+  - mudancas na matriz de frequencia
+- riscos registrados para a futura implementacao:
+  - confusao entre contribuicao anterior e contribuicao do lancamento atual
+  - complemento em mes ja quitado ser confundido com duplicidade dentro do mesmo lancamento
+  - risco de poluicao visual excessiva no formulario
+  - risco de quebrar o fechamento de soma do valor controlado
+  - risco de quebrar o rateio controlado se o assistente fugir dos payloads atuais
+  - risco de a UX reintroduzir leitura incorreta de `em aberto`
+- proxima microetapa recomendada:
+  - implementar o MVP do assistente no formulario de lancamento simples e no fluxo de rateio/edicao reaproveitando os payloads atuais e mantendo o modo manual visivel
