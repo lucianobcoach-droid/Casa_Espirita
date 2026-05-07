@@ -1050,3 +1050,21 @@ Consolidacao:
 
 Proxima etapa recomendada:
 - preparar a impressao da matriz com tentativa de acomodar todas as colunas na mesma pagina, reaproveitando margens e padrao de impressao do modulo
+
+### 42. Frequencia por competencia - impressao da matriz
+
+Status: IMPLEMENTADO
+
+Consolidacao:
+- a tela `/financeiro/frequencia-competencias/` passou a ter acao `Imprimir`
+- o impresso cobre os formatos:
+  - `Com valores`
+  - `Sem valores (frequencia)`
+- o template reaproveita o padrao documental do modulo com cabecalho de impressao e metadados essenciais
+- foi adotado contrato local de print com `A4 landscape`, margem reduzida e tabela compactada para tentar acomodar todas as competencias na mesma pagina
+- a fonte de dados continua sendo `AlocacaoCompetenciaFinanceira`
+- a compactacao nao promete pagina unica perfeita em qualquer combinacao; periodos mais longos ainda podem ficar apertados conforme navegador/impressora
+- termo por favorecido segue pendente
+
+Proxima etapa recomendada:
+- implementar o termo por favorecido usando a mesma base de competencias ja consolidada

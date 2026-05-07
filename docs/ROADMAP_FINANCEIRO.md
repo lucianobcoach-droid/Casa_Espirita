@@ -1098,3 +1098,23 @@ Proxima etapa recomendada:
 
 Proxima etapa recomendada:
 - preparar a impressao da matriz tentando acomodar todas as colunas na mesma pagina, reaproveitando margens e padrao de impressao ja usados no sistema
+
+## 23. Frequencia por competencia - impressao da matriz
+
+- etapa funcional concluida para impressao da tela `/financeiro/frequencia-competencias/`
+- escopo entregue:
+  - botao `Imprimir`
+  - impressao dos dois formatos (`Com valores` e `Sem valores (frequencia)`)
+  - cabecalho documental enxuto com formato, periodo, subcategoria, status e emissao
+  - contrato local de print em `A4 landscape`
+  - compactacao de fonte, padding e largura das colunas para tentar acomodar a matriz em uma pagina
+- recortes preservados:
+  - nenhuma exportacao dedicada
+  - nenhum PDF dedicado
+  - nenhuma mudanca na fonte de dados
+  - nenhum termo por favorecido ainda nesta etapa
+- limitacao conhecida:
+  - periodos mais largos, mesmo dentro do limite funcional de 24 competencias, ainda podem ficar visualmente apertados conforme navegador/impressora
+
+Proxima etapa recomendada:
+- implementar o termo por favorecido reaproveitando a mesma base de competencias ja consolidada

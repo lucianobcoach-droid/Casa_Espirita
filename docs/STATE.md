@@ -3157,9 +3157,37 @@ Com filtro por periodo:
   - total por mes = quantidade de favorecidos com contribuicao naquela competencia
   - total geral = total de ocorrencias positivas na matriz
 - a tela continua listando favorecidos recorrentes mesmo sem alocacao no periodo, agora com leitura visual negativa nos meses vazios
-- impressao da matriz ainda nao foi implementada nesta microetapa
-- proxima microetapa recomendada: preparar a impressao da matriz tentando acomodar todas as colunas na mesma pagina, reaproveitando margens e padrao de impressao ja usados no sistema
+- impressao da matriz ainda nao havia sido implementada nesta microetapa
 - nao houve alteracao em models, migrations, calculos financeiros, saldos, relatorios existentes ou banco real; nenhum arquivo SQLite foi alterado/versionado
+
+## Frequencia por competencia - impressao da matriz
+
+- a tela `/financeiro/frequencia-competencias/` passou a ter acao `Imprimir`, reaproveitando `window.print()` como nos demais relatorios do modulo
+- a impressao cobre os dois formatos da matriz:
+  - `Com valores`
+  - `Sem valores (frequencia)`
+- o impresso reaproveita o contrato documental do modulo com:
+  - `financeiro-document-header`
+  - `financeiro-document-meta-grid`
+  - isolamento de shell/acoes por `no-print`
+  - cabecalho enxuto com titulo, formato, periodo, subcategoria, status e data/hora de emissao
+- foi aplicado contrato local de print para matriz larga:
+  - `@page` em `A4 landscape`
+  - margem reduzida `14mm 10mm`
+  - tabela compactada com fonte menor, padding reduzido e `table-layout: fixed`
+  - colunas mensais mais estreitas e coluna de favorecido reduzida
+  - `thead` e `tfoot` preservados no print para repeticao/fechamento
+- no modo sem valores, os indicadores continuam derivados de `AlocacaoCompetenciaFinanceira` e passam a imprimir com leitura aceitavel tambem em preto e branco, usando simbolo com borda leve em vez de depender apenas da cor
+- elementos ocultados no print:
+  - menu/shell
+  - bloco hero de tela
+  - filtros editaveis
+  - botao de impressao e acao de voltar
+  - sombras e molduras desnecessarias
+- limitacao conhecida registrada:
+  - o layout tenta acomodar todos os meses do intervalo na mesma pagina, mas periodos muito largos (mesmo dentro do limite funcional de 24 competencias) ainda podem ficar visualmente apertados conforme o navegador/impressora
+- proxima microetapa recomendada: preparar o termo por favorecido usando a mesma base de competencias ja consolidada
+- nao houve alteracao em calculos financeiros, saldos, relatorios existentes, models, migrations ou banco real; nenhum arquivo SQLite foi alterado/versionado
 
 - foi criada a camada reutilizavel `financeiro/permissoes.py` com `FinanceiroPermissaoMixin`, integrando `LoginRequiredMixin` e o helper central `usuario_possui_permissao()` do app `configuracoes`
 - o mixin exige usuario autenticado, valida a permissao funcional por codigo canonico em `get_permissao_requerida()` e responde com HTTP 403 e mensagem simples quando o usuario autenticado nao tem a permissao exigida ou nao possui perfil-base ativo

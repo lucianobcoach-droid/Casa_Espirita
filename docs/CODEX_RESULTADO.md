@@ -4771,3 +4771,33 @@ Não houve alteração de código funcional nesta etapa.
 - cobertura de testes adicionada para modo padrao com valores, indicadores positivos/negativos, totais de frequencia e respeito aos filtros no modo sem valores
 - impressao ainda nao foi implementada; a proxima etapa registrada e preparar a matriz para caber na mesma pagina, reaproveitando margens e padrao de impressao do modulo
 - sem alteracao de models, migrations, calculos financeiros, saldos, relatorios existentes ou banco real; nenhum arquivo SQLite foi alterado/versionado
+
+## Microetapa: impressao da matriz de frequencia por competencia
+
+- a mesma tela `/financeiro/frequencia-competencias/` passou a oferecer acao `Imprimir` com `window.print()`, sem abrir geracao de PDF dedicada
+- o template passou a reaproveitar o vocabulario documental do modulo (`financeiro-document-header`, `financeiro-document-meta-grid`, `no-print`, `only-print`) para manter consistencia com `Resumo`, `Prestacao` e demais relatorios impressos
+- a impressao foi preparada para os dois formatos da matriz:
+  - `Com valores`
+  - `Sem valores (frequencia)`
+- contrato local de print aplicado para matriz larga:
+  - `@page` em `A4 landscape`
+  - margem `14mm 10mm`
+  - fonte menor
+  - padding reduzido
+  - tabela com `table-layout: fixed`
+  - largura compactada para coluna de favorecido, competencias e total
+- o cabecalho impresso passou a exibir:
+  - titulo `Frequencia por competencia`
+  - formato
+  - periodo
+  - subcategoria
+  - status
+  - data/hora de emissao
+- no modo sem valores, os indicadores continuam derivados de `AlocacaoCompetenciaFinanceira` e foram ajustados para imprimir de forma mais neutra, com simbolo e borda leve mesmo em preto e branco
+- cobertura de testes adicionada para:
+  - botao/acao de impressao
+  - CSS local de print
+  - metadados essenciais do documento impresso
+  - preservacao da matriz monetaria e da matriz sem valores
+- limitacao conhecida registrada: o layout tenta acomodar todos os meses na mesma pagina, mas periodos muito longos dentro do limite de 24 competencias ainda podem ficar apertados conforme navegador/impressora
+- sem alteracao de models, migrations, calculos financeiros, saldos, relatorios existentes ou banco real; nenhum arquivo SQLite foi alterado/versionado

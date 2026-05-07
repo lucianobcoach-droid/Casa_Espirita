@@ -2781,6 +2781,49 @@ class FrequenciaCompetenciasViewTests(TestCase):
         self.assertContains(response, 'Matriz mensal com valores')
         self.assertContains(response, 'R$ 100,00')
 
+    def test_matriz_exibe_acao_de_impressao_e_css_local_de_print(self):
+        self._login_com_permissoes(
+            'user-matriz-print',
+            ['financeiro.resumo_financeiro.visualizar'],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:frequencia-competencias'),
+            self._parametros_base(),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'onclick="window.print()"')
+        self.assertContains(response, '>Imprimir<', html=False)
+        self.assertContains(response, 'financeiro-frequencia-hero no-print')
+        self.assertContains(response, 'financeiro-frequencia-panel is-filters no-print')
+        self.assertContains(response, '@media print')
+        self.assertContains(response, 'size: A4 landscape;')
+        self.assertContains(response, 'financeiro-document-header only-print')
+
+    def test_matriz_impressao_traz_cabecalho_e_metadados_essenciais(self):
+        self._login_com_permissoes(
+            'user-matriz-print-meta',
+            ['financeiro.resumo_financeiro.visualizar'],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:frequencia-competencias'),
+            self._parametros_base(formato_matriz='frequencia'),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Frequencia por competencia')
+        self.assertContains(response, 'Formato')
+        self.assertContains(response, 'Sem valores (frequencia)')
+        self.assertContains(response, 'Periodo')
+        self.assertContains(response, 'Jan/2026 a Mar/2026')
+        self.assertContains(response, 'Subcategoria')
+        self.assertContains(response, 'Todas controladas')
+        self.assertContains(response, 'Status')
+        self.assertContains(response, 'Todos')
+        self.assertContains(response, 'Emitido em')
+
     def test_matriz_soma_alocacoes_por_competencia_e_ignora_item_nao_controlado(self):
         self._login_com_permissoes(
             'user-matriz-soma',

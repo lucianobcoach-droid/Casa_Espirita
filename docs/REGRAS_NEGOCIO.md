@@ -143,7 +143,8 @@ Este documento consolida regras permanentes do sistema. Ele não substitui o his
 - No filtro de status da matriz, `Todos` considera apenas `quitado` e `aberto`; `cancelado` fica fora da leitura gerencial desta tela.
 - A matriz sem valores deve ser apenas uma visualizacao derivada da matriz com valores: contribuicao existente (`valor_alocado > 0`) vira indicador positivo, ausencia de contribuicao vira indicador negativo.
 - No modo sem valores, o total por favorecido deve contar competencias com contribuicao no periodo, o total por mes deve contar favorecidos com contribuicao naquela competencia e o total geral deve contar ocorrencias positivas na matriz.
-- A impressao da matriz deve ficar para etapa posterior, sem abrir nova fonte de dados nem nova regra de negocio para frequencia.
+- A impressao da matriz deve reaproveitar o mesmo contrato documental dos relatorios do modulo, mantendo a mesma fonte `AlocacaoCompetenciaFinanceira` e sem abrir nova regra de negocio para frequencia.
+- No impresso da matriz, a prioridade e tentar acomodar o maior numero possivel de competencias na mesma pagina por meio de compactacao visual, sem prometer pagina unica perfeita para qualquer periodo dentro do limite funcional.
 - Em clone comum, competencias existentes nao devem ser copiadas automaticamente para o novo lancamento.
 - Em clone de rateio, competencias tambem nao devem ser copiadas automaticamente para evitar duplicidade de quitacao por competencia.
 - No MVP inicial, nao abrir modulo separado de baixa; manter o fluxo no proprio lancamento e tratar termo por favorecido como segunda onda apos validacao da matriz.

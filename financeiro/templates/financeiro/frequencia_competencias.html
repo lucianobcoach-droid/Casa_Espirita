@@ -189,6 +189,13 @@
         font-weight: 800;
     }
 
+    @media screen {
+        .financeiro-document-header.only-print,
+        .financeiro-document-meta-grid.only-print {
+            display: none !important;
+        }
+    }
+
     @media (max-width: 768px) {
         .financeiro-frequencia-hero {
             padding: 1rem;
@@ -202,10 +209,174 @@
             padding: 0 0.75rem 0.9rem;
         }
     }
+
+    @media print {
+        @page {
+            size: A4 landscape;
+            margin: 14mm 10mm;
+        }
+
+        html,
+        body {
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .financeiro-frequencia-page {
+            gap: 0;
+        }
+
+        .financeiro-frequencia-panel {
+            border: 0 !important;
+            box-shadow: none !important;
+            background: #fff !important;
+        }
+
+        .financeiro-frequencia-panel-header,
+        .financeiro-frequencia-hero,
+        .financeiro-frequencia-panel.is-filters {
+            display: none !important;
+        }
+
+        .financeiro-document-header.only-print {
+            display: flex !important;
+            margin-bottom: 0.35rem !important;
+            padding-bottom: 0.35rem !important;
+        }
+
+        .financeiro-document-meta-grid.only-print {
+            display: grid !important;
+            grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+            gap: 0.28rem !important;
+            margin-bottom: 0.38rem !important;
+        }
+
+        .financeiro-document-meta-card {
+            padding: 0.26rem 0.34rem !important;
+        }
+
+        .financeiro-document-meta-label {
+            margin-bottom: 0.06rem !important;
+            font-size: 6.8px !important;
+        }
+
+        .financeiro-document-meta-value {
+            font-size: 7.7px !important;
+            line-height: 1.18 !important;
+        }
+
+        .financeiro-document-title {
+            font-size: 12px !important;
+        }
+
+        .financeiro-document-subtitle,
+        .financeiro-document-brand-note {
+            font-size: 7.3px !important;
+            line-height: 1.2 !important;
+        }
+
+        .financeiro-document-report {
+            padding: 0.4rem 0.45rem 0.5rem !important;
+            border-width: 1px !important;
+        }
+
+        .financeiro-frequencia-table-wrap {
+            padding: 0 !important;
+        }
+
+        .financeiro-frequencia-table,
+        .financeiro-frequencia-table thead,
+        .financeiro-frequencia-table tbody,
+        .financeiro-frequencia-table tfoot {
+            width: 100% !important;
+        }
+
+        .financeiro-frequencia-table {
+            min-width: 0 !important;
+            font-size: 7.2px !important;
+            line-height: 1.15 !important;
+            table-layout: fixed;
+            margin-bottom: 0 !important;
+        }
+
+        .financeiro-frequencia-table thead {
+            display: table-header-group;
+        }
+
+        .financeiro-frequencia-table tfoot {
+            display: table-footer-group;
+        }
+
+        .financeiro-frequencia-table thead th,
+        .financeiro-frequencia-table tfoot th,
+        .financeiro-frequencia-table tfoot td {
+            background: #fff !important;
+        }
+
+        .financeiro-frequencia-table th,
+        .financeiro-frequencia-table td {
+            padding: 0.14rem 0.18rem !important;
+            border-color: #d6dee8 !important;
+            position: static !important;
+            left: auto !important;
+            top: auto !important;
+            box-shadow: none !important;
+        }
+
+        .financeiro-frequencia-table th:first-child,
+        .financeiro-frequencia-table td:first-child {
+            position: static !important;
+        }
+
+        .financeiro-frequencia-row-person {
+            min-width: 0 !important;
+            width: 22% !important;
+            white-space: normal;
+            word-break: break-word;
+        }
+
+        .financeiro-frequencia-cell {
+            min-width: 0 !important;
+            width: 5.4% !important;
+        }
+
+        .financeiro-frequencia-frequency-cell {
+            min-width: 0 !important;
+            width: 4.8% !important;
+        }
+
+        .financeiro-frequencia-total {
+            min-width: 0 !important;
+            width: 8% !important;
+        }
+
+        .financeiro-frequencia-row-person .financeiro-meta {
+            display: block;
+            font-size: 6.7px !important;
+            line-height: 1.1 !important;
+        }
+
+        .financeiro-frequencia-indicator {
+            width: 1rem;
+            height: 1rem;
+            border: 0.6px solid #9ca3af;
+            background: #fff !important;
+            color: #111827 !important;
+            font-size: 0.72rem;
+        }
+
+        .financeiro-frequencia-empty {
+            color: #64748b !important;
+        }
+
+        .table-wrapper {
+            overflow: visible !important;
+        }
+    }
 </style>
 
 <div class="financeiro-frequencia-page">
-    <section class="financeiro-frequencia-hero">
+    <section class="financeiro-frequencia-hero no-print">
         <div>
             <h1 class="financeiro-frequencia-title">Frequencia por competencia</h1>
             <p class="financeiro-frequencia-subtitle">
@@ -224,11 +395,12 @@
             </div>
         </div>
         <div class="financeiro-page-header-actions">
+            <button class="button is-light" type="button" onclick="window.print()">Imprimir</button>
             <a class="button is-light" href="{% url 'financeiro:home' %}">Voltar ao financeiro</a>
         </div>
     </section>
 
-    <section class="financeiro-frequencia-panel">
+    <section class="financeiro-frequencia-panel is-filters no-print">
         <form method="get" class="filters-box">
             <div class="columns is-multiline">
                 <div class="column is-6-tablet is-3-desktop">
@@ -312,121 +484,183 @@
     {% endif %}
 
     <section class="financeiro-frequencia-panel">
-        <div class="financeiro-frequencia-panel-header">
-            <div>
-                <h2 class="financeiro-frequencia-panel-title">
-                    {% if formato_matriz == 'frequencia' %}
-                        Matriz mensal sem valores
-                    {% else %}
-                        Matriz mensal com valores
-                    {% endif %}
-                </h2>
-                <p class="financeiro-frequencia-panel-note">
-                    {% if formato_matriz == 'frequencia' %}
-                        Linhas para favorecidos recorrentes, colunas por competencia mensal e leitura visual de contribuicao por mes.
-                    {% else %}
-                        Linhas para favorecidos recorrentes, colunas por competencia mensal e totais por favorecido, por mes e geral.
-                    {% endif %}
-                </p>
-            </div>
-            <div class="financeiro-frequencia-meta">
-                <span class="financeiro-frequencia-meta-item"><strong>Favorecidos:</strong> {{ quantidade_favorecidos }}</span>
-                <span class="financeiro-frequencia-meta-item"><strong>Competencias:</strong> {{ quantidade_competencias|default:0 }}</span>
-                <span class="financeiro-frequencia-meta-item">
-                    <strong>Total geral:</strong>
-                    {% if formato_matriz == 'frequencia' %}
-                        {{ total_geral_frequencia }} ocorrencias
-                    {% else %}
-                        R$ {{ total_geral|br_money }}
-                    {% endif %}
-                </span>
-            </div>
-        </div>
-
-        <div class="financeiro-frequencia-table-wrap">
-            <div class="table-wrapper">
-                <table class="table is-fullwidth is-striped is-hoverable financeiro-table financeiro-frequencia-table">
-                    <thead>
-                        <tr>
-                            <th>Favorecido</th>
-                            {% for coluna in competencias_colunas %}
-                                <th class="{% if formato_matriz == 'frequencia' %}financeiro-frequencia-frequency-cell{% else %}financeiro-frequencia-cell{% endif %}">{{ coluna.label }}</th>
-                            {% endfor %}
-                            <th class="financeiro-frequencia-total">Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for linha in matriz_linhas %}
-                            <tr>
-                                <td class="financeiro-frequencia-row-person">
-                                    <strong>{{ linha.pessoa.nome }}</strong>
-                                    <span class="financeiro-meta">{{ linha.pessoa.codigo }}</span>
-                                </td>
-                                {% if formato_matriz == 'frequencia' %}
-                                    {% for presenca in linha.presencas %}
-                                        <td class="financeiro-frequencia-frequency-cell">
-                                            {% if presenca %}
-                                                <span class="financeiro-frequencia-indicator financeiro-frequencia-indicator-positive" title="Com contribuicao" aria-label="Com contribuicao">✓</span>
-                                            {% else %}
-                                                <span class="financeiro-frequencia-indicator financeiro-frequencia-indicator-negative" title="Sem contribuicao" aria-label="Sem contribuicao">×</span>
-                                            {% endif %}
-                                        </td>
-                                    {% endfor %}
-                                    <td class="financeiro-frequencia-total">{{ linha.total_frequencia }}/{{ quantidade_competencias|default:0 }}</td>
-                                {% else %}
-                                    {% for valor in linha.valores %}
-                                        <td class="financeiro-frequencia-cell">
-                                            {% if valor %}
-                                                R$ {{ valor|br_money }}
-                                            {% else %}
-                                                <span class="financeiro-frequencia-empty">-</span>
-                                            {% endif %}
-                                        </td>
-                                    {% endfor %}
-                                    <td class="financeiro-frequencia-total">R$ {{ linha.total|br_money }}</td>
-                                {% endif %}
-                            </tr>
-                        {% empty %}
-                            <tr>
-                                <td colspan="{{ competencias_colunas|length|add:2 }}" class="has-text-centered">
-                                    Nenhum favorecido recorrente disponivel para a matriz.
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                    <tfoot>
-                        <tr>
-                            <th>Total por mes</th>
-                            {% if formato_matriz == 'frequencia' %}
-                                {% for total_mes in totais_frequencia %}
-                                    <td class="financeiro-frequencia-frequency-cell">
-                                        {% if total_mes %}
-                                            {{ total_mes }}
-                                        {% else %}
-                                            <span class="financeiro-frequencia-empty">-</span>
-                                        {% endif %}
-                                    </td>
-                                {% endfor %}
-                                <td class="financeiro-frequencia-total">{{ total_geral_frequencia }} ocorrencias</td>
-                            {% else %}
-                                {% for total_mes in totais_colunas %}
-                                    <td class="financeiro-frequencia-cell">
-                                        {% if total_mes %}
-                                            R$ {{ total_mes|br_money }}
-                                        {% else %}
-                                            <span class="financeiro-frequencia-empty">-</span>
-                                        {% endif %}
-                                    </td>
-                                {% endfor %}
-                                <td class="financeiro-frequencia-total">R$ {{ total_geral|br_money }}</td>
+        <div class="financeiro-report-sheet">
+            <article class="financeiro-document-report">
+                <header class="financeiro-document-header only-print">
+                    <div class="financeiro-document-brand">
+                        {% if financeiro_shell_brand_logo_url %}
+                        <div class="financeiro-document-brand-identity">
+                            <img
+                                class="financeiro-document-logo"
+                                src="{{ financeiro_shell_brand_logo_url }}"
+                                alt="Logo institucional"
+                                loading="eager"
+                                decoding="async"
+                                referrerpolicy="no-referrer"
+                                onerror="this.closest('.financeiro-document-brand-identity').remove();"
+                            >
+                        </div>
+                        {% endif %}
+                        <div class="financeiro-document-brand-copy">
+                            <span class="financeiro-document-kicker">Relatorio Financeiro</span>
+                            {% if not financeiro_shell_brand_logo_url %}
+                            <p class="financeiro-document-brand-name">{{ financeiro_shell_brand_name }}</p>
                             {% endif %}
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
-            {% if matriz_vazia and not periodo_error %}
-                <p class="help">Nenhuma alocacao encontrada para os filtros informados. Os favorecidos recorrentes continuam listados para evidenciar meses sem valor.</p>
-            {% endif %}
+                            <p class="financeiro-document-brand-note">Leitura mensal derivada das alocacoes de competencia para acompanhamento recorrente.</p>
+                        </div>
+                    </div>
+                    <div>
+                        <h2 class="financeiro-document-title">Frequencia por competencia</h2>
+                        <p class="financeiro-document-subtitle">
+                            {% if formato_matriz == 'frequencia' %}
+                                Matriz sem valores com indicador visual de contribuicao por competencia.
+                            {% else %}
+                                Matriz com valores alocados por competencia para leitura mensal do periodo.
+                            {% endif %}
+                        </p>
+                    </div>
+                </header>
+
+                <div class="financeiro-document-meta-grid only-print">
+                    <div class="financeiro-document-meta-card">
+                        <span class="financeiro-document-meta-label">Formato</span>
+                        <span class="financeiro-document-meta-value">{% if formato_matriz == 'frequencia' %}Sem valores (frequencia){% else %}Com valores{% endif %}</span>
+                    </div>
+                    <div class="financeiro-document-meta-card">
+                        <span class="financeiro-document-meta-label">Periodo</span>
+                        <span class="financeiro-document-meta-value">{{ periodo_competencia_label|default:'Nao informado' }}</span>
+                    </div>
+                    <div class="financeiro-document-meta-card">
+                        <span class="financeiro-document-meta-label">Subcategoria</span>
+                        <span class="financeiro-document-meta-value">{{ categoria_filtro_label|default:'Todas controladas' }}</span>
+                    </div>
+                    <div class="financeiro-document-meta-card">
+                        <span class="financeiro-document-meta-label">Status</span>
+                        <span class="financeiro-document-meta-value">{{ status_label }}</span>
+                    </div>
+                    <div class="financeiro-document-meta-card">
+                        <span class="financeiro-document-meta-label">Emitido em</span>
+                        <span class="financeiro-document-meta-value">{% now "d/m/Y H:i" %}</span>
+                    </div>
+                </div>
+
+                <div class="financeiro-frequencia-panel-header no-print">
+                    <div>
+                        <h2 class="financeiro-frequencia-panel-title">
+                            {% if formato_matriz == 'frequencia' %}
+                                Matriz mensal sem valores
+                            {% else %}
+                                Matriz mensal com valores
+                            {% endif %}
+                        </h2>
+                        <p class="financeiro-frequencia-panel-note">
+                            {% if formato_matriz == 'frequencia' %}
+                                Linhas para favorecidos recorrentes, colunas por competencia mensal e leitura visual de contribuicao por mes.
+                            {% else %}
+                                Linhas para favorecidos recorrentes, colunas por competencia mensal e totais por favorecido, por mes e geral.
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="financeiro-frequencia-meta">
+                        <span class="financeiro-frequencia-meta-item"><strong>Favorecidos:</strong> {{ quantidade_favorecidos }}</span>
+                        <span class="financeiro-frequencia-meta-item"><strong>Competencias:</strong> {{ quantidade_competencias|default:0 }}</span>
+                        <span class="financeiro-frequencia-meta-item">
+                            <strong>Total geral:</strong>
+                            {% if formato_matriz == 'frequencia' %}
+                                {{ total_geral_frequencia }} ocorrencias
+                            {% else %}
+                                R$ {{ total_geral|br_money }}
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="financeiro-frequencia-table-wrap">
+                    <div class="table-wrapper">
+                        <table class="table is-fullwidth is-striped is-hoverable financeiro-table financeiro-frequencia-table">
+                            <thead>
+                                <tr>
+                                    <th>Favorecido</th>
+                                    {% for coluna in competencias_colunas %}
+                                        <th class="{% if formato_matriz == 'frequencia' %}financeiro-frequencia-frequency-cell{% else %}financeiro-frequencia-cell{% endif %}">{{ coluna.label }}</th>
+                                    {% endfor %}
+                                    <th class="financeiro-frequencia-total">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for linha in matriz_linhas %}
+                                    <tr>
+                                        <td class="financeiro-frequencia-row-person">
+                                            <strong>{{ linha.pessoa.nome }}</strong>
+                                            <span class="financeiro-meta">{{ linha.pessoa.codigo }}</span>
+                                        </td>
+                                        {% if formato_matriz == 'frequencia' %}
+                                            {% for presenca in linha.presencas %}
+                                                <td class="financeiro-frequencia-frequency-cell">
+                                                    {% if presenca %}
+                                                        <span class="financeiro-frequencia-indicator financeiro-frequencia-indicator-positive" title="Com contribuicao" aria-label="Com contribuicao">&#10003;</span>
+                                                    {% else %}
+                                                        <span class="financeiro-frequencia-indicator financeiro-frequencia-indicator-negative" title="Sem contribuicao" aria-label="Sem contribuicao">&times;</span>
+                                                    {% endif %}
+                                                </td>
+                                            {% endfor %}
+                                            <td class="financeiro-frequencia-total">{{ linha.total_frequencia }}/{{ quantidade_competencias|default:0 }}</td>
+                                        {% else %}
+                                            {% for valor in linha.valores %}
+                                                <td class="financeiro-frequencia-cell">
+                                                    {% if valor %}
+                                                        R$ {{ valor|br_money }}
+                                                    {% else %}
+                                                        <span class="financeiro-frequencia-empty">-</span>
+                                                    {% endif %}
+                                                </td>
+                                            {% endfor %}
+                                            <td class="financeiro-frequencia-total">R$ {{ linha.total|br_money }}</td>
+                                        {% endif %}
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="{{ competencias_colunas|length|add:2 }}" class="has-text-centered">
+                                            Nenhum favorecido recorrente disponivel para a matriz.
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th>Total por mes</th>
+                                    {% if formato_matriz == 'frequencia' %}
+                                        {% for total_mes in totais_frequencia %}
+                                            <td class="financeiro-frequencia-frequency-cell">
+                                                {% if total_mes %}
+                                                    {{ total_mes }}
+                                                {% else %}
+                                                    <span class="financeiro-frequencia-empty">-</span>
+                                                {% endif %}
+                                            </td>
+                                        {% endfor %}
+                                        <td class="financeiro-frequencia-total">{{ total_geral_frequencia }} ocorrencias</td>
+                                    {% else %}
+                                        {% for total_mes in totais_colunas %}
+                                            <td class="financeiro-frequencia-cell">
+                                                {% if total_mes %}
+                                                    R$ {{ total_mes|br_money }}
+                                                {% else %}
+                                                    <span class="financeiro-frequencia-empty">-</span>
+                                                {% endif %}
+                                            </td>
+                                        {% endfor %}
+                                        <td class="financeiro-frequencia-total">R$ {{ total_geral|br_money }}</td>
+                                    {% endif %}
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    {% if matriz_vazia and not periodo_error %}
+                        <p class="help">Nenhuma alocacao encontrada para os filtros informados. Os favorecidos recorrentes continuam listados para evidenciar meses sem valor.</p>
+                    {% endif %}
+                </div>
+            </article>
         </div>
     </section>
 </div>
