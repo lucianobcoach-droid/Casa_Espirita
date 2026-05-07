@@ -2800,6 +2800,10 @@ class FrequenciaCompetenciasViewTests(TestCase):
         self.assertContains(response, '@media print')
         self.assertContains(response, 'size: A4 landscape;')
         self.assertContains(response, 'financeiro-document-header only-print')
+        self.assertContains(response, 'financeiro-frequencia-th-print-label')
+        self.assertContains(response, 'financeiro-frequencia-col-person')
+        self.assertContains(response, 'text-overflow: ellipsis;')
+        self.assertContains(response, 'word-break: normal !important;')
 
     def test_matriz_impressao_traz_cabecalho_e_metadados_essenciais(self):
         self._login_com_permissoes(
@@ -2823,6 +2827,29 @@ class FrequenciaCompetenciasViewTests(TestCase):
         self.assertContains(response, 'Status')
         self.assertContains(response, 'Todos')
         self.assertContains(response, 'Emitido em')
+
+    def test_matriz_impressao_usa_labels_compactos_para_competencias(self):
+        self._login_com_permissoes(
+            'user-matriz-print-labels',
+            ['financeiro.resumo_financeiro.visualizar'],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:frequencia-competencias'),
+            self._parametros_base(),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            [coluna['label'] for coluna in response.context['competencias_colunas']],
+            ['Jan/2026', 'Fev/2026', 'Mar/2026'],
+        )
+        self.assertEqual(
+            [coluna['label_print'] for coluna in response.context['competencias_colunas']],
+            ['01/2026', '02/2026', '03/2026'],
+        )
+        self.assertContains(response, '<span class="financeiro-frequencia-th-screen-label">Jan/2026</span>')
+        self.assertContains(response, '<span class="financeiro-frequencia-th-print-label">01/2026</span>')
 
     def test_matriz_soma_alocacoes_por_competencia_e_ignora_item_nao_controlado(self):
         self._login_com_permissoes(

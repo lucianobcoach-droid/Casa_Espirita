@@ -160,6 +160,10 @@ def _rotulo_competencia_mensal(ano: int, mes: int) -> str:
     return f'{MESES_PT_BR_ABREV[mes - 1]}/{ano}'
 
 
+def _rotulo_competencia_mensal_print(ano: int, mes: int) -> str:
+    return f'{mes:02d}/{ano}'
+
+
 def _iterar_competencias_mensais(inicio: date, fim: date) -> list[tuple[int, int]]:
     competencias: list[tuple[int, int]] = []
     ano_atual = inicio.year
@@ -4651,6 +4655,7 @@ class FrequenciaCompetenciasView(FinanceiroPermissaoMixin, TemplateView):
                 'ano': ano,
                 'mes': mes,
                 'label': _rotulo_competencia_mensal(ano, mes),
+                'label_print': _rotulo_competencia_mensal_print(ano, mes),
             }
             for ano, mes in competencias
         ]

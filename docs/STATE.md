@@ -3189,6 +3189,22 @@ Com filtro por periodo:
 - proxima microetapa recomendada: preparar o termo por favorecido usando a mesma base de competencias ja consolidada
 - nao houve alteracao em calculos financeiros, saldos, relatorios existentes, models, migrations ou banco real; nenhum arquivo SQLite foi alterado/versionado
 
+## Frequencia por competencia - refinamento da impressao com meses compactos
+
+- refinada a impressao da matriz apos validacao visual em PDF real pela usuaria
+- problema observado:
+  - os cabecalhos mensais ocupavam espaco demais
+  - a coluna `Favorecido` ficava comprimida e podia quebrar nomes de forma ruim, letra por letra
+- ajuste aplicado:
+  - a tela continua usando o rotulo visual ja aprovado (`Jan/2026`, `Fev/2026` etc.)
+  - o impresso passa a usar rotulo compacto `MM/AAAA` (`01/2026`, `02/2026`, `03/2026` etc.)
+  - a coluna `Favorecido` ganhou largura protegida via `colgroup`, `white-space: nowrap`, `text-overflow: ellipsis`, `word-break: normal` e `overflow-wrap: normal`
+  - as colunas mensais ficaram mais compactas, com fonte e padding menores no print
+  - valores e indicadores ficam centralizados no impresso para economizar largura
+- a prioridade do PDF passa a ser: favorecido legivel, meses compactos, total visivel e tentativa de manter a matriz inteira na pagina
+- a limitacao continua: periodos muito longos dentro do limite de 24 competencias podem ficar apertados conforme navegador/impressora
+- nao houve alteracao de fonte de dados, calculos financeiros, saldos, relatorios existentes ou banco real; nenhum arquivo SQLite foi alterado/versionado
+
 - foi criada a camada reutilizavel `financeiro/permissoes.py` com `FinanceiroPermissaoMixin`, integrando `LoginRequiredMixin` e o helper central `usuario_possui_permissao()` do app `configuracoes`
 - o mixin exige usuario autenticado, valida a permissao funcional por codigo canonico em `get_permissao_requerida()` e responde com HTTP 403 e mensagem simples quando o usuario autenticado nao tem a permissao exigida ou nao possui perfil-base ativo
 - o enforcement backend foi aplicado nas views principais do `financeiro`, cobrindo home secundaria, listagens, cadastros, edicoes, exclusoes, extratos, resumo, prestacao de contas, auditoria, importacao/exportacao, download de modelo/inconsistencias, clone comum, clone/edicao de rateio, recibo, acoes em lote e endpoints auxiliares de autocomplete/historico/sugestoes

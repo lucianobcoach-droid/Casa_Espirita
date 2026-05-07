@@ -4801,3 +4801,15 @@ Não houve alteração de código funcional nesta etapa.
   - preservacao da matriz monetaria e da matriz sem valores
 - limitacao conhecida registrada: o layout tenta acomodar todos os meses na mesma pagina, mas periodos muito longos dentro do limite de 24 competencias ainda podem ficar apertados conforme navegador/impressora
 - sem alteracao de models, migrations, calculos financeiros, saldos, relatorios existentes ou banco real; nenhum arquivo SQLite foi alterado/versionado
+
+## Microetapa: refinamento da impressao da matriz de frequencia
+
+- refinada a impressao da matriz apos a usuaria observar em PDF que os cabecalhos mensais consumiam largura e comprimiam a coluna `Favorecido`
+- `financeiro/views.py` passou a fornecer `label_print` por competencia no formato `MM/AAAA`, preservando `label` para a tela normal
+- `financeiro/templates/financeiro/frequencia_competencias.html` passou a renderizar:
+  - `Jan/2026`, `Fev/2026` etc. na tela
+  - `01/2026`, `02/2026` etc. no impresso
+- a coluna `Favorecido` foi protegida no print com largura propria em `colgroup`, `nowrap`, `ellipsis` e bloqueio de `word-break`/`overflow-wrap` agressivos
+- as colunas mensais receberam compactacao adicional de fonte/padding e valores/indicadores centralizados no print
+- testes passaram a cobrir os labels compactos de impressao e as classes/regras que impedem a quebra letra por letra do favorecido
+- a fonte da matriz continua sendo `AlocacaoCompetenciaFinanceira`; nao houve alteracao de calculos, saldos, relatorios existentes ou banco real; nenhum arquivo SQLite foi alterado/versionado

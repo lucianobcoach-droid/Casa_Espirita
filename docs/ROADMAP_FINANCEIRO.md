@@ -1118,3 +1118,18 @@ Proxima etapa recomendada:
 
 Proxima etapa recomendada:
 - implementar o termo por favorecido reaproveitando a mesma base de competencias ja consolidada
+
+## 24. Frequencia por competencia - refinamento da impressao
+
+- etapa funcional concluida para corrigir a compressao da coluna `Favorecido` no PDF da matriz
+- ajustes entregues:
+  - cabecalho mensal compacto no impresso em `MM/AAAA`
+  - rotulo de tela preservado em formato amigavel (`Jan/2026`)
+  - coluna `Favorecido` protegida contra quebra letra por letra
+  - colunas mensais mais compactas no print
+  - valores/indicadores centralizados no impresso para reduzir largura
+- limitacao mantida:
+  - periodos mais largos dentro do limite de 24 competencias ainda podem ficar apertados conforme navegador/impressora
+
+Proxima etapa recomendada:
+- implementar o termo por favorecido reaproveitando a mesma base de competencias ja consolidada

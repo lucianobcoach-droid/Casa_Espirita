@@ -1068,3 +1068,18 @@ Consolidacao:
 
 Proxima etapa recomendada:
 - implementar o termo por favorecido usando a mesma base de competencias ja consolidada
+
+### 43. Frequencia por competencia - refinamento da impressao
+
+Status: IMPLEMENTADO
+
+Consolidacao:
+- corrigida a compressao excessiva da coluna `Favorecido` no PDF da matriz de frequencia
+- o impresso passou a usar cabecalho compacto de competencias no formato `MM/AAAA`
+- a tela normal preserva o rotulo visual ja validado
+- a coluna `Favorecido` recebeu largura dedicada e protecao contra quebra letra por letra
+- as colunas mensais foram compactadas no print para economizar largura sem mudar a fonte de dados
+- a limitacao pratica de periodos longos continua registrada
+
+Proxima etapa recomendada:
+- implementar o termo por favorecido usando a mesma base de competencias ja consolidada

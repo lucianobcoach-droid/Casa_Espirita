@@ -189,6 +189,10 @@
         font-weight: 800;
     }
 
+    .financeiro-frequencia-th-print-label {
+        display: none;
+    }
+
     @media screen {
         .financeiro-document-header.only-print,
         .financeiro-document-meta-grid.only-print {
@@ -293,7 +297,7 @@
 
         .financeiro-frequencia-table {
             min-width: 0 !important;
-            font-size: 7.2px !important;
+            font-size: 6.8px !important;
             line-height: 1.15 !important;
             table-layout: fixed;
             margin-bottom: 0 !important;
@@ -315,7 +319,7 @@
 
         .financeiro-frequencia-table th,
         .financeiro-frequencia-table td {
-            padding: 0.14rem 0.18rem !important;
+            padding: 0.12rem 0.14rem !important;
             border-color: #d6dee8 !important;
             position: static !important;
             left: auto !important;
@@ -330,30 +334,60 @@
 
         .financeiro-frequencia-row-person {
             min-width: 0 !important;
-            width: 22% !important;
-            white-space: normal;
-            word-break: break-word;
+            width: 24% !important;
+            max-width: 0;
+            white-space: nowrap !important;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            word-break: normal !important;
+            overflow-wrap: normal !important;
+            hyphens: none !important;
         }
 
         .financeiro-frequencia-cell {
             min-width: 0 !important;
-            width: 5.4% !important;
+            width: 3.9% !important;
+            text-align: center !important;
         }
 
         .financeiro-frequencia-frequency-cell {
             min-width: 0 !important;
-            width: 4.8% !important;
+            width: 3.7% !important;
         }
 
         .financeiro-frequencia-total {
             min-width: 0 !important;
-            width: 8% !important;
+            width: 7% !important;
+            text-align: center !important;
+        }
+
+        .financeiro-frequencia-col-person {
+            width: 24% !important;
+        }
+
+        .financeiro-frequencia-col-total {
+            width: 7% !important;
+        }
+
+        .financeiro-frequencia-col-month {
+            width: auto !important;
         }
 
         .financeiro-frequencia-row-person .financeiro-meta {
-            display: block;
+            display: inline;
+            margin-left: 0.15rem;
             font-size: 6.7px !important;
             line-height: 1.1 !important;
+        }
+
+        .financeiro-frequencia-th-screen-label {
+            display: none !important;
+        }
+
+        .financeiro-frequencia-th-print-label {
+            display: inline !important;
+            white-space: nowrap !important;
+            font-size: 6.3px !important;
         }
 
         .financeiro-frequencia-indicator {
@@ -578,11 +612,21 @@
                 <div class="financeiro-frequencia-table-wrap">
                     <div class="table-wrapper">
                         <table class="table is-fullwidth is-striped is-hoverable financeiro-table financeiro-frequencia-table">
+                            <colgroup>
+                                <col class="financeiro-frequencia-col-person">
+                                {% for coluna in competencias_colunas %}
+                                    <col class="financeiro-frequencia-col-month">
+                                {% endfor %}
+                                <col class="financeiro-frequencia-col-total">
+                            </colgroup>
                             <thead>
                                 <tr>
-                                    <th>Favorecido</th>
+                                    <th class="financeiro-frequencia-row-person">Favorecido</th>
                                     {% for coluna in competencias_colunas %}
-                                        <th class="{% if formato_matriz == 'frequencia' %}financeiro-frequencia-frequency-cell{% else %}financeiro-frequencia-cell{% endif %}">{{ coluna.label }}</th>
+                                        <th class="{% if formato_matriz == 'frequencia' %}financeiro-frequencia-frequency-cell{% else %}financeiro-frequencia-cell{% endif %}" title="{{ coluna.label }}">
+                                            <span class="financeiro-frequencia-th-screen-label">{{ coluna.label }}</span>
+                                            <span class="financeiro-frequencia-th-print-label">{{ coluna.label_print }}</span>
+                                        </th>
                                     {% endfor %}
                                     <th class="financeiro-frequencia-total">Total</th>
                                 </tr>
