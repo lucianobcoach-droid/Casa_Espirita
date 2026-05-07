@@ -1137,6 +1137,9 @@ Consolidacao:
   - valor preenchido no mes e o gatilho da competencia atendida
   - checkbox nao e obrigatorio quando o valor ja representa a competencia
   - modo manual atual permanece
+  - em edicao, lancamento antigo sem competencia deve poder ser regularizado no proprio registro
+  - redistribuicao de competencias nao altera automaticamente o valor financeiro total do lancamento/subcategoria
+  - a UX deve separar `ja registrado` de `valor deste lancamento`
 - desenho tecnico consolidado:
   - o assistente deve preencher os payloads ja existentes
   - nao deve criar nova fonte de dados nem novo fluxo de salvamento
@@ -1151,10 +1154,12 @@ Consolidacao:
 
 Riscos:
 - confusao entre contribuicao previa e lancamento atual
+- confusao entre referencia historica e valor do lancamento atual
 - poluicao excessiva do formulario
 - quebra do fechamento de soma
 - quebra do rateio controlado
 - reintroducao de leitura incorreta de `em aberto`
+- redistribuicao em lancamento quitado ser interpretada como mudanca de valor financeiro
 
 Proxima microetapa recomendada:
 - implementar o MVP do assistente reaproveitando `competencias_payload` e `competencias_rateio_payload`, com o modo manual preservado

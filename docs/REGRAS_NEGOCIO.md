@@ -153,6 +153,10 @@ Este documento consolida regras permanentes do sistema. Ele não substitui o his
 - Na futura UX assistida de competencias, a grade padrao recomendada de sugestao deve cobrir ultimos 5 meses, mes atual e proximos 5.
 - Na futura UX assistida de competencias, `sem valor alocado` deve ser lido como `sem quitacao registrada`, e nao como `em aberto` automatico.
 - Na futura UX assistida de competencias, `valor alocado existente` deve ser lido como `ja possui contribuicao` / `ja quitado`, sem impedir novo complemento em outro lancamento.
+- Na futura UX assistida de competencias, ao editar lancamento existente que atenda favorecido recorrente + subcategoria controlada, o assistente deve aparecer mesmo se ainda nao houver nenhuma competencia salva, permitindo regularizacao do proprio lancamento.
+- Na futura UX assistida de competencias, editar competencias de um lancamento existente tem funcao de redistribuicao gerencial da competencia e nao deve alterar automaticamente o valor financeiro total do lancamento/subcategoria.
+- Na futura UX assistida de competencias, essa redistribuicao pode ocorrer tambem em lancamento quitado, desde que o fluxo atual permita a edicao do lancamento; o cuidado deve ser deixar claro que a alteracao afeta a leitura historica da matriz.
+- Na futura UX assistida de competencias, a interface deve diferenciar claramente `Ja registrado` (referencia historica/consolidada) de `Valor deste lancamento` (campo editavel do formulario atual).
 - Na futura UX assistida de competencias, o assistente deve ser apenas camada de preenchimento dos payloads atuais (`competencias_payload` e `competencias_rateio_payload`), sem criar nova fonte de persistencia nem duplicar validacoes.
 - Na futura UX assistida de competencias, o modo manual atual deve continuar disponivel como base segura e fallback operacional.
 - Em clone comum, competencias existentes nao devem ser copiadas automaticamente para o novo lancamento.

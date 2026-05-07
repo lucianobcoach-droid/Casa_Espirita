@@ -186,6 +186,9 @@ Estas regras devem ser respeitadas em qualquer etapa:
   - ausencia de valor no mes = `sem quitacao registrada`
   - valor previamente alocado no mes = `ja possui contribuicao`
   - valor preenchido no mes atual = gatilho principal da competencia atendida
+- esse assistente deve permitir tambem regularizar lancamentos antigos sem competencia ao abrir `Editar`, desde que o lancamento continue atendendo favorecido recorrente + subcategoria controlada
+- na edicao, a funcao do assistente e redistribuir competencias do proprio lancamento sem alterar automaticamente o valor financeiro total do registro
+- a UX futura deve separar com clareza a referencia historica (`ja registrado`) do valor editavel do formulario atual (`valor deste lancamento`)
 - esse assistente nao deve criar nova fonte de persistencia nem substituir o modo manual; ele deve coexistir com o fluxo manual atual como fallback/base segura
 - a implementacao desse assistente deve ocorrer em microetapa propria e manter a regra de que o rateio trabalha apenas por subcategoria controlada, nunca pelo valor bruto total do documento
 

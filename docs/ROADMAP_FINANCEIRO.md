@@ -1235,10 +1235,27 @@ Observacao:
 
 - edicao simples:
   - carregar competencias ja salvas no mesmo bloco assistido/manual
+- lancamento antigo sem competencia:
+  - se o lancamento existente atender favorecido recorrente + subcategoria controlada, o assistente deve aparecer mesmo sem alocacoes ja salvas
+  - a grade pode abrir vazia para permitir regularizacao no proprio registro
 - edicao coordenada do grupo:
   - carregar competencias ja salvas por subcategoria controlada
 - clone:
   - continua sem copiar competencias automaticamente
+
+### Redistribuicao sem alterar valor total
+
+- a edicao de competencias deve servir para corrigir a distribuicao por competencia sem alterar automaticamente o valor financeiro total do lancamento/subcategoria
+- a soma editada continua precisando fechar com o valor controlado
+- isso vale inclusive para lancamentos quitados ja existentes, como redistribuicao gerencial/historica da competencia
+
+### Referencia historica x valor do formulario atual
+
+- a UX futura deve separar claramente:
+  - `Ja registrado`: valor historico previo naquela pessoa/subcategoria/competencia
+  - `Valor deste lancamento`: campo editavel do formulario atual
+- novo valor em mes ja contribuido nao deve ser bloqueado automaticamente
+- a matriz consolidada continua somando lancamentos diferentes na mesma competencia
 
 ### Fora do MVP
 
@@ -1255,7 +1272,9 @@ Observacao:
 ### Riscos principais
 
 - usuario confundir contribuicao anterior com o valor do lancamento atual
+- usuario confundir `ja registrado` com `valor deste lancamento`
 - usuario preencher valor em mes ja contribuido e interpretar isso como duplicidade proibida, quando na verdade a matriz soma multiplos lancamentos
+- usuario interpretar redistribuicao de competencias como alteracao do valor financeiro quitado
 - poluicao excessiva do formulario
 - quebra da validacao de soma do valor controlado
 - quebra do rateio controlado se o assistente fugir dos payloads atuais

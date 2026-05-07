@@ -3710,10 +3710,23 @@ Riscos principais antes de migration:
   - lancamento simples: uma grade para a subcategoria controlada do lancamento
   - rateio: uma grade por subcategoria controlada do grupo, sem usar o valor bruto total do documento
   - edicao: carregar competencias ja salvas no mesmo bloco assistido/manual
+  - lancamento antigo sem competencia: se em `Editar` o lancamento existente atender favorecido recorrente + subcategoria controlada, o assistente deve aparecer mesmo sem alocacoes ja salvas, com grade vazia pronta para regularizacao
   - clone: continua sem copiar competencias automaticamente
 - decisao funcional recomendada para referencia visual:
   - mostrar no assistente o valor ja alocado anteriormente naquela competencia como apoio
   - ainda assim permitir novo valor no mes, pois a matriz futura soma multiplos lancamentos
+- complemento desta SPEC para novo lancamento x edicao:
+  - `ja registrado` = valor historico ja existente para aquela pessoa/subcategoria/competencia, em outros lancamentos ou como referencia consolidada
+  - `valor deste lancamento` = campo editavel do lancamento atual; somente isso entra no payload atual
+  - em edicao do proprio lancamento, o assistente deve carregar as competencias atuais do registro como base editavel
+- redistribuicao em edicao:
+  - a edicao de competencias existe para corrigir a distribuicao gerencial por competencia, sem alterar automaticamente o valor financeiro total do lancamento/subcategoria
+  - a soma editada continua precisando fechar exatamente com o valor controlado do lancamento simples ou da subcategoria controlada do rateio
+  - isso inclui lancamentos quitados ja existentes, desde que o sistema permita a edicao do lancamento; a redistribuicao afeta a leitura gerencial/matriz, nao cria novo valor financeiro
+- comportamento esperado em lancamento quitado:
+  - nao criar bloqueio novo nesta SPEC apenas por estar quitado
+  - permitir ajuste das competencias como redistribuicao historica controlada
+  - registrar como cuidado de UX que essa edicao altera a matriz historica e deve deixar claro o que ja estava salvo e o que esta sendo ajustado
 - integracao tecnica consolidada para futura implementacao:
   - o assistente deve apenas montar/preencher os payloads atuais
   - nao deve criar nova fonte de dados nem novo fluxo de salvamento
@@ -3730,7 +3743,9 @@ Riscos principais antes de migration:
   - mudancas na matriz de frequencia
 - riscos registrados para a futura implementacao:
   - confusao entre contribuicao anterior e contribuicao do lancamento atual
+  - confusao entre `ja registrado` e `valor deste lancamento`
   - complemento em mes ja quitado ser confundido com duplicidade dentro do mesmo lancamento
+  - usuario interpretar redistribuicao de competencias como alteracao do valor financeiro quitado
   - risco de poluicao visual excessiva no formulario
   - risco de quebrar o fechamento de soma do valor controlado
   - risco de quebrar o rateio controlado se o assistente fugir dos payloads atuais

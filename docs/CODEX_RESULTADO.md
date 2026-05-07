@@ -4888,6 +4888,7 @@ Não houve alteração de código funcional nesta etapa.
   - lancamento simples: uma grade para a subcategoria controlada do lancamento
   - rateio: uma grade por subcategoria controlada, sem usar valor bruto do documento
   - edicao simples e edicao coordenada do grupo devem carregar competencias ja salvas
+  - lancamento antigo sem competencia deve abrir o assistente vazio e pronto para regularizacao, desde que o lancamento atenda favorecido recorrente + subcategoria controlada
   - clone continua sem copiar competencias automaticamente
 - riscos e limites registrados:
   - confusao entre contribuicao previa e valor do lancamento atual
@@ -4903,3 +4904,19 @@ Não houve alteração de código funcional nesta etapa.
   - `financeiro/templates/financeiro/lancamento_rateio_grupo_form.html`
 - proxima microetapa recomendada registrada:
   - implementar o MVP do assistente reaproveitando os payloads atuais e preservando integralmente o modo manual
+
+## Microetapa documental: complemento da SPEC do Assistente inteligente de competencias
+
+- complementei a SPEC anterior para esclarecer comportamento em edicao, regularizacao historica e diferenca entre referencia consolidada e valor do lancamento atual
+- pontos novos registrados:
+  - em `Editar`, lancamento antigo sem nenhuma competencia salva deve exibir o assistente quando houver favorecido recorrente + subcategoria controlada
+  - a grade pode abrir vazia para permitir inserir competencias do zero no proprio lancamento existente
+  - a edicao de competencias tem funcao de redistribuicao gerencial, sem alterar automaticamente o valor financeiro total do lancamento/subcategoria
+  - essa redistribuicao tambem pode ocorrer em lancamento quitado, desde que a edicao do lancamento seja permitida pelo fluxo atual
+  - em novo lancamento, quando o mes ja tiver contribuicao anterior, a UX futura deve separar claramente:
+    - `Ja registrado`
+    - `Valor deste lancamento`
+  - o valor novo digitado pertence apenas ao payload do lancamento atual; a soma consolidada aparece depois na matriz
+- tambem registrei risco adicional de o usuario confundir:
+  - historico ja registrado x valor do formulario atual
+  - redistribuicao de competencia x alteracao do valor financeiro quitado
