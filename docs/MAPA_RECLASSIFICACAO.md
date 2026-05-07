@@ -1163,3 +1163,30 @@ Riscos:
 
 Proxima microetapa recomendada:
 - implementar o MVP do assistente reaproveitando `competencias_payload` e `competencias_rateio_payload`, com o modo manual preservado
+
+### 47. Assistente inteligente de competencias - MVP funcional
+
+Status apos microetapa funcional: IMPLEMENTADO
+
+Consolidacao:
+- o assistente foi implementado como camada assistida sobre os payloads atuais, sem nova persistencia
+- reaproveitos consolidados:
+  - `competencias_payload`
+  - `competencias_rateio_payload`
+- coberturas funcionais entregues:
+  - lancamento simples novo
+  - edicao simples
+  - regularizacao de lancamento antigo sem competencia
+  - rateio controlado
+  - edicao de grupo rateado
+- regras preservadas:
+  - meses sugeridos = ultimos 5 + atual + proximos 5
+  - `Ja registrado` e apenas referencia historica
+  - `Valor deste lancamento` e o unico valor que entra no payload atual
+  - modo manual continua disponivel
+  - soma continua fechando com valor controlado
+  - item nao controlado continua fora do assistente/rateio de competencia
+- sem alteracao de model, migration, calculos, saldos ou banco real
+
+Proxima microetapa recomendada:
+- validar o MVP em uso real e registrar os ajustes finos de UX antes de abrir nova frente de competencia/termo

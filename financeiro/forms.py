@@ -1,14 +1,16 @@
 from __future__ import annotations
 
 import json
+from datetime import date
 from decimal import Decimal, InvalidOperation
 from uuid import uuid4
 
 from django import forms
 from django.core.exceptions import ValidationError
-from django.db.models import Q
+from django.db.models import Q, Sum
 from django.forms.models import construct_instance
 from django.urls import reverse_lazy
+from django.utils import timezone
 
 from .models import (
     AlocacaoCompetenciaFinanceira,
@@ -20,6 +22,21 @@ from .models import (
     LancamentoFinanceiro,
     PessoaFinanceira,
     TipoContaFinanceira,
+)
+
+MESES_PT_BR_ABREV = (
+    'Jan',
+    'Fev',
+    'Mar',
+    'Abr',
+    'Mai',
+    'Jun',
+    'Jul',
+    'Ago',
+    'Set',
+    'Out',
+    'Nov',
+    'Dez',
 )
 
 
@@ -116,6 +133,115 @@ def _linhas_rateio_controladas(
         if categoria.controla_recorrencia_competencia and categoria.permite_vinculo_em_lancamento:
             linhas_controladas.append(linha)
     return linhas_controladas
+
+
+def _formatar_decimal_brl(valor: Decimal | str | None) -> str:
+    if valor in (None, ''):
+        return ''
+
+    if not isinstance(valor, Decimal):
+        try:
+            valor = Decimal(str(valor))
+        except (InvalidOperation, TypeError, ValueError):
+            return ''
+
+    valor = valor.quantize(Decimal('0.01'))
+    negativo = valor < Decimal('0.00')
+    valor_absoluto = abs(valor)
+    inteiro, centavos = f'{valor_absoluto:.2f}'.split('.')
+    inteiro_formatado = f'{int(inteiro):,}'.replace(',', '.')
+    prefixo = '-R$ ' if negativo else 'R$ '
+    return f'{prefixo}{inteiro_formatado},{centavos}'
+
+
+def _iterar_meses_assistente(referencia: date) -> list[tuple[int, int]]:
+    base_indice = referencia.year * 12 + (referencia.month - 1)
+    competencias: list[tuple[int, int]] = []
+    for deslocamento in range(-5, 6):
+        indice_atual = base_indice + deslocamento
+        ano_atual = indice_atual // 12
+        mes_atual = (indice_atual % 12) + 1
+        competencias.append((ano_atual, mes_atual))
+    return competencias
+
+
+def _montar_assistente_meses(
+    *,
+    referencia: date,
+    pessoa_id: int | None,
+    categoria_id: int | None,
+    linhas_atuais: list[dict[str, str]],
+    registro_lookup: dict[str, dict[str, dict[str, str]]],
+) -> list[dict[str, object]]:
+    linhas_por_competencia: dict[str, str] = {}
+    for linha in linhas_atuais:
+        mes_raw = str(linha.get('mes', '') or '').strip()
+        ano_raw = str(linha.get('ano', '') or '').strip()
+        valor_raw = str(linha.get('valor', '') or '').strip()
+        if not mes_raw or not ano_raw:
+            continue
+        try:
+            chave = f'{int(ano_raw):04d}-{int(mes_raw):02d}'
+        except (TypeError, ValueError):
+            continue
+        linhas_por_competencia[chave] = valor_raw
+
+    registros_categoria = (
+        registro_lookup.get(str(pessoa_id or ''), {}).get(str(categoria_id or ''), {})
+        if pessoa_id and categoria_id
+        else {}
+    )
+
+    meses = []
+    for ano_competencia, mes_competencia in _iterar_meses_assistente(referencia):
+        chave = f'{ano_competencia:04d}-{mes_competencia:02d}'
+        valor_registrado = registros_categoria.get(chave, '')
+        valor_lancamento = linhas_por_competencia.get(chave, '')
+        possui_registro = bool(valor_registrado and Decimal(valor_registrado or '0.00') > Decimal('0.00'))
+        meses.append(
+            {
+                'chave': chave,
+                'mes': mes_competencia,
+                'ano': ano_competencia,
+                'label': f'{MESES_PT_BR_ABREV[mes_competencia - 1]}/{ano_competencia}',
+                'ja_registrado': valor_registrado,
+                'ja_registrado_texto': _formatar_decimal_brl(valor_registrado) if possui_registro else '',
+                'ja_possui_contribuicao': possui_registro,
+                'status_texto': 'Ja possui contribuicao' if possui_registro else 'Sem quitacao registrada',
+                'valor_lancamento': valor_lancamento,
+                'valor_lancamento_texto': _formatar_decimal_brl(valor_lancamento).replace('R$ ', '')
+                if valor_lancamento
+                else '',
+            }
+        )
+    return meses
+
+
+def _montar_lookup_competencias_registradas(
+    *,
+    excluir_lancamento_ids: set[int] | None = None,
+) -> dict[str, dict[str, dict[str, str]]]:
+    queryset = AlocacaoCompetenciaFinanceira.objects.filter(
+        categoria__controla_recorrencia_competencia=True,
+        lancamento__pessoa__contribuinte_recorrente=True,
+    )
+    if excluir_lancamento_ids:
+        queryset = queryset.exclude(lancamento_id__in=excluir_lancamento_ids)
+
+    lookup: dict[str, dict[str, dict[str, str]]] = {}
+    for registro in queryset.values(
+        'lancamento__pessoa_id',
+        'categoria_id',
+        'ano_competencia',
+        'mes_competencia',
+    ).annotate(total=Sum('valor_alocado')):
+        pessoa_key = str(registro['lancamento__pessoa_id'])
+        categoria_key = str(registro['categoria_id'])
+        competencia_key = f"{registro['ano_competencia']:04d}-{registro['mes_competencia']:02d}"
+        lookup.setdefault(pessoa_key, {}).setdefault(categoria_key, {})[competencia_key] = (
+            f"{registro['total']:.2f}"
+        )
+    return lookup
 
 
 class ContaFinanceiraForm(forms.ModelForm):
@@ -303,6 +429,11 @@ class LancamentoFinanceiroForm(forms.ModelForm):
         self.rateio_linhas_iniciais = []
         self.competencias_linhas_iniciais = []
         self.competencias_rateio_iniciais: dict[str, list[dict[str, str]]] = {}
+        self.assistente_competencia_bloco_visivel = False
+        self.assistente_competencia_meses_sugeridos: list[dict[str, object]] = []
+        self.assistente_competencia_registro_lookup = _montar_lookup_competencias_registradas(
+            excluir_lancamento_ids={self.instance.pk} if self.instance.pk else set()
+        )
         tipo_atual = self._get_tipo_atual()
         categoria_inicial = self.initial.get('categoria') or self.instance.categoria
         categoria_inicial_id = getattr(categoria_inicial, 'pk', categoria_inicial)
@@ -389,6 +520,7 @@ class LancamentoFinanceiroForm(forms.ModelForm):
             )
         self.fields['categoria'].widget.attrs.pop('required', None)
         self.fields['pessoa'].widget.attrs.pop('required', None)
+        self._atualizar_assistente_competencia()
 
     def _get_tipo_atual(self) -> str:
         if self.is_bound:
@@ -397,6 +529,104 @@ class LancamentoFinanceiroForm(forms.ModelForm):
             self.initial.get('tipo')
             or self.instance.tipo
             or LancamentoFinanceiro.TipoLancamento.RECEITA
+        )
+
+    def _resolver_data_referencia_assistente(self) -> date:
+        data_referencia = None
+        if self.is_bound:
+            data_referencia_raw = (
+                self.data.get(self.add_prefix('data_competencia'))
+                or self.data.get(self.add_prefix('data_pagamento'))
+                or ''
+            ).strip()
+            if data_referencia_raw:
+                try:
+                    data_referencia = date.fromisoformat(data_referencia_raw)
+                except ValueError:
+                    data_referencia = None
+
+        if data_referencia is None:
+            data_referencia = (
+                self.initial.get('data_competencia')
+                or getattr(self.instance, 'data_competencia', None)
+                or self.initial.get('data_pagamento')
+                or getattr(self.instance, 'data_pagamento', None)
+            )
+
+        if hasattr(data_referencia, 'date'):
+            data_referencia = data_referencia.date()
+        if isinstance(data_referencia, date):
+            return data_referencia
+        return timezone.localdate()
+
+    def _resolver_pessoa_atual(self) -> PessoaFinanceira | None:
+        if self.is_bound:
+            pessoa_id = (self.data.get(self.add_prefix('pessoa')) or '').strip()
+            if pessoa_id.isdigit():
+                return PessoaFinanceira.objects.filter(pk=int(pessoa_id)).first()
+            return None
+        pessoa = self.initial.get('pessoa') or getattr(self.instance, 'pessoa', None)
+        if isinstance(pessoa, PessoaFinanceira) or pessoa is None:
+            return pessoa
+        if str(pessoa).isdigit():
+            return PessoaFinanceira.objects.filter(pk=int(pessoa)).first()
+        return None
+
+    def _resolver_categoria_atual(self) -> CategoriaFinanceira | None:
+        if self.is_bound:
+            categoria_id = (self.data.get(self.add_prefix('categoria')) or '').strip()
+            if categoria_id.isdigit():
+                return CategoriaFinanceira.objects.filter(pk=int(categoria_id)).first()
+            return None
+        categoria = self.initial.get('categoria') or getattr(self.instance, 'categoria', None)
+        if isinstance(categoria, CategoriaFinanceira) or categoria is None:
+            return categoria
+        if str(categoria).isdigit():
+            return CategoriaFinanceira.objects.filter(pk=int(categoria)).first()
+        return None
+
+    def _lancamento_com_rateio_raw(self) -> bool:
+        if self.instance.pk:
+            return False
+        if self.is_bound:
+            return bool(self.data.get(self.add_prefix('lancamento_com_rateio')))
+        return bool(self.initial.get('lancamento_com_rateio'))
+
+    def _atualizar_assistente_competencia(self, cleaned_data: dict | None = None) -> None:
+        if cleaned_data is None:
+            tipo = self._get_tipo_atual()
+            pessoa = self._resolver_pessoa_atual()
+            categoria = self._resolver_categoria_atual()
+            lancamento_com_rateio = self._lancamento_com_rateio_raw()
+        else:
+            tipo = cleaned_data.get('tipo')
+            pessoa = cleaned_data.get('pessoa')
+            categoria = cleaned_data.get('categoria')
+            lancamento_com_rateio = bool(cleaned_data.get('lancamento_com_rateio')) and not self.instance.pk
+
+        aplicavel = bool(
+            not lancamento_com_rateio
+            and tipo in {
+                LancamentoFinanceiro.TipoLancamento.RECEITA,
+                LancamentoFinanceiro.TipoLancamento.DESPESA,
+            }
+            and pessoa
+            and categoria
+            and pessoa.contribuinte_recorrente
+            and categoria.controla_recorrencia_competencia
+            and categoria.permite_vinculo_em_lancamento
+        )
+        self.assistente_competencia_bloco_visivel = bool(
+            aplicavel
+            or self.competencias_linhas_iniciais
+            or (self.instance.pk and self.instance.usa_controle_competencia())
+        )
+        self.assistente_competencia_meses_sugeridos = _montar_assistente_meses(
+            referencia=self._resolver_data_referencia_assistente(),
+            pessoa_id=getattr(pessoa, 'pk', None),
+            categoria_id=getattr(categoria, 'pk', None),
+            linhas_atuais=self.competencias_linhas_iniciais,
+            registro_lookup=self.assistente_competencia_registro_lookup,
         )
 
     def _parse_rateio_payload(self, payload: str) -> list[dict[str, str]]:
@@ -733,6 +963,10 @@ class LancamentoFinanceiroForm(forms.ModelForm):
             self._validar_competencias_rateio(cleaned_data)
         else:
             cleaned_data['competencias_rateio_por_categoria'] = {}
+        self.competencias_bloco_visivel = bool(
+            self.competencias_linhas_iniciais or cleaned_data['competencias_requeridas']
+        )
+        self._atualizar_assistente_competencia(cleaned_data)
         return cleaned_data
 
     def _post_clean(self):
@@ -830,6 +1064,7 @@ class LancamentoFinanceiroGrupoRateioForm(forms.ModelForm):
         self.grupo_lancamentos = list(grupo_lancamentos or [])
         self.rateio_linhas_iniciais: list[dict[str, str]] = []
         self.competencias_rateio_iniciais: dict[str, list[dict[str, str]]] = {}
+        self.assistente_competencia_rateio_grupos_iniciais: list[dict[str, object]] = []
         super().__init__(*args, **kwargs)
         for field_name in ('data_competencia', 'data_pagamento'):
             self.fields[field_name].widget.format = '%Y-%m-%d'
@@ -901,6 +1136,120 @@ class LancamentoFinanceiroGrupoRateioForm(forms.ModelForm):
                 Decimal('0.00'),
             )
         self.competencias_rateio_bloco_visivel = bool(self.competencias_rateio_iniciais)
+        self.assistente_competencia_registro_lookup = _montar_lookup_competencias_registradas(
+            excluir_lancamento_ids={lancamento.pk for lancamento in self.grupo_lancamentos if lancamento.pk}
+        )
+        self._atualizar_assistente_competencia_rateio()
+
+    def _resolver_data_referencia_assistente(self) -> date:
+        if self.is_bound:
+            data_referencia_raw = (
+                self.data.get(self.add_prefix('data_competencia'))
+                or self.data.get(self.add_prefix('data_pagamento'))
+                or ''
+            ).strip()
+            if data_referencia_raw:
+                try:
+                    return date.fromisoformat(data_referencia_raw)
+                except ValueError:
+                    pass
+
+        data_referencia = (
+            getattr(self.instance, 'data_competencia', None)
+            or getattr(self.instance, 'data_pagamento', None)
+        )
+        if hasattr(data_referencia, 'date'):
+            data_referencia = data_referencia.date()
+        if isinstance(data_referencia, date):
+            return data_referencia
+        return timezone.localdate()
+
+    def _resolver_pessoa_atual(self) -> PessoaFinanceira | None:
+        if self.is_bound:
+            pessoa_id = (self.data.get(self.add_prefix('pessoa')) or '').strip()
+            if pessoa_id.isdigit():
+                return PessoaFinanceira.objects.filter(pk=int(pessoa_id)).first()
+            return None
+        pessoa = getattr(self.instance, 'pessoa', None)
+        if isinstance(pessoa, PessoaFinanceira) or pessoa is None:
+            return pessoa
+        if str(pessoa).isdigit():
+            return PessoaFinanceira.objects.filter(pk=int(pessoa)).first()
+        return None
+
+    def _resolver_rateio_linhas_atuais(
+        self,
+        *,
+        cleaned_data: dict | None = None,
+    ) -> list[dict[str, object]]:
+        tipo = cleaned_data.get('tipo') if cleaned_data else self._get_tipo_atual()
+        pessoa = cleaned_data.get('pessoa') if cleaned_data else self._resolver_pessoa_atual()
+        if cleaned_data is not None and cleaned_data.get('rateio_linhas'):
+            return _linhas_rateio_controladas(
+                tipo=tipo,
+                pessoa=pessoa,
+                rateio_linhas=cleaned_data.get('rateio_linhas'),
+            )
+
+        categorias_disponiveis = {
+            str(categoria.pk): categoria for categoria in categorias_vinculaveis_queryset(tipo)
+        }
+        consolidadas: dict[str, dict[str, object]] = {}
+        for linha in self.rateio_linhas_iniciais:
+            categoria_id = str(linha.get('categoria', '') or '').strip()
+            valor_raw = str(linha.get('valor', '') or '').strip()
+            categoria = categorias_disponiveis.get(categoria_id)
+            if categoria is None:
+                continue
+            try:
+                valor = Decimal(valor_raw)
+            except (InvalidOperation, TypeError):
+                continue
+            if valor <= Decimal('0.00'):
+                continue
+            grupo = consolidadas.setdefault(
+                categoria_id,
+                {'categoria': categoria, 'valor': Decimal('0.00')},
+            )
+            grupo['valor'] += valor
+        return _linhas_rateio_controladas(
+            tipo=tipo,
+            pessoa=pessoa,
+            rateio_linhas=list(consolidadas.values()),
+        )
+
+    def _get_tipo_atual(self) -> str:
+        if self.is_bound:
+            return (self.data.get(self.add_prefix('tipo')) or '').strip()
+        return (
+            self.initial.get('tipo')
+            or self.instance.tipo
+            or LancamentoFinanceiro.TipoLancamento.RECEITA
+        )
+
+    def _atualizar_assistente_competencia_rateio(self, cleaned_data: dict | None = None) -> None:
+        grupos_iniciais: list[dict[str, object]] = []
+        pessoa = cleaned_data.get('pessoa') if cleaned_data else self._resolver_pessoa_atual()
+        for linha in self._resolver_rateio_linhas_atuais(cleaned_data=cleaned_data):
+            categoria = linha['categoria']
+            grupos_iniciais.append(
+                {
+                    'categoria_id': str(categoria.pk),
+                    'categoria_label': str(categoria),
+                    'valor_controlado_texto': _formatar_decimal_brl(linha['valor']),
+                    'meses': _montar_assistente_meses(
+                        referencia=self._resolver_data_referencia_assistente(),
+                        pessoa_id=getattr(pessoa, 'pk', None),
+                        categoria_id=categoria.pk,
+                        linhas_atuais=self.competencias_rateio_iniciais.get(str(categoria.pk), []),
+                        registro_lookup=self.assistente_competencia_registro_lookup,
+                    ),
+                }
+            )
+        self.assistente_competencia_rateio_grupos_iniciais = grupos_iniciais
+        self.competencias_rateio_bloco_visivel = bool(
+            self.competencias_rateio_iniciais or self.assistente_competencia_rateio_grupos_iniciais
+        )
 
     def _parse_rateio_payload(self, payload: str) -> list[dict[str, str]]:
         if not payload:
@@ -1146,6 +1495,7 @@ class LancamentoFinanceiroGrupoRateioForm(forms.ModelForm):
                 continue
             competencias_rateio_por_categoria[categoria.pk] = linhas_competencia
         cleaned_data['competencias_rateio_por_categoria'] = competencias_rateio_por_categoria
+        self._atualizar_assistente_competencia_rateio(cleaned_data)
         return cleaned_data
 
     def _post_clean(self):

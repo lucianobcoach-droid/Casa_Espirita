@@ -159,6 +159,12 @@ Este documento consolida regras permanentes do sistema. Ele não substitui o his
 - Na futura UX assistida de competencias, a interface deve diferenciar claramente `Ja registrado` (referencia historica/consolidada) de `Valor deste lancamento` (campo editavel do formulario atual).
 - Na futura UX assistida de competencias, o assistente deve ser apenas camada de preenchimento dos payloads atuais (`competencias_payload` e `competencias_rateio_payload`), sem criar nova fonte de persistencia nem duplicar validacoes.
 - Na futura UX assistida de competencias, o modo manual atual deve continuar disponivel como base segura e fallback operacional.
+- No MVP implementado do assistente de competencias, a grade sugerida padrao deve cobrir exatamente 11 meses (ultimos 5, mes atual e proximos 5), tomando `data_competencia` como referencia principal e `data_pagamento`/data atual apenas como fallback tecnico.
+- No MVP implementado do assistente de competencias, `Ja registrado` serve apenas como referencia historica consolidada da mesma pessoa + subcategoria + competencia e nao pode entrar automaticamente no payload do lancamento atual.
+- No MVP implementado do assistente de competencias, `Valor deste lancamento` e o campo editavel que alimenta o payload atual; se vazio, nao entra; se positivo, entra e segue sujeito as validacoes backend ja existentes.
+- No MVP implementado do assistente de competencias, o assistente deve aparecer em edicao mesmo para lancamento antigo sem competencias salvas, desde que o registro atenda favorecido recorrente + subcategoria controlada.
+- No MVP implementado do assistente de competencias, a redistribuicao de competencias em edicao simples ou rateada nao altera automaticamente o valor financeiro total do registro; apenas reorganiza a leitura gerencial por competencia, mantendo a soma fechada contra o valor controlado.
+- No MVP implementado do assistente de competencias, o rateio assistido deve abrir uma grade independente para cada subcategoria controlada do grupo e ignorar itens nao controlados.
 - Em clone comum, competencias existentes nao devem ser copiadas automaticamente para o novo lancamento.
 - Em clone de rateio, competencias tambem nao devem ser copiadas automaticamente para evitar duplicidade de quitacao por competencia.
 - No MVP inicial, nao abrir modulo separado de baixa; manter o fluxo no proprio lancamento e tratar termo por favorecido como segunda onda apos validacao da matriz.

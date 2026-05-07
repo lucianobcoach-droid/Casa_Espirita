@@ -1910,6 +1910,59 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
         request.user = type('UserStub', (), {'is_authenticated': False})()
         return request
 
+    def _build_get_request(self, path='/'):
+        request = self.factory.get(path)
+        request.user = type('UserStub', (), {'is_authenticated': False})()
+        return request
+
+    def _render_lancamento_form(self, form):
+        request = self._build_get_request('/financeiro/lancamentos/novo/')
+        return render_to_string(
+            'financeiro/lancamento_form.html',
+            {
+                'form': form,
+                'page_title': 'Novo Lancamento Financeiro',
+                'cancel_url': '/financeiro/lancamentos/',
+                'submit_label': 'Salvar',
+                'allow_save_and_stay': False,
+                'return_to': '',
+                'save_and_stay_param': 'salvar_permanecer',
+                'rateio_categoria_opcoes': [
+                    {'id': self.categoria_controlada.pk, 'label': str(self.categoria_controlada), 'tipo': self.categoria_controlada.tipo},
+                    {'id': self.categoria_nao_controlada.pk, 'label': str(self.categoria_nao_controlada), 'tipo': self.categoria_nao_controlada.tipo},
+                ],
+                'competencia_pessoas_recorrentes_ids': [self.pessoa_recorrente.pk],
+                'competencia_categorias_controladas_ids': [self.categoria_controlada.pk],
+                'request': request,
+            },
+            request=request,
+        )
+
+    def _render_rateio_form(self, form, grupo_rateio='grp-render'):
+        request = self._build_get_request(f'/financeiro/lancamentos/rateio/{grupo_rateio}/editar/')
+        return render_to_string(
+            'financeiro/lancamento_rateio_grupo_form.html',
+            {
+                'form': form,
+                'page_title': 'Editar Lancamento Financeiro',
+                'submit_label': 'Atualizar',
+                'cancel_url': '/financeiro/lancamentos/',
+                'return_to': '',
+                'grupo_rateio': grupo_rateio,
+                'grupo_rateio_quantidade_linhas': len(form.grupo_lancamentos),
+                'grupo_rateio_valor_total': '130,00',
+                'grupo_rateio_linha_representativa': form.instance,
+                'rateio_categoria_opcoes': [
+                    {'id': self.categoria_controlada.pk, 'label': str(self.categoria_controlada), 'tipo': self.categoria_controlada.tipo},
+                    {'id': self.categoria_nao_controlada.pk, 'label': str(self.categoria_nao_controlada), 'tipo': self.categoria_nao_controlada.tipo},
+                ],
+                'competencia_pessoas_recorrentes_ids': [self.pessoa_recorrente.pk],
+                'competencia_categorias_controladas_ids': [self.categoria_controlada.pk],
+                'request': request,
+            },
+            request=request,
+        )
+
     def test_model_permite_criar_alocacao_valida(self):
         lancamento = self._criar_lancamento_controlado()
         alocacao = AlocacaoCompetenciaFinanceira(
@@ -2099,6 +2152,118 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
             ],
         )
         self.assertTrue(form.competencias_bloco_visivel)
+
+    def test_assistente_simples_exibe_11_meses_e_separa_ja_registrado_do_valor_do_lancamento(self):
+        LancamentoFinanceiro.objects.create(
+            descricao='Recebimento anterior',
+            tipo=LancamentoFinanceiro.TipoLancamento.RECEITA,
+            status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+            valor=Decimal('50.00'),
+            data_competencia=date(2026, 1, 8),
+            data_pagamento=date(2026, 1, 8),
+            numero_documento='ANT-001',
+            pessoa=self.pessoa_recorrente,
+            categoria=self.categoria_controlada,
+            conta=self.conta,
+        )
+        anterior = LancamentoFinanceiro.objects.get(numero_documento='ANT-001')
+        AlocacaoCompetenciaFinanceira.objects.create(
+            lancamento=anterior,
+            categoria=self.categoria_controlada,
+            ano_competencia=2026,
+            mes_competencia=1,
+            valor_alocado=Decimal('50.00'),
+        )
+
+        lancamento = self._criar_lancamento_controlado(valor='100.00')
+        AlocacaoCompetenciaFinanceira.objects.create(
+            lancamento=lancamento,
+            categoria=self.categoria_controlada,
+            ano_competencia=2026,
+            mes_competencia=1,
+            valor_alocado=Decimal('30.00'),
+        )
+        AlocacaoCompetenciaFinanceira.objects.create(
+            lancamento=lancamento,
+            categoria=self.categoria_controlada,
+            ano_competencia=2026,
+            mes_competencia=2,
+            valor_alocado=Decimal('70.00'),
+        )
+
+        form = LancamentoFinanceiroForm(instance=lancamento)
+        janeiro = next(
+            mes for mes in form.assistente_competencia_meses_sugeridos
+            if mes['ano'] == 2026 and mes['mes'] == 1
+        )
+
+        self.assertEqual(len(form.assistente_competencia_meses_sugeridos), 11)
+        self.assertTrue(form.assistente_competencia_bloco_visivel)
+        self.assertEqual(janeiro['ja_registrado'], '50.00')
+        self.assertEqual(janeiro['valor_lancamento'], '30.00')
+
+    def test_assistente_simples_aparece_na_edicao_sem_competencias_para_regularizacao(self):
+        lancamento = self._criar_lancamento_controlado()
+
+        form = LancamentoFinanceiroForm(instance=lancamento)
+
+        self.assertTrue(form.assistente_competencia_bloco_visivel)
+        self.assertEqual(len(form.assistente_competencia_meses_sugeridos), 11)
+        self.assertTrue(all(not item['valor_lancamento'] for item in form.assistente_competencia_meses_sugeridos))
+
+    def test_assistente_simples_nao_aparece_para_favorecido_nao_recorrente(self):
+        lancamento = LancamentoFinanceiro.objects.create(
+            descricao='Recebimento avulso',
+            tipo=LancamentoFinanceiro.TipoLancamento.RECEITA,
+            status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+            valor=Decimal('100.00'),
+            data_competencia=date(2026, 3, 10),
+            data_pagamento=date(2026, 3, 10),
+            numero_documento='AVULSO-001',
+            pessoa=self.pessoa_avulsa,
+            categoria=self.categoria_controlada,
+            conta=self.conta,
+        )
+
+        form = LancamentoFinanceiroForm(instance=lancamento)
+
+        self.assertFalse(form.assistente_competencia_bloco_visivel)
+
+    def test_assistente_simples_nao_aparece_para_subcategoria_nao_controlada(self):
+        lancamento = LancamentoFinanceiro.objects.create(
+            descricao='Recebimento sem controle',
+            tipo=LancamentoFinanceiro.TipoLancamento.RECEITA,
+            status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+            valor=Decimal('100.00'),
+            data_competencia=date(2026, 3, 10),
+            data_pagamento=date(2026, 3, 10),
+            numero_documento='LIVRO-001',
+            pessoa=self.pessoa_recorrente,
+            categoria=self.categoria_nao_controlada,
+            conta=self.conta,
+        )
+
+        form = LancamentoFinanceiroForm(instance=lancamento)
+
+        self.assertFalse(form.assistente_competencia_bloco_visivel)
+
+    def test_template_lancamento_form_exibe_rotulos_do_assistente(self):
+        lancamento = self._criar_lancamento_controlado()
+        AlocacaoCompetenciaFinanceira.objects.create(
+            lancamento=lancamento,
+            categoria=self.categoria_controlada,
+            ano_competencia=2026,
+            mes_competencia=1,
+            valor_alocado=Decimal('100.00'),
+        )
+        form = LancamentoFinanceiroForm(instance=lancamento)
+
+        html = self._render_lancamento_form(form)
+
+        self.assertIn('Assistente de competencias', html)
+        self.assertIn('Valor deste lancamento', html)
+        self.assertIn('Ja registrado:', html)
+        self.assertIn('financeiro-competencia-assistente-grid', html)
 
     def test_rateio_com_item_controlado_exige_competencias_pela_parte_controlada(self):
         dados = self._dados_rateio()
@@ -2307,6 +2472,167 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
                 ]
             },
         )
+
+    def test_assistente_rateio_exibe_ja_registrado_e_valor_do_grupo_atual_separadamente(self):
+        anterior = LancamentoFinanceiro.objects.create(
+            descricao='Recebimento anterior',
+            tipo=LancamentoFinanceiro.TipoLancamento.RECEITA,
+            status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+            valor=Decimal('50.00'),
+            data_competencia=date(2026, 1, 12),
+            data_pagamento=date(2026, 1, 12),
+            numero_documento='RATEIO-ANT',
+            pessoa=self.pessoa_recorrente,
+            categoria=self.categoria_controlada,
+            conta=self.conta,
+        )
+        AlocacaoCompetenciaFinanceira.objects.create(
+            lancamento=anterior,
+            categoria=self.categoria_controlada,
+            ano_competencia=2026,
+            mes_competencia=1,
+            valor_alocado=Decimal('50.00'),
+        )
+
+        grupo_rateio = 'grp-assistente'
+        lancamento_controlado = LancamentoFinanceiro.objects.create(
+            descricao='Recebimento rateado',
+            tipo=LancamentoFinanceiro.TipoLancamento.RECEITA,
+            status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+            valor=Decimal('100.00'),
+            data_competencia=date(2026, 3, 10),
+            data_pagamento=date(2026, 3, 10),
+            numero_documento='100326-777',
+            pessoa=self.pessoa_recorrente,
+            categoria=self.categoria_controlada,
+            conta=self.conta,
+            com_rateio=True,
+            grupo_rateio=grupo_rateio,
+        )
+        lancamento_nao_controlado = LancamentoFinanceiro.objects.create(
+            descricao='Recebimento rateado',
+            tipo=LancamentoFinanceiro.TipoLancamento.RECEITA,
+            status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+            valor=Decimal('30.00'),
+            data_competencia=date(2026, 3, 10),
+            data_pagamento=date(2026, 3, 10),
+            numero_documento='100326-777',
+            pessoa=self.pessoa_recorrente,
+            categoria=self.categoria_nao_controlada,
+            conta=self.conta,
+            com_rateio=True,
+            grupo_rateio=grupo_rateio,
+        )
+        AlocacaoCompetenciaFinanceira.objects.create(
+            lancamento=lancamento_controlado,
+            categoria=self.categoria_controlada,
+            ano_competencia=2026,
+            mes_competencia=1,
+            valor_alocado=Decimal('30.00'),
+        )
+
+        form = LancamentoFinanceiroGrupoRateioForm(
+            instance=lancamento_controlado,
+            grupo_lancamentos=[lancamento_controlado, lancamento_nao_controlado],
+        )
+        janeiro = next(
+            mes for mes in form.assistente_competencia_rateio_grupos_iniciais[0]['meses']
+            if mes['ano'] == 2026 and mes['mes'] == 1
+        )
+
+        self.assertEqual(janeiro['ja_registrado'], '50.00')
+        self.assertEqual(janeiro['valor_lancamento'], '30.00')
+
+    def test_assistente_rateio_exibe_grupo_apenas_para_subcategoria_controlada(self):
+        grupo_rateio = 'grp-assistente-controlada'
+        lancamento_controlado = LancamentoFinanceiro.objects.create(
+            descricao='Recebimento rateado',
+            tipo=LancamentoFinanceiro.TipoLancamento.RECEITA,
+            status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+            valor=Decimal('100.00'),
+            data_competencia=date(2026, 3, 10),
+            data_pagamento=date(2026, 3, 10),
+            numero_documento='100326-778',
+            pessoa=self.pessoa_recorrente,
+            categoria=self.categoria_controlada,
+            conta=self.conta,
+            com_rateio=True,
+            grupo_rateio=grupo_rateio,
+        )
+        lancamento_nao_controlado = LancamentoFinanceiro.objects.create(
+            descricao='Recebimento rateado',
+            tipo=LancamentoFinanceiro.TipoLancamento.RECEITA,
+            status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+            valor=Decimal('30.00'),
+            data_competencia=date(2026, 3, 10),
+            data_pagamento=date(2026, 3, 10),
+            numero_documento='100326-778',
+            pessoa=self.pessoa_recorrente,
+            categoria=self.categoria_nao_controlada,
+            conta=self.conta,
+            com_rateio=True,
+            grupo_rateio=grupo_rateio,
+        )
+
+        form = LancamentoFinanceiroGrupoRateioForm(
+            instance=lancamento_controlado,
+            grupo_lancamentos=[lancamento_controlado, lancamento_nao_controlado],
+        )
+
+        self.assertEqual(len(form.assistente_competencia_rateio_grupos_iniciais), 1)
+        self.assertEqual(
+            form.assistente_competencia_rateio_grupos_iniciais[0]['categoria_id'],
+            str(self.categoria_controlada.pk),
+        )
+
+    def test_template_rateio_grupo_exibe_rotulos_do_assistente(self):
+        grupo_rateio = 'grp-template'
+        lancamento_controlado = LancamentoFinanceiro.objects.create(
+            descricao='Recebimento rateado',
+            tipo=LancamentoFinanceiro.TipoLancamento.RECEITA,
+            status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+            valor=Decimal('100.00'),
+            data_competencia=date(2026, 3, 10),
+            data_pagamento=date(2026, 3, 10),
+            numero_documento='100326-991',
+            pessoa=self.pessoa_recorrente,
+            categoria=self.categoria_controlada,
+            conta=self.conta,
+            com_rateio=True,
+            grupo_rateio=grupo_rateio,
+        )
+        lancamento_nao_controlado = LancamentoFinanceiro.objects.create(
+            descricao='Recebimento rateado',
+            tipo=LancamentoFinanceiro.TipoLancamento.RECEITA,
+            status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+            valor=Decimal('30.00'),
+            data_competencia=date(2026, 3, 10),
+            data_pagamento=date(2026, 3, 10),
+            numero_documento='100326-991',
+            pessoa=self.pessoa_recorrente,
+            categoria=self.categoria_nao_controlada,
+            conta=self.conta,
+            com_rateio=True,
+            grupo_rateio=grupo_rateio,
+        )
+        AlocacaoCompetenciaFinanceira.objects.create(
+            lancamento=lancamento_controlado,
+            categoria=self.categoria_controlada,
+            ano_competencia=2026,
+            mes_competencia=1,
+            valor_alocado=Decimal('100.00'),
+        )
+        form = LancamentoFinanceiroGrupoRateioForm(
+            instance=lancamento_controlado,
+            grupo_lancamentos=[lancamento_controlado, lancamento_nao_controlado],
+        )
+
+        html = self._render_rateio_form(form, grupo_rateio=grupo_rateio)
+
+        self.assertIn('Assistente de competencias', html)
+        self.assertIn('Valor deste lancamento', html)
+        self.assertIn('Ja registrado:', html)
+        self.assertIn('financeiro-rateio-grupo-competencias-registradas', html)
 
     def test_clone_rateado_nao_precarrega_competencias(self):
         grupo_rateio = 'grp-clone'

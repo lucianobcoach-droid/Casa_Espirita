@@ -3752,3 +3752,32 @@ Riscos principais antes de migration:
   - risco de a UX reintroduzir leitura incorreta de `em aberto`
 - proxima microetapa recomendada:
   - implementar o MVP do assistente no formulario de lancamento simples e no fluxo de rateio/edicao reaproveitando os payloads atuais e mantendo o modo manual visivel
+
+## MVP implementado - Assistente inteligente de competencias
+
+- microetapa funcional concluida sem alteracao de model, migration, calculos, saldos ou banco real
+- o assistente foi implementado como camada visual de preenchimento sobre os payloads ja existentes:
+  - `competencias_payload` no lancamento simples
+  - `competencias_rateio_payload` no rateio controlado
+- fluxos cobertos nesta entrega:
+  - lancamento simples novo
+  - edicao de lancamento simples
+  - regularizacao de lancamento antigo sem competencia
+  - rateio controlado novo
+  - edicao de grupo rateado
+- regra de exibicao implementada:
+  - no simples, aparece apenas com favorecido recorrente + subcategoria controlada
+  - no rateio, aparece apenas por subcategoria controlada
+  - favorecido nao recorrente e subcategoria nao controlada continuam sem assistente
+- grade sugerida implementada com 11 meses:
+  - ultimos 5 meses
+  - mes atual
+  - proximos 5 meses
+- leitura implementada na UX:
+  - `Ja registrado` = referencia consolidada da mesma pessoa + subcategoria + competencia em outros lancamentos
+  - `Valor deste lancamento` = campo editavel do lancamento/grupo atual
+  - ausencia de registro continua como `Sem quitacao registrada`, sem uso de status `em aberto`
+- em edicao, o assistente recarrega as competencias do proprio lancamento/grupo e permite redistribuicao entre meses sem alterar automaticamente o valor financeiro total; a soma continua precisando fechar com o valor controlado
+- o modo manual permaneceu visivel e funcional como fallback; o assistente nao criou nova fonte de verdade nem novo fluxo de persistencia
+- clone comum e clone de rateio continuam sem copiar competencias automaticamente
+- cobertura automatizada reforcada para exibicao positiva e negativa do assistente, separacao entre `Ja registrado` e `Valor deste lancamento`, regularizacao de lancamento sem competencias e exibicao por subcategoria controlada no rateio

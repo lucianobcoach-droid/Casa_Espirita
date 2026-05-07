@@ -1290,3 +1290,41 @@ Observacao:
 
 Proxima etapa recomendada:
 - implementar o MVP do assistente, primeiro no lancamento simples e no fluxo de rateio/edicao, reaproveitando os payloads atuais e preservando o modo manual
+
+## 28. Assistente inteligente de competencias - MVP funcional
+
+Status: IMPLEMENTADO
+
+Consolidacao:
+- o assistente deixou de ser apenas SPEC e passou a existir nos formularios de lancamento e rateio sem alterar model, migration ou banco
+- continua sendo camada assistida sobre os payloads ja existentes:
+  - `competencias_payload`
+  - `competencias_rateio_payload`
+- fluxos implementados:
+  - lancamento simples novo
+  - edicao de lancamento simples
+  - regularizacao de lancamento antigo sem competencia
+  - rateio controlado novo
+  - edicao coordenada de grupo rateado
+- regra de exibicao consolidada em codigo:
+  - simples: apenas com favorecido recorrente + subcategoria controlada
+  - rateio: apenas por subcategoria controlada
+  - item nao controlado continua fora
+- grade assistida entregue com 11 meses sugeridos:
+  - ultimos 5
+  - atual
+  - proximos 5
+- a UX separa `Ja registrado` (referencia consolidada) de `Valor deste lancamento` (campo editavel do registro atual)
+- o modo manual permanece visivel e funcional como fallback
+- redistribuicao em edicao continua sem alterar automaticamente o valor financeiro total; o fechamento segue protegido pelas validacoes atuais
+
+Limites que permanecem fora desta etapa:
+- observacao/complemento por competencia
+- alteracao de model/migration
+- historico detalhado por competencia
+- termo por favorecido
+- importacao/exportacao de competencias
+- baixa separada
+
+Proxima microetapa recomendada:
+- homologar UX real do assistente em tela e decidir se a proxima onda sera refinamento visual/local do formulario ou abertura da frente de termo por favorecido

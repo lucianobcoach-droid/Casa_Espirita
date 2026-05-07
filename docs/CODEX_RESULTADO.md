@@ -4920,3 +4920,36 @@ Não houve alteração de código funcional nesta etapa.
 - tambem registrei risco adicional de o usuario confundir:
   - historico ja registrado x valor do formulario atual
   - redistribuicao de competencia x alteracao do valor financeiro quitado
+
+## Microetapa: MVP do Assistente inteligente de competencias
+
+- implementado o primeiro MVP funcional do assistente sem alterar model, migration, tabela, calculo financeiro, saldos ou banco real
+- a implementacao foi mantida sobre a infraestrutura ja aprovada de competencias:
+  - `competencias_payload` no lancamento simples
+  - `competencias_rateio_payload` no rateio controlado
+  - validacoes backend existentes de soma, duplicidade e escopo por subcategoria controlada
+- `financeiro/forms.py` passou a montar contexto auxiliar do assistente:
+  - competencia de referencia baseada em `data_competencia` (ou `data_pagamento`, com fallback para data atual)
+  - grade sugerida de 11 meses
+  - lookup consolidado de `Ja registrado` por pessoa + subcategoria + competencia, excluindo o proprio lancamento/grupo em edicao
+- `financeiro/templates/financeiro/lancamento_form.html` ganhou:
+  - bloco visual `Assistente de competencias` no fluxo simples
+  - bloco assistido por subcategoria controlada no rateio novo
+  - integracao JS que preenche/atualiza as mesmas linhas manuais e serializa os payloads atuais
+- `financeiro/templates/financeiro/lancamento_rateio_grupo_form.html` ganhou o bloco assistido por subcategoria controlada no fluxo coordenado de rateio, tambem sem payload paralelo
+- comportamento entregue:
+  - lancamento simples novo: assistente aparece apenas para favorecido recorrente + subcategoria controlada
+  - edicao simples: competencias atuais carregam no assistente; lancamento antigo sem competencia abre grade vazia pronta para regularizacao
+  - novo lancamento em mes ja contribuido: `Ja registrado` aparece como referencia e o usuario ainda pode informar `Valor deste lancamento`
+  - rateio novo/edicao: cada subcategoria controlada recebe sua propria grade; item nao controlado continua fora
+  - redistribuicao em edicao nao altera automaticamente o valor financeiro total; a soma continua precisando fechar com o valor controlado
+- modo manual preservado:
+  - as tabelas manuais continuam visiveis
+  - o assistente funciona como camada de preenchimento rapido sobre a mesma fonte de verdade
+- cobertura de testes ampliada para exibicao do assistente, separacao entre `Ja registrado` e `Valor deste lancamento`, regularizacao de lancamento sem competencias, nao exibicao fora do escopo e exibicao por subcategoria controlada no rateio
+- validacoes finais passaram com sucesso:
+  - `py manage.py check`
+  - `py -m compileall financeiro configuracoes`
+  - `py manage.py makemigrations --check --dry-run financeiro`
+  - `py manage.py test financeiro.tests` com 119 testes OK
+- nenhum arquivo SQLite foi alterado/versionado

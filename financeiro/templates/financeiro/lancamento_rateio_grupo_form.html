@@ -214,6 +214,108 @@
         color: #6b7280;
     }
 
+    .financeiro-competencia-assistente {
+        margin-bottom: 1rem;
+        padding: 0.85rem 0.9rem;
+        border: 1px solid #dbe7f3;
+        border-radius: 0.85rem;
+        background: #fff;
+    }
+
+    .financeiro-competencia-assistente-copy {
+        margin-bottom: 0.75rem;
+    }
+
+    .financeiro-competencia-assistente-copy p {
+        margin: 0;
+    }
+
+    .financeiro-competencia-assistente-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
+        gap: 0.75rem;
+    }
+
+    .financeiro-competencia-assistente-card {
+        padding: 0.78rem;
+        border: 1px solid #dbe7f3;
+        border-radius: 0.8rem;
+        background: #f8fbff;
+    }
+
+    .financeiro-competencia-assistente-card.is-positive {
+        border-color: #b9dbc2;
+        background: #f5fbf7;
+    }
+
+    .financeiro-competencia-assistente-card.is-empty {
+        background: #fbfcfe;
+    }
+
+    .financeiro-competencia-assistente-label {
+        margin: 0 0 0.32rem;
+        color: #1f2937;
+        font-size: 0.82rem;
+        font-weight: 700;
+    }
+
+    .financeiro-competencia-assistente-state {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.38rem;
+        margin-bottom: 0.35rem;
+        color: #475569;
+        font-size: 0.73rem;
+        font-weight: 700;
+    }
+
+    .financeiro-competencia-assistente-state::before {
+        content: "";
+        width: 0.55rem;
+        height: 0.55rem;
+        border-radius: 999px;
+        background: #cbd5e1;
+    }
+
+    .financeiro-competencia-assistente-card.is-positive .financeiro-competencia-assistente-state {
+        color: #166534;
+    }
+
+    .financeiro-competencia-assistente-card.is-positive .financeiro-competencia-assistente-state::before {
+        background: #22c55e;
+    }
+
+    .financeiro-competencia-assistente-note {
+        margin: 0 0 0.45rem;
+        color: #64748b;
+        font-size: 0.73rem;
+        line-height: 1.4;
+    }
+
+    .financeiro-competencia-assistente-registered {
+        margin: 0 0 0.45rem;
+        color: #35548a;
+        font-size: 0.73rem;
+        font-weight: 600;
+    }
+
+    .financeiro-competencia-assistente-field-label {
+        display: block;
+        margin-bottom: 0.25rem;
+        color: #64748b;
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+    }
+
+    .financeiro-competencia-assistente-current {
+        margin: 0.4rem 0 0;
+        color: #1d4ed8;
+        font-size: 0.72rem;
+        font-weight: 600;
+    }
+
     @media screen and (max-width: 860px) {
         .financeiro-rateio-summary-grid,
         .financeiro-rateio-action-grid {
@@ -435,7 +537,39 @@
                 {% for error in form.competencias_rateio_payload.errors %}
                     <p class="help is-danger mb-2">{{ error }}</p>
                 {% endfor %}
-                <div data-financeiro-competencia-rateio-groups="true"></div>
+                <div data-financeiro-competencia-rateio-groups="true">
+                    {% for grupo in form.assistente_competencia_rateio_grupos_iniciais %}
+                        <div class="mb-4">
+                            <div class="financeiro-rateio-panel-note-row">
+                                <div>
+                                    <p class="financeiro-rateio-action-row-title">Competencias - {{ grupo.categoria_label }}</p>
+                                    <p class="financeiro-rateio-action-row-text">Valor controlado: {{ grupo.valor_controlado_texto }}</p>
+                                </div>
+                            </div>
+                            <div class="financeiro-competencia-assistente">
+                                <div class="financeiro-competencia-assistente-copy">
+                                    <p class="financeiro-rateio-action-row-title">Assistente de competencias</p>
+                                    <p class="financeiro-rateio-action-row-text">Sugestao rapida por mes. O valor ja registrado e so referencia; apenas o valor deste lancamento entra no grupo atual.</p>
+                                </div>
+                                <div class="financeiro-competencia-assistente-grid">
+                                    {% for mes in grupo.meses %}
+                                        <div class="financeiro-competencia-assistente-card {% if mes.ja_possui_contribuicao %}is-positive{% else %}is-empty{% endif %}">
+                                            <p class="financeiro-competencia-assistente-label">{{ mes.label }}</p>
+                                            <div class="financeiro-competencia-assistente-state">{{ mes.status_texto }}</div>
+                                            {% if mes.ja_registrado_texto %}
+                                                <p class="financeiro-competencia-assistente-registered">Já registrado: {{ mes.ja_registrado_texto }}</p>
+                                            {% else %}
+                                                <p class="financeiro-competencia-assistente-note">Sem quitação registrada.</p>
+                                            {% endif %}
+                                            <label class="financeiro-competencia-assistente-field-label">Valor deste lançamento</label>
+                                            <input type="text" class="input" value="{{ mes.valor_lancamento_texto }}" disabled>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
             </div>
         </section>
 
@@ -480,6 +614,7 @@
 {{ form.competencias_rateio_iniciais|json_script:'financeiro-rateio-grupo-competencias-inicial' }}
 {{ competencia_pessoas_recorrentes_ids|json_script:'financeiro-rateio-grupo-pessoas-recorrentes' }}
 {{ competencia_categorias_controladas_ids|json_script:'financeiro-rateio-grupo-categorias-controladas' }}
+{{ form.assistente_competencia_registro_lookup|json_script:'financeiro-rateio-grupo-competencias-registradas' }}
 <script>
     (function () {
         const tipoField = document.querySelector('[data-financeiro-tipo="true"]');
@@ -506,6 +641,7 @@
         const competenciasRateioInicialNode = document.getElementById('financeiro-rateio-grupo-competencias-inicial');
         const pessoasRecorrentesNode = document.getElementById('financeiro-rateio-grupo-pessoas-recorrentes');
         const categoriasControladasNode = document.getElementById('financeiro-rateio-grupo-categorias-controladas');
+        const competenciasRegistradasNode = document.getElementById('financeiro-rateio-grupo-competencias-registradas');
         const rateioCategorias = rateioCategoriasNode ? JSON.parse(rateioCategoriasNode.textContent) : [];
         const rateioInicial = rateioInicialNode ? JSON.parse(rateioInicialNode.textContent) : [];
         const competenciasRateioInicial = competenciasRateioInicialNode ? JSON.parse(competenciasRateioInicialNode.textContent) : {};
@@ -515,6 +651,9 @@
         const categoriasControladas = new Set(
             categoriasControladasNode ? JSON.parse(categoriasControladasNode.textContent).map(String) : []
         );
+        const competenciasRegistradas = competenciasRegistradasNode
+            ? JSON.parse(competenciasRegistradasNode.textContent)
+            : {};
         let rateioRows = Array.isArray(rateioInicial) ? rateioInicial.slice() : [];
         let competenciasRateioByCategoria = JSON.parse(JSON.stringify(competenciasRateioInicial || {}));
 
@@ -539,6 +678,83 @@
             const valor = Math.abs(centavos) / 100;
             const formatado = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor);
             return centavos < 0 ? `-${formatado}` : formatado;
+        }
+
+        function formatarCompetenciaLabel(mes, ano) {
+            const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+            return `${meses[mes - 1]}/${ano}`;
+        }
+
+        function competenciaKey(mes, ano) {
+            return `${String(ano).padStart(4, '0')}-${String(mes).padStart(2, '0')}`;
+        }
+
+        function obterReferenciaCompetencia() {
+            const valorReferencia = (dataCompetenciaField && dataCompetenciaField.value)
+                || (dataPagamentoField && dataPagamentoField.value)
+                || '';
+            if (valorReferencia) {
+                const partes = valorReferencia.split('-').map(Number);
+                if (partes.length === 3 && Number.isFinite(partes[0]) && Number.isFinite(partes[1])) {
+                    return { ano: partes[0], mes: partes[1] };
+                }
+            }
+            const hoje = new Date();
+            return { ano: hoje.getFullYear(), mes: hoje.getMonth() + 1 };
+        }
+
+        function getCompetenciasSugeridas() {
+            const referencia = obterReferenciaCompetencia();
+            const competencias = [];
+            const baseIndice = referencia.ano * 12 + (referencia.mes - 1);
+            for (let deslocamento = -5; deslocamento <= 5; deslocamento += 1) {
+                const indiceAtual = baseIndice + deslocamento;
+                const anoAtual = Math.floor(indiceAtual / 12);
+                const mesAtual = (indiceAtual % 12) + 1;
+                competencias.push({
+                    mes: mesAtual,
+                    ano: anoAtual,
+                    key: competenciaKey(mesAtual, anoAtual),
+                    label: formatarCompetenciaLabel(mesAtual, anoAtual),
+                });
+            }
+            return competencias;
+        }
+
+        function getCompetenciaRegistrada(pessoaId, categoriaId, mes, ano) {
+            if (!pessoaId || !categoriaId) return '';
+            const porPessoa = competenciasRegistradas[String(pessoaId)] || {};
+            const porCategoria = porPessoa[String(categoriaId)] || {};
+            return porCategoria[competenciaKey(mes, ano)] || '';
+        }
+
+        function findCompetenciaRow(rows, mes, ano) {
+            const key = competenciaKey(mes, ano);
+            return rows.find(function (row) {
+                return competenciaKey(row.mes || '', row.ano || '') === key;
+            }) || null;
+        }
+
+        function upsertCompetenciaRow(rows, mes, ano, valor) {
+            const key = competenciaKey(mes, ano);
+            const indice = rows.findIndex(function (row) {
+                return competenciaKey(row.mes || '', row.ano || '') === key;
+            });
+            if (!valor) {
+                if (indice >= 0) rows.splice(indice, 1);
+            } else if (indice >= 0) {
+                rows[indice].mes = String(mes);
+                rows[indice].ano = String(ano);
+                rows[indice].valor = valor;
+            } else {
+                rows.push({ mes: String(mes), ano: String(ano), valor: valor });
+            }
+            rows.sort(function (left, right) {
+                const leftAno = Number(left.ano || 0);
+                const rightAno = Number(right.ano || 0);
+                if (leftAno !== rightAno) return leftAno - rightAno;
+                return Number(left.mes || 0) - Number(right.mes || 0);
+            });
         }
 
         function formatarMoedaPtBr(digitos) {
@@ -744,6 +960,90 @@
             }) || null;
         }
 
+        function syncCompetenciaRateioAssistantForCategoria(categoriaId) {
+            const assistenteGrid = document.querySelector(
+                `[data-financeiro-competencia-rateio-assistente-grid="${categoriaId}"]`
+            );
+            if (!assistenteGrid) return;
+            assistenteGrid.innerHTML = '';
+            const pessoaId = pessoaField ? pessoaField.value : '';
+            const rows = Array.isArray(competenciasRateioByCategoria[categoriaId])
+                ? competenciasRateioByCategoria[categoriaId]
+                : [];
+
+            getCompetenciasSugeridas().forEach(function (competencia) {
+                const rowAtual = findCompetenciaRow(rows, competencia.mes, competencia.ano);
+                const valorAtual = rowAtual ? String(rowAtual.valor || '') : '';
+                const valorRegistrado = getCompetenciaRegistrada(
+                    pessoaId,
+                    categoriaId,
+                    competencia.mes,
+                    competencia.ano
+                );
+                const possuiRegistro = parseMoedaParaCentavos(valorRegistrado) > 0;
+
+                const card = document.createElement('div');
+                card.className = `financeiro-competencia-assistente-card ${possuiRegistro ? 'is-positive' : 'is-empty'}`;
+
+                const title = document.createElement('p');
+                title.className = 'financeiro-competencia-assistente-label';
+                title.textContent = competencia.label;
+                card.appendChild(title);
+
+                const state = document.createElement('div');
+                state.className = 'financeiro-competencia-assistente-state';
+                state.textContent = possuiRegistro ? 'Ja possui contribuicao' : 'Sem quitacao registrada';
+                card.appendChild(state);
+
+                const info = document.createElement('p');
+                info.className = possuiRegistro
+                    ? 'financeiro-competencia-assistente-registered'
+                    : 'financeiro-competencia-assistente-note';
+                info.textContent = possuiRegistro
+                    ? `Ja registrado: ${formatarCentavosMoeda(parseMoedaParaCentavos(valorRegistrado))}`
+                    : 'Sem quitacao registrada.';
+                card.appendChild(info);
+
+                const fieldLabel = document.createElement('label');
+                fieldLabel.className = 'financeiro-competencia-assistente-field-label';
+                fieldLabel.textContent = 'Valor deste lancamento';
+                card.appendChild(fieldLabel);
+
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.inputMode = 'numeric';
+                input.autocomplete = 'off';
+                input.className = 'input';
+                input.value = formatarMoedaPtBr((valorAtual || '').replace(/\D/g, ''));
+                input.setAttribute(
+                    'aria-label',
+                    `Valor deste lancamento para ${competencia.label} em ${categoriaId}`
+                );
+                input.addEventListener('input', function () {
+                    const digitos = input.value.replace(/\D/g, '');
+                    input.value = formatarMoedaPtBr(digitos);
+                    upsertCompetenciaRow(
+                        competenciasRateioByCategoria[categoriaId],
+                        competencia.mes,
+                        competencia.ano,
+                        normalizarMoedaParaDecimal(digitos)
+                    );
+                    renderCompetenciasRateioGroups();
+                    serializeCompetenciasRateio();
+                });
+                card.appendChild(input);
+
+                if (parseMoedaParaCentavos(valorAtual) > 0) {
+                    const atual = document.createElement('p');
+                    atual.className = 'financeiro-competencia-assistente-current';
+                    atual.textContent = `Neste lancamento: ${formatarCentavosMoeda(parseMoedaParaCentavos(valorAtual))}`;
+                    card.appendChild(atual);
+                }
+
+                assistenteGrid.appendChild(card);
+            });
+        }
+
         function getRateioLinhasControladasConsolidadas() {
             if (!pessoaRecorrenteSelecionada()) return [];
             const consolidadas = {};
@@ -892,6 +1192,7 @@
             select.addEventListener('change', function () {
                 competenciasRateioByCategoria[categoriaId][rowIndex].mes = select.value;
                 serializeCompetenciasRateio();
+                syncCompetenciaRateioAssistantForCategoria(categoriaId);
             });
             return select;
         }
@@ -907,6 +1208,7 @@
             input.addEventListener('input', function () {
                 competenciasRateioByCategoria[categoriaId][rowIndex].ano = input.value;
                 serializeCompetenciasRateio();
+                syncCompetenciaRateioAssistantForCategoria(categoriaId);
             });
             return input;
         }
@@ -925,6 +1227,7 @@
                 input.value = formatarMoedaPtBr(digitosAtualizados);
                 competenciasRateioByCategoria[categoriaId][rowIndex].valor = normalizarMoedaParaDecimal(digitosAtualizados);
                 serializeCompetenciasRateio();
+                syncCompetenciaRateioAssistantForCategoria(categoriaId);
             });
             return input;
         }
@@ -971,6 +1274,18 @@
                 header.appendChild(addButton);
                 wrapper.appendChild(header);
 
+                const assistenteBox = document.createElement('div');
+                assistenteBox.className = 'financeiro-competencia-assistente';
+                const assistenteCopy = document.createElement('div');
+                assistenteCopy.className = 'financeiro-competencia-assistente-copy';
+                assistenteCopy.innerHTML = '<p class="financeiro-rateio-action-row-title">Assistente de competencias</p><p class="financeiro-rateio-action-row-text">Sugestao rapida por mes. O valor ja registrado e so referencia; apenas o valor deste lancamento entra no grupo atual.</p>';
+                assistenteBox.appendChild(assistenteCopy);
+                const assistenteGrid = document.createElement('div');
+                assistenteGrid.className = 'financeiro-competencia-assistente-grid';
+                assistenteGrid.dataset.financeiroCompetenciaRateioAssistenteGrid = categoriaId;
+                assistenteBox.appendChild(assistenteGrid);
+                wrapper.appendChild(assistenteBox);
+
                 const tableContainer = document.createElement('div');
                 tableContainer.className = 'table-container';
                 const table = document.createElement('table');
@@ -1013,6 +1328,7 @@
                 tableContainer.appendChild(table);
                 wrapper.appendChild(tableContainer);
                 competenciaRateioGroups.appendChild(wrapper);
+                syncCompetenciaRateioAssistantForCategoria(categoriaId);
             });
         }
 
@@ -1061,14 +1377,18 @@
             dataCompetenciaField.dataset.autoFilledCompetencia = dataCompetenciaField.value ? 'false' : 'true';
             dataCompetenciaField.addEventListener('input', function () {
                 dataCompetenciaField.dataset.autoFilledCompetencia = 'false';
+                syncCompetenciasRateioState();
             });
             dataCompetenciaField.addEventListener('change', function () {
                 dataCompetenciaField.dataset.autoFilledCompetencia = dataCompetenciaField.value ? 'false' : 'true';
+                syncCompetenciasRateioState();
             });
         }
         if (dataPagamentoField) {
             dataPagamentoField.addEventListener('input', syncDataCompetenciaFromPagamento);
             dataPagamentoField.addEventListener('change', syncDataCompetenciaFromPagamento);
+            dataPagamentoField.addEventListener('input', syncCompetenciasRateioState);
+            dataPagamentoField.addEventListener('change', syncCompetenciasRateioState);
         }
         const formElement = document.querySelector('form');
         if (formElement) {
