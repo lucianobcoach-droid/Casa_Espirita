@@ -4834,3 +4834,35 @@ Não houve alteração de código funcional nesta etapa.
   - modo manual atual preservado
   - complemento/observacao por competencia para SPEC propria
 - nenhum arquivo SQLite foi alterado/versionado
+
+## Microetapa: refinamento final da impressao da matriz (indicadores + cabecalho limpo)
+
+- mantive a base da tela `/financeiro/frequencia-competencias/` e refinei somente impressao/apresentacao
+- no modo `Sem valores (frequencia)`, os indicadores `✓` e `×` permaneceram com classes distintas e ganharam reforco de impressao com:
+  - `print-color-adjust: exact`
+  - `-webkit-print-color-adjust: exact`
+- objetivo do ajuste: tentar preservar verde/vermelho no print/PDF, mantendo fallback legivel quando a impressora ignorar cor
+- cabecalho impresso da matriz foi simplificado para reduzir poluicao visual:
+  - removido campo `Formato`
+  - removido campo `Status`
+  - mantidos `Periodo`, `Subcategoria` e `Emitido em`
+  - `Subcategoria` agora exibe nome legivel da subcategoria filtrada; sem filtro especifico, mostra `Todas controladas`
+- cobertura de testes atualizada para garantir:
+  - presenca das regras de print color adjust
+  - manutencao de `✓` e `×` no modo sem valores
+  - classes distintas de indicador positivo/negativo
+  - cabecalho impresso sem `Formato` e sem `Status`
+  - exibicao do nome da subcategoria quando filtrada e `Todas controladas` quando nao filtrada
+- sem alteracao de calculo financeiro, saldos, fonte da matriz, relatorios existentes fora desta tela ou banco real
+
+## Registro documental: frente futura de UX assistida/inteligente de competencias
+
+- registrei como frente futura, sem implementacao nesta etapa, o `Assistente inteligente de competencias`
+- direcao registrada:
+  - sugerir meses proximos (ultimos 5, atual e proximos 5)
+  - ausencia de valor no mes = `sem quitacao registrada` (nao `em aberto` automatico)
+  - mes com valor alocado = `ja quitado` / `ja possui contribuicao`
+  - preenchimento do valor no mes como gatilho de atendimento/quitacao da competencia
+  - sem dependencia obrigatoria de checkbox quando o valor ja estiver preenchido
+  - modo manual atual preservado
+  - complemento/observacao por competencia fica para SPEC propria

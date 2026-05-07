@@ -1101,3 +1101,23 @@ Consolidacao:
 
 Proxima etapa recomendada:
 - abrir SPEC dedicada do assistente antes de mexer em forms/models/templates de lancamento e rateio
+
+### 45. Frequencia por competencia - cabecalho impresso limpo e subcategoria legivel
+
+Status: IMPLEMENTADO (AJUSTE DE IMPRESSAO) + FRENTE FUTURA MANTIDA
+
+Consolidacao:
+- cabecalho/metadados do impresso da matriz foi simplificado:
+  - removido `Formato`
+  - removido `Status`
+  - mantidos `Periodo`, `Subcategoria` e `Emitido em`
+- regra da subcategoria no cabecalho impresso:
+  - quando houver filtro especifico, exibir nome legivel da subcategoria
+  - quando nao houver filtro especifico, exibir `Todas controladas`
+- ajuste de impressao dos indicadores no modo sem valores mantido:
+  - `✓` e `×` com tentativa de preservar verde/vermelho no print/PDF
+  - fallback legivel sem cor preservado
+- sem alteracao de calculo financeiro, saldos, fonte da matriz ou banco real
+
+Frente futura relacionada (sem implementacao):
+- `Assistente inteligente de competencias` permanece como backlog com SPEC propria obrigatoria antes de mexer em forms/models/templates

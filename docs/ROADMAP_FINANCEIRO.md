@@ -1149,3 +1149,22 @@ Proxima etapa recomendada:
 
 Proxima etapa recomendada:
 - abrir SPEC dedicada do `Assistente inteligente de competencias` antes de qualquer mudanca em formulario/modelagem de lancamento/rateio
+
+## 26. Frequencia por competencia - refinamento do cabecalho impresso
+
+- etapa funcional concluida (ajuste de apresentacao):
+  - cabecalho impresso ficou mais limpo e compacto
+  - removidos `Formato` e `Status` dos metadados de impressao
+  - mantidos `Periodo`, `Subcategoria` e `Emitido em`
+  - `Subcategoria` exibe nome legivel quando filtrada; sem filtro especifico exibe `Todas controladas`
+- etapa funcional concluida (ajuste visual de indicadores no print):
+  - `✓` e `×` preservados no modo sem valores
+  - tentativa de manter verde/vermelho no PDF/impressao com `print-color-adjust`/`-webkit-print-color-adjust`
+  - fallback legivel em preto e branco mantido
+- recortes preservados:
+  - sem alteracao de regra de negocio
+  - sem alteracao de fonte de dados (`AlocacaoCompetenciaFinanceira`)
+  - sem alteracao de calculo financeiro, saldos ou banco real
+
+Proxima etapa recomendada:
+- abrir SPEC propria do `Assistente inteligente de competencias` antes de qualquer mudanca em forms/models/templates

@@ -252,7 +252,7 @@
 
         .financeiro-document-meta-grid.only-print {
             display: grid !important;
-            grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
             gap: 0.28rem !important;
             margin-bottom: 0.38rem !important;
         }
@@ -574,20 +574,12 @@
 
                 <div class="financeiro-document-meta-grid only-print">
                     <div class="financeiro-document-meta-card">
-                        <span class="financeiro-document-meta-label">Formato</span>
-                        <span class="financeiro-document-meta-value">{% if formato_matriz == 'frequencia' %}Sem valores (frequencia){% else %}Com valores{% endif %}</span>
-                    </div>
-                    <div class="financeiro-document-meta-card">
                         <span class="financeiro-document-meta-label">Periodo</span>
                         <span class="financeiro-document-meta-value">{{ periodo_competencia_label|default:'Nao informado' }}</span>
                     </div>
                     <div class="financeiro-document-meta-card">
                         <span class="financeiro-document-meta-label">Subcategoria</span>
                         <span class="financeiro-document-meta-value">{{ categoria_filtro_label|default:'Todas controladas' }}</span>
-                    </div>
-                    <div class="financeiro-document-meta-card">
-                        <span class="financeiro-document-meta-label">Status</span>
-                        <span class="financeiro-document-meta-value">{{ status_label }}</span>
                     </div>
                     <div class="financeiro-document-meta-card">
                         <span class="financeiro-document-meta-label">Emitido em</span>

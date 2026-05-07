@@ -3654,3 +3654,30 @@ Riscos principais antes de migration:
   - termo por favorecido ainda nao implementado
   - sem exportacao e sem impressao refinada nesta microetapa
 - sem alteracao de calculo financeiro, saldos, relatorios existentes, migrations ou banco real; nenhum arquivo SQLite foi alterado/versionado
+
+## Refinamento da impressao da matriz de frequencia (cabecalho limpo + indicadores)
+
+- impressao da matriz sem valores ajustada para preservar melhor a formatacao condicional dos indicadores:
+  - `✓` positivo com tentativa de verde no print/PDF
+  - `×` negativo com tentativa de vermelho no print/PDF
+- aplicado `print-color-adjust: exact` e `-webkit-print-color-adjust: exact` no contexto de impressao, mantendo fallback legivel em preto e branco por simbolo e contraste
+- cabecalho impresso da matriz ficou mais limpo e compacto:
+  - removidos `Formato` e `Status`
+  - mantidos `Periodo`, `Subcategoria` e `Emitido em`
+  - `Subcategoria` passa a exibir nome legivel da selecionada; quando nao houver selecao especifica, exibe `Todas controladas`
+- sem alteracao de regra de negocio da matriz, sem alteracao de fonte de dados (`AlocacaoCompetenciaFinanceira`), sem alteracao de calculo financeiro, saldos, relatorios existentes ou banco real
+
+## Frente futura registrada - Assistente inteligente de competencias (UX)
+
+- frente registrada como futura, sem implementacao nesta microetapa
+- direcao funcional consolidada:
+  - sugerir meses proximos (ultimos 5, mes atual e proximos 5)
+  - mes sem valor alocado deve ser lido como `sem quitacao registrada` (nao como `em aberto` automatico)
+  - mes com valor alocado deve aparecer como `ja quitado` / `ja possui contribuicao`
+  - preenchimento de valor no mes deve ser o gatilho principal para incluir/quitar a competencia
+  - checkbox nao deve ser obrigatorio quando o valor preenchido ja representa a competencia
+  - modo manual atual permanece como base segura
+  - complemento/observacao por competencia fica para SPEC propria
+- governanca da frente:
+  - nao implementar sem SPEC dedicada
+  - qualquer evolucao deve ser tratada em microetapa propria por impactar formulario de lancamento e fluxo de rateio

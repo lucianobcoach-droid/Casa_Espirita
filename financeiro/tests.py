@@ -2822,15 +2822,31 @@ class FrequenciaCompetenciasViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Frequencia por competencia')
-        self.assertContains(response, 'Formato')
-        self.assertContains(response, 'Sem valores (frequencia)')
-        self.assertContains(response, 'Periodo')
+        self.assertContains(response, 'financeiro-document-meta-label">Periodo')
         self.assertContains(response, 'Jan/2026 a Mar/2026')
-        self.assertContains(response, 'Subcategoria')
+        self.assertContains(response, 'financeiro-document-meta-label">Subcategoria')
         self.assertContains(response, 'Todas controladas')
-        self.assertContains(response, 'Status')
-        self.assertContains(response, 'Todos')
-        self.assertContains(response, 'Emitido em')
+        self.assertContains(response, 'financeiro-document-meta-label">Emitido em')
+        self.assertNotContains(response, 'financeiro-document-meta-label">Formato')
+        self.assertNotContains(response, 'financeiro-document-meta-label">Status')
+
+    def test_matriz_impressao_exibe_nome_da_subcategoria_quando_filtrada(self):
+        self._login_com_permissoes(
+            'user-matriz-print-subcategoria',
+            ['financeiro.resumo_financeiro.visualizar'],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:frequencia-competencias'),
+            self._parametros_base(categoria=str(self.categoria_controlada_2.pk)),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Campanha recorrente matriz')
+        self.assertContains(response, 'financeiro-document-meta-label">Subcategoria')
+        self.assertNotContains(response, 'financeiro-document-meta-value">Todas controladas')
+        self.assertNotContains(response, 'financeiro-document-meta-label">Formato')
+        self.assertNotContains(response, 'financeiro-document-meta-label">Status')
 
     def test_matriz_impressao_usa_labels_compactos_para_competencias(self):
         self._login_com_permissoes(
