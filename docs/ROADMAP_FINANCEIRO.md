@@ -1133,3 +1133,19 @@ Proxima etapa recomendada:
 
 Proxima etapa recomendada:
 - implementar o termo por favorecido reaproveitando a mesma base de competencias ja consolidada
+
+## 25. Frequencia por competencia - ajuste de cores no print e UX futura
+
+- etapa funcional concluida (ajuste pontual de impressao):
+  - preservacao de cor/contraste dos indicadores `✓` e `×` no modo sem valores da matriz impressa
+  - fallback visual mantido para impressao em preto e branco
+- frente futura registrada sem implementacao:
+  - `Assistente inteligente de competencias`
+  - sugestao de meses proximos para preenchimento de competencias
+  - regra de leitura: ausencia de valor nao significa `em aberto`, e sim `sem quitacao registrada`
+  - valor alocado no mes marca competencia como atendida/quitada
+  - modo manual permanece como base segura
+  - complemento/observacao por competencia depende de SPEC propria
+
+Proxima etapa recomendada:
+- abrir SPEC dedicada do `Assistente inteligente de competencias` antes de qualquer mudanca em formulario/modelagem de lancamento/rateio

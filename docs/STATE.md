@@ -3205,6 +3205,27 @@ Com filtro por periodo:
 - a limitacao continua: periodos muito longos dentro do limite de 24 competencias podem ficar apertados conforme navegador/impressora
 - nao houve alteracao de fonte de dados, calculos financeiros, saldos, relatorios existentes ou banco real; nenhum arquivo SQLite foi alterado/versionado
 
+## Frequencia por competencia - ajuste de cor na impressao dos indicadores
+
+- ajustada a impressao dos indicadores da matriz sem valores para tentar preservar verde (`✓`) e vermelho (`×`) tambem no PDF/print
+- foi aplicado `print-color-adjust: exact` e `-webkit-print-color-adjust: exact` nos elementos de indicador, mantendo borda/simbolo como fallback legivel em preto e branco
+- a regra da matriz nao mudou: indicadores continuam derivados de `AlocacaoCompetenciaFinanceira` e do valor alocado por competencia
+- nao houve alteracao em models, migrations, calculos financeiros, saldos, relatorios existentes ou banco real; nenhum arquivo SQLite foi alterado/versionado
+
+## Frente futura registrada - Assistente inteligente de competencias
+
+- registrada como frente futura de UX, sem implementacao nesta microetapa
+- objetivo: reduzir preenchimento manual de competencias quando houver favorecido recorrente + subcategoria controlada
+- direcao funcional futura aprovada para SPEC:
+  - sugerir janela de meses proximos (ultimos 5, mes atual e proximos 5)
+  - nao tratar ausencia de competencia como status `em aberto`
+  - mes sem valor alocado = sem quitacao registrada
+  - mes com valor alocado = ja quitado/ja possui contribuicao
+  - valor preenchido no mes deve funcionar como gatilho principal de inclusao/quitacao da competencia (sem checkbox obrigatorio)
+  - modo manual atual deve continuar disponivel
+  - complemento/observacao por competencia fica para SPEC propria
+- proxima microetapa recomendada: abrir SPEC dedicada do assistente antes de alterar forms/models/templates de lancamento e rateio
+
 - foi criada a camada reutilizavel `financeiro/permissoes.py` com `FinanceiroPermissaoMixin`, integrando `LoginRequiredMixin` e o helper central `usuario_possui_permissao()` do app `configuracoes`
 - o mixin exige usuario autenticado, valida a permissao funcional por codigo canonico em `get_permissao_requerida()` e responde com HTTP 403 e mensagem simples quando o usuario autenticado nao tem a permissao exigida ou nao possui perfil-base ativo
 - o enforcement backend foi aplicado nas views principais do `financeiro`, cobrindo home secundaria, listagens, cadastros, edicoes, exclusoes, extratos, resumo, prestacao de contas, auditoria, importacao/exportacao, download de modelo/inconsistencias, clone comum, clone/edicao de rateio, recibo, acoes em lote e endpoints auxiliares de autocomplete/historico/sugestoes

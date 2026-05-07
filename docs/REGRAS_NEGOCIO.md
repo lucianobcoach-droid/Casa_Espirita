@@ -146,6 +146,8 @@ Este documento consolida regras permanentes do sistema. Ele não substitui o his
 - A impressao da matriz deve reaproveitar o mesmo contrato documental dos relatorios do modulo, mantendo a mesma fonte `AlocacaoCompetenciaFinanceira` e sem abrir nova regra de negocio para frequencia.
 - No impresso da matriz, a prioridade e tentar acomodar o maior numero possivel de competencias na mesma pagina por meio de compactacao visual, sem prometer pagina unica perfeita para qualquer periodo dentro do limite funcional.
 - No impresso da matriz, as competencias devem usar cabecalho compacto `MM/AAAA`, e a coluna `Favorecido` deve permanecer legivel, com protecao contra quebra letra por letra.
+- Na leitura da frequencia por competencia, ausencia de valor alocado em um mes nao deve ser tratada automaticamente como status `em aberto`; deve ser lida como `sem quitacao registrada`.
+- Para a frente futura de assistencia de competencias, o preenchimento de valor no mes deve ser o gatilho principal da competencia atendida/quitada, sem dependencia obrigatoria de checkbox.
 - Em clone comum, competencias existentes nao devem ser copiadas automaticamente para o novo lancamento.
 - Em clone de rateio, competencias tambem nao devem ser copiadas automaticamente para evitar duplicidade de quitacao por competencia.
 - No MVP inicial, nao abrir modulo separado de baixa; manter o fluxo no proprio lancamento e tratar termo por favorecido como segunda onda apos validacao da matriz.

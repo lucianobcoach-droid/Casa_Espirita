@@ -2804,6 +2804,10 @@ class FrequenciaCompetenciasViewTests(TestCase):
         self.assertContains(response, 'financeiro-frequencia-col-person')
         self.assertContains(response, 'text-overflow: ellipsis;')
         self.assertContains(response, 'word-break: normal !important;')
+        self.assertContains(response, '-webkit-print-color-adjust: exact;')
+        self.assertContains(response, 'print-color-adjust: exact;')
+        self.assertContains(response, 'financeiro-frequencia-indicator-positive')
+        self.assertContains(response, 'financeiro-frequencia-indicator-negative')
 
     def test_matriz_impressao_traz_cabecalho_e_metadados_essenciais(self):
         self._login_com_permissoes(

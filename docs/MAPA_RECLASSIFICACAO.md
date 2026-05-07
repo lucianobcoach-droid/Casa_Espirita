@@ -1083,3 +1083,21 @@ Consolidacao:
 
 Proxima etapa recomendada:
 - implementar o termo por favorecido usando a mesma base de competencias ja consolidada
+
+### 44. Frequencia por competencia - ajuste de cores no print e assistente futuro
+
+Status: PARCIAL (ajuste de impressao concluido + frente futura registrada)
+
+Consolidacao:
+- ajuste concluido: impressao dos indicadores `✓` e `×` no modo sem valores com tentativa de preservar verde/vermelho no PDF/print e fallback legivel sem cor
+- frente futura registrada (sem implementacao): `Assistente inteligente de competencias`
+- direcao futura registrada:
+  - sugerir meses proximos (ultimos 5, atual, proximos 5)
+  - ausencia de valor nao vira status `em aberto`; fica como `sem quitacao registrada`
+  - mes com valor alocado aparece como quitado/ja contribuido
+  - valor preenchido no mes e o gatilho principal da competencia atendida
+  - modo manual continua obrigatoriamente disponivel
+  - complemento/observacao por competencia depende de SPEC propria
+
+Proxima etapa recomendada:
+- abrir SPEC dedicada do assistente antes de mexer em forms/models/templates de lancamento e rateio

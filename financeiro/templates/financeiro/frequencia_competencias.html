@@ -173,11 +173,13 @@
     .financeiro-frequencia-indicator-positive {
         color: #166534;
         background: #dcfce7;
+        border: 1px solid #86efac;
     }
 
     .financeiro-frequencia-indicator-negative {
         color: #b91c1c;
         background: #fee2e2;
+        border: 1px solid #fca5a5;
     }
 
     .financeiro-frequencia-table tfoot tr {
@@ -393,10 +395,25 @@
         .financeiro-frequencia-indicator {
             width: 1rem;
             height: 1rem;
-            border: 0.6px solid #9ca3af;
-            background: #fff !important;
-            color: #111827 !important;
+            border-width: 0.6px;
+            border-style: solid;
             font-size: 0.72rem;
+        }
+
+        .financeiro-frequencia-indicator-positive {
+            color: #166534 !important;
+            background: #dcfce7 !important;
+            border-color: #86efac !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .financeiro-frequencia-indicator-negative {
+            color: #b91c1c !important;
+            background: #fee2e2 !important;
+            border-color: #fca5a5 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
         }
 
         .financeiro-frequencia-empty {

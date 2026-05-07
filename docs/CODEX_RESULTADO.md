@@ -4813,3 +4813,24 @@ Não houve alteração de código funcional nesta etapa.
 - as colunas mensais receberam compactacao adicional de fonte/padding e valores/indicadores centralizados no print
 - testes passaram a cobrir os labels compactos de impressao e as classes/regras que impedem a quebra letra por letra do favorecido
 - a fonte da matriz continua sendo `AlocacaoCompetenciaFinanceira`; nao houve alteracao de calculos, saldos, relatorios existentes ou banco real; nenhum arquivo SQLite foi alterado/versionado
+
+## Microetapa: ajuste de cor dos indicadores no print e registro de UX futura
+
+- ajustado o print da matriz sem valores para preservar melhor a formatacao condicional dos simbolos:
+  - `✓` com cor/base verde
+  - `×` com cor/base vermelha
+- o template passou a aplicar `print-color-adjust: exact` e `-webkit-print-color-adjust: exact` tambem nas classes especificas de indicador, mantendo borda/simbolo como fallback quando a impressora ignorar cor
+- a regra de negocio da matriz permaneceu intacta (mesma fonte `AlocacaoCompetenciaFinanceira`, sem alteracao de calculo)
+- cobertura de testes reforcada para conferir a presenca de:
+  - `print-color-adjust`
+  - `-webkit-print-color-adjust`
+  - classes distintas de indicador positivo/negativo no HTML/CSS
+- foi registrada documentalmente a frente futura `Assistente inteligente de competencias`, sem implementacao nesta etapa, com direcao inicial:
+  - sugestao de meses proximos (ultimos 5, atual, proximos 5)
+  - sem status automatico `em aberto` para ausencia de registro
+  - mes sem valor = sem quitacao registrada
+  - mes com valor alocado = ja quitado/ja possui contribuicao
+  - valor preenchido no mes como gatilho principal, sem checkbox obrigatorio
+  - modo manual atual preservado
+  - complemento/observacao por competencia para SPEC propria
+- nenhum arquivo SQLite foi alterado/versionado
