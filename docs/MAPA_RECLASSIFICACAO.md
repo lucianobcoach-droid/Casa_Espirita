@@ -452,34 +452,37 @@ Documentos relacionados:
 
 ---
 
-### 19. Tabelas personalizadas de controle
+### 19. Construtor de tabelas personalizadas configuraveis
 
 Status inicial: FUTURO REAL / FRENTE FUTURA GRANDE
 
-Status apos auditoria documental desta microetapa: SPEC FUNCIONAL INICIAL CONSOLIDADA / BACKLOG
+Status apos auditoria documental desta microetapa: SPEC FUNCIONAL CONSOLIDADA / BACKLOG
 
 Motivo:
-Foi levantada frente futura para controles configuraveis, como energia eletrica mensal, com colunas definidas pelo usuario, formulas por celula e totalizadores. Deve ser tratada separadamente das correcoes imediatas do financeiro.
+Foi levantada frente futura para controles configuraveis genericos, com colunas definidas pelo usuario, tipos de dado, formulas controladas por coluna e totalizadores. Deve ser tratada separadamente das correcoes imediatas do financeiro.
 
 Consolidacao desta baixa documental:
 - manter classificada como `FUTURO/BACKLOG` (sem implementacao nesta etapa)
 - manter separada da frente de frequencia mensal por competencia
 - exigir auditoria e SPEC propria antes de qualquer modelagem/migration
-- SPEC inicial agora consolidada com:
-  - objetivo funcional proprio
-  - recorte possivel de MVP
+- a frente passa a ser tratada como `Construtor de tabelas personalizadas configuraveis`
+- nao partir de caso de uso piloto fixo como eixo principal
+- SPEC consolidada agora com:
+  - objetivo funcional proprio e generico
+  - recorte conceitual de MVP com construtor controlado
   - fora do MVP
   - limites de seguranca
+  - limites iniciais sugeridos
   - premissas de permissao
   - diretriz de formulas permitidas/proibidas
   - diretriz de auditoria/trilha
-  - diretriz de exportacao/backup
+  - diretriz de exportacao XLSX/backup
   - regra de separacao em relacao ao financeiro oficial
 - classificacao das pendencias desta frente:
   - implementar agora: nenhuma
-  - pendencia proxima: fechar caso de uso piloto e limites iniciais do MVP
-  - backlog/futuro: referencias opcionais, templates e importacao assistida
-  - fora de escopo: engine generica de planilha e integracao escrevente com financeiro
+  - pendencia proxima: fechar contrato funcional do construtor generico controlado
+  - backlog/futuro: exemplos/templates, referencias opcionais e importacao assistida
+  - fora de escopo: engine livre estilo Excel e integracao escrevente com financeiro
   - risco a monitorar: virar "Excel dentro do sistema", perder governanca de permissoes/auditoria e confundir controle interno com dado financeiro oficial
 - riscos registrados para etapa futura: alta complexidade, risco de virar "Excel dentro do sistema", limites de formula por seguranca, permissoes, trilha de auditoria, backup/exportacao e separacao entre dado operacional e financeiro oficial
 

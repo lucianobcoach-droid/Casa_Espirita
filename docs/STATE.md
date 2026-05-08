@@ -2,34 +2,41 @@
 
 Data de atualizacao: 2026-05-08
 
-## SPEC funcional inicial consolidada: tabelas de controle personalizadas
+## SPEC funcional consolidada: construtor de tabelas personalizadas configuraveis
 
 - frente mantida como backlog proprio, separada da frequencia por competencia e sem implementacao funcional nesta etapa
-- objetivo funcional consolidado: permitir tabelas configuraveis para controles internos da Casa, reduzindo dependencia de planilhas externas sem transformar o sistema em planilha generica
-- recorte possivel de MVP registrado documentalmente:
-  - tabela com nome/descricao e colunas limitadas
-  - linhas digitadas manualmente
-  - totalizadores basicos
-  - exportacao simples
-  - auditoria de estrutura e dados
-- limites consolidados da SPEC:
-  - nao implementar agora
-  - nao definir arquitetura definitiva de banco nesta etapa
-  - nao misturar com frequencia por competencia
-  - nao permitir efeito sobre calculos financeiros, saldos, relatorios ou lancamentos reais
+- classificacao consolidada: `Construtor de tabelas personalizadas configuraveis`
+- objetivo funcional consolidado: permitir que a usuaria crie controles internos diversos por meio de tabelas configuraveis, sem depender de um piloto fixo e sem transformar o sistema em planilha livre
+- recorte conceitual do MVP registrado:
+  - cadastro de tabela personalizada
+  - cadastro de colunas dinamicas
+  - criacao e edicao manual de linhas
+  - colunas comuns e colunas calculadas
+  - totalizadores definidos pelo sistema
+  - exportacao XLSX
+  - auditoria de estrutura, formulas e dados
 - diretriz de formulas consolidada:
-  - permitir apenas formulas estritamente controladas por whitelist, se entrarem no MVP
-  - proibir codigo executavel, referencias livres entre tabelas, acesso externo e qualquer escrita no financeiro oficial
-- diretriz de governanca consolidada:
-  - exigir permissoes separadas para visualizar, estruturar, preencher, exportar e restaurar
-  - exigir trilha de auditoria para estrutura, linhas e operacoes de exportacao/backup
-  - tratar vinculos futuros com pessoa/conta/categoria/lancamento apenas como referencia opcional e controlada
+  - formula aplicada por coluna, nao celula por celula no MVP
+  - formula limitada a colunas da mesma linha
+  - formula apenas por whitelist segura
+  - proibicao de codigo executavel, referencia livre entre tabelas e qualquer escrita no financeiro oficial
+- limites iniciais sugeridos registrados:
+  - ate 30 colunas por tabela
+  - ate 5.000 linhas por tabela
+  - ate 10 colunas calculadas
+  - ate 20 opcoes em coluna lista
+  - sem importacao no primeiro recorte
+- relacao consolidada com o financeiro oficial:
+  - nao gera lancamento
+  - nao altera saldo, extrato, resumo, prestacao/fechamento ou balancete
+  - nao altera regras de transferencia, rateio ou competencia
+  - vinculos futuros com pessoa/conta/categoria/lancamento devem nascer como leitura e em microetapa propria
 - classificacao documental das pendencias:
   - implementar agora: nenhuma
-  - pendencia proxima: fechar caso de uso piloto e limite inicial de formulas/colunas/exportacao
-  - backlog/futuro: referencias opcionais, templates, importacao assistida e evolucoes controladas
-  - fora de escopo: engine generica de planilha, integracao escrevente com financeiro e modelagem definitiva nesta etapa
-  - risco a monitorar: virar "Excel dentro do sistema", perder governanca e misturar controle interno com dado financeiro oficial
+  - pendencia proxima: fechar contrato funcional do construtor generico controlado
+  - backlog/futuro: exemplos/templates, referencias opcionais e importacao assistida
+  - fora de escopo: engine livre estilo Excel, integracao escrevente com financeiro e modelagem definitiva nesta etapa
+  - risco a monitorar: virar "Excel dentro do sistema", perder governanca ou confundir controle interno com dado financeiro oficial
 
 ## Validacao da alocacao de competencias no lancamento simples
 

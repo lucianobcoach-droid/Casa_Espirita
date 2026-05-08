@@ -2,6 +2,45 @@
 
 Data: 2026-05-08
 
+## Microetapa documental: ajuste da SPEC de tabelas configuraveis para construtor generico controlado
+
+- etapa exclusivamente documental, sem alteracao de codigo
+- confirmei antes de alterar:
+  - branch `feat/reinicio-financeiro`
+  - arvore limpa
+  - ausencia de commits locais pendentes
+  - ausencia de commits remotos pendentes
+  - `fetch` concluido sem erro
+- atualizei a frente para refletir a decisao da usuaria:
+  - nao tratar o MVP como piloto fixo
+  - tratar a frente como `Construtor de tabelas personalizadas configuraveis`
+  - manter liberdade estrutural com governanca, limites e seguranca
+- consolidacoes documentais aplicadas:
+  - tabelas personalizadas com colunas dinamicas, tipos de dado e formulas controladas por coluna
+  - linhas criadas/editadas manualmente com validacao por tipo
+  - totalizadores definidos pelo sistema
+  - exportacao XLSX como recorte preferencial do MVP
+  - permissoes separadas para estrutura, linhas, formulas, exportacao e arquivamento/restauracao
+  - auditoria de tabela, coluna, formula e linha
+- limites iniciais registrados:
+  - ate 30 colunas por tabela
+  - ate 5.000 linhas por tabela
+  - ate 10 colunas calculadas
+  - ate 20 opcoes em colunas de lista
+- relacao consolidada com o financeiro oficial:
+  - nao gerar lancamentos
+  - nao alterar saldos, extrato, resumo, balancete ou prestacao/fechamento
+  - nao alterar transferencia, rateio ou competencia
+  - permitir vinculo futuro apenas de leitura e em microetapa propria
+- confirmado nesta microetapa:
+  - sem Python
+  - sem templates
+  - sem JS/CSS
+  - sem model
+  - sem migration
+  - sem banco
+  - sem impacto em calculos, saldos, relatorios ou lancamentos reais
+
 ## Microetapa documental: SPEC funcional inicial de tabelas de controle personalizadas
 
 - etapa exclusivamente documental, sem alteracao de codigo

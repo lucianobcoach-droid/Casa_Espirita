@@ -2,53 +2,109 @@
 
 Data: 2026-05-08
 
-## 0.21. SPEC funcional inicial: tabelas de controle personalizadas
+## 0.21. SPEC funcional inicial: construtor de tabelas personalizadas configuraveis
 
 Status consolidado: SPEC FUNCIONAL DOCUMENTAL CONSOLIDADA / BACKLOG
 
 ### Classificacao da frente
 
 - Frente propria e separada da frequencia por competencia.
+- Deve ser tratada como `Construtor de tabelas personalizadas configuraveis`.
+- A liberdade de uso deve ser estrutural, mas controlada pelas regras do sistema.
+- Nao deve partir de um caso de uso piloto fixo como eixo principal.
+- Pode futuramente ter exemplos de uso, mas o MVP conceitual deve ser generico e controlado.
 - Nao deve ser tratada como extensao da matriz de frequencia nem como ajuste pequeno do financeiro atual.
 - Deve permanecer em trilha propria de especificacao, homologacao e futura implementacao incremental.
 
 ### Objetivo funcional
 
-- Permitir controles internos configuraveis da Casa em tabelas proprias, reduzindo dependencia de planilhas externas sem transformar o sistema em planilha generica.
+- Permitir que a usuaria crie qualquer controle interno por meio de tabelas configuraveis, reduzindo dependencia de planilhas externas sem transformar o sistema em planilha livre.
 - Atender controles operacionais e gerenciais que hoje nao cabem bem em lancamentos, cadastros ou relatorios oficiais do financeiro.
 
 ### Escopo possivel do MVP
 
-- cadastro de uma tabela personalizada com nome, descricao curta e status ativo/inativo;
-- definicao manual de colunas com tipos limitados e previsiveis;
-- linhas de controle digitadas manualmente pelo usuario;
-- totalizadores basicos e visoes simples de soma/contagem;
-- exportacao simples da tabela;
-- trilha de auditoria de estrutura e de dados;
+- cadastro de tabela personalizada com:
+  - nome;
+  - descricao;
+  - status ativo/inativo ou arquivado;
+  - ordem de exibicao, se fizer sentido no recorte.
+- cadastro de colunas personalizadas com:
+  - nome da coluna;
+  - tipo de dado;
+  - obrigatoria sim/nao;
+  - ordem da coluna;
+  - visivel sim/nao, se fizer sentido;
+  - classificacao entre coluna comum e coluna calculada.
+- tipos de dados iniciais:
+  - texto curto;
+  - texto longo;
+  - numero inteiro;
+  - numero decimal;
+  - valor monetario;
+  - percentual;
+  - data;
+  - mes/competencia;
+  - sim/nao;
+  - lista de opcoes;
+  - formula controlada.
+- linhas personalizadas com:
+  - criacao manual;
+  - edicao manual;
+  - arquivamento ou exclusao logica;
+  - validacao conforme o tipo de dado da coluna.
+- formulas controladas por coluna:
+  - aplicadas a coluna inteira, nao celula por celula no MVP;
+  - restritas a colunas da mesma linha;
+  - permitidas apenas por whitelist simples e segura.
+- totalizadores definidos pelo sistema:
+  - soma;
+  - media;
+  - minimo;
+  - maximo;
+  - contagem.
+- exportacao XLSX como recorte preferencial do MVP.
+- trilha de auditoria de estrutura, formulas e dados.
 - separacao explicita entre dado de controle interno e financeiro oficial.
 
 ### Fora do MVP
 
-- motor generico de planilha livre;
-- formulas arbitrarias por texto livre;
+- planilha livre estilo Excel;
+- formula livre por texto arbitrario;
+- formula celula por celula;
 - automacoes, macros, scripts ou qualquer execucao dinamica;
+- referencia circular;
+- referencia livre entre tabelas;
 - escrita automatica em lancamentos, saldos, relatorios ou cadastros oficiais do financeiro;
-- importacao em massa complexa com conciliacao inteligente;
-- dashboards transversais, cruzamentos amplos entre tabelas e consolidacao multi-modulo;
+- importacao em massa;
+- dashboards avancados;
 - definicao definitiva de modelagem de banco antes do fechamento funcional desta SPEC.
 
 ### Tipos de coluna e diretriz de formula
 
-- Tipos de coluna aceitaveis para o recorte inicial: texto curto, texto longo, numero, valor monetario, inteiro, data, booleano, selecao simples e referencia opcional somente de leitura.
-- Se houver formula no MVP, ela deve ser estritamente controlada por whitelist e limitada a operacoes no contexto da propria linha.
+- Tipos de coluna aceitaveis para o recorte inicial:
+  - texto curto;
+  - texto longo;
+  - numero inteiro;
+  - numero decimal;
+  - valor monetario;
+  - percentual;
+  - data;
+  - mes/competencia;
+  - sim/nao;
+  - lista de opcoes;
+  - formula controlada.
+- No MVP, formula deve ser atributo de coluna calculada e nao configuracao livre celula por celula.
+- Formula deve ser estritamente controlada por whitelist e limitada a operacoes no contexto da propria linha.
 - Formulas permitidas no desenho inicial:
   - operacoes aritmeticas simples (`+`, `-`, `*`, `/`);
   - parenteses;
   - funcoes seguras e fechadas, se realmente necessarias, como `ABS`, `ROUND`, `MIN` e `MAX`;
-  - totalizadores calculados pelo proprio sistema, sem expressao livre do usuario final.
+  - uso apenas de colunas da mesma linha;
+  - totalizadores calculados pelo proprio sistema, sem expressao livre complexa do usuario final.
 - Formulas proibidas:
   - qualquer avaliacao de Python, JavaScript, SQL ou codigo executavel;
   - referencias livres entre tabelas;
+  - referencias circulares;
   - referencias que alterem outras linhas, outras colunas ou outros registros;
   - formulas com efeito colateral, chamada externa, importacao de arquivo, acesso a rede ou leitura/escrita no sistema;
   - referencia direta a saldos, calculos, balancetes, extratos, prestacao, fechamento ou lancamentos reais como dado editavel.
@@ -56,33 +112,48 @@ Status consolidado: SPEC FUNCIONAL DOCUMENTAL CONSOLIDADA / BACKLOG
 ### Limites de seguranca
 
 - Nao permitir que a frente vire um "Excel dentro do sistema".
+- A liberdade deve existir na estrutura da tabela, nao na execucao irrestrita de formulas ou automacoes.
 - Impor limites de quantidade de colunas, linhas por consulta, tipos suportados e complexidade de formula.
 - Separar claramente configuracao da tabela, lancamento de linhas e administracao de permissoes.
 - Qualquer vinculo futuro com entidades oficiais deve nascer como referencia controlada e nao como escrita automatica.
 - A frente nao pode criar novo caminho para alterar calculos financeiros, saldos, relatorios oficiais ou lancamentos reais.
+
+### Limites iniciais sugeridos
+
+- ate 30 colunas por tabela;
+- ate 5.000 linhas por tabela no MVP;
+- ate 10 colunas calculadas por tabela;
+- ate 20 opcoes em colunas do tipo lista;
+- formulas apenas entre colunas da mesma linha;
+- totalizadores apenas em rodape/listagem;
+- sem importacao no primeiro recorte;
+- sem integracao escrevente com o financeiro oficial.
 
 ### Premissas de permissoes
 
 - Permissoes devem ser separadas por acao, no minimo:
   - visualizar tabelas;
   - criar/editar estrutura;
-  - lancar/editar linhas;
+  - preencher/editar linhas;
+  - alterar formulas;
   - exportar;
-  - administrar tabelas arquivadas/restauracoes.
+  - arquivar/restaurar;
+  - administrar permissoes/configuracoes da tabela.
 - Estrutura da tabela e formulas devem exigir permissao mais forte do que o simples preenchimento de linhas.
 - Se existir vinculo futuro com entidades oficiais, ele deve exigir permissao dedicada e auditoria reforcada.
 
 ### Diretriz de auditoria e trilha de alteracoes
 
-- Registrar criacao, edicao, arquivamento e exclusao logica da tabela.
-- Registrar alteracao de colunas, tipos, ordem, obrigatoriedade e formula.
-- Registrar inclusao, alteracao e exclusao de linhas com antes/depois estruturado.
+- Registrar criacao, edicao e arquivamento da tabela.
+- Registrar criacao, edicao e remocao de colunas.
+- Registrar alteracao de formulas.
+- Registrar inclusao, edicao e exclusao logica de linhas com antes/depois quando aplicavel.
 - Registrar usuario, data/hora, tabela afetada e acao de exportacao/backup/restauracao.
 - Excluir fisicamente dados de controle deve ser excecao; preferir arquivamento ou exclusao logica quando o uso real justificar.
 
 ### Diretriz de exportacao e backup
 
-- Cada tabela deve poder ser exportada ao menos em formato simples de leitura, como CSV ou XLSX.
+- Cada tabela deve poder ser exportada ao menos em XLSX no recorte inicial preferencial.
 - Deve existir estrategia futura de backup que preserve estrutura + dados + metadados essenciais da tabela.
 - Restauracao, quando existir, deve ser tratada como operacao administrativa auditada.
 - Exportacao nao pode ser tratada como integracao oficial com o financeiro; e apenas saida documental/operacional.
@@ -106,9 +177,22 @@ Status consolidado: SPEC FUNCIONAL DOCUMENTAL CONSOLIDADA / BACKLOG
   - lancamentos reais;
   - regras de transferencia, rateio ou competencias ja consolidadas.
 
+### Regra de separacao com o financeiro oficial
+
+- As tabelas personalizadas sao controles internos.
+- Nao geram lancamento financeiro.
+- Nao alteram saldo.
+- Nao alteram extrato.
+- Nao alteram resumo.
+- Nao alteram prestacao/fechamento.
+- Nao alteram balancete.
+- Nao alteram regras de transferencia, rateio ou competencia.
+- Eventual vinculo futuro com pessoa, conta, categoria ou lancamento deve ser somente leitura no primeiro recorte e exigir microetapa propria.
+
 ### Riscos principais
 
 - risco de escopo crescer ate virar "Excel dentro do sistema";
+- risco de a flexibilidade estrutural ser confundida com liberdade irrestrita de planilha;
 - risco de proliferacao de tabelas sem governanca;
 - risco de formulas ambiguas ou dificeis de auditar;
 - risco de confusao entre controle interno e dado financeiro oficial;
@@ -121,12 +205,12 @@ Status consolidado: SPEC FUNCIONAL DOCUMENTAL CONSOLIDADA / BACKLOG
 - Implementar agora:
   - nenhuma; esta microetapa e apenas de auditoria documental e SPEC funcional inicial.
 - Pendencia proxima:
-  - validar com a usuaria o primeiro caso de uso piloto da frente;
-  - fechar se o MVP inicial tera apenas totalizadores nativos ou tambem formulas simples por whitelist;
-  - definir limite funcional inicial de colunas, linhas e exportacao.
+  - fechar os detalhes do construtor generico controlado sem rebaixar a governanca da frente;
+  - validar se os limites iniciais sugeridos permanecem adequados para o primeiro recorte funcional;
+  - definir o contrato inicial de exportacao XLSX e a forma de exibicao/edicao das colunas calculadas.
 - Backlog/futuro:
   - referencias opcionais a entidades oficiais;
-  - templates de tabela;
+  - exemplos/templates de tabela;
   - importacao assistida;
   - filtros/visoes salvas;
   - formulas controladas mais ricas, se o uso real justificar.

@@ -277,12 +277,14 @@ Estas regras devem ser respeitadas em qualquer etapa:
 - a expansao futura de acoes em lote para outros cadastros permanece registrada como frente posterior de UX/operacao, sem ser tratada como regra de negocio estrutural
 
 ### 5.6. Diretriz futura de tabelas personalizadas de controle
-- fica registrada como frente futura grande a possibilidade de controles configuraveis por tabela, como energia eletrica mensal ou outros acompanhamentos operacionais recorrentes
-- essa frente deve permitir, em desenho futuro proprio, que o usuario defina nome das colunas, formulas por celula e colunas com totalizadores
-- essa frente deve prever suporte a tipos de coluna, linhas de controle e relacoes opcionais com entidades existentes (financeiro, pessoas, categorias), sem acoplamento automatico inicial
+- fica registrada como frente futura grande um construtor de tabelas personalizadas configuraveis para controles internos, com liberdade estrutural controlada pelo sistema
+- essa frente nao deve partir de uma tabela piloto fixa como eixo principal; exemplos de uso podem existir no futuro, mas o conceito-base deve ser generico e reutilizavel
+- essa frente deve permitir, em desenho futuro proprio, que o usuario defina nome das colunas, tipos de dado, quantidade de colunas, linhas de controle e colunas calculadas com formulas aplicadas por coluna
+- essa frente deve prever suporte a relacoes opcionais com entidades existentes (financeiro, pessoas, categorias), sem acoplamento automatico inicial e sem escrita automatica no financeiro oficial
 - essa frente nao deve ser misturada com correcoes imediatas do financeiro, pois envolve estrutura propria de configuracao, validacao de formulas, persistencia e experiencia de edicao tabular
 - essa frente nao deve ser misturada com a frente de frequencia mensal por competencia; ambas devem seguir trilhas independentes de especificacao
-- antes de qualquer implementacao, essa frente deve passar por auditoria e desenho funcional separado, avaliando seguranca das formulas, auditoria, permissao, backup/exportacao e relacao com lancamentos financeiros reais
+- essa frente nao deve ser tratada como planilha livre nem como "Excel dentro do sistema"; a flexibilidade precisa nascer com governanca, limites de uso e seguranca
+- antes de qualquer implementacao, essa frente deve passar por auditoria e desenho funcional separado, avaliando seguranca das formulas, auditoria, permissao, backup/exportacao, limites estruturais e relacao com lancamentos financeiros reais
 
 ## 6. Estado funcional ja validado
 Ate o momento, esta validado que:
