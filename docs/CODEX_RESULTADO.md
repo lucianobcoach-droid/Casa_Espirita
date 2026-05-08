@@ -2,6 +2,41 @@
 
 Data: 2026-05-08
 
+## Microetapa documental: fechamento da navegacao de tabelas configuraveis
+
+- etapa exclusivamente documental, sem alteracao de codigo
+- confirmei antes de alterar:
+  - branch `feat/reinicio-financeiro`
+  - arvore limpa
+  - ausencia de commits locais pendentes
+  - ausencia de commits remotos pendentes
+  - `fetch` concluido sem erro
+- fechei documentalmente a navegacao e o enquadramento da frente `Construtor de tabelas personalizadas configuraveis`
+- decisao estrategica registrada:
+  - frente isolada do financeiro oficial
+  - no MVP, pode nascer dentro de `Financeiro > Controles internos`
+  - sem mistura com lancamentos, extrato, resumo, prestacao/fechamento ou balancete
+- pontos de navegacao consolidados:
+  - item de menu `Tabelas personalizadas`
+  - listagem propria da frente
+  - fluxo listagem -> metadados da tabela -> colunas -> linhas
+  - caminho claro de volta entre linhas, estrutura e listagem
+  - menu visivel apenas para quem tiver permissao de visualizar tabelas personalizadas
+- decisoes operacionais recomendadas registradas:
+  - `data` com `minimo/maximo` apenas se configurado na coluna
+  - `sim/nao` e `lista de opcoes` com `contagem` adiada ou simplificada
+  - reordenacao inicial por campo numerico `ordem`
+  - totalizadores exibidos apenas quando configurados por coluna
+- confirmado nesta microetapa:
+  - alteracao restrita a documentos
+  - sem Python
+  - sem templates
+  - sem JS/CSS
+  - sem model
+  - sem migration
+  - sem banco
+  - sem impacto em calculos, saldos, relatorios ou lancamentos reais
+
 ## Microetapa documental: fechamento da UX operacional de tabelas configuraveis
 
 - etapa exclusivamente documental, sem alteracao de codigo

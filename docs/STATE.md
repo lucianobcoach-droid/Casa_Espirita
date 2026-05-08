@@ -57,6 +57,12 @@ Data de atualizacao: 2026-05-08
   - totalizadores por coluna
   - exportacao com totalizadores visiveis
   - diferenciacao clara entre permissoes de estrutura e de preenchimento
+- navegacao e enquadramento do MVP agora registrados com:
+  - localizacao em `Financeiro > Controles internos > Tabelas personalizadas`
+  - isolamento de `Lancamentos`, `Extrato`, `Resumo`, `Prestacao/Fechamento` e `Balancete`
+  - listagem propria da frente
+  - fluxo claro entre listagem, estrutura, colunas e linhas
+  - visibilidade do menu dependente da permissao de visualizar tabelas personalizadas
 
 ## Validacao da alocacao de competencias no lancamento simples
 

@@ -677,15 +677,118 @@ Status consolidado: SPEC FUNCIONAL DOCUMENTAL CONSOLIDADA / BACKLOG
 - Nao gerar lancamento.
 - Nao alterar saldo, extrato, resumo, prestacao/fechamento ou balancete.
 
+### SPEC de navegacao e enquadramento documental
+
+#### Enquadramento estrategico da frente
+
+- A frente deve ficar isolada do financeiro oficial.
+- No MVP, pode nascer dentro do modulo `financeiro` como area de `Controles internos`.
+- Nao deve se misturar com:
+  - lancamentos;
+  - relatorios financeiros;
+  - extrato;
+  - resumo;
+  - prestacao/fechamento;
+  - balancete.
+- Nao deve gerar documentos financeiros oficiais.
+- Nao deve gerar lancamento.
+- Nao deve alterar saldo.
+
+#### Localizacao sugerida para o MVP
+
+- Menu do financeiro:
+  - grupo: `Controles internos`
+  - item: `Tabelas personalizadas`
+- Nome funcional da tela:
+  - `Tabelas personalizadas`
+- Descricao operacional sugerida:
+  - area para criar controles internos configuraveis, sem efeito sobre lancamentos financeiros oficiais.
+
+#### Alternativas futuras de posicionamento
+
+- Manter como area interna do `financeiro`, se o uso continuar essencialmente gerencial/financeiro.
+- Evoluir futuramente para modulo proprio `Controles internos`, se a frente passar a atender controles gerais da Casa fora do escopo financeiro.
+
+#### Regra de separacao na navegacao
+
+- Nao entrar em `Lançamentos`.
+- Nao entrar como relatorio financeiro.
+- Nao aparecer como parte de `Extrato`.
+- Nao aparecer como parte de `Resumo`.
+- Nao aparecer como parte de `Prestacao/Fechamento`.
+- Nao aparecer como parte de `Balancete`.
+- Nao gerar documentos financeiros oficiais.
+- Nao gerar lancamento.
+- Nao alterar saldo.
+
+#### Fluxo de navegacao do MVP
+
+- Caminho principal:
+  - `Financeiro > Controles internos > Tabelas personalizadas`
+- Ao abrir:
+  - o sistema mostra a listagem de tabelas personalizadas.
+- Na listagem, a usuaria pode:
+  - abrir tabela;
+  - criar nova tabela;
+  - editar estrutura;
+  - exportar;
+  - arquivar/restaurar, se tiver permissao.
+- Ao criar nova tabela:
+  - salva os metadados;
+  - conduz para configuracao de colunas.
+- Depois de configurar colunas:
+  - conduz para o preenchimento de linhas.
+- Na tela de linhas:
+  - deve existir caminho claro para voltar a estrutura;
+  - deve existir caminho claro para voltar a listagem;
+  - deve existir caminho claro para exportar.
+- Colunas calculadas devem aparecer como resultado somente leitura na tela de linhas.
+
+#### Filtros simples sugeridos para o MVP
+
+- Na listagem de tabelas:
+  - busca por nome;
+  - filtro por status;
+  - ordenacao simples por nome ou ultima atualizacao.
+- Na tela de linhas:
+  - busca textual simples, se tecnicamente segura no MVP;
+  - filtro por status da linha, se houver arquivamento/exclusao logica.
+- Filtros avancados ficam fora do MVP.
+
+#### Decisoes pendentes e recomendacao inicial
+
+- `data`:
+  - recomendacao inicial: permitir `minimo` e `maximo` apenas se configurado explicitamente na coluna.
+- `sim/nao` e `lista de opcoes`:
+  - recomendacao inicial: deixar `contagem` para futuro ou limitar a contagem simples total, sem agrupamentos.
+- Reordenacao de colunas:
+  - recomendacao inicial: comecar por campo numerico `ordem`;
+  - `arrastar-e-soltar` fica para futuro.
+- Totalizadores:
+  - recomendacao inicial: aparecer somente quando configurados por coluna.
+
+#### Permissoes afetadas pela navegacao
+
+- visualizar tabelas personalizadas;
+- criar tabela personalizada;
+- editar estrutura;
+- configurar formula;
+- preencher linhas;
+- editar linhas;
+- exportar;
+- arquivar/restaurar;
+- administrar configuracoes.
+- A visibilidade do item de menu deve depender da permissao de visualizar tabelas personalizadas.
+
 #### Classificacao de pendencias desta SPEC de UX
 
 - Implementar agora:
   - nenhuma; a etapa continua apenas documental.
 - Pendencia proxima:
-  - fechar a navegacao/localizacao da frente dentro do modulo;
   - validar a abordagem final de reordenacao de colunas;
   - validar se `data` tera `min/max` no totalizador inicial;
   - definir se `contagem` por lista/sim-nao entra no primeiro recorte.
+  - validar se busca textual simples nas linhas entra ja no MVP inicial.
 - Backlog/futuro:
   - filtros simples;
   - visoes salvas;
@@ -703,6 +806,7 @@ Status consolidado: SPEC FUNCIONAL DOCUMENTAL CONSOLIDADA / BACKLOG
   - a UX ficar complexa demais e incentivar uso como planilha livre;
   - a experiencia de formulas guiadas ficar confusa para usuaria nao tecnica;
   - a distincao entre preencher linhas e alterar estrutura/permissoes ficar fraca.
+  - a frente nascer visualmente perto demais de relatorios ou lancamentos e confundir seu papel.
 
 ## 0.20. Especificacao funcional: tipo/disponibilidade de conta e Balancete patrimonial
 

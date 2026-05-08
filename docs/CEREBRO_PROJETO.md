@@ -281,6 +281,7 @@ Estas regras devem ser respeitadas em qualquer etapa:
 - essa frente nao deve partir de uma tabela piloto fixa como eixo principal; exemplos de uso podem existir no futuro, mas o conceito-base deve ser generico e reutilizavel
 - essa frente deve permitir, em desenho futuro proprio, que o usuario defina nome das colunas, tipos de dado, quantidade de colunas, linhas de controle e colunas calculadas com formulas aplicadas por coluna
 - essa frente deve prever suporte a relacoes opcionais com entidades existentes (financeiro, pessoas, categorias), sem acoplamento automatico inicial e sem escrita automatica no financeiro oficial
+- no MVP documental atual, essa frente pode nascer dentro do modulo `financeiro` em uma area propria de `Controles internos`, mantendo isolamento funcional em relacao a `Lançamentos`, `Extrato`, `Resumo`, `Prestacao/Fechamento` e `Balancete`
 - essa frente nao deve ser misturada com correcoes imediatas do financeiro, pois envolve estrutura propria de configuracao, validacao de formulas, persistencia e experiencia de edicao tabular
 - essa frente nao deve ser misturada com a frente de frequencia mensal por competencia; ambas devem seguir trilhas independentes de especificacao
 - essa frente nao deve ser tratada como planilha livre nem como "Excel dentro do sistema"; a flexibilidade precisa nascer com governanca, limites de uso e seguranca
