@@ -2,6 +2,53 @@
 
 Data: 2026-05-08
 
+## Microetapa tecnica: estrutura minima de dados de tabelas configuraveis
+
+- etapa funcional controlada, limitada aos models, migration e testes minimos da base estrutural
+- confirmei antes de alterar:
+  - branch `feat/reinicio-financeiro`
+  - arvore limpa
+  - ausencia de commits locais pendentes
+  - ausencia de commits remotos pendentes
+  - `fetch` concluido sem erro
+- implementei em `financeiro/models.py`:
+  - `TabelaPersonalizada`
+  - `ColunaPersonalizada`
+  - `LinhaTabelaPersonalizada`
+  - `ValorTabelaPersonalizada`
+- mantive o recorte tecnico aprovado:
+  - sem `FormulaColunaPersonalizada`
+  - sem `TotalizadorColunaPersonalizada`
+  - sem views, urls, templates, forms, menu ou permissao executavel
+  - sem exportacao XLSX e sem auditoria operacional propria da nova frente
+  - sem integracao com financeiro oficial
+- migration criada:
+  - `financeiro/migrations/0017_colunapersonalizada_linhatabelapersonalizada_and_more.py`
+- testes adicionados em `financeiro/tests.py` para:
+  - criacao de tabela
+  - choices de status
+  - criacao e invalidacao de coluna
+  - unicidade de coluna por tabela
+  - criacao de linha
+  - criacao e invalidacao de valor
+  - unicidade `linha + coluna`
+  - nao regressao basica de `LancamentoFinanceiro`
+- validacoes executadas com sucesso:
+  - `py manage.py makemigrations --check --dry-run`
+  - `py manage.py check`
+  - `py -m compileall financeiro configuracoes`
+  - `py manage.py test financeiro`
+- resultado dos testes:
+  - `133` testes executados
+  - suite `OK`
+- baixa documental consolidada:
+  - microetapa 3 do backlog tecnico incremental concluida
+  - pendencia proxima movida para `permissoes e menu da frente`
+- confirmado nesta microetapa:
+  - sem alteracao em templates, views, urls, forms, JS ou CSS
+  - sem alteracao em arquivos SQLite
+  - sem impacto em calculos, saldos, extrato, resumo, prestacao/fechamento ou balancete
+
 ## Microetapa documental: SPEC tecnica de modelagem de dados de tabelas configuraveis
 
 - etapa documental e tecnica, sem implementacao funcional

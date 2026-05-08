@@ -87,6 +87,16 @@ def normalizar_nome_pessoa_financeira(valor: str) -> str:
     return re.sub(r'\s+', ' ', valor_sem_acentos).strip().casefold()
 
 
+def _normalizar_identificador_textual(valor: str) -> str:
+    valor_sem_acentos = unicodedata.normalize('NFKD', valor or '')
+    valor_sem_acentos = ''.join(
+        caractere
+        for caractere in valor_sem_acentos
+        if not unicodedata.combining(caractere)
+    )
+    return re.sub(r'\s+', ' ', valor_sem_acentos).strip().casefold()
+
+
 class CentroCusto(models.Model):
     codigo = models.CharField(max_length=30, unique=True)
     nome = models.CharField(max_length=150)
@@ -638,6 +648,353 @@ class RegraLancamentoFinanceiro(models.Model):
             errors['categoria'] = 'Categoria e obrigatoria para receita e despesa.'
         elif lancamento_operacional and self.categoria_id and not self.categoria.permite_vinculo_em_lancamento:
             errors['categoria'] = 'Selecione uma subcategoria para receita e despesa. Categoria pai nao pode ser usada em regras.'
+
+        if errors:
+            raise ValidationError(errors)
+
+    def save(self, *args, **kwargs) -> None:
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+
+class TabelaPersonalizada(models.Model):
+    class StatusTabela(models.TextChoices):
+        ATIVA = 'ativa', 'Ativa'
+        INATIVA = 'inativa', 'Inativa'
+        ARQUIVADA = 'arquivada', 'Arquivada'
+
+    nome = models.CharField(max_length=150)
+    descricao = models.TextField(blank=True)
+    status = models.CharField(
+        max_length=20,
+        choices=StatusTabela.choices,
+        default=StatusTabela.ATIVA,
+    )
+    ordem = models.PositiveIntegerField(default=0)
+    criado_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name='tabelas_personalizadas_criadas',
+        null=True,
+        blank=True,
+    )
+    atualizado_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name='tabelas_personalizadas_atualizadas',
+        null=True,
+        blank=True,
+    )
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['ordem', 'nome', 'pk']
+        verbose_name = 'Tabela personalizada'
+        verbose_name_plural = 'Tabelas personalizadas'
+
+    def __str__(self) -> str:
+        return self.nome
+
+    def clean(self) -> None:
+        super().clean()
+        errors: dict[str, str] = {}
+        nome_normalizado = _normalizar_identificador_textual(self.nome)
+
+        if not nome_normalizado:
+            errors['nome'] = 'Informe o nome da tabela.'
+        elif self.status != self.StatusTabela.ARQUIVADA:
+            queryset = type(self).objects.exclude(status=self.StatusTabela.ARQUIVADA)
+            if self.pk:
+                queryset = queryset.exclude(pk=self.pk)
+            for tabela in queryset.only('nome'):
+                if _normalizar_identificador_textual(tabela.nome) == nome_normalizado:
+                    errors['nome'] = 'Ja existe outra tabela personalizada ativa/inativa com este nome.'
+                    break
+
+        if errors:
+            raise ValidationError(errors)
+
+    def save(self, *args, **kwargs) -> None:
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+
+class ColunaPersonalizada(models.Model):
+    class StatusColuna(models.TextChoices):
+        ATIVA = 'ativa', 'Ativa'
+        INATIVA = 'inativa', 'Inativa'
+        ARQUIVADA = 'arquivada', 'Arquivada'
+
+    class TipoDado(models.TextChoices):
+        TEXTO_CURTO = 'texto_curto', 'Texto curto'
+        TEXTO_LONGO = 'texto_longo', 'Texto longo'
+        INTEIRO = 'inteiro', 'Inteiro'
+        DECIMAL = 'decimal', 'Decimal'
+        MONETARIO = 'monetario', 'Monetario'
+        PERCENTUAL = 'percentual', 'Percentual'
+        DATA = 'data', 'Data'
+        MES_COMPETENCIA = 'mes_competencia', 'Mes/competencia'
+        BOOLEANO = 'booleano', 'Booleano'
+        LISTA_OPCOES = 'lista_opcoes', 'Lista de opcoes'
+        FORMULA_CONTROLADA = 'formula_controlada', 'Formula controlada'
+
+    tabela = models.ForeignKey(
+        TabelaPersonalizada,
+        on_delete=models.CASCADE,
+        related_name='colunas',
+    )
+    nome = models.CharField(max_length=150)
+    tipo_dado = models.CharField(max_length=30, choices=TipoDado.choices)
+    obrigatoria = models.BooleanField(default=False)
+    visivel = models.BooleanField(default=True)
+    ordem = models.PositiveIntegerField(default=0)
+    calculada = models.BooleanField(default=False)
+    configuracao_json = models.JSONField(default=dict, blank=True)
+    status = models.CharField(
+        max_length=20,
+        choices=StatusColuna.choices,
+        default=StatusColuna.ATIVA,
+    )
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['tabela_id', 'ordem', 'nome', 'pk']
+        verbose_name = 'Coluna personalizada'
+        verbose_name_plural = 'Colunas personalizadas'
+
+    def __str__(self) -> str:
+        return f'{self.tabela.nome} - {self.nome}'
+
+    def clean(self) -> None:
+        super().clean()
+        errors: dict[str, str] = {}
+        nome_normalizado = _normalizar_identificador_textual(self.nome)
+        configuracao = self.configuracao_json or {}
+
+        if not nome_normalizado:
+            errors['nome'] = 'Informe o nome da coluna.'
+
+        if self.calculada and self.tipo_dado != self.TipoDado.FORMULA_CONTROLADA:
+            errors['tipo_dado'] = 'Coluna calculada deve usar o tipo formula_controlada.'
+
+        if not self.calculada and self.tipo_dado == self.TipoDado.FORMULA_CONTROLADA:
+            errors['calculada'] = 'Tipo formula_controlada exige coluna marcada como calculada.'
+
+        if configuracao and not isinstance(configuracao, dict):
+            errors['configuracao_json'] = 'A configuracao da coluna precisa ser um objeto JSON.'
+
+        if isinstance(configuracao, dict) and self.tipo_dado == self.TipoDado.LISTA_OPCOES:
+            opcoes = configuracao.get('opcoes', [])
+            if not isinstance(opcoes, list):
+                errors['configuracao_json'] = 'Lista de opcoes exige um array em configuracao_json.opcoes.'
+            else:
+                opcoes_normalizadas: set[str] = set()
+                for opcao in opcoes:
+                    if not isinstance(opcao, str) or not opcao.strip():
+                        errors['configuracao_json'] = 'Lista de opcoes aceita apenas itens textuais nao vazios.'
+                        break
+                    opcao_normalizada = _normalizar_identificador_textual(opcao)
+                    if opcao_normalizada in opcoes_normalizadas:
+                        errors['configuracao_json'] = 'Lista de opcoes nao pode repetir valores equivalentes.'
+                        break
+                    opcoes_normalizadas.add(opcao_normalizada)
+                if len(opcoes) > 20:
+                    errors['configuracao_json'] = 'Lista de opcoes aceita no maximo 20 itens no MVP.'
+
+        if self.tabela_id and nome_normalizado and self.status != self.StatusColuna.ARQUIVADA:
+            queryset = type(self).objects.filter(tabela=self.tabela).exclude(status=self.StatusColuna.ARQUIVADA)
+            if self.pk:
+                queryset = queryset.exclude(pk=self.pk)
+            for coluna in queryset.only('nome'):
+                if _normalizar_identificador_textual(coluna.nome) == nome_normalizado:
+                    errors['nome'] = 'Ja existe outra coluna ativa/inativa com este nome nesta tabela.'
+                    break
+
+        if errors:
+            raise ValidationError(errors)
+
+    def save(self, *args, **kwargs) -> None:
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+
+class LinhaTabelaPersonalizada(models.Model):
+    class StatusLinha(models.TextChoices):
+        ATIVA = 'ativa', 'Ativa'
+        ARQUIVADA = 'arquivada', 'Arquivada'
+
+    tabela = models.ForeignKey(
+        TabelaPersonalizada,
+        on_delete=models.CASCADE,
+        related_name='linhas',
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=StatusLinha.choices,
+        default=StatusLinha.ATIVA,
+    )
+    ordem = models.PositiveIntegerField(default=0)
+    criado_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name='linhas_tabelas_personalizadas_criadas',
+        null=True,
+        blank=True,
+    )
+    atualizado_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name='linhas_tabelas_personalizadas_atualizadas',
+        null=True,
+        blank=True,
+    )
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['tabela_id', 'ordem', 'pk']
+        verbose_name = 'Linha de tabela personalizada'
+        verbose_name_plural = 'Linhas de tabela personalizada'
+
+    def __str__(self) -> str:
+        referencia = self.pk if self.pk else 'nova'
+        return f'{self.tabela.nome} - linha {referencia}'
+
+    def save(self, *args, **kwargs) -> None:
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+
+class ValorTabelaPersonalizada(models.Model):
+    linha = models.ForeignKey(
+        LinhaTabelaPersonalizada,
+        on_delete=models.CASCADE,
+        related_name='valores',
+    )
+    coluna = models.ForeignKey(
+        ColunaPersonalizada,
+        on_delete=models.CASCADE,
+        related_name='valores',
+    )
+    valor_texto = models.TextField(blank=True)
+    valor_numero = models.DecimalField(
+        max_digits=18,
+        decimal_places=6,
+        null=True,
+        blank=True,
+    )
+    valor_data = models.DateField(null=True, blank=True)
+    valor_booleano = models.BooleanField(null=True, blank=True)
+    valor_json = models.JSONField(null=True, blank=True)
+    valor_calculado = models.JSONField(null=True, blank=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['linha_id', 'coluna_id', 'pk']
+        verbose_name = 'Valor de tabela personalizada'
+        verbose_name_plural = 'Valores de tabela personalizada'
+        constraints = [
+            models.UniqueConstraint(
+                fields=('linha', 'coluna'),
+                name='uniq_valor_tabela_personalizada_linha_coluna',
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f'{self.linha} - {self.coluna.nome}'
+
+    def clean(self) -> None:
+        super().clean()
+        errors: dict[str, str] = {}
+
+        if self.linha_id and self.coluna_id and self.linha.tabela_id != self.coluna.tabela_id:
+            errors['coluna'] = 'A coluna precisa pertencer a mesma tabela da linha informada.'
+
+        possui_valor_texto = bool((self.valor_texto or '').strip())
+        possui_valor_numero = self.valor_numero is not None
+        possui_valor_data = self.valor_data is not None
+        possui_valor_booleano = self.valor_booleano is not None
+        possui_valor_json = self.valor_json is not None
+        possui_valor_calculado = self.valor_calculado is not None
+
+        slots_manuais_preenchidos = sum(
+            (
+                possui_valor_texto,
+                possui_valor_numero,
+                possui_valor_data,
+                possui_valor_booleano,
+                possui_valor_json,
+            )
+        )
+
+        if self.coluna_id:
+            if self.coluna.calculada:
+                if slots_manuais_preenchidos:
+                    errors['coluna'] = 'Coluna calculada nao aceita valor manual nesta etapa.'
+                if self.coluna.tipo_dado != ColunaPersonalizada.TipoDado.FORMULA_CONTROLADA:
+                    errors['coluna'] = 'Coluna calculada precisa usar o tipo formula_controlada.'
+            else:
+                if possui_valor_calculado:
+                    errors['valor_calculado'] = 'Valor calculado so pode ser usado em coluna calculada.'
+
+                tipo_dado = self.coluna.tipo_dado
+                if tipo_dado in {
+                    ColunaPersonalizada.TipoDado.TEXTO_CURTO,
+                    ColunaPersonalizada.TipoDado.TEXTO_LONGO,
+                }:
+                    if not possui_valor_texto:
+                        errors['valor_texto'] = 'Este tipo de coluna exige valor_texto.'
+                    elif slots_manuais_preenchidos > 1:
+                        errors['coluna'] = 'Preencha apenas o slot de valor compativel com a coluna.'
+                    elif (
+                        tipo_dado == ColunaPersonalizada.TipoDado.TEXTO_CURTO
+                        and len((self.valor_texto or '').strip()) > 120
+                    ):
+                        errors['valor_texto'] = 'Texto curto aceita no maximo 120 caracteres.'
+                elif tipo_dado == ColunaPersonalizada.TipoDado.MES_COMPETENCIA:
+                    if not possui_valor_texto:
+                        errors['valor_texto'] = 'Mes/competencia exige valor_texto no formato MM/AAAA.'
+                    elif slots_manuais_preenchidos > 1:
+                        errors['coluna'] = 'Preencha apenas o slot de valor compativel com a coluna.'
+                    elif not re.match(r'^(0[1-9]|1[0-2])/\d{4}$', (self.valor_texto or '').strip()):
+                        errors['valor_texto'] = 'Mes/competencia deve seguir o formato MM/AAAA.'
+                elif tipo_dado in {
+                    ColunaPersonalizada.TipoDado.INTEIRO,
+                    ColunaPersonalizada.TipoDado.DECIMAL,
+                    ColunaPersonalizada.TipoDado.MONETARIO,
+                    ColunaPersonalizada.TipoDado.PERCENTUAL,
+                }:
+                    if not possui_valor_numero:
+                        errors['valor_numero'] = 'Este tipo de coluna exige valor_numero.'
+                    elif slots_manuais_preenchidos > 1:
+                        errors['coluna'] = 'Preencha apenas o slot de valor compativel com a coluna.'
+                    elif (
+                        tipo_dado == ColunaPersonalizada.TipoDado.INTEIRO
+                        and self.valor_numero != self.valor_numero.to_integral_value()
+                    ):
+                        errors['valor_numero'] = 'Coluna do tipo inteiro nao aceita casas decimais.'
+                elif tipo_dado == ColunaPersonalizada.TipoDado.DATA:
+                    if not possui_valor_data:
+                        errors['valor_data'] = 'Coluna do tipo data exige valor_data.'
+                    elif slots_manuais_preenchidos > 1:
+                        errors['coluna'] = 'Preencha apenas o slot de valor compativel com a coluna.'
+                elif tipo_dado == ColunaPersonalizada.TipoDado.BOOLEANO:
+                    if not possui_valor_booleano:
+                        errors['valor_booleano'] = 'Coluna do tipo booleano exige valor_booleano.'
+                    elif slots_manuais_preenchidos > 1:
+                        errors['coluna'] = 'Preencha apenas o slot de valor compativel com a coluna.'
+                elif tipo_dado == ColunaPersonalizada.TipoDado.LISTA_OPCOES:
+                    if not possui_valor_texto:
+                        errors['valor_texto'] = 'Lista de opcoes exige valor_texto.'
+                    elif slots_manuais_preenchidos > 1:
+                        errors['coluna'] = 'Preencha apenas o slot de valor compativel com a coluna.'
+                    else:
+                        configuracao = self.coluna.configuracao_json or {}
+                        opcoes = configuracao.get('opcoes', []) if isinstance(configuracao, dict) else []
+                        if opcoes and self.valor_texto not in opcoes:
+                            errors['valor_texto'] = 'O valor informado nao esta entre as opcoes permitidas.'
 
         if errors:
             raise ValidationError(errors)

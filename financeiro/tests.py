@@ -23,10 +23,14 @@ from .models import (
     AlocacaoCompetenciaFinanceira,
     AssinaturaInstitucional,
     CategoriaFinanceira,
+    ColunaPersonalizada,
     ContaFinanceira,
+    LinhaTabelaPersonalizada,
     LancamentoFinanceiro,
     PessoaFinanceira,
+    TabelaPersonalizada,
     TipoContaFinanceira,
+    ValorTabelaPersonalizada,
 )
 from .views import (
     BalanceteInstitucionalFinanceiroView,
@@ -1880,6 +1884,7 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
             conta=self.conta,
         )
 
+
     def _dados_rateio(self, **overrides):
         dados = self._dados_lancamento(
             valor='',
@@ -3661,3 +3666,214 @@ class LancamentoListagemAcoesTests(TestCase):
             reverse('financeiro:lancamento-delete', kwargs={'pk': self.lancamento_simples.pk})
         )
         self.assertEqual(response_get.status_code, 200)
+
+
+class TabelasPersonalizadasEstruturaBaseTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            username='tester_tabelas',
+            password='segredo123',
+        )
+        self.tabela = TabelaPersonalizada.objects.create(
+            nome='Controle interno',
+            descricao='Tabela base de teste',
+            criado_por=self.user,
+            atualizado_por=self.user,
+        )
+
+    def test_cria_tabela_personalizada(self):
+        self.assertEqual(self.tabela.status, TabelaPersonalizada.StatusTabela.ATIVA)
+        self.assertEqual(self.tabela.nome, 'Controle interno')
+        self.assertEqual(self.tabela.criado_por, self.user)
+
+    def test_status_choices_validos_da_tabela(self):
+        self.assertEqual(
+            {valor for valor, _rotulo in TabelaPersonalizada.StatusTabela.choices},
+            {'ativa', 'inativa', 'arquivada'},
+        )
+
+    def test_bloqueia_nome_duplicado_de_tabela_nao_arquivada(self):
+        duplicada = TabelaPersonalizada(
+            nome=' controle   interno ',
+            status=TabelaPersonalizada.StatusTabela.INATIVA,
+        )
+
+        with self.assertRaises(ValidationError):
+            duplicada.full_clean()
+
+    def test_cria_coluna_com_tipo_permitido(self):
+        coluna = ColunaPersonalizada.objects.create(
+            tabela=self.tabela,
+            nome='Valor previsto',
+            tipo_dado=ColunaPersonalizada.TipoDado.DECIMAL,
+        )
+
+        self.assertEqual(coluna.tipo_dado, ColunaPersonalizada.TipoDado.DECIMAL)
+        self.assertFalse(coluna.calculada)
+
+    def test_bloqueia_coluna_com_tipo_invalido(self):
+        coluna = ColunaPersonalizada(
+            tabela=self.tabela,
+            nome='Campo invalido',
+            tipo_dado='tipo_livre',
+        )
+
+        with self.assertRaises(ValidationError):
+            coluna.full_clean()
+
+    def test_bloqueia_coluna_duplicada_na_mesma_tabela(self):
+        ColunaPersonalizada.objects.create(
+            tabela=self.tabela,
+            nome='Observacao',
+            tipo_dado=ColunaPersonalizada.TipoDado.TEXTO_CURTO,
+        )
+        duplicada = ColunaPersonalizada(
+            tabela=self.tabela,
+            nome=' observacao ',
+            tipo_dado=ColunaPersonalizada.TipoDado.TEXTO_LONGO,
+        )
+
+        with self.assertRaises(ValidationError):
+            duplicada.full_clean()
+
+    def test_coluna_calculada_exige_tipo_formula_controlada(self):
+        coluna = ColunaPersonalizada(
+            tabela=self.tabela,
+            nome='Total calculado',
+            tipo_dado=ColunaPersonalizada.TipoDado.DECIMAL,
+            calculada=True,
+        )
+
+        with self.assertRaises(ValidationError):
+            coluna.full_clean()
+
+    def test_cria_linha_tabela_personalizada(self):
+        linha = LinhaTabelaPersonalizada.objects.create(
+            tabela=self.tabela,
+            criado_por=self.user,
+            atualizado_por=self.user,
+        )
+
+        self.assertEqual(linha.status, LinhaTabelaPersonalizada.StatusLinha.ATIVA)
+        self.assertEqual(linha.tabela, self.tabela)
+
+    def test_cria_valor_tabela_personalizada(self):
+        coluna = ColunaPersonalizada.objects.create(
+            tabela=self.tabela,
+            nome='Descricao',
+            tipo_dado=ColunaPersonalizada.TipoDado.TEXTO_CURTO,
+        )
+        linha = LinhaTabelaPersonalizada.objects.create(tabela=self.tabela)
+
+        valor = ValorTabelaPersonalizada.objects.create(
+            linha=linha,
+            coluna=coluna,
+            valor_texto='Linha inicial',
+        )
+
+        self.assertEqual(valor.valor_texto, 'Linha inicial')
+        self.assertEqual(valor.coluna, coluna)
+
+    def test_bloqueia_valor_quando_coluna_e_de_outra_tabela(self):
+        outra_tabela = TabelaPersonalizada.objects.create(nome='Outro controle')
+        coluna_outra_tabela = ColunaPersonalizada.objects.create(
+            tabela=outra_tabela,
+            nome='Descricao',
+            tipo_dado=ColunaPersonalizada.TipoDado.TEXTO_CURTO,
+        )
+        linha = LinhaTabelaPersonalizada.objects.create(tabela=self.tabela)
+
+        valor = ValorTabelaPersonalizada(
+            linha=linha,
+            coluna=coluna_outra_tabela,
+            valor_texto='Invalido',
+        )
+
+        with self.assertRaises(ValidationError):
+            valor.full_clean()
+
+    def test_bloqueia_unicidade_linha_coluna(self):
+        coluna = ColunaPersonalizada.objects.create(
+            tabela=self.tabela,
+            nome='Descricao',
+            tipo_dado=ColunaPersonalizada.TipoDado.TEXTO_CURTO,
+        )
+        linha = LinhaTabelaPersonalizada.objects.create(tabela=self.tabela)
+        ValorTabelaPersonalizada.objects.create(
+            linha=linha,
+            coluna=coluna,
+            valor_texto='Primeiro valor',
+        )
+
+        duplicado = ValorTabelaPersonalizada(
+            linha=linha,
+            coluna=coluna,
+            valor_texto='Segundo valor',
+        )
+
+        with self.assertRaises(ValidationError):
+            duplicado.full_clean()
+
+    def test_valida_slot_basico_conforme_tipo(self):
+        coluna = ColunaPersonalizada.objects.create(
+            tabela=self.tabela,
+            nome='Quantidade',
+            tipo_dado=ColunaPersonalizada.TipoDado.INTEIRO,
+        )
+        linha = LinhaTabelaPersonalizada.objects.create(tabela=self.tabela)
+        valor = ValorTabelaPersonalizada(
+            linha=linha,
+            coluna=coluna,
+            valor_texto='10',
+        )
+
+        with self.assertRaises(ValidationError):
+            valor.full_clean()
+
+    def test_coluna_calculada_bloqueia_valor_manual(self):
+        coluna = ColunaPersonalizada.objects.create(
+            tabela=self.tabela,
+            nome='Total',
+            tipo_dado=ColunaPersonalizada.TipoDado.FORMULA_CONTROLADA,
+            calculada=True,
+        )
+        linha = LinhaTabelaPersonalizada.objects.create(tabela=self.tabela)
+        valor = ValorTabelaPersonalizada(
+            linha=linha,
+            coluna=coluna,
+            valor_texto='123',
+        )
+
+        with self.assertRaises(ValidationError):
+            valor.full_clean()
+
+    def test_lancamento_financeiro_existente_permanece_funcional(self):
+        conta = ContaFinanceira.objects.create(
+            nome='Conta operacional teste',
+            saldo_inicial=Decimal('0.00'),
+            data_saldo_inicial=date(2026, 1, 1),
+        )
+        pessoa = PessoaFinanceira.objects.create(codigo='TP001', nome='Pessoa teste tabelas')
+        categoria_pai = CategoriaFinanceira.objects.create(
+            nome='Receitas teste tabelas',
+            tipo=CategoriaFinanceira.TipoCategoria.RECEITA,
+        )
+        categoria = CategoriaFinanceira.objects.create(
+            nome='Doacao teste tabelas',
+            tipo=CategoriaFinanceira.TipoCategoria.RECEITA,
+            categoria_pai=categoria_pai,
+        )
+
+        lancamento = LancamentoFinanceiro.objects.create(
+            descricao='Lancamento preservado',
+            tipo=LancamentoFinanceiro.TipoLancamento.RECEITA,
+            status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+            valor=Decimal('25.00'),
+            data_competencia=date(2026, 5, 1),
+            data_pagamento=date(2026, 5, 1),
+            pessoa=pessoa,
+            categoria=categoria,
+            conta=conta,
+        )
+
+        self.assertEqual(lancamento.descricao, 'Lancamento preservado')

@@ -88,9 +88,23 @@ Data de atualizacao: 2026-05-08
   - valor por celula com slots tipados, evitando JSON livre por linha
   - reaproveitamento conceitual da auditoria atual por snapshot/diff
   - formulas continuam fora da primeira implementacao estrutural completa
+- estrutura minima de dados agora implementada com:
+  - `TabelaPersonalizada`
+  - `ColunaPersonalizada`
+  - `LinhaTabelaPersonalizada`
+  - `ValorTabelaPersonalizada`
+  - migration propria do `financeiro`
+  - testes minimos de integridade, tipagem, vinculo linha/coluna e nao regressao basica no `LancamentoFinanceiro`
+- limites desta implementacao estrutural:
+  - sem `FormulaColunaPersonalizada`
+  - sem `TotalizadorColunaPersonalizada`
+  - sem menu, views, urls, templates, forms ou permissoes executaveis
+  - sem auditoria operacional propria da nova frente
+  - sem exportacao XLSX da nova frente
+  - sem integracao com financeiro oficial
 - classificacao documental atualizada desta frente:
-  - implementar agora: nenhuma (etapa documental)
-  - pendencia proxima: validar/aprovar a SPEC tecnica de modelagem e, se aprovada, abrir a implementacao minima da estrutura de dados
+  - implementar agora: estrutura minima de dados concluida
+  - pendencia proxima: abrir microetapa de permissoes e menu da frente, sem formula, totalizador ou UX completa
   - backlog/futuro: agrupamentos por opcao, filtros avancados/compostos, visoes salvas, arrastar-e-soltar, importacao assistida e exemplos/templates
   - fora de escopo: planilha livre estilo Excel, integracao escrevente com financeiro e modelagem definitiva de banco nesta fase
   - risco a monitorar: perda de governanca e desvio da frente para comportamento de planilha livre

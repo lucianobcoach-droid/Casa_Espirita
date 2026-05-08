@@ -1406,6 +1406,45 @@ Status consolidado: SPEC FUNCIONAL DOCUMENTAL CONSOLIDADA / BACKLOG TECNICO INCR
   - exportacao XLSX completa;
   - UX refinada.
 
+##### Resultado da implementacao minima da estrutura de dados
+
+- Estrutura implementada nesta microetapa:
+  - `TabelaPersonalizada`
+  - `ColunaPersonalizada`
+  - `LinhaTabelaPersonalizada`
+  - `ValorTabelaPersonalizada`
+- Regras tecnicas implementadas no recorte:
+  - `TabelaPersonalizada` com `status` controlado, timestamps, `criado_por`/`atualizado_por`, ordenacao segura e bloqueio de duplicidade de nome nao arquivado por normalizacao simples
+  - `ColunaPersonalizada` com `tipo_dado` por whitelist, `configuracao_json` controlada, `status`, ordenacao, `calculada` e bloqueio de duplicidade de nome por tabela entre colunas nao arquivadas
+  - `LinhaTabelaPersonalizada` com vinculo a tabela, `status` logico e timestamps
+  - `ValorTabelaPersonalizada` com unicidade `linha + coluna`, validacao de pertencimento da coluna a mesma tabela da linha e validacao basica do slot de valor conforme o tipo da coluna
+- Validacoes basicas implementadas:
+  - coluna calculada exige `tipo_dado=formula_controlada`
+  - `formula_controlada` exige `calculada=True`
+  - coluna calculada nao aceita valor manual nesta etapa
+  - `inteiro` nao aceita casas decimais
+  - `mes_competencia` exige `MM/AAAA`
+  - `lista_opcoes` aceita validacao basica contra `configuracao_json.opcoes`, quando informado
+- Itens deliberadamente fora desta implementacao:
+  - `FormulaColunaPersonalizada`
+  - `TotalizadorColunaPersonalizada`
+  - formula guiada
+  - totalizadores
+  - menu, views, urls, templates e forms
+  - permissoes executaveis
+  - exportacao XLSX da nova frente
+  - auditoria operacional propria da nova frente
+  - qualquer integracao com financeiro oficial
+- Validacao tecnica concluida nesta microetapa:
+  - migration criada no `financeiro`
+  - `py manage.py makemigrations --check --dry-run` sem pendencias
+  - `py manage.py check` sem issues
+  - `py -m compileall financeiro configuracoes` sem erro
+  - `py manage.py test financeiro` com suite verde
+- Proxima microetapa recomendada:
+  - `permissoes e menu da frente`
+  - ainda sem formula, totalizador, views completas ou exportacao
+
 #### Microetapa 4 - permissoes e menu da frente
 
 - Objetivo:

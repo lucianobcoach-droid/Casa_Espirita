@@ -467,6 +467,7 @@ Status apos fechamento documental desta microetapa: PRIMEIRO RECORTE OPERACIONAL
 Status apos planejamento documental desta microetapa: BACKLOG TECNICO INCREMENTAL DO MVP PLANEJADO / BACKLOG
 Status apos auditoria tecnica preparatoria desta microetapa: AUDITORIA TECNICA PREPARATORIA CONCLUIDA / BACKLOG
 Status apos SPEC tecnica desta microetapa: SPEC TECNICA DE MODELAGEM CONSOLIDADA / BACKLOG
+Status apos implementacao desta microetapa: ESTRUTURA MINIMA DE DADOS IMPLEMENTADA / BACKLOG
 
 Motivo:
 Foi levantada frente futura para controles configuraveis genericos, com colunas definidas pelo usuario, tipos de dado, formulas controladas por coluna e totalizadores. Deve ser tratada separadamente das correcoes imediatas do financeiro.
@@ -528,6 +529,14 @@ Consolidacao desta baixa documental:
 - reclassificacao da pendencia proxima apos a SPEC tecnica:
   - deixa de ser `SPEC tecnica de modelagem de dados`
   - passa a ser `validar/aprovar a modelagem e, se aprovada, abrir a implementacao minima da estrutura de dados`
+- consolidacao da implementacao estrutural minima:
+  - models implementados: `TabelaPersonalizada`, `ColunaPersonalizada`, `LinhaTabelaPersonalizada` e `ValorTabelaPersonalizada`
+  - migration criada no `financeiro`
+  - testes minimos adicionados e suite do app validada
+  - regras de formula, totalizador, menu, views, permissao executavel, exportacao e auditoria propria permanecem fora desta etapa
+- reclassificacao da pendencia proxima apos a implementacao estrutural:
+  - deixa de ser `implementacao minima da estrutura de dados`
+  - passa a ser `permissoes e menu da frente`
 - guardrails reforcados:
   - qualquer alteracao em banco real exige backup e autorizacao
   - arquivos SQLite nao devem ser versionados
