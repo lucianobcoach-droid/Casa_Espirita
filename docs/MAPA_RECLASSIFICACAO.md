@@ -460,6 +460,8 @@ Status apos auditoria documental desta microetapa: SPEC FUNCIONAL CONSOLIDADA / 
 
 Status apos complemento documental desta microetapa: SPEC FUNCIONAL + OPERACIONAL CONSOLIDADA / BACKLOG
 
+Status apos fechamento documental desta microetapa: SPEC FUNCIONAL + OPERACIONAL + UX CONSOLIDADA / BACKLOG
+
 Motivo:
 Foi levantada frente futura para controles configuraveis genericos, com colunas definidas pelo usuario, tipos de dado, formulas controladas por coluna e totalizadores. Deve ser tratada separadamente das correcoes imediatas do financeiro.
 
@@ -470,6 +472,7 @@ Consolidacao desta baixa documental:
 - a frente passa a ser tratada como `Construtor de tabelas personalizadas configuraveis`
 - nao partir de caso de uso piloto fixo como eixo principal
 - SPEC consolidada agora com:
+  - contrato de UX operacional documentado
   - fluxo operacional documentado de uso futuro
   - objetivo funcional proprio e generico
   - recorte conceitual de MVP com construtor controlado
@@ -483,7 +486,7 @@ Consolidacao desta baixa documental:
   - regra de separacao em relacao ao financeiro oficial
 - classificacao das pendencias desta frente:
   - implementar agora: nenhuma
-  - pendencia proxima: fechar contrato operacional do construtor generico controlado e da UX de formulas guiadas
+  - pendencia proxima: fechar localizacao/navegacao da frente no modulo e os ultimos detalhes de totalizadores/filtros simples
   - backlog/futuro: exemplos/templates, referencias opcionais e importacao assistida
   - fora de escopo: engine livre estilo Excel e integracao escrevente com financeiro
   - risco a monitorar: virar "Excel dentro do sistema", perder governanca de permissoes/auditoria e confundir controle interno com dado financeiro oficial

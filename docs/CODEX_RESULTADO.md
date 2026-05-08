@@ -2,6 +2,44 @@
 
 Data: 2026-05-08
 
+## Microetapa documental: fechamento da UX operacional de tabelas configuraveis
+
+- etapa exclusivamente documental, sem alteracao de codigo
+- confirmei antes de alterar:
+  - branch `feat/reinicio-financeiro`
+  - arvore limpa
+  - ausencia de commits locais pendentes
+  - ausencia de commits remotos pendentes
+  - `fetch` concluido sem erro
+- fechei documentalmente o contrato de UX operacional do `Construtor de tabelas personalizadas configuraveis`
+- blocos de UX registrados:
+  - tela/listagem de tabelas
+  - fluxo de criacao e edicao da tabela
+  - tela de configuracao de colunas
+  - UX de criacao/edicao de coluna
+  - limites concretos por tipo
+  - construtor guiado de formulas
+  - comportamento quando coluna dependente de formula e alterada/removida
+  - tela tabular de preenchimento de linhas
+  - totalizadores por coluna
+  - exportacao XLSX com colunas calculadas e totalizadores visiveis
+  - auditoria e permissoes na UX
+- direcoes operacionais consolidadas:
+  - listagem separada do financeiro operacional
+  - coluna calculada sempre como somente leitura no preenchimento
+  - totalizador configurado por coluna no recorte inicial sugerido
+  - exportacao refletindo a visao visivel da tabela
+  - reforco visual e funcional para nao parecer planilha livre estilo Excel
+- confirmado nesta microetapa:
+  - alteracao restrita a documentos
+  - sem Python
+  - sem templates
+  - sem JS/CSS
+  - sem model
+  - sem migration
+  - sem banco
+  - sem impacto em calculos, saldos, relatorios ou lancamentos reais
+
 ## Microetapa documental: detalhamento operacional da SPEC de tabelas configuraveis
 
 - etapa exclusivamente documental, sem alteracao de codigo

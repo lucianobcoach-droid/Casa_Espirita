@@ -464,6 +464,246 @@ Status consolidado: SPEC FUNCIONAL DOCUMENTAL CONSOLIDADA / BACKLOG
   - perda de governanca sobre formulas e auditoria;
   - confusao entre controle interno e dado financeiro oficial.
 
+### SPEC de UX operacional documental
+
+#### Tela de listagem de tabelas personalizadas
+
+- A frente deve ter uma tela propria de listagem, separada do financeiro operacional e sem mistura com lancamentos.
+- A listagem deve mostrar, no minimo:
+  - nome;
+  - descricao curta;
+  - status;
+  - quantidade de colunas;
+  - quantidade de linhas;
+  - ultima atualizacao.
+- Acoes previstas na listagem:
+  - abrir;
+  - editar estrutura;
+  - arquivar/restaurar;
+  - exportar;
+  - criar nova tabela.
+- A leitura visual deve reforcar que se trata de controles internos configuraveis, nao de documentos financeiros.
+
+#### Fluxo de criacao e edicao da tabela
+
+- O formulario de criacao/edicao deve expor:
+  - nome;
+  - descricao;
+  - status;
+  - ordem de exibicao, se esse campo for mantido no recorte.
+- Depois de salvar uma tabela nova:
+  - o sistema deve conduzir para a configuracao das colunas;
+  - a tabela pode existir sem nenhuma linha inicialmente;
+  - nao deve existir vinculo obrigatorio com financeiro.
+- Em edicao:
+  - a usuaria deve conseguir revisar os metadados da tabela sem ser forcada a alterar linhas.
+
+#### Tela de configuracao de colunas
+
+- A tela de colunas deve exibir uma lista ordenavel.
+- Deve permitir:
+  - adicionar coluna;
+  - editar coluna;
+  - ocultar/arquivar coluna;
+  - reordenar colunas.
+- Cada item da lista deve mostrar:
+  - nome da coluna;
+  - tipo de dado;
+  - obrigatoriedade;
+  - visibilidade;
+  - se e coluna calculada.
+- O sistema deve impedir remocao insegura de coluna usada em formula sem revisao previa da dependencia.
+
+#### UX de criacao e edicao de coluna
+
+- O formulario da coluna deve expor:
+  - nome da coluna;
+  - tipo de dado;
+  - obrigatoria sim/nao;
+  - visivel sim/nao;
+  - ordem;
+  - coluna comum ou calculada.
+- Para `lista de opcoes`:
+  - a UX deve permitir cadastrar e revisar as opcoes permitidas da coluna.
+- Para `coluna calculada`:
+  - o fluxo deve abrir, ou exigir antes do fechamento, o construtor guiado de formula.
+
+#### Limites concretos por tipo de dado
+
+- `texto curto`:
+  - limite inicial sugerido: 120 caracteres.
+- `texto longo`:
+  - limite inicial sugerido: 2000 caracteres.
+- `numero inteiro`:
+  - validar inteiro, sem casas decimais.
+- `numero decimal`:
+  - precisao padrao sugerida: ate 4 casas decimais.
+- `valor monetario`:
+  - precisao padrao sugerida: 2 casas decimais.
+- `percentual`:
+  - formato percentual com precisao padrao sugerida de 2 casas decimais.
+- `data`:
+  - formato de data do sistema.
+- `mes/competencia`:
+  - formato `MM/AAAA`.
+- `sim/nao`:
+  - valor booleano.
+- `lista de opcoes`:
+  - ate 20 opcoes no MVP.
+- `formula controlada`:
+  - valor sempre calculado pelo sistema.
+
+#### UX do construtor guiado de formulas
+
+- Nao permitir campo livre estilo Excel.
+- A experiencia deve ser guiada.
+- O fluxo deve permitir:
+  - escolher colunas de origem elegiveis;
+  - escolher operadores permitidos;
+  - escolher funcoes permitidas, quando aplicavel;
+  - visualizar previa textual legivel da formula.
+- Antes de salvar, o sistema deve validar:
+  - consistencia da formula;
+  - compatibilidade de tipos;
+  - ausencia de referencia circular;
+  - ausencia de referencia entre tabelas;
+  - ausencia de uso de coluna incompatível com calculo.
+- A formula continua aplicada a coluna inteira, nunca celula por celula no MVP.
+
+#### Comportamento quando coluna usada em formula for alterada ou removida
+
+- Se alterar apenas o nome da coluna:
+  - a formula pode permanecer valida;
+  - o rotulo exibido na previa e na leitura deve ser atualizado.
+- Se alterar o tipo:
+  - o sistema deve bloquear quando a mudanca quebrar a formula;
+  - ou exigir revisao explicita antes de concluir.
+- Se ocultar a coluna:
+  - o sistema deve permitir apenas se isso nao quebrar a leitura esperada;
+  - caso exista dependencia relevante, deve sinalizar essa dependencia.
+- Se arquivar/remover a coluna:
+  - o sistema deve bloquear quando houver formula dependente;
+  - a remocao so pode seguir apos revisao ou remocao previa da formula.
+- A decisao tomada deve ser auditada.
+
+#### Tela de preenchimento de linhas
+
+- O preenchimento deve ocorrer em formato tabular.
+- A tela deve permitir:
+  - adicionar linha;
+  - editar linha;
+  - arquivar/excluir logicamente linha.
+- Cada campo deve respeitar o tipo da coluna.
+- Colunas calculadas devem aparecer como somente leitura.
+- Totalizadores devem aparecer em rodape ou area equivalente da listagem.
+- Filtros simples podem ficar para backlog, se nao couberem no MVP.
+
+#### Totalizadores
+
+- Totalizadores aceitos:
+  - soma;
+  - media;
+  - minimo;
+  - maximo;
+  - contagem.
+- Tipos que aceitam totalizador no recorte inicial:
+  - `numero inteiro`;
+  - `numero decimal`;
+  - `valor monetario`;
+  - `percentual` com cautela de leitura;
+  - `data` apenas para `minimo` e `maximo`, se isso entrar no recorte;
+  - `sim/nao` e `lista de opcoes` podem usar `contagem` apenas se o uso real justificar.
+- Direcao sugerida para o MVP:
+  - totalizador configurado por coluna, nao automatico apenas por tipo;
+  - a interface deve deixar claro se a coluna participa ou nao do rodape de totalizacao.
+- Na tela:
+  - totalizadores devem aparecer em rodape/listagem, alinhados com a coluna correspondente.
+- No XLSX:
+  - totalizadores visiveis na tela devem sair tambem no rodape exportado.
+
+#### Exportacao XLSX na UX
+
+- A exportacao deve exportar a tabela visivel.
+- O arquivo deve incluir:
+  - cabecalhos;
+  - linhas visiveis;
+  - formatacao basica por tipo;
+  - colunas calculadas com o valor ja calculado;
+  - totalizadores quando estiverem visiveis na tela.
+- O evento de exportacao deve ir para a auditoria.
+- A exportacao nao deve ser tratada como integracao financeira.
+
+#### Auditoria de UX
+
+- Registrar:
+  - criacao, edicao e arquivamento de tabela;
+  - criacao, edicao, remocao, ocultacao e reordenacao de coluna;
+  - alteracao de formula;
+  - inclusao, edicao e exclusao logica de linha;
+  - exportacao.
+- Registrar, quando aplicavel:
+  - usuario;
+  - data/hora;
+  - acao;
+  - antes/depois.
+
+#### Permissoes na UX
+
+- Permissoes operacionais da experiencia:
+  - visualizar tabela;
+  - criar tabela;
+  - editar estrutura;
+  - configurar formula;
+  - preencher linha;
+  - editar linha;
+  - arquivar/restaurar;
+  - exportar;
+  - administrar tabela/configuracoes.
+- A UX deve diferenciar com clareza:
+  - quem pode apenas preencher linhas;
+  - quem pode alterar estrutura;
+  - quem pode alterar formulas.
+
+#### Seguranca e limites na UX
+
+- A UX deve evitar aparencia de planilha livre estilo Excel.
+- A liberdade deve ser de estrutura controlada, nao de formula livre.
+- Nao permitir:
+  - formula livre;
+  - macro;
+  - script;
+  - codigo executavel.
+- Nao permitir escrita no financeiro.
+- Nao gerar lancamento.
+- Nao alterar saldo, extrato, resumo, prestacao/fechamento ou balancete.
+
+#### Classificacao de pendencias desta SPEC de UX
+
+- Implementar agora:
+  - nenhuma; a etapa continua apenas documental.
+- Pendencia proxima:
+  - fechar a navegacao/localizacao da frente dentro do modulo;
+  - validar a abordagem final de reordenacao de colunas;
+  - validar se `data` tera `min/max` no totalizador inicial;
+  - definir se `contagem` por lista/sim-nao entra no primeiro recorte.
+- Backlog/futuro:
+  - filtros simples;
+  - visoes salvas;
+  - exemplos/templates de tabela;
+  - importacao assistida;
+  - refinamentos visuais adicionais da grade.
+- Fora de escopo:
+  - implementacao funcional nesta etapa;
+  - modelagem definitiva de banco;
+  - planilha livre estilo Excel;
+  - formula celula por celula;
+  - integracao escrevente com financeiro;
+  - geracao automatica de lancamentos.
+- Risco a monitorar:
+  - a UX ficar complexa demais e incentivar uso como planilha livre;
+  - a experiencia de formulas guiadas ficar confusa para usuaria nao tecnica;
+  - a distincao entre preencher linhas e alterar estrutura/permissoes ficar fraca.
+
 ## 0.20. Especificacao funcional: tipo/disponibilidade de conta e Balancete patrimonial
 
 Base cadastral das contas financeiras implementada em primeira microetapa funcional. A leitura patrimonial detalhada por conta tambem foi aplicada no Balancete Institucional, sem reabrir o MVP atual do Balancete nem alterar a base de calculo.

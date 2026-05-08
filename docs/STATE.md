@@ -47,6 +47,16 @@ Data de atualizacao: 2026-05-08
   - exportacao XLSX
   - auditoria operacional
   - permissoes operacionais
+- contrato de UX operacional agora registrado com:
+  - listagem de tabelas
+  - fluxo de criacao/edicao da tabela
+  - tela de configuracao de colunas
+  - UX de coluna calculada e formulas guiadas
+  - comportamento de dependencias entre colunas
+  - grade de preenchimento de linhas
+  - totalizadores por coluna
+  - exportacao com totalizadores visiveis
+  - diferenciacao clara entre permissoes de estrutura e de preenchimento
 
 ## Validacao da alocacao de competencias no lancamento simples
 
