@@ -866,6 +866,58 @@ Status consolidado: SPEC FUNCIONAL DOCUMENTAL CONSOLIDADA / BACKLOG TECNICO INCR
   - proposta definitiva de banco;
   - criacao de permissao ou menu real.
 
+##### Resultado da auditoria tecnica preparatoria
+
+- Navegacao/menu/topbar do financeiro:
+  - o shell atual da navegacao fica em `financeiro/templates/financeiro/base.html`
+  - o menu atual e organizado em grupos `Visao geral`, `Movimentacao`, `Relatorios`, `Cadastros` e `Institucional`
+  - a exibicao dos itens usa `tem_permissao` e `tem_alguma_permissao` com codigos funcionais do financeiro
+  - o ponto futuro mais seguro para esta frente e nascer como novo grupo `Controles internos` dentro do menu do financeiro, com item `Tabelas personalizadas`, sem entrar em `Lancamentos` nem em relatorios oficiais
+- Permissoes:
+  - a base atual fica em `configuracoes.models` com `PermissaoSistema`, `PerfilAcesso`, `PerfilPermissaoSistema` e `UsuarioPerfilAcesso`
+  - o enforcement backend reutilizavel ja existe em `configuracoes.permissoes.PermissaoSistemaMixin` e no adaptador do modulo `financeiro.permissoes.FinanceiroPermissaoMixin`
+  - o padrao de template tag ja existe em `financeiro/templatetags/financeiro_permissoes.py`
+  - seeds e evolucoes documentais/executaveis de permissao ja existem em `configuracoes/migrations`, com base inicial em `0004_seed_perfis_permissoes_v1.py`
+  - padrao futuro documental recomendado para a frente:
+    - `financeiro.tabelas_personalizadas.visualizar`
+    - `financeiro.tabelas_personalizadas.criar`
+    - `financeiro.tabelas_personalizadas.editar_estrutura`
+    - `financeiro.tabelas_personalizadas.configurar_formula`
+    - `financeiro.tabelas_personalizadas.preencher_linhas`
+    - `financeiro.tabelas_personalizadas.editar_linhas`
+    - `financeiro.tabelas_personalizadas.exportar`
+    - `financeiro.tabelas_personalizadas.arquivar_restaurar`
+    - `financeiro.tabelas_personalizadas.administrar_configuracoes`
+- Auditoria:
+  - ja existe trilha atual em `financeiro.models.AuditoriaFinanceiro`
+  - o modelo atual registra `acao`, `modelo`, `registro_id`, `data_hora`, `usuario` e `campos_alterados` em `JSONField`
+  - o modulo ja possui helpers de snapshot, normalizacao e diff em `financeiro/views.py`, incluindo `_build_auditoria_payload` e registradores por entidade
+  - existe listagem propria de auditoria em `financeiro:auditoria-lancamento-list` com filtros e exibicao de before/after
+  - a futura frente deve reaproveitar este padrao, mas exigira complemento de escopo e nomenclatura para auditar tabela, coluna, formula, linha e exportacao sem ficar limitada ao vocabulario de lancamentos
+- Exportacao XLSX:
+  - o financeiro ja possui fluxo de exportacao por views dedicadas com filtros `GET`, `HttpResponse` de download e `Content-Disposition` por arquivo
+  - a geracao XLSX atual usa helpers proprios em `financeiro/views.py`, com montagem XML compactada, sem dependencia aparente de biblioteca externa tipo `openpyxl`
+  - os cadastros auxiliares ja seguem padrao reutilizavel de exportacao com cabecalhos, ordenacao previsivel e reaproveitamento dos filtros da listagem
+  - a futura frente pode reaproveitar esse contrato tecnico, desde que a exportacao continue tratada como download documental e nunca como integracao com o financeiro oficial
+- Views/listagens/forms/templates:
+  - o padrao dominante de listagem no financeiro usa `ListView` com filtros simples por `GET`, botao `Exportar`, acao primaria de criacao e acoes por linha condicionadas por permissao
+  - o padrao de formulario reutilizavel esta em `FinanceiroFormMixin`, com mensagens de sucesso, `return_to`, opcao de salvar e permanecer e templates dedicados por recurso
+  - o padrao de exclusao reutilizavel esta em `FinanceiroDeleteMixin`, com confirmacao explicita e retorno controlado
+  - templates proximos do futuro uso sao `conta_list.html`, `pessoa_list.html`, `categoria_list.html` e `centro_custo_list.html`, porque ja mostram filtros simples, estado vazio, acoes por linha e leitura de cadastro sem mistura com relatorios
+- Organizacao tecnica futura:
+  - a frente deve permanecer dentro do app `financeiro`, porque compartilha governanca, permissoes, auditoria e localizacao de menu
+  - ao mesmo tempo, nao deve entrar no miolo de `LancamentoFinanceiro`; a recomendacao documental e abrir arquivos e rotas proprios da frente dentro do app, com views/templates/forms separados dos fluxos de lancamentos e relatorios oficiais
+- Riscos tecnicos mapeados:
+  - misturar a frente com `Lancamentos` e contaminar a percepcao de dado oficial
+  - expor menu ou tela sem separar bem permissao de estrutura, formula e preenchimento
+  - reaproveitar auditoria de forma insuficiente e perder trilha de mudancas estruturais
+  - fazer a exportacao parecer integracao escrevente com o financeiro
+  - escolher modelagem dinamica ampla demais na proxima SPEC tecnica
+  - herdar UX tabular que aproxime a frente de uma planilha livre estilo Excel
+- Baixa desta microetapa:
+  - auditoria tecnica preparatoria concluida sem implementacao funcional
+  - proxima microetapa recomendada: SPEC tecnica de modelagem de dados, ainda sem `model` e sem `migration`
+
 #### Microetapa 2 - SPEC tecnica de modelagem de dados
 
 - Objetivo:

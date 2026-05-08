@@ -465,6 +465,7 @@ Status apos fechamento documental desta microetapa: SPEC FUNCIONAL + OPERACIONAL
 Status apos fechamento documental desta microetapa: SPEC FUNCIONAL + OPERACIONAL + UX + NAVEGACAO CONSOLIDADA / BACKLOG
 Status apos fechamento documental desta microetapa: PRIMEIRO RECORTE OPERACIONAL DOCUMENTAL FECHADO / BACKLOG
 Status apos planejamento documental desta microetapa: BACKLOG TECNICO INCREMENTAL DO MVP PLANEJADO / BACKLOG
+Status apos auditoria tecnica preparatoria desta microetapa: AUDITORIA TECNICA PREPARATORIA CONCLUIDA / BACKLOG
 
 Motivo:
 Foi levantada frente futura para controles configuraveis genericos, com colunas definidas pelo usuario, tipos de dado, formulas controladas por coluna e totalizadores. Deve ser tratada separadamente das correcoes imediatas do financeiro.
@@ -507,6 +508,16 @@ Consolidacao desta baixa documental:
   - SPEC tecnica de modelagem antes de qualquer `model` ou `migration`
   - implementacao estrutural minima apenas depois da SPEC tecnica aprovada
   - permissoes/menu, listagem, cadastro, colunas, linhas, totalizadores, busca, exportacao, formulas, auditoria, UX e homologacao quebrados em microetapas futuras proprias
+- achados da auditoria tecnica preparatoria:
+  - navegacao atual do financeiro centralizada em `financeiro/templates/financeiro/base.html`, com exibicao de grupos e itens condicionada por permissao
+  - camada de permissao pronta em `configuracoes` e `financeiro`, com mixins, template tags, matriz documental e seeds em migrations
+  - trilha de auditoria atual pronta em `AuditoriaFinanceiro`, com `usuario`, `data_hora`, `acao` e `campos_alterados` de before/after
+  - exportacao XLSX atual pronta por views dedicadas e helpers proprios no `financeiro`
+  - padrao de listagem/formulario mais proximo do futuro uso esta nos cadastros auxiliares, nao em `LancamentoFinanceiro`
+  - recomendacao documental de organizacao: manter a frente dentro do app `financeiro`, mas em arquivos/rotas proprios e em grupo de menu `Controles internos`
+- reclassificacao da pendencia proxima apos a auditoria:
+  - deixa de ser `auditoria tecnica preparatoria`
+  - passa a ser `SPEC tecnica de modelagem de dados`, ainda sem `model` e sem `migration`
 - guardrails reforcados:
   - qualquer alteracao em banco real exige backup e autorizacao
   - arquivos SQLite nao devem ser versionados

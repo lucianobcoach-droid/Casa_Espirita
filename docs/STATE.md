@@ -74,9 +74,17 @@ Data de atualizacao: 2026-05-08
   - sem formula celula por celula
   - sem macro/script/codigo executavel
   - sem geracao de lancamento e sem alteracao de saldo, extrato, resumo, prestacao/fechamento ou balancete
+- auditoria tecnica preparatoria da base atual agora concluida, com estes achados principais:
+  - menu atual do financeiro concentrado em `financeiro/templates/financeiro/base.html`, com exibicao condicional por template tags de permissao
+  - padrao futuro recomendado de entrada: `Financeiro > Controles internos > Tabelas personalizadas`, em grupo proprio e sem mistura com `Lancamentos` ou relatorios oficiais
+  - enforcement de permissao ja pronto em `configuracoes.permissoes.PermissaoSistemaMixin` e `financeiro.permissoes.FinanceiroPermissaoMixin`
+  - trilha de auditoria ja existente em `AuditoriaFinanceiro`, com `usuario`, `data_hora`, `acao` e `before/after` por `campos_alterados`
+  - exportacao XLSX ja padronizada por views dedicadas e helpers proprios em `financeiro/views.py`
+  - padroes de listagem/formulario mais proximos do futuro uso ja existem nos cadastros auxiliares do `financeiro`
+  - recomendacao tecnica futura: manter a frente dentro do app `financeiro`, mas em arquivos e rotas proprios, sem entrar no miolo de `LancamentoFinanceiro`
 - classificacao documental atualizada desta frente:
   - implementar agora: nenhuma (etapa documental)
-  - pendencia proxima: executar auditoria tecnica preparatoria da base atual como primeira microetapa futura, sem implementacao
+  - pendencia proxima: abrir a SPEC tecnica de modelagem de dados antes de qualquer `model` ou `migration`
   - backlog/futuro: agrupamentos por opcao, filtros avancados/compostos, visoes salvas, arrastar-e-soltar, importacao assistida e exemplos/templates
   - fora de escopo: planilha livre estilo Excel, integracao escrevente com financeiro e modelagem definitiva de banco nesta fase
   - risco a monitorar: perda de governanca e desvio da frente para comportamento de planilha livre

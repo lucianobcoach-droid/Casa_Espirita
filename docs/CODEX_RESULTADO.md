@@ -2,6 +2,43 @@
 
 Data: 2026-05-08
 
+## Microetapa documental: auditoria tecnica preparatoria de tabelas configuraveis
+
+- etapa de auditoria tecnica sem implementacao funcional
+- confirmei antes de alterar:
+  - branch `feat/reinicio-financeiro`
+  - arvore limpa
+  - ausencia de commits locais pendentes
+  - ausencia de commits remotos pendentes
+  - `fetch` concluido sem erro
+- auditei tecnicamente o encaixe da frente `Construtor de tabelas personalizadas configuraveis` na base atual do `financeiro`
+- achados principais registrados:
+  - shell de navegacao do modulo em `financeiro/templates/financeiro/base.html`, com grupos de menu e exibicao condicionada por permissao
+  - camada de permissao pronta em `configuracoes` e adaptada no `financeiro` por mixin e template tags
+  - trilha atual de auditoria pronta em `AuditoriaFinanceiro`, com `usuario`, `data_hora`, `acao` e diff `before/after`
+  - fluxo atual de exportacao XLSX pronto por views dedicadas e helpers proprios
+  - padrao reutilizavel de listagem/formulario concentrado nos cadastros auxiliares do modulo
+  - recomendacao tecnica documental: manter a frente dentro do app `financeiro`, mas em arquivos/rotas proprios e sem mistura com o fluxo de lancamentos
+- riscos tecnicos documentados:
+  - mistura indevida com lancamentos financeiros
+  - permissao insuficiente entre estrutura, formula e preenchimento
+  - auditoria fraca para mudancas estruturais
+  - exportacao confundida com integracao financeira
+  - modelagem dinamica ampla demais
+  - UX com aparencia de planilha livre
+- baixa documental consolidada:
+  - microetapa 1 do backlog tecnico incremental concluida
+  - pendencia proxima movida para SPEC tecnica de modelagem de dados, ainda sem `model` e sem `migration`
+- confirmado nesta microetapa:
+  - alteracao restrita a documentos
+  - sem Python
+  - sem templates
+  - sem JS/CSS
+  - sem model
+  - sem migration
+  - sem banco
+  - sem impacto em calculos, saldos, relatorios ou lancamentos reais
+
 ## Microetapa documental: planejamento do backlog tecnico de tabelas configuraveis
 
 - etapa exclusivamente documental, sem alteracao de codigo
