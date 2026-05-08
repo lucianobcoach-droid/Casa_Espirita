@@ -755,17 +755,27 @@ Status consolidado: SPEC FUNCIONAL DOCUMENTAL CONSOLIDADA / BACKLOG
   - filtro por status da linha, se houver arquivamento/exclusao logica.
 - Filtros avancados ficam fora do MVP.
 
-#### Decisoes pendentes e recomendacao inicial
+#### Decisoes finais consolidadas do primeiro recorte operacional
 
 - `data`:
-  - recomendacao inicial: permitir `minimo` e `maximo` apenas se configurado explicitamente na coluna.
+  - no MVP, permitir `minimo` e `maximo`;
+  - somente quando o totalizador for configurado explicitamente na coluna;
+  - nao aplicar automaticamente em toda coluna de data.
 - `sim/nao` e `lista de opcoes`:
-  - recomendacao inicial: deixar `contagem` para futuro ou limitar a contagem simples total, sem agrupamentos.
+  - no MVP, permitir apenas `contagem simples total`;
+  - nao implementar agrupamento por opcao no primeiro recorte;
+  - agrupamentos por opcao ficam para backlog/futuro.
+- Busca textual simples na tela de linhas:
+  - entra no MVP como busca simples sobre os valores visiveis/editaveis da tabela;
+  - filtros avancados, visoes salvas, busca por tipo especifico e filtros compostos ficam para backlog/futuro.
 - Reordenacao de colunas:
-  - recomendacao inicial: comecar por campo numerico `ordem`;
-  - `arrastar-e-soltar` fica para futuro.
+  - no MVP, usar campo numerico `ordem`;
+  - `arrastar-e-soltar` fica para futuro;
+  - a ordenacao deve afetar a exibicao na tela e no XLSX.
 - Totalizadores:
-  - recomendacao inicial: aparecer somente quando configurados por coluna.
+  - aparecem somente quando configurados por coluna;
+  - se visiveis na tela, devem ser incluidos no rodape do XLSX;
+  - nao sao formulas livres e continuam controlados pelo sistema.
 
 #### Permissoes afetadas pela navegacao
 
@@ -785,12 +795,12 @@ Status consolidado: SPEC FUNCIONAL DOCUMENTAL CONSOLIDADA / BACKLOG
 - Implementar agora:
   - nenhuma; a etapa continua apenas documental.
 - Pendencia proxima:
-  - validar a abordagem final de reordenacao de colunas;
-  - validar se `data` tera `min/max` no totalizador inicial;
-  - definir se `contagem` por lista/sim-nao entra no primeiro recorte.
-  - validar se busca textual simples nas linhas entra ja no MVP inicial.
+  - nenhuma decisao de escopo funcional pendente para fechar o primeiro recorte operacional documental;
+  - proxima pendencia e abrir microetapa propria para traducao desta SPEC em backlog tecnico incremental (sem modelagem definitiva nesta fase).
 - Backlog/futuro:
-  - filtros simples;
+  - agrupamentos por opcao em colunas `sim/nao` e `lista de opcoes`;
+  - filtros avancados, busca por tipo especifico e filtros compostos;
+  - `arrastar-e-soltar` para reordenacao de colunas;
   - visoes salvas;
   - exemplos/templates de tabela;
   - importacao assistida;

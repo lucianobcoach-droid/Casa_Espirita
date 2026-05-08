@@ -2,6 +2,40 @@
 
 Data: 2026-05-08
 
+## Microetapa documental: fechamento do primeiro recorte operacional de tabelas configuraveis
+
+- etapa exclusivamente documental, sem alteracao de codigo
+- confirmei antes de alterar:
+  - branch `feat/reinicio-financeiro`
+  - arvore limpa
+  - ausencia de commits locais pendentes
+  - ausencia de commits remotos pendentes
+  - `fetch` concluido sem erro
+- consolidei as decisoes finais do primeiro recorte operacional da frente `Construtor de tabelas personalizadas configuraveis`:
+  - `data` com totalizadores `minimo` e `maximo` apenas quando configurados explicitamente na coluna
+  - `sim/nao` e `lista de opcoes` com `contagem simples total` no MVP, sem agrupamento por opcao
+  - busca textual simples na tela de linhas incluida no MVP, sem filtros avancados neste recorte
+  - reordenacao no MVP por campo numerico `ordem`, com efeito na tela e no XLSX
+  - totalizadores visiveis somente quando configurados por coluna e incluidos no rodape do XLSX quando visiveis na tela
+- reforco de seguranca registrado:
+  - sem formula livre estilo Excel
+  - sem formula celula por celula
+  - sem macro/script/execucao de codigo
+  - sem geracao de lancamento
+  - sem alteracao de saldo, extrato, resumo, prestacao/fechamento ou balancete
+- baixa documental consolidada:
+  - primeiro recorte operacional documental fechado
+  - pendencia proxima movida para abertura de backlog tecnico incremental em microetapas proprias
+- confirmado nesta microetapa:
+  - alteracao restrita a documentos
+  - sem Python
+  - sem templates
+  - sem JS/CSS
+  - sem model
+  - sem migration
+  - sem banco
+  - sem impacto em calculos, saldos, relatorios ou lancamentos reais
+
 ## Microetapa documental: fechamento da navegacao de tabelas configuraveis
 
 - etapa exclusivamente documental, sem alteracao de codigo

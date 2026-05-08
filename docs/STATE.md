@@ -63,6 +63,23 @@ Data de atualizacao: 2026-05-08
   - listagem propria da frente
   - fluxo claro entre listagem, estrutura, colunas e linhas
   - visibilidade do menu dependente da permissao de visualizar tabelas personalizadas
+- decisoes finais do primeiro recorte operacional agora consolidadas:
+  - colunas de `data` podem usar totalizadores `minimo` e `maximo` no MVP somente quando configurados explicitamente por coluna
+  - colunas `sim/nao` e `lista de opcoes` usam apenas `contagem simples total` no MVP, sem agrupamento por opcao
+  - busca textual simples na tela de linhas entra no MVP sobre valores visiveis/editaveis
+  - reordenacao de colunas no MVP usa campo numerico `ordem`; `arrastar-e-soltar` fica como futuro
+  - totalizadores aparecem apenas quando configurados por coluna e, quando visiveis na tela, devem sair no rodape do XLSX
+- reforco de seguranca consolidado para esta frente:
+  - sem formula livre estilo Excel
+  - sem formula celula por celula
+  - sem macro/script/codigo executavel
+  - sem geracao de lancamento e sem alteracao de saldo, extrato, resumo, prestacao/fechamento ou balancete
+- classificacao documental atualizada desta frente:
+  - implementar agora: nenhuma (etapa documental)
+  - pendencia proxima: quebrar a SPEC fechada em backlog tecnico incremental
+  - backlog/futuro: agrupamentos por opcao, filtros avancados/compostos, visoes salvas, arrastar-e-soltar, importacao assistida e exemplos/templates
+  - fora de escopo: planilha livre estilo Excel, integracao escrevente com financeiro e modelagem definitiva de banco nesta fase
+  - risco a monitorar: perda de governanca e desvio da frente para comportamento de planilha livre
 
 ## Validacao da alocacao de competencias no lancamento simples
 

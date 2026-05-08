@@ -463,6 +463,7 @@ Status apos complemento documental desta microetapa: SPEC FUNCIONAL + OPERACIONA
 Status apos fechamento documental desta microetapa: SPEC FUNCIONAL + OPERACIONAL + UX CONSOLIDADA / BACKLOG
 
 Status apos fechamento documental desta microetapa: SPEC FUNCIONAL + OPERACIONAL + UX + NAVEGACAO CONSOLIDADA / BACKLOG
+Status apos fechamento documental desta microetapa: PRIMEIRO RECORTE OPERACIONAL DOCUMENTAL FECHADO / BACKLOG
 
 Motivo:
 Foi levantada frente futura para controles configuraveis genericos, com colunas definidas pelo usuario, tipos de dado, formulas controladas por coluna e totalizadores. Deve ser tratada separadamente das correcoes imediatas do financeiro.
@@ -489,10 +490,16 @@ Consolidacao desta baixa documental:
   - regra de separacao em relacao ao financeiro oficial
 - classificacao das pendencias desta frente:
   - implementar agora: nenhuma
-  - pendencia proxima: fechar os ultimos detalhes de totalizadores e filtros simples do primeiro recorte
+  - pendencia proxima: abrir microetapa tecnica propria para quebrar a SPEC fechada em backlog de implementacao incremental
   - backlog/futuro: exemplos/templates, referencias opcionais e importacao assistida
   - fora de escopo: engine livre estilo Excel e integracao escrevente com financeiro
   - risco a monitorar: virar "Excel dentro do sistema", perder governanca de permissoes/auditoria e confundir controle interno com dado financeiro oficial
+- decisoes finais do primeiro recorte operacional agora consolidadas:
+  - `data` aceita totalizadores `minimo` e `maximo` apenas quando configurados explicitamente na coluna
+  - `sim/nao` e `lista de opcoes` aceitam apenas `contagem simples total` no MVP, sem agrupamento por opcao
+  - busca textual simples na tela de linhas entra no MVP; filtros avancados ficam para backlog/futuro
+  - reordenacao no MVP usa campo numerico `ordem`; `arrastar-e-soltar` fica para futuro
+  - totalizadores aparecem somente quando configurados por coluna e, quando visiveis na tela, devem sair no rodape do XLSX
 - riscos registrados para etapa futura: alta complexidade, risco de virar "Excel dentro do sistema", limites de formula por seguranca, permissoes, trilha de auditoria, backup/exportacao e separacao entre dado operacional e financeiro oficial
 
 Classificacao documental:
