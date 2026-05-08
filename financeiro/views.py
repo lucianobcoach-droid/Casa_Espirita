@@ -36,6 +36,7 @@ from .forms import (
     LancamentoFinanceiroForm,
     LancamentoFinanceiroGrupoRateioForm,
     PessoaFinanceiraForm,
+    TabelaPersonalizadaForm,
     categorias_vinculaveis_queryset,
 )
 from .models import (
@@ -8135,7 +8136,49 @@ class TabelaPersonalizadaListView(FinanceiroPermissaoMixin, ListView):
         context['status_choices'] = TabelaPersonalizada.StatusTabela.choices
         context['filtro_nome'] = self.request.GET.get('nome', '').strip()
         context['filtro_status'] = self.request.GET.get('status', '').strip()
+        context['pode_criar_tabela_personalizada'] = usuario_possui_permissao(
+            self.request.user,
+            PermissoesTabelasPersonalizadas.CRIAR,
+        )
+        context['pode_editar_estrutura_tabela_personalizada'] = usuario_possui_permissao(
+            self.request.user,
+            PermissoesTabelasPersonalizadas.EDITAR_ESTRUTURA,
+        )
         return context
+
+
+class TabelaPersonalizadaCreateView(FinanceiroFormMixin, CreateView):
+    permissao_requerida = PermissoesTabelasPersonalizadas.CRIAR
+    model = TabelaPersonalizada
+    form_class = TabelaPersonalizadaForm
+    template_name = 'financeiro/tabela_personalizada_form.html'
+    success_url = reverse_lazy('financeiro:tabela-personalizada-list')
+    page_title = 'Nova tabela personalizada'
+    success_message = 'Tabela personalizada cadastrada com sucesso.'
+
+    def form_valid(self, form):
+        usuario = self.request.user if self.request.user.is_authenticated else None
+        form.instance.criado_por = usuario
+        form.instance.atualizado_por = usuario
+        return super().form_valid(form)
+
+
+class TabelaPersonalizadaUpdateView(FinanceiroFormMixin, UpdateView):
+    permissao_requerida = PermissoesTabelasPersonalizadas.EDITAR_ESTRUTURA
+    model = TabelaPersonalizada
+    form_class = TabelaPersonalizadaForm
+    template_name = 'financeiro/tabela_personalizada_form.html'
+    success_url = reverse_lazy('financeiro:tabela-personalizada-list')
+    page_title = 'Editar tabela personalizada'
+    submit_label = 'Atualizar'
+    success_message = 'Tabela personalizada atualizada com sucesso.'
+
+    def form_valid(self, form):
+        usuario = self.request.user if self.request.user.is_authenticated else None
+        if not form.instance.criado_por:
+            form.instance.criado_por = usuario
+        form.instance.atualizado_por = usuario
+        return super().form_valid(form)
 
 
 class CategoriaFinanceiraUpdateView(FinanceiroFormMixin, UpdateView):

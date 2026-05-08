@@ -2,6 +2,41 @@
 
 Data: 2026-05-08
 
+## Microetapa tecnica: cadastro inicial de tabelas configuraveis
+
+- etapa funcional controlada, limitada ao cadastro e edicao apenas dos metadados de `TabelaPersonalizada`
+- confirmei antes de alterar:
+  - branch `feat/reinicio-financeiro`
+  - arvore limpa
+  - ausencia de commits locais pendentes
+  - ausencia de commits remotos pendentes
+  - `fetch` concluido sem erro
+- implementei a frente em cinco pontos:
+  - `TabelaPersonalizadaForm` criado com `nome`, `descricao`, `status` e `ordem`
+  - `TabelaPersonalizadaCreateView` protegida por `financeiro.tabelas_personalizadas.criar`
+  - `TabelaPersonalizadaUpdateView` protegida por `financeiro.tabelas_personalizadas.editar_estrutura`
+  - template `financeiro/tabela_personalizada_form.html` criado apenas para os dados gerais da tabela
+  - listagem atualizada com botao `Nova tabela` e acao `Editar`, sem links quebrados
+- guardrails preservados:
+  - sem configuracao de colunas
+  - sem preenchimento de linhas
+  - sem formulas guiadas
+  - sem totalizadores
+  - sem exportacao XLSX
+  - sem auditoria operacional propria
+  - sem arquivar/restaurar ou exclusao
+- testes adicionados para:
+  - resolver URLs de criacao e edicao
+  - liberar acesso apenas com as permissoes corretas
+  - criar tabela valida
+  - editar metadados validos
+  - mostrar/ocultar botao `Nova tabela`
+  - mostrar/ocultar acao `Editar`
+  - confirmar nao regressao basica em `LancamentoFinanceiro`
+- baixa documental consolidada:
+  - cadastro inicial de metadados da tabela concluido
+  - proxima pendencia movida para configuracao inicial de colunas
+
 ## Microetapa tecnica: menu real e listagem minima de tabelas configuraveis
 
 - etapa funcional controlada, limitada a URL, `ListView`, template minimo e item de menu da frente, sem criacao/edicao, sem formulas, sem totalizadores e sem exportacao

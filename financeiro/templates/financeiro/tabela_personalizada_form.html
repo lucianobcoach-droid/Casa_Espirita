@@ -1,0 +1,209 @@
+{% extends 'financeiro/base.html' %}
+{% block title %}{{ page_title }}{% endblock %}
+{% block content %}
+<style>
+    .financeiro-tabela-form-page {
+        display: grid;
+        gap: 0.9rem;
+    }
+
+    .financeiro-tabela-form-card {
+        border: 1px solid rgba(203, 213, 225, 0.85);
+        border-radius: 1rem;
+        background: #fff;
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.045);
+        overflow: hidden;
+    }
+
+    .financeiro-tabela-form-body {
+        padding: 1rem 1.05rem 1.05rem;
+    }
+
+    .financeiro-tabela-form-grid {
+        display: grid;
+        gap: 0.95rem;
+    }
+
+    .financeiro-tabela-form-grid-duo {
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .financeiro-tabela-form-field .label {
+        margin-bottom: 0.22rem;
+    }
+
+    .financeiro-tabela-form-field .control,
+    .financeiro-tabela-form-field .control > * {
+        width: 100%;
+    }
+
+    .financeiro-tabela-form-field .control > input,
+    .financeiro-tabela-form-field .control > textarea,
+    .financeiro-tabela-form-field .control > select,
+    .financeiro-tabela-form-field .control .input,
+    .financeiro-tabela-form-field .control .textarea,
+    .financeiro-tabela-form-field .control .select select {
+        min-height: 2.5rem;
+        width: 100%;
+        padding: 0.55rem 0.8rem;
+        border: 1px solid #d7e2f0;
+        border-radius: 8px;
+        background: #fff;
+        box-shadow: none;
+        color: #182433;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .financeiro-tabela-form-field .control > input:focus,
+    .financeiro-tabela-form-field .control > textarea:focus,
+    .financeiro-tabela-form-field .control > select:focus,
+    .financeiro-tabela-form-field .control .input:focus,
+    .financeiro-tabela-form-field .control .textarea:focus,
+    .financeiro-tabela-form-field .control .select select:focus {
+        border-color: #206bc4;
+        box-shadow: 0 0 0 0.2rem rgba(32, 107, 196, 0.12);
+        outline: 0;
+    }
+
+    .financeiro-tabela-form-field textarea {
+        min-height: 8rem;
+        resize: vertical;
+        line-height: 1.5;
+    }
+
+    .financeiro-tabela-form-field .help {
+        margin-top: 0.24rem;
+        color: #5b6b7f;
+        font-size: 0.82rem;
+    }
+
+    .financeiro-tabela-form-field .help.is-danger {
+        color: #c0392b;
+    }
+
+    .financeiro-tabela-form-notice {
+        margin-bottom: 0.95rem;
+        padding: 0.85rem 0.95rem;
+        border: 1px solid #dce7f5;
+        border-radius: 0.95rem;
+        background: linear-gradient(180deg, #f8fbff 0%, #f4f8fc 100%);
+        color: #334155;
+    }
+
+    .financeiro-tabela-form-notice strong {
+        color: #153a73;
+    }
+
+    .financeiro-tabela-form-errors {
+        margin-bottom: 0.85rem;
+    }
+
+    .financeiro-tabela-form-actions {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.45rem;
+        padding-top: 0.85rem;
+        border-top: 1px solid #edf2f7;
+    }
+
+    @media screen and (max-width: 1023px) {
+        .financeiro-tabela-form-grid-duo {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="financeiro-tabela-form-page">
+    <div class="financeiro-page-header financeiro-page-head">
+        <div class="financeiro-page-header-main">
+            <h1 class="title financeiro-page-title">{{ page_title }}</h1>
+            <p class="subtitle is-6 mb-0">
+                Cadastro apenas dos dados gerais da tabela personalizada.
+            </p>
+        </div>
+    </div>
+
+    <section class="financeiro-tabela-form-card">
+        <div class="financeiro-tabela-form-body">
+            <div class="financeiro-tabela-form-notice">
+                <strong>Proxima etapa:</strong>
+                a configuracao de colunas sera liberada em microetapa posterior.
+            </div>
+
+            {% if form.non_field_errors %}
+                <div class="notification is-danger financeiro-tabela-form-errors">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <form method="post">
+                {% csrf_token %}
+                {% if return_to %}<input type="hidden" name="return_to" value="{{ return_to }}">{% endif %}
+                <div class="financeiro-tabela-form-grid">
+                    <div class="field financeiro-tabela-form-field">
+                        <label class="label" for="{{ form.nome.id_for_label }}">{{ form.nome.label }}</label>
+                        <div class="control">
+                            {{ form.nome }}
+                        </div>
+                        {% if form.nome.help_text %}
+                            <p class="help">{{ form.nome.help_text }}</p>
+                        {% endif %}
+                        {% for error in form.nome.errors %}
+                            <p class="help is-danger">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+
+                    <div class="field financeiro-tabela-form-field">
+                        <label class="label" for="{{ form.descricao.id_for_label }}">{{ form.descricao.label }}</label>
+                        <div class="control">
+                            {{ form.descricao }}
+                        </div>
+                        {% if form.descricao.help_text %}
+                            <p class="help">{{ form.descricao.help_text }}</p>
+                        {% endif %}
+                        {% for error in form.descricao.errors %}
+                            <p class="help is-danger">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+
+                    <div class="financeiro-tabela-form-grid-duo">
+                        <div class="field financeiro-tabela-form-field">
+                            <label class="label" for="{{ form.status.id_for_label }}">{{ form.status.label }}</label>
+                            <div class="control">
+                                {{ form.status }}
+                            </div>
+                            {% if form.status.help_text %}
+                                <p class="help">{{ form.status.help_text }}</p>
+                            {% endif %}
+                            {% for error in form.status.errors %}
+                                <p class="help is-danger">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+
+                        <div class="field financeiro-tabela-form-field">
+                            <label class="label" for="{{ form.ordem.id_for_label }}">{{ form.ordem.label }}</label>
+                            <div class="control">
+                                {{ form.ordem }}
+                            </div>
+                            {% if form.ordem.help_text %}
+                                <p class="help">{{ form.ordem.help_text }}</p>
+                            {% endif %}
+                            {% for error in form.ordem.errors %}
+                                <p class="help is-danger">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="financeiro-tabela-form-actions">
+                    <button class="button is-primary" type="submit">{{ submit_label }}</button>
+                    <a class="button" href="{{ cancel_url }}">Voltar</a>
+                </div>
+            </form>
+        </div>
+    </section>
+</div>
+{% endblock %}

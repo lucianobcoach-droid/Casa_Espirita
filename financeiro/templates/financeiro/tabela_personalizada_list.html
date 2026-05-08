@@ -35,6 +35,13 @@
         color: #153a73;
     }
 
+    .financeiro-tabela-personalizada-note-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.5rem;
+        padding: 0.85rem 0.95rem 0;
+    }
+
     .financeiro-tabela-personalizada-table-wrap {
         width: 100%;
         max-width: 100%;
@@ -105,6 +112,10 @@
     .financeiro-tabela-personalizada-empty {
         color: #64748b;
     }
+
+    .financeiro-tabela-personalizada-actions {
+        white-space: nowrap;
+    }
 </style>
 
 <div class="financeiro-tabela-personalizada-page">
@@ -115,6 +126,13 @@
                 Area de controles internos configuraveis, sem efeito sobre lancamentos financeiros oficiais.
             </p>
         </div>
+        {% if pode_criar_tabela_personalizada %}
+            <div class="financeiro-page-header-actions">
+                <a class="button is-primary" href="{% url 'financeiro:tabela-personalizada-create' %}">
+                    Nova tabela
+                </a>
+            </div>
+        {% endif %}
     </div>
 
     <section class="financeiro-tabela-personalizada-card">
@@ -147,7 +165,7 @@
 
         <div class="financeiro-tabela-personalizada-note">
             <strong>Recorte atual:</strong>
-            esta tela entrega apenas leitura basica das tabelas existentes. Criacao, estrutura, linhas e formulas entram nas proximas microetapas.
+            esta etapa libera a listagem e o cadastro apenas dos dados gerais da tabela. Colunas, linhas, formulas, totalizadores e exportacao entram nas proximas microetapas.
         </div>
 
         <div class="financeiro-tabela-personalizada-table-wrap">
@@ -160,6 +178,7 @@
                     <th>Colunas</th>
                     <th>Linhas</th>
                     <th>Ultima atualizacao</th>
+                    {% if pode_editar_estrutura_tabela_personalizada %}<th>Acoes</th>{% endif %}
                 </tr>
                 </thead>
                 <tbody>
@@ -181,10 +200,17 @@
                         <td><span class="financeiro-tabela-personalizada-count">{{ tabela.quantidade_colunas }}</span></td>
                         <td><span class="financeiro-tabela-personalizada-count">{{ tabela.quantidade_linhas }}</span></td>
                         <td>{{ tabela.atualizado_em|date:'d/m/Y H:i' }}</td>
+                        {% if pode_editar_estrutura_tabela_personalizada %}
+                            <td class="financeiro-tabela-personalizada-actions">
+                                <a class="button is-small is-light" href="{% url 'financeiro:tabela-personalizada-update' tabela.pk %}">
+                                    Editar
+                                </a>
+                            </td>
+                        {% endif %}
                     </tr>
                 {% empty %}
                     <tr>
-                        <td colspan="6" class="financeiro-tabela-personalizada-empty">
+                        <td colspan="{% if pode_editar_estrutura_tabela_personalizada %}7{% else %}6{% endif %}" class="financeiro-tabela-personalizada-empty">
                             Nenhuma tabela personalizada cadastrada ate o momento.
                         </td>
                     </tr>

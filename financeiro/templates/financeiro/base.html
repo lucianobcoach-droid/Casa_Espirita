@@ -2259,9 +2259,9 @@
                                 <section class="financeiro-menu-group">
                                     <h2 class="financeiro-menu-group-title">Controles internos</h2>
                                     <div class="financeiro-menu-links">
-                                        <a class="financeiro-menu-link{% if current_url_name == 'tabela-personalizada-list' %} is-active{% endif %}" href="{% url 'financeiro:tabela-personalizada-list' %}">
+                                        <a class="financeiro-menu-link{% if current_url_name == 'tabela-personalizada-list' or current_url_name == 'tabela-personalizada-create' or current_url_name == 'tabela-personalizada-update' %} is-active{% endif %}" href="{% url 'financeiro:tabela-personalizada-list' %}">
                                             <span>Tabelas personalizadas</span>
-                                            <span class="financeiro-menu-link-note">Leitura</span>
+                                            <span class="financeiro-menu-link-note">Metadados</span>
                                         </a>
                                     </div>
                                 </section>
@@ -2299,7 +2299,7 @@
                             Relatorios
                         {% elif current_url_name == 'conta-list' or current_url_name == 'conta-create' or current_url_name == 'conta-update' or current_url_name == 'conta-delete' or current_url_name == 'pessoa-list' or current_url_name == 'pessoa-create' or current_url_name == 'pessoa-update' or current_url_name == 'pessoa-delete' or current_url_name == 'categoria-list' or current_url_name == 'categoria-create' or current_url_name == 'categoria-update' or current_url_name == 'categoria-delete' or current_url_name == 'centro-custo-list' or current_url_name == 'centro-custo-create' or current_url_name == 'centro-custo-update' or current_url_name == 'centro-custo-delete' %}
                             Cadastros
-                        {% elif current_url_name == 'tabela-personalizada-list' %}
+                        {% elif current_url_name == 'tabela-personalizada-list' or current_url_name == 'tabela-personalizada-create' or current_url_name == 'tabela-personalizada-update' %}
                             Controles internos
                         {% elif current_url_name == 'assinatura-list' or current_url_name == 'assinatura-create' or current_url_name == 'assinatura-update' or current_url_name == 'assinatura-delete' or current_url_name == 'configuracao-institucional-list' or current_url_name == 'configuracao-institucional-create' or current_url_name == 'configuracao-institucional-update' or current_url_name == 'configuracao-institucional-delete' %}
                             Institucional

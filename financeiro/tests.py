@@ -18,6 +18,7 @@ from .forms import (
     LancamentoFinanceiroForm,
     LancamentoFinanceiroGrupoRateioForm,
     PessoaFinanceiraForm,
+    TabelaPersonalizadaForm,
 )
 from .models import (
     AlocacaoCompetenciaFinanceira,
@@ -44,7 +45,9 @@ from .views import (
     LancamentoFinanceiroGrupoRateioCloneView,
     LancamentoFinanceiroGrupoRateioUpdateView,
     PrestacaoContasFinanceiroView,
+    TabelaPersonalizadaCreateView,
     TabelaPersonalizadaListView,
+    TabelaPersonalizadaUpdateView,
     _filtrar_lancamentos_por_parametros,
     _validar_conteudo_planilha_importacao_contas_xlsx,
     montar_contexto_fechamento_periodo,
@@ -3951,6 +3954,16 @@ class TabelasPersonalizadasListViewTests(TestCase):
 
         self.assertIs(resolved.func.view_class, TabelaPersonalizadaListView)
 
+    def test_url_resolve_para_view_de_criacao(self):
+        resolved = resolve(reverse('financeiro:tabela-personalizada-create'))
+
+        self.assertIs(resolved.func.view_class, TabelaPersonalizadaCreateView)
+
+    def test_url_resolve_para_view_de_edicao(self):
+        resolved = resolve(reverse('financeiro:tabela-personalizada-update', kwargs={'pk': self.tabela.pk}))
+
+        self.assertIs(resolved.func.view_class, TabelaPersonalizadaUpdateView)
+
     def test_usuario_com_permissao_visualizar_acessa_listagem(self):
         self._login_com_permissoes(
             'user-tabela-visualizar',
@@ -3974,6 +3987,113 @@ class TabelasPersonalizadasListViewTests(TestCase):
 
         self.assertEqual(response.status_code, 403)
 
+    def test_usuario_com_permissao_criar_acessa_tela_de_criacao(self):
+        self._login_com_permissoes(
+            'user-tabela-criar',
+            [PermissoesTabelasPersonalizadas.CRIAR],
+        )
+
+        response = self.client.get(reverse('financeiro:tabela-personalizada-create'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Cadastro apenas dos dados gerais da tabela personalizada.')
+        self.assertContains(response, 'a configuracao de colunas sera liberada em microetapa posterior.')
+
+    def test_usuario_sem_permissao_criar_recebe_403_na_criacao(self):
+        self._login_com_permissoes(
+            'user-tabela-sem-criar',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+
+        response = self.client.get(reverse('financeiro:tabela-personalizada-create'))
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_criacao_valida_de_tabela_personalizada(self):
+        usuario = self._login_com_permissoes(
+            'user-tabela-criacao-valida',
+            [
+                PermissoesTabelasPersonalizadas.CRIAR,
+                PermissoesTabelasPersonalizadas.VISUALIZAR,
+            ],
+        )
+
+        response = self.client.post(
+            reverse('financeiro:tabela-personalizada-create'),
+            data={
+                'nome': 'Controle de eventos',
+                'descricao': 'Uso interno para agenda de manutencoes.',
+                'status': TabelaPersonalizada.StatusTabela.INATIVA,
+                'ordem': 7,
+            },
+        )
+
+        self.assertRedirects(response, reverse('financeiro:tabela-personalizada-list'))
+        tabela = TabelaPersonalizada.objects.get(nome='Controle de eventos')
+        self.assertEqual(tabela.descricao, 'Uso interno para agenda de manutencoes.')
+        self.assertEqual(tabela.status, TabelaPersonalizada.StatusTabela.INATIVA)
+        self.assertEqual(tabela.ordem, 7)
+        self.assertEqual(tabela.criado_por, usuario)
+        self.assertEqual(tabela.atualizado_por, usuario)
+
+    def test_form_da_tabela_personalizada_expoe_apenas_metadados(self):
+        form = TabelaPersonalizadaForm()
+
+        self.assertEqual(list(form.fields.keys()), ['nome', 'descricao', 'status', 'ordem'])
+
+    def test_usuario_com_permissao_editar_estrutura_acessa_tela_de_edicao(self):
+        self._login_com_permissoes(
+            'user-tabela-editar',
+            [PermissoesTabelasPersonalizadas.EDITAR_ESTRUTURA],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-update', kwargs={'pk': self.tabela.pk})
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Cadastro apenas dos dados gerais da tabela personalizada.')
+        self.assertContains(response, self.tabela.nome)
+
+    def test_usuario_sem_permissao_editar_estrutura_recebe_403_na_edicao(self):
+        self._login_com_permissoes(
+            'user-tabela-sem-editar',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-update', kwargs={'pk': self.tabela.pk})
+        )
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_edicao_valida_de_metadados_da_tabela(self):
+        usuario = self._login_com_permissoes(
+            'user-tabela-edicao-valida',
+            [
+                PermissoesTabelasPersonalizadas.EDITAR_ESTRUTURA,
+                PermissoesTabelasPersonalizadas.VISUALIZAR,
+            ],
+        )
+
+        response = self.client.post(
+            reverse('financeiro:tabela-personalizada-update', kwargs={'pk': self.tabela.pk}),
+            data={
+                'nome': 'Controle de almoxarifado revisado',
+                'descricao': 'Controle interno ajustado nesta microetapa.',
+                'status': TabelaPersonalizada.StatusTabela.INATIVA,
+                'ordem': 3,
+            },
+        )
+
+        self.assertRedirects(response, reverse('financeiro:tabela-personalizada-list'))
+        self.tabela.refresh_from_db()
+        self.assertEqual(self.tabela.nome, 'Controle de almoxarifado revisado')
+        self.assertEqual(self.tabela.descricao, 'Controle interno ajustado nesta microetapa.')
+        self.assertEqual(self.tabela.status, TabelaPersonalizada.StatusTabela.INATIVA)
+        self.assertEqual(self.tabela.ordem, 3)
+        self.assertEqual(self.tabela.atualizado_por, usuario)
+
     def test_listagem_exibe_estado_vazio_sem_erro(self):
         TabelaPersonalizada.objects.all().delete()
         self._login_com_permissoes(
@@ -3985,6 +4105,64 @@ class TabelasPersonalizadasListViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Nenhuma tabela personalizada cadastrada ate o momento.')
+
+    def test_listagem_exibe_botao_nova_tabela_apenas_com_permissao_criar(self):
+        self._login_com_permissoes(
+            'user-menu-tabela-criar',
+            [
+                PermissoesTabelasPersonalizadas.VISUALIZAR,
+                PermissoesTabelasPersonalizadas.CRIAR,
+            ],
+        )
+
+        response = self.client.get(reverse('financeiro:tabela-personalizada-list'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, reverse('financeiro:tabela-personalizada-create'))
+        self.assertContains(response, 'Nova tabela')
+
+    def test_listagem_oculta_botao_nova_tabela_sem_permissao_criar(self):
+        self._login_com_permissoes(
+            'user-menu-tabela-sem-criar',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+
+        response = self.client.get(reverse('financeiro:tabela-personalizada-list'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, reverse('financeiro:tabela-personalizada-create'))
+
+    def test_listagem_exibe_acao_editar_apenas_com_permissao_editar_estrutura(self):
+        self._login_com_permissoes(
+            'user-menu-tabela-editar',
+            [
+                PermissoesTabelasPersonalizadas.VISUALIZAR,
+                PermissoesTabelasPersonalizadas.EDITAR_ESTRUTURA,
+            ],
+        )
+
+        response = self.client.get(reverse('financeiro:tabela-personalizada-list'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            reverse('financeiro:tabela-personalizada-update', kwargs={'pk': self.tabela.pk}),
+        )
+        self.assertContains(response, 'Editar')
+
+    def test_listagem_oculta_acao_editar_sem_permissao_editar_estrutura(self):
+        self._login_com_permissoes(
+            'user-menu-tabela-sem-editar',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+
+        response = self.client.get(reverse('financeiro:tabela-personalizada-list'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(
+            response,
+            reverse('financeiro:tabela-personalizada-update', kwargs={'pk': self.tabela.pk}),
+        )
 
     def test_menu_exibe_item_quando_usuario_tem_permissao(self):
         self._login_com_permissoes(
@@ -4011,3 +4189,53 @@ class TabelasPersonalizadasListViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertNotContains(response, reverse('financeiro:tabela-personalizada-list'))
+
+    def test_criacao_de_tabela_nao_impacta_lancamento_financeiro_existente(self):
+        pessoa = PessoaFinanceira.objects.create(nome='Pessoa preservada')
+        categoria_pai = CategoriaFinanceira.objects.create(
+            nome='Categoria pai preservada',
+            tipo=LancamentoFinanceiro.TipoLancamento.RECEITA,
+        )
+        categoria = CategoriaFinanceira.objects.create(
+            nome='Categoria preservada',
+            tipo=LancamentoFinanceiro.TipoLancamento.RECEITA,
+            categoria_pai=categoria_pai,
+        )
+        conta = ContaFinanceira.objects.create(
+            nome='Conta preservada',
+            saldo_inicial=Decimal('0.00'),
+            data_saldo_inicial=date(2026, 5, 1),
+        )
+        lancamento = LancamentoFinanceiro.objects.create(
+            descricao='Lancamento preservado pela microetapa',
+            tipo=LancamentoFinanceiro.TipoLancamento.RECEITA,
+            status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+            valor=Decimal('42.00'),
+            data_competencia=date(2026, 5, 2),
+            data_pagamento=date(2026, 5, 2),
+            pessoa=pessoa,
+            categoria=categoria,
+            conta=conta,
+        )
+        self._login_com_permissoes(
+            'user-tabela-sem-impacto',
+            [
+                PermissoesTabelasPersonalizadas.CRIAR,
+                PermissoesTabelasPersonalizadas.VISUALIZAR,
+            ],
+        )
+
+        response = self.client.post(
+            reverse('financeiro:tabela-personalizada-create'),
+            data={
+                'nome': 'Controle paralelo',
+                'descricao': '',
+                'status': TabelaPersonalizada.StatusTabela.ATIVA,
+                'ordem': 0,
+            },
+        )
+
+        self.assertRedirects(response, reverse('financeiro:tabela-personalizada-list'))
+        lancamento.refresh_from_db()
+        self.assertEqual(lancamento.descricao, 'Lancamento preservado pela microetapa')
+        self.assertEqual(lancamento.valor, Decimal('42.00'))

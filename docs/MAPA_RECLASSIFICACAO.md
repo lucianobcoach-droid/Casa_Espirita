@@ -556,9 +556,13 @@ Consolidacao desta baixa documental:
   - template minimo de leitura criado sem links quebrados
   - item de menu criado em `Controles internos`, isolado do financeiro oficial
   - sem criacao/edicao, sem colunas, sem linhas, sem formulas, sem totalizadores e sem exportacao nesta etapa
-- reclassificacao da pendencia proxima apos a listagem minima:
-  - deixa de ser `menu real + listagem minima da frente`
-  - passa a ser `cadastro inicial da tabela personalizada` ou `refinamento seguro da listagem`, conforme prioridade da proxima microetapa
+- consolidacao do cadastro inicial de metadados:
+  - formulario de `TabelaPersonalizada` criado apenas com `nome`, `descricao`, `status` e `ordem`
+  - criacao e edicao protegidas por permissoes separadas da frente
+  - listagem atualizada com `Nova tabela` e `Editar`, sem abrir colunas, linhas ou exportacao
+- reclassificacao da pendencia proxima apos o cadastro inicial:
+  - deixa de ser `cadastro inicial da tabela personalizada`
+  - passa a ser `configuracao inicial de colunas da tabela`, mantendo linhas, formulas, totalizadores e exportacao fora do recorte imediato
 - guardrails reforcados:
   - qualquer alteracao em banco real exige backup e autorizacao
   - arquivos SQLite nao devem ser versionados

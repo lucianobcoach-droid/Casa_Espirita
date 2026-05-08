@@ -1554,13 +1554,27 @@ Status consolidado: SPEC FUNCIONAL DOCUMENTAL CONSOLIDADA / BACKLOG TECNICO INCR
   - nao, assumindo estrutura minima ja existente.
 - Validacoes esperadas:
   - criacao/edicao sem impacto em outras frentes;
-  - redirecionamento coerente para configuracao de colunas.
+  - redirecionamento coerente para a listagem, sem depender ainda da configuracao de colunas.
 - Dependencias anteriores:
   - microetapas 3, 4 e 5.
 - Fora de escopo:
   - colunas;
   - linhas;
   - formulas.
+- Resultado consolidado desta microetapa:
+  - `TabelaPersonalizadaForm` criado apenas com `nome`, `descricao`, `status` e `ordem`
+  - `TabelaPersonalizadaCreateView` protegida por `financeiro.tabelas_personalizadas.criar`
+  - `TabelaPersonalizadaUpdateView` protegida por `financeiro.tabelas_personalizadas.editar_estrutura`
+  - rotas criadas:
+    - `financeiro:tabela-personalizada-create`
+    - `financeiro:tabela-personalizada-update`
+  - template proprio de formulario criado apenas para dados gerais da tabela
+  - listagem atualizada com:
+    - botao `Nova tabela` apenas para quem pode criar
+    - acao `Editar` apenas para quem pode editar estrutura
+  - sem redirecionar para colunas, porque essa microetapa ainda nao existe
+- Proxima microetapa recomendada:
+  - abrir a configuracao inicial de colunas da tabela, mantendo linhas, formulas, totalizadores e exportacao fora deste recorte
 
 #### Microetapa 7 - configuracao de colunas
 

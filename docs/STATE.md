@@ -111,16 +111,22 @@ Data de atualizacao: 2026-05-08
   - filtros simples por nome e status
   - grupo `Controles internos` no menu do `financeiro`, sem mistura com `Lancamentos`, `Extrato`, `Resumo`, `Prestacao/Fechamento` ou `Balancete`
   - exposicao apenas de nome, descricao curta, status, quantidade de colunas, quantidade de linhas e ultima atualizacao
+- cadastro inicial de metadados da tabela agora implementado com:
+  - `TabelaPersonalizadaForm` limitado a `nome`, `descricao`, `status` e `ordem`
+  - `TabelaPersonalizadaCreateView` protegida por `financeiro.tabelas_personalizadas.criar`
+  - `TabelaPersonalizadaUpdateView` protegida por `financeiro.tabelas_personalizadas.editar_estrutura`
+  - template proprio de formulario, com aviso explicito de que a configuracao de colunas fica para microetapa posterior
+  - botao `Nova tabela` na listagem apenas para quem pode criar
+  - acao `Editar` na listagem apenas para quem pode editar estrutura
 - limites desta implementacao estrutural:
   - sem `FormulaColunaPersonalizada`
   - sem `TotalizadorColunaPersonalizada`
-  - sem forms de criacao/edicao
   - sem auditoria operacional propria da nova frente
   - sem exportacao XLSX da nova frente
   - sem integracao com financeiro oficial
 - classificacao documental atualizada desta frente:
-  - implementar agora: estrutura minima de dados, permissoes executaveis e listagem minima somente leitura concluidas
-  - pendencia proxima: abrir microetapa de cadastro inicial da tabela personalizada ou refinamento seguro da listagem, ainda sem colunas, linhas, formulas, totalizadores ou exportacao
+  - implementar agora: estrutura minima de dados, permissoes executaveis, listagem minima somente leitura e cadastro inicial de metadados concluidos
+  - pendencia proxima: abrir microetapa de configuracao de colunas, ainda sem linhas, formulas, totalizadores ou exportacao
   - backlog/futuro: agrupamentos por opcao, filtros avancados/compostos, visoes salvas, arrastar-e-soltar, importacao assistida e exemplos/templates
   - fora de escopo: planilha livre estilo Excel, integracao escrevente com financeiro e modelagem definitiva de banco nesta fase
   - risco a monitorar: perda de governanca e desvio da frente para comportamento de planilha livre

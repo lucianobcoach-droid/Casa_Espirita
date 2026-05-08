@@ -21,6 +21,7 @@ from .models import (
     ContaFinanceira,
     LancamentoFinanceiro,
     PessoaFinanceira,
+    TabelaPersonalizada,
     TipoContaFinanceira,
 )
 
@@ -402,6 +403,31 @@ class ConfiguracaoInstitucionalForm(forms.ModelForm):
             'logo_url': 'Opcional. Informe uma URL de logo para o cabecalho do recibo.',
             'mensagem_padrao_recibo': 'Opcional. Se vazia, o recibo continua usando o fallback simples ja existente.',
             'padrao': 'Quando marcada, esta configuracao passa a ser a usada por padrao no recibo.',
+        }
+
+
+class TabelaPersonalizadaForm(forms.ModelForm):
+    class Meta:
+        model = TabelaPersonalizada
+        fields = [
+            'nome',
+            'descricao',
+            'status',
+            'ordem',
+        ]
+        widgets = {
+            'descricao': forms.Textarea(
+                attrs={
+                    'rows': 4,
+                    'placeholder': 'Descreva brevemente o objetivo deste controle interno.',
+                }
+            ),
+            'ordem': forms.NumberInput(attrs={'min': 0}),
+        }
+        help_texts = {
+            'descricao': 'Opcional. Use para explicar o uso interno da tabela.',
+            'status': 'Controla apenas a disponibilidade documental desta tabela no MVP.',
+            'ordem': 'Opcional. Valores menores aparecem primeiro na listagem.',
         }
 
 
