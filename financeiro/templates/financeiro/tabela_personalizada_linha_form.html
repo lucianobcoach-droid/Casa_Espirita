@@ -1,0 +1,168 @@
+{% extends 'financeiro/base.html' %}
+{% block title %}{{ page_title }}{% endblock %}
+{% block content %}
+<style>
+    .financeiro-linha-form-page {
+        display: grid;
+        gap: 0.9rem;
+    }
+
+    .financeiro-linha-form-card {
+        border: 1px solid rgba(203, 213, 225, 0.85);
+        border-radius: 1rem;
+        background: #fff;
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.045);
+        overflow: hidden;
+    }
+
+    .financeiro-linha-form-body {
+        padding: 1rem 1.05rem 1.05rem;
+    }
+
+    .financeiro-linha-form-grid {
+        display: grid;
+        gap: 0.95rem;
+    }
+
+    .financeiro-linha-form-grid-duo {
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .financeiro-linha-form-field .label {
+        margin-bottom: 0.22rem;
+    }
+
+    .financeiro-linha-form-field .control,
+    .financeiro-linha-form-field .control > * {
+        width: 100%;
+    }
+
+    .financeiro-linha-form-field .control > input,
+    .financeiro-linha-form-field .control > textarea,
+    .financeiro-linha-form-field .control > select,
+    .financeiro-linha-form-field .control .input,
+    .financeiro-linha-form-field .control .textarea,
+    .financeiro-linha-form-field .control .select select {
+        min-height: 2.5rem;
+        width: 100%;
+        padding: 0.55rem 0.8rem;
+        border: 1px solid #d7e2f0;
+        border-radius: 8px;
+        background: #fff;
+        box-shadow: none;
+        color: #182433;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .financeiro-linha-form-field .control > input:focus,
+    .financeiro-linha-form-field .control > textarea:focus,
+    .financeiro-linha-form-field .control > select:focus,
+    .financeiro-linha-form-field .control .input:focus,
+    .financeiro-linha-form-field .control .textarea:focus,
+    .financeiro-linha-form-field .control .select select:focus {
+        border-color: #206bc4;
+        box-shadow: 0 0 0 0.2rem rgba(32, 107, 196, 0.12);
+        outline: 0;
+    }
+
+    .financeiro-linha-form-field textarea {
+        min-height: 7rem;
+        resize: vertical;
+        line-height: 1.5;
+    }
+
+    .financeiro-linha-form-field .help {
+        margin-top: 0.24rem;
+        color: #5b6b7f;
+        font-size: 0.82rem;
+    }
+
+    .financeiro-linha-form-field .help.is-danger {
+        color: #c0392b;
+    }
+
+    .financeiro-linha-form-notice {
+        margin-bottom: 0.95rem;
+        padding: 0.85rem 0.95rem;
+        border: 1px solid #dce7f5;
+        border-radius: 0.95rem;
+        background: linear-gradient(180deg, #f8fbff 0%, #f4f8fc 100%);
+        color: #334155;
+    }
+
+    .financeiro-linha-form-notice strong {
+        color: #153a73;
+    }
+
+    .financeiro-linha-form-errors {
+        margin-bottom: 0.85rem;
+    }
+
+    .financeiro-linha-form-actions {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.45rem;
+        padding-top: 0.85rem;
+        border-top: 1px solid #edf2f7;
+    }
+
+    @media screen and (max-width: 1023px) {
+        .financeiro-linha-form-grid-duo {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="financeiro-linha-form-page">
+    <div class="financeiro-page-header financeiro-page-head">
+        <div class="financeiro-page-header-main">
+            <h1 class="title financeiro-page-title">{{ page_title }}</h1>
+            <p class="subtitle is-6 mb-0">
+                Tabela: {{ tabela_personalizada.nome }}
+            </p>
+        </div>
+    </div>
+
+    <section class="financeiro-linha-form-card">
+        <div class="financeiro-linha-form-body">
+            <div class="financeiro-linha-form-notice">
+                <strong>Recorte atual:</strong>
+                preenchimento basico de linhas, sem formulas e totalizadores nesta etapa. Controle interno sem impacto financeiro.
+            </div>
+
+            {% if form.non_field_errors %}
+                <div class="notification is-danger financeiro-linha-form-errors">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <form method="post">
+                {% csrf_token %}
+                {% if return_to %}<input type="hidden" name="return_to" value="{{ return_to }}">{% endif %}
+                <div class="financeiro-linha-form-grid">
+                    {% for field in form %}
+                        <div class="field financeiro-linha-form-field">
+                            <label class="label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            <div class="control">{{ field }}</div>
+                            {% if field.help_text %}<p class="help">{{ field.help_text }}</p>{% endif %}
+                            {% for error in field.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+                        </div>
+                    {% empty %}
+                        <div class="notification is-warning is-light mb-0">
+                            Esta tabela ainda nao possui colunas editaveis visiveis para preenchimento nesta etapa.
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="financeiro-linha-form-actions">
+                    <button class="button is-primary" type="submit">{{ submit_label }}</button>
+                    <a class="button" href="{{ cancel_url }}">Voltar</a>
+                </div>
+            </form>
+        </div>
+    </section>
+</div>
+{% endblock %}

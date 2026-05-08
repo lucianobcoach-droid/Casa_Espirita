@@ -7,7 +7,8 @@ from uuid import uuid4
 
 from django import forms
 from django.core.exceptions import ValidationError
-from django.db.models import Q, Sum
+from django.db import transaction
+from django.db.models import Max, Q, Sum
 from django.forms.models import construct_instance
 from django.urls import reverse_lazy
 from django.utils import timezone
@@ -20,10 +21,12 @@ from .models import (
     ConfiguracaoInstitucional,
     CentroCusto,
     ContaFinanceira,
+    LinhaTabelaPersonalizada,
     LancamentoFinanceiro,
     PessoaFinanceira,
     TabelaPersonalizada,
     TipoContaFinanceira,
+    ValorTabelaPersonalizada,
 )
 
 MESES_PT_BR_ABREV = (
@@ -535,6 +538,196 @@ class ColunaPersonalizadaForm(forms.ModelForm):
             'ordem': 'Valores menores aparecem primeiro na estrutura da tabela.',
             'status': 'Use para manter a coluna ativa, inativa ou arquivada na estrutura.',
         }
+
+
+class TabelaPersonalizadaLinhaForm(forms.Form):
+    campo_prefixo = 'coluna_'
+
+    @classmethod
+    def colunas_editaveis_queryset(cls, tabela: TabelaPersonalizada):
+        return (
+            ColunaPersonalizada.objects.filter(
+                tabela=tabela,
+                status=ColunaPersonalizada.StatusColuna.ATIVA,
+                visivel=True,
+                calculada=False,
+            )
+            .exclude(tipo_dado=ColunaPersonalizada.TipoDado.FORMULA_CONTROLADA)
+            .order_by('ordem', 'nome', 'pk')
+        )
+
+    @classmethod
+    def campo_coluna_nome(cls, coluna_id: int) -> str:
+        return f'{cls.campo_prefixo}{coluna_id}'
+
+    def __init__(self, *args, tabela: TabelaPersonalizada, linha: LinhaTabelaPersonalizada | None = None, **kwargs):
+        self.tabela = tabela
+        self.linha = linha
+        self.colunas_dinamicas = list(self.colunas_editaveis_queryset(tabela))
+        self.valores_existentes: dict[int, ValorTabelaPersonalizada] = {}
+        if self.linha:
+            self.valores_existentes = {
+                valor.coluna_id: valor
+                for valor in self.linha.valores.select_related('coluna')
+            }
+
+        super().__init__(*args, **kwargs)
+
+        for coluna in self.colunas_dinamicas:
+            field_name = self.campo_coluna_nome(coluna.pk)
+            self.fields[field_name] = self._build_field(coluna)
+            if not self.is_bound:
+                self.initial[field_name] = self._valor_inicial_coluna(coluna)
+
+    def _build_field(self, coluna: ColunaPersonalizada) -> forms.Field:
+        comum = {
+            'label': coluna.nome,
+            'required': coluna.obrigatoria,
+        }
+
+        if coluna.tipo_dado == ColunaPersonalizada.TipoDado.TEXTO_CURTO:
+            return forms.CharField(max_length=120, **comum)
+        if coluna.tipo_dado == ColunaPersonalizada.TipoDado.TEXTO_LONGO:
+            return forms.CharField(widget=forms.Textarea(attrs={'rows': 4}), **comum)
+        if coluna.tipo_dado == ColunaPersonalizada.TipoDado.INTEIRO:
+            return forms.IntegerField(**comum)
+        if coluna.tipo_dado == ColunaPersonalizada.TipoDado.DECIMAL:
+            return forms.DecimalField(max_digits=18, decimal_places=6, **comum)
+        if coluna.tipo_dado == ColunaPersonalizada.TipoDado.MONETARIO:
+            return forms.DecimalField(max_digits=18, decimal_places=2, **comum)
+        if coluna.tipo_dado == ColunaPersonalizada.TipoDado.PERCENTUAL:
+            return forms.DecimalField(max_digits=18, decimal_places=2, **comum)
+        if coluna.tipo_dado == ColunaPersonalizada.TipoDado.DATA:
+            return forms.DateField(
+                widget=forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date'}),
+                input_formats=['%Y-%m-%d'],
+                **comum,
+            )
+        if coluna.tipo_dado == ColunaPersonalizada.TipoDado.MES_COMPETENCIA:
+            return forms.RegexField(
+                regex=r'^(0[1-9]|1[0-2])/\d{4}$',
+                error_messages={'invalid': 'Use o formato MM/AAAA.'},
+                **comum,
+            )
+        if coluna.tipo_dado == ColunaPersonalizada.TipoDado.BOOLEANO:
+            choices = [('1', 'Sim'), ('0', 'Nao')]
+            if not coluna.obrigatoria:
+                choices = [('', 'Selecione')] + choices
+            return forms.TypedChoiceField(
+                choices=choices,
+                coerce=lambda valor: {'1': True, '0': False}.get(valor, None),
+                empty_value=None,
+                **comum,
+            )
+        if coluna.tipo_dado == ColunaPersonalizada.TipoDado.LISTA_OPCOES:
+            configuracao = coluna.configuracao_json if isinstance(coluna.configuracao_json, dict) else {}
+            opcoes = configuracao.get('opcoes', [])
+            choices = [(opcao, opcao) for opcao in opcoes if isinstance(opcao, str) and opcao.strip()]
+            if not coluna.obrigatoria:
+                choices = [('', 'Selecione')] + choices
+            return forms.ChoiceField(choices=choices, **comum)
+
+        return forms.CharField(disabled=True, required=False, label=coluna.nome)
+
+    def _valor_inicial_coluna(self, coluna: ColunaPersonalizada):
+        valor = self.valores_existentes.get(coluna.pk)
+        if not valor:
+            return None
+
+        if coluna.tipo_dado in {
+            ColunaPersonalizada.TipoDado.TEXTO_CURTO,
+            ColunaPersonalizada.TipoDado.TEXTO_LONGO,
+            ColunaPersonalizada.TipoDado.MES_COMPETENCIA,
+            ColunaPersonalizada.TipoDado.LISTA_OPCOES,
+        }:
+            return valor.valor_texto
+        if coluna.tipo_dado in {
+            ColunaPersonalizada.TipoDado.INTEIRO,
+            ColunaPersonalizada.TipoDado.DECIMAL,
+            ColunaPersonalizada.TipoDado.MONETARIO,
+            ColunaPersonalizada.TipoDado.PERCENTUAL,
+        }:
+            return valor.valor_numero
+        if coluna.tipo_dado == ColunaPersonalizada.TipoDado.DATA:
+            return valor.valor_data
+        if coluna.tipo_dado == ColunaPersonalizada.TipoDado.BOOLEANO:
+            if valor.valor_booleano is None:
+                return None
+            return '1' if valor.valor_booleano else '0'
+        return None
+
+    def _valor_vazio(self, coluna: ColunaPersonalizada, valor) -> bool:
+        if coluna.tipo_dado == ColunaPersonalizada.TipoDado.BOOLEANO:
+            return valor is None
+        if valor is None:
+            return True
+        if isinstance(valor, str):
+            return not valor.strip()
+        return False
+
+    def _montar_payload_valor(self, coluna: ColunaPersonalizada, valor) -> dict[str, object]:
+        payload: dict[str, object] = {
+            'valor_texto': '',
+            'valor_numero': None,
+            'valor_data': None,
+            'valor_booleano': None,
+            'valor_json': None,
+            'valor_calculado': None,
+        }
+
+        if coluna.tipo_dado in {
+            ColunaPersonalizada.TipoDado.TEXTO_CURTO,
+            ColunaPersonalizada.TipoDado.TEXTO_LONGO,
+            ColunaPersonalizada.TipoDado.MES_COMPETENCIA,
+            ColunaPersonalizada.TipoDado.LISTA_OPCOES,
+        }:
+            payload['valor_texto'] = (valor or '').strip()
+        elif coluna.tipo_dado in {
+            ColunaPersonalizada.TipoDado.INTEIRO,
+            ColunaPersonalizada.TipoDado.DECIMAL,
+            ColunaPersonalizada.TipoDado.MONETARIO,
+            ColunaPersonalizada.TipoDado.PERCENTUAL,
+        }:
+            payload['valor_numero'] = valor
+        elif coluna.tipo_dado == ColunaPersonalizada.TipoDado.DATA:
+            payload['valor_data'] = valor
+        elif coluna.tipo_dado == ColunaPersonalizada.TipoDado.BOOLEANO:
+            payload['valor_booleano'] = valor
+
+        return payload
+
+    def save(self, *, usuario=None):
+        with transaction.atomic():
+            if self.linha is None:
+                self.linha = LinhaTabelaPersonalizada.objects.create(
+                    tabela=self.tabela,
+                    ordem=(self.tabela.linhas.aggregate(maior=Max('ordem')).get('maior') or 0) + 1,
+                    criado_por=usuario,
+                    atualizado_por=usuario,
+                )
+            else:
+                if not self.linha.criado_por:
+                    self.linha.criado_por = usuario
+                self.linha.atualizado_por = usuario
+                self.linha.save()
+
+            for coluna in self.colunas_dinamicas:
+                field_name = self.campo_coluna_nome(coluna.pk)
+                valor_limpo = self.cleaned_data.get(field_name)
+                queryset = ValorTabelaPersonalizada.objects.filter(linha=self.linha, coluna=coluna)
+
+                if self._valor_vazio(coluna, valor_limpo):
+                    queryset.delete()
+                    continue
+
+                payload = self._montar_payload_valor(coluna, valor_limpo)
+                queryset.update_or_create(
+                    linha=self.linha,
+                    coluna=coluna,
+                    defaults=payload,
+                )
+
+        return self.linha
 
 
 class LancamentoFinanceiroForm(forms.ModelForm):

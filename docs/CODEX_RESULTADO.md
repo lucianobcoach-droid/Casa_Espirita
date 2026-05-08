@@ -42,6 +42,45 @@ Data: 2026-05-08
   - configuracao inicial de colunas concluida
   - proxima pendencia movida para tela de linhas e preenchimento de valores
 
+## Microetapa tecnica: linhas de tabelas personalizadas
+
+- etapa funcional controlada, limitada a listagem de linhas e ao preenchimento inicial de valores, sem formulas guiadas, sem totalizadores, sem exportacao e sem auditoria operacional propria
+- confirmei antes de alterar:
+  - branch `feat/reinicio-financeiro`
+  - arvore limpa
+  - ausencia de commits locais pendentes
+  - ausencia de commits remotos pendentes
+  - `fetch` concluido sem erro
+- implementei a frente em seis pontos:
+  - listagem de linhas por tabela com leitura apenas de colunas ativas, visiveis e nao calculadas
+  - `TabelaPersonalizadaLinhaForm` dinamico gerado a partir das colunas da tabela
+  - criacao de linha protegida por `financeiro.tabelas_personalizadas.preencher_linhas`
+  - edicao de linha protegida por `financeiro.tabelas_personalizadas.editar_linhas`
+  - templates proprios de listagem e formulario de linha
+  - acao `Linhas` adicionada na listagem de tabelas conforme as permissoes da frente
+- guardrails preservados:
+  - sem formulas guiadas
+  - sem coluna calculada funcional
+  - sem totalizadores
+  - sem exportacao XLSX
+  - sem auditoria operacional propria
+  - sem arquivar/restaurar, exclusao, importacao ou edicao em massa
+- regras seguras desta microetapa:
+  - colunas invisiveis, arquivadas, calculadas ou `formula_controlada` nao entram no form nem na listagem de linhas
+  - `lista_opcoes` usa apenas `configuracao_json.opcoes`
+  - valores sao persistidos nos slots corretos de `ValorTabelaPersonalizada`
+  - usuario apenas com `visualizar` pode abrir a listagem, mas nao ve acao de nova linha nem edicao
+- testes adicionados para:
+  - resolver URLs de listagem/criacao/edicao de linha
+  - liberar e bloquear acesso por `visualizar`, `preencher_linhas` e `editar_linhas`
+  - criar e editar linha valida com valores tipados
+  - impedir manipulacao de linha de outra tabela pela URL
+  - ocultar colunas invisiveis/arquivadas e bloquear `formula_controlada`
+  - respeitar `lista_opcoes`, obrigatoriedade e nao regressao basica em `LancamentoFinanceiro`
+- baixa documental consolidada:
+  - tela de linhas e preenchimento inicial de valores concluidos
+  - proxima pendencia movida para totalizadores controlados por coluna
+
 ## Microetapa tecnica: cadastro inicial de tabelas configuraveis
 
 - etapa funcional controlada, limitada ao cadastro e edicao apenas dos metadados de `TabelaPersonalizada`

@@ -71,6 +71,9 @@ from .views import (
     TabelaPersonalizadaColunaListView,
     TabelaPersonalizadaColunaUpdateView,
     TabelaPersonalizadaCreateView,
+    TabelaPersonalizadaLinhaCreateView,
+    TabelaPersonalizadaLinhaListView,
+    TabelaPersonalizadaLinhaUpdateView,
     TabelaPersonalizadaListView,
     TabelaPersonalizadaUpdateView,
 )
@@ -120,6 +123,21 @@ urlpatterns = [
         'controles-internos/tabelas-personalizadas/<int:tabela_id>/colunas/<int:pk>/editar/',
         TabelaPersonalizadaColunaUpdateView.as_view(),
         name='tabela-personalizada-coluna-update',
+    ),
+    path(
+        'controles-internos/tabelas-personalizadas/<int:tabela_id>/linhas/',
+        TabelaPersonalizadaLinhaListView.as_view(),
+        name='tabela-personalizada-linha-list',
+    ),
+    path(
+        'controles-internos/tabelas-personalizadas/<int:tabela_id>/linhas/nova/',
+        TabelaPersonalizadaLinhaCreateView.as_view(),
+        name='tabela-personalizada-linha-create',
+    ),
+    path(
+        'controles-internos/tabelas-personalizadas/<int:tabela_id>/linhas/<int:pk>/editar/',
+        TabelaPersonalizadaLinhaUpdateView.as_view(),
+        name='tabela-personalizada-linha-update',
     ),
     path('autocomplete/pessoas/', PessoaFinanceiraAutocompleteView.as_view(), name='autocomplete-pessoa'),
     path(

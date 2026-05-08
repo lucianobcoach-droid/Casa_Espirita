@@ -25,7 +25,7 @@ from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views import View
-from django.views.generic import CreateView, DeleteView, DetailView, ListView, TemplateView, UpdateView
+from django.views.generic import CreateView, DeleteView, DetailView, FormView, ListView, TemplateView, UpdateView
 
 from .forms import (
     AssinaturaInstitucionalForm,
@@ -38,6 +38,7 @@ from .forms import (
     LancamentoFinanceiroGrupoRateioForm,
     PessoaFinanceiraForm,
     TabelaPersonalizadaForm,
+    TabelaPersonalizadaLinhaForm,
     categorias_vinculaveis_queryset,
 )
 from .models import (
@@ -49,11 +50,13 @@ from .models import (
     ConfiguracaoInstitucional,
     CentroCusto,
     ContaFinanceira,
+    LinhaTabelaPersonalizada,
     LancamentoFinanceiro,
     PessoaFinanceira,
     RegraLancamentoFinanceiro,
     TabelaPersonalizada,
     TipoContaFinanceira,
+    ValorTabelaPersonalizada,
     normalizar_nome_pessoa_financeira,
 )
 from .permissoes import (
@@ -8146,6 +8149,31 @@ class TabelaPersonalizadaListView(FinanceiroPermissaoMixin, ListView):
             self.request.user,
             PermissoesTabelasPersonalizadas.EDITAR_ESTRUTURA,
         )
+        context['pode_preencher_linhas_tabela_personalizada'] = usuario_possui_permissao(
+            self.request.user,
+            PermissoesTabelasPersonalizadas.PREENCHER_LINHAS,
+        )
+        context['pode_editar_linhas_tabela_personalizada'] = usuario_possui_permissao(
+            self.request.user,
+            PermissoesTabelasPersonalizadas.EDITAR_LINHAS,
+        )
+        context['pode_visualizar_linhas_tabela_personalizada'] = usuario_possui_permissao(
+            self.request.user,
+            PermissoesTabelasPersonalizadas.VISUALIZAR,
+        )
+        context['pode_acessar_linhas_tabela_personalizada'] = any(
+            (
+                context['pode_visualizar_linhas_tabela_personalizada'],
+                context['pode_preencher_linhas_tabela_personalizada'],
+                context['pode_editar_linhas_tabela_personalizada'],
+            )
+        )
+        context['possui_acoes_tabela_personalizada'] = any(
+            (
+                context['pode_editar_estrutura_tabela_personalizada'],
+                context['pode_acessar_linhas_tabela_personalizada'],
+            )
+        )
         return context
 
 
@@ -8261,6 +8289,157 @@ class TabelaPersonalizadaColunaUpdateView(FinanceiroFormMixin, UpdateView):
         context = super().get_context_data(**kwargs)
         context['tabela_personalizada'] = self.tabela
         return context
+
+
+def _formatar_valor_linha_tabela(coluna: ColunaPersonalizada, valor: ValorTabelaPersonalizada | None) -> str:
+    if valor is None:
+        return ''
+
+    if coluna.tipo_dado in {
+        ColunaPersonalizada.TipoDado.TEXTO_CURTO,
+        ColunaPersonalizada.TipoDado.TEXTO_LONGO,
+        ColunaPersonalizada.TipoDado.MES_COMPETENCIA,
+        ColunaPersonalizada.TipoDado.LISTA_OPCOES,
+    }:
+        return valor.valor_texto or ''
+    if coluna.tipo_dado == ColunaPersonalizada.TipoDado.BOOLEANO:
+        if valor.valor_booleano is None:
+            return ''
+        return 'Sim' if valor.valor_booleano else 'Nao'
+    if coluna.tipo_dado == ColunaPersonalizada.TipoDado.DATA:
+        return valor.valor_data.strftime('%d/%m/%Y') if valor.valor_data else ''
+    if valor.valor_numero is None:
+        return ''
+    if coluna.tipo_dado == ColunaPersonalizada.TipoDado.INTEIRO:
+        return str(int(valor.valor_numero))
+    if coluna.tipo_dado == ColunaPersonalizada.TipoDado.MONETARIO:
+        return f'R$ {valor.valor_numero:.2f}'
+    if coluna.tipo_dado == ColunaPersonalizada.TipoDado.PERCENTUAL:
+        return f'{valor.valor_numero:.2f}%'
+    return str(valor.valor_numero)
+
+
+class TabelaPersonalizadaLinhaBaseMixin:
+    tabela_context_key = 'tabela_personalizada'
+
+    def _get_tabela(self) -> TabelaPersonalizada:
+        if not hasattr(self, 'tabela'):
+            self.tabela = get_object_or_404(TabelaPersonalizada, pk=self.kwargs['tabela_id'])
+        return self.tabela
+
+    def _get_colunas_editaveis(self):
+        return list(TabelaPersonalizadaLinhaForm.colunas_editaveis_queryset(self._get_tabela()))
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['tabela'] = self._get_tabela()
+        kwargs['linha'] = getattr(self, 'object', None)
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context[self.tabela_context_key] = self._get_tabela()
+        context['colunas_editaveis'] = self._get_colunas_editaveis()
+        return context
+
+
+class TabelaPersonalizadaLinhaListView(FinanceiroPermissaoMixin, ListView):
+    permissao_requerida = PermissoesTabelasPersonalizadas.VISUALIZAR
+    model = LinhaTabelaPersonalizada
+    template_name = 'financeiro/tabela_personalizada_linha_list.html'
+    context_object_name = 'linhas_personalizadas'
+
+    def dispatch(self, request, *args, **kwargs):
+        self.tabela = get_object_or_404(TabelaPersonalizada, pk=self.kwargs['tabela_id'])
+        self.colunas_visiveis = list(TabelaPersonalizadaLinhaForm.colunas_editaveis_queryset(self.tabela))
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_queryset(self):
+        return (
+            super()
+            .get_queryset()
+            .filter(tabela=self.tabela, status=LinhaTabelaPersonalizada.StatusLinha.ATIVA)
+            .prefetch_related('valores__coluna')
+            .order_by('ordem', 'pk')
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        linhas_renderizadas = []
+        colunas_visiveis_ids = {coluna.pk for coluna in self.colunas_visiveis}
+        for linha in context['linhas_personalizadas']:
+            valores_por_coluna = {
+                valor.coluna_id: valor
+                for valor in linha.valores.all()
+                if valor.coluna_id in colunas_visiveis_ids
+            }
+            celulas = [
+                {
+                    'coluna': coluna,
+                    'valor': _formatar_valor_linha_tabela(coluna, valores_por_coluna.get(coluna.pk)),
+                }
+                for coluna in self.colunas_visiveis
+            ]
+            linhas_renderizadas.append({'linha': linha, 'celulas': celulas})
+
+        context['tabela_personalizada'] = self.tabela
+        context['colunas_visiveis'] = self.colunas_visiveis
+        context['linhas_renderizadas'] = linhas_renderizadas
+        context['pode_preencher_linhas_tabela_personalizada'] = usuario_possui_permissao(
+            self.request.user,
+            PermissoesTabelasPersonalizadas.PREENCHER_LINHAS,
+        )
+        context['pode_editar_linhas_tabela_personalizada'] = usuario_possui_permissao(
+            self.request.user,
+            PermissoesTabelasPersonalizadas.EDITAR_LINHAS,
+        )
+        return context
+
+
+class TabelaPersonalizadaLinhaCreateView(TabelaPersonalizadaLinhaBaseMixin, FinanceiroFormMixin, FormView):
+    permissao_requerida = PermissoesTabelasPersonalizadas.PREENCHER_LINHAS
+    form_class = TabelaPersonalizadaLinhaForm
+    template_name = 'financeiro/tabela_personalizada_linha_form.html'
+    page_title = 'Nova linha personalizada'
+    success_message = 'Linha personalizada cadastrada com sucesso.'
+
+    def dispatch(self, request, *args, **kwargs):
+        self.tabela = get_object_or_404(TabelaPersonalizada, pk=self.kwargs['tabela_id'])
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_success_url(self):
+        return reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk})
+
+    def get_cancel_url(self):
+        return self._get_return_to_url() or self.get_success_url()
+
+    def form_valid(self, form):
+        self.object = form.save(usuario=self.request.user if self.request.user.is_authenticated else None)
+        return super().form_valid(form)
+
+
+class TabelaPersonalizadaLinhaUpdateView(TabelaPersonalizadaLinhaBaseMixin, FinanceiroFormMixin, FormView):
+    permissao_requerida = PermissoesTabelasPersonalizadas.EDITAR_LINHAS
+    form_class = TabelaPersonalizadaLinhaForm
+    template_name = 'financeiro/tabela_personalizada_linha_form.html'
+    page_title = 'Editar linha personalizada'
+    submit_label = 'Atualizar'
+    success_message = 'Linha personalizada atualizada com sucesso.'
+
+    def dispatch(self, request, *args, **kwargs):
+        self.tabela = get_object_or_404(TabelaPersonalizada, pk=self.kwargs['tabela_id'])
+        self.object = get_object_or_404(LinhaTabelaPersonalizada, pk=self.kwargs['pk'], tabela=self.tabela)
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_success_url(self):
+        return reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk})
+
+    def get_cancel_url(self):
+        return self._get_return_to_url() or self.get_success_url()
+
+    def form_valid(self, form):
+        self.object = form.save(usuario=self.request.user if self.request.user.is_authenticated else None)
+        return super().form_valid(form)
 
 
 class CategoriaFinanceiraUpdateView(FinanceiroFormMixin, UpdateView):

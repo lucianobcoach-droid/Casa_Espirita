@@ -125,6 +125,14 @@ Data de atualizacao: 2026-05-08
   - suporte controlado a `lista_opcoes` por texto auxiliar, gravando `configuracao_json.opcoes`
   - criacao e edicao de coluna protegidas por `financeiro.tabelas_personalizadas.editar_estrutura`
   - acao `Colunas` adicionada na listagem de tabelas apenas para quem pode editar estrutura
+- tela de linhas e preenchimento inicial de valores agora implementados com:
+  - listagem de linhas por tabela em rota propria dentro de `Controles internos`
+  - exibicao apenas de colunas ativas, visiveis e nao calculadas
+  - `TabelaPersonalizadaLinhaForm` dinamico com campos por tipo a partir da estrutura da tabela
+  - criacao de linha protegida por `financeiro.tabelas_personalizadas.preencher_linhas`
+  - edicao de linha protegida por `financeiro.tabelas_personalizadas.editar_linhas`
+  - listagem de linhas protegida por `financeiro.tabelas_personalizadas.visualizar`
+  - acao `Linhas` adicionada na listagem de tabelas sem abrir formulas, totalizadores ou exportacao
 - limites desta implementacao estrutural:
   - sem `FormulaColunaPersonalizada`
   - sem `TotalizadorColunaPersonalizada`
@@ -132,8 +140,8 @@ Data de atualizacao: 2026-05-08
   - sem exportacao XLSX da nova frente
   - sem integracao com financeiro oficial
 - classificacao documental atualizada desta frente:
-  - implementar agora: estrutura minima de dados, permissoes executaveis, listagem minima somente leitura, cadastro inicial de metadados e configuracao inicial de colunas concluidos
-  - pendencia proxima: abrir microetapa de tela de linhas e preenchimento de valores, ainda sem formulas, totalizadores ou exportacao
+  - implementar agora: estrutura minima de dados, permissoes executaveis, listagem minima somente leitura, cadastro inicial de metadados, configuracao inicial de colunas e preenchimento inicial de linhas concluidos
+  - pendencia proxima: abrir microetapa de totalizadores controlados por coluna, ainda sem formulas guiadas, exportacao XLSX ou auditoria operacional propria
   - backlog/futuro: agrupamentos por opcao, filtros avancados/compostos, visoes salvas, arrastar-e-soltar, importacao assistida e exemplos/templates
   - fora de escopo: planilha livre estilo Excel, integracao escrevente com financeiro e modelagem definitiva de banco nesta fase
   - risco a monitorar: perda de governanca e desvio da frente para comportamento de planilha livre

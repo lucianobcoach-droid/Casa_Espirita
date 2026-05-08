@@ -1623,6 +1623,11 @@ Status consolidado: SPEC FUNCIONAL DOCUMENTAL CONSOLIDADA / BACKLOG TECNICO INCR
 
 #### Microetapa 8 - linhas e valores editaveis
 
+- Status apos implementacao:
+  - concluida com listagem de linhas, criacao e edicao basica de valores por tabela
+  - campos gerados dinamicamente apenas para colunas ativas, visiveis e nao calculadas
+  - `formula_controlada` mantida fora do formulario e da listagem desta etapa
+  - permissoes separadas entre visualizar, preencher e editar linhas
 - Objetivo:
   - abrir a grade operacional de dados do MVP.
 - Escopo:
@@ -1650,6 +1655,8 @@ Status consolidado: SPEC FUNCIONAL DOCUMENTAL CONSOLIDADA / BACKLOG TECNICO INCR
   - filtros avancados;
   - formulas livres;
   - importacao em massa.
+- Proxima microetapa recomendada:
+  - abrir os totalizadores controlados por coluna, ainda sem formulas guiadas, exportacao XLSX ou auditoria operacional propria
 
 #### Microetapa 9 - totalizadores controlados por coluna
 

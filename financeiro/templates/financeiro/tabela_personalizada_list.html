@@ -165,7 +165,7 @@
 
         <div class="financeiro-tabela-personalizada-note">
             <strong>Recorte atual:</strong>
-            esta etapa libera a listagem e o cadastro apenas dos dados gerais da tabela. Colunas, linhas, formulas, totalizadores e exportacao entram nas proximas microetapas.
+            esta etapa libera metadados, estrutura de colunas e preenchimento basico de linhas. Formulas, totalizadores e exportacao entram nas proximas microetapas.
         </div>
 
         <div class="financeiro-tabela-personalizada-table-wrap">
@@ -178,7 +178,7 @@
                     <th>Colunas</th>
                     <th>Linhas</th>
                     <th>Ultima atualizacao</th>
-                    {% if pode_editar_estrutura_tabela_personalizada %}<th>Acoes</th>{% endif %}
+                    {% if possui_acoes_tabela_personalizada %}<th>Acoes</th>{% endif %}
                 </tr>
                 </thead>
                 <tbody>
@@ -200,20 +200,27 @@
                         <td><span class="financeiro-tabela-personalizada-count">{{ tabela.quantidade_colunas }}</span></td>
                         <td><span class="financeiro-tabela-personalizada-count">{{ tabela.quantidade_linhas }}</span></td>
                         <td>{{ tabela.atualizado_em|date:'d/m/Y H:i' }}</td>
-                        {% if pode_editar_estrutura_tabela_personalizada %}
+                        {% if possui_acoes_tabela_personalizada %}
                             <td class="financeiro-tabela-personalizada-actions">
-                                <a class="button is-small is-light" href="{% url 'financeiro:tabela-personalizada-coluna-list' tabela.pk %}">
-                                    Colunas
-                                </a>
-                                <a class="button is-small is-light" href="{% url 'financeiro:tabela-personalizada-update' tabela.pk %}">
-                                    Editar
-                                </a>
+                                {% if pode_acessar_linhas_tabela_personalizada %}
+                                    <a class="button is-small is-light" href="{% url 'financeiro:tabela-personalizada-linha-list' tabela.pk %}">
+                                        Linhas
+                                    </a>
+                                {% endif %}
+                                {% if pode_editar_estrutura_tabela_personalizada %}
+                                    <a class="button is-small is-light" href="{% url 'financeiro:tabela-personalizada-coluna-list' tabela.pk %}">
+                                        Colunas
+                                    </a>
+                                    <a class="button is-small is-light" href="{% url 'financeiro:tabela-personalizada-update' tabela.pk %}">
+                                        Editar
+                                    </a>
+                                {% endif %}
                             </td>
                         {% endif %}
                     </tr>
                 {% empty %}
                     <tr>
-                        <td colspan="{% if pode_editar_estrutura_tabela_personalizada %}7{% else %}6{% endif %}" class="financeiro-tabela-personalizada-empty">
+                        <td colspan="{% if possui_acoes_tabela_personalizada %}7{% else %}6{% endif %}" class="financeiro-tabela-personalizada-empty">
                             Nenhuma tabela personalizada cadastrada ate o momento.
                         </td>
                     </tr>

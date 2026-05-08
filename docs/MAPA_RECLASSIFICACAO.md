@@ -566,9 +566,14 @@ Consolidacao desta baixa documental:
   - `formula_controlada` mantida bloqueada no formulario desta etapa
   - `lista_opcoes` permitida de forma controlada em `configuracao_json.opcoes`
   - listagem de tabelas atualizada com acao `Colunas`, sem abrir linhas ou exportacao
-- reclassificacao da pendencia proxima apos a configuracao inicial de colunas:
-  - deixa de ser `configuracao inicial de colunas da tabela`
-  - passa a ser `tela de linhas e preenchimento de valores`, mantendo formulas, totalizadores e exportacao fora do recorte imediato
+- consolidacao da tela de linhas e do preenchimento inicial de valores:
+  - listagem de linhas criada por tabela com leitura apenas de colunas ativas, visiveis e nao calculadas
+  - criacao e edicao de linha protegidas por permissoes separadas de preencher/editar linhas
+  - `TabelaPersonalizadaLinhaForm` dinamico criado sem abrir `formula_controlada`, totalizadores ou exportacao
+  - listagem de tabelas atualizada com acao `Linhas`, respeitando o recorte de permissao da frente
+- reclassificacao da pendencia proxima apos a tela de linhas:
+  - deixa de ser `tela de linhas e preenchimento de valores`
+  - passa a ser `totalizadores controlados por coluna`, mantendo formulas guiadas, exportacao e auditoria operacional propria fora do recorte imediato
 - guardrails reforcados:
   - qualquer alteracao em banco real exige backup e autorizacao
   - arquivos SQLite nao devem ser versionados
