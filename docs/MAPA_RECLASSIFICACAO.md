@@ -466,6 +466,7 @@ Status apos fechamento documental desta microetapa: SPEC FUNCIONAL + OPERACIONAL
 Status apos fechamento documental desta microetapa: PRIMEIRO RECORTE OPERACIONAL DOCUMENTAL FECHADO / BACKLOG
 Status apos planejamento documental desta microetapa: BACKLOG TECNICO INCREMENTAL DO MVP PLANEJADO / BACKLOG
 Status apos auditoria tecnica preparatoria desta microetapa: AUDITORIA TECNICA PREPARATORIA CONCLUIDA / BACKLOG
+Status apos SPEC tecnica desta microetapa: SPEC TECNICA DE MODELAGEM CONSOLIDADA / BACKLOG
 
 Motivo:
 Foi levantada frente futura para controles configuraveis genericos, com colunas definidas pelo usuario, tipos de dado, formulas controladas por coluna e totalizadores. Deve ser tratada separadamente das correcoes imediatas do financeiro.
@@ -518,6 +519,15 @@ Consolidacao desta baixa documental:
 - reclassificacao da pendencia proxima apos a auditoria:
   - deixa de ser `auditoria tecnica preparatoria`
   - passa a ser `SPEC tecnica de modelagem de dados`, ainda sem `model` e sem `migration`
+- consolidacao da SPEC tecnica de modelagem:
+  - entidades candidatas documentadas: tabela, coluna, linha, valor, formula, totalizador, auditoria e permissoes
+  - alternativas comparadas: EAV, JSON por linha, colunas tipadas separadas e modelo hibrido
+  - estrategia recomendada: modelo hibrido controlado, com valor por celula e slots tipados
+  - alternativa descartada como base inicial: `JSON por linha`
+  - formula guiada completa permanece fora da primeira implementacao estrutural
+- reclassificacao da pendencia proxima apos a SPEC tecnica:
+  - deixa de ser `SPEC tecnica de modelagem de dados`
+  - passa a ser `validar/aprovar a modelagem e, se aprovada, abrir a implementacao minima da estrutura de dados`
 - guardrails reforcados:
   - qualquer alteracao em banco real exige backup e autorizacao
   - arquivos SQLite nao devem ser versionados

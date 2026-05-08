@@ -945,13 +945,446 @@ Status consolidado: SPEC FUNCIONAL DOCUMENTAL CONSOLIDADA / BACKLOG TECNICO INCR
   - `migration`;
   - alteracao de banco real.
 
+##### Resultado da SPEC tecnica de modelagem de dados
+
+###### Premissa central da modelagem
+
+- A modelagem desta frente deve continuar separada do dominio de `LancamentoFinanceiro`.
+- A frente deve nascer dentro do app `financeiro`, mas com entidades proprias de controles internos configuraveis.
+- Esta SPEC ainda nao autoriza `model`, `migration` nem alteracao de banco.
+- A modelagem recomendada ainda precisa de aprovacao explicita antes de virar implementacao estrutural.
+
+###### Entidades candidatas do MVP
+
+- `TabelaPersonalizada`
+  - responsabilidade:
+    - representar o controle interno configuravel como unidade principal.
+  - campos provaveis:
+    - `nome`
+    - `descricao`
+    - `status`
+    - `ordem`
+    - `criado_por`
+    - `atualizado_por`
+    - `criado_em`
+    - `atualizado_em`
+  - relacionamentos provaveis:
+    - 1 tabela possui N colunas
+    - 1 tabela possui N linhas
+  - regras de validacao:
+    - nome obrigatorio
+    - nome unico por escopo funcional do modulo, ou ao menos bloqueio de duplicidade ativa equivalente
+    - status limitado a ativo/inativo/arquivado
+  - riscos:
+    - tabela virar container generico demais sem governanca
+    - metadado misturar regra estrutural e regra operacional
+  - fora do MVP:
+    - versionamento completo de layout
+    - ownership granular por tabela
+    - vinculos obrigatorios com entidades do financeiro oficial
+- `ColunaPersonalizada`
+  - responsabilidade:
+    - definir estrutura, tipo, visibilidade e comportamento de cada coluna da tabela.
+  - campos provaveis:
+    - `tabela`
+    - `nome`
+    - `tipo_dado`
+    - `obrigatoria`
+    - `visivel`
+    - `ordem`
+    - `calculada`
+    - `configuracao_json`
+    - `status`
+  - relacionamentos provaveis:
+    - N colunas pertencem a 1 tabela
+    - 1 coluna pode ter 0 ou 1 formula ativa no recorte inicial
+    - 1 coluna pode ter 0 ou 1 totalizador configurado no recorte inicial
+  - regras de validacao:
+    - nome obrigatorio dentro da tabela
+    - `tipo_dado` por whitelist fechada
+    - coluna calculada nao pode ser editavel na entrada de linhas
+    - `configuracao_json` usada apenas para dados controlados como opcoes, precisao e metadados do tipo
+  - riscos:
+    - JSON de configuracao virar escape para regra livre
+    - alteracao de tipo quebrar dados ja preenchidos
+  - fora do MVP:
+    - formulas por celula
+    - dependencia entre tabelas
+    - tipos arbitrarios criados pelo usuario
+- `LinhaTabelaPersonalizada`
+  - responsabilidade:
+    - representar cada registro operacional preenchido pela usuaria.
+  - campos provaveis:
+    - `tabela`
+    - `status`
+    - `ordem` ou `criado_em` como referencia de ordenacao inicial
+    - `criado_por`
+    - `atualizado_por`
+    - `criado_em`
+    - `atualizado_em`
+  - relacionamentos provaveis:
+    - N linhas pertencem a 1 tabela
+    - 1 linha possui N valores de celula
+  - regras de validacao:
+    - linha pertence sempre a uma unica tabela
+    - arquivamento/exclusao deve ser logico no MVP
+  - riscos:
+    - ordenar por posicao rigida demais e gerar custo de manutencao
+    - exclusao fisica perder trilha
+  - fora do MVP:
+    - workflow/aprovacao de linhas
+    - historico de versoes por linha
+- `ValorTabelaPersonalizada`
+  - responsabilidade:
+    - persistir o valor efetivo de cada cruzamento linha x coluna no modelo estrutural do MVP.
+  - campos provaveis:
+    - `linha`
+    - `coluna`
+    - `valor_texto`
+    - `valor_numero`
+    - `valor_data`
+    - `valor_booleano`
+    - `valor_json`
+    - `valor_calculado`
+    - `atualizado_em`
+  - relacionamentos provaveis:
+    - 1 valor pertence a 1 linha e 1 coluna
+    - unicidade logica por par `linha + coluna`
+  - regras de validacao:
+    - somente um slot principal de valor manual deve estar preenchido conforme o tipo da coluna
+    - coluna calculada grava apenas resultado calculado e permanece somente leitura na entrada
+    - `valor_json` reservado para tipos controlados como lista de opcoes ou payload estruturado de baixo risco
+  - riscos:
+    - proliferacao de registros por celula
+    - ambiguidade se mais de um campo tipado ficar preenchido
+  - fora do MVP:
+    - historico por celula
+    - anexos/binarios
+    - engine de formula por valor livre
+- `FormulaColunaPersonalizada`
+  - responsabilidade:
+    - registrar a definicao normalizada da formula guiada aplicada a uma coluna calculada.
+  - campos provaveis:
+    - `coluna`
+    - `expressao_normalizada` ou `estrutura_json_guiada`
+    - `versao`
+    - `ativa`
+    - `validada_em`
+  - relacionamentos provaveis:
+    - 1 coluna calculada pode ter historico simples de versoes
+  - regras de validacao:
+    - formula apenas para coluna marcada como calculada
+    - formula so referencia colunas da mesma tabela e da mesma linha
+    - operadores e funcoes apenas por whitelist
+    - nao aceitar texto livre estilo Excel
+  - riscos:
+    - definicao textual abrir brecha para parser inseguro
+    - revisao de dependencias ficar complexa cedo demais
+  - fora do MVP:
+    - macros
+    - scripts
+    - referencia entre tabelas
+    - formula guiada completa ja na primeira implementacao estrutural
+- `TotalizadorColunaPersonalizada`
+  - responsabilidade:
+    - representar a configuracao de totalizacao controlada por coluna.
+  - campos provaveis:
+    - `coluna`
+    - `tipo_totalizador`
+    - `ativo`
+  - relacionamentos provaveis:
+    - 1 coluna pode ter 0 ou 1 totalizador no recorte inicial
+  - regras de validacao:
+    - apenas tipos elegiveis aceitam totalizador
+    - `data` so aceita `minimo` e `maximo`
+    - `sim/nao` e `lista de opcoes` so aceitam `contagem simples total`
+  - riscos:
+    - crescer para mini-engine analitica
+    - custo de consulta em tabelas grandes sem estrategia de leitura cuidadosa
+  - fora do MVP:
+    - agrupamentos por opcao
+    - totalizadores compostos
+    - dashboards
+- `Auditoria operacional`
+  - responsabilidade:
+    - registrar mudancas de tabela, coluna, formula, linha e exportacao.
+  - campos provaveis:
+    - reaproveitar conceito atual de `acao`, `modelo`, `registro_id`, `usuario`, `data_hora`, `campos_alterados`
+  - relacionamentos provaveis:
+    - eventos ligados ao usuario autenticado e ao registro alterado
+  - regras de validacao:
+    - exportacao precisa ser registravel mesmo sem before/after rico
+    - alteracoes estruturais precisam capturar diff inteligivel
+  - riscos:
+    - vocabulário atual de auditoria ficar curto para `exportacao`
+    - volume de log crescer rapido em edicao tabular
+  - fora do MVP:
+    - trilha imutavel completa por celula
+    - versionamento full de estrutura
+- `Permissoes`
+  - responsabilidade:
+    - separar governanca de estrutura, formulas, preenchimento, exportacao e administracao.
+  - campos provaveis:
+    - reaproveitar `PermissaoSistema` atual no formato `modulo.recurso.acao`
+  - relacionamentos provaveis:
+    - ligacao via perfil-base ja existente em `configuracoes`
+  - regras de validacao:
+    - menu escondido nao substitui enforcement backend
+    - acoes sensiveis precisam ser mais restritas que preenchimento simples
+  - riscos:
+    - granularidade insuficiente entre editar estrutura e editar linhas
+  - fora do MVP:
+    - permissao por tabela individual
+    - extras e bloqueios finos por usuario nesta frente
+
+###### Comparacao de alternativas de persistencia para valores dinamicos
+
+- Alternativa A: EAV com um registro por celula
+  - simplicidade:
+    - media; estrutura conceitual simples, mas leitura e validacao crescem rapido
+  - flexibilidade:
+    - alta
+  - validacao por tipo:
+    - media para baixa se o valor ficar generico demais
+  - busca textual simples:
+    - media, mas exige cuidado para nao pesquisar campos tecnicos indevidos
+  - totalizadores:
+    - media; agregacoes existem, mas exigem filtragem por tipo e coerencia forte
+  - exportacao XLSX:
+    - media; exige pivotar muitos registros por linha
+  - auditoria before/after:
+    - media; diffs por celula sao possiveis, mas podem gerar ruido
+  - risco de performance:
+    - medio, com crescimento direto de uma linha por celula
+  - risco de virar planilha livre:
+    - medio para alto, se o valor ficar generico e a coluna perder governanca
+  - aderencia ao MVP:
+    - razoavel, mas pede disciplina forte de tipagem
+- Alternativa B: JSON por linha
+  - simplicidade:
+    - alta para gravar, baixa para governar
+  - flexibilidade:
+    - muito alta
+  - validacao por tipo:
+    - baixa no longo prazo; concentraria muita regra fora do model
+  - busca textual simples:
+    - baixa para media, dependendo de leitura e filtros manuais
+  - totalizadores:
+    - baixa
+  - exportacao XLSX:
+    - media; leitura e montagem seriam possiveis, mas mais manuais
+  - auditoria before/after:
+    - baixa; diff tende a ficar grosso demais por linha inteira
+  - risco de performance:
+    - medio inicialmente, mas com custo de parsing e pouca seletividade
+  - risco de virar planilha livre:
+    - alto
+  - aderencia ao MVP:
+    - baixa; simplifica demais a gravacao e enfraquece a governanca
+- Alternativa C: colunas tipadas separadas por tipo
+  - simplicidade:
+    - baixa; multiplica entidades e fluxos cedo demais
+  - flexibilidade:
+    - media
+  - validacao por tipo:
+    - alta
+  - busca textual simples:
+    - media, mas com unificacao trabalhosa
+  - totalizadores:
+    - alta para tipos numericos, com custo de orquestracao
+  - exportacao XLSX:
+    - media; exige compor varias fontes
+  - auditoria before/after:
+    - media; diffs ficam dispersos
+  - risco de performance:
+    - medio, com varios joins e duplicacao de logica
+  - risco de virar planilha livre:
+    - medio
+  - aderencia ao MVP:
+    - baixa para o primeiro recorte, por excesso de estrutura
+- Alternativa D: modelo hibrido
+  - leitura desta SPEC:
+    - entidades explicitas de tabela, coluna, linha, formula e totalizador
+    - persistencia de valor por celula com slots tipados controlados e `valor_json` residual apenas para casos guiados
+  - simplicidade:
+    - media
+  - flexibilidade:
+    - alta o suficiente para o MVP, sem abrir JSON livre por linha
+  - validacao por tipo:
+    - alta
+  - busca textual simples:
+    - media para alta no recorte do MVP, porque os valores visiveis/editaveis continuam controlados
+  - totalizadores:
+    - alta no que o MVP precisa
+  - exportacao XLSX:
+    - alta para o recorte da frente
+  - auditoria before/after:
+    - alta; conversa melhor com o padrao atual de snapshot/diff
+  - risco de performance:
+    - medio, mas administravel com os limites atuais de 5.000 linhas e 30 colunas
+  - risco de virar planilha livre:
+    - menor do que nas demais, desde que `configuracao_json` e formulas continuem governados
+  - aderencia ao MVP:
+    - alta
+
+###### Estrategia recomendada desta SPEC
+
+- Abordagem preferencial:
+  - adotar modelo hibrido controlado
+  - estrutura principal separada em `TabelaPersonalizada`, `ColunaPersonalizada`, `LinhaTabelaPersonalizada`, `ValorTabelaPersonalizada`, `FormulaColunaPersonalizada` e `TotalizadorColunaPersonalizada`
+  - persistencia de valor por celula com slots tipados, e nao JSON solto por linha inteira
+- Justificativa:
+  - conversa melhor com o estilo atual do projeto, que privilegia models explicitos, validacoes objetivas, auditoria por snapshot e permissoes claras
+  - facilita manter busca textual simples, exportacao XLSX previsivel e totalizadores controlados sem abrir engine livre
+  - preserva governanca sobre tipos, visibilidade e formulas, reduzindo o risco de virar "Excel dentro do sistema"
+- Alternativa descartada como estrategia inicial:
+  - `JSON por linha`
+  - motivo:
+    - enfraquece validacao por tipo
+    - dificulta auditoria before/after legivel
+    - aumenta o risco de formula e configuracao escaparem do controle do sistema
+- Alternativa a evitar como primeira onda:
+  - `colunas tipadas separadas por tipo`
+  - motivo:
+    - deixa a estrutura mais pesada do que o MVP exige
+    - complica leitura, manutencao e exportacao cedo demais
+- Pontos que precisam ser reavaliados antes da implementacao real:
+  - se `valor_monetario` merece slot proprio ou se `valor_numero` com contexto do tipo atende o recorte
+  - se `valor_calculado` deve ficar persistido ou apenas derivado em leitura nas primeiras iteracoes
+  - se `TotalizadorColunaPersonalizada` deve aceitar uma configuracao por coluna ou historico/versionamento futuro
+  - se a auditoria de exportacao entra por extensao de `AuditoriaFinanceiro` ou por regra especifica acoplada ao fluxo
+  - se a ordenacao de linhas nasce por `criado_em` e `pk` ou se ja vale um campo explicito de `ordem`
+
+###### Modelagem conceitual minima sugerida
+
+- `TabelaPersonalizada`
+  - `nome`
+  - `descricao`
+  - `status`
+  - `ordem`
+  - `criado_por`
+  - `atualizado_por`
+  - `criado_em`
+  - `atualizado_em`
+- `ColunaPersonalizada`
+  - `tabela`
+  - `nome`
+  - `tipo_dado`
+  - `obrigatoria`
+  - `visivel`
+  - `ordem`
+  - `calculada`
+  - `configuracao_json`, quando necessario para opcoes, precisao ou metadado guiado
+  - `status`
+- `LinhaTabelaPersonalizada`
+  - `tabela`
+  - `status`
+  - `ordem` ou `criado_em`
+  - `criado_por`
+  - `atualizado_por`
+  - `criado_em`
+  - `atualizado_em`
+- `ValorTabelaPersonalizada`
+  - `linha`
+  - `coluna`
+  - `valor_texto`
+  - `valor_numero`
+  - `valor_data`
+  - `valor_booleano`
+  - `valor_json`, quando necessario para lista de opcoes ou payload guiado controlado
+  - `valor_calculado`
+  - `atualizado_em`
+- `FormulaColunaPersonalizada`
+  - `coluna_calculada`
+  - `expressao_normalizada` ou `estrutura_json_guiada`
+  - `versao`
+  - `ativa`
+  - `validada_em`
+- `TotalizadorColunaPersonalizada`
+  - `coluna`
+  - `tipo_totalizador`
+  - `ativo`
+- `Auditoria`
+  - avaliar reaproveitamento de `AuditoriaFinanceiro` com extensao futura de vocabulario/escopo, sem criar model nesta etapa
+
+###### Regras tecnicas a preservar
+
+- formula por coluna, nunca por celula no MVP
+- formula apenas com colunas da mesma linha
+- formula nao pode ser texto livre estilo Excel
+- colunas calculadas sao somente leitura na entrada de linhas
+- totalizadores nao sao formulas livres
+- busca textual simples deve considerar apenas valores visiveis/editaveis no MVP
+- exportacao XLSX deve refletir a tela visivel e incluir totalizadores visiveis
+- nenhuma entidade desta frente gera lancamento financeiro
+- nenhuma entidade desta frente altera saldo, extrato, resumo, prestacao/fechamento ou balancete
+
+###### Permissoes e modelagem
+
+- Esta etapa nao cria permissao executavel.
+- A modelagem deve facilitar a separacao futura entre:
+  - visualizar tabelas
+  - criar tabela
+  - editar estrutura
+  - configurar formula
+  - preencher linhas
+  - editar linhas
+  - exportar
+  - arquivar/restaurar
+  - administrar configuracoes
+- Direcao documental recomendada para os codigos futuros:
+  - `financeiro.tabelas_personalizadas.visualizar`
+  - `financeiro.tabelas_personalizadas.criar`
+  - `financeiro.tabelas_personalizadas.editar_estrutura`
+  - `financeiro.tabelas_personalizadas.configurar_formula`
+  - `financeiro.tabelas_personalizadas.preencher_linhas`
+  - `financeiro.tabelas_personalizadas.editar_linhas`
+  - `financeiro.tabelas_personalizadas.exportar`
+  - `financeiro.tabelas_personalizadas.arquivar_restaurar`
+  - `financeiro.tabelas_personalizadas.administrar_configuracoes`
+
+###### Auditoria e modelagem
+
+- `AuditoriaFinanceiro` pode ser reaproveitada como padrao base de estrategia, porque ja oferece:
+  - `acao`
+  - `modelo`
+  - `registro_id`
+  - `usuario`
+  - `data_hora`
+  - `campos_alterados` com `before/after`
+- Ajustes futuros provaveis antes da implementacao da frente:
+  - ampliar vocabulario para eventos de `exportacao`
+  - garantir rotulos adequados para `tabela`, `coluna`, `linha`, `formula` e `totalizador`
+  - decidir se eventos muito frequentes de edicao tabular entram em log por linha, por lote ou por celula
+- A implementacao da auditoria pode entrar em microetapa propria ou ser acoplada a cada fluxo estrutural, conforme decisao futura, mas a estrategia de snapshot/diff deve ser preservada.
+
+###### Riscos tecnicos da modelagem
+
+- modelagem dinamica ampla demais
+- valores tipados dificeis de buscar se a governanca dos slots for frouxa
+- totalizadores pesados em tabelas maiores
+- auditoria volumosa
+- formulas dificeis de validar
+- performance com ate 5.000 linhas x 30 colunas
+- crescimento futuro para planilha livre
+- vinculo indevido com financeiro oficial
+
+###### Decisao desta SPEC
+
+- A modelagem recomendada nesta microetapa e:
+  - modelo hibrido controlado com entidades explicitas e valor por celula em slots tipados
+- Esta recomendacao ainda precisa de aprovacao antes de virar `model` e `migration`.
+- Se aprovada, a proxima microetapa tecnica pode ser a implementacao minima da estrutura de dados.
+- Mesmo com aprovacao estrutural, a primeira implementacao nao deve incluir formula guiada completa; a camada de formulas continua como etapa sensivel posterior.
+
 #### Microetapa 3 - implementacao minima da estrutura de dados do MVP
 
 - Objetivo:
   - abrir a primeira etapa funcional apenas da base estrutural, apos SPEC tecnica aprovada.
 - Escopo:
   - criar entidades minimas de tabela, coluna, linha e valor;
-  - manter formulas mais sensiveis e integracoes fora desta primeira modelagem.
+  - manter formulas mais sensiveis e integracoes fora desta primeira modelagem;
+  - nao incluir formula guiada completa nesta primeira implementacao estrutural.
 - Arquivos provaveis a consultar:
   - `financeiro/models.py`;
   - `financeiro/migrations/`;

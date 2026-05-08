@@ -82,9 +82,15 @@ Data de atualizacao: 2026-05-08
   - exportacao XLSX ja padronizada por views dedicadas e helpers proprios em `financeiro/views.py`
   - padroes de listagem/formulario mais proximos do futuro uso ja existem nos cadastros auxiliares do `financeiro`
   - recomendacao tecnica futura: manter a frente dentro do app `financeiro`, mas em arquivos e rotas proprios, sem entrar no miolo de `LancamentoFinanceiro`
+- SPEC tecnica de modelagem de dados agora registrada com esta direcao:
+  - entidades explicitas de tabela, coluna, linha, valor, formula e totalizador
+  - estrategia preferencial de persistencia = modelo hibrido controlado
+  - valor por celula com slots tipados, evitando JSON livre por linha
+  - reaproveitamento conceitual da auditoria atual por snapshot/diff
+  - formulas continuam fora da primeira implementacao estrutural completa
 - classificacao documental atualizada desta frente:
   - implementar agora: nenhuma (etapa documental)
-  - pendencia proxima: abrir a SPEC tecnica de modelagem de dados antes de qualquer `model` ou `migration`
+  - pendencia proxima: validar/aprovar a SPEC tecnica de modelagem e, se aprovada, abrir a implementacao minima da estrutura de dados
   - backlog/futuro: agrupamentos por opcao, filtros avancados/compostos, visoes salvas, arrastar-e-soltar, importacao assistida e exemplos/templates
   - fora de escopo: planilha livre estilo Excel, integracao escrevente com financeiro e modelagem definitiva de banco nesta fase
   - risco a monitorar: perda de governanca e desvio da frente para comportamento de planilha livre

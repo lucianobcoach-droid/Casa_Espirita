@@ -2,6 +2,39 @@
 
 Data: 2026-05-08
 
+## Microetapa documental: SPEC tecnica de modelagem de dados de tabelas configuraveis
+
+- etapa documental e tecnica, sem implementacao funcional
+- confirmei antes de alterar:
+  - branch `feat/reinicio-financeiro`
+  - arvore limpa
+  - ausencia de commits locais pendentes
+  - ausencia de commits remotos pendentes
+  - `fetch` concluido sem erro
+- auditei `financeiro/models.py`, `financeiro/views.py`, `financeiro/forms.py`, `financeiro/permissoes.py`, `configuracoes/models.py`, `configuracoes/permissoes.py` e `docs/MATRIZ_PERMISSOES.md` para propor a modelagem futura
+- consolidei a SPEC tecnica documental da frente com:
+  - entidades candidatas de tabela, coluna, linha, valor, formula, totalizador, auditoria e permissoes
+  - comparacao entre EAV por celula, JSON por linha, colunas tipadas separadas e modelo hibrido
+  - recomendacao de modelo hibrido controlado, com valor por celula em slots tipados
+  - descarte de `JSON por linha` como estrategia inicial
+  - registro de que a primeira implementacao estrutural futura nao deve incluir formula guiada completa
+- direcao tecnica consolidada:
+  - manter a frente dentro do app `financeiro`, mas desacoplada de `LancamentoFinanceiro`
+  - reaproveitar o padrao atual de auditoria por snapshot/diff como base conceitual
+  - manter permissoes no formato `modulo.recurso.acao`, sem criar permissao executavel nesta etapa
+- baixa documental consolidada:
+  - microetapa 2 do backlog tecnico incremental concluida
+  - pendencia proxima movida para aprovacao da modelagem e eventual abertura da implementacao minima da estrutura de dados
+- confirmado nesta microetapa:
+  - alteracao restrita a documentos
+  - sem Python
+  - sem templates
+  - sem JS/CSS
+  - sem model
+  - sem migration
+  - sem banco
+  - sem impacto em calculos, saldos, relatorios ou lancamentos reais
+
 ## Microetapa documental: auditoria tecnica preparatoria de tabelas configuraveis
 
 - etapa de auditoria tecnica sem implementacao funcional
