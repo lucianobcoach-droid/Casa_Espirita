@@ -4,7 +4,7 @@ Data: 2026-05-08
 
 ## 0.21. SPEC funcional inicial: construtor de tabelas personalizadas configuraveis
 
-Status consolidado: SPEC FUNCIONAL DOCUMENTAL CONSOLIDADA / BACKLOG
+Status consolidado: SPEC FUNCIONAL DOCUMENTAL CONSOLIDADA / BACKLOG TECNICO INCREMENTAL PLANEJADO
 
 ### Classificacao da frente
 
@@ -817,6 +817,435 @@ Status consolidado: SPEC FUNCIONAL DOCUMENTAL CONSOLIDADA / BACKLOG
   - a experiencia de formulas guiadas ficar confusa para usuaria nao tecnica;
   - a distincao entre preencher linhas e alterar estrutura/permissoes ficar fraca.
   - a frente nascer visualmente perto demais de relatorios ou lancamentos e confundir seu papel.
+
+### Backlog tecnico incremental do MVP
+
+#### Guardrails transversais do backlog
+
+- A primeira microetapa tecnica futura deve ser auditoria tecnica preparatoria, e nao implementacao.
+- A modelagem de dados deve vir em SPEC tecnica propria antes de qualquer `model` ou `migration`.
+- Qualquer alteracao em banco real exige cuidado, backup e autorizacao explicita.
+- Arquivos SQLite nao devem ser versionados.
+- A frente continua sem integracao escrevente com o financeiro oficial.
+- Enquanto este backlog estiver apenas documental:
+  - nao criar `model`;
+  - nao criar `migration`;
+  - nao alterar Python;
+  - nao alterar templates;
+  - nao alterar JS/CSS;
+  - nao alterar banco.
+
+#### Microetapa 1 - auditoria tecnica preparatoria da base atual
+
+- Objetivo:
+  - mapear por onde a frente entraria com seguranca no codigo atual.
+- Escopo:
+  - auditar menu/topbar do financeiro;
+  - auditar padrao atual de permissoes;
+  - auditar trilha de auditoria existente;
+  - auditar padroes atuais de exportacao XLSX;
+  - auditar padroes de views, templates e listagens reutilizaveis;
+  - registrar achados e riscos sem alterar comportamento.
+- Arquivos provaveis a consultar:
+  - `financeiro/base.html`;
+  - `configuracoes/permissoes.py`;
+  - `docs/MATRIZ_PERMISSOES.md`;
+  - views/templates/listagens do `financeiro`;
+  - pontos atuais de exportacao XLSX e auditoria do modulo.
+- Risco:
+  - mapear de forma incompleta e abrir implementacao em superficie errada.
+- Envolve model/migration/banco:
+  - nao.
+- Validacoes esperadas:
+  - confirmacao documental de pontos de entrada, permissoes e padroes reaproveitaveis;
+  - ausencia total de diff funcional.
+- Dependencias anteriores:
+  - SPEC funcional, operacional, UX e navegacao ja fechadas.
+- Fora de escopo:
+  - implementacao;
+  - proposta definitiva de banco;
+  - criacao de permissao ou menu real.
+
+#### Microetapa 2 - SPEC tecnica de modelagem de dados
+
+- Objetivo:
+  - propor modelos candidatos e relacoes do MVP antes de qualquer `migration`.
+- Escopo:
+  - avaliar entidades candidatas de tabela, coluna, linha, valor, formula, totalizador, auditoria e permissoes;
+  - avaliar riscos de EAV, JSON e dados tipados;
+  - comparar alternativas e registrar recorte recomendado do MVP.
+- Arquivos provaveis a consultar:
+  - `financeiro/models.py`;
+  - modelos existentes de auditoria/permissao;
+  - documentos oficiais desta frente.
+- Risco:
+  - antecipar modelagem definitiva sem auditoria tecnica suficiente;
+  - escolher estrutura flexivel demais e aproximar a frente de uma planilha livre.
+- Envolve model/migration/banco:
+  - nao.
+- Validacoes esperadas:
+  - SPEC tecnica aprovada documentalmente;
+  - lista clara do que fica para depois da primeira modelagem.
+- Dependencias anteriores:
+  - microetapa 1 concluida.
+- Fora de escopo:
+  - `model`;
+  - `migration`;
+  - alteracao de banco real.
+
+#### Microetapa 3 - implementacao minima da estrutura de dados do MVP
+
+- Objetivo:
+  - abrir a primeira etapa funcional apenas da base estrutural, apos SPEC tecnica aprovada.
+- Escopo:
+  - criar entidades minimas de tabela, coluna, linha e valor;
+  - manter formulas mais sensiveis e integracoes fora desta primeira modelagem.
+- Arquivos provaveis a consultar:
+  - `financeiro/models.py`;
+  - `financeiro/migrations/`;
+  - testes do modulo financeiro.
+- Risco:
+  - criar base cedo demais ou ampla demais;
+  - endurecer modelagem antes de validar recorte minimo.
+- Envolve model/migration/banco:
+  - sim.
+- Validacoes esperadas:
+  - `makemigrations --check --dry-run`;
+  - testes dirigidos da nova estrutura;
+  - confirmacao de que nao ha impacto em calculos, saldos e relatorios.
+- Dependencias anteriores:
+  - microetapa 2 aprovada.
+- Fora de escopo:
+  - formulas guiadas;
+  - integracao com financeiro oficial;
+  - exportacao XLSX completa;
+  - UX refinada.
+
+#### Microetapa 4 - permissoes e menu da frente
+
+- Objetivo:
+  - encaixar a frente na governanca de acesso e na navegacao do modulo.
+- Escopo:
+  - criar permissoes do recurso;
+  - posicionar `Financeiro > Controles internos > Tabelas personalizadas`;
+  - separar visualizar, criar, editar estrutura, configurar formula, preencher linhas, exportar e arquivar/restaurar.
+- Arquivos provaveis a consultar:
+  - `docs/MATRIZ_PERMISSOES.md`;
+  - camada de permissoes em `configuracoes`;
+  - shell/menu do `financeiro`.
+- Risco:
+  - expor menu sem enforcement backend;
+  - misturar perfil de preenchimento com perfil de estrutura.
+- Envolve model/migration/banco:
+  - pode envolver permissao/migration apenas se a SPEC tecnica ja estiver aprovada para isso.
+- Validacoes esperadas:
+  - menu condicionado por permissao;
+  - protecao backend coerente com a matriz.
+- Dependencias anteriores:
+  - microetapa 1;
+  - preferencialmente apos microetapa 3 quando a frente ja tiver base funcional minima.
+- Fora de escopo:
+  - integrações com financeiro;
+  - refinamentos amplos de UX.
+
+#### Microetapa 5 - listagem de tabelas personalizadas
+
+- Objetivo:
+  - entregar a tela inicial da frente.
+- Escopo:
+  - listagem de tabelas;
+  - busca por nome;
+  - filtro por status;
+  - ordenacao simples.
+- Arquivos provaveis a consultar:
+  - views/listagens do `financeiro`;
+  - templates de listagem ja consolidados no modulo.
+- Risco:
+  - herdar padrao visual que aproxime a frente de lancamentos financeiros.
+- Envolve model/migration/banco:
+  - nao, assumindo estrutura minima ja existente.
+- Validacoes esperadas:
+  - permissao de visualizacao;
+  - navegacao correta pelo menu;
+  - ausencia de mistura com lancamentos e relatorios financeiros.
+- Dependencias anteriores:
+  - microetapas 3 e 4.
+- Fora de escopo:
+  - edicao de colunas;
+  - preenchimento de linhas;
+  - formulas.
+
+#### Microetapa 6 - cadastro e edicao da tabela
+
+- Objetivo:
+  - permitir criar e manter metadados da tabela.
+- Escopo:
+  - nome;
+  - descricao;
+  - status;
+  - ordem, se mantida no recorte final.
+- Arquivos provaveis a consultar:
+  - formularios e views de cadastro do `financeiro`;
+  - padroes de validacao e mensagens do modulo.
+- Risco:
+  - confundir metadado de tabela com configuracao estrutural mais profunda.
+- Envolve model/migration/banco:
+  - nao, assumindo estrutura minima ja existente.
+- Validacoes esperadas:
+  - criacao/edicao sem impacto em outras frentes;
+  - redirecionamento coerente para configuracao de colunas.
+- Dependencias anteriores:
+  - microetapas 3, 4 e 5.
+- Fora de escopo:
+  - colunas;
+  - linhas;
+  - formulas.
+
+#### Microetapa 7 - configuracao de colunas
+
+- Objetivo:
+  - abrir a camada de estrutura configuravel da tabela.
+- Escopo:
+  - criar, editar, reordenar, ocultar e arquivar coluna;
+  - nome, tipo, obrigatoria, visivel, ordem;
+  - comum ou calculada.
+- Arquivos provaveis a consultar:
+  - formularios estruturais do `financeiro`;
+  - templates de configuracao/listagem ordenavel.
+- Risco:
+  - abrir liberdade demais sem validacao por tipo;
+  - permitir alteracao insegura de coluna depois de uso real.
+- Envolve model/migration/banco:
+  - nao, assumindo base estrutural aprovada.
+- Validacoes esperadas:
+  - persistencia da ordem;
+  - respeito ao tipo de coluna;
+  - bloqueio de acoes inseguras em colunas dependentes.
+- Dependencias anteriores:
+  - microetapa 6.
+- Fora de escopo:
+  - formula guiada completa;
+  - totalizadores;
+  - exportacao final.
+
+#### Microetapa 8 - linhas e valores editaveis
+
+- Objetivo:
+  - abrir a grade operacional de dados do MVP.
+- Escopo:
+  - tela tabular;
+  - adicionar linha;
+  - editar linha;
+  - arquivar ou excluir logicamente linha;
+  - validar valor por tipo de dado.
+- Arquivos provaveis a consultar:
+  - templates tabulares do modulo;
+  - views/formularios de edicao em lote ou grade.
+- Risco:
+  - UX pesada demais;
+  - validacao fraca por tipo;
+  - aproximacao visual de planilha livre.
+- Envolve model/migration/banco:
+  - nao, assumindo estrutura minima aprovada.
+- Validacoes esperadas:
+  - respeito a obrigatoriedade e tipos;
+  - colunas calculadas somente leitura, quando existirem;
+  - arquivamento logico funcional.
+- Dependencias anteriores:
+  - microetapa 7.
+- Fora de escopo:
+  - filtros avancados;
+  - formulas livres;
+  - importacao em massa.
+
+#### Microetapa 9 - totalizadores controlados por coluna
+
+- Objetivo:
+  - adicionar leitura consolidada minima do MVP sem abrir formula livre.
+- Escopo:
+  - soma, media, minimo, maximo e contagem;
+  - `data` com `minimo` e `maximo` somente se configurado;
+  - `sim/nao` e `lista de opcoes` com contagem simples total;
+  - sem agrupamento por opcao no MVP.
+- Arquivos provaveis a consultar:
+  - listagens e componentes de rodape do `financeiro`;
+  - exportacoes atuais para coerencia de apresentacao.
+- Risco:
+  - transformar totalizador em mini-engine de formula;
+  - gerar expectativa de analitico avancado cedo demais.
+- Envolve model/migration/banco:
+  - nao necessariamente.
+- Validacoes esperadas:
+  - totalizadores corretos por tipo elegivel;
+  - ausencia de expressao livre;
+  - nenhuma interferencia em calculos financeiros oficiais.
+- Dependencias anteriores:
+  - microetapa 8.
+- Fora de escopo:
+  - agrupamentos por opcao;
+  - dashboards;
+  - filtros compostos.
+
+#### Microetapa 10 - busca textual simples na tela de linhas
+
+- Objetivo:
+  - facilitar consulta operacional basica sem abrir filtros avancados.
+- Escopo:
+  - busca textual sobre valores visiveis/editaveis;
+  - manter fora do MVP filtros compostos e visoes salvas.
+- Arquivos provaveis a consultar:
+  - padroes de busca textual em listagens do `financeiro`.
+- Risco:
+  - busca cara ou ambigua em estrutura dinamica;
+  - pressao para evoluir cedo demais para filtro avancado.
+- Envolve model/migration/banco:
+  - nao necessariamente.
+- Validacoes esperadas:
+  - busca simples coerente com colunas visiveis;
+  - sem regressao de performance basica do recorte.
+- Dependencias anteriores:
+  - microetapa 8.
+- Fora de escopo:
+  - filtros avancados;
+  - busca por tipo especifico;
+  - visoes salvas.
+
+#### Microetapa 11 - exportacao XLSX
+
+- Objetivo:
+  - disponibilizar saida documental do controle interno.
+- Escopo:
+  - exportar tabela visivel;
+  - cabecalhos, linhas visiveis e formatacao basica;
+  - incluir colunas calculadas pelo valor resultante, quando existirem;
+  - incluir totalizadores visiveis no rodape;
+  - registrar evento de exportacao na auditoria.
+- Arquivos provaveis a consultar:
+  - exportacoes XLSX existentes do `financeiro`;
+  - pontos de auditoria e views de download.
+- Risco:
+  - exportacao ser confundida com integracao financeira;
+  - perda de consistencia entre tela e arquivo.
+- Envolve model/migration/banco:
+  - nao necessariamente.
+- Validacoes esperadas:
+  - arquivo coerente com a tela;
+  - formatacao basica por tipo;
+  - evento auditavel registrado.
+- Dependencias anteriores:
+  - microetapas 8 e 9.
+- Fora de escopo:
+  - importacao em massa;
+  - sincronizacao com financeiro oficial.
+
+#### Microetapa 12 - formulas guiadas por coluna
+
+- Objetivo:
+  - abrir a parte mais sensivel da frente de forma isolada e controlada.
+- Escopo:
+  - formula aplicada a coluna inteira;
+  - sem formula celula por celula;
+  - sem formula livre estilo Excel;
+  - apenas colunas da mesma linha;
+  - operadores e funcoes por whitelist;
+  - bloqueio de dependencias inseguras.
+- Arquivos provaveis a consultar:
+  - camada estrutural da tabela;
+  - validacoes de backend;
+  - UX/documentacao da frente.
+- Risco:
+  - virar vetor para comportamento de planilha livre;
+  - criar dependencia circular ou regra dificil de auditar.
+- Envolve model/migration/banco:
+  - possivelmente ajustes de estrutura, conforme SPEC tecnica aprovada.
+- Validacoes esperadas:
+  - bloqueio de referencia circular;
+  - bloqueio de referencia entre tabelas;
+  - bloqueio de codigo executavel;
+  - calculo restrito a whitelist.
+- Dependencias anteriores:
+  - microetapas 2, 7 e 8.
+- Fora de escopo:
+  - macros;
+  - scripts;
+  - referencias livres;
+  - escrita em outras tabelas ou no financeiro.
+
+#### Microetapa 13 - auditoria operacional
+
+- Objetivo:
+  - fechar rastreabilidade minima da frente.
+- Escopo:
+  - auditar tabela, coluna, formula, linha e exportacao;
+  - registrar usuario, data/hora, acao e antes/depois quando aplicavel.
+- Arquivos provaveis a consultar:
+  - implementacoes de auditoria ja existentes no `financeiro`;
+  - camada de views sensiveis da nova frente.
+- Risco:
+  - abrir estrutura flexivel sem trilha suficiente;
+  - dificultar suporte e governanca depois da homologacao.
+- Envolve model/migration/banco:
+  - possivelmente, conforme padrao de auditoria adotado.
+- Validacoes esperadas:
+  - eventos principais auditados;
+  - leitura coerente do historico.
+- Dependencias anteriores:
+  - microetapa 1;
+  - e, para cobertura completa, apos microetapas 6 a 12 conforme o recorte auditado.
+- Fora de escopo:
+  - desfazer/restaurar;
+  - auditoria acionavel transversal completa.
+
+#### Microetapa 14 - refinamento visual e UX do MVP
+
+- Objetivo:
+  - garantir que a frente pareca um controle interno governado, e nao um Excel livre.
+- Escopo:
+  - reforcar diferenca visual para financeiro oficial;
+  - revisar mensagens, estados vazios e navegacao;
+  - ajustar hierarquia entre estrutura, linhas, totalizadores e exportacao.
+- Arquivos provaveis a consultar:
+  - templates e componentes visuais da nova frente;
+  - padroes de UX consolidados do `financeiro`.
+- Risco:
+  - a base funcional nascer correta, mas a experiencia induzir uso errado.
+- Envolve model/migration/banco:
+  - nao.
+- Validacoes esperadas:
+  - leitura clara de controle interno;
+  - ausencia de aparencia de planilha livre;
+  - navegacao compreensivel entre listagem, estrutura e linhas.
+- Dependencias anteriores:
+  - microetapas 5 a 13 conforme o recorte implementado.
+- Fora de escopo:
+  - reabertura da modelagem;
+  - dashboards avancados.
+
+#### Microetapa 15 - homologacao com massa de teste
+
+- Objetivo:
+  - validar o MVP com cenarios internos controlados antes de qualquer uso real sensivel.
+- Escopo:
+  - criar exemplos de controles internos;
+  - validar criacao de tabelas, colunas, linhas, totalizadores, busca e exportacao;
+  - evitar uso de banco real sem autorizacao e backup.
+- Arquivos provaveis a consultar:
+  - massa de teste controlada;
+  - testes automatizados e documentos de uso da frente.
+- Risco:
+  - homologar cedo demais com massa irreal;
+  - contaminar base real sem backup.
+- Envolve model/migration/banco:
+  - sim, no sentido de uso da estrutura implementada; qualquer uso em base real depende de autorizacao.
+- Validacoes esperadas:
+  - fluxo principal do MVP validado ponta a ponta;
+  - confirmacao de ausencia de impacto em financeiro oficial.
+- Dependencias anteriores:
+  - microetapas 3 a 14, conforme recorte entregue.
+- Fora de escopo:
+  - integracao escrevente com financeiro;
+  - importacao em massa;
+  - backlog avancado da frente.
 
 ## 0.20. Especificacao funcional: tipo/disponibilidade de conta e Balancete patrimonial
 

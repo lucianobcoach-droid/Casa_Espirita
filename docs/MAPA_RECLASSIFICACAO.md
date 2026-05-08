@@ -464,6 +464,7 @@ Status apos fechamento documental desta microetapa: SPEC FUNCIONAL + OPERACIONAL
 
 Status apos fechamento documental desta microetapa: SPEC FUNCIONAL + OPERACIONAL + UX + NAVEGACAO CONSOLIDADA / BACKLOG
 Status apos fechamento documental desta microetapa: PRIMEIRO RECORTE OPERACIONAL DOCUMENTAL FECHADO / BACKLOG
+Status apos planejamento documental desta microetapa: BACKLOG TECNICO INCREMENTAL DO MVP PLANEJADO / BACKLOG
 
 Motivo:
 Foi levantada frente futura para controles configuraveis genericos, com colunas definidas pelo usuario, tipos de dado, formulas controladas por coluna e totalizadores. Deve ser tratada separadamente das correcoes imediatas do financeiro.
@@ -501,6 +502,15 @@ Consolidacao desta baixa documental:
   - reordenacao no MVP usa campo numerico `ordem`; `arrastar-e-soltar` fica para futuro
   - totalizadores aparecem somente quando configurados por coluna e, quando visiveis na tela, devem sair no rodape do XLSX
 - riscos registrados para etapa futura: alta complexidade, risco de virar "Excel dentro do sistema", limites de formula por seguranca, permissoes, trilha de auditoria, backup/exportacao e separacao entre dado operacional e financeiro oficial
+- backlog tecnico incremental agora organizado em ordem segura:
+  - primeira microetapa futura = auditoria tecnica preparatoria da base atual
+  - SPEC tecnica de modelagem antes de qualquer `model` ou `migration`
+  - implementacao estrutural minima apenas depois da SPEC tecnica aprovada
+  - permissoes/menu, listagem, cadastro, colunas, linhas, totalizadores, busca, exportacao, formulas, auditoria, UX e homologacao quebrados em microetapas futuras proprias
+- guardrails reforcados:
+  - qualquer alteracao em banco real exige backup e autorizacao
+  - arquivos SQLite nao devem ser versionados
+  - a frente continua sem integracao escrevente com o financeiro oficial
 
 Classificacao documental:
 - FRENTE FUTURA GRANDE

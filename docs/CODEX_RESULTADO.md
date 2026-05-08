@@ -2,6 +2,42 @@
 
 Data: 2026-05-08
 
+## Microetapa documental: planejamento do backlog tecnico de tabelas configuraveis
+
+- etapa exclusivamente documental, sem alteracao de codigo
+- confirmei antes de alterar:
+  - branch `feat/reinicio-financeiro`
+  - arvore limpa
+  - ausencia de commits locais pendentes
+  - ausencia de commits remotos pendentes
+  - `fetch` concluido sem erro
+- transformei a SPEC ja fechada da frente `Construtor de tabelas personalizadas configuraveis` em backlog tecnico incremental do MVP, com ordem segura de futuras microetapas
+- backlog tecnico futuro registrado:
+  - auditoria tecnica preparatoria da base atual
+  - SPEC tecnica de modelagem de dados antes de qualquer `model`/`migration`
+  - estrutura minima de dados
+  - permissoes e menu
+  - listagem, cadastro, colunas, linhas, totalizadores, busca e exportacao
+  - formulas guiadas por coluna em etapa sensivel propria
+  - auditoria operacional
+  - refinamento visual/UX
+  - homologacao com massa de teste
+- guardrails documentais reforcados:
+  - primeira etapa futura deve ser auditoria tecnica, nao implementacao
+  - modelagem de dados deve vir em SPEC propria antes de qualquer migration
+  - qualquer alteracao em banco real exige backup e autorizacao
+  - arquivos SQLite nao devem ser versionados
+  - a frente continua sem integracao escrevente com o financeiro oficial
+- confirmado nesta microetapa:
+  - alteracao restrita a documentos
+  - sem Python
+  - sem templates
+  - sem JS/CSS
+  - sem model
+  - sem migration
+  - sem banco
+  - sem impacto em calculos, saldos, relatorios ou lancamentos reais
+
 ## Microetapa documental: fechamento do primeiro recorte operacional de tabelas configuraveis
 
 - etapa exclusivamente documental, sem alteracao de codigo

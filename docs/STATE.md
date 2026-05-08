@@ -76,10 +76,31 @@ Data de atualizacao: 2026-05-08
   - sem geracao de lancamento e sem alteracao de saldo, extrato, resumo, prestacao/fechamento ou balancete
 - classificacao documental atualizada desta frente:
   - implementar agora: nenhuma (etapa documental)
-  - pendencia proxima: quebrar a SPEC fechada em backlog tecnico incremental
+  - pendencia proxima: executar auditoria tecnica preparatoria da base atual como primeira microetapa futura, sem implementacao
   - backlog/futuro: agrupamentos por opcao, filtros avancados/compostos, visoes salvas, arrastar-e-soltar, importacao assistida e exemplos/templates
   - fora de escopo: planilha livre estilo Excel, integracao escrevente com financeiro e modelagem definitiva de banco nesta fase
   - risco a monitorar: perda de governanca e desvio da frente para comportamento de planilha livre
+- backlog tecnico incremental do MVP agora registrado em ordem segura:
+  - 1) auditoria tecnica preparatoria
+  - 2) SPEC tecnica de modelagem antes de qualquer migration
+  - 3) estrutura minima de dados
+  - 4) permissoes e menu
+  - 5) listagem de tabelas
+  - 6) cadastro e edicao da tabela
+  - 7) configuracao de colunas
+  - 8) linhas e valores editaveis
+  - 9) totalizadores por coluna
+  - 10) busca textual simples
+  - 11) exportacao XLSX
+  - 12) formulas guiadas por coluna
+  - 13) auditoria operacional
+  - 14) refinamento visual e UX
+  - 15) homologacao com massa de teste
+- guardrails adicionais consolidados para a fila futura:
+  - modelagem de dados em SPEC propria antes de `model` e `migration`
+  - qualquer alteracao em banco real exige backup e autorizacao
+  - arquivos SQLite nao devem ser versionados
+  - a frente segue sem integracao escrevente com o financeiro oficial
 
 ## Validacao da alocacao de competencias no lancamento simples
 
