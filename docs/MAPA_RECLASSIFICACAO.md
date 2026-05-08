@@ -469,6 +469,7 @@ Status apos auditoria tecnica preparatoria desta microetapa: AUDITORIA TECNICA P
 Status apos SPEC tecnica desta microetapa: SPEC TECNICA DE MODELAGEM CONSOLIDADA / BACKLOG
 Status apos implementacao desta microetapa: ESTRUTURA MINIMA DE DADOS IMPLEMENTADA / BACKLOG
 Status apos implementacao desta microetapa: PERMISSOES EXECUTAVEIS DA FRENTE IMPLEMENTADAS / BACKLOG
+Status apos implementacao desta microetapa: MENU REAL + LISTAGEM MINIMA SOMENTE LEITURA IMPLEMENTADOS / BACKLOG
 
 Motivo:
 Foi levantada frente futura para controles configuraveis genericos, com colunas definidas pelo usuario, tipos de dado, formulas controladas por coluna e totalizadores. Deve ser tratada separadamente das correcoes imediatas do financeiro.
@@ -549,6 +550,15 @@ Consolidacao desta baixa documental:
 - reclassificacao da pendencia proxima apos a camada de permissao:
   - deixa de ser `permissoes e menu da frente`
   - passa a ser `menu real + listagem minima da frente`, ja apoiados pelas permissoes executaveis e sem link quebrado
+- consolidacao do menu real e da listagem minima:
+  - rota criada dentro do app `financeiro`
+  - `ListView` protegida por `financeiro.tabelas_personalizadas.visualizar`
+  - template minimo de leitura criado sem links quebrados
+  - item de menu criado em `Controles internos`, isolado do financeiro oficial
+  - sem criacao/edicao, sem colunas, sem linhas, sem formulas, sem totalizadores e sem exportacao nesta etapa
+- reclassificacao da pendencia proxima apos a listagem minima:
+  - deixa de ser `menu real + listagem minima da frente`
+  - passa a ser `cadastro inicial da tabela personalizada` ou `refinamento seguro da listagem`, conforme prioridade da proxima microetapa
 - guardrails reforcados:
   - qualquer alteracao em banco real exige backup e autorizacao
   - arquivos SQLite nao devem ser versionados

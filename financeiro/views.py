@@ -18,7 +18,7 @@ from django.contrib import messages
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db import transaction
-from django.db.models import Q, Sum
+from django.db.models import Count, Q, Sum
 from django.db.models.functions import Coalesce
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
@@ -49,10 +49,15 @@ from .models import (
     LancamentoFinanceiro,
     PessoaFinanceira,
     RegraLancamentoFinanceiro,
+    TabelaPersonalizada,
     TipoContaFinanceira,
     normalizar_nome_pessoa_financeira,
 )
-from .permissoes import FinanceiroPermissaoMixin, usuario_possui_permissao
+from .permissoes import (
+    FinanceiroPermissaoMixin,
+    PermissoesTabelasPersonalizadas,
+    usuario_possui_permissao,
+)
 
 
 LANCAMENTO_ORDENACOES_LISTAGEM = {
@@ -8101,6 +8106,36 @@ class CategoriaFinanceiraCreateView(FinanceiroFormMixin, CreateView):
                 },
             )
         return super().get_success_url()
+
+
+class TabelaPersonalizadaListView(FinanceiroPermissaoMixin, ListView):
+    permissao_requerida = PermissoesTabelasPersonalizadas.VISUALIZAR
+    model = TabelaPersonalizada
+    template_name = 'financeiro/tabela_personalizada_list.html'
+    context_object_name = 'tabelas_personalizadas'
+
+    def get_queryset(self):
+        queryset = super().get_queryset().annotate(
+            quantidade_colunas=Count('colunas', distinct=True),
+            quantidade_linhas=Count('linhas', distinct=True),
+        )
+        nome = self.request.GET.get('nome', '').strip()
+        status = self.request.GET.get('status', '').strip()
+        status_validos = {valor for valor, _rotulo in TabelaPersonalizada.StatusTabela.choices}
+
+        if nome:
+            queryset = queryset.filter(nome__icontains=nome)
+        if status in status_validos:
+            queryset = queryset.filter(status=status)
+
+        return queryset.order_by('ordem', 'nome', 'pk')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['status_choices'] = TabelaPersonalizada.StatusTabela.choices
+        context['filtro_nome'] = self.request.GET.get('nome', '').strip()
+        context['filtro_status'] = self.request.GET.get('status', '').strip()
+        return context
 
 
 class CategoriaFinanceiraUpdateView(FinanceiroFormMixin, UpdateView):

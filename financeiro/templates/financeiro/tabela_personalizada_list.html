@@ -1,0 +1,197 @@
+{% extends 'financeiro/base.html' %}
+{% block title %}Tabelas personalizadas{% endblock %}
+{% block content %}
+<style>
+    .financeiro-tabela-personalizada-page {
+        display: grid;
+        gap: 0.9rem;
+    }
+
+    .financeiro-tabela-personalizada-card {
+        border: 1px solid rgba(203, 213, 225, 0.85);
+        border-radius: 1rem;
+        background: #fff;
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.045);
+        overflow: hidden;
+    }
+
+    .financeiro-tabela-personalizada-card .filters-box {
+        margin-bottom: 0;
+        padding: 0.8rem 0.95rem 0.9rem;
+        border: 0;
+        border-bottom: 1px solid #edf2f7;
+        border-radius: 0;
+        background: linear-gradient(180deg, #fbfcfe 0%, #f8fafc 100%);
+    }
+
+    .financeiro-tabela-personalizada-note {
+        padding: 0.85rem 0.95rem;
+        border-bottom: 1px solid #edf2f7;
+        background: linear-gradient(180deg, rgba(239, 246, 255, 0.9) 0%, rgba(248, 250, 252, 0.9) 100%);
+        color: #334155;
+    }
+
+    .financeiro-tabela-personalizada-note strong {
+        color: #153a73;
+    }
+
+    .financeiro-tabela-personalizada-table-wrap {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+    }
+
+    .financeiro-tabela-personalizada-table {
+        margin-bottom: 0;
+    }
+
+    .financeiro-tabela-personalizada-table td,
+    .financeiro-tabela-personalizada-table th {
+        vertical-align: middle;
+    }
+
+    .financeiro-tabela-personalizada-description {
+        color: #475569;
+    }
+
+    .financeiro-tabela-personalizada-description.is-empty {
+        color: #94a3b8;
+    }
+
+    .financeiro-tabela-personalizada-status {
+        display: inline-flex;
+        align-items: center;
+        min-height: 1.6rem;
+        padding: 0.15rem 0.55rem;
+        border-radius: 999px;
+        background: #f3f6fb;
+        color: #475569;
+        font-size: 0.72rem;
+        font-weight: 700;
+        line-height: 1.1;
+    }
+
+    .financeiro-tabela-personalizada-status.is-active {
+        background: rgba(47, 133, 90, 0.12);
+        color: #236746;
+    }
+
+    .financeiro-tabela-personalizada-status.is-inactive {
+        background: rgba(180, 83, 9, 0.12);
+        color: #9a3412;
+    }
+
+    .financeiro-tabela-personalizada-status.is-archived {
+        background: rgba(100, 116, 139, 0.14);
+        color: #475569;
+    }
+
+    .financeiro-tabela-personalizada-count {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 2.1rem;
+        min-height: 1.75rem;
+        padding: 0.15rem 0.55rem;
+        border-radius: 999px;
+        background: #eff6ff;
+        color: #1d4ed8;
+        font-size: 0.78rem;
+        font-weight: 700;
+        line-height: 1.1;
+    }
+
+    .financeiro-tabela-personalizada-empty {
+        color: #64748b;
+    }
+</style>
+
+<div class="financeiro-tabela-personalizada-page">
+    <div class="financeiro-page-header financeiro-page-head">
+        <div class="financeiro-page-header-main">
+            <h1 class="title financeiro-page-title">Tabelas personalizadas</h1>
+            <p class="subtitle is-6 mb-0">
+                Area de controles internos configuraveis, sem efeito sobre lancamentos financeiros oficiais.
+            </p>
+        </div>
+    </div>
+
+    <section class="financeiro-tabela-personalizada-card">
+        <form method="get" class="filters-box no-print">
+            <div class="columns is-multiline">
+                <div class="column is-12-mobile is-6-tablet is-5-desktop">
+                    <label class="label">Nome</label>
+                    <input class="input" type="text" name="nome" value="{{ filtro_nome }}" placeholder="Buscar por nome">
+                </div>
+                <div class="column is-12-mobile is-6-tablet is-5-desktop">
+                    <label class="label">Status</label>
+                    <div class="select is-fullwidth">
+                        <select name="status">
+                            <option value="">Todos</option>
+                            {% for valor, rotulo in status_choices %}
+                            <option value="{{ valor }}" {% if filtro_status == valor %}selected{% endif %}>{{ rotulo }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="column is-12-mobile is-12-tablet is-2-desktop">
+                    <label class="label">&nbsp;</label>
+                    <div class="buttons">
+                        <button class="button is-link is-fullwidth" type="submit">Filtrar</button>
+                        <a class="button is-light is-fullwidth" href="{% url 'financeiro:tabela-personalizada-list' %}">Limpar</a>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+        <div class="financeiro-tabela-personalizada-note">
+            <strong>Recorte atual:</strong>
+            esta tela entrega apenas leitura basica das tabelas existentes. Criacao, estrutura, linhas e formulas entram nas proximas microetapas.
+        </div>
+
+        <div class="financeiro-tabela-personalizada-table-wrap">
+            <table class="table is-fullwidth is-hoverable financeiro-table financeiro-tabela-personalizada-table">
+                <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Descricao</th>
+                    <th>Status</th>
+                    <th>Colunas</th>
+                    <th>Linhas</th>
+                    <th>Ultima atualizacao</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for tabela in tabelas_personalizadas %}
+                    <tr>
+                        <td>{{ tabela.nome }}</td>
+                        <td>
+                            {% if tabela.descricao %}
+                                <span class="financeiro-tabela-personalizada-description">{{ tabela.descricao|truncatechars:110 }}</span>
+                            {% else %}
+                                <span class="financeiro-tabela-personalizada-description is-empty">Nao informada</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="financeiro-tabela-personalizada-status{% if tabela.status == 'ativa' %} is-active{% elif tabela.status == 'inativa' %} is-inactive{% else %} is-archived{% endif %}">
+                                {{ tabela.get_status_display }}
+                            </span>
+                        </td>
+                        <td><span class="financeiro-tabela-personalizada-count">{{ tabela.quantidade_colunas }}</span></td>
+                        <td><span class="financeiro-tabela-personalizada-count">{{ tabela.quantidade_linhas }}</span></td>
+                        <td>{{ tabela.atualizado_em|date:'d/m/Y H:i' }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6" class="financeiro-tabela-personalizada-empty">
+                            Nenhuma tabela personalizada cadastrada ate o momento.
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+{% endblock %}

@@ -1518,6 +1518,23 @@ Status consolidado: SPEC FUNCIONAL DOCUMENTAL CONSOLIDADA / BACKLOG TECNICO INCR
   - edicao de colunas;
   - preenchimento de linhas;
   - formulas.
+- Resultado consolidado desta microetapa:
+  - rota criada em `controles-internos/tabelas-personalizadas/` com name `financeiro:tabela-personalizada-list`
+  - listagem minima em `ListView`, protegida por `financeiro.tabelas_personalizadas.visualizar`
+  - template proprio criado apenas para leitura de:
+    - nome
+    - descricao curta
+    - status
+    - quantidade de colunas
+    - quantidade de linhas
+    - ultima atualizacao
+  - filtros simples entregues:
+    - busca por nome
+    - filtro por status
+  - menu real entregue em `Financeiro > Controles internos > Tabelas personalizadas`, visivel apenas para quem tem a permissao de visualizar
+  - sem acoes quebradas de criacao, edicao, estrutura, linhas, formulas, totalizadores ou exportacao
+- Proxima microetapa recomendada:
+  - abrir o cadastro inicial da tabela personalizada ou, se preferir um passo ainda mais seguro, refinar a listagem com ordenacao/contagem/paginacao antes de abrir escrita
 
 #### Microetapa 6 - cadastro e edicao da tabela
 

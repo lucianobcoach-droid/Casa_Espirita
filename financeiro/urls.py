@@ -67,6 +67,7 @@ from .views import (
     PrestacaoContasFinanceiroView,
     ResumoFinanceiroView,
     RegraLancamentoFinanceiroSugestaoView,
+    TabelaPersonalizadaListView,
 )
 
 app_name = 'financeiro'
@@ -85,6 +86,11 @@ urlpatterns = [
     path('resumo/', ResumoFinanceiroView.as_view(), name='resumo'),
     path('frequencia-competencias/', FrequenciaCompetenciasView.as_view(), name='frequencia-competencias'),
     path('evolucao-categorias/', EvolucaoCategoriasFinanceiroView.as_view(), name='evolucao-categorias'),
+    path(
+        'controles-internos/tabelas-personalizadas/',
+        TabelaPersonalizadaListView.as_view(),
+        name='tabela-personalizada-list',
+    ),
     path('autocomplete/pessoas/', PessoaFinanceiraAutocompleteView.as_view(), name='autocomplete-pessoa'),
     path(
         'historico/pessoas/<int:pessoa_id>/ultimos-lancamentos/',

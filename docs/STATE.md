@@ -104,16 +104,23 @@ Data de atualizacao: 2026-05-08
     - `consulta-visualizacao` com `visualizar` e `exportar`
   - separacao explicita entre `editar_estrutura` e `configurar_formula`
   - menu real ainda adiado para a proxima microetapa, evitando link quebrado antes da listagem minima
+- menu real + listagem minima somente leitura agora implementados com:
+  - rota `financeiro:tabela-personalizada-list` em `controles-internos/tabelas-personalizadas/`
+  - `ListView` protegida por `financeiro.tabelas_personalizadas.visualizar`
+  - template proprio de leitura basica das tabelas existentes
+  - filtros simples por nome e status
+  - grupo `Controles internos` no menu do `financeiro`, sem mistura com `Lancamentos`, `Extrato`, `Resumo`, `Prestacao/Fechamento` ou `Balancete`
+  - exposicao apenas de nome, descricao curta, status, quantidade de colunas, quantidade de linhas e ultima atualizacao
 - limites desta implementacao estrutural:
   - sem `FormulaColunaPersonalizada`
   - sem `TotalizadorColunaPersonalizada`
-  - sem menu, views, urls, templates ou forms
+  - sem forms de criacao/edicao
   - sem auditoria operacional propria da nova frente
   - sem exportacao XLSX da nova frente
   - sem integracao com financeiro oficial
 - classificacao documental atualizada desta frente:
-  - implementar agora: estrutura minima de dados e permissoes executaveis concluidas
-  - pendencia proxima: abrir microetapa de menu real + listagem minima da frente, ja apoiada pelas novas permissoes e sem formula, totalizador ou UX completa
+  - implementar agora: estrutura minima de dados, permissoes executaveis e listagem minima somente leitura concluidas
+  - pendencia proxima: abrir microetapa de cadastro inicial da tabela personalizada ou refinamento seguro da listagem, ainda sem colunas, linhas, formulas, totalizadores ou exportacao
   - backlog/futuro: agrupamentos por opcao, filtros avancados/compostos, visoes salvas, arrastar-e-soltar, importacao assistida e exemplos/templates
   - fora de escopo: planilha livre estilo Excel, integracao escrevente com financeiro e modelagem definitiva de banco nesta fase
   - risco a monitorar: perda de governanca e desvio da frente para comportamento de planilha livre

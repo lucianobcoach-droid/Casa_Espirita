@@ -2,6 +2,47 @@
 
 Data: 2026-05-08
 
+## Microetapa tecnica: menu real e listagem minima de tabelas configuraveis
+
+- etapa funcional controlada, limitada a URL, `ListView`, template minimo e item de menu da frente, sem criacao/edicao, sem formulas, sem totalizadores e sem exportacao
+- confirmei antes de alterar:
+  - branch `feat/reinicio-financeiro`
+  - arvore limpa
+  - ausencia de commits locais pendentes
+  - ausencia de commits remotos pendentes
+  - `fetch` concluido sem erro
+- implementei a frente em quatro pontos:
+  - rota `financeiro:tabela-personalizada-list` em `controles-internos/tabelas-personalizadas/`
+  - `TabelaPersonalizadaListView` protegida por `financeiro.tabelas_personalizadas.visualizar`
+  - template `financeiro/tabela_personalizada_list.html` com leitura basica e estado vazio claro
+  - item de menu `Tabelas personalizadas` no grupo `Controles internos` de `financeiro/base.html`
+- recorte entregue na tela:
+  - nome
+  - descricao curta
+  - status
+  - quantidade de colunas
+  - quantidade de linhas
+  - ultima atualizacao
+  - filtros simples por nome e status
+- guardrails preservados:
+  - sem links quebrados
+  - sem botao de criacao apontando para rota inexistente
+  - sem forms de criacao/edicao
+  - sem colunas, linhas, formulas, totalizadores, exportacao ou auditoria operacional propria
+- testes adicionados para:
+  - resolver a URL correta
+  - liberar acesso apenas para usuario com permissao de visualizar
+  - bloquear usuario sem permissao
+  - listar tabela existente
+  - exibir estado vazio sem erro
+  - mostrar/ocultar item de menu conforme permissao
+- baixa documental consolidada:
+  - menu real + listagem minima somente leitura concluidos
+  - pendencia proxima movida para `cadastro inicial da tabela personalizada` ou `refinamento seguro da listagem`
+- confirmado nesta microetapa:
+  - sem alteracao em models, formulas, totalizadores, exportacao, auditoria operacional nova ou banco real
+  - sem impacto em calculos, saldos, extrato, resumo, prestacao/fechamento ou balancete
+
 ## Microetapa tecnica: permissoes executaveis de tabelas configuraveis
 
 - etapa funcional controlada, limitada a permissoes executaveis/documentais da frente, sem abrir menu real, views, urls, templates, forms ou UX

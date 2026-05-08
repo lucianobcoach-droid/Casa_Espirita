@@ -32,6 +32,7 @@ from .models import (
     TipoContaFinanceira,
     ValorTabelaPersonalizada,
 )
+from .permissoes import PermissoesTabelasPersonalizadas
 from .views import (
     BalanceteInstitucionalFinanceiroView,
     ContaFinanceiraAutocompleteView,
@@ -43,6 +44,7 @@ from .views import (
     LancamentoFinanceiroGrupoRateioCloneView,
     LancamentoFinanceiroGrupoRateioUpdateView,
     PrestacaoContasFinanceiroView,
+    TabelaPersonalizadaListView,
     _filtrar_lancamentos_por_parametros,
     _validar_conteudo_planilha_importacao_contas_xlsx,
     montar_contexto_fechamento_periodo,
@@ -3877,3 +3879,135 @@ class TabelasPersonalizadasEstruturaBaseTests(TestCase):
         )
 
         self.assertEqual(lancamento.descricao, 'Lancamento preservado')
+
+
+class TabelasPersonalizadasListViewTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            username='tester_tabelas_list',
+            password='segredo123',
+            is_active=True,
+        )
+        self.tabela = TabelaPersonalizada.objects.create(
+            nome='Controle de almoxarifado',
+            descricao='Controle interno sem impacto em lancamentos oficiais.',
+            criado_por=self.user,
+            atualizado_por=self.user,
+        )
+        ColunaPersonalizada.objects.create(
+            tabela=self.tabela,
+            nome='Item',
+            tipo_dado=ColunaPersonalizada.TipoDado.TEXTO_CURTO,
+        )
+        ColunaPersonalizada.objects.create(
+            tabela=self.tabela,
+            nome='Quantidade',
+            tipo_dado=ColunaPersonalizada.TipoDado.INTEIRO,
+        )
+        LinhaTabelaPersonalizada.objects.create(
+            tabela=self.tabela,
+            criado_por=self.user,
+            atualizado_por=self.user,
+        )
+
+    def _garantir_permissao(self, codigo: str) -> PermissaoSistema:
+        permissao = PermissaoSistema.objects.filter(codigo=codigo).first()
+        if permissao:
+            return permissao
+        partes = codigo.split('.')
+        modulo = partes[0] if len(partes) > 0 else 'financeiro'
+        recurso = partes[1] if len(partes) > 1 else 'geral'
+        acao = '.'.join(partes[2:]) if len(partes) > 2 else 'acessar'
+        return PermissaoSistema.objects.create(
+            codigo=codigo,
+            nome=codigo,
+            modulo=modulo,
+            recurso=recurso,
+            acao=acao,
+            ativo=True,
+        )
+
+    def _login_com_permissoes(self, username: str, codigos_permissao: list[str]):
+        user_model = get_user_model()
+        usuario = user_model.objects.create_user(
+            username=username,
+            password='senha-forte-123',
+            email=f'{username}@teste.local',
+            is_active=True,
+        )
+        perfil = PerfilAcesso.objects.create(
+            codigo=f'perfil-{username}',
+            nome=f'Perfil {username}',
+            ativo=True,
+        )
+        for codigo in codigos_permissao:
+            perfil.permissoes.add(self._garantir_permissao(codigo))
+        UsuarioPerfilAcesso.objects.create(usuario=usuario, perfil=perfil)
+        self.client.force_login(usuario)
+        return usuario
+
+    def test_url_resolve_para_view_da_listagem_minima(self):
+        resolved = resolve(reverse('financeiro:tabela-personalizada-list'))
+
+        self.assertIs(resolved.func.view_class, TabelaPersonalizadaListView)
+
+    def test_usuario_com_permissao_visualizar_acessa_listagem(self):
+        self._login_com_permissoes(
+            'user-tabela-visualizar',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+
+        response = self.client.get(reverse('financeiro:tabela-personalizada-list'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Controle de almoxarifado')
+        self.assertContains(response, '2')
+        self.assertContains(response, '1')
+
+    def test_usuario_sem_permissao_visualizar_recebe_403(self):
+        self._login_com_permissoes(
+            'user-tabela-sem-visualizar',
+            ['financeiro.lancamentos.listar'],
+        )
+
+        response = self.client.get(reverse('financeiro:tabela-personalizada-list'))
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_listagem_exibe_estado_vazio_sem_erro(self):
+        TabelaPersonalizada.objects.all().delete()
+        self._login_com_permissoes(
+            'user-tabela-vazia',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+
+        response = self.client.get(reverse('financeiro:tabela-personalizada-list'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Nenhuma tabela personalizada cadastrada ate o momento.')
+
+    def test_menu_exibe_item_quando_usuario_tem_permissao(self):
+        self._login_com_permissoes(
+            'user-menu-tabela-com-permissao',
+            [
+                'financeiro.lancamentos.listar',
+                PermissoesTabelasPersonalizadas.VISUALIZAR,
+            ],
+        )
+
+        response = self.client.get(reverse('financeiro:home-secundaria'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, reverse('financeiro:tabela-personalizada-list'))
+        self.assertContains(response, 'Tabelas personalizadas')
+
+    def test_menu_nao_exibe_item_sem_permissao_da_frente(self):
+        self._login_com_permissoes(
+            'user-menu-tabela-sem-permissao',
+            ['financeiro.lancamentos.listar'],
+        )
+
+        response = self.client.get(reverse('financeiro:home-secundaria'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, reverse('financeiro:tabela-personalizada-list'))
