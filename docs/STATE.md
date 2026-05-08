@@ -33,10 +33,20 @@ Data de atualizacao: 2026-05-08
   - vinculos futuros com pessoa/conta/categoria/lancamento devem nascer como leitura e em microetapa propria
 - classificacao documental das pendencias:
   - implementar agora: nenhuma
-  - pendencia proxima: fechar contrato funcional do construtor generico controlado
+  - pendencia proxima: fechar contrato operacional do construtor generico controlado
   - backlog/futuro: exemplos/templates, referencias opcionais e importacao assistida
   - fora de escopo: engine livre estilo Excel, integracao escrevente com financeiro e modelagem definitiva nesta etapa
   - risco a monitorar: virar "Excel dentro do sistema", perder governanca ou confundir controle interno com dado financeiro oficial
+- SPEC operacional futura agora registrada com:
+  - fluxo de criacao de tabela
+  - fluxo de criacao de colunas
+  - validacoes por tipo de dado
+  - formulas guiadas por coluna
+  - fluxo de linhas
+  - totalizadores
+  - exportacao XLSX
+  - auditoria operacional
+  - permissoes operacionais
 
 ## Validacao da alocacao de competencias no lancamento simples
 

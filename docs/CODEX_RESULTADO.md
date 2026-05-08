@@ -2,6 +2,43 @@
 
 Data: 2026-05-08
 
+## Microetapa documental: detalhamento operacional da SPEC de tabelas configuraveis
+
+- etapa exclusivamente documental, sem alteracao de codigo
+- confirmei antes de alterar:
+  - branch `feat/reinicio-financeiro`
+  - arvore limpa
+  - ausencia de commits locais pendentes
+  - ausencia de commits remotos pendentes
+  - `fetch` concluido sem erro
+- complementei a frente `Construtor de tabelas personalizadas configuraveis` com SPEC operacional documental de uso futuro
+- escopo operacional registrado:
+  - criacao de tabela
+  - criacao de colunas
+  - comportamento e validacao por tipo
+  - formulas guiadas por coluna
+  - fluxo de linhas
+  - totalizadores
+  - exportacao XLSX
+  - auditoria operacional
+  - permissoes operacionais
+- diretrizes operacionais consolidadas:
+  - formula aplicada por coluna inteira
+  - formula nao editavel celula por celula no MVP
+  - formula usando apenas colunas da mesma linha
+  - bloqueio de Python, JavaScript, SQL, macros, scripts, referencia circular e referencia livre entre tabelas
+  - colunas calculadas exibidas como resultado, sem edicao direta na linha
+  - exportacao XLSX auditada e sem carater de integracao com o financeiro
+- confirmado nesta microetapa:
+  - alteracao restrita a documentos
+  - sem Python
+  - sem templates
+  - sem JS/CSS
+  - sem model
+  - sem migration
+  - sem banco
+  - sem impacto em calculos, saldos, relatorios ou lancamentos reais
+
 ## Microetapa documental: ajuste da SPEC de tabelas configuraveis para construtor generico controlado
 
 - etapa exclusivamente documental, sem alteracao de codigo

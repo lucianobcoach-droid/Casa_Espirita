@@ -224,6 +224,246 @@ Status consolidado: SPEC FUNCIONAL DOCUMENTAL CONSOLIDADA / BACKLOG
   - mistura entre controle interno e fonte oficial financeira;
   - permissao, auditoria e backup ficarem atras da flexibilidade entregue.
 
+### SPEC operacional documental do uso futuro
+
+#### Fluxo operacional de criacao de tabela
+
+- A usuaria inicia por `Criar nova tabela`.
+- O sistema solicita:
+  - nome da tabela;
+  - descricao;
+  - status inicial (`ativa`, `inativa` ou `arquivada`, conforme o recorte aprovado);
+  - ordem de exibicao, se esse campo entrar no primeiro recorte.
+- Ao salvar a estrutura inicial:
+  - a tabela pode nascer sem linhas;
+  - a tabela deve nascer com estrutura editavel;
+  - a tela seguinte deve conduzir naturalmente para o cadastro das colunas.
+
+#### Fluxo operacional de criacao de colunas
+
+- A partir da tabela criada, a usuaria usa `Adicionar coluna`.
+- Para cada coluna, o sistema deve pedir:
+  - nome da coluna;
+  - tipo de dado;
+  - obrigatoria sim/nao;
+  - ordem de exibicao;
+  - visivel sim/nao;
+  - coluna comum ou coluna calculada.
+- Ao salvar uma coluna:
+  - o sistema valida o contrato minimo do tipo;
+  - colunas comuns ficam prontas para preenchimento manual nas linhas;
+  - colunas calculadas exigem definicao da formula guiada antes de entrarem em uso real.
+
+#### Tipos de dados e comportamento esperado
+
+- `texto curto`:
+  - campo de texto simples;
+  - pensado para identificadores, rotulos e descricoes curtas.
+- `texto longo`:
+  - campo de texto expandido;
+  - pensado para observacoes e conteudo descritivo.
+- `numero inteiro`:
+  - aceita apenas numeros sem casas decimais.
+- `numero decimal`:
+  - aceita casas decimais conforme padrao do sistema ou configuracao futura controlada.
+- `valor monetario`:
+  - usa formato monetario;
+  - deve preservar leitura numerica consistente para totalizadores e formulas permitidas.
+- `percentual`:
+  - usa formato percentual;
+  - continua sendo dado numerico validado pelo sistema.
+- `data`:
+  - aceita apenas datas validas.
+- `mes/competencia`:
+  - representa competencia mensal em formato controlado de mes/ano.
+- `sim/nao`:
+  - comportamento booleano.
+- `lista de opcoes`:
+  - valor obrigatoriamente escolhido dentro das opcoes cadastradas para a coluna.
+- `formula controlada`:
+  - valor nao digitado manualmente;
+  - resultado calculado pelo sistema a partir de colunas da mesma linha.
+
+#### Regras de validacao por tipo
+
+- `texto curto`:
+  - deve ter limite de caracteres menor e objetivo;
+  - no recorte inicial, a SPEC pode considerar um teto curto e padronizado.
+- `texto longo`:
+  - deve ter limite superior maior do que o texto curto, ainda com teto controlado.
+- `numero inteiro`:
+  - nao aceita casas decimais;
+  - nao aceita texto mascarado fora do formato numerico esperado.
+- `numero decimal`:
+  - aceita casas decimais;
+  - deve obedecer quantidade padrao ou configuracao futura controlada, sem liberdade irrestrita.
+- `valor monetario`:
+  - deve validar numero monetario e exibir formatacao monetaria coerente.
+- `percentual`:
+  - deve validar numero percentual e exibir formatacao percentual coerente.
+- `data`:
+  - deve bloquear data invalida.
+- `mes/competencia`:
+  - deve aceitar apenas formato controlado de mes/ano.
+- `sim/nao`:
+  - deve persistir comportamento booleano claro, sem variantes textuais livres.
+- `lista de opcoes`:
+  - deve bloquear qualquer valor fora das opcoes configuradas.
+- `formula controlada`:
+  - deve ser sempre calculada pelo sistema;
+  - nao deve permitir digitacao direta da celula.
+
+#### Fluxo operacional de formulas por coluna
+
+- Formula e atributo de uma coluna calculada.
+- A formula vale para a coluna inteira.
+- No MVP, a formula nao e editavel celula por celula.
+- A formula usa apenas colunas da mesma linha.
+- Operacoes permitidas:
+  - soma;
+  - subtracao;
+  - multiplicacao;
+  - divisao;
+  - parenteses;
+  - `ABS`;
+  - `ROUND`;
+  - `MIN`;
+  - `MAX`.
+- A formula deve ser criada por construtor guiado, e nao por codigo livre.
+- Deve ficar explicitamente proibido:
+  - Python;
+  - JavaScript;
+  - SQL;
+  - macros;
+  - scripts;
+  - referencia circular;
+  - referencia livre entre tabelas.
+
+#### UX sugerida para formulas
+
+- A usuaria escolhe a coluna calculada.
+- Depois escolhe as colunas de origem elegiveis.
+- Em seguida escolhe operadores e funcoes permitidas no construtor guiado.
+- O sistema exibe uma previa textual legivel da formula antes do salvamento.
+- Antes de salvar, o sistema valida:
+  - sintaxe do construtor;
+  - compatibilidade entre tipos;
+  - ausencia de referencia circular;
+  - aderencia as operacoes permitidas.
+- Se uma coluna usada por formula for alterada ou removida:
+  - o sistema deve bloquear a mudanca;
+  - ou exigir revisao explicita da formula antes de concluir a alteracao estrutural.
+
+#### Fluxo operacional de linhas
+
+- A usuaria usa `Adicionar linha`.
+- O sistema exibe apenas campos editaveis correspondentes as colunas comuns.
+- Cada celula deve respeitar o tipo de dado da coluna.
+- Ao salvar a linha:
+  - o sistema valida obrigatoriedade;
+  - valida formato e tipo;
+  - calcula automaticamente as colunas calculadas.
+- Em `Editar linha`:
+  - a usuaria altera apenas colunas editaveis;
+  - colunas calculadas aparecem como resultado, sem edicao direta.
+- Em `Arquivar` ou `Excluir logicamente linha`:
+  - a linha deixa de compor o uso operacional normal;
+  - o historico deve permanecer auditavel.
+
+#### Totalizadores
+
+- Totalizadores aceitos no recorte inicial:
+  - soma;
+  - media;
+  - minimo;
+  - maximo;
+  - contagem.
+- Totalizadores devem aparecer em rodape ou listagem consolidada.
+- Totalizadores devem ser definidos pelo sistema, nao por formula livre do usuario.
+- Totalizadores devem respeitar o tipo de dado aplicavel de cada coluna.
+
+#### Exportacao XLSX
+
+- A exportacao deve permitir `Exportar tabela visivel`.
+- O arquivo deve incluir:
+  - cabecalhos das colunas;
+  - dados das linhas visiveis conforme o recorte aprovado;
+  - formatacao basica coerente com o tipo de dado.
+- Decisao operacional sugerida para o MVP:
+  - incluir totalizadores no XLSX quando eles estiverem presentes na listagem/rodape da tabela;
+  - manter essa inclusao como comportamento padrao do documento exportado, e nao como integracao com o financeiro.
+- A exportacao deve ser registrada na auditoria.
+- A exportacao nao deve ser tratada como integracao oficial com o financeiro.
+
+#### Auditoria operacional
+
+- Auditar:
+  - criacao, edicao e arquivamento de tabela;
+  - criacao, edicao e remocao de coluna;
+  - alteracao de tipo de dado;
+  - alteracao de formula;
+  - inclusao, edicao e exclusao logica de linha;
+  - exportacao XLSX.
+- Cada evento deve registrar, quando aplicavel:
+  - usuario;
+  - data/hora;
+  - acao;
+  - antes/depois.
+
+#### Permissoes operacionais
+
+- Permissoes minimas sugeridas:
+  - visualizar tabela;
+  - criar tabela;
+  - editar estrutura;
+  - preencher linhas;
+  - editar linhas;
+  - alterar formulas;
+  - exportar;
+  - arquivar/restaurar tabela;
+  - administrar configuracoes/permissoes.
+- Estrutura e formulas devem exigir permissao mais forte do que preenchimento simples de linhas.
+
+#### Regras de seguranca operacionais
+
+- Nao alterar financeiro oficial.
+- Nao gerar lancamento.
+- Nao alterar saldos.
+- Nao alterar extrato.
+- Nao alterar resumo.
+- Nao alterar prestacao/fechamento.
+- Nao alterar balancete.
+- Nao alterar regras de transferencia, rateio ou competencia.
+- Vinculos futuros com pessoa, conta, categoria ou lancamento devem nascer como leitura no primeiro recorte, nunca como escrita automatica.
+
+#### Classificacao de pendencias desta SPEC operacional
+
+- Implementar agora:
+  - nenhuma; esta etapa continua exclusivamente documental.
+- Pendencia proxima:
+  - fechar a UX do construtor guiado de formulas;
+  - fechar limites concretos de caracteres e precisao por tipo;
+  - decidir o comportamento final de totalizadores no XLSX;
+  - decidir a experiencia de bloqueio/revisao quando coluna usada em formula for alterada.
+- Backlog/futuro:
+  - importacao assistida;
+  - exemplos/templates de tabela;
+  - referencias opcionais de leitura a entidades oficiais;
+  - filtros e visoes salvas;
+  - formulas controladas mais ricas, se o uso real justificar.
+- Fora de escopo:
+  - implementacao funcional nesta microetapa;
+  - modelagem definitiva de banco;
+  - planilha livre estilo Excel;
+  - formula celula por celula;
+  - macros, scripts e execucao de codigo;
+  - integracao escrevente com financeiro;
+  - geracao automatica de lancamentos financeiros.
+- Risco a monitorar:
+  - escopo crescer para automacao excessiva;
+  - perda de governanca sobre formulas e auditoria;
+  - confusao entre controle interno e dado financeiro oficial.
+
 ## 0.20. Especificacao funcional: tipo/disponibilidade de conta e Balancete patrimonial
 
 Base cadastral das contas financeiras implementada em primeira microetapa funcional. A leitura patrimonial detalhada por conta tambem foi aplicada no Balancete Institucional, sem reabrir o MVP atual do Balancete nem alterar a base de calculo.
