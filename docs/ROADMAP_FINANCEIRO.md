@@ -1442,8 +1442,8 @@ Status consolidado: SPEC FUNCIONAL DOCUMENTAL CONSOLIDADA / BACKLOG TECNICO INCR
   - `py -m compileall financeiro configuracoes` sem erro
   - `py manage.py test financeiro` com suite verde
 - Proxima microetapa recomendada:
-  - `permissoes e menu da frente`
-  - ainda sem formula, totalizador, views completas ou exportacao
+  - `permissoes executaveis da frente`
+  - antes do menu real, para evitar link quebrado sem listagem minima
 
 #### Microetapa 4 - permissoes e menu da frente
 
@@ -1471,6 +1471,26 @@ Status consolidado: SPEC FUNCIONAL DOCUMENTAL CONSOLIDADA / BACKLOG TECNICO INCR
 - Fora de escopo:
   - integrações com financeiro;
   - refinamentos amplos de UX.
+
+- Resultado consolidado desta microetapa intermediaria segura:
+  - permissoes executaveis/documentais implementadas antes do menu real;
+  - codigos canonicos criados para:
+    - `financeiro.tabelas_personalizadas.visualizar`
+    - `financeiro.tabelas_personalizadas.criar`
+    - `financeiro.tabelas_personalizadas.editar_estrutura`
+    - `financeiro.tabelas_personalizadas.configurar_formula`
+    - `financeiro.tabelas_personalizadas.preencher_linhas`
+    - `financeiro.tabelas_personalizadas.editar_linhas`
+    - `financeiro.tabelas_personalizadas.exportar`
+    - `financeiro.tabelas_personalizadas.arquivar_restaurar`
+    - `financeiro.tabelas_personalizadas.administrar_configuracoes`
+  - seed por migration no app `configuracoes`, sem criar menu real nesta etapa
+  - recorte inicial de perfis adotado:
+    - `administrador-geral` e `gestao-administrativa`: todas as permissoes
+    - `operador-financeiro`: `visualizar`, `criar`, `editar_estrutura`, `preencher_linhas`, `editar_linhas` e `exportar`
+    - `consulta-visualizacao`: `visualizar` e `exportar`
+  - `configurar_formula`, `arquivar_restaurar` e `administrar_configuracoes` ficaram mais restritas por risco de governanca
+  - menu real adiado para a proxima microetapa, quando ja existir rota/listagem minima e nao houver risco de link quebrado
 
 #### Microetapa 5 - listagem de tabelas personalizadas
 

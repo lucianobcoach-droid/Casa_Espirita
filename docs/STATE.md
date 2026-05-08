@@ -95,16 +95,25 @@ Data de atualizacao: 2026-05-08
   - `ValorTabelaPersonalizada`
   - migration propria do `financeiro`
   - testes minimos de integridade, tipagem, vinculo linha/coluna e nao regressao basica no `LancamentoFinanceiro`
+- camada de permissoes executaveis da frente agora implementada com:
+  - catalogo canonico em `financeiro.permissoes.PermissoesTabelasPersonalizadas`
+  - seed idempotente de `PermissaoSistema` por migration em `configuracoes`
+  - vinculo inicial e conservador por perfil-base:
+    - `administrador-geral` e `gestao-administrativa` com todas as permissoes da frente
+    - `operador-financeiro` com `visualizar`, `criar`, `editar_estrutura`, `preencher_linhas`, `editar_linhas` e `exportar`
+    - `consulta-visualizacao` com `visualizar` e `exportar`
+  - separacao explicita entre `editar_estrutura` e `configurar_formula`
+  - menu real ainda adiado para a proxima microetapa, evitando link quebrado antes da listagem minima
 - limites desta implementacao estrutural:
   - sem `FormulaColunaPersonalizada`
   - sem `TotalizadorColunaPersonalizada`
-  - sem menu, views, urls, templates, forms ou permissoes executaveis
+  - sem menu, views, urls, templates ou forms
   - sem auditoria operacional propria da nova frente
   - sem exportacao XLSX da nova frente
   - sem integracao com financeiro oficial
 - classificacao documental atualizada desta frente:
-  - implementar agora: estrutura minima de dados concluida
-  - pendencia proxima: abrir microetapa de permissoes e menu da frente, sem formula, totalizador ou UX completa
+  - implementar agora: estrutura minima de dados e permissoes executaveis concluidas
+  - pendencia proxima: abrir microetapa de menu real + listagem minima da frente, ja apoiada pelas novas permissoes e sem formula, totalizador ou UX completa
   - backlog/futuro: agrupamentos por opcao, filtros avancados/compostos, visoes salvas, arrastar-e-soltar, importacao assistida e exemplos/templates
   - fora de escopo: planilha livre estilo Excel, integracao escrevente com financeiro e modelagem definitiva de banco nesta fase
   - risco a monitorar: perda de governanca e desvio da frente para comportamento de planilha livre

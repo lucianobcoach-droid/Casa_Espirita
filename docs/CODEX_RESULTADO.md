@@ -2,6 +2,45 @@
 
 Data: 2026-05-08
 
+## Microetapa tecnica: permissoes executaveis de tabelas configuraveis
+
+- etapa funcional controlada, limitada a permissoes executaveis/documentais da frente, sem abrir menu real, views, urls, templates, forms ou UX
+- confirmei antes de alterar:
+  - branch `feat/reinicio-financeiro`
+  - arvore limpa
+  - ausencia de commits locais pendentes
+  - ausencia de commits remotos pendentes
+  - `fetch` concluido sem erro
+- implementei a camada de permissao da frente em tres pontos:
+  - catalogo canonico em `financeiro.permissoes.PermissoesTabelasPersonalizadas`
+  - seed idempotente de `PermissaoSistema` em `configuracoes/migrations/0010_permissoes_tabelas_personalizadas.py`
+  - testes de seed/perfil/helper em `configuracoes/tests.py`
+- permissoes registradas:
+  - `financeiro.tabelas_personalizadas.visualizar`
+  - `financeiro.tabelas_personalizadas.criar`
+  - `financeiro.tabelas_personalizadas.editar_estrutura`
+  - `financeiro.tabelas_personalizadas.configurar_formula`
+  - `financeiro.tabelas_personalizadas.preencher_linhas`
+  - `financeiro.tabelas_personalizadas.editar_linhas`
+  - `financeiro.tabelas_personalizadas.exportar`
+  - `financeiro.tabelas_personalizadas.arquivar_restaurar`
+  - `financeiro.tabelas_personalizadas.administrar_configuracoes`
+- recorte inicial de perfis consolidado:
+  - `administrador-geral` e `gestao-administrativa`: todas
+  - `operador-financeiro`: `visualizar`, `criar`, `editar_estrutura`, `preencher_linhas`, `editar_linhas` e `exportar`
+  - `consulta-visualizacao`: `visualizar` e `exportar`
+- decisoes conservadoras desta microetapa:
+  - `configurar_formula` ficou separado de `editar_estrutura`
+  - `arquivar_restaurar` e `administrar_configuracoes` nao foram abertos ao `operador-financeiro`
+  - menu real ficou adiado para a proxima microetapa, evitando link quebrado antes da listagem minima
+- baixa documental consolidada:
+  - camada de permissoes executaveis da frente concluida
+  - pendencia proxima movida para `menu real + listagem minima da frente`
+- confirmado nesta microetapa:
+  - sem alteracao em views, urls, templates, forms, JS ou CSS
+  - sem alteracao em arquivos SQLite
+  - sem impacto em calculos, saldos, extrato, resumo, prestacao/fechamento ou balancete
+
 ## Microetapa tecnica: estrutura minima de dados de tabelas configuraveis
 
 - etapa funcional controlada, limitada aos models, migration e testes minimos da base estrutural

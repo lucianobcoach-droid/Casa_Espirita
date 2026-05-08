@@ -468,6 +468,7 @@ Status apos planejamento documental desta microetapa: BACKLOG TECNICO INCREMENTA
 Status apos auditoria tecnica preparatoria desta microetapa: AUDITORIA TECNICA PREPARATORIA CONCLUIDA / BACKLOG
 Status apos SPEC tecnica desta microetapa: SPEC TECNICA DE MODELAGEM CONSOLIDADA / BACKLOG
 Status apos implementacao desta microetapa: ESTRUTURA MINIMA DE DADOS IMPLEMENTADA / BACKLOG
+Status apos implementacao desta microetapa: PERMISSOES EXECUTAVEIS DA FRENTE IMPLEMENTADAS / BACKLOG
 
 Motivo:
 Foi levantada frente futura para controles configuraveis genericos, com colunas definidas pelo usuario, tipos de dado, formulas controladas por coluna e totalizadores. Deve ser tratada separadamente das correcoes imediatas do financeiro.
@@ -537,6 +538,17 @@ Consolidacao desta baixa documental:
 - reclassificacao da pendencia proxima apos a implementacao estrutural:
   - deixa de ser `implementacao minima da estrutura de dados`
   - passa a ser `permissoes e menu da frente`
+- consolidacao da camada de permissao executavel:
+  - catalogo canonico de permissoes criado no backend do `financeiro`
+  - seed por migration criado em `configuracoes` para registrar a frente no catalogo oficial de `PermissaoSistema`
+  - atribuicao inicial e conservadora por perfil-base:
+    - `administrador-geral` e `gestao-administrativa` com todas as permissoes
+    - `operador-financeiro` com leitura e operacao comum, sem `configurar_formula`, `arquivar_restaurar` ou `administrar_configuracoes`
+    - `consulta-visualizacao` com `visualizar` e `exportar`
+  - matriz documental atualizada sem abrir menu real nesta mesma etapa
+- reclassificacao da pendencia proxima apos a camada de permissao:
+  - deixa de ser `permissoes e menu da frente`
+  - passa a ser `menu real + listagem minima da frente`, ja apoiados pelas permissoes executaveis e sem link quebrado
 - guardrails reforcados:
   - qualquer alteracao em banco real exige backup e autorizacao
   - arquivos SQLite nao devem ser versionados

@@ -98,6 +98,15 @@ Convencoes de leitura:
 | financeiro | Centros de custo | editar | S | S | S | - | - |  |
 | financeiro | Centros de custo | excluir | S | S | - | - | - | Exclusao de cadastro estrutural fica restrita a Administrador geral e Gestao administrativa |
 | financeiro | Centros de custo | acessar autocomplete | S | S | S | - | - | Endpoint auxiliar do formulario de lancamento segue perfil operacional de escrita |
+| financeiro | Tabelas personalizadas | visualizar | S | S | S | - | S | Frente de controles internos; sera a permissao minima futura para exibir o item de menu |
+| financeiro | Tabelas personalizadas | criar | S | S | S | - | - | Permite criar nova tabela personalizada sem liberar menu tecnico extra |
+| financeiro | Tabelas personalizadas | editar estrutura | S | S | S | - | - | Cobre metadados e colunas, mas nao abre configuracao de formula por si so |
+| financeiro | Tabelas personalizadas | configurar formula | S | S | - | - | - | Mantida separada de `editar estrutura` por sensibilidade e risco de governanca |
+| financeiro | Tabelas personalizadas | preencher linhas | S | S | S | - | - | Permite inserir dados operacionais nas linhas da tabela |
+| financeiro | Tabelas personalizadas | editar linhas | S | S | S | - | - | Permite alterar dados ja preenchidos, sem mexer na estrutura |
+| financeiro | Tabelas personalizadas | exportar | S | S | S | - | S | Exportacao futura em XLSX segue o mesmo recorte de leitura da frente |
+| financeiro | Tabelas personalizadas | arquivar/restaurar | S | S | - | - | - | Acao sensivel, separada do preenchimento cotidiano e mais proxima de governanca estrutural |
+| financeiro | Tabelas personalizadas | administrar configuracoes | S | S | - | - | - | Permissao mais forte da frente; nao foi aberta ao Operador financeiro no primeiro recorte |
 | financeiro | Assinaturas institucionais | listar/visualizar | S | S | - | - | - | Configuracao funcional sensivel |
 | financeiro | Assinaturas institucionais | criar | S | S | - | - | - |  |
 | financeiro | Assinaturas institucionais | editar | S | S | - | - | - |  |
