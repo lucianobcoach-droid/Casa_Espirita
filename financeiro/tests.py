@@ -2261,8 +2261,20 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
         html = self._render_lancamento_form(form)
 
         self.assertIn('Assistente de competencias', html)
+        self.assertIn('financeiro-competencia-assistente-table', html)
+        self.assertIn('Mes', html)
+        self.assertIn('Situacao', html)
+        self.assertIn('Ja registrado', html)
         self.assertIn('Valor deste lancamento', html)
-        self.assertIn('Ja registrado:', html)
+        self.assertIn(
+            'Distribua o valor total entre as competencias. A soma informada deve fechar com o valor do lancamento.',
+            html,
+        )
+        self.assertIn('financeiro-competencia-assistente-status', html)
+        self.assertIn('Ja possui contribuicao', html)
+        self.assertIn('Sem quitacao registrada', html)
+        self.assertIn('name="competencias_payload"', html)
+        self.assertIn('data-financeiro-competencia-body="true"', html)
         self.assertIn('financeiro-competencia-assistente-grid', html)
 
     def test_rateio_com_item_controlado_exige_competencias_pela_parte_controlada(self):
@@ -2630,8 +2642,18 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
         html = self._render_rateio_form(form, grupo_rateio=grupo_rateio)
 
         self.assertIn('Assistente de competencias', html)
+        self.assertIn('financeiro-competencia-assistente-table', html)
+        self.assertIn('Mes', html)
+        self.assertIn('Situacao', html)
+        self.assertIn('Ja registrado', html)
         self.assertIn('Valor deste lancamento', html)
-        self.assertIn('Ja registrado:', html)
+        self.assertIn(
+            'Distribua o valor da subcategoria entre as competencias. A soma informada deve fechar com o valor da subcategoria.',
+            html,
+        )
+        self.assertIn('financeiro-competencia-assistente-status', html)
+        self.assertIn('Ja possui contribuicao', html)
+        self.assertIn('Sem quitacao registrada', html)
         self.assertIn('financeiro-rateio-grupo-competencias-registradas', html)
 
     def test_clone_rateado_nao_precarrega_competencias(self):

@@ -165,6 +165,11 @@ Este documento consolida regras permanentes do sistema. Ele não substitui o his
 - No MVP implementado do assistente de competencias, o assistente deve aparecer em edicao mesmo para lancamento antigo sem competencias salvas, desde que o registro atenda favorecido recorrente + subcategoria controlada.
 - No MVP implementado do assistente de competencias, a redistribuicao de competencias em edicao simples ou rateada nao altera automaticamente o valor financeiro total do registro; apenas reorganiza a leitura gerencial por competencia, mantendo a soma fechada contra o valor controlado.
 - No MVP implementado do assistente de competencias, o rateio assistido deve abrir uma grade independente para cada subcategoria controlada do grupo e ignorar itens nao controlados.
+- No refinamento de UX do assistente de competencias, a apresentacao visual prioritara lista/tabela compacta com `Mes`, `Situacao`, `Ja registrado` e `Valor deste lancamento`, evitando cards extensos e repeticao de texto por mes.
+- No refinamento de UX do assistente de competencias, a mensagem de orientacao deve ser instrutiva e nao soar como erro antecipado:
+  - simples: `Distribua o valor total entre as competencias. A soma informada deve fechar com o valor do lancamento.`
+  - rateio: `Distribua o valor da subcategoria entre as competencias. A soma informada deve fechar com o valor da subcategoria.`
+- No refinamento de UX do assistente de competencias, a digitacao nos campos mensais nao deve provocar perda de foco; a sincronizacao precisa atualizar apenas as linhas/payloads necessarios sem reconstruir o bloco inteiro a cada tecla.
 - Em clone comum, competencias existentes nao devem ser copiadas automaticamente para o novo lancamento.
 - Em clone de rateio, competencias tambem nao devem ser copiadas automaticamente para evitar duplicidade de quitacao por competencia.
 - No MVP inicial, nao abrir modulo separado de baixa; manter o fluxo no proprio lancamento e tratar termo por favorecido como segunda onda apos validacao da matriz.

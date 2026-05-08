@@ -1,4 +1,4 @@
-{% extends 'financeiro/base.html' %}
+﻿{% extends 'financeiro/base.html' %}
 {% block title %}{{ page_title }}{% endblock %}
 {% block content %}
 <style>
@@ -223,97 +223,90 @@
     }
 
     .financeiro-competencia-assistente-copy {
-        margin-bottom: 0.75rem;
+        margin-bottom: 0.7rem;
     }
 
     .financeiro-competencia-assistente-copy p {
         margin: 0;
     }
 
-    .financeiro-competencia-assistente-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
-        gap: 0.75rem;
+    .financeiro-competencia-assistente-copy .financeiro-rateio-action-row-text {
+        margin-top: 0.2rem;
     }
 
-    .financeiro-competencia-assistente-card {
-        padding: 0.78rem;
-        border: 1px solid #dbe7f3;
-        border-radius: 0.8rem;
-        background: #f8fbff;
+    .financeiro-competencia-assistente-table {
+        margin-bottom: 0;
+        table-layout: fixed;
     }
 
-    .financeiro-competencia-assistente-card.is-positive {
-        border-color: #b9dbc2;
-        background: #f5fbf7;
-    }
-
-    .financeiro-competencia-assistente-card.is-empty {
-        background: #fbfcfe;
-    }
-
-    .financeiro-competencia-assistente-label {
-        margin: 0 0 0.32rem;
-        color: #1f2937;
-        font-size: 0.82rem;
-        font-weight: 700;
-    }
-
-    .financeiro-competencia-assistente-state {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.38rem;
-        margin-bottom: 0.35rem;
-        color: #475569;
-        font-size: 0.73rem;
-        font-weight: 700;
-    }
-
-    .financeiro-competencia-assistente-state::before {
-        content: "";
-        width: 0.55rem;
-        height: 0.55rem;
-        border-radius: 999px;
-        background: #cbd5e1;
-    }
-
-    .financeiro-competencia-assistente-card.is-positive .financeiro-competencia-assistente-state {
-        color: #166534;
-    }
-
-    .financeiro-competencia-assistente-card.is-positive .financeiro-competencia-assistente-state::before {
-        background: #22c55e;
-    }
-
-    .financeiro-competencia-assistente-note {
-        margin: 0 0 0.45rem;
+    .financeiro-competencia-assistente-table thead th {
         color: #64748b;
-        font-size: 0.73rem;
-        line-height: 1.4;
-    }
-
-    .financeiro-competencia-assistente-registered {
-        margin: 0 0 0.45rem;
-        color: #35548a;
-        font-size: 0.73rem;
-        font-weight: 600;
-    }
-
-    .financeiro-competencia-assistente-field-label {
-        display: block;
-        margin-bottom: 0.25rem;
-        color: #64748b;
-        font-size: 0.68rem;
+        font-size: 0.69rem;
         font-weight: 700;
         letter-spacing: 0.03em;
         text-transform: uppercase;
     }
 
-    .financeiro-competencia-assistente-current {
-        margin: 0.4rem 0 0;
-        color: #1d4ed8;
+    .financeiro-competencia-assistente-table td,
+    .financeiro-competencia-assistente-table th {
+        padding-top: 0.55rem;
+        padding-bottom: 0.55rem;
+        vertical-align: middle;
+    }
+
+    .financeiro-competencia-assistente-month {
+        color: #1f2937;
+        font-size: 0.81rem;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .financeiro-competencia-assistente-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.38rem;
+        padding: 0.18rem 0.52rem;
+        border-radius: 999px;
         font-size: 0.72rem;
+        font-weight: 700;
+        line-height: 1.2;
+        white-space: nowrap;
+    }
+
+    .financeiro-competencia-assistente-status::before {
+        content: "";
+        width: 0.48rem;
+        height: 0.48rem;
+        border-radius: 999px;
+        background: currentColor;
+        opacity: 0.88;
+    }
+
+    .financeiro-competencia-assistente-status.is-positive {
+        background: #f0fdf4;
+        color: #166534;
+    }
+
+    .financeiro-competencia-assistente-status.is-empty {
+        background: #fff7ed;
+        color: #b45309;
+    }
+
+    .financeiro-competencia-assistente-registered {
+        color: #35548a;
+        font-size: 0.73rem;
         font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .financeiro-competencia-assistente-registered.is-empty {
+        color: #94a3b8;
+        font-weight: 500;
+    }
+
+    .financeiro-competencia-assistente-input {
+        max-width: 8.25rem;
+        min-width: 6.75rem;
     }
 
     @media screen and (max-width: 860px) {
@@ -512,7 +505,7 @@
                             <tbody data-financeiro-rateio-body="true"></tbody>
                             <tfoot class="financeiro-rateio-fechamento">
                             <tr>
-                                <td><span class="financeiro-rateio-fechamento-label">DIFERENÇA A DETALHAR</span></td>
+                                <td><span class="financeiro-rateio-fechamento-label">DIFERENCA A DETALHAR</span></td>
                                 <td><span class="financeiro-rateio-fechamento-value" data-financeiro-rateio-diferenca="true">R$ 0,00</span></td>
                                 <td></td>
                             </tr>
@@ -531,9 +524,9 @@
             style="{% if not form.competencias_rateio_bloco_visivel %}display: none;{% endif %}"
         >
             <div class="financeiro-form-section-body">
-                <div class="financeiro-rateio-section-kicker">Competências</div>
-                <div class="financeiro-form-section-title">Competências atendidas da subcategoria controlada</div>
-                <div class="financeiro-form-section-text">Cada subcategoria controlada do rateio fecha as competências apenas contra o seu valor consolidado.</div>
+                <div class="financeiro-rateio-section-kicker">Competencias</div>
+                <div class="financeiro-form-section-title">Competencias atendidas da subcategoria controlada</div>
+                <div class="financeiro-form-section-text">Cada subcategoria controlada do rateio fecha as competencias apenas contra o seu valor consolidado.</div>
                 {% for error in form.competencias_rateio_payload.errors %}
                     <p class="help is-danger mb-2">{{ error }}</p>
                 {% endfor %}
@@ -549,22 +542,39 @@
                             <div class="financeiro-competencia-assistente">
                                 <div class="financeiro-competencia-assistente-copy">
                                     <p class="financeiro-rateio-action-row-title">Assistente de competencias</p>
-                                    <p class="financeiro-rateio-action-row-text">Sugestao rapida por mes. O valor ja registrado e so referencia; apenas o valor deste lancamento entra no grupo atual.</p>
+                                    <p class="financeiro-rateio-action-row-text">Distribua o valor da subcategoria entre as competencias. A soma informada deve fechar com o valor da subcategoria.</p>
                                 </div>
-                                <div class="financeiro-competencia-assistente-grid">
-                                    {% for mes in grupo.meses %}
-                                        <div class="financeiro-competencia-assistente-card {% if mes.ja_possui_contribuicao %}is-positive{% else %}is-empty{% endif %}">
-                                            <p class="financeiro-competencia-assistente-label">{{ mes.label }}</p>
-                                            <div class="financeiro-competencia-assistente-state">{{ mes.status_texto }}</div>
-                                            {% if mes.ja_registrado_texto %}
-                                                <p class="financeiro-competencia-assistente-registered">Já registrado: {{ mes.ja_registrado_texto }}</p>
-                                            {% else %}
-                                                <p class="financeiro-competencia-assistente-note">Sem quitação registrada.</p>
-                                            {% endif %}
-                                            <label class="financeiro-competencia-assistente-field-label">Valor deste lançamento</label>
-                                            <input type="text" class="input" value="{{ mes.valor_lancamento_texto }}" disabled>
-                                        </div>
-                                    {% endfor %}
+                                <div class="table-container">
+                                    <table class="table is-fullwidth is-narrow financeiro-competencia-assistente-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Mes</th>
+                                                <th>Situacao</th>
+                                                <th>Ja registrado</th>
+                                                <th>Valor deste lancamento</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="financeiro-competencia-assistente-grid">
+                                            {% for mes in grupo.meses %}
+                                                <tr>
+                                                    <td><span class="financeiro-competencia-assistente-month">{{ mes.label }}</span></td>
+                                                    <td>
+                                                        <span class="financeiro-competencia-assistente-status {% if mes.ja_possui_contribuicao %}is-positive{% else %}is-empty{% endif %}">
+                                                            {{ mes.status_texto }}
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <span class="financeiro-competencia-assistente-registered {% if not mes.ja_registrado_texto %}is-empty{% endif %}">
+                                                            {% if mes.ja_registrado_texto %}{{ mes.ja_registrado_texto }}{% else %}-{% endif %}
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <input type="text" class="input financeiro-competencia-assistente-input" value="{{ mes.valor_lancamento_texto }}" disabled>
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                         </div>
@@ -788,7 +798,7 @@
             rateioDiferencaText.textContent = formatarCentavosMoeda(diferenca);
             rateioDiferencaText.classList.toggle('is-alert', diferenca !== 0);
             if (diferenca < 0) {
-                rateioStatusText.textContent = 'Atenção: o rateio ultrapassou o valor total do documento.';
+                rateioStatusText.textContent = 'Atencao: o rateio ultrapassou o valor total do documento.';
                 rateioStatusText.hidden = false;
             } else {
                 rateioStatusText.textContent = '';
@@ -982,38 +992,38 @@
                 );
                 const possuiRegistro = parseMoedaParaCentavos(valorRegistrado) > 0;
 
-                const card = document.createElement('div');
-                card.className = `financeiro-competencia-assistente-card ${possuiRegistro ? 'is-positive' : 'is-empty'}`;
+                const tr = document.createElement('tr');
 
-                const title = document.createElement('p');
-                title.className = 'financeiro-competencia-assistente-label';
-                title.textContent = competencia.label;
-                card.appendChild(title);
+                const monthCell = document.createElement('td');
+                const month = document.createElement('span');
+                month.className = 'financeiro-competencia-assistente-month';
+                month.textContent = competencia.label;
+                monthCell.appendChild(month);
+                tr.appendChild(monthCell);
 
-                const state = document.createElement('div');
-                state.className = 'financeiro-competencia-assistente-state';
+                const stateCell = document.createElement('td');
+                const state = document.createElement('span');
+                state.className = `financeiro-competencia-assistente-status ${possuiRegistro ? 'is-positive' : 'is-empty'}`;
                 state.textContent = possuiRegistro ? 'Ja possui contribuicao' : 'Sem quitacao registrada';
-                card.appendChild(state);
+                stateCell.appendChild(state);
+                tr.appendChild(stateCell);
 
-                const info = document.createElement('p');
-                info.className = possuiRegistro
-                    ? 'financeiro-competencia-assistente-registered'
-                    : 'financeiro-competencia-assistente-note';
-                info.textContent = possuiRegistro
-                    ? `Ja registrado: ${formatarCentavosMoeda(parseMoedaParaCentavos(valorRegistrado))}`
-                    : 'Sem quitacao registrada.';
-                card.appendChild(info);
+                const registeredCell = document.createElement('td');
+                const registered = document.createElement('span');
+                registered.className = `financeiro-competencia-assistente-registered ${possuiRegistro ? '' : 'is-empty'}`.trim();
+                registered.textContent = possuiRegistro
+                    ? formatarCentavosMoeda(parseMoedaParaCentavos(valorRegistrado))
+                    : '-';
+                registeredCell.appendChild(registered);
+                tr.appendChild(registeredCell);
 
-                const fieldLabel = document.createElement('label');
-                fieldLabel.className = 'financeiro-competencia-assistente-field-label';
-                fieldLabel.textContent = 'Valor deste lancamento';
-                card.appendChild(fieldLabel);
+                const inputCell = document.createElement('td');
 
                 const input = document.createElement('input');
                 input.type = 'text';
                 input.inputMode = 'numeric';
                 input.autocomplete = 'off';
-                input.className = 'input';
+                input.className = 'input financeiro-competencia-assistente-input';
                 input.value = formatarMoedaPtBr((valorAtual || '').replace(/\D/g, ''));
                 input.setAttribute(
                     'aria-label',
@@ -1028,19 +1038,13 @@
                         competencia.ano,
                         normalizarMoedaParaDecimal(digitos)
                     );
-                    renderCompetenciasRateioGroups();
+                    renderCompetenciasRateioRowsForCategoria(categoriaId);
                     serializeCompetenciasRateio();
                 });
-                card.appendChild(input);
+                inputCell.appendChild(input);
+                tr.appendChild(inputCell);
 
-                if (parseMoedaParaCentavos(valorAtual) > 0) {
-                    const atual = document.createElement('p');
-                    atual.className = 'financeiro-competencia-assistente-current';
-                    atual.textContent = `Neste lancamento: ${formatarCentavosMoeda(parseMoedaParaCentavos(valorAtual))}`;
-                    card.appendChild(atual);
-                }
-
-                assistenteGrid.appendChild(card);
+                assistenteGrid.appendChild(tr);
             });
         }
 
@@ -1278,12 +1282,19 @@
                 assistenteBox.className = 'financeiro-competencia-assistente';
                 const assistenteCopy = document.createElement('div');
                 assistenteCopy.className = 'financeiro-competencia-assistente-copy';
-                assistenteCopy.innerHTML = '<p class="financeiro-rateio-action-row-title">Assistente de competencias</p><p class="financeiro-rateio-action-row-text">Sugestao rapida por mes. O valor ja registrado e so referencia; apenas o valor deste lancamento entra no grupo atual.</p>';
+                assistenteCopy.innerHTML = '<p class="financeiro-rateio-action-row-title">Assistente de competencias</p><p class="financeiro-rateio-action-row-text">Distribua o valor da subcategoria entre as competencias. A soma informada deve fechar com o valor da subcategoria.</p>';
                 assistenteBox.appendChild(assistenteCopy);
-                const assistenteGrid = document.createElement('div');
+                const assistenteTableWrapper = document.createElement('div');
+                assistenteTableWrapper.className = 'table-container';
+                const assistenteTable = document.createElement('table');
+                assistenteTable.className = 'table is-fullwidth is-narrow financeiro-competencia-assistente-table';
+                assistenteTable.innerHTML = '<thead><tr><th>Mes</th><th>Situacao</th><th>Ja registrado</th><th>Valor deste lancamento</th></tr></thead>';
+                const assistenteGrid = document.createElement('tbody');
                 assistenteGrid.className = 'financeiro-competencia-assistente-grid';
                 assistenteGrid.dataset.financeiroCompetenciaRateioAssistenteGrid = categoriaId;
-                assistenteBox.appendChild(assistenteGrid);
+                assistenteTable.appendChild(assistenteGrid);
+                assistenteTableWrapper.appendChild(assistenteTable);
+                assistenteBox.appendChild(assistenteTableWrapper);
                 wrapper.appendChild(assistenteBox);
 
                 const tableContainer = document.createElement('div');
@@ -1292,43 +1303,54 @@
                 table.className = 'table is-fullwidth is-narrow is-striped financeiro-rateio-table';
                 table.innerHTML = '<thead><tr><th>Mes</th><th>Ano</th><th>Valor</th><th class="has-text-right">Acao</th></tr></thead>';
                 const tbody = document.createElement('tbody');
-
-                competenciasRateioByCategoria[categoriaId].forEach(function (row, index) {
-                    const tr = document.createElement('tr');
-
-                    const mesCell = document.createElement('td');
-                    mesCell.appendChild(createCompetenciaRateioMesSelect(categoriaId, row.mes, index));
-                    tr.appendChild(mesCell);
-
-                    const anoCell = document.createElement('td');
-                    anoCell.appendChild(createCompetenciaRateioAnoInput(categoriaId, row.ano, index));
-                    tr.appendChild(anoCell);
-
-                    const valorCell = document.createElement('td');
-                    valorCell.appendChild(createCompetenciaRateioValorInput(categoriaId, row.valor, index));
-                    tr.appendChild(valorCell);
-
-                    const acaoCell = document.createElement('td');
-                    acaoCell.className = 'has-text-right';
-                    const removeButton = document.createElement('button');
-                    removeButton.type = 'button';
-                    removeButton.className = 'button is-small is-light';
-                    removeButton.textContent = 'Remover';
-                    removeButton.addEventListener('click', function () {
-                        competenciasRateioByCategoria[categoriaId].splice(index, 1);
-                        renderCompetenciasRateioGroups();
-                        serializeCompetenciasRateio();
-                    });
-                    acaoCell.appendChild(removeButton);
-                    tr.appendChild(acaoCell);
-                    tbody.appendChild(tr);
-                });
+                tbody.dataset.financeiroCompetenciaRateioBody = categoriaId;
 
                 table.appendChild(tbody);
                 tableContainer.appendChild(table);
                 wrapper.appendChild(tableContainer);
                 competenciaRateioGroups.appendChild(wrapper);
+                renderCompetenciasRateioRowsForCategoria(categoriaId);
                 syncCompetenciaRateioAssistantForCategoria(categoriaId);
+            });
+        }
+
+        function renderCompetenciasRateioRowsForCategoria(categoriaId) {
+            const tbody = document.querySelector(`[data-financeiro-competencia-rateio-body="${categoriaId}"]`);
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            if (!Array.isArray(competenciasRateioByCategoria[categoriaId]) || !competenciasRateioByCategoria[categoriaId].length) {
+                competenciasRateioByCategoria[categoriaId] = [{ mes: '', ano: '', valor: '' }];
+            }
+
+            competenciasRateioByCategoria[categoriaId].forEach(function (row, index) {
+                const tr = document.createElement('tr');
+
+                const mesCell = document.createElement('td');
+                mesCell.appendChild(createCompetenciaRateioMesSelect(categoriaId, row.mes, index));
+                tr.appendChild(mesCell);
+
+                const anoCell = document.createElement('td');
+                anoCell.appendChild(createCompetenciaRateioAnoInput(categoriaId, row.ano, index));
+                tr.appendChild(anoCell);
+
+                const valorCell = document.createElement('td');
+                valorCell.appendChild(createCompetenciaRateioValorInput(categoriaId, row.valor, index));
+                tr.appendChild(valorCell);
+
+                const acaoCell = document.createElement('td');
+                acaoCell.className = 'has-text-right';
+                const removeButton = document.createElement('button');
+                removeButton.type = 'button';
+                removeButton.className = 'button is-small is-light';
+                removeButton.textContent = 'Remover';
+                removeButton.addEventListener('click', function () {
+                    competenciasRateioByCategoria[categoriaId].splice(index, 1);
+                    renderCompetenciasRateioGroups();
+                    serializeCompetenciasRateio();
+                });
+                acaoCell.appendChild(removeButton);
+                tr.appendChild(acaoCell);
+                tbody.appendChild(tr);
             });
         }
 

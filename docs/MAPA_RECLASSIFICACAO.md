@@ -1190,3 +1190,17 @@ Consolidacao:
 
 Proxima microetapa recomendada:
 - validar o MVP em uso real e registrar os ajustes finos de UX antes de abrir nova frente de competencia/termo
+
+### 48. Assistente inteligente de competencias - refinamento de UX
+
+Status apos microetapa funcional: IMPLEMENTADO
+
+Consolidacao:
+- layout do assistente refinado de cards para lista/tabela compacta
+- foco dos inputs corrigido sem alterar payloads nem regras backend
+- mensagem orientativa de soma suavizada no simples e no rateio
+- modo manual preservado como fallback
+- sem alteracao de model, migration, calculos, saldos ou banco real
+
+Pendencia:
+- revisao visual mais ampla das secoes do formulario continua aberta para microetapa futura

@@ -3781,3 +3781,23 @@ Riscos principais antes de migration:
 - o modo manual permaneceu visivel e funcional como fallback; o assistente nao criou nova fonte de verdade nem novo fluxo de persistencia
 - clone comum e clone de rateio continuam sem copiar competencias automaticamente
 - cobertura automatizada reforcada para exibicao positiva e negativa do assistente, separacao entre `Ja registrado` e `Valor deste lancamento`, regularizacao de lancamento sem competencias e exibicao por subcategoria controlada no rateio
+
+## Refino de UX - Assistente inteligente de competencias
+
+- microetapa de refinamento concluida sem alteracao de model, migration, calculos, saldos ou banco real
+- o assistente deixou de usar cards grandes e passou a usar lista/tabela compacta com quatro colunas:
+  - `Mes`
+  - `Situacao`
+  - `Ja registrado`
+  - `Valor deste lancamento`
+- a mensagem orientativa foi suavizada:
+  - simples: `Distribua o valor total entre as competencias. A soma informada deve fechar com o valor do lancamento.`
+  - rateio: `Distribua o valor da subcategoria entre as competencias. A soma informada deve fechar com o valor da subcategoria.`
+- o bug de foco foi corrigido removendo o re-render completo do assistente a cada tecla digitada; a sincronizacao passou a atualizar apenas:
+  - as linhas manuais correspondentes
+  - a serializacao do payload atual
+- o modo manual continuou visivel e funcional como fallback
+- os payloads continuam sendo:
+  - `competencias_payload`
+  - `competencias_rateio_payload`
+- permanece pendente uma revisao visual mais ampla das secoes do formulario, pois ainda existe mistura visual entre blocos fora do escopo desta microetapa

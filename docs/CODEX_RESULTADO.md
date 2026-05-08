@@ -4953,3 +4953,18 @@ Não houve alteração de código funcional nesta etapa.
   - `py manage.py makemigrations --check --dry-run financeiro`
   - `py manage.py test financeiro.tests` com 119 testes OK
 - nenhum arquivo SQLite foi alterado/versionado
+
+## Microetapa: refinamento de UX do Assistente inteligente de competencias
+
+- o bloco visual do assistente foi compactado de cards grandes para lista/tabela com colunas fixas de `Mes`, `Situacao`, `Ja registrado` e `Valor deste lancamento`
+- os textos repetidos por mes foram removidos, mantendo somente a leitura essencial e a diferenciacao visual de status
+- a orientacao de soma foi suavizada:
+  - simples: `Distribua o valor total entre as competencias. A soma informada deve fechar com o valor do lancamento.`
+  - rateio: `Distribua o valor da subcategoria entre as competencias. A soma informada deve fechar com o valor da subcategoria.`
+- o bug de foco nos inputs foi corrigido ao evitar reconstruir o bloco inteiro do assistente a cada `input`; a digitacao agora atualiza apenas:
+  - a linha manual correspondente
+  - a serializacao do payload
+- o modo manual permaneceu visivel e os payloads atuais foram preservados:
+  - `competencias_payload`
+  - `competencias_rateio_payload`
+- mantida a observacao de UX futura: as secoes do formulario ainda merecem uma revisao visual geral, mas isso ficou fora do escopo desta microetapa

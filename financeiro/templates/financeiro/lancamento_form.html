@@ -87,22 +87,21 @@
     .financeiro-competencia-table th { color: #5f6b7a; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; }
     .financeiro-competencia-table td, .financeiro-competencia-table th { padding-top: 0.65rem; padding-bottom: 0.65rem; vertical-align: middle; }
     .financeiro-competencia-assistente { margin-bottom: 1rem; padding: 0.85rem 0.9rem; border: 1px solid #dbe7f3; border-radius: 12px; background: #fff; }
-    .financeiro-competencia-assistente-copy { margin-bottom: 0.8rem; }
+    .financeiro-competencia-assistente-copy { margin-bottom: 0.7rem; }
     .financeiro-competencia-assistente-copy p { margin: 0; }
-    .financeiro-competencia-assistente-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(168px, 1fr)); gap: 0.75rem; }
-    .financeiro-competencia-assistente-card { padding: 0.8rem; border: 1px solid #dbe7f3; border-radius: 12px; background: #f8fbff; }
-    .financeiro-competencia-assistente-card.is-positive { border-color: #b9dbc2; background: #f5fbf7; }
-    .financeiro-competencia-assistente-card.is-empty { background: #fbfcfe; }
-    .financeiro-competencia-assistente-label { margin: 0 0 0.32rem; color: #182433; font-size: 0.84rem; font-weight: 700; }
-    .financeiro-competencia-assistente-state { display: inline-flex; align-items: center; gap: 0.38rem; margin-bottom: 0.35rem; color: #4b5a6a; font-size: 0.74rem; font-weight: 700; }
-    .financeiro-competencia-assistente-state::before { content: ""; width: 0.55rem; height: 0.55rem; border-radius: 999px; background: #cbd5e1; }
-    .financeiro-competencia-assistente-card.is-positive .financeiro-competencia-assistente-state { color: #166534; }
-    .financeiro-competencia-assistente-card.is-positive .financeiro-competencia-assistente-state::before { background: #22c55e; }
-    .financeiro-competencia-assistente-card.is-empty .financeiro-competencia-assistente-state { color: #64748b; }
-    .financeiro-competencia-assistente-note { margin: 0 0 0.5rem; color: #64748b; font-size: 0.74rem; line-height: 1.4; }
-    .financeiro-competencia-assistente-registered { margin: 0 0 0.55rem; color: #35548a; font-size: 0.73rem; font-weight: 600; }
-    .financeiro-competencia-assistente-field-label { display: block; margin-bottom: 0.28rem; color: #5f6b7a; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; }
-    .financeiro-competencia-assistente-current { margin: 0.45rem 0 0; color: #206bc4; font-size: 0.72rem; font-weight: 600; }
+    .financeiro-competencia-assistente-copy .financeiro-tabler-meta { margin-top: 0.22rem; }
+    .financeiro-competencia-assistente-table { margin-bottom: 0; table-layout: fixed; }
+    .financeiro-competencia-assistente-table thead th { color: #5f6b7a; font-size: 0.69rem; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; }
+    .financeiro-competencia-assistente-table td,
+    .financeiro-competencia-assistente-table th { padding-top: 0.55rem; padding-bottom: 0.55rem; vertical-align: middle; }
+    .financeiro-competencia-assistente-month { color: #182433; font-size: 0.82rem; font-weight: 700; white-space: nowrap; }
+    .financeiro-competencia-assistente-status { display: inline-flex; align-items: center; gap: 0.38rem; padding: 0.18rem 0.52rem; border-radius: 999px; font-size: 0.72rem; font-weight: 700; line-height: 1.2; white-space: nowrap; }
+    .financeiro-competencia-assistente-status::before { content: ""; width: 0.48rem; height: 0.48rem; border-radius: 999px; background: currentColor; opacity: 0.88; }
+    .financeiro-competencia-assistente-status.is-positive { background: #f0fdf4; color: #166534; }
+    .financeiro-competencia-assistente-status.is-empty { background: #fff7ed; color: #b45309; }
+    .financeiro-competencia-assistente-registered { color: #35548a; font-size: 0.74rem; font-weight: 600; white-space: nowrap; }
+    .financeiro-competencia-assistente-registered.is-empty { color: #94a3b8; font-weight: 500; }
+    .financeiro-competencia-assistente-input { max-width: 8.25rem; min-width: 6.75rem; }
     .financeiro-tabler-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem 1rem; margin-top: 0.15rem; }
     .financeiro-tabler-save-rule-inline { display: inline-flex; align-items: center; gap: 0.45rem; margin: 0; color: #667382; font-size: 0.78rem; font-weight: 500; line-height: 1.2; cursor: pointer; }
     .financeiro-tabler-save-rule-inline input { width: 0.95rem; height: 0.95rem; margin: 0; cursor: pointer; }
@@ -450,22 +449,39 @@
                                         <div class="financeiro-competencia-assistente">
                                             <div class="financeiro-competencia-assistente-copy">
                                                 <p class="financeiro-tabler-subtitle">Assistente de competencias</p>
-                                                <p class="financeiro-tabler-meta">Sugestao rapida por mes. O valor ja registrado e so referencia; apenas o valor deste lancamento entra no grupo atual.</p>
+                                                <p class="financeiro-tabler-meta">Distribua o valor da subcategoria entre as competencias. A soma informada deve fechar com o valor da subcategoria.</p>
                                             </div>
-                                            <div class="financeiro-competencia-assistente-grid">
-                                                {% for mes in grupo.meses %}
-                                                    <div class="financeiro-competencia-assistente-card {% if mes.ja_possui_contribuicao %}is-positive{% else %}is-empty{% endif %}">
-                                                        <p class="financeiro-competencia-assistente-label">{{ mes.label }}</p>
-                                                        <div class="financeiro-competencia-assistente-state">{{ mes.status_texto }}</div>
-                                                        {% if mes.ja_registrado_texto %}
-                                                            <p class="financeiro-competencia-assistente-registered">Ja registrado: {{ mes.ja_registrado_texto }}</p>
-                                                        {% else %}
-                                                            <p class="financeiro-competencia-assistente-note">Sem quitacao registrada.</p>
-                                                        {% endif %}
-                                                        <label class="financeiro-competencia-assistente-field-label">Valor deste lancamento</label>
-                                                        <input type="text" class="form-control" value="{{ mes.valor_lancamento_texto }}" disabled>
-                                                    </div>
-                                                {% endfor %}
+                                            <div class="table-responsive">
+                                                <table class="table table-vcenter financeiro-competencia-assistente-table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Mes</th>
+                                                            <th>Situacao</th>
+                                                            <th>Ja registrado</th>
+                                                            <th>Valor deste lancamento</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody class="financeiro-competencia-assistente-grid">
+                                                        {% for mes in grupo.meses %}
+                                                            <tr>
+                                                                <td><span class="financeiro-competencia-assistente-month">{{ mes.label }}</span></td>
+                                                                <td>
+                                                                    <span class="financeiro-competencia-assistente-status {% if mes.ja_possui_contribuicao %}is-positive{% else %}is-empty{% endif %}">
+                                                                        {{ mes.status_texto }}
+                                                                    </span>
+                                                                </td>
+                                                                <td>
+                                                                    <span class="financeiro-competencia-assistente-registered {% if not mes.ja_registrado_texto %}is-empty{% endif %}">
+                                                                        {{ mes.ja_registrado_texto|default:"-" }}
+                                                                    </span>
+                                                                </td>
+                                                                <td>
+                                                                    <input type="text" class="form-control financeiro-competencia-assistente-input" value="{{ mes.valor_lancamento_texto }}" disabled>
+                                                                </td>
+                                                            </tr>
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
                                             </div>
                                         </div>
                                     </div>
@@ -490,28 +506,45 @@
                         >
                             <div class="financeiro-competencia-assistente-copy">
                                 <p class="financeiro-tabler-subtitle">Assistente de competencias</p>
-                                <p class="financeiro-tabler-meta">Sugestao rapida por mes. O valor ja registrado e so referencia; apenas o valor deste lancamento entra no payload atual.</p>
+                                <p class="financeiro-tabler-meta">Distribua o valor total entre as competencias. A soma informada deve fechar com o valor do lancamento.</p>
                             </div>
-                            <div class="financeiro-competencia-assistente-grid" data-financeiro-competencia-assistente-grid="true">
-                                {% for mes in form.assistente_competencia_meses_sugeridos %}
-                                    <div class="financeiro-competencia-assistente-card {% if mes.ja_possui_contribuicao %}is-positive{% else %}is-empty{% endif %}">
-                                        <p class="financeiro-competencia-assistente-label">{{ mes.label }}</p>
-                                        <div class="financeiro-competencia-assistente-state">{{ mes.status_texto }}</div>
-                                        {% if mes.ja_registrado_texto %}
-                                            <p class="financeiro-competencia-assistente-registered">Ja registrado: {{ mes.ja_registrado_texto }}</p>
-                                        {% else %}
-                                            <p class="financeiro-competencia-assistente-note">Sem quitacao registrada.</p>
-                                        {% endif %}
-                                        <label class="financeiro-competencia-assistente-field-label">Valor deste lancamento</label>
-                                        <input type="text" class="form-control" value="{{ mes.valor_lancamento_texto }}" disabled>
-                                    </div>
-                                {% endfor %}
+                            <div class="table-responsive">
+                                <table class="table table-vcenter financeiro-competencia-assistente-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Mes</th>
+                                            <th>Situacao</th>
+                                            <th>Ja registrado</th>
+                                            <th>Valor deste lancamento</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="financeiro-competencia-assistente-grid" data-financeiro-competencia-assistente-grid="true">
+                                        {% for mes in form.assistente_competencia_meses_sugeridos %}
+                                            <tr>
+                                                <td><span class="financeiro-competencia-assistente-month">{{ mes.label }}</span></td>
+                                                <td>
+                                                    <span class="financeiro-competencia-assistente-status {% if mes.ja_possui_contribuicao %}is-positive{% else %}is-empty{% endif %}">
+                                                        {{ mes.status_texto }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <span class="financeiro-competencia-assistente-registered {% if not mes.ja_registrado_texto %}is-empty{% endif %}">
+                                                        {{ mes.ja_registrado_texto|default:"-" }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <input type="text" class="form-control financeiro-competencia-assistente-input" value="{{ mes.valor_lancamento_texto }}" disabled>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                         <div class="financeiro-tabler-subhead">
                             <div>
                                 <p class="financeiro-tabler-subtitle">Competências atendidas</p>
-                                <p class="financeiro-tabler-meta">Distribua o valor controlado entre mês, ano e valor alocado. O modo manual continua disponível como fallback.</p>
+                                <p class="financeiro-tabler-meta">Distribua o valor total entre as competencias. A soma informada deve fechar com o valor do lancamento. O modo manual continua disponivel como fallback.</p>
                             </div>
                             <button
                                 class="btn btn-outline-primary btn-sm"
@@ -1297,38 +1330,38 @@
                 );
                 const possuiRegistro = parseMoedaParaCentavos(valorRegistrado) > 0;
 
-                const card = document.createElement('div');
-                card.className = `financeiro-competencia-assistente-card ${possuiRegistro ? 'is-positive' : 'is-empty'}`;
+                const tr = document.createElement('tr');
 
-                const title = document.createElement('p');
-                title.className = 'financeiro-competencia-assistente-label';
-                title.textContent = competencia.label;
-                card.appendChild(title);
+                const monthCell = document.createElement('td');
+                const month = document.createElement('span');
+                month.className = 'financeiro-competencia-assistente-month';
+                month.textContent = competencia.label;
+                monthCell.appendChild(month);
+                tr.appendChild(monthCell);
 
-                const state = document.createElement('div');
-                state.className = 'financeiro-competencia-assistente-state';
+                const stateCell = document.createElement('td');
+                const state = document.createElement('span');
+                state.className = `financeiro-competencia-assistente-status ${possuiRegistro ? 'is-positive' : 'is-empty'}`;
                 state.textContent = possuiRegistro ? 'Ja possui contribuicao' : 'Sem quitacao registrada';
-                card.appendChild(state);
+                stateCell.appendChild(state);
+                tr.appendChild(stateCell);
 
-                const info = document.createElement('p');
-                info.className = possuiRegistro
-                    ? 'financeiro-competencia-assistente-registered'
-                    : 'financeiro-competencia-assistente-note';
-                info.textContent = possuiRegistro
-                    ? `Ja registrado: ${formatarCentavosMoeda(parseMoedaParaCentavos(valorRegistrado))}`
-                    : 'Sem quitacao registrada.';
-                card.appendChild(info);
+                const registeredCell = document.createElement('td');
+                const registered = document.createElement('span');
+                registered.className = `financeiro-competencia-assistente-registered ${possuiRegistro ? '' : 'is-empty'}`.trim();
+                registered.textContent = possuiRegistro
+                    ? formatarCentavosMoeda(parseMoedaParaCentavos(valorRegistrado))
+                    : '-';
+                registeredCell.appendChild(registered);
+                tr.appendChild(registeredCell);
 
-                const fieldLabel = document.createElement('label');
-                fieldLabel.className = 'financeiro-competencia-assistente-field-label';
-                fieldLabel.textContent = 'Valor deste lancamento';
-                card.appendChild(fieldLabel);
+                const inputCell = document.createElement('td');
 
                 const input = document.createElement('input');
                 input.type = 'text';
                 input.inputMode = 'numeric';
                 input.autocomplete = 'off';
-                input.className = 'form-control';
+                input.className = 'form-control financeiro-competencia-assistente-input';
                 input.value = formatarMoedaPtBr((valorAtual || '').replace(/\D/g, ''));
                 input.setAttribute('aria-label', `Valor deste lancamento para ${competencia.label}`);
                 input.addEventListener('input', function () {
@@ -1342,18 +1375,11 @@
                     );
                     renderCompetenciaRows();
                     serializeCompetenciaRows();
-                    renderCompetenciaAssistant();
                 });
-                card.appendChild(input);
+                inputCell.appendChild(input);
+                tr.appendChild(inputCell);
 
-                if (parseMoedaParaCentavos(valorAtual) > 0) {
-                    const atual = document.createElement('p');
-                    atual.className = 'financeiro-competencia-assistente-current';
-                    atual.textContent = `Neste lancamento: ${formatarCentavosMoeda(parseMoedaParaCentavos(valorAtual))}`;
-                    card.appendChild(atual);
-                }
-
-                competenciaAssistenteGrid.appendChild(card);
+                competenciaAssistenteGrid.appendChild(tr);
             });
         }
 
@@ -1749,12 +1775,19 @@
                 assistenteBox.className = 'financeiro-competencia-assistente';
                 const assistenteCopy = document.createElement('div');
                 assistenteCopy.className = 'financeiro-competencia-assistente-copy';
-                assistenteCopy.innerHTML = '<p class="financeiro-tabler-subtitle">Assistente de competencias</p><p class="financeiro-tabler-meta">Sugestao rapida por mes. O valor ja registrado e so referencia; apenas o valor deste lancamento entra no grupo atual.</p>';
+                assistenteCopy.innerHTML = '<p class="financeiro-tabler-subtitle">Assistente de competencias</p><p class="financeiro-tabler-meta">Distribua o valor da subcategoria entre as competencias. A soma informada deve fechar com o valor da subcategoria.</p>';
                 assistenteBox.appendChild(assistenteCopy);
-                const assistenteGrid = document.createElement('div');
+                const assistenteTableWrapper = document.createElement('div');
+                assistenteTableWrapper.className = 'table-responsive';
+                const assistenteTable = document.createElement('table');
+                assistenteTable.className = 'table table-vcenter financeiro-competencia-assistente-table';
+                assistenteTable.innerHTML = '<thead><tr><th>Mes</th><th>Situacao</th><th>Ja registrado</th><th>Valor deste lancamento</th></tr></thead>';
+                const assistenteGrid = document.createElement('tbody');
                 assistenteGrid.className = 'financeiro-competencia-assistente-grid';
                 assistenteGrid.dataset.financeiroCompetenciaRateioAssistenteGrid = categoriaId;
-                assistenteBox.appendChild(assistenteGrid);
+                assistenteTable.appendChild(assistenteGrid);
+                assistenteTableWrapper.appendChild(assistenteTable);
+                assistenteBox.appendChild(assistenteTableWrapper);
                 wrapper.appendChild(assistenteBox);
 
                 const tableWrapper = document.createElement('div');
@@ -1763,43 +1796,55 @@
                 table.className = 'table table-vcenter financeiro-competencia-table';
                 table.innerHTML = '<thead><tr><th>Mês</th><th>Ano</th><th>Valor</th><th class="text-end">Ação</th></tr></thead>';
                 const tbody = document.createElement('tbody');
-
-                competenciasRateioByCategoria[categoriaId].forEach(function (row, index) {
-                    const tr = document.createElement('tr');
-
-                    const mesCell = document.createElement('td');
-                    mesCell.appendChild(createCompetenciaRateioMesSelect(categoriaId, row.mes, index));
-                    tr.appendChild(mesCell);
-
-                    const anoCell = document.createElement('td');
-                    anoCell.appendChild(createCompetenciaRateioAnoInput(categoriaId, row.ano, index));
-                    tr.appendChild(anoCell);
-
-                    const valorCell = document.createElement('td');
-                    valorCell.appendChild(createCompetenciaRateioValorInput(categoriaId, row.valor, index));
-                    tr.appendChild(valorCell);
-
-                    const acaoCell = document.createElement('td');
-                    acaoCell.className = 'text-end';
-                    const removeButton = document.createElement('button');
-                    removeButton.type = 'button';
-                    removeButton.className = 'btn btn-sm btn-outline-secondary';
-                    removeButton.textContent = 'Remover';
-                    removeButton.addEventListener('click', function () {
-                        competenciasRateioByCategoria[categoriaId].splice(index, 1);
-                        renderCompetenciasRateioGroups();
-                        serializeCompetenciasRateio();
-                    });
-                    acaoCell.appendChild(removeButton);
-                    tr.appendChild(acaoCell);
-                    tbody.appendChild(tr);
-                });
+                tbody.dataset.financeiroCompetenciaRateioBody = categoriaId;
 
                 table.appendChild(tbody);
                 tableWrapper.appendChild(table);
                 wrapper.appendChild(tableWrapper);
                 competenciaRateioGroups.appendChild(wrapper);
+                renderCompetenciasRateioRowsForCategoria(categoriaId);
                 syncCompetenciaRateioAssistantForCategoria(categoriaId);
+            });
+        }
+
+        function renderCompetenciasRateioRowsForCategoria(categoriaId) {
+            const tbody = document.querySelector(`[data-financeiro-competencia-rateio-body="${categoriaId}"]`);
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            if (!Array.isArray(competenciasRateioByCategoria[categoriaId]) || !competenciasRateioByCategoria[categoriaId].length) {
+                competenciasRateioByCategoria[categoriaId] = [{ mes: '', ano: '', valor: '' }];
+            }
+
+            competenciasRateioByCategoria[categoriaId].forEach(function (row, index) {
+                const tr = document.createElement('tr');
+
+                const mesCell = document.createElement('td');
+                mesCell.appendChild(createCompetenciaRateioMesSelect(categoriaId, row.mes, index));
+                tr.appendChild(mesCell);
+
+                const anoCell = document.createElement('td');
+                anoCell.appendChild(createCompetenciaRateioAnoInput(categoriaId, row.ano, index));
+                tr.appendChild(anoCell);
+
+                const valorCell = document.createElement('td');
+                valorCell.appendChild(createCompetenciaRateioValorInput(categoriaId, row.valor, index));
+                tr.appendChild(valorCell);
+
+                const acaoCell = document.createElement('td');
+                acaoCell.className = 'text-end';
+                const removeButton = document.createElement('button');
+                removeButton.type = 'button';
+                removeButton.className = 'btn btn-sm btn-outline-secondary';
+                removeButton.textContent = 'Remover';
+                removeButton.addEventListener('click', function () {
+                    competenciasRateioByCategoria[categoriaId].splice(index, 1);
+                    renderCompetenciasRateioGroups();
+                    serializeCompetenciasRateio();
+                });
+                acaoCell.appendChild(removeButton);
+                tr.appendChild(acaoCell);
+
+                tbody.appendChild(tr);
             });
         }
 
@@ -1824,38 +1869,38 @@
                 );
                 const possuiRegistro = parseMoedaParaCentavos(valorRegistrado) > 0;
 
-                const card = document.createElement('div');
-                card.className = `financeiro-competencia-assistente-card ${possuiRegistro ? 'is-positive' : 'is-empty'}`;
+                const tr = document.createElement('tr');
 
-                const title = document.createElement('p');
-                title.className = 'financeiro-competencia-assistente-label';
-                title.textContent = competencia.label;
-                card.appendChild(title);
+                const monthCell = document.createElement('td');
+                const month = document.createElement('span');
+                month.className = 'financeiro-competencia-assistente-month';
+                month.textContent = competencia.label;
+                monthCell.appendChild(month);
+                tr.appendChild(monthCell);
 
-                const state = document.createElement('div');
-                state.className = 'financeiro-competencia-assistente-state';
+                const stateCell = document.createElement('td');
+                const state = document.createElement('span');
+                state.className = `financeiro-competencia-assistente-status ${possuiRegistro ? 'is-positive' : 'is-empty'}`;
                 state.textContent = possuiRegistro ? 'Ja possui contribuicao' : 'Sem quitacao registrada';
-                card.appendChild(state);
+                stateCell.appendChild(state);
+                tr.appendChild(stateCell);
 
-                const info = document.createElement('p');
-                info.className = possuiRegistro
-                    ? 'financeiro-competencia-assistente-registered'
-                    : 'financeiro-competencia-assistente-note';
-                info.textContent = possuiRegistro
-                    ? `Ja registrado: ${formatarCentavosMoeda(parseMoedaParaCentavos(valorRegistrado))}`
-                    : 'Sem quitacao registrada.';
-                card.appendChild(info);
+                const registeredCell = document.createElement('td');
+                const registered = document.createElement('span');
+                registered.className = `financeiro-competencia-assistente-registered ${possuiRegistro ? '' : 'is-empty'}`.trim();
+                registered.textContent = possuiRegistro
+                    ? formatarCentavosMoeda(parseMoedaParaCentavos(valorRegistrado))
+                    : '-';
+                registeredCell.appendChild(registered);
+                tr.appendChild(registeredCell);
 
-                const fieldLabel = document.createElement('label');
-                fieldLabel.className = 'financeiro-competencia-assistente-field-label';
-                fieldLabel.textContent = 'Valor deste lancamento';
-                card.appendChild(fieldLabel);
+                const inputCell = document.createElement('td');
 
                 const input = document.createElement('input');
                 input.type = 'text';
                 input.inputMode = 'numeric';
                 input.autocomplete = 'off';
-                input.className = 'form-control';
+                input.className = 'form-control financeiro-competencia-assistente-input';
                 input.value = formatarMoedaPtBr((valorAtual || '').replace(/\D/g, ''));
                 input.setAttribute(
                     'aria-label',
@@ -1870,19 +1915,13 @@
                         competencia.ano,
                         normalizarMoedaParaDecimal(digitos)
                     );
-                    renderCompetenciasRateioGroups();
+                    renderCompetenciasRateioRowsForCategoria(categoriaId);
                     serializeCompetenciasRateio();
                 });
-                card.appendChild(input);
+                inputCell.appendChild(input);
+                tr.appendChild(inputCell);
 
-                if (parseMoedaParaCentavos(valorAtual) > 0) {
-                    const atual = document.createElement('p');
-                    atual.className = 'financeiro-competencia-assistente-current';
-                    atual.textContent = `Neste lancamento: ${formatarCentavosMoeda(parseMoedaParaCentavos(valorAtual))}`;
-                    card.appendChild(atual);
-                }
-
-                assistenteGrid.appendChild(card);
+                assistenteGrid.appendChild(tr);
             });
         }
 

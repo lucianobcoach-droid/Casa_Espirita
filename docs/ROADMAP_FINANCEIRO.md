@@ -1328,3 +1328,25 @@ Limites que permanecem fora desta etapa:
 
 Proxima microetapa recomendada:
 - homologar UX real do assistente em tela e decidir se a proxima onda sera refinamento visual/local do formulario ou abertura da frente de termo por favorecido
+
+## 29. Assistente inteligente de competencias - refinamento de UX
+
+Status: IMPLEMENTADO
+
+Consolidacao:
+- o assistente foi compactado para lista/tabela, reduzindo altura visual e repeticao de texto dentro do formulario
+- a leitura base passou a usar quatro colunas fixas:
+  - `Mes`
+  - `Situacao`
+  - `Ja registrado`
+  - `Valor deste lancamento`
+- a formacao condicional por situacao foi mantida com classes distintas para meses com contribuicao previa e meses sem quitacao registrada
+- a orientacao sobre soma deixou de soar como bronca e passou a ser instrucao de preenchimento
+- o bug de foco foi tratado ao impedir re-render completo do assistente a cada tecla digitada
+- o modo manual continua como fallback operacional e a fonte de verdade continua sendo os payloads atuais
+
+Pendencia registrada:
+- ainda cabe uma revisao visual mais ampla das secoes do formulario, porque outros blocos continuam visualmente misturados fora do escopo desta microetapa
+
+Proxima microetapa recomendada:
+- validar este refinamento em uso real e decidir se a proxima frente sera polimento visual geral do formulario ou abertura do termo por favorecido
