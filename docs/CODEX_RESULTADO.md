@@ -2,6 +2,46 @@
 
 Data: 2026-05-08
 
+## Microetapa tecnica: configuracao inicial de colunas personalizadas
+
+- etapa funcional controlada, limitada a estrutura de colunas por tabela, sem tela de linhas, sem formulas guiadas, sem totalizadores e sem exportacao
+- confirmei antes de alterar:
+  - branch `feat/reinicio-financeiro`
+  - arvore limpa
+  - ausencia de commits locais pendentes
+  - ausencia de commits remotos pendentes
+  - `fetch` concluido sem erro
+- implementei a frente em seis pontos:
+  - listagem estrutural de colunas por tabela
+  - `ColunaPersonalizadaForm` criado para `nome`, `tipo_dado`, `obrigatoria`, `visivel`, `ordem` e `status`
+  - criacao de coluna protegida por `financeiro.tabelas_personalizadas.editar_estrutura`
+  - edicao de coluna protegida por `financeiro.tabelas_personalizadas.editar_estrutura`
+  - templates proprios de listagem e formulario de coluna
+  - acao `Colunas` adicionada na listagem de tabelas apenas para quem pode editar estrutura
+- guardrails preservados:
+  - sem tela de linhas
+  - sem preenchimento de valores
+  - sem formula guiada
+  - sem `formula_controlada` no formulario desta etapa
+  - sem totalizadores
+  - sem exportacao XLSX
+  - sem auditoria operacional propria
+  - sem arquivar/restaurar ou exclusao
+- regra adicional segura desta microetapa:
+  - `lista_opcoes` foi liberada de forma controlada por campo textual auxiliar, com uma opcao por linha, maximo de 20 itens e persistencia em `configuracao_json.opcoes`
+- testes adicionados para:
+  - resolver URLs de listagem/criacao/edicao de coluna
+  - liberar e bloquear acesso por `editar_estrutura`
+  - criar e editar coluna valida
+  - impedir `formula_controlada` no form desta etapa
+  - manter o vinculo da coluna com a tabela correta
+  - bloquear manipulacao por URL quando a coluna pertence a outra tabela
+  - mostrar/ocultar a acao `Colunas`
+  - confirmar nao regressao basica em `LancamentoFinanceiro`
+- baixa documental consolidada:
+  - configuracao inicial de colunas concluida
+  - proxima pendencia movida para tela de linhas e preenchimento de valores
+
 ## Microetapa tecnica: cadastro inicial de tabelas configuraveis
 
 - etapa funcional controlada, limitada ao cadastro e edicao apenas dos metadados de `TabelaPersonalizada`

@@ -1602,6 +1602,24 @@ Status consolidado: SPEC FUNCIONAL DOCUMENTAL CONSOLIDADA / BACKLOG TECNICO INCR
   - formula guiada completa;
   - totalizadores;
   - exportacao final.
+- Resultado consolidado desta microetapa:
+  - rota de configuracao estrutural criada por tabela:
+    - `financeiro:tabela-personalizada-coluna-list`
+    - `financeiro:tabela-personalizada-coluna-create`
+    - `financeiro:tabela-personalizada-coluna-update`
+  - listagem de colunas criada com:
+    - nome
+    - tipo de dado
+    - obrigatoria
+    - visivel
+    - ordem
+    - status
+  - `ColunaPersonalizadaForm` criado sem expor `calculada`
+  - `formula_controlada` bloqueada nesta etapa
+  - `lista_opcoes` habilitada de forma controlada por campo textual auxiliar, com maximo de 20 opcoes e gravacao em `configuracao_json.opcoes`
+  - listagem de tabelas atualizada com acao `Colunas` apenas para quem tem `editar_estrutura`
+- Proxima microetapa recomendada:
+  - abrir a tela de linhas e o preenchimento inicial de valores, ainda sem formulas guiadas, totalizadores ou exportacao
 
 #### Microetapa 8 - linhas e valores editaveis
 

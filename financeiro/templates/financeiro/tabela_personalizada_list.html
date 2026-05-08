@@ -202,6 +202,9 @@
                         <td>{{ tabela.atualizado_em|date:'d/m/Y H:i' }}</td>
                         {% if pode_editar_estrutura_tabela_personalizada %}
                             <td class="financeiro-tabela-personalizada-actions">
+                                <a class="button is-small is-light" href="{% url 'financeiro:tabela-personalizada-coluna-list' tabela.pk %}">
+                                    Colunas
+                                </a>
                                 <a class="button is-small is-light" href="{% url 'financeiro:tabela-personalizada-update' tabela.pk %}">
                                     Editar
                                 </a>

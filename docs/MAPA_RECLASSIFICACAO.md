@@ -560,9 +560,15 @@ Consolidacao desta baixa documental:
   - formulario de `TabelaPersonalizada` criado apenas com `nome`, `descricao`, `status` e `ordem`
   - criacao e edicao protegidas por permissoes separadas da frente
   - listagem atualizada com `Nova tabela` e `Editar`, sem abrir colunas, linhas ou exportacao
-- reclassificacao da pendencia proxima apos o cadastro inicial:
-  - deixa de ser `cadastro inicial da tabela personalizada`
-  - passa a ser `configuracao inicial de colunas da tabela`, mantendo linhas, formulas, totalizadores e exportacao fora do recorte imediato
+- consolidacao da configuracao inicial de colunas:
+  - listagem estrutural de colunas criada por tabela
+  - criacao e edicao de coluna protegidas por `editar_estrutura`
+  - `formula_controlada` mantida bloqueada no formulario desta etapa
+  - `lista_opcoes` permitida de forma controlada em `configuracao_json.opcoes`
+  - listagem de tabelas atualizada com acao `Colunas`, sem abrir linhas ou exportacao
+- reclassificacao da pendencia proxima apos a configuracao inicial de colunas:
+  - deixa de ser `configuracao inicial de colunas da tabela`
+  - passa a ser `tela de linhas e preenchimento de valores`, mantendo formulas, totalizadores e exportacao fora do recorte imediato
 - guardrails reforcados:
   - qualquer alteracao em banco real exige backup e autorizacao
   - arquivos SQLite nao devem ser versionados

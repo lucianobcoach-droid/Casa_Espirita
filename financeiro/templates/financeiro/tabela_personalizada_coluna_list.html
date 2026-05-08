@@ -1,0 +1,164 @@
+{% extends 'financeiro/base.html' %}
+{% block title %}Estrutura da tabela{% endblock %}
+{% block content %}
+<style>
+    .financeiro-coluna-page {
+        display: grid;
+        gap: 0.9rem;
+    }
+
+    .financeiro-coluna-card {
+        border: 1px solid rgba(203, 213, 225, 0.85);
+        border-radius: 1rem;
+        background: #fff;
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.045);
+        overflow: hidden;
+    }
+
+    .financeiro-coluna-note {
+        padding: 0.85rem 0.95rem;
+        border-bottom: 1px solid #edf2f7;
+        background: linear-gradient(180deg, rgba(239, 246, 255, 0.9) 0%, rgba(248, 250, 252, 0.9) 100%);
+        color: #334155;
+    }
+
+    .financeiro-coluna-note strong {
+        color: #153a73;
+    }
+
+    .financeiro-coluna-table-wrap {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    .financeiro-coluna-flag {
+        display: inline-flex;
+        align-items: center;
+        min-height: 1.6rem;
+        padding: 0.15rem 0.55rem;
+        border-radius: 999px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        line-height: 1.1;
+    }
+
+    .financeiro-coluna-flag.is-yes {
+        background: rgba(47, 133, 90, 0.12);
+        color: #236746;
+    }
+
+    .financeiro-coluna-flag.is-no {
+        background: rgba(100, 116, 139, 0.14);
+        color: #475569;
+    }
+
+    .financeiro-coluna-status {
+        display: inline-flex;
+        align-items: center;
+        min-height: 1.6rem;
+        padding: 0.15rem 0.55rem;
+        border-radius: 999px;
+        background: #f3f6fb;
+        color: #475569;
+        font-size: 0.72rem;
+        font-weight: 700;
+        line-height: 1.1;
+    }
+
+    .financeiro-coluna-status.is-active {
+        background: rgba(47, 133, 90, 0.12);
+        color: #236746;
+    }
+
+    .financeiro-coluna-status.is-inactive {
+        background: rgba(180, 83, 9, 0.12);
+        color: #9a3412;
+    }
+
+    .financeiro-coluna-status.is-archived {
+        background: rgba(100, 116, 139, 0.14);
+        color: #475569;
+    }
+
+    .financeiro-coluna-empty {
+        color: #64748b;
+    }
+</style>
+
+<div class="financeiro-coluna-page">
+    <div class="financeiro-page-header financeiro-page-head">
+        <div class="financeiro-page-header-main">
+            <h1 class="title financeiro-page-title">Estrutura da tabela</h1>
+            <p class="subtitle is-6 mb-0">
+                {{ tabela_personalizada.nome }}
+            </p>
+        </div>
+        <div class="financeiro-page-header-actions">
+            <a class="button is-primary" href="{% url 'financeiro:tabela-personalizada-coluna-create' tabela_personalizada.pk %}">
+                Nova coluna
+            </a>
+            <a class="button is-light" href="{% url 'financeiro:tabela-personalizada-list' %}">
+                Voltar para tabelas
+            </a>
+        </div>
+    </div>
+
+    <section class="financeiro-coluna-card">
+        <div class="financeiro-coluna-note">
+            <strong>Recorte atual:</strong>
+            esta etapa configura apenas a estrutura das colunas. O preenchimento de linhas sera liberado em microetapa posterior. Formulas e totalizadores seguem como microetapas futuras.
+        </div>
+
+        <div class="financeiro-coluna-table-wrap">
+            <table class="table is-fullwidth is-hoverable financeiro-table">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Tipo de dado</th>
+                        <th>Obrigatoria</th>
+                        <th>Visivel</th>
+                        <th>Ordem</th>
+                        <th>Status</th>
+                        <th>Acoes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for coluna in colunas_personalizadas %}
+                        <tr>
+                            <td>{{ coluna.nome }}</td>
+                            <td>{{ coluna.get_tipo_dado_display }}</td>
+                            <td>
+                                <span class="financeiro-coluna-flag {% if coluna.obrigatoria %}is-yes{% else %}is-no{% endif %}">
+                                    {% if coluna.obrigatoria %}Sim{% else %}Nao{% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="financeiro-coluna-flag {% if coluna.visivel %}is-yes{% else %}is-no{% endif %}">
+                                    {% if coluna.visivel %}Sim{% else %}Nao{% endif %}
+                                </span>
+                            </td>
+                            <td>{{ coluna.ordem }}</td>
+                            <td>
+                                <span class="financeiro-coluna-status{% if coluna.status == 'ativa' %} is-active{% elif coluna.status == 'inativa' %} is-inactive{% else %} is-archived{% endif %}">
+                                    {{ coluna.get_status_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <a class="button is-small is-light" href="{% url 'financeiro:tabela-personalizada-coluna-update' tabela_personalizada.pk coluna.pk %}">
+                                    Editar
+                                </a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="7" class="financeiro-coluna-empty">
+                                Nenhuma coluna personalizada cadastrada ate o momento para esta tabela.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+{% endblock %}

@@ -16,6 +16,7 @@ from .models import (
     AlocacaoCompetenciaFinanceira,
     AssinaturaInstitucional,
     CategoriaFinanceira,
+    ColunaPersonalizada,
     ConfiguracaoInstitucional,
     CentroCusto,
     ContaFinanceira,
@@ -428,6 +429,111 @@ class TabelaPersonalizadaForm(forms.ModelForm):
             'descricao': 'Opcional. Use para explicar o uso interno da tabela.',
             'status': 'Controla apenas a disponibilidade documental desta tabela no MVP.',
             'ordem': 'Opcional. Valores menores aparecem primeiro na listagem.',
+        }
+
+
+class ColunaPersonalizadaForm(forms.ModelForm):
+    opcoes_lista = forms.CharField(
+        required=False,
+        widget=forms.Textarea(
+            attrs={
+                'rows': 6,
+                'placeholder': 'Uma opcao por linha.',
+            }
+        ),
+        label='Opcoes da lista',
+        help_text='Use apenas para o tipo Lista de opcoes. Informe uma opcao por linha, com maximo de 20 itens.',
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        tipos_permitidos = [
+            escolha
+            for escolha in self.fields['tipo_dado'].choices
+            if escolha[0] != ColunaPersonalizada.TipoDado.FORMULA_CONTROLADA
+        ]
+        self.fields['tipo_dado'].choices = tipos_permitidos
+        self.fields['ordem'].widget.attrs.update({'min': 0})
+
+        configuracao = self.instance.configuracao_json if getattr(self.instance, 'pk', None) else {}
+        if isinstance(configuracao, dict):
+            opcoes = configuracao.get('opcoes', [])
+            if isinstance(opcoes, list) and not self.is_bound:
+                self.initial['opcoes_lista'] = '\n'.join(
+                    opcao for opcao in opcoes if isinstance(opcao, str) and opcao.strip()
+                )
+
+    def clean_tipo_dado(self):
+        tipo_dado = self.cleaned_data.get('tipo_dado')
+        if tipo_dado == ColunaPersonalizada.TipoDado.FORMULA_CONTROLADA:
+            raise ValidationError('Formula controlada ainda nao pode ser configurada nesta etapa.')
+        return tipo_dado
+
+    def clean_opcoes_lista(self):
+        conteudo = (self.cleaned_data.get('opcoes_lista') or '').replace('\r\n', '\n')
+        linhas = [linha.strip() for linha in conteudo.split('\n')]
+        opcoes = [linha for linha in linhas if linha]
+
+        if not opcoes:
+            return []
+
+        opcoes_normalizadas: set[str] = set()
+        for opcao in opcoes:
+            opcao_normalizada = opcao.casefold()
+            if opcao_normalizada in opcoes_normalizadas:
+                raise ValidationError('Lista de opcoes nao pode repetir valores equivalentes.')
+            opcoes_normalizadas.add(opcao_normalizada)
+
+        if len(opcoes) > 20:
+            raise ValidationError('Lista de opcoes aceita no maximo 20 itens no MVP.')
+
+        return opcoes
+
+    def clean(self):
+        cleaned_data = super().clean()
+        tipo_dado = cleaned_data.get('tipo_dado')
+        opcoes = cleaned_data.get('opcoes_lista') or []
+
+        if tipo_dado == ColunaPersonalizada.TipoDado.LISTA_OPCOES and not opcoes:
+            self.add_error('opcoes_lista', 'Informe ao menos uma opcao para este tipo de coluna.')
+
+        if tipo_dado != ColunaPersonalizada.TipoDado.LISTA_OPCOES and opcoes:
+            self.add_error('opcoes_lista', 'As opcoes so podem ser preenchidas para o tipo Lista de opcoes.')
+
+        return cleaned_data
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        instance.calculada = False
+
+        tipo_dado = self.cleaned_data.get('tipo_dado')
+        opcoes = self.cleaned_data.get('opcoes_lista') or []
+        if tipo_dado == ColunaPersonalizada.TipoDado.LISTA_OPCOES:
+            instance.configuracao_json = {'opcoes': opcoes}
+        else:
+            instance.configuracao_json = {}
+
+        if commit:
+            instance.save()
+        return instance
+
+    class Meta:
+        model = ColunaPersonalizada
+        fields = [
+            'nome',
+            'tipo_dado',
+            'obrigatoria',
+            'visivel',
+            'ordem',
+            'status',
+        ]
+        widgets = {
+            'ordem': forms.NumberInput(attrs={'min': 0}),
+        }
+        help_texts = {
+            'visivel': 'Controla apenas a exibicao futura da coluna nas telas da frente.',
+            'ordem': 'Valores menores aparecem primeiro na estrutura da tabela.',
+            'status': 'Use para manter a coluna ativa, inativa ou arquivada na estrutura.',
         }
 
 

@@ -30,6 +30,7 @@ from django.views.generic import CreateView, DeleteView, DetailView, ListView, T
 from .forms import (
     AssinaturaInstitucionalForm,
     CategoriaFinanceiraForm,
+    ColunaPersonalizadaForm,
     ConfiguracaoInstitucionalForm,
     CentroCustoForm,
     ContaFinanceiraForm,
@@ -44,6 +45,7 @@ from .models import (
     AssinaturaInstitucional,
     AuditoriaFinanceiro,
     CategoriaFinanceira,
+    ColunaPersonalizada,
     ConfiguracaoInstitucional,
     CentroCusto,
     ContaFinanceira,
@@ -8179,6 +8181,86 @@ class TabelaPersonalizadaUpdateView(FinanceiroFormMixin, UpdateView):
             form.instance.criado_por = usuario
         form.instance.atualizado_por = usuario
         return super().form_valid(form)
+
+
+class TabelaPersonalizadaColunaListView(FinanceiroPermissaoMixin, ListView):
+    permissao_requerida = PermissoesTabelasPersonalizadas.EDITAR_ESTRUTURA
+    model = ColunaPersonalizada
+    template_name = 'financeiro/tabela_personalizada_coluna_list.html'
+    context_object_name = 'colunas_personalizadas'
+
+    def dispatch(self, request, *args, **kwargs):
+        self.tabela = get_object_or_404(TabelaPersonalizada, pk=self.kwargs['tabela_id'])
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_queryset(self):
+        return (
+            super()
+            .get_queryset()
+            .filter(tabela=self.tabela)
+            .order_by('ordem', 'nome', 'pk')
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['tabela_personalizada'] = self.tabela
+        return context
+
+
+class TabelaPersonalizadaColunaCreateView(FinanceiroFormMixin, CreateView):
+    permissao_requerida = PermissoesTabelasPersonalizadas.EDITAR_ESTRUTURA
+    model = ColunaPersonalizada
+    form_class = ColunaPersonalizadaForm
+    template_name = 'financeiro/tabela_personalizada_coluna_form.html'
+    page_title = 'Nova coluna personalizada'
+    success_message = 'Coluna personalizada cadastrada com sucesso.'
+
+    def dispatch(self, request, *args, **kwargs):
+        self.tabela = get_object_or_404(TabelaPersonalizada, pk=self.kwargs['tabela_id'])
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_success_url(self):
+        return reverse('financeiro:tabela-personalizada-coluna-list', kwargs={'tabela_id': self.tabela.pk})
+
+    def get_cancel_url(self):
+        return self._get_return_to_url() or self.get_success_url()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['tabela_personalizada'] = self.tabela
+        return context
+
+    def form_valid(self, form):
+        form.instance.tabela = self.tabela
+        return super().form_valid(form)
+
+
+class TabelaPersonalizadaColunaUpdateView(FinanceiroFormMixin, UpdateView):
+    permissao_requerida = PermissoesTabelasPersonalizadas.EDITAR_ESTRUTURA
+    model = ColunaPersonalizada
+    form_class = ColunaPersonalizadaForm
+    template_name = 'financeiro/tabela_personalizada_coluna_form.html'
+    page_title = 'Editar coluna personalizada'
+    submit_label = 'Atualizar'
+    success_message = 'Coluna personalizada atualizada com sucesso.'
+
+    def dispatch(self, request, *args, **kwargs):
+        self.tabela = get_object_or_404(TabelaPersonalizada, pk=self.kwargs['tabela_id'])
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_queryset(self):
+        return super().get_queryset().filter(tabela=self.tabela)
+
+    def get_success_url(self):
+        return reverse('financeiro:tabela-personalizada-coluna-list', kwargs={'tabela_id': self.tabela.pk})
+
+    def get_cancel_url(self):
+        return self._get_return_to_url() or self.get_success_url()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['tabela_personalizada'] = self.tabela
+        return context
 
 
 class CategoriaFinanceiraUpdateView(FinanceiroFormMixin, UpdateView):

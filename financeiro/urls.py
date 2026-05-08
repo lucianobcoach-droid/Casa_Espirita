@@ -67,6 +67,9 @@ from .views import (
     PrestacaoContasFinanceiroView,
     ResumoFinanceiroView,
     RegraLancamentoFinanceiroSugestaoView,
+    TabelaPersonalizadaColunaCreateView,
+    TabelaPersonalizadaColunaListView,
+    TabelaPersonalizadaColunaUpdateView,
     TabelaPersonalizadaCreateView,
     TabelaPersonalizadaListView,
     TabelaPersonalizadaUpdateView,
@@ -102,6 +105,21 @@ urlpatterns = [
         'controles-internos/tabelas-personalizadas/<int:pk>/editar/',
         TabelaPersonalizadaUpdateView.as_view(),
         name='tabela-personalizada-update',
+    ),
+    path(
+        'controles-internos/tabelas-personalizadas/<int:tabela_id>/colunas/',
+        TabelaPersonalizadaColunaListView.as_view(),
+        name='tabela-personalizada-coluna-list',
+    ),
+    path(
+        'controles-internos/tabelas-personalizadas/<int:tabela_id>/colunas/nova/',
+        TabelaPersonalizadaColunaCreateView.as_view(),
+        name='tabela-personalizada-coluna-create',
+    ),
+    path(
+        'controles-internos/tabelas-personalizadas/<int:tabela_id>/colunas/<int:pk>/editar/',
+        TabelaPersonalizadaColunaUpdateView.as_view(),
+        name='tabela-personalizada-coluna-update',
     ),
     path('autocomplete/pessoas/', PessoaFinanceiraAutocompleteView.as_view(), name='autocomplete-pessoa'),
     path(

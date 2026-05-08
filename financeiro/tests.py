@@ -14,6 +14,7 @@ from django.urls import resolve, reverse
 
 from .forms import (
     CategoriaFinanceiraForm,
+    ColunaPersonalizadaForm,
     ContaFinanceiraForm,
     LancamentoFinanceiroForm,
     LancamentoFinanceiroGrupoRateioForm,
@@ -45,6 +46,9 @@ from .views import (
     LancamentoFinanceiroGrupoRateioCloneView,
     LancamentoFinanceiroGrupoRateioUpdateView,
     PrestacaoContasFinanceiroView,
+    TabelaPersonalizadaColunaCreateView,
+    TabelaPersonalizadaColunaListView,
+    TabelaPersonalizadaColunaUpdateView,
     TabelaPersonalizadaCreateView,
     TabelaPersonalizadaListView,
     TabelaPersonalizadaUpdateView,
@@ -3912,6 +3916,20 @@ class TabelasPersonalizadasListViewTests(TestCase):
             criado_por=self.user,
             atualizado_por=self.user,
         )
+        self.outra_tabela = TabelaPersonalizada.objects.create(
+            nome='Controle paralelo',
+            descricao='Tabela separada para validar isolamento.',
+            criado_por=self.user,
+            atualizado_por=self.user,
+        )
+        self.coluna_existente = ColunaPersonalizada.objects.create(
+            tabela=self.tabela,
+            nome='Observacao interna',
+            tipo_dado=ColunaPersonalizada.TipoDado.TEXTO_LONGO,
+            obrigatoria=False,
+            visivel=True,
+            ordem=3,
+        )
 
     def _garantir_permissao(self, codigo: str) -> PermissaoSistema:
         permissao = PermissaoSistema.objects.filter(codigo=codigo).first()
@@ -3963,6 +3981,30 @@ class TabelasPersonalizadasListViewTests(TestCase):
         resolved = resolve(reverse('financeiro:tabela-personalizada-update', kwargs={'pk': self.tabela.pk}))
 
         self.assertIs(resolved.func.view_class, TabelaPersonalizadaUpdateView)
+
+    def test_url_resolve_para_view_de_listagem_de_colunas(self):
+        resolved = resolve(
+            reverse('financeiro:tabela-personalizada-coluna-list', kwargs={'tabela_id': self.tabela.pk})
+        )
+
+        self.assertIs(resolved.func.view_class, TabelaPersonalizadaColunaListView)
+
+    def test_url_resolve_para_view_de_criacao_de_coluna(self):
+        resolved = resolve(
+            reverse('financeiro:tabela-personalizada-coluna-create', kwargs={'tabela_id': self.tabela.pk})
+        )
+
+        self.assertIs(resolved.func.view_class, TabelaPersonalizadaColunaCreateView)
+
+    def test_url_resolve_para_view_de_edicao_de_coluna(self):
+        resolved = resolve(
+            reverse(
+                'financeiro:tabela-personalizada-coluna-update',
+                kwargs={'tabela_id': self.tabela.pk, 'pk': self.coluna_existente.pk},
+            )
+        )
+
+        self.assertIs(resolved.func.view_class, TabelaPersonalizadaColunaUpdateView)
 
     def test_usuario_com_permissao_visualizar_acessa_listagem(self):
         self._login_com_permissoes(
@@ -4093,6 +4135,193 @@ class TabelasPersonalizadasListViewTests(TestCase):
         self.assertEqual(self.tabela.status, TabelaPersonalizada.StatusTabela.INATIVA)
         self.assertEqual(self.tabela.ordem, 3)
         self.assertEqual(self.tabela.atualizado_por, usuario)
+
+    def test_usuario_com_permissao_editar_estrutura_acessa_listagem_de_colunas(self):
+        self._login_com_permissoes(
+            'user-coluna-list',
+            [PermissoesTabelasPersonalizadas.EDITAR_ESTRUTURA],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-coluna-list', kwargs={'tabela_id': self.tabela.pk})
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Estrutura da tabela')
+        self.assertContains(response, 'Observacao interna')
+        self.assertContains(response, 'estrutura das colunas')
+        self.assertContains(response, 'microetapa posterior')
+
+    def test_usuario_sem_permissao_editar_estrutura_nao_acessa_colunas(self):
+        self._login_com_permissoes(
+            'user-coluna-list-sem-permissao',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-coluna-list', kwargs={'tabela_id': self.tabela.pk})
+        )
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_form_de_coluna_nao_expoe_formula_controlada_nem_calculada(self):
+        form = ColunaPersonalizadaForm()
+        valores_tipo = {valor for valor, _rotulo in form.fields['tipo_dado'].choices}
+
+        self.assertNotIn(ColunaPersonalizada.TipoDado.FORMULA_CONTROLADA, valores_tipo)
+        self.assertNotIn('calculada', form.fields)
+
+    def test_usuario_com_permissao_cria_coluna_valida(self):
+        self._login_com_permissoes(
+            'user-coluna-criar',
+            [PermissoesTabelasPersonalizadas.EDITAR_ESTRUTURA],
+        )
+
+        response = self.client.post(
+            reverse('financeiro:tabela-personalizada-coluna-create', kwargs={'tabela_id': self.tabela.pk}),
+            data={
+                'nome': 'Categoria interna',
+                'tipo_dado': ColunaPersonalizada.TipoDado.LISTA_OPCOES,
+                'opcoes_lista': 'Material\nLimpeza\nApoio',
+                'obrigatoria': 'on',
+                'visivel': 'on',
+                'ordem': 5,
+                'status': ColunaPersonalizada.StatusColuna.ATIVA,
+            },
+        )
+
+        self.assertRedirects(
+            response,
+            reverse('financeiro:tabela-personalizada-coluna-list', kwargs={'tabela_id': self.tabela.pk}),
+        )
+        coluna = ColunaPersonalizada.objects.get(tabela=self.tabela, nome='Categoria interna')
+        self.assertEqual(coluna.tipo_dado, ColunaPersonalizada.TipoDado.LISTA_OPCOES)
+        self.assertEqual(coluna.configuracao_json, {'opcoes': ['Material', 'Limpeza', 'Apoio']})
+        self.assertFalse(coluna.calculada)
+
+    def test_usuario_com_permissao_edita_coluna_valida(self):
+        self._login_com_permissoes(
+            'user-coluna-editar',
+            [PermissoesTabelasPersonalizadas.EDITAR_ESTRUTURA],
+        )
+
+        response = self.client.post(
+            reverse(
+                'financeiro:tabela-personalizada-coluna-update',
+                kwargs={'tabela_id': self.tabela.pk, 'pk': self.coluna_existente.pk},
+            ),
+            data={
+                'nome': 'Observacao revisada',
+                'tipo_dado': ColunaPersonalizada.TipoDado.TEXTO_CURTO,
+                'opcoes_lista': '',
+                'obrigatoria': 'on',
+                'visivel': '',
+                'ordem': 9,
+                'status': ColunaPersonalizada.StatusColuna.INATIVA,
+            },
+        )
+
+        self.assertRedirects(
+            response,
+            reverse('financeiro:tabela-personalizada-coluna-list', kwargs={'tabela_id': self.tabela.pk}),
+        )
+        self.coluna_existente.refresh_from_db()
+        self.assertEqual(self.coluna_existente.nome, 'Observacao revisada')
+        self.assertEqual(self.coluna_existente.tipo_dado, ColunaPersonalizada.TipoDado.TEXTO_CURTO)
+        self.assertTrue(self.coluna_existente.obrigatoria)
+        self.assertFalse(self.coluna_existente.visivel)
+        self.assertEqual(self.coluna_existente.ordem, 9)
+        self.assertEqual(self.coluna_existente.status, ColunaPersonalizada.StatusColuna.INATIVA)
+
+    def test_form_bloqueia_formula_controlada_nesta_etapa(self):
+        form = ColunaPersonalizadaForm(
+            data={
+                'nome': 'Formula futura',
+                'tipo_dado': ColunaPersonalizada.TipoDado.FORMULA_CONTROLADA,
+                'opcoes_lista': '',
+                'obrigatoria': '',
+                'visivel': 'on',
+                'ordem': 1,
+                'status': ColunaPersonalizada.StatusColuna.ATIVA,
+            }
+        )
+
+        self.assertFalse(form.is_valid())
+        self.assertIn('tipo_dado', form.errors)
+
+    def test_coluna_criada_fica_vinculada_a_tabela_correta(self):
+        self._login_com_permissoes(
+            'user-coluna-vinculo',
+            [PermissoesTabelasPersonalizadas.EDITAR_ESTRUTURA],
+        )
+
+        self.client.post(
+            reverse('financeiro:tabela-personalizada-coluna-create', kwargs={'tabela_id': self.outra_tabela.pk}),
+            data={
+                'nome': 'Codigo secundario',
+                'tipo_dado': ColunaPersonalizada.TipoDado.TEXTO_CURTO,
+                'opcoes_lista': '',
+                'obrigatoria': '',
+                'visivel': 'on',
+                'ordem': 2,
+                'status': ColunaPersonalizada.StatusColuna.ATIVA,
+            },
+        )
+
+        coluna = ColunaPersonalizada.objects.get(nome='Codigo secundario')
+        self.assertEqual(coluna.tabela, self.outra_tabela)
+
+    def test_edicao_nao_permite_manipular_coluna_de_outra_tabela_pela_url(self):
+        self._login_com_permissoes(
+            'user-coluna-url-errada',
+            [PermissoesTabelasPersonalizadas.EDITAR_ESTRUTURA],
+        )
+        coluna_outra_tabela = ColunaPersonalizada.objects.create(
+            tabela=self.outra_tabela,
+            nome='Campo isolado',
+            tipo_dado=ColunaPersonalizada.TipoDado.TEXTO_CURTO,
+        )
+
+        response = self.client.get(
+            reverse(
+                'financeiro:tabela-personalizada-coluna-update',
+                kwargs={'tabela_id': self.tabela.pk, 'pk': coluna_outra_tabela.pk},
+            )
+        )
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_listagem_exibe_acao_colunas_apenas_com_permissao_editar_estrutura(self):
+        self._login_com_permissoes(
+            'user-menu-colunas-com-permissao',
+            [
+                PermissoesTabelasPersonalizadas.VISUALIZAR,
+                PermissoesTabelasPersonalizadas.EDITAR_ESTRUTURA,
+            ],
+        )
+
+        response = self.client.get(reverse('financeiro:tabela-personalizada-list'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            reverse('financeiro:tabela-personalizada-coluna-list', kwargs={'tabela_id': self.tabela.pk}),
+        )
+        self.assertContains(response, 'Colunas')
+
+    def test_listagem_oculta_acao_colunas_sem_permissao_editar_estrutura(self):
+        self._login_com_permissoes(
+            'user-menu-colunas-sem-permissao',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+
+        response = self.client.get(reverse('financeiro:tabela-personalizada-list'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(
+            response,
+            reverse('financeiro:tabela-personalizada-coluna-list', kwargs={'tabela_id': self.tabela.pk}),
+        )
 
     def test_listagem_exibe_estado_vazio_sem_erro(self):
         TabelaPersonalizada.objects.all().delete()
@@ -4228,7 +4457,7 @@ class TabelasPersonalizadasListViewTests(TestCase):
         response = self.client.post(
             reverse('financeiro:tabela-personalizada-create'),
             data={
-                'nome': 'Controle paralelo',
+                'nome': 'Controle sem impacto',
                 'descricao': '',
                 'status': TabelaPersonalizada.StatusTabela.ATIVA,
                 'ordem': 0,

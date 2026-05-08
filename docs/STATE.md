@@ -118,6 +118,13 @@ Data de atualizacao: 2026-05-08
   - template proprio de formulario, com aviso explicito de que a configuracao de colunas fica para microetapa posterior
   - botao `Nova tabela` na listagem apenas para quem pode criar
   - acao `Editar` na listagem apenas para quem pode editar estrutura
+- configuracao inicial de colunas agora implementada com:
+  - listagem estrutural de colunas por tabela em rota propria dentro de `Controles internos`
+  - `ColunaPersonalizadaForm` limitado a `nome`, `tipo_dado`, `obrigatoria`, `visivel`, `ordem` e `status`
+  - `formula_controlada` bloqueada no formulario desta etapa
+  - suporte controlado a `lista_opcoes` por texto auxiliar, gravando `configuracao_json.opcoes`
+  - criacao e edicao de coluna protegidas por `financeiro.tabelas_personalizadas.editar_estrutura`
+  - acao `Colunas` adicionada na listagem de tabelas apenas para quem pode editar estrutura
 - limites desta implementacao estrutural:
   - sem `FormulaColunaPersonalizada`
   - sem `TotalizadorColunaPersonalizada`
@@ -125,8 +132,8 @@ Data de atualizacao: 2026-05-08
   - sem exportacao XLSX da nova frente
   - sem integracao com financeiro oficial
 - classificacao documental atualizada desta frente:
-  - implementar agora: estrutura minima de dados, permissoes executaveis, listagem minima somente leitura e cadastro inicial de metadados concluidos
-  - pendencia proxima: abrir microetapa de configuracao de colunas, ainda sem linhas, formulas, totalizadores ou exportacao
+  - implementar agora: estrutura minima de dados, permissoes executaveis, listagem minima somente leitura, cadastro inicial de metadados e configuracao inicial de colunas concluidos
+  - pendencia proxima: abrir microetapa de tela de linhas e preenchimento de valores, ainda sem formulas, totalizadores ou exportacao
   - backlog/futuro: agrupamentos por opcao, filtros avancados/compostos, visoes salvas, arrastar-e-soltar, importacao assistida e exemplos/templates
   - fora de escopo: planilha livre estilo Excel, integracao escrevente com financeiro e modelagem definitiva de banco nesta fase
   - risco a monitorar: perda de governanca e desvio da frente para comportamento de planilha livre
