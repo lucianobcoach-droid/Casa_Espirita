@@ -1,6 +1,144 @@
 # ROADMAP FINANCEIRO
 
-Data: 2026-04-23
+Data: 2026-05-08
+
+## 0.21. SPEC funcional inicial: tabelas de controle personalizadas
+
+Status consolidado: SPEC FUNCIONAL DOCUMENTAL CONSOLIDADA / BACKLOG
+
+### Classificacao da frente
+
+- Frente propria e separada da frequencia por competencia.
+- Nao deve ser tratada como extensao da matriz de frequencia nem como ajuste pequeno do financeiro atual.
+- Deve permanecer em trilha propria de especificacao, homologacao e futura implementacao incremental.
+
+### Objetivo funcional
+
+- Permitir controles internos configuraveis da Casa em tabelas proprias, reduzindo dependencia de planilhas externas sem transformar o sistema em planilha generica.
+- Atender controles operacionais e gerenciais que hoje nao cabem bem em lancamentos, cadastros ou relatorios oficiais do financeiro.
+
+### Escopo possivel do MVP
+
+- cadastro de uma tabela personalizada com nome, descricao curta e status ativo/inativo;
+- definicao manual de colunas com tipos limitados e previsiveis;
+- linhas de controle digitadas manualmente pelo usuario;
+- totalizadores basicos e visoes simples de soma/contagem;
+- exportacao simples da tabela;
+- trilha de auditoria de estrutura e de dados;
+- separacao explicita entre dado de controle interno e financeiro oficial.
+
+### Fora do MVP
+
+- motor generico de planilha livre;
+- formulas arbitrarias por texto livre;
+- automacoes, macros, scripts ou qualquer execucao dinamica;
+- escrita automatica em lancamentos, saldos, relatorios ou cadastros oficiais do financeiro;
+- importacao em massa complexa com conciliacao inteligente;
+- dashboards transversais, cruzamentos amplos entre tabelas e consolidacao multi-modulo;
+- definicao definitiva de modelagem de banco antes do fechamento funcional desta SPEC.
+
+### Tipos de coluna e diretriz de formula
+
+- Tipos de coluna aceitaveis para o recorte inicial: texto curto, texto longo, numero, valor monetario, inteiro, data, booleano, selecao simples e referencia opcional somente de leitura.
+- Se houver formula no MVP, ela deve ser estritamente controlada por whitelist e limitada a operacoes no contexto da propria linha.
+- Formulas permitidas no desenho inicial:
+  - operacoes aritmeticas simples (`+`, `-`, `*`, `/`);
+  - parenteses;
+  - funcoes seguras e fechadas, se realmente necessarias, como `ABS`, `ROUND`, `MIN` e `MAX`;
+  - totalizadores calculados pelo proprio sistema, sem expressao livre do usuario final.
+- Formulas proibidas:
+  - qualquer avaliacao de Python, JavaScript, SQL ou codigo executavel;
+  - referencias livres entre tabelas;
+  - referencias que alterem outras linhas, outras colunas ou outros registros;
+  - formulas com efeito colateral, chamada externa, importacao de arquivo, acesso a rede ou leitura/escrita no sistema;
+  - referencia direta a saldos, calculos, balancetes, extratos, prestacao, fechamento ou lancamentos reais como dado editavel.
+
+### Limites de seguranca
+
+- Nao permitir que a frente vire um "Excel dentro do sistema".
+- Impor limites de quantidade de colunas, linhas por consulta, tipos suportados e complexidade de formula.
+- Separar claramente configuracao da tabela, lancamento de linhas e administracao de permissoes.
+- Qualquer vinculo futuro com entidades oficiais deve nascer como referencia controlada e nao como escrita automatica.
+- A frente nao pode criar novo caminho para alterar calculos financeiros, saldos, relatorios oficiais ou lancamentos reais.
+
+### Premissas de permissoes
+
+- Permissoes devem ser separadas por acao, no minimo:
+  - visualizar tabelas;
+  - criar/editar estrutura;
+  - lancar/editar linhas;
+  - exportar;
+  - administrar tabelas arquivadas/restauracoes.
+- Estrutura da tabela e formulas devem exigir permissao mais forte do que o simples preenchimento de linhas.
+- Se existir vinculo futuro com entidades oficiais, ele deve exigir permissao dedicada e auditoria reforcada.
+
+### Diretriz de auditoria e trilha de alteracoes
+
+- Registrar criacao, edicao, arquivamento e exclusao logica da tabela.
+- Registrar alteracao de colunas, tipos, ordem, obrigatoriedade e formula.
+- Registrar inclusao, alteracao e exclusao de linhas com antes/depois estruturado.
+- Registrar usuario, data/hora, tabela afetada e acao de exportacao/backup/restauracao.
+- Excluir fisicamente dados de controle deve ser excecao; preferir arquivamento ou exclusao logica quando o uso real justificar.
+
+### Diretriz de exportacao e backup
+
+- Cada tabela deve poder ser exportada ao menos em formato simples de leitura, como CSV ou XLSX.
+- Deve existir estrategia futura de backup que preserve estrutura + dados + metadados essenciais da tabela.
+- Restauracao, quando existir, deve ser tratada como operacao administrativa auditada.
+- Exportacao nao pode ser tratada como integracao oficial com o financeiro; e apenas saida documental/operacional.
+
+### Relacao com o financeiro oficial
+
+- Quando deve ficar separado:
+  - controles internos, provisoes, acompanhamentos operacionais, metas, medidores e listas auxiliares que nao representam por si so lancamento financeiro oficial;
+  - qualquer dado ainda em preparo, conferencia ou organizacao interna.
+- Quando pode futuramente vincular entidades:
+  - pessoa, conta, categoria ou lancamento podem entrar apenas como referencia opcional e controlada;
+  - primeiro recorte seguro e leitura/relacionamento, nao escrita;
+  - eventual integracao futura deve nascer por microetapa propria e com regra explicita de permissao/auditoria.
+- O que nao pode alterar:
+  - calculo financeiro;
+  - saldos;
+  - extrato;
+  - resumo;
+  - prestacao/fechamento;
+  - balancete;
+  - lancamentos reais;
+  - regras de transferencia, rateio ou competencias ja consolidadas.
+
+### Riscos principais
+
+- risco de escopo crescer ate virar "Excel dentro do sistema";
+- risco de proliferacao de tabelas sem governanca;
+- risco de formulas ambiguas ou dificeis de auditar;
+- risco de confusao entre controle interno e dado financeiro oficial;
+- risco de permissao excessiva para quem so deveria preencher linhas;
+- risco de exportacao/backup insuficiente para uma frente que tende a concentrar dado operacional importante;
+- risco de futura integracao com financeiro criar expectativa de escrita automatica indevida.
+
+### Classificacao de pendencias desta frente
+
+- Implementar agora:
+  - nenhuma; esta microetapa e apenas de auditoria documental e SPEC funcional inicial.
+- Pendencia proxima:
+  - validar com a usuaria o primeiro caso de uso piloto da frente;
+  - fechar se o MVP inicial tera apenas totalizadores nativos ou tambem formulas simples por whitelist;
+  - definir limite funcional inicial de colunas, linhas e exportacao.
+- Backlog/futuro:
+  - referencias opcionais a entidades oficiais;
+  - templates de tabela;
+  - importacao assistida;
+  - filtros/visoes salvas;
+  - formulas controladas mais ricas, se o uso real justificar.
+- Fora de escopo:
+  - modelagem definitiva de banco nesta etapa;
+  - implementacao funcional agora;
+  - qualquer impacto em Python, templates, JS/CSS, migrations, banco ou financeiro oficial;
+  - transformacao da frente em engine generica de planilha.
+- Risco a monitorar:
+  - escopo expandir por conveniencia e perder governanca;
+  - mistura entre controle interno e fonte oficial financeira;
+  - permissao, auditoria e backup ficarem atras da flexibilidade entregue.
 
 ## 0.20. Especificacao funcional: tipo/disponibilidade de conta e Balancete patrimonial
 

@@ -1,6 +1,38 @@
 # CODEX_RESULTADO
 
-Data: 2026-05-06
+Data: 2026-05-08
+
+## Microetapa documental: SPEC funcional inicial de tabelas de controle personalizadas
+
+- etapa exclusivamente documental, sem alteracao de codigo
+- confirmei a branch `feat/reinicio-financeiro`, estado limpo, `fetch` concluido e ausencia de commits locais/remotos pendentes antes de iniciar qualquer alteracao
+- consultei apenas os documentos e skills autorizados para esta microetapa
+- consolidei a frente `Tabelas de controle personalizadas` como SPEC funcional inicial propria, separada da frequencia por competencia
+- objetivo funcional consolidado:
+  - reduzir dependencia de planilhas externas para controles internos da Casa
+  - manter separacao clara entre dado operacional interno e financeiro oficial
+- recorte de MVP documentado:
+  - tabelas configuraveis com colunas limitadas
+  - linhas manuais
+  - totalizadores basicos
+  - exportacao simples
+  - auditoria/trilha de alteracoes
+- diretrizes consolidadas na SPEC:
+  - formulas apenas por whitelist estrita, se entrarem no MVP
+  - proibicao de codigo executavel, referencias livres entre tabelas e qualquer escrita em dados financeiros oficiais
+  - permissoes separadas para visualizar, estruturar, preencher, exportar e restaurar
+  - vinculos futuros com pessoa/conta/categoria/lancamento apenas como referencia opcional e controlada
+- classificacao documental de pendencias registrada:
+  - implementar agora = nenhuma
+  - pendencia proxima = fechar caso de uso piloto e limites iniciais do MVP
+  - backlog/futuro = referencias opcionais, templates, importacao assistida e evolucoes controladas
+  - fora de escopo = engine generica de planilha, integracao escrevente com financeiro e modelagem definitiva nesta etapa
+  - risco a monitorar = frente virar "Excel dentro do sistema" e perder governanca
+- confirmado nesta microetapa:
+  - sem model
+  - sem migration
+  - sem alteracao de Python, templates, JS/CSS ou banco
+  - sem impacto em calculos financeiros, saldos, relatorios ou lancamentos reais
 
 ## Microetapa documental: frente futura de tabelas de controle personalizadas
 

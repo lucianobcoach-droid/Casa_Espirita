@@ -1,22 +1,35 @@
 # STATE
 
-Data de atualizacao: 2026-05-06
+Data de atualizacao: 2026-05-08
 
-## Frente futura registrada: tabelas de controle personalizadas
+## SPEC funcional inicial consolidada: tabelas de controle personalizadas
 
-- registrada como frente futura separada, classificada em backlog e sem implementacao nesta etapa
-- objetivo futuro: permitir tabelas configuraveis para controles internos da Casa, reduzindo dependencia de planilhas externas
-- recursos desejados para especificacao futura:
-  - criacao de tabelas personalizadas
-  - colunas configuraveis com tipos de coluna
-  - formulas controladas entre colunas
-  - linhas de controle com consolidacoes basicas
-  - possibilidade futura de vinculo com financeiro, pessoas, categorias ou outras entidades
-- regra de seguranca desta etapa:
+- frente mantida como backlog proprio, separada da frequencia por competencia e sem implementacao funcional nesta etapa
+- objetivo funcional consolidado: permitir tabelas configuraveis para controles internos da Casa, reduzindo dependencia de planilhas externas sem transformar o sistema em planilha generica
+- recorte possivel de MVP registrado documentalmente:
+  - tabela com nome/descricao e colunas limitadas
+  - linhas digitadas manualmente
+  - totalizadores basicos
+  - exportacao simples
+  - auditoria de estrutura e dados
+- limites consolidados da SPEC:
   - nao implementar agora
-  - nao misturar com a frente atual de frequencia por competencia
-  - exigir auditoria e SPEC propria antes de qualquer modelagem, model ou migration
-- riscos ja registrados para analise futura: alta complexidade, risco de virar "Excel dentro do sistema", necessidade de limites de formula por seguranca, permissoes, trilha de auditoria, backup/exportacao e separacao entre dado operacional e financeiro oficial
+  - nao definir arquitetura definitiva de banco nesta etapa
+  - nao misturar com frequencia por competencia
+  - nao permitir efeito sobre calculos financeiros, saldos, relatorios ou lancamentos reais
+- diretriz de formulas consolidada:
+  - permitir apenas formulas estritamente controladas por whitelist, se entrarem no MVP
+  - proibir codigo executavel, referencias livres entre tabelas, acesso externo e qualquer escrita no financeiro oficial
+- diretriz de governanca consolidada:
+  - exigir permissoes separadas para visualizar, estruturar, preencher, exportar e restaurar
+  - exigir trilha de auditoria para estrutura, linhas e operacoes de exportacao/backup
+  - tratar vinculos futuros com pessoa/conta/categoria/lancamento apenas como referencia opcional e controlada
+- classificacao documental das pendencias:
+  - implementar agora: nenhuma
+  - pendencia proxima: fechar caso de uso piloto e limite inicial de formulas/colunas/exportacao
+  - backlog/futuro: referencias opcionais, templates, importacao assistida e evolucoes controladas
+  - fora de escopo: engine generica de planilha, integracao escrevente com financeiro e modelagem definitiva nesta etapa
+  - risco a monitorar: virar "Excel dentro do sistema", perder governanca e misturar controle interno com dado financeiro oficial
 
 ## Validacao da alocacao de competencias no lancamento simples
 
