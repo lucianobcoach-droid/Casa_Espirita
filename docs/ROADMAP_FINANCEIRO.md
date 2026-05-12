@@ -1628,6 +1628,11 @@ Status consolidado: SPEC FUNCIONAL DOCUMENTAL CONSOLIDADA / BACKLOG TECNICO INCR
   - campos gerados dinamicamente apenas para colunas ativas, visiveis e nao calculadas
   - `formula_controlada` mantida fora do formulario e da listagem desta etapa
   - permissoes separadas entre visualizar, preencher e editar linhas
+- Status apos refinamento tecnico curto:
+  - `ValorTabelaPersonalizada.valor_numero` ampliado para 8 casas decimais reais por migration propria
+  - entrada decimal brasileira aceita virgula ou ponto no formulario dinamico de linhas
+  - `decimal` limitado a 8 casas, `monetario` a 2 e `percentual` a 4, com mensagens claras em portugues
+  - estado vazio da grade ganhou CTA contextual `+ Nova linha` apenas para quem pode preencher
 - Objetivo:
   - abrir a grade operacional de dados do MVP.
 - Escopo:

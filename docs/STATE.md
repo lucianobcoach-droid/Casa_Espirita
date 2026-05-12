@@ -133,6 +133,12 @@ Data de atualizacao: 2026-05-08
   - edicao de linha protegida por `financeiro.tabelas_personalizadas.editar_linhas`
   - listagem de linhas protegida por `financeiro.tabelas_personalizadas.visualizar`
   - acao `Linhas` adicionada na listagem de tabelas sem abrir formulas, totalizadores ou exportacao
+- refinamento tecnico de UX e precisao das linhas agora implementado com:
+  - `ValorTabelaPersonalizada.valor_numero` ampliado para `max_digits=20` e `decimal_places=8`
+  - campos decimais da tela de linhas aceitando virgula ou ponto como separador decimal
+  - `decimal` validado com ate 8 casas, `monetario` com ate 2, `percentual` com ate 4 e `inteiro` apenas sem casas
+  - campos numericos renderizados com entrada textual + `inputmode`, evitando validacao nativa confusa do navegador para decimal brasileiro
+  - estado vazio da grade de linhas com CTA contextual `+ Nova linha` apenas para quem pode preencher
 - limites desta implementacao estrutural:
   - sem `FormulaColunaPersonalizada`
   - sem `TotalizadorColunaPersonalizada`

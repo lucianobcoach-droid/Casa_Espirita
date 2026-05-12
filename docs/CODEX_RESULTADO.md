@@ -2,6 +2,45 @@
 
 Data: 2026-05-08
 
+## Microetapa tecnica: refinamento decimal e UX da tela de linhas personalizadas
+
+- etapa funcional curta e controlada, limitada a precisao real de `valor_numero`, entrada decimal brasileira e estado vazio da grade de linhas
+- confirmei antes de alterar:
+  - branch `feat/reinicio-financeiro`
+  - arvore limpa
+  - ausencia de commits locais pendentes
+  - ausencia de commits remotos pendentes
+  - `fetch` concluido sem erro
+- implementei a frente em quatro pontos:
+  - `ValorTabelaPersonalizada.valor_numero` ampliado para `max_digits=20` e `decimal_places=8`
+  - migration propria do `financeiro` para suportar 8 casas decimais reais
+  - `TabelaPersonalizadaLinhaForm` ajustado para aceitar virgula ou ponto como separador decimal, com widgets textuais e mensagens mais claras
+  - estado vazio da tela de linhas refinado com CTA contextual `+ Nova linha` apenas para quem tem permissao de preencher
+- validacoes por tipo consolidadas:
+  - `decimal` aceita ate 8 casas
+  - `monetario` aceita ate 2 casas
+  - `percentual` aceita ate 4 casas
+  - `inteiro` continua aceitando apenas numeros inteiros
+- guardrails preservados:
+  - sem formulas guiadas
+  - sem `formula_controlada` funcional
+  - sem totalizadores
+  - sem exportacao XLSX
+  - sem auditoria operacional propria
+  - sem arquivar/restaurar, exclusao, importacao ou edicao em massa
+- testes adicionados/ajustados para:
+  - metadata do campo numerico com 8 casas reais
+  - aceitar decimal com virgula e com ponto
+  - bloquear excesso de casas em `decimal` e `monetario`
+  - aceitar `percentual` com 4 casas
+  - bloquear decimal em coluna inteira
+  - mostrar/ocultar CTA do estado vazio conforme permissao
+  - manter a listagem exibindo valores sem regressao
+  - confirmar nao impacto em `LancamentoFinanceiro`
+- baixa documental consolidada:
+  - refinamento tecnico de linhas concluido
+  - pendencia proxima mantida em `totalizadores controlados por coluna`
+
 ## Microetapa tecnica: configuracao inicial de colunas personalizadas
 
 - etapa funcional controlada, limitada a estrutura de colunas por tabela, sem tela de linhas, sem formulas guiadas, sem totalizadores e sem exportacao

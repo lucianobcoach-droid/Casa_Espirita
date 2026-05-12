@@ -159,6 +159,53 @@ def _formatar_decimal_brl(valor: Decimal | str | None) -> str:
     return f'{prefixo}{inteiro_formatado},{centavos}'
 
 
+def _normalizar_decimal_entrada(valor):
+    if not isinstance(valor, str):
+        return valor
+
+    valor = valor.strip()
+    if not valor:
+        return valor
+
+    if ',' in valor and '.' in valor:
+        if valor.rfind(',') > valor.rfind('.'):
+            return valor.replace('.', '').replace(',', '.')
+        return valor.replace(',', '')
+
+    if ',' in valor:
+        return valor.replace(',', '.')
+
+    return valor
+
+
+class DecimalBRField(forms.DecimalField):
+    def __init__(self, *args, placeholder: str = '', **kwargs):
+        widget = kwargs.pop(
+            'widget',
+            forms.TextInput(
+                attrs={
+                    'inputmode': 'decimal',
+                    'autocomplete': 'off',
+                    'placeholder': placeholder,
+                }
+            ),
+        )
+        kwargs.setdefault(
+            'error_messages',
+            {
+                'invalid': 'Informe um numero valido. Use virgula ou ponto como separador decimal.',
+            },
+        )
+        super().__init__(*args, widget=widget, **kwargs)
+        self.error_messages.setdefault(
+            'max_decimal_places',
+            f'Este campo aceita ate {self.decimal_places} casas decimais.',
+        )
+
+    def to_python(self, value):
+        return super().to_python(_normalizar_decimal_entrada(value))
+
+
 def _iterar_meses_assistente(referencia: date) -> list[tuple[int, int]]:
     base_indice = referencia.year * 12 + (referencia.month - 1)
     competencias: list[tuple[int, int]] = []
@@ -590,13 +637,44 @@ class TabelaPersonalizadaLinhaForm(forms.Form):
         if coluna.tipo_dado == ColunaPersonalizada.TipoDado.TEXTO_LONGO:
             return forms.CharField(widget=forms.Textarea(attrs={'rows': 4}), **comum)
         if coluna.tipo_dado == ColunaPersonalizada.TipoDado.INTEIRO:
-            return forms.IntegerField(**comum)
+            return forms.IntegerField(
+                widget=forms.TextInput(
+                    attrs={
+                        'inputmode': 'numeric',
+                        'autocomplete': 'off',
+                        'placeholder': 'Ex.: 10',
+                    }
+                ),
+                error_messages={
+                    'invalid': 'Este campo aceita apenas numeros inteiros.',
+                },
+                help_text='Este campo aceita apenas numeros inteiros.',
+                **comum,
+            )
         if coluna.tipo_dado == ColunaPersonalizada.TipoDado.DECIMAL:
-            return forms.DecimalField(max_digits=18, decimal_places=6, **comum)
+            return DecimalBRField(
+                max_digits=20,
+                decimal_places=8,
+                placeholder='Ex.: 1,01499912',
+                help_text='Este campo aceita ate 8 casas decimais.',
+                **comum,
+            )
         if coluna.tipo_dado == ColunaPersonalizada.TipoDado.MONETARIO:
-            return forms.DecimalField(max_digits=18, decimal_places=2, **comum)
+            return DecimalBRField(
+                max_digits=20,
+                decimal_places=2,
+                placeholder='Ex.: 10,50',
+                help_text='Este campo aceita ate 2 casas decimais.',
+                **comum,
+            )
         if coluna.tipo_dado == ColunaPersonalizada.TipoDado.PERCENTUAL:
-            return forms.DecimalField(max_digits=18, decimal_places=2, **comum)
+            return DecimalBRField(
+                max_digits=20,
+                decimal_places=4,
+                placeholder='Ex.: 12,3456',
+                help_text='Este campo aceita ate 4 casas decimais.',
+                **comum,
+            )
         if coluna.tipo_dado == ColunaPersonalizada.TipoDado.DATA:
             return forms.DateField(
                 widget=forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date'}),
@@ -688,6 +766,14 @@ class TabelaPersonalizadaLinhaForm(forms.Form):
             ColunaPersonalizada.TipoDado.MONETARIO,
             ColunaPersonalizada.TipoDado.PERCENTUAL,
         }:
+            if coluna.tipo_dado == ColunaPersonalizada.TipoDado.INTEIRO:
+                valor = Decimal(valor).quantize(Decimal('1'))
+            elif coluna.tipo_dado == ColunaPersonalizada.TipoDado.DECIMAL:
+                valor = valor.quantize(Decimal('0.00000001'))
+            elif coluna.tipo_dado == ColunaPersonalizada.TipoDado.MONETARIO:
+                valor = valor.quantize(Decimal('0.01'))
+            elif coluna.tipo_dado == ColunaPersonalizada.TipoDado.PERCENTUAL:
+                valor = valor.quantize(Decimal('0.0001'))
             payload['valor_numero'] = valor
         elif coluna.tipo_dado == ColunaPersonalizada.TipoDado.DATA:
             payload['valor_data'] = valor

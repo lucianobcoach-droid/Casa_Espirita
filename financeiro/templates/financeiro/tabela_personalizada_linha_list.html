@@ -35,6 +35,18 @@
         color: #64748b;
     }
 
+    .financeiro-linha-empty-box {
+        display: grid;
+        gap: 0.45rem;
+        justify-items: start;
+        padding: 1rem 0.15rem;
+    }
+
+    .financeiro-linha-empty-title {
+        color: #334155;
+        font-weight: 600;
+    }
+
     .financeiro-linha-row-meta {
         color: #64748b;
         font-size: 0.76rem;
@@ -116,7 +128,15 @@
                     {% empty %}
                         <tr>
                             <td colspan="{% if pode_editar_linhas_tabela_personalizada %}{{ colunas_visiveis|length|add:'2' }}{% else %}{{ colunas_visiveis|length|add:'1' }}{% endif %}" class="financeiro-linha-empty">
-                                Nenhuma linha ativa cadastrada ate o momento para esta tabela.
+                                <div class="financeiro-linha-empty-box">
+                                    <div class="financeiro-linha-empty-title">Nenhuma linha cadastrada ainda para esta tabela.</div>
+                                    <div>Cadastre a primeira linha para comecar a preencher este controle interno.</div>
+                                    {% if pode_preencher_linhas_tabela_personalizada %}
+                                        <a class="button is-primary is-light" href="{% url 'financeiro:tabela-personalizada-linha-create' tabela_personalizada.pk %}">
+                                            + Nova linha
+                                        </a>
+                                    {% endif %}
+                                </div>
                             </td>
                         </tr>
                     {% endfor %}

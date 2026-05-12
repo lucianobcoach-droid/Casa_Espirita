@@ -97,6 +97,12 @@ def _normalizar_identificador_textual(valor: str) -> str:
     return re.sub(r'\s+', ' ', valor_sem_acentos).strip().casefold()
 
 
+def _contar_casas_decimais(valor: Decimal) -> int:
+    if valor is None:
+        return 0
+    return max(-valor.as_tuple().exponent, 0)
+
+
 class CentroCusto(models.Model):
     codigo = models.CharField(max_length=30, unique=True)
     nome = models.CharField(max_length=150)
@@ -880,8 +886,8 @@ class ValorTabelaPersonalizada(models.Model):
     )
     valor_texto = models.TextField(blank=True)
     valor_numero = models.DecimalField(
-        max_digits=18,
-        decimal_places=6,
+        max_digits=20,
+        decimal_places=8,
         null=True,
         blank=True,
     )
@@ -975,6 +981,23 @@ class ValorTabelaPersonalizada(models.Model):
                         and self.valor_numero != self.valor_numero.to_integral_value()
                     ):
                         errors['valor_numero'] = 'Coluna do tipo inteiro nao aceita casas decimais.'
+                    else:
+                        casas_decimais = _contar_casas_decimais(self.valor_numero)
+                        if (
+                            tipo_dado == ColunaPersonalizada.TipoDado.DECIMAL
+                            and casas_decimais > 8
+                        ):
+                            errors['valor_numero'] = 'Este campo aceita ate 8 casas decimais.'
+                        elif (
+                            tipo_dado == ColunaPersonalizada.TipoDado.MONETARIO
+                            and casas_decimais > 2
+                        ):
+                            errors['valor_numero'] = 'Este campo aceita ate 2 casas decimais.'
+                        elif (
+                            tipo_dado == ColunaPersonalizada.TipoDado.PERCENTUAL
+                            and casas_decimais > 4
+                        ):
+                            errors['valor_numero'] = 'Este campo aceita ate 4 casas decimais.'
                 elif tipo_dado == ColunaPersonalizada.TipoDado.DATA:
                     if not possui_valor_data:
                         errors['valor_data'] = 'Coluna do tipo data exige valor_data.'

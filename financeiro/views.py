@@ -8315,8 +8315,8 @@ def _formatar_valor_linha_tabela(coluna: ColunaPersonalizada, valor: ValorTabela
     if coluna.tipo_dado == ColunaPersonalizada.TipoDado.MONETARIO:
         return f'R$ {valor.valor_numero:.2f}'
     if coluna.tipo_dado == ColunaPersonalizada.TipoDado.PERCENTUAL:
-        return f'{valor.valor_numero:.2f}%'
-    return str(valor.valor_numero)
+        return f"{format(valor.valor_numero, '.4f').rstrip('0').rstrip('.')}%"
+    return format(valor.valor_numero, '.8f').rstrip('0').rstrip('.')
 
 
 class TabelaPersonalizadaLinhaBaseMixin:

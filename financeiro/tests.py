@@ -3999,6 +3999,22 @@ class TabelasPersonalizadasListViewTests(TestCase):
             visivel=True,
             ordem=12,
         )
+        decimal = ColunaPersonalizada.objects.create(
+            tabela=self.tabela,
+            nome='Consumo decimal',
+            tipo_dado=ColunaPersonalizada.TipoDado.DECIMAL,
+            obrigatoria=False,
+            visivel=True,
+            ordem=12,
+        )
+        percentual = ColunaPersonalizada.objects.create(
+            tabela=self.tabela,
+            nome='Percentual aplicado',
+            tipo_dado=ColunaPersonalizada.TipoDado.PERCENTUAL,
+            obrigatoria=False,
+            visivel=True,
+            ordem=12,
+        )
         data_coluna = ColunaPersonalizada.objects.create(
             tabela=self.tabela,
             nome='Data de entrada',
@@ -4062,6 +4078,8 @@ class TabelasPersonalizadasListViewTests(TestCase):
             'texto': texto,
             'inteiro': inteiro,
             'monetario': monetario,
+            'decimal': decimal,
+            'percentual': percentual,
             'data': data_coluna,
             'competencia': competencia,
             'booleano': booleano,
@@ -4095,10 +4113,26 @@ class TabelasPersonalizadasListViewTests(TestCase):
         )
         ValorTabelaPersonalizada.objects.create(
             linha=linha,
+            coluna=colunas['decimal'],
+            valor_numero=Decimal('1.01499912'),
+        )
+        ValorTabelaPersonalizada.objects.create(
+            linha=linha,
+            coluna=colunas['percentual'],
+            valor_numero=Decimal('12.3456'),
+        )
+        ValorTabelaPersonalizada.objects.create(
+            linha=linha,
             coluna=colunas['lista'],
             valor_texto='Limpeza',
         )
         return linha
+
+    def _dados_minimos_linha(self, colunas: dict[str, ColunaPersonalizada]):
+        return {
+            self._campo_coluna(colunas['texto']): 'Linha base',
+            self._campo_coluna(colunas['inteiro']): '1',
+        }
 
     def test_url_resolve_para_view_da_listagem_minima(self):
         resolved = resolve(reverse('financeiro:tabela-personalizada-list'))
@@ -4470,6 +4504,8 @@ class TabelasPersonalizadasListViewTests(TestCase):
         self.assertContains(response, 'Sabao liquido')
         self.assertContains(response, 'Limpeza')
         self.assertContains(response, 'Sim')
+        self.assertContains(response, '1.01499912')
+        self.assertContains(response, '12.3456%')
         self.assertNotContains(response, 'Campo oculto')
         self.assertNotContains(response, 'Campo arquivado')
         self.assertNotContains(response, 'Campo calculado futuro')
@@ -4584,6 +4620,93 @@ class TabelasPersonalizadasListViewTests(TestCase):
         self.assertFalse(form.is_valid())
         self.assertIn(self._campo_coluna(colunas['texto']), form.errors)
         self.assertIn(self._campo_coluna(colunas['inteiro']), form.errors)
+
+    def test_model_valor_numero_suporta_oito_casas_decimais_reais(self):
+        campo = ValorTabelaPersonalizada._meta.get_field('valor_numero')
+
+        self.assertEqual(campo.max_digits, 20)
+        self.assertEqual(campo.decimal_places, 8)
+
+    def test_form_de_linha_aceita_decimal_com_virgula(self):
+        colunas = self._criar_colunas_para_linhas()
+        dados = self._dados_minimos_linha(colunas)
+        dados[self._campo_coluna(colunas['decimal'])] = '1,01499912'
+
+        form = TabelaPersonalizadaLinhaForm(data=dados, tabela=self.tabela)
+
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(
+            form.cleaned_data[self._campo_coluna(colunas['decimal'])],
+            Decimal('1.01499912'),
+        )
+
+    def test_form_de_linha_aceita_decimal_com_ponto(self):
+        colunas = self._criar_colunas_para_linhas()
+        dados = self._dados_minimos_linha(colunas)
+        dados[self._campo_coluna(colunas['decimal'])] = '1.01499912'
+
+        form = TabelaPersonalizadaLinhaForm(data=dados, tabela=self.tabela)
+
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(
+            form.cleaned_data[self._campo_coluna(colunas['decimal'])],
+            Decimal('1.01499912'),
+        )
+
+    def test_form_de_linha_rejeita_decimal_com_mais_de_oito_casas(self):
+        colunas = self._criar_colunas_para_linhas()
+        dados = self._dados_minimos_linha(colunas)
+        campo = self._campo_coluna(colunas['decimal'])
+        dados[campo] = '1,014999123'
+
+        form = TabelaPersonalizadaLinhaForm(data=dados, tabela=self.tabela)
+
+        self.assertFalse(form.is_valid())
+        self.assertIn('ate 8 casas decimais', form.errors[campo][0])
+
+    def test_form_de_linha_monetario_aceita_ate_duas_casas(self):
+        colunas = self._criar_colunas_para_linhas()
+        dados = self._dados_minimos_linha(colunas)
+        campo = self._campo_coluna(colunas['monetario'])
+        dados[campo] = '10,55'
+
+        form = TabelaPersonalizadaLinhaForm(data=dados, tabela=self.tabela)
+
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(form.cleaned_data[campo], Decimal('10.55'))
+
+    def test_form_de_linha_monetario_rejeita_mais_de_duas_casas(self):
+        colunas = self._criar_colunas_para_linhas()
+        dados = self._dados_minimos_linha(colunas)
+        campo = self._campo_coluna(colunas['monetario'])
+        dados[campo] = '10,555'
+
+        form = TabelaPersonalizadaLinhaForm(data=dados, tabela=self.tabela)
+
+        self.assertFalse(form.is_valid())
+        self.assertIn('ate 2 casas decimais', form.errors[campo][0])
+
+    def test_form_de_linha_percentual_aceita_ate_quatro_casas(self):
+        colunas = self._criar_colunas_para_linhas()
+        dados = self._dados_minimos_linha(colunas)
+        campo = self._campo_coluna(colunas['percentual'])
+        dados[campo] = '12,3456'
+
+        form = TabelaPersonalizadaLinhaForm(data=dados, tabela=self.tabela)
+
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(form.cleaned_data[campo], Decimal('12.3456'))
+
+    def test_form_de_linha_inteiro_rejeita_valor_decimal(self):
+        colunas = self._criar_colunas_para_linhas()
+        dados = self._dados_minimos_linha(colunas)
+        campo = self._campo_coluna(colunas['inteiro'])
+        dados[campo] = '1,5'
+
+        form = TabelaPersonalizadaLinhaForm(data=dados, tabela=self.tabela)
+
+        self.assertFalse(form.is_valid())
+        self.assertIn('apenas numeros inteiros', form.errors[campo][0])
 
     def test_usuario_com_permissao_cria_linha_valida_com_valores_tipados(self):
         colunas = self._criar_colunas_para_linhas()
@@ -4733,6 +4856,51 @@ class TabelasPersonalizadasListViewTests(TestCase):
                 'financeiro:tabela-personalizada-linha-update',
                 kwargs={'tabela_id': self.tabela.pk, 'pk': LinhaTabelaPersonalizada.objects.filter(tabela=self.tabela).latest('pk').pk},
             ),
+        )
+
+    def test_estado_vazio_da_listagem_de_linhas_mostra_cta_para_quem_pode_preencher(self):
+        self._criar_colunas_para_linhas()
+        LinhaTabelaPersonalizada.objects.filter(tabela=self.tabela).delete()
+        self._login_com_permissoes(
+            'user-linha-cta-vazio',
+            [
+                PermissoesTabelasPersonalizadas.VISUALIZAR,
+                PermissoesTabelasPersonalizadas.PREENCHER_LINHAS,
+            ],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk})
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Nenhuma linha cadastrada ainda para esta tabela.')
+        self.assertContains(response, 'Cadastre a primeira linha para comecar a preencher este controle interno.')
+        self.assertContains(response, '+ Nova linha')
+        self.assertContains(
+            response,
+            reverse('financeiro:tabela-personalizada-linha-create', kwargs={'tabela_id': self.tabela.pk}),
+            count=2,
+        )
+
+    def test_estado_vazio_da_listagem_de_linhas_nao_mostra_cta_para_usuario_so_visualizador(self):
+        self._criar_colunas_para_linhas()
+        LinhaTabelaPersonalizada.objects.filter(tabela=self.tabela).delete()
+        self._login_com_permissoes(
+            'user-linha-cta-vazio-visualizador',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk})
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Nenhuma linha cadastrada ainda para esta tabela.')
+        self.assertNotContains(response, '+ Nova linha')
+        self.assertNotContains(
+            response,
+            reverse('financeiro:tabela-personalizada-linha-create', kwargs={'tabela_id': self.tabela.pk}),
         )
 
     def test_criacao_de_linha_nao_impacta_lancamento_financeiro_existente(self):

@@ -470,6 +470,7 @@ Status apos SPEC tecnica desta microetapa: SPEC TECNICA DE MODELAGEM CONSOLIDADA
 Status apos implementacao desta microetapa: ESTRUTURA MINIMA DE DADOS IMPLEMENTADA / BACKLOG
 Status apos implementacao desta microetapa: PERMISSOES EXECUTAVEIS DA FRENTE IMPLEMENTADAS / BACKLOG
 Status apos implementacao desta microetapa: MENU REAL + LISTAGEM MINIMA SOMENTE LEITURA IMPLEMENTADOS / BACKLOG
+Status apos implementacao desta microetapa: REFINAMENTO DE UX E PRECISAO DECIMAL DAS LINHAS IMPLEMENTADO / BACKLOG
 
 Motivo:
 Foi levantada frente futura para controles configuraveis genericos, com colunas definidas pelo usuario, tipos de dado, formulas controladas por coluna e totalizadores. Deve ser tratada separadamente das correcoes imediatas do financeiro.
@@ -483,6 +484,8 @@ Consolidacao desta baixa documental:
 - SPEC consolidada agora com:
   - navegacao/localizacao documentada para o MVP
   - contrato de UX operacional documentado
+  - precisao real de `valor_numero` elevada para 8 casas no recorte de linhas
+  - entrada decimal brasileira aceita com virgula ou ponto no formulario dinamico
   - fluxo operacional documentado de uso futuro
   - objetivo funcional proprio e generico
   - recorte conceitual de MVP com construtor controlado
