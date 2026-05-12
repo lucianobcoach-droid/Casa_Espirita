@@ -55,6 +55,7 @@ from .models import (
     PessoaFinanceira,
     RegraLancamentoFinanceiro,
     TabelaPersonalizada,
+    TotalizadorColunaPersonalizada,
     TipoContaFinanceira,
     ValorTabelaPersonalizada,
     normalizar_nome_pessoa_financeira,
@@ -8226,6 +8227,7 @@ class TabelaPersonalizadaColunaListView(FinanceiroPermissaoMixin, ListView):
             super()
             .get_queryset()
             .filter(tabela=self.tabela)
+            .prefetch_related('totalizadores')
             .order_by('ordem', 'nome', 'pk')
         )
 
@@ -8319,6 +8321,58 @@ def _formatar_valor_linha_tabela(coluna: ColunaPersonalizada, valor: ValorTabela
     return format(valor.valor_numero, '.8f').rstrip('0').rstrip('.')
 
 
+def _formatar_resultado_totalizador(coluna: ColunaPersonalizada, tipo_totalizador: str, valor) -> str:
+    if tipo_totalizador == TotalizadorColunaPersonalizada.TipoTotalizador.CONTAGEM:
+        return str(valor)
+
+    if coluna.tipo_dado == ColunaPersonalizada.TipoDado.DATA:
+        return valor.strftime('%d/%m/%Y') if valor else ''
+
+    if valor is None:
+        return ''
+
+    if coluna.tipo_dado == ColunaPersonalizada.TipoDado.INTEIRO:
+        return str(int(valor))
+    if coluna.tipo_dado == ColunaPersonalizada.TipoDado.MONETARIO:
+        return f'R$ {valor:.2f}'
+    if coluna.tipo_dado == ColunaPersonalizada.TipoDado.PERCENTUAL:
+        return f"{format(valor, '.4f').rstrip('0').rstrip('.')}%"
+    return format(valor, '.8f').rstrip('0').rstrip('.')
+
+
+def _calcular_totalizador_coluna(
+    coluna: ColunaPersonalizada,
+    tipo_totalizador: str,
+    valores: list[ValorTabelaPersonalizada],
+):
+    if tipo_totalizador == TotalizadorColunaPersonalizada.TipoTotalizador.CONTAGEM:
+        return len(valores)
+
+    if coluna.tipo_dado == ColunaPersonalizada.TipoDado.DATA:
+        datas = [valor.valor_data for valor in valores if valor.valor_data is not None]
+        if not datas:
+            return None
+        if tipo_totalizador == TotalizadorColunaPersonalizada.TipoTotalizador.MINIMO:
+            return min(datas)
+        if tipo_totalizador == TotalizadorColunaPersonalizada.TipoTotalizador.MAXIMO:
+            return max(datas)
+        return None
+
+    numeros = [valor.valor_numero for valor in valores if valor.valor_numero is not None]
+    if not numeros:
+        return None
+
+    if tipo_totalizador == TotalizadorColunaPersonalizada.TipoTotalizador.SOMA:
+        return sum(numeros, Decimal('0'))
+    if tipo_totalizador == TotalizadorColunaPersonalizada.TipoTotalizador.MEDIA:
+        return sum(numeros, Decimal('0')) / Decimal(len(numeros))
+    if tipo_totalizador == TotalizadorColunaPersonalizada.TipoTotalizador.MINIMO:
+        return min(numeros)
+    if tipo_totalizador == TotalizadorColunaPersonalizada.TipoTotalizador.MAXIMO:
+        return max(numeros)
+    return None
+
+
 class TabelaPersonalizadaLinhaBaseMixin:
     tabela_context_key = 'tabela_personalizada'
 
@@ -8351,7 +8405,9 @@ class TabelaPersonalizadaLinhaListView(FinanceiroPermissaoMixin, ListView):
 
     def dispatch(self, request, *args, **kwargs):
         self.tabela = get_object_or_404(TabelaPersonalizada, pk=self.kwargs['tabela_id'])
-        self.colunas_visiveis = list(TabelaPersonalizadaLinhaForm.colunas_editaveis_queryset(self.tabela))
+        self.colunas_visiveis = list(
+            TabelaPersonalizadaLinhaForm.colunas_editaveis_queryset(self.tabela).prefetch_related('totalizadores')
+        )
         return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
@@ -8367,24 +8423,59 @@ class TabelaPersonalizadaLinhaListView(FinanceiroPermissaoMixin, ListView):
         context = super().get_context_data(**kwargs)
         linhas_renderizadas = []
         colunas_visiveis_ids = {coluna.pk for coluna in self.colunas_visiveis}
+        valores_totalizadores_por_coluna: dict[int, list[ValorTabelaPersonalizada]] = {
+            coluna.pk: [] for coluna in self.colunas_visiveis
+        }
         for linha in context['linhas_personalizadas']:
-            valores_por_coluna = {
+            valores_linha_por_coluna = {
                 valor.coluna_id: valor
                 for valor in linha.valores.all()
                 if valor.coluna_id in colunas_visiveis_ids
             }
+            for coluna_id, valor in valores_linha_por_coluna.items():
+                valores_totalizadores_por_coluna.setdefault(coluna_id, []).append(valor)
             celulas = [
                 {
                     'coluna': coluna,
-                    'valor': _formatar_valor_linha_tabela(coluna, valores_por_coluna.get(coluna.pk)),
+                    'valor': _formatar_valor_linha_tabela(coluna, valores_linha_por_coluna.get(coluna.pk)),
                 }
                 for coluna in self.colunas_visiveis
             ]
             linhas_renderizadas.append({'linha': linha, 'celulas': celulas})
 
+        totalizadores_renderizados = []
+        possui_totalizadores = False
+        for coluna in self.colunas_visiveis:
+            itens = []
+            for totalizador in coluna.totalizadores.all():
+                if not totalizador.ativo:
+                    continue
+                resultado = _calcular_totalizador_coluna(
+                    coluna,
+                    totalizador.tipo_totalizador,
+                    valores_totalizadores_por_coluna.get(coluna.pk, []),
+                )
+                if resultado is None:
+                    continue
+                itens.append(
+                    {
+                        'label': totalizador.get_tipo_totalizador_display(),
+                        'valor': _formatar_resultado_totalizador(
+                            coluna,
+                            totalizador.tipo_totalizador,
+                            resultado,
+                        ),
+                    }
+                )
+            if itens:
+                possui_totalizadores = True
+            totalizadores_renderizados.append({'coluna': coluna, 'itens': itens})
+
         context['tabela_personalizada'] = self.tabela
         context['colunas_visiveis'] = self.colunas_visiveis
         context['linhas_renderizadas'] = linhas_renderizadas
+        context['totalizadores_renderizados'] = totalizadores_renderizados
+        context['possui_totalizadores_tabela_personalizada'] = possui_totalizadores
         context['pode_preencher_linhas_tabela_personalizada'] = usuario_possui_permissao(
             self.request.user,
             PermissoesTabelasPersonalizadas.PREENCHER_LINHAS,

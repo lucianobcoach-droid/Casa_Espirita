@@ -1,6 +1,36 @@
 # CODEX_RESULTADO
 
-Data: 2026-05-08
+Data: 2026-05-12
+
+## Microetapa tecnica: totalizadores controlados por coluna nas tabelas personalizadas
+
+- etapa funcional controlada, limitada a totalizadores configurados por coluna na frente de tabelas personalizadas, sem formulas guiadas, sem exportacao XLSX e sem auditoria operacional propria
+- confirmei antes de alterar:
+  - branch `feat/reinicio-financeiro`
+  - arvore limpa
+  - ausencia de commits locais pendentes
+  - ausencia de commits remotos pendentes
+  - `fetch` concluido sem erro
+- implementei a frente em cinco pontos:
+  - model `TotalizadorColunaPersonalizada` com migration propria no app `financeiro`
+  - compatibilidade por tipo centralizada no model para `soma`, `media`, `minimo`, `maximo` e `contagem`
+  - configuracao dos totalizadores dentro do `ColunaPersonalizadaForm`, com opcoes dinamicas e limpeza segura de configuracoes incompativeis
+  - rodape da tela de linhas passando a exibir apenas totalizadores ativos de colunas visiveis e nao calculadas
+  - calculo restrito a linhas ativas, sem agrupamento por opcao e sem qualquer engine livre
+- compatibilidades consolidadas nesta microetapa:
+  - `inteiro`, `decimal`, `monetario` e `percentual`: `soma`, `media`, `minimo`, `maximo` e `contagem`
+  - `data`: `minimo`, `maximo` e `contagem`
+  - `booleano`, `lista_opcoes`, `texto_curto`, `texto_longo` e `mes_competencia`: `contagem` simples total
+- testes adicionados/ajustados para:
+  - criacao valida e bloqueio de incompatibilidade
+  - configuracao do formulario de coluna
+  - limpeza de totalizador incompativel ao mudar o tipo da coluna
+  - rodape da tela de linhas com soma decimal de 8 casas, soma monetaria, percentual, data e contagem
+  - ignorar linhas arquivadas e nao exibir totalizador sem configuracao
+  - confirmacao de nao impacto em `LancamentoFinanceiro`
+- baixa documental consolidada:
+  - totalizadores controlados por coluna concluidos
+  - pendencia proxima movida para `busca textual simples na tela de linhas`
 
 ## Microetapa tecnica: normalizacao da exibicao numerica na edicao de linhas personalizadas
 

@@ -1666,6 +1666,7 @@ Status consolidado: SPEC FUNCIONAL DOCUMENTAL CONSOLIDADA / BACKLOG TECNICO INCR
 
 #### Microetapa 9 - totalizadores controlados por coluna
 
+- Status apos implementacao: CONCLUIDA
 - Objetivo:
   - adicionar leitura consolidada minima do MVP sem abrir formula livre.
 - Escopo:
@@ -1680,7 +1681,7 @@ Status consolidado: SPEC FUNCIONAL DOCUMENTAL CONSOLIDADA / BACKLOG TECNICO INCR
   - transformar totalizador em mini-engine de formula;
   - gerar expectativa de analitico avancado cedo demais.
 - Envolve model/migration/banco:
-  - nao necessariamente.
+  - sim, no recorte implementado: model proprio e migration dedicada no app `financeiro`.
 - Validacoes esperadas:
   - totalizadores corretos por tipo elegivel;
   - ausencia de expressao livre;
@@ -1691,6 +1692,15 @@ Status consolidado: SPEC FUNCIONAL DOCUMENTAL CONSOLIDADA / BACKLOG TECNICO INCR
   - agrupamentos por opcao;
   - dashboards;
   - filtros compostos.
+- Consolidacao da entrega:
+  - model `TotalizadorColunaPersonalizada` criado com choices controlados de `soma`, `media`, `minimo`, `maximo` e `contagem`
+  - configuracao de totalizadores acoplada ao `ColunaPersonalizadaForm`, com exibicao apenas de opcoes compativeis por tipo
+  - troca de tipo da coluna passa a limpar totalizadores incompativeis de forma segura
+  - rodape da tela de linhas agora exibe apenas totalizadores configurados em colunas visiveis, ativas e nao calculadas
+  - linhas arquivadas nao entram nos calculos
+  - `decimal` preserva soma com 8 casas; `monetario` e `percentual` mantem exibicao ajustada ao tipo
+- Proxima microetapa recomendada:
+  - abrir a busca textual simples na tela de linhas, mantendo formulas guiadas, exportacao XLSX e auditoria operacional propria fora do recorte imediato
 
 #### Microetapa 10 - busca textual simples na tela de linhas
 

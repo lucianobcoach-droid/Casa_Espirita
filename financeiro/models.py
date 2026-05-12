@@ -826,6 +826,96 @@ class ColunaPersonalizada(models.Model):
         super().save(*args, **kwargs)
 
 
+class TotalizadorColunaPersonalizada(models.Model):
+    class TipoTotalizador(models.TextChoices):
+        SOMA = 'soma', 'Soma'
+        MEDIA = 'media', 'Media'
+        MINIMO = 'minimo', 'Minimo'
+        MAXIMO = 'maximo', 'Maximo'
+        CONTAGEM = 'contagem', 'Contagem'
+
+    coluna = models.ForeignKey(
+        ColunaPersonalizada,
+        on_delete=models.CASCADE,
+        related_name='totalizadores',
+    )
+    tipo_totalizador = models.CharField(max_length=20, choices=TipoTotalizador.choices)
+    ativo = models.BooleanField(default=True)
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['coluna_id', 'tipo_totalizador', 'pk']
+        verbose_name = 'Totalizador de coluna personalizada'
+        verbose_name_plural = 'Totalizadores de colunas personalizadas'
+        constraints = [
+            models.UniqueConstraint(
+                fields=('coluna', 'tipo_totalizador'),
+                name='uniq_totalizador_coluna_personalizada_coluna_tipo',
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f'{self.coluna.nome} - {self.get_tipo_totalizador_display()}'
+
+    @classmethod
+    def tipos_compativeis_por_tipo_dado(cls, tipo_dado: str | None) -> tuple[str, ...]:
+        numericos = (
+            cls.TipoTotalizador.SOMA,
+            cls.TipoTotalizador.MEDIA,
+            cls.TipoTotalizador.MINIMO,
+            cls.TipoTotalizador.MAXIMO,
+            cls.TipoTotalizador.CONTAGEM,
+        )
+        if tipo_dado in {
+            ColunaPersonalizada.TipoDado.INTEIRO,
+            ColunaPersonalizada.TipoDado.DECIMAL,
+            ColunaPersonalizada.TipoDado.MONETARIO,
+            ColunaPersonalizada.TipoDado.PERCENTUAL,
+        }:
+            return numericos
+        if tipo_dado == ColunaPersonalizada.TipoDado.DATA:
+            return (
+                cls.TipoTotalizador.MINIMO,
+                cls.TipoTotalizador.MAXIMO,
+                cls.TipoTotalizador.CONTAGEM,
+            )
+        if tipo_dado in {
+            ColunaPersonalizada.TipoDado.BOOLEANO,
+            ColunaPersonalizada.TipoDado.LISTA_OPCOES,
+            ColunaPersonalizada.TipoDado.TEXTO_CURTO,
+            ColunaPersonalizada.TipoDado.TEXTO_LONGO,
+            ColunaPersonalizada.TipoDado.MES_COMPETENCIA,
+        }:
+            return (cls.TipoTotalizador.CONTAGEM,)
+        return ()
+
+    @classmethod
+    def tipos_dado_compativeis_por_totalizador(cls, tipo_totalizador: str) -> tuple[str, ...]:
+        return tuple(
+            tipo_dado
+            for tipo_dado, _rotulo in ColunaPersonalizada.TipoDado.choices
+            if tipo_totalizador in cls.tipos_compativeis_por_tipo_dado(tipo_dado)
+        )
+
+    def clean(self) -> None:
+        super().clean()
+        errors: dict[str, str] = {}
+
+        if self.coluna_id:
+            if self.coluna.calculada or self.coluna.tipo_dado == ColunaPersonalizada.TipoDado.FORMULA_CONTROLADA:
+                errors['coluna'] = 'Coluna calculada nao aceita totalizador nesta etapa.'
+            elif self.tipo_totalizador not in self.tipos_compativeis_por_tipo_dado(self.coluna.tipo_dado):
+                errors['tipo_totalizador'] = 'O totalizador informado nao e compativel com o tipo de dado da coluna.'
+
+        if errors:
+            raise ValidationError(errors)
+
+    def save(self, *args, **kwargs) -> None:
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+
 class LinhaTabelaPersonalizada(models.Model):
     class StatusLinha(models.TextChoices):
         ATIVA = 'ativa', 'Ativa'

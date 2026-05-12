@@ -25,6 +25,7 @@ from .models import (
     LancamentoFinanceiro,
     PessoaFinanceira,
     TabelaPersonalizada,
+    TotalizadorColunaPersonalizada,
     TipoContaFinanceira,
     ValorTabelaPersonalizada,
 )
@@ -520,6 +521,13 @@ class ColunaPersonalizadaForm(forms.ModelForm):
         label='Opcoes da lista',
         help_text='Use apenas para o tipo Lista de opcoes. Informe uma opcao por linha, com maximo de 20 itens.',
     )
+    totalizadores_configurados = forms.MultipleChoiceField(
+        required=False,
+        choices=TotalizadorColunaPersonalizada.TipoTotalizador.choices,
+        widget=forms.CheckboxSelectMultiple,
+        label='Totalizadores',
+        help_text='Selecione apenas totalizadores compativeis com o tipo de dado desta coluna.',
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -530,6 +538,7 @@ class ColunaPersonalizadaForm(forms.ModelForm):
         ]
         self.fields['tipo_dado'].choices = tipos_permitidos
         self.fields['ordem'].widget.attrs.update({'min': 0})
+        self.totalizadores_render = []
 
         configuracao = self.instance.configuracao_json if getattr(self.instance, 'pk', None) else {}
         if isinstance(configuracao, dict):
@@ -539,11 +548,50 @@ class ColunaPersonalizadaForm(forms.ModelForm):
                     opcao for opcao in opcoes if isinstance(opcao, str) and opcao.strip()
                 )
 
+        if self.is_bound:
+            totalizadores_key = self.add_prefix('totalizadores_configurados')
+            if hasattr(self.data, 'getlist'):
+                totalizadores_brutos = self.data.getlist(totalizadores_key)
+            else:
+                valor_bruto = self.data.get(totalizadores_key, [])
+                if isinstance(valor_bruto, (list, tuple, set)):
+                    totalizadores_brutos = list(valor_bruto)
+                elif valor_bruto in (None, ''):
+                    totalizadores_brutos = []
+                else:
+                    totalizadores_brutos = [valor_bruto]
+            selecionados_totalizadores = set(totalizadores_brutos)
+        else:
+            selecionados_totalizadores = set(
+                self.instance.totalizadores.filter(ativo=True).values_list('tipo_totalizador', flat=True)
+            ) if getattr(self.instance, 'pk', None) else set()
+            self.initial['totalizadores_configurados'] = list(selecionados_totalizadores)
+
+        self.totalizadores_render = [
+            {
+                'value': valor,
+                'label': rotulo,
+                'checked': valor in selecionados_totalizadores,
+                'tipos_dado': TotalizadorColunaPersonalizada.tipos_dado_compativeis_por_totalizador(valor),
+            }
+            for valor, rotulo in TotalizadorColunaPersonalizada.TipoTotalizador.choices
+        ]
+
     def clean_tipo_dado(self):
         tipo_dado = self.cleaned_data.get('tipo_dado')
         if tipo_dado == ColunaPersonalizada.TipoDado.FORMULA_CONTROLADA:
             raise ValidationError('Formula controlada ainda nao pode ser configurada nesta etapa.')
         return tipo_dado
+
+    def clean_totalizadores_configurados(self):
+        totalizadores = self.cleaned_data.get('totalizadores_configurados') or []
+        tipo_dado = self.cleaned_data.get('tipo_dado') or self.data.get(self.add_prefix('tipo_dado'))
+        tipos_compativeis = set(TotalizadorColunaPersonalizada.tipos_compativeis_por_tipo_dado(tipo_dado))
+        if not tipos_compativeis and totalizadores:
+            raise ValidationError('Nao foi possivel configurar totalizadores para este tipo de coluna.')
+        if any(totalizador not in tipos_compativeis for totalizador in totalizadores):
+            raise ValidationError('Selecione apenas totalizadores compativeis com o tipo de dado da coluna.')
+        return totalizadores
 
     def clean_opcoes_lista(self):
         conteudo = (self.cleaned_data.get('opcoes_lista') or '').replace('\r\n', '\n')
@@ -584,6 +632,7 @@ class ColunaPersonalizadaForm(forms.ModelForm):
 
         tipo_dado = self.cleaned_data.get('tipo_dado')
         opcoes = self.cleaned_data.get('opcoes_lista') or []
+        totalizadores = self.cleaned_data.get('totalizadores_configurados') or []
         if tipo_dado == ColunaPersonalizada.TipoDado.LISTA_OPCOES:
             instance.configuracao_json = {'opcoes': opcoes}
         else:
@@ -591,6 +640,15 @@ class ColunaPersonalizadaForm(forms.ModelForm):
 
         if commit:
             instance.save()
+            tipos_compativeis = set(TotalizadorColunaPersonalizada.tipos_compativeis_por_tipo_dado(tipo_dado))
+            totalizadores_ativos = set(totalizadores).intersection(tipos_compativeis)
+            instance.totalizadores.exclude(tipo_totalizador__in=totalizadores_ativos).update(ativo=False)
+            for tipo_totalizador in totalizadores_ativos:
+                TotalizadorColunaPersonalizada.objects.update_or_create(
+                    coluna=instance,
+                    tipo_totalizador=tipo_totalizador,
+                    defaults={'ativo': True},
+                )
         return instance
 
     class Meta:

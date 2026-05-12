@@ -83,6 +83,25 @@
     .financeiro-coluna-empty {
         color: #64748b;
     }
+
+    .financeiro-coluna-totalizadores {
+        display: grid;
+        gap: 0.22rem;
+    }
+
+    .financeiro-coluna-totalizador-chip {
+        display: inline-flex;
+        align-items: center;
+        width: fit-content;
+        min-height: 1.6rem;
+        padding: 0.15rem 0.55rem;
+        border-radius: 999px;
+        background: rgba(32, 107, 196, 0.12);
+        color: #1d4f91;
+        font-size: 0.72rem;
+        font-weight: 700;
+        line-height: 1.1;
+    }
 </style>
 
 <div class="financeiro-coluna-page">
@@ -106,7 +125,7 @@
     <section class="financeiro-coluna-card">
         <div class="financeiro-coluna-note">
             <strong>Recorte atual:</strong>
-            esta etapa configura apenas a estrutura das colunas. O preenchimento de linhas sera liberado em microetapa posterior. Formulas e totalizadores seguem como microetapas futuras.
+            esta etapa configura a estrutura das colunas e os totalizadores controlados por coluna. O preenchimento de linhas continua separado e formulas guiadas seguem para microetapas futuras.
         </div>
 
         <div class="financeiro-coluna-table-wrap">
@@ -118,6 +137,7 @@
                         <th>Obrigatoria</th>
                         <th>Visivel</th>
                         <th>Ordem</th>
+                        <th>Totalizadores</th>
                         <th>Status</th>
                         <th>Acoes</th>
                     </tr>
@@ -139,6 +159,21 @@
                             </td>
                             <td>{{ coluna.ordem }}</td>
                             <td>
+                                {% with totalizadores_ativos=coluna.totalizadores.all %}
+                                    <div class="financeiro-coluna-totalizadores">
+                                        {% for totalizador in totalizadores_ativos %}
+                                            {% if totalizador.ativo %}
+                                                <span class="financeiro-coluna-totalizador-chip">
+                                                    {{ totalizador.get_tipo_totalizador_display }}
+                                                </span>
+                                            {% endif %}
+                                        {% empty %}
+                                            <span class="financeiro-linha-value-empty">-</span>
+                                        {% endfor %}
+                                    </div>
+                                {% endwith %}
+                            </td>
+                            <td>
                                 <span class="financeiro-coluna-status{% if coluna.status == 'ativa' %} is-active{% elif coluna.status == 'inativa' %} is-inactive{% else %} is-archived{% endif %}">
                                     {{ coluna.get_status_display }}
                                 </span>
@@ -151,7 +186,7 @@
                         </tr>
                     {% empty %}
                         <tr>
-                            <td colspan="7" class="financeiro-coluna-empty">
+                            <td colspan="8" class="financeiro-coluna-empty">
                                 Nenhuma coluna personalizada cadastrada ate o momento para esta tabela.
                             </td>
                         </tr>

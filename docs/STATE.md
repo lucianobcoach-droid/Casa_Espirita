@@ -1,6 +1,6 @@
 # STATE
 
-Data de atualizacao: 2026-05-08
+Data de atualizacao: 2026-05-12
 
 ## SPEC funcional consolidada: construtor de tabelas personalizadas configuraveis
 
@@ -140,15 +140,24 @@ Data de atualizacao: 2026-05-08
   - campos numericos renderizados com entrada textual + `inputmode`, evitando validacao nativa confusa do navegador para decimal brasileiro
   - estado vazio da grade de linhas com CTA contextual `+ Nova linha` apenas para quem pode preencher
   - edicao de linhas agora normaliza o valor inicial por tipo antes de preencher o formulario, evitando que `monetario` e `percentual` sejam recarregados com zeros excedentes e rejeitados pelo proprio form
+- totalizadores controlados por coluna agora implementados com:
+  - model proprio `TotalizadorColunaPersonalizada` no `financeiro`, com migration dedicada
+  - choices controlados de `soma`, `media`, `minimo`, `maximo` e `contagem`
+  - configuracao feita no proprio `ColunaPersonalizadaForm`, exibindo apenas opcoes compativeis com o tipo de dado
+  - limpeza segura de totalizadores incompativeis quando a coluna muda de tipo, sem abrir formula livre
+  - calculo no rodape da tela de linhas apenas para colunas ativas, visiveis, nao calculadas e com configuracao ativa
+  - linhas arquivadas ignoradas no calculo
+  - `inteiro`, `decimal`, `monetario` e `percentual` com `soma`, `media`, `minimo`, `maximo` e `contagem`
+  - `data` com `minimo`, `maximo` e `contagem`
+  - `booleano`, `lista_opcoes`, `texto_curto`, `texto_longo` e `mes_competencia` com `contagem` simples total
 - limites desta implementacao estrutural:
   - sem `FormulaColunaPersonalizada`
-  - sem `TotalizadorColunaPersonalizada`
   - sem auditoria operacional propria da nova frente
   - sem exportacao XLSX da nova frente
   - sem integracao com financeiro oficial
 - classificacao documental atualizada desta frente:
-  - implementar agora: estrutura minima de dados, permissoes executaveis, listagem minima somente leitura, cadastro inicial de metadados, configuracao inicial de colunas e preenchimento inicial de linhas concluidos
-  - pendencia proxima: abrir microetapa de totalizadores controlados por coluna, ainda sem formulas guiadas, exportacao XLSX ou auditoria operacional propria
+  - implementar agora: estrutura minima de dados, permissoes executaveis, listagem minima somente leitura, cadastro inicial de metadados, configuracao inicial de colunas, preenchimento inicial de linhas e totalizadores controlados por coluna concluidos
+  - pendencia proxima: abrir microetapa de busca textual simples na tela de linhas, ainda sem formulas guiadas, exportacao XLSX ou auditoria operacional propria
   - backlog/futuro: agrupamentos por opcao, filtros avancados/compostos, visoes salvas, arrastar-e-soltar, importacao assistida e exemplos/templates
   - fora de escopo: planilha livre estilo Excel, integracao escrevente com financeiro e modelagem definitiva de banco nesta fase
   - risco a monitorar: perda de governanca e desvio da frente para comportamento de planilha livre

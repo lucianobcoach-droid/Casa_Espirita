@@ -32,6 +32,7 @@ from .models import (
     LancamentoFinanceiro,
     PessoaFinanceira,
     TabelaPersonalizada,
+    TotalizadorColunaPersonalizada,
     TipoContaFinanceira,
     ValorTabelaPersonalizada,
 )
@@ -3860,6 +3861,57 @@ class TabelasPersonalizadasEstruturaBaseTests(TestCase):
         with self.assertRaises(ValidationError):
             valor.full_clean()
 
+    def test_cria_totalizador_valido_para_coluna_numerica(self):
+        coluna = ColunaPersonalizada.objects.create(
+            tabela=self.tabela,
+            nome='Valor previsto',
+            tipo_dado=ColunaPersonalizada.TipoDado.DECIMAL,
+        )
+
+        totalizador = TotalizadorColunaPersonalizada.objects.create(
+            coluna=coluna,
+            tipo_totalizador=TotalizadorColunaPersonalizada.TipoTotalizador.SOMA,
+        )
+
+        self.assertEqual(totalizador.coluna, coluna)
+        self.assertTrue(totalizador.ativo)
+
+    def test_bloqueia_totalizador_incompativel_com_tipo_da_coluna(self):
+        coluna = ColunaPersonalizada.objects.create(
+            tabela=self.tabela,
+            nome='Descricao livre',
+            tipo_dado=ColunaPersonalizada.TipoDado.TEXTO_CURTO,
+        )
+        totalizador = TotalizadorColunaPersonalizada(
+            coluna=coluna,
+            tipo_totalizador=TotalizadorColunaPersonalizada.TipoTotalizador.SOMA,
+        )
+
+        with self.assertRaises(ValidationError):
+            totalizador.full_clean()
+
+    def test_compatibilidade_de_totalizadores_por_tipo(self):
+        self.assertEqual(
+            set(TotalizadorColunaPersonalizada.tipos_compativeis_por_tipo_dado(ColunaPersonalizada.TipoDado.TEXTO_CURTO)),
+            {TotalizadorColunaPersonalizada.TipoTotalizador.CONTAGEM},
+        )
+        self.assertEqual(
+            set(TotalizadorColunaPersonalizada.tipos_compativeis_por_tipo_dado(ColunaPersonalizada.TipoDado.BOOLEANO)),
+            {TotalizadorColunaPersonalizada.TipoTotalizador.CONTAGEM},
+        )
+        self.assertEqual(
+            set(TotalizadorColunaPersonalizada.tipos_compativeis_por_tipo_dado(ColunaPersonalizada.TipoDado.LISTA_OPCOES)),
+            {TotalizadorColunaPersonalizada.TipoTotalizador.CONTAGEM},
+        )
+        self.assertEqual(
+            set(TotalizadorColunaPersonalizada.tipos_compativeis_por_tipo_dado(ColunaPersonalizada.TipoDado.DATA)),
+            {
+                TotalizadorColunaPersonalizada.TipoTotalizador.MINIMO,
+                TotalizadorColunaPersonalizada.TipoTotalizador.MAXIMO,
+                TotalizadorColunaPersonalizada.TipoTotalizador.CONTAGEM,
+            },
+        )
+
     def test_lancamento_financeiro_existente_permanece_funcional(self):
         conta = ContaFinanceira.objects.create(
             nome='Conta operacional teste',
@@ -4128,8 +4180,63 @@ class TabelasPersonalizadasListViewTests(TestCase):
         )
         ValorTabelaPersonalizada.objects.create(
             linha=linha,
+            coluna=colunas['data'],
+            valor_data=date(2026, 5, 8),
+        )
+        ValorTabelaPersonalizada.objects.create(
+            linha=linha,
             coluna=colunas['lista'],
             valor_texto='Limpeza',
+        )
+        return linha
+
+    def _criar_segunda_linha_com_valores(self, colunas: dict[str, ColunaPersonalizada], *, status='ativa'):
+        linha = LinhaTabelaPersonalizada.objects.create(
+            tabela=self.tabela,
+            ordem=21,
+            status=status,
+            criado_por=self.user,
+            atualizado_por=self.user,
+        )
+        ValorTabelaPersonalizada.objects.create(
+            linha=linha,
+            coluna=colunas['texto'],
+            valor_texto='Detergente concentrado',
+        )
+        ValorTabelaPersonalizada.objects.create(
+            linha=linha,
+            coluna=colunas['inteiro'],
+            valor_numero=Decimal('2'),
+        )
+        ValorTabelaPersonalizada.objects.create(
+            linha=linha,
+            coluna=colunas['monetario'],
+            valor_numero=Decimal('19.90'),
+        )
+        ValorTabelaPersonalizada.objects.create(
+            linha=linha,
+            coluna=colunas['decimal'],
+            valor_numero=Decimal('2.00000088'),
+        )
+        ValorTabelaPersonalizada.objects.create(
+            linha=linha,
+            coluna=colunas['percentual'],
+            valor_numero=Decimal('4.5'),
+        )
+        ValorTabelaPersonalizada.objects.create(
+            linha=linha,
+            coluna=colunas['data'],
+            valor_data=date(2026, 5, 10),
+        )
+        ValorTabelaPersonalizada.objects.create(
+            linha=linha,
+            coluna=colunas['booleano'],
+            valor_booleano=False,
+        )
+        ValorTabelaPersonalizada.objects.create(
+            linha=linha,
+            coluna=colunas['lista'],
+            valor_texto='Material',
         )
         return linha
 
@@ -4351,7 +4458,7 @@ class TabelasPersonalizadasListViewTests(TestCase):
         self.assertContains(response, 'Estrutura da tabela')
         self.assertContains(response, 'Observacao interna')
         self.assertContains(response, 'estrutura das colunas')
-        self.assertContains(response, 'microetapa posterior')
+        self.assertContains(response, 'totalizadores controlados por coluna')
 
     def test_usuario_sem_permissao_editar_estrutura_nao_acessa_colunas(self):
         self._login_com_permissoes(
@@ -4450,6 +4557,75 @@ class TabelasPersonalizadasListViewTests(TestCase):
         self.assertFalse(form.is_valid())
         self.assertIn('tipo_dado', form.errors)
 
+    def test_form_de_coluna_permite_configurar_totalizador_compativel(self):
+        form = ColunaPersonalizadaForm(
+            data={
+                'nome': 'Consumo total',
+                'tipo_dado': ColunaPersonalizada.TipoDado.DECIMAL,
+                'opcoes_lista': '',
+                'totalizadores_configurados': [
+                    TotalizadorColunaPersonalizada.TipoTotalizador.SOMA,
+                    TotalizadorColunaPersonalizada.TipoTotalizador.MEDIA,
+                ],
+                'obrigatoria': '',
+                'visivel': 'on',
+                'ordem': 1,
+                'status': ColunaPersonalizada.StatusColuna.ATIVA,
+            }
+        )
+
+        self.assertTrue(form.is_valid(), form.errors)
+
+    def test_form_de_coluna_bloqueia_totalizador_incompativel(self):
+        form = ColunaPersonalizadaForm(
+            data={
+                'nome': 'Texto livre',
+                'tipo_dado': ColunaPersonalizada.TipoDado.TEXTO_CURTO,
+                'opcoes_lista': '',
+                'totalizadores_configurados': [
+                    TotalizadorColunaPersonalizada.TipoTotalizador.SOMA,
+                ],
+                'obrigatoria': '',
+                'visivel': 'on',
+                'ordem': 1,
+                'status': ColunaPersonalizada.StatusColuna.ATIVA,
+            }
+        )
+
+        self.assertFalse(form.is_valid())
+        self.assertIn('totalizadores_configurados', form.errors)
+
+    def test_form_de_coluna_limpa_totalizador_incompativel_ao_mudar_tipo(self):
+        coluna = ColunaPersonalizada.objects.create(
+            tabela=self.tabela,
+            nome='Consumo ajustavel',
+            tipo_dado=ColunaPersonalizada.TipoDado.DECIMAL,
+            visivel=True,
+        )
+        totalizador = TotalizadorColunaPersonalizada.objects.create(
+            coluna=coluna,
+            tipo_totalizador=TotalizadorColunaPersonalizada.TipoTotalizador.SOMA,
+            ativo=True,
+        )
+
+        form = ColunaPersonalizadaForm(
+            data={
+                'nome': 'Consumo ajustavel',
+                'tipo_dado': ColunaPersonalizada.TipoDado.TEXTO_CURTO,
+                'opcoes_lista': '',
+                'obrigatoria': '',
+                'visivel': 'on',
+                'ordem': 0,
+                'status': ColunaPersonalizada.StatusColuna.ATIVA,
+            },
+            instance=coluna,
+        )
+
+        self.assertTrue(form.is_valid(), form.errors)
+        form.save()
+        totalizador.refresh_from_db()
+        self.assertFalse(totalizador.ativo)
+
     def test_coluna_criada_fica_vinculada_a_tabela_correta(self):
         self._login_com_permissoes(
             'user-coluna-vinculo',
@@ -4515,6 +4691,111 @@ class TabelasPersonalizadasListViewTests(TestCase):
         self.assertNotContains(response, 'Campo oculto')
         self.assertNotContains(response, 'Campo arquivado')
         self.assertNotContains(response, 'Campo calculado futuro')
+
+    def test_totalizador_nao_aparece_sem_configuracao_na_tela_de_linhas(self):
+        colunas = self._criar_colunas_para_linhas()
+        self._criar_linha_com_valores(colunas)
+        self._login_com_permissoes(
+            'user-linha-sem-totalizador',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk})
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'Totalizadores')
+
+    def test_totalizador_aparece_no_rodape_com_soma_decimal_monetaria_percentual_e_datas(self):
+        colunas = self._criar_colunas_para_linhas()
+        self._criar_linha_com_valores(colunas)
+        self._criar_segunda_linha_com_valores(colunas)
+        TotalizadorColunaPersonalizada.objects.create(
+            coluna=colunas['decimal'],
+            tipo_totalizador=TotalizadorColunaPersonalizada.TipoTotalizador.SOMA,
+        )
+        TotalizadorColunaPersonalizada.objects.create(
+            coluna=colunas['monetario'],
+            tipo_totalizador=TotalizadorColunaPersonalizada.TipoTotalizador.SOMA,
+        )
+        TotalizadorColunaPersonalizada.objects.create(
+            coluna=colunas['percentual'],
+            tipo_totalizador=TotalizadorColunaPersonalizada.TipoTotalizador.SOMA,
+        )
+        TotalizadorColunaPersonalizada.objects.create(
+            coluna=colunas['data'],
+            tipo_totalizador=TotalizadorColunaPersonalizada.TipoTotalizador.MINIMO,
+        )
+        TotalizadorColunaPersonalizada.objects.create(
+            coluna=colunas['data'],
+            tipo_totalizador=TotalizadorColunaPersonalizada.TipoTotalizador.MAXIMO,
+        )
+        self._login_com_permissoes(
+            'user-linha-totalizadores',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk})
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Totalizadores')
+        self.assertContains(response, '<strong>Soma:</strong> 3.015', html=True)
+        self.assertContains(response, '<strong>Soma:</strong> R$ 70.62', html=True)
+        self.assertContains(response, '<strong>Soma:</strong> 16.8456%', html=True)
+        self.assertContains(response, '<strong>Minimo:</strong> 08/05/2026', html=True)
+        self.assertContains(response, '<strong>Maximo:</strong> 10/05/2026', html=True)
+
+    def test_totalizador_de_contagem_simples_para_texto_booleano_e_lista(self):
+        colunas = self._criar_colunas_para_linhas()
+        self._criar_linha_com_valores(colunas)
+        self._criar_segunda_linha_com_valores(colunas)
+        TotalizadorColunaPersonalizada.objects.create(
+            coluna=colunas['texto'],
+            tipo_totalizador=TotalizadorColunaPersonalizada.TipoTotalizador.CONTAGEM,
+        )
+        TotalizadorColunaPersonalizada.objects.create(
+            coluna=colunas['booleano'],
+            tipo_totalizador=TotalizadorColunaPersonalizada.TipoTotalizador.CONTAGEM,
+        )
+        TotalizadorColunaPersonalizada.objects.create(
+            coluna=colunas['lista'],
+            tipo_totalizador=TotalizadorColunaPersonalizada.TipoTotalizador.CONTAGEM,
+        )
+        self._login_com_permissoes(
+            'user-linha-totalizadores-contagem',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk})
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '<strong>Contagem:</strong> 2', html=True, count=3)
+
+    def test_totalizador_ignora_linhas_arquivadas(self):
+        colunas = self._criar_colunas_para_linhas()
+        self._criar_linha_com_valores(colunas)
+        self._criar_segunda_linha_com_valores(colunas, status=LinhaTabelaPersonalizada.StatusLinha.ARQUIVADA)
+        TotalizadorColunaPersonalizada.objects.create(
+            coluna=colunas['monetario'],
+            tipo_totalizador=TotalizadorColunaPersonalizada.TipoTotalizador.SOMA,
+        )
+        self._login_com_permissoes(
+            'user-linha-totalizador-ignora-arquivada',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk})
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '<strong>Soma:</strong> R$ 50.72', html=True)
+        self.assertNotContains(response, '<strong>Soma:</strong> R$ 70.62', html=True)
 
     def test_usuario_sem_permissao_visualizar_nao_acessa_listagem_de_linhas(self):
         self._login_com_permissoes(

@@ -128,6 +128,40 @@
         border-top: 1px solid #edf2f7;
     }
 
+    .financeiro-coluna-form-totalizadores {
+        display: grid;
+        gap: 0.55rem;
+        padding: 0.85rem 0.95rem;
+        border: 1px solid #d7e2f0;
+        border-radius: 0.95rem;
+        background: #f8fbff;
+    }
+
+    .financeiro-coluna-form-totalizadores-grid {
+        display: grid;
+        gap: 0.55rem;
+    }
+
+    .financeiro-coluna-form-totalizador-option {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        min-height: 2.1rem;
+    }
+
+    .financeiro-coluna-form-totalizador-option input[type="checkbox"] {
+        width: 1rem;
+        min-width: 1rem;
+        height: 1rem;
+        min-height: 1rem;
+        margin: 0;
+        accent-color: #206bc4;
+    }
+
+    .financeiro-coluna-form-totalizador-option.is-hidden {
+        display: none;
+    }
+
     @media screen and (max-width: 1023px) {
         .financeiro-coluna-form-grid-duo {
             grid-template-columns: 1fr;
@@ -149,7 +183,7 @@
         <div class="financeiro-coluna-form-body">
             <div class="financeiro-coluna-form-notice">
                 <strong>Recorte atual:</strong>
-                sem preenchimento de linhas nesta etapa. Formulas e totalizadores serao liberados em microetapas futuras.
+                sem preenchimento de linhas nesta etapa. Formulas guiadas seguem futuras. Totalizadores aqui continuam como configuracao controlada por coluna.
             </div>
 
             {% if form.non_field_errors %}
@@ -181,6 +215,32 @@
                         <div class="control">{{ form.opcoes_lista }}</div>
                         {% if form.opcoes_lista.help_text %}<p class="help">{{ form.opcoes_lista.help_text }}</p>{% endif %}
                         {% for error in form.opcoes_lista.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+                    </div>
+
+                    <div class="field financeiro-coluna-form-field">
+                        <label class="label">{{ form.totalizadores_configurados.label }}</label>
+                        <div class="financeiro-coluna-form-totalizadores" id="financeiro-totalizadores-configurados">
+                            <div class="financeiro-coluna-form-totalizadores-grid">
+                                {% for totalizador in form.totalizadores_render %}
+                                    <label
+                                        class="financeiro-coluna-form-totalizador-option"
+                                        data-totalizador-option
+                                        data-tipos-dado="{{ totalizador.tipos_dado|join:' ' }}"
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            name="{{ form.totalizadores_configurados.html_name }}"
+                                            value="{{ totalizador.value }}"
+                                            {% if totalizador.checked %}checked{% endif %}
+                                        >
+                                        <span>{{ totalizador.label }}</span>
+                                    </label>
+                                {% endfor %}
+                            </div>
+                            {% if form.totalizadores_configurados.help_text %}<p class="help">{{ form.totalizadores_configurados.help_text }}</p>{% endif %}
+                            <p class="help">As opcoes mudam conforme o tipo de dado e totalizadores incompativeis ficam ocultos e desmarcados.</p>
+                            {% for error in form.totalizadores_configurados.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+                        </div>
                     </div>
 
                     <div class="financeiro-coluna-form-grid-duo">
@@ -228,4 +288,31 @@
         </div>
     </section>
 </div>
+<script>
+    (function () {
+        const tipoDado = document.getElementById('{{ form.tipo_dado.id_for_label }}');
+        const options = document.querySelectorAll('[data-totalizador-option]');
+
+        function syncTotalizadores() {
+            const tipoSelecionado = tipoDado ? tipoDado.value : '';
+            options.forEach((option) => {
+                const tiposDado = (option.dataset.tiposDado || '').split(' ').filter(Boolean);
+                const checkbox = option.querySelector('input[type="checkbox"]');
+                const compativel = Boolean(tipoSelecionado) && tiposDado.includes(tipoSelecionado);
+                option.classList.toggle('is-hidden', !compativel);
+                if (checkbox) {
+                    checkbox.disabled = !compativel;
+                    if (!compativel) {
+                        checkbox.checked = false;
+                    }
+                }
+            });
+        }
+
+        if (tipoDado) {
+            tipoDado.addEventListener('change', syncTotalizadores);
+            syncTotalizadores();
+        }
+    })();
+</script>
 {% endblock %}

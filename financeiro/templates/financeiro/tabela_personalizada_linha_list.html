@@ -60,6 +60,29 @@
     .financeiro-linha-actions {
         white-space: nowrap;
     }
+
+    .financeiro-linha-totalizadores-row th,
+    .financeiro-linha-totalizadores-row td {
+        vertical-align: top;
+        background: #f8fbff;
+        border-top: 2px solid #dbe7f5;
+    }
+
+    .financeiro-linha-totalizadores-box {
+        display: grid;
+        gap: 0.25rem;
+    }
+
+    .financeiro-linha-totalizadores-title {
+        color: #334155;
+        font-weight: 700;
+    }
+
+    .financeiro-linha-totalizadores-item {
+        color: #475569;
+        font-size: 0.82rem;
+        line-height: 1.35;
+    }
 </style>
 
 <div class="financeiro-linha-page">
@@ -85,7 +108,7 @@
     <section class="financeiro-linha-card">
         <div class="financeiro-linha-note">
             <strong>Recorte atual:</strong>
-            esta etapa permite preenchimento basico de linhas. Formulas, totalizadores e exportacao serao liberados em microetapas futuras. Controle interno sem impacto financeiro oficial.
+            esta etapa permite preenchimento basico de linhas e totalizadores configurados por coluna. Formulas guiadas e exportacao serao liberados em microetapas futuras. Controle interno sem impacto financeiro oficial.
         </div>
 
         <div class="financeiro-linha-table-wrap">
@@ -141,6 +164,34 @@
                         </tr>
                     {% endfor %}
                 </tbody>
+                {% if possui_totalizadores_tabela_personalizada %}
+                    <tfoot>
+                        <tr class="financeiro-linha-totalizadores-row">
+                            <th>
+                                <div class="financeiro-linha-totalizadores-box">
+                                    <span class="financeiro-linha-totalizadores-title">Totalizadores</span>
+                                    <span class="financeiro-linha-row-meta">Somente colunas visiveis com configuracao ativa.</span>
+                                </div>
+                            </th>
+                            {% for totalizador_coluna in totalizadores_renderizados %}
+                                <td>
+                                    {% if totalizador_coluna.itens %}
+                                        <div class="financeiro-linha-totalizadores-box">
+                                            {% for item in totalizador_coluna.itens %}
+                                                <div class="financeiro-linha-totalizadores-item">
+                                                    <strong>{{ item.label }}:</strong> {{ item.valor }}
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        <span class="financeiro-linha-value-empty">-</span>
+                                    {% endif %}
+                                </td>
+                            {% endfor %}
+                            {% if pode_editar_linhas_tabela_personalizada %}<td></td>{% endif %}
+                        </tr>
+                    </tfoot>
+                {% endif %}
             </table>
         </div>
     </section>

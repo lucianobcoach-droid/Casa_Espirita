@@ -576,9 +576,15 @@ Consolidacao desta baixa documental:
   - criacao e edicao de linha protegidas por permissoes separadas de preencher/editar linhas
   - `TabelaPersonalizadaLinhaForm` dinamico criado sem abrir `formula_controlada`, totalizadores ou exportacao
   - listagem de tabelas atualizada com acao `Linhas`, respeitando o recorte de permissao da frente
-- reclassificacao da pendencia proxima apos a tela de linhas:
-  - deixa de ser `tela de linhas e preenchimento de valores`
-  - passa a ser `totalizadores controlados por coluna`, mantendo formulas guiadas, exportacao e auditoria operacional propria fora do recorte imediato
+- consolidacao dos totalizadores controlados por coluna:
+  - model `TotalizadorColunaPersonalizada` implementado com migration dedicada no `financeiro`
+  - configuracao de totalizador incorporada ao formulario de coluna, com exibicao apenas de opcoes compativeis com o tipo
+  - rodape da listagem de linhas passa a exibir apenas totalizadores configurados em colunas visiveis, ativas e nao calculadas
+  - linhas arquivadas ficam fora do calculo
+  - contagem simples total mantida para texto, booleano, lista de opcoes e `mes_competencia`, sem agrupamentos
+- reclassificacao da pendencia proxima apos os totalizadores:
+  - deixa de ser `totalizadores controlados por coluna`
+  - passa a ser `busca textual simples na tela de linhas`, mantendo formulas guiadas, exportacao e auditoria operacional propria fora do recorte imediato
 - guardrails reforcados:
   - qualquer alteracao em banco real exige backup e autorizacao
   - arquivos SQLite nao devem ser versionados
