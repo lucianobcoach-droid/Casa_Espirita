@@ -4108,6 +4108,11 @@ class TabelasPersonalizadasListViewTests(TestCase):
         )
         ValorTabelaPersonalizada.objects.create(
             linha=linha,
+            coluna=colunas['monetario'],
+            valor_numero=Decimal('50.72'),
+        )
+        ValorTabelaPersonalizada.objects.create(
+            linha=linha,
             coluna=colunas['booleano'],
             valor_booleano=True,
         )
@@ -4504,6 +4509,7 @@ class TabelasPersonalizadasListViewTests(TestCase):
         self.assertContains(response, 'Sabao liquido')
         self.assertContains(response, 'Limpeza')
         self.assertContains(response, 'Sim')
+        self.assertContains(response, 'R$ 50.72')
         self.assertContains(response, '1.01499912')
         self.assertContains(response, '12.3456%')
         self.assertNotContains(response, 'Campo oculto')
@@ -4696,6 +4702,91 @@ class TabelasPersonalizadasListViewTests(TestCase):
 
         self.assertTrue(form.is_valid(), form.errors)
         self.assertEqual(form.cleaned_data[campo], Decimal('12.3456'))
+
+    def test_form_de_linha_em_edicao_formata_valores_iniciais_por_tipo(self):
+        colunas = self._criar_colunas_para_linhas()
+        linha = self._criar_linha_com_valores(colunas)
+        valor_percentual = linha.valores.get(coluna=colunas['percentual'])
+        valor_percentual.valor_numero = Decimal('12.34')
+        valor_percentual.save()
+
+        form = TabelaPersonalizadaLinhaForm(tabela=self.tabela, linha=linha)
+
+        self.assertEqual(form[self._campo_coluna(colunas['monetario'])].value(), '50,72')
+        self.assertEqual(form[self._campo_coluna(colunas['percentual'])].value(), '12,34')
+        self.assertEqual(form[self._campo_coluna(colunas['decimal'])].value(), '1,01499912')
+        self.assertEqual(form[self._campo_coluna(colunas['inteiro'])].value(), '4')
+
+    def test_edicao_de_linha_aceita_reenvio_sem_mudar_valor_monetario_carregado_pelo_sistema(self):
+        colunas = self._criar_colunas_para_linhas()
+        linha = self._criar_linha_com_valores(colunas)
+        self._login_com_permissoes(
+            'user-linha-edicao-monetario-normalizado',
+            [
+                PermissoesTabelasPersonalizadas.EDITAR_LINHAS,
+                PermissoesTabelasPersonalizadas.VISUALIZAR,
+            ],
+        )
+
+        response = self.client.post(
+            reverse(
+                'financeiro:tabela-personalizada-linha-update',
+                kwargs={'tabela_id': self.tabela.pk, 'pk': linha.pk},
+            ),
+            data={
+                self._campo_coluna(colunas['texto']): 'Sabao liquido',
+                self._campo_coluna(colunas['inteiro']): '4',
+                self._campo_coluna(colunas['monetario']): '50,72',
+                self._campo_coluna(colunas['decimal']): '1,01499912',
+                self._campo_coluna(colunas['percentual']): '12,3456',
+                self._campo_coluna(colunas['booleano']): '1',
+                self._campo_coluna(colunas['lista']): 'Limpeza',
+            },
+        )
+
+        self.assertRedirects(
+            response,
+            reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk}),
+        )
+        linha.refresh_from_db()
+        self.assertEqual(linha.valores.get(coluna=colunas['monetario']).valor_numero, Decimal('50.72'))
+
+    def test_edicao_de_linha_percentual_com_zeros_excedentes_carrega_sem_erro(self):
+        colunas = self._criar_colunas_para_linhas()
+        linha = self._criar_linha_com_valores(colunas)
+        valor_percentual = linha.valores.get(coluna=colunas['percentual'])
+        valor_percentual.valor_numero = Decimal('12.34')
+        valor_percentual.save()
+        self._login_com_permissoes(
+            'user-linha-edicao-percentual-normalizado',
+            [
+                PermissoesTabelasPersonalizadas.EDITAR_LINHAS,
+                PermissoesTabelasPersonalizadas.VISUALIZAR,
+            ],
+        )
+
+        response = self.client.post(
+            reverse(
+                'financeiro:tabela-personalizada-linha-update',
+                kwargs={'tabela_id': self.tabela.pk, 'pk': linha.pk},
+            ),
+            data={
+                self._campo_coluna(colunas['texto']): 'Sabao liquido',
+                self._campo_coluna(colunas['inteiro']): '4',
+                self._campo_coluna(colunas['monetario']): '50,72',
+                self._campo_coluna(colunas['decimal']): '1,01499912',
+                self._campo_coluna(colunas['percentual']): '12,34',
+                self._campo_coluna(colunas['booleano']): '1',
+                self._campo_coluna(colunas['lista']): 'Limpeza',
+            },
+        )
+
+        self.assertRedirects(
+            response,
+            reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk}),
+        )
+        linha.refresh_from_db()
+        self.assertEqual(linha.valores.get(coluna=colunas['percentual']).valor_numero, Decimal('12.34'))
 
     def test_form_de_linha_inteiro_rejeita_valor_decimal(self):
         colunas = self._criar_colunas_para_linhas()

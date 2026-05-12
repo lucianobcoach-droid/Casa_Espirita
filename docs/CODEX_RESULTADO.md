@@ -2,6 +2,35 @@
 
 Data: 2026-05-08
 
+## Microetapa tecnica: normalizacao da exibicao numerica na edicao de linhas personalizadas
+
+- etapa funcional curta e controlada, limitada a corrigir a exibicao e a reutilizacao de valores numericos ja salvos no formulario dinamico de edicao de linhas
+- confirmei antes de alterar:
+  - branch `feat/reinicio-financeiro`
+  - arvore limpa
+  - ausencia de commits locais pendentes
+  - ausencia de commits remotos pendentes
+  - `fetch` concluido sem erro
+- implementei a correcao em dois pontos principais:
+  - `TabelaPersonalizadaLinhaForm` passou a formatar o valor inicial conforme o tipo da coluna antes de preencher o campo
+  - a edicao deixou de reapresentar `monetario` e `percentual` com zeros excedentes que violavam o proprio limite do form
+- comportamento consolidado nesta microetapa:
+  - `decimal` continua com ate 8 casas e sem truncar valor valido
+  - `monetario` volta carregando com 2 casas
+  - `percentual` volta carregando com ate 4 casas, sem zeros desnecessarios
+  - `inteiro` volta carregando sem casas decimais
+  - continua aceita entrada com virgula ou ponto como separador decimal
+- testes adicionados/ajustados para:
+  - formatacao inicial por tipo na edicao de linha
+  - reenvio sem alteracao de valor monetario carregado pelo proprio sistema
+  - reenvio sem erro de percentual com zeros excedentes no armazenamento
+  - manutencao do decimal com 8 casas
+  - manutencao da listagem de linhas sem regressao
+  - confirmacao de nao impacto em `LancamentoFinanceiro`
+- baixa documental consolidada:
+  - bug de auto-rejeicao do formulario na edicao de linhas corrigido
+  - pendencia proxima mantida em `totalizadores controlados por coluna`
+
 ## Microetapa tecnica: refinamento decimal e UX da tela de linhas personalizadas
 
 - etapa funcional curta e controlada, limitada a precisao real de `valor_numero`, entrada decimal brasileira e estado vazio da grade de linhas

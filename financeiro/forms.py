@@ -178,6 +178,32 @@ def _normalizar_decimal_entrada(valor):
     return valor
 
 
+def _formatar_decimal_para_formulario(
+    valor: Decimal | str | None,
+    *,
+    decimal_places: int,
+    trim_zeros: bool = False,
+) -> str:
+    if valor in (None, ''):
+        return ''
+
+    if not isinstance(valor, Decimal):
+        try:
+            valor = Decimal(str(valor))
+        except (InvalidOperation, TypeError, ValueError):
+            return ''
+
+    if decimal_places <= 0:
+        return str(valor.quantize(Decimal('1')))
+
+    quantizador = Decimal('0.' + ('0' * (decimal_places - 1)) + '1')
+    valor = valor.quantize(quantizador)
+    texto = format(valor, 'f')
+    if trim_zeros:
+        texto = texto.rstrip('0').rstrip('.')
+    return texto.replace('.', ',')
+
+
 class DecimalBRField(forms.DecimalField):
     def __init__(self, *args, placeholder: str = '', **kwargs):
         widget = kwargs.pop(
@@ -725,7 +751,29 @@ class TabelaPersonalizadaLinhaForm(forms.Form):
             ColunaPersonalizada.TipoDado.MONETARIO,
             ColunaPersonalizada.TipoDado.PERCENTUAL,
         }:
-            return valor.valor_numero
+            if valor.valor_numero is None:
+                return None
+            if coluna.tipo_dado == ColunaPersonalizada.TipoDado.INTEIRO:
+                return _formatar_decimal_para_formulario(
+                    valor.valor_numero,
+                    decimal_places=0,
+                )
+            if coluna.tipo_dado == ColunaPersonalizada.TipoDado.MONETARIO:
+                return _formatar_decimal_para_formulario(
+                    valor.valor_numero,
+                    decimal_places=2,
+                )
+            if coluna.tipo_dado == ColunaPersonalizada.TipoDado.PERCENTUAL:
+                return _formatar_decimal_para_formulario(
+                    valor.valor_numero,
+                    decimal_places=4,
+                    trim_zeros=True,
+                )
+            return _formatar_decimal_para_formulario(
+                valor.valor_numero,
+                decimal_places=8,
+                trim_zeros=True,
+            )
         if coluna.tipo_dado == ColunaPersonalizada.TipoDado.DATA:
             return valor.valor_data
         if coluna.tipo_dado == ColunaPersonalizada.TipoDado.BOOLEANO:

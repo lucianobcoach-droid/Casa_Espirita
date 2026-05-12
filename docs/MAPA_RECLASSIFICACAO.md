@@ -471,6 +471,7 @@ Status apos implementacao desta microetapa: ESTRUTURA MINIMA DE DADOS IMPLEMENTA
 Status apos implementacao desta microetapa: PERMISSOES EXECUTAVEIS DA FRENTE IMPLEMENTADAS / BACKLOG
 Status apos implementacao desta microetapa: MENU REAL + LISTAGEM MINIMA SOMENTE LEITURA IMPLEMENTADOS / BACKLOG
 Status apos implementacao desta microetapa: REFINAMENTO DE UX E PRECISAO DECIMAL DAS LINHAS IMPLEMENTADO / BACKLOG
+Status apos correcao desta microetapa: NORMALIZACAO DE EXIBICAO NUMERICA NA EDICAO DE LINHAS IMPLEMENTADA / BACKLOG
 
 Motivo:
 Foi levantada frente futura para controles configuraveis genericos, com colunas definidas pelo usuario, tipos de dado, formulas controladas por coluna e totalizadores. Deve ser tratada separadamente das correcoes imediatas do financeiro.
@@ -486,6 +487,7 @@ Consolidacao desta baixa documental:
   - contrato de UX operacional documentado
   - precisao real de `valor_numero` elevada para 8 casas no recorte de linhas
   - entrada decimal brasileira aceita com virgula ou ponto no formulario dinamico
+  - edicao de linhas agora normaliza monetario, percentual, decimal e inteiro conforme o tipo antes de preencher o formulario
   - fluxo operacional documentado de uso futuro
   - objetivo funcional proprio e generico
   - recorte conceitual de MVP com construtor controlado

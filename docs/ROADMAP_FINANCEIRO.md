@@ -1633,6 +1633,7 @@ Status consolidado: SPEC FUNCIONAL DOCUMENTAL CONSOLIDADA / BACKLOG TECNICO INCR
   - entrada decimal brasileira aceita virgula ou ponto no formulario dinamico de linhas
   - `decimal` limitado a 8 casas, `monetario` a 2 e `percentual` a 4, com mensagens claras em portugues
   - estado vazio da grade ganhou CTA contextual `+ Nova linha` apenas para quem pode preencher
+  - edicao de linha passou a normalizar por tipo os valores iniciais carregados do banco, evitando que `monetario` e `percentual` sejam exibidos com 8 casas e rejeitados pelo proprio formulario
 - Objetivo:
   - abrir a grade operacional de dados do MVP.
 - Escopo:

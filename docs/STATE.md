@@ -139,6 +139,7 @@ Data de atualizacao: 2026-05-08
   - `decimal` validado com ate 8 casas, `monetario` com ate 2, `percentual` com ate 4 e `inteiro` apenas sem casas
   - campos numericos renderizados com entrada textual + `inputmode`, evitando validacao nativa confusa do navegador para decimal brasileiro
   - estado vazio da grade de linhas com CTA contextual `+ Nova linha` apenas para quem pode preencher
+  - edicao de linhas agora normaliza o valor inicial por tipo antes de preencher o formulario, evitando que `monetario` e `percentual` sejam recarregados com zeros excedentes e rejeitados pelo proprio form
 - limites desta implementacao estrutural:
   - sem `FormulaColunaPersonalizada`
   - sem `TotalizadorColunaPersonalizada`
