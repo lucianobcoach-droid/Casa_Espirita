@@ -2,6 +2,35 @@
 
 Data: 2026-05-12
 
+## Microetapa tecnica: busca textual simples nas linhas personalizadas
+
+- etapa funcional controlada, limitada a busca textual simples na tela de linhas das tabelas personalizadas, sem formulas guiadas, sem exportacao XLSX, sem auditoria operacional propria e sem filtros avancados
+- confirmei antes de alterar:
+  - branch `feat/reinicio-financeiro`
+  - arvore limpa
+  - ausencia de commits locais pendentes
+  - ausencia de commits remotos pendentes
+  - `fetch` concluido sem erro
+- implementei a frente em tres pontos:
+  - campo `Buscar nas linhas` no topo da listagem de linhas
+  - filtro simples aplicado apenas nas linhas ativas da tabela atual e sobre valores de colunas visiveis/editaveis
+  - estado de busca sem resultado com mensagem propria e acao `Limpar`
+- comportamento consolidado nesta microetapa:
+  - busca cobre texto, lista de opcoes, mes/competencia, numero, data e booleano de forma simples
+  - colunas invisiveis, arquivadas, calculadas ou `formula_controlada` ficam fora da busca
+  - tabelas diferentes nao entram no resultado
+  - totalizadores do rodape passam a refletir as linhas filtradas pela busca, porque a tela passa a operar sobre o resultado visivel atual
+- testes adicionados/ajustados para:
+  - busca por texto, lista de opcoes, mes/competencia e numero
+  - exclusao de colunas invisiveis, arquivadas e calculadas do escopo da busca
+  - isolamento por tabela
+  - mensagem de sem resultado e botao `Limpar`
+  - totalizadores sobre resultado filtrado
+  - confirmacao de nao impacto em `LancamentoFinanceiro`
+- baixa documental consolidada:
+  - busca textual simples concluida
+  - pendencia proxima movida para `exportacao XLSX`
+
 ## Microetapa tecnica: totalizadores controlados por coluna nas tabelas personalizadas
 
 - etapa funcional controlada, limitada a totalizadores configurados por coluna na frente de tabelas personalizadas, sem formulas guiadas, sem exportacao XLSX e sem auditoria operacional propria

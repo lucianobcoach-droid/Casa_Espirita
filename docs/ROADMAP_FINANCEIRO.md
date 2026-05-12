@@ -1704,6 +1704,7 @@ Status consolidado: SPEC FUNCIONAL DOCUMENTAL CONSOLIDADA / BACKLOG TECNICO INCR
 
 #### Microetapa 10 - busca textual simples na tela de linhas
 
+- Status apos implementacao: CONCLUIDA
 - Objetivo:
   - facilitar consulta operacional basica sem abrir filtros avancados.
 - Escopo:
@@ -1725,6 +1726,14 @@ Status consolidado: SPEC FUNCIONAL DOCUMENTAL CONSOLIDADA / BACKLOG TECNICO INCR
   - filtros avancados;
   - busca por tipo especifico;
   - visoes salvas.
+- Consolidacao da entrega:
+  - campo `Buscar nas linhas` adicionado no topo da listagem de linhas
+  - busca aplicada apenas sobre valores visiveis/editaveis das colunas ativas, visiveis e nao calculadas da tabela atual
+  - cobertura simples de texto, lista de opcoes, mes/competencia, numero, data e booleano, sem virar filtro analitico avancado
+  - mensagem propria para busca sem resultado e botao `Limpar` quando houver termo ativo
+  - totalizadores do rodape passam a refletir o resultado filtrado da busca, sem opcao de alternar para total geral nesta etapa
+- Proxima microetapa recomendada:
+  - abrir a exportacao XLSX da nova frente, mantendo formulas guiadas e auditoria operacional propria fora do recorte imediato
 
 #### Microetapa 11 - exportacao XLSX
 

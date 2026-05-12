@@ -31,6 +31,42 @@
         overflow-x: auto;
     }
 
+    .financeiro-linha-search {
+        display: flex;
+        align-items: end;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        padding: 0.95rem 0.95rem 0;
+    }
+
+    .financeiro-linha-search-field {
+        flex: 1 1 18rem;
+    }
+
+    .financeiro-linha-search-field .label {
+        margin-bottom: 0.25rem;
+        color: #334155;
+        font-weight: 600;
+    }
+
+    .financeiro-linha-search-field .input {
+        min-height: 2.5rem;
+        border-radius: 0.75rem;
+        border-color: #d7e2f0;
+        box-shadow: none;
+    }
+
+    .financeiro-linha-search-field .input:focus {
+        border-color: #206bc4;
+        box-shadow: 0 0 0 0.2rem rgba(32, 107, 196, 0.12);
+    }
+
+    .financeiro-linha-search-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
     .financeiro-linha-empty {
         color: #64748b;
     }
@@ -111,6 +147,26 @@
             esta etapa permite preenchimento basico de linhas e totalizadores configurados por coluna. Formulas guiadas e exportacao serao liberados em microetapas futuras. Controle interno sem impacto financeiro oficial.
         </div>
 
+        <form method="get" class="financeiro-linha-search">
+            <div class="financeiro-linha-search-field">
+                <label class="label" for="id_busca_linhas">Buscar nas linhas</label>
+                <input
+                    class="input"
+                    type="text"
+                    id="id_busca_linhas"
+                    name="busca"
+                    value="{{ termo_busca_linhas }}"
+                    placeholder="Digite texto, numero, data, competencia ou opcao visivel"
+                >
+            </div>
+            <div class="financeiro-linha-search-actions">
+                <button class="button is-light" type="submit">Buscar</button>
+                {% if busca_linhas_ativa %}
+                    <a class="button" href="{% url 'financeiro:tabela-personalizada-linha-list' tabela_personalizada.pk %}">Limpar</a>
+                {% endif %}
+            </div>
+        </form>
+
         <div class="financeiro-linha-table-wrap">
             <table class="table is-fullwidth is-hoverable financeiro-table">
                 <thead>
@@ -152,12 +208,20 @@
                         <tr>
                             <td colspan="{% if pode_editar_linhas_tabela_personalizada %}{{ colunas_visiveis|length|add:'2' }}{% else %}{{ colunas_visiveis|length|add:'1' }}{% endif %}" class="financeiro-linha-empty">
                                 <div class="financeiro-linha-empty-box">
-                                    <div class="financeiro-linha-empty-title">Nenhuma linha cadastrada ainda para esta tabela.</div>
-                                    <div>Cadastre a primeira linha para comecar a preencher este controle interno.</div>
-                                    {% if pode_preencher_linhas_tabela_personalizada %}
-                                        <a class="button is-primary is-light" href="{% url 'financeiro:tabela-personalizada-linha-create' tabela_personalizada.pk %}">
-                                            + Nova linha
+                                    {% if busca_linhas_ativa %}
+                                        <div class="financeiro-linha-empty-title">Nenhuma linha encontrada para a busca informada.</div>
+                                        <div>Revise os termos da busca ou limpe o filtro para voltar a ver todas as linhas ativas desta tabela.</div>
+                                        <a class="button is-light" href="{% url 'financeiro:tabela-personalizada-linha-list' tabela_personalizada.pk %}">
+                                            Limpar
                                         </a>
+                                    {% else %}
+                                        <div class="financeiro-linha-empty-title">Nenhuma linha cadastrada ainda para esta tabela.</div>
+                                        <div>Cadastre a primeira linha para comecar a preencher este controle interno.</div>
+                                        {% if pode_preencher_linhas_tabela_personalizada %}
+                                            <a class="button is-primary is-light" href="{% url 'financeiro:tabela-personalizada-linha-create' tabela_personalizada.pk %}">
+                                                + Nova linha
+                                            </a>
+                                        {% endif %}
                                     {% endif %}
                                 </div>
                             </td>
@@ -170,7 +234,7 @@
                             <th>
                                 <div class="financeiro-linha-totalizadores-box">
                                     <span class="financeiro-linha-totalizadores-title">Totalizadores</span>
-                                    <span class="financeiro-linha-row-meta">Somente colunas visiveis com configuracao ativa.</span>
+                                    <span class="financeiro-linha-row-meta">Somente colunas visiveis com configuracao ativa, sobre as linhas filtradas na tela.</span>
                                 </div>
                             </th>
                             {% for totalizador_coluna in totalizadores_renderizados %}

@@ -4185,6 +4185,11 @@ class TabelasPersonalizadasListViewTests(TestCase):
         )
         ValorTabelaPersonalizada.objects.create(
             linha=linha,
+            coluna=colunas['competencia'],
+            valor_texto='05/2026',
+        )
+        ValorTabelaPersonalizada.objects.create(
+            linha=linha,
             coluna=colunas['lista'],
             valor_texto='Limpeza',
         )
@@ -4227,6 +4232,11 @@ class TabelasPersonalizadasListViewTests(TestCase):
             linha=linha,
             coluna=colunas['data'],
             valor_data=date(2026, 5, 10),
+        )
+        ValorTabelaPersonalizada.objects.create(
+            linha=linha,
+            coluna=colunas['competencia'],
+            valor_texto='06/2026',
         )
         ValorTabelaPersonalizada.objects.create(
             linha=linha,
@@ -4795,6 +4805,214 @@ class TabelasPersonalizadasListViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, '<strong>Soma:</strong> R$ 50.72', html=True)
+        self.assertNotContains(response, '<strong>Soma:</strong> R$ 70.62', html=True)
+
+    def test_busca_encontra_linha_por_texto(self):
+        colunas = self._criar_colunas_para_linhas()
+        self._criar_linha_com_valores(colunas)
+        self._criar_segunda_linha_com_valores(colunas)
+        self._login_com_permissoes(
+            'user-linha-busca-texto',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk}),
+            {'busca': 'detergente'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Detergente concentrado')
+        self.assertNotContains(response, 'Sabao liquido')
+
+    def test_busca_encontra_linha_por_lista_de_opcoes(self):
+        colunas = self._criar_colunas_para_linhas()
+        self._criar_linha_com_valores(colunas)
+        self._criar_segunda_linha_com_valores(colunas)
+        self._login_com_permissoes(
+            'user-linha-busca-lista',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk}),
+            {'busca': 'material'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Detergente concentrado')
+        self.assertNotContains(response, 'Sabao liquido')
+
+    def test_busca_encontra_linha_por_mes_competencia(self):
+        colunas = self._criar_colunas_para_linhas()
+        self._criar_linha_com_valores(colunas)
+        self._criar_segunda_linha_com_valores(colunas)
+        self._login_com_permissoes(
+            'user-linha-busca-competencia',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk}),
+            {'busca': '06/2026'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Detergente concentrado')
+        self.assertNotContains(response, 'Sabao liquido')
+
+    def test_busca_por_numero_funciona_de_forma_simples(self):
+        colunas = self._criar_colunas_para_linhas()
+        self._criar_linha_com_valores(colunas)
+        self._criar_segunda_linha_com_valores(colunas)
+        self._login_com_permissoes(
+            'user-linha-busca-numero',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk}),
+            {'busca': '50,72'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Sabao liquido')
+        self.assertNotContains(response, 'Detergente concentrado')
+
+    def test_busca_nao_considera_coluna_invisivel(self):
+        colunas = self._criar_colunas_para_linhas()
+        linha = self._criar_linha_com_valores(colunas)
+        ValorTabelaPersonalizada.objects.create(
+            linha=linha,
+            coluna=colunas['invisivel'],
+            valor_texto='segredo-invisivel',
+        )
+        self._login_com_permissoes(
+            'user-linha-busca-invisivel',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk}),
+            {'busca': 'segredo-invisivel'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Nenhuma linha encontrada para a busca informada.')
+        self.assertNotContains(response, 'Sabao liquido')
+
+    def test_busca_nao_considera_coluna_arquivada(self):
+        colunas = self._criar_colunas_para_linhas()
+        linha = self._criar_linha_com_valores(colunas)
+        ValorTabelaPersonalizada.objects.create(
+            linha=linha,
+            coluna=colunas['arquivada'],
+            valor_texto='segredo-arquivado',
+        )
+        self._login_com_permissoes(
+            'user-linha-busca-arquivada',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk}),
+            {'busca': 'segredo-arquivado'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Nenhuma linha encontrada para a busca informada.')
+        self.assertNotContains(response, 'Sabao liquido')
+
+    def test_busca_nao_considera_coluna_calculada_formula(self):
+        colunas = self._criar_colunas_para_linhas()
+        linha = self._criar_linha_com_valores(colunas)
+        ValorTabelaPersonalizada.objects.create(
+            linha=linha,
+            coluna=colunas['formula'],
+            valor_calculado='segredo-formula',
+        )
+        self._login_com_permissoes(
+            'user-linha-busca-formula',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk}),
+            {'busca': 'segredo-formula'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Nenhuma linha encontrada para a busca informada.')
+        self.assertNotContains(response, 'Sabao liquido')
+
+    def test_busca_restringe_resultado_a_tabela_correta(self):
+        coluna_outra_tabela = ColunaPersonalizada.objects.create(
+            tabela=self.outra_tabela,
+            nome='Descricao secundaria',
+            tipo_dado=ColunaPersonalizada.TipoDado.TEXTO_CURTO,
+            visivel=True,
+        )
+        linha_outra_tabela = LinhaTabelaPersonalizada.objects.create(
+            tabela=self.outra_tabela,
+            criado_por=self.user,
+            atualizado_por=self.user,
+        )
+        ValorTabelaPersonalizada.objects.create(
+            linha=linha_outra_tabela,
+            coluna=coluna_outra_tabela,
+            valor_texto='item-outra-tabela',
+        )
+        self._login_com_permissoes(
+            'user-linha-busca-outra-tabela',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk}),
+            {'busca': 'item-outra-tabela'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Nenhuma linha encontrada para a busca informada.')
+        self.assertEqual(response.context['linhas_renderizadas'], [])
+
+    def test_busca_sem_resultado_exibe_mensagem_clara_e_botao_limpar(self):
+        colunas = self._criar_colunas_para_linhas()
+        self._criar_linha_com_valores(colunas)
+        self._login_com_permissoes(
+            'user-linha-busca-sem-resultado',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk}),
+            {'busca': 'nao-encontrado'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Nenhuma linha encontrada para a busca informada.')
+        self.assertContains(response, 'Limpar')
+
+    def test_totalizadores_refletem_apenas_linhas_filtradas(self):
+        colunas = self._criar_colunas_para_linhas()
+        self._criar_linha_com_valores(colunas)
+        self._criar_segunda_linha_com_valores(colunas)
+        TotalizadorColunaPersonalizada.objects.create(
+            coluna=colunas['monetario'],
+            tipo_totalizador=TotalizadorColunaPersonalizada.TipoTotalizador.SOMA,
+        )
+        self._login_com_permissoes(
+            'user-linha-totalizador-filtrado',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk}),
+            {'busca': 'detergente'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '<strong>Soma:</strong> R$ 19.90', html=True)
         self.assertNotContains(response, '<strong>Soma:</strong> R$ 70.62', html=True)
 
     def test_usuario_sem_permissao_visualizar_nao_acessa_listagem_de_linhas(self):

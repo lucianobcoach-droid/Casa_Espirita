@@ -582,9 +582,14 @@ Consolidacao desta baixa documental:
   - rodape da listagem de linhas passa a exibir apenas totalizadores configurados em colunas visiveis, ativas e nao calculadas
   - linhas arquivadas ficam fora do calculo
   - contagem simples total mantida para texto, booleano, lista de opcoes e `mes_competencia`, sem agrupamentos
-- reclassificacao da pendencia proxima apos os totalizadores:
-  - deixa de ser `totalizadores controlados por coluna`
-  - passa a ser `busca textual simples na tela de linhas`, mantendo formulas guiadas, exportacao e auditoria operacional propria fora do recorte imediato
+- consolidacao da busca textual simples nas linhas:
+  - campo de busca adicionado na tela de linhas com escopo restrito a valores visiveis/editaveis da tabela atual
+  - busca simples cobre texto, lista de opcoes, mes/competencia, numero, data e booleano sem abrir filtros avancados
+  - colunas invisiveis, arquivadas, calculadas e `formula_controlada` ficam fora da busca
+  - totalizadores passam a refletir o resultado filtrado mostrado na tela
+- reclassificacao da pendencia proxima apos a busca:
+  - deixa de ser `busca textual simples na tela de linhas`
+  - passa a ser `exportacao XLSX`, mantendo formulas guiadas e auditoria operacional propria fora do recorte imediato
 - guardrails reforcados:
   - qualquer alteracao em banco real exige backup e autorizacao
   - arquivos SQLite nao devem ser versionados

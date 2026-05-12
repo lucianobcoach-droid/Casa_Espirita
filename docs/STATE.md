@@ -150,14 +150,21 @@ Data de atualizacao: 2026-05-12
   - `inteiro`, `decimal`, `monetario` e `percentual` com `soma`, `media`, `minimo`, `maximo` e `contagem`
   - `data` com `minimo`, `maximo` e `contagem`
   - `booleano`, `lista_opcoes`, `texto_curto`, `texto_longo` e `mes_competencia` com `contagem` simples total
+- busca textual simples na tela de linhas agora implementada com:
+  - campo `Buscar nas linhas` no topo da listagem
+  - busca restrita a linhas ativas da tabela atual
+  - busca restrita a colunas ativas, visiveis, nao calculadas e nao `formula_controlada`
+  - cobertura simples de texto, lista de opcoes, mes/competencia, numero, data e booleano
+  - estado sem resultado com mensagem propria e acao `Limpar`
+  - totalizadores do rodape refletindo exatamente o resultado filtrado mostrado na tela, sem alternancia entre total geral e total filtrado nesta etapa
 - limites desta implementacao estrutural:
   - sem `FormulaColunaPersonalizada`
   - sem auditoria operacional propria da nova frente
   - sem exportacao XLSX da nova frente
   - sem integracao com financeiro oficial
 - classificacao documental atualizada desta frente:
-  - implementar agora: estrutura minima de dados, permissoes executaveis, listagem minima somente leitura, cadastro inicial de metadados, configuracao inicial de colunas, preenchimento inicial de linhas e totalizadores controlados por coluna concluidos
-  - pendencia proxima: abrir microetapa de busca textual simples na tela de linhas, ainda sem formulas guiadas, exportacao XLSX ou auditoria operacional propria
+  - implementar agora: estrutura minima de dados, permissoes executaveis, listagem minima somente leitura, cadastro inicial de metadados, configuracao inicial de colunas, preenchimento inicial de linhas, totalizadores controlados por coluna e busca textual simples concluidos
+  - pendencia proxima: abrir microetapa de exportacao XLSX da nova frente, ainda sem formulas guiadas e sem auditoria operacional propria
   - backlog/futuro: agrupamentos por opcao, filtros avancados/compostos, visoes salvas, arrastar-e-soltar, importacao assistida e exemplos/templates
   - fora de escopo: planilha livre estilo Excel, integracao escrevente com financeiro e modelagem definitiva de banco nesta fase
   - risco a monitorar: perda de governanca e desvio da frente para comportamento de planilha livre

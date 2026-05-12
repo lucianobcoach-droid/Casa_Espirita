@@ -8321,6 +8321,77 @@ def _formatar_valor_linha_tabela(coluna: ColunaPersonalizada, valor: ValorTabela
     return format(valor.valor_numero, '.8f').rstrip('0').rstrip('.')
 
 
+def _normalizar_texto_busca_linhas(valor: str | None) -> str:
+    if valor is None:
+        return ''
+    texto = unicodedata.normalize('NFKD', str(valor))
+    texto = ''.join(caractere for caractere in texto if not unicodedata.combining(caractere))
+    return ' '.join(texto.casefold().split())
+
+
+def _representacoes_busca_valor_linha(
+    coluna: ColunaPersonalizada,
+    valor: ValorTabelaPersonalizada | None,
+) -> tuple[str, ...]:
+    if valor is None:
+        return ()
+
+    if coluna.tipo_dado in {
+        ColunaPersonalizada.TipoDado.TEXTO_CURTO,
+        ColunaPersonalizada.TipoDado.TEXTO_LONGO,
+        ColunaPersonalizada.TipoDado.MES_COMPETENCIA,
+        ColunaPersonalizada.TipoDado.LISTA_OPCOES,
+    }:
+        return tuple(representacao for representacao in [valor.valor_texto or ''] if representacao)
+
+    if coluna.tipo_dado == ColunaPersonalizada.TipoDado.BOOLEANO:
+        if valor.valor_booleano is None:
+            return ()
+        return ('sim', 'true', 'verdadeiro') if valor.valor_booleano else ('nao', 'não', 'false', 'falso')
+
+    if coluna.tipo_dado == ColunaPersonalizada.TipoDado.DATA:
+        if not valor.valor_data:
+            return ()
+        return (
+            valor.valor_data.strftime('%Y-%m-%d'),
+            valor.valor_data.strftime('%d/%m/%Y'),
+        )
+
+    if valor.valor_numero is None:
+        return ()
+
+    if coluna.tipo_dado == ColunaPersonalizada.TipoDado.INTEIRO:
+        return (str(int(valor.valor_numero)),)
+
+    if coluna.tipo_dado == ColunaPersonalizada.TipoDado.MONETARIO:
+        base = format(valor.valor_numero.quantize(Decimal('0.01')), '.2f')
+        return (base, base.replace('.', ','), f'R$ {base}', f'R$ {base.replace(".", ",")}')
+
+    if coluna.tipo_dado == ColunaPersonalizada.TipoDado.PERCENTUAL:
+        base = format(valor.valor_numero.quantize(Decimal('0.0001')), '.4f').rstrip('0').rstrip('.')
+        return (base, base.replace('.', ','), f'{base}%', f'{base.replace(".", ",")}%')
+
+    base = format(valor.valor_numero.quantize(Decimal('0.00000001')), '.8f').rstrip('0').rstrip('.')
+    return (base, base.replace('.', ','))
+
+
+def _linha_corresponde_busca_tabela_personalizada(
+    linha: LinhaTabelaPersonalizada,
+    colunas_visiveis_ids: set[int],
+    termo_normalizado: str,
+) -> bool:
+    if not termo_normalizado:
+        return True
+
+    for valor in linha.valores.all():
+        if valor.coluna_id not in colunas_visiveis_ids:
+            continue
+        for representacao in _representacoes_busca_valor_linha(valor.coluna, valor):
+            if termo_normalizado in _normalizar_texto_busca_linhas(representacao):
+                return True
+    return False
+
+
 def _formatar_resultado_totalizador(coluna: ColunaPersonalizada, tipo_totalizador: str, valor) -> str:
     if tipo_totalizador == TotalizadorColunaPersonalizada.TipoTotalizador.CONTAGEM:
         return str(valor)
@@ -8408,16 +8479,31 @@ class TabelaPersonalizadaLinhaListView(FinanceiroPermissaoMixin, ListView):
         self.colunas_visiveis = list(
             TabelaPersonalizadaLinhaForm.colunas_editaveis_queryset(self.tabela).prefetch_related('totalizadores')
         )
+        self.termo_busca_linhas = (request.GET.get('busca') or '').strip()
+        self.termo_busca_linhas_normalizado = _normalizar_texto_busca_linhas(self.termo_busca_linhas)
         return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
-        return (
+        queryset = (
             super()
             .get_queryset()
             .filter(tabela=self.tabela, status=LinhaTabelaPersonalizada.StatusLinha.ATIVA)
             .prefetch_related('valores__coluna')
             .order_by('ordem', 'pk')
         )
+        if not self.termo_busca_linhas_normalizado:
+            return queryset
+
+        colunas_visiveis_ids = {coluna.pk for coluna in self.colunas_visiveis}
+        return [
+            linha
+            for linha in queryset
+            if _linha_corresponde_busca_tabela_personalizada(
+                linha,
+                colunas_visiveis_ids,
+                self.termo_busca_linhas_normalizado,
+            )
+        ]
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -8484,6 +8570,8 @@ class TabelaPersonalizadaLinhaListView(FinanceiroPermissaoMixin, ListView):
             self.request.user,
             PermissoesTabelasPersonalizadas.EDITAR_LINHAS,
         )
+        context['termo_busca_linhas'] = self.termo_busca_linhas
+        context['busca_linhas_ativa'] = bool(self.termo_busca_linhas)
         return context
 
 
