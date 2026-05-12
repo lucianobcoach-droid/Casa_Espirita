@@ -587,9 +587,15 @@ Consolidacao desta baixa documental:
   - busca simples cobre texto, lista de opcoes, mes/competencia, numero, data e booleano sem abrir filtros avancados
   - colunas invisiveis, arquivadas, calculadas e `formula_controlada` ficam fora da busca
   - totalizadores passam a refletir o resultado filtrado mostrado na tela
-- reclassificacao da pendencia proxima apos a busca:
-  - deixa de ser `busca textual simples na tela de linhas`
-  - passa a ser `exportacao XLSX`, mantendo formulas guiadas e auditoria operacional propria fora do recorte imediato
+- consolidacao da exportacao XLSX das linhas:
+  - rota de exportacao propria criada dentro da tabela personalizada, protegida por `financeiro.tabelas_personalizadas.exportar`
+  - botao `Exportar XLSX` adicionado na tela de linhas apenas para quem possui permissao de exportar
+  - o arquivo reflete exatamente o recorte visivel da tela: somente colunas ativas/visiveis/nao calculadas, somente linhas ativas e busca ativa quando houver
+  - totalizadores visiveis passam a sair no bloco final da planilha com o mesmo resultado filtrado exibido na tela
+  - o cabecalho do arquivo reforca o contexto de controle interno sem efeito financeiro oficial
+- reclassificacao da pendencia proxima apos a exportacao:
+  - deixa de ser `exportacao XLSX`
+  - passa a ser `formulas guiadas por coluna`, mantendo auditoria operacional propria fora do recorte imediato
 - guardrails reforcados:
   - qualquer alteracao em banco real exige backup e autorizacao
   - arquivos SQLite nao devem ser versionados

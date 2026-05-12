@@ -135,6 +135,11 @@
                     Nova linha
                 </a>
             {% endif %}
+            {% if pode_exportar_linhas_tabela_personalizada %}
+                <a class="button is-light" href="{{ exportacao_linhas_tabela_personalizada_url }}">
+                    Exportar XLSX
+                </a>
+            {% endif %}
             <a class="button is-light" href="{% url 'financeiro:tabela-personalizada-list' %}">
                 Voltar para tabelas
             </a>
@@ -144,7 +149,7 @@
     <section class="financeiro-linha-card">
         <div class="financeiro-linha-note">
             <strong>Recorte atual:</strong>
-            esta etapa permite preenchimento basico de linhas e totalizadores configurados por coluna. Formulas guiadas e exportacao serao liberados em microetapas futuras. Controle interno sem impacto financeiro oficial.
+            esta etapa permite preenchimento basico de linhas, busca textual simples, totalizadores configurados por coluna e exportacao XLSX refletindo a leitura atual da tela. Formulas guiadas seguem fora do recorte. Controle interno sem impacto financeiro oficial.
         </div>
 
         <form method="get" class="financeiro-linha-search">

@@ -1,6 +1,9 @@
 import json
 from datetime import date
 from decimal import Decimal
+from io import BytesIO
+from xml.etree import ElementTree
+from zipfile import ZipFile
 
 from django.contrib.auth import get_user_model
 from django.contrib.messages.storage.fallback import FallbackStorage
@@ -53,6 +56,7 @@ from .views import (
     TabelaPersonalizadaColunaUpdateView,
     TabelaPersonalizadaCreateView,
     TabelaPersonalizadaLinhaCreateView,
+    TabelaPersonalizadaLinhaExportXlsxView,
     TabelaPersonalizadaLinhaListView,
     TabelaPersonalizadaLinhaUpdateView,
     TabelaPersonalizadaListView,
@@ -4256,6 +4260,39 @@ class TabelasPersonalizadasListViewTests(TestCase):
             self._campo_coluna(colunas['inteiro']): '1',
         }
 
+    def _ler_linhas_xlsx(self, conteudo: bytes) -> list[list[str]]:
+        with ZipFile(BytesIO(conteudo)) as arquivo_xlsx:
+            workbook_tree = ElementTree.fromstring(arquivo_xlsx.read('xl/workbook.xml'))
+            namespace_workbook = {
+                'main': 'http://schemas.openxmlformats.org/spreadsheetml/2006/main',
+                'rel': 'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
+            }
+            primeiro_sheet = workbook_tree.find('main:sheets/main:sheet', namespace_workbook)
+            self.assertIsNotNone(primeiro_sheet)
+            relation_id = primeiro_sheet.get('{http://schemas.openxmlformats.org/officeDocument/2006/relationships}id')
+
+            relacoes_tree = ElementTree.fromstring(arquivo_xlsx.read('xl/_rels/workbook.xml.rels'))
+            namespace_rels = {'rel': 'http://schemas.openxmlformats.org/package/2006/relationships'}
+            destino = ''
+            for relacao in relacoes_tree.findall('rel:Relationship', namespace_rels):
+                if relacao.get('Id') == relation_id:
+                    destino = relacao.get('Target', '')
+                    break
+
+            self.assertTrue(destino)
+            caminho_planilha = f"xl/{destino.lstrip('./')}"
+            planilha_tree = ElementTree.fromstring(arquivo_xlsx.read(caminho_planilha))
+            namespace_planilha = {'main': 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'}
+
+            linhas = []
+            for linha in planilha_tree.findall('main:sheetData/main:row', namespace_planilha):
+                valores = []
+                for celula in linha.findall('main:c', namespace_planilha):
+                    texto = ''.join(celula.itertext())
+                    valores.append(texto)
+                linhas.append(valores)
+            return linhas
+
     def test_url_resolve_para_view_da_listagem_minima(self):
         resolved = resolve(reverse('financeiro:tabela-personalizada-list'))
 
@@ -4308,6 +4345,13 @@ class TabelasPersonalizadasListViewTests(TestCase):
         )
 
         self.assertIs(resolved.func.view_class, TabelaPersonalizadaLinhaCreateView)
+
+    def test_url_resolve_para_view_de_exportacao_xlsx_de_linhas(self):
+        resolved = resolve(
+            reverse('financeiro:tabela-personalizada-linha-export-xlsx', kwargs={'tabela_id': self.tabela.pk})
+        )
+
+        self.assertIs(resolved.func.view_class, TabelaPersonalizadaLinhaExportXlsxView)
 
     def test_url_resolve_para_view_de_edicao_de_linha(self):
         linha = LinhaTabelaPersonalizada.objects.create(
@@ -5014,6 +5058,143 @@ class TabelasPersonalizadasListViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, '<strong>Soma:</strong> R$ 19.90', html=True)
         self.assertNotContains(response, '<strong>Soma:</strong> R$ 70.62', html=True)
+
+    def test_botao_exportar_xlsx_aparece_apenas_para_usuario_com_permissao(self):
+        colunas = self._criar_colunas_para_linhas()
+        self._criar_linha_com_valores(colunas)
+        self._login_com_permissoes(
+            'user-linha-exporta-botao',
+            [
+                PermissoesTabelasPersonalizadas.VISUALIZAR,
+                PermissoesTabelasPersonalizadas.EXPORTAR,
+            ],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk})
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            reverse('financeiro:tabela-personalizada-linha-export-xlsx', kwargs={'tabela_id': self.tabela.pk}),
+        )
+        self.assertContains(response, 'Exportar XLSX')
+
+    def test_botao_exportar_xlsx_nao_aparece_sem_permissao(self):
+        colunas = self._criar_colunas_para_linhas()
+        self._criar_linha_com_valores(colunas)
+        self._login_com_permissoes(
+            'user-linha-nao-exporta-botao',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk})
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'Exportar XLSX')
+
+    def test_usuario_com_permissao_exporta_xlsx_de_linhas(self):
+        colunas = self._criar_colunas_para_linhas()
+        self._criar_linha_com_valores(colunas)
+        self._criar_segunda_linha_com_valores(colunas)
+        TotalizadorColunaPersonalizada.objects.create(
+            coluna=colunas['monetario'],
+            tipo_totalizador=TotalizadorColunaPersonalizada.TipoTotalizador.SOMA,
+        )
+        self._login_com_permissoes(
+            'user-linha-exporta',
+            [PermissoesTabelasPersonalizadas.EXPORTAR],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-export-xlsx', kwargs={'tabela_id': self.tabela.pk})
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response['Content-Type'],
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        )
+        self.assertIn('.xlsx', response['Content-Disposition'])
+        linhas = self._ler_linhas_xlsx(response.content)
+        conteudo = '\n'.join(' | '.join(linha) for linha in linhas)
+        self.assertIn('Controle de almoxarifado - controle interno sem efeito financeiro oficial', conteudo)
+        self.assertIn('Descricao do item', conteudo)
+        self.assertIn('Valor unitario', conteudo)
+        self.assertIn('Sabao liquido', conteudo)
+        self.assertIn('Detergente concentrado', conteudo)
+        self.assertIn('R$ 50.72', conteudo)
+        self.assertIn('1.01499912', conteudo)
+        self.assertIn('Soma: R$ 70.62', conteudo)
+        self.assertNotIn('Campo oculto', conteudo)
+        self.assertNotIn('Campo arquivado', conteudo)
+        self.assertNotIn('Campo calculado futuro', conteudo)
+
+    def test_usuario_sem_permissao_exportar_recebe_403(self):
+        self._login_com_permissoes(
+            'user-linha-sem-exportar',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-export-xlsx', kwargs={'tabela_id': self.tabela.pk})
+        )
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_exportacao_xlsx_respeita_busca_ativa(self):
+        colunas = self._criar_colunas_para_linhas()
+        self._criar_linha_com_valores(colunas)
+        self._criar_segunda_linha_com_valores(colunas)
+        TotalizadorColunaPersonalizada.objects.create(
+            coluna=colunas['monetario'],
+            tipo_totalizador=TotalizadorColunaPersonalizada.TipoTotalizador.SOMA,
+        )
+        self._login_com_permissoes(
+            'user-linha-exporta-busca',
+            [PermissoesTabelasPersonalizadas.EXPORTAR],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-export-xlsx', kwargs={'tabela_id': self.tabela.pk}),
+            {'busca': 'detergente'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        linhas = self._ler_linhas_xlsx(response.content)
+        conteudo = '\n'.join(' | '.join(linha) for linha in linhas)
+        self.assertIn('Detergente concentrado', conteudo)
+        self.assertNotIn('Sabao liquido', conteudo)
+        self.assertIn('Soma: R$ 19.90', conteudo)
+        self.assertNotIn('Soma: R$ 70.62', conteudo)
+
+    def test_exportacao_xlsx_nao_altera_dados(self):
+        colunas = self._criar_colunas_para_linhas()
+        self._criar_linha_com_valores(colunas)
+        quantidades_antes = (
+            LinhaTabelaPersonalizada.objects.count(),
+            ValorTabelaPersonalizada.objects.count(),
+        )
+        self._login_com_permissoes(
+            'user-linha-exporta-sem-escrita',
+            [PermissoesTabelasPersonalizadas.EXPORTAR],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-export-xlsx', kwargs={'tabela_id': self.tabela.pk})
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            quantidades_antes,
+            (
+                LinhaTabelaPersonalizada.objects.count(),
+                ValorTabelaPersonalizada.objects.count(),
+            ),
+        )
 
     def test_usuario_sem_permissao_visualizar_nao_acessa_listagem_de_linhas(self):
         self._login_com_permissoes(

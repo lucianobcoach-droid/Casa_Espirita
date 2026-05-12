@@ -72,6 +72,7 @@ from .views import (
     TabelaPersonalizadaColunaUpdateView,
     TabelaPersonalizadaCreateView,
     TabelaPersonalizadaLinhaCreateView,
+    TabelaPersonalizadaLinhaExportXlsxView,
     TabelaPersonalizadaLinhaListView,
     TabelaPersonalizadaLinhaUpdateView,
     TabelaPersonalizadaListView,
@@ -133,6 +134,11 @@ urlpatterns = [
         'controles-internos/tabelas-personalizadas/<int:tabela_id>/linhas/nova/',
         TabelaPersonalizadaLinhaCreateView.as_view(),
         name='tabela-personalizada-linha-create',
+    ),
+    path(
+        'controles-internos/tabelas-personalizadas/<int:tabela_id>/linhas/exportar-xlsx/',
+        TabelaPersonalizadaLinhaExportXlsxView.as_view(),
+        name='tabela-personalizada-linha-export-xlsx',
     ),
     path(
         'controles-internos/tabelas-personalizadas/<int:tabela_id>/linhas/<int:pk>/editar/',

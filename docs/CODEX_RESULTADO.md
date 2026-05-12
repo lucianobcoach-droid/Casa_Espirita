@@ -2,6 +2,36 @@
 
 Data: 2026-05-12
 
+## Microetapa tecnica: exportacao XLSX das linhas personalizadas
+
+- etapa funcional controlada, limitada a exportacao XLSX da tela de linhas das tabelas personalizadas, sem formulas guiadas e sem auditoria operacional propria
+- confirmei antes de alterar:
+  - branch `feat/reinicio-financeiro`
+  - arvore limpa
+  - ausencia de commits locais pendentes
+  - ausencia de commits remotos pendentes
+  - `fetch` concluido sem erro
+- implementei a frente em quatro pontos:
+  - rota de exportacao XLSX propria dentro de `controles-internos/tabelas-personalizadas/<tabela_id>/linhas/`
+  - reuse do mesmo recorte filtrado da tela de linhas para exportar apenas colunas visiveis, linhas ativas, busca ativa e totalizadores visiveis
+  - botao `Exportar XLSX` na tela de linhas, exibido apenas para usuario com permissao `financeiro.tabelas_personalizadas.exportar`
+  - geracao de planilha XLSX com cabecalho simples de controle interno, cabecalhos em negrito e bloco final de totalizadores sobre o resultado exportado
+- comportamento consolidado nesta microetapa:
+  - colunas invisiveis, arquivadas, calculadas e `formula_controlada` ficam fora da exportacao
+  - busca ativa passa a restringir tambem o arquivo exportado
+  - totalizadores do XLSX refletem apenas as linhas filtradas mostradas na tela
+  - a exportacao permanece documental/interna, sem qualquer efeito financeiro oficial
+- testes adicionados/ajustados para:
+  - acesso com e sem permissao de exportar
+  - visibilidade do botao na tela
+  - cabecalhos exportados apenas para colunas visiveis
+  - respeito a busca ativa
+  - presenca dos totalizadores visiveis no arquivo
+  - confirmacao de nao impacto em `LancamentoFinanceiro`
+- baixa documental consolidada:
+  - exportacao XLSX concluida
+  - pendencia proxima movida para `formulas guiadas por coluna`
+
 ## Microetapa tecnica: busca textual simples nas linhas personalizadas
 
 - etapa funcional controlada, limitada a busca textual simples na tela de linhas das tabelas personalizadas, sem formulas guiadas, sem exportacao XLSX, sem auditoria operacional propria e sem filtros avancados

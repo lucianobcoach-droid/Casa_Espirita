@@ -923,6 +923,137 @@ def _gerar_arquivo_xlsx(planilhas: list[tuple[str, list[list[str]]]]) -> bytes:
     return arquivo.getvalue()
 
 
+def _xlsx_planilha_xml_formatada(
+    linhas: list[list[str]],
+    *,
+    larguras_colunas: list[int] | None = None,
+    linhas_negrito: set[int] | None = None,
+) -> str:
+    linhas_negrito = linhas_negrito or set()
+    colunas_xml = ''
+    if larguras_colunas:
+        colunas = ''.join(
+            f'<col min="{indice}" max="{indice}" width="{max(8, largura)}" customWidth="1"/>'
+            for indice, largura in enumerate(larguras_colunas, start=1)
+        )
+        colunas_xml = f'<cols>{colunas}</cols>'
+
+    linhas_xml = []
+    for indice_linha, linha in enumerate(linhas, start=1):
+        celulas_xml = []
+        for indice_coluna, valor in enumerate(linha, start=1):
+            referencia = f'{_xlsx_coluna_referencia(indice_coluna)}{indice_linha}'
+            estilo = ' s="1"' if indice_linha in linhas_negrito else ''
+            celulas_xml.append(
+                f'<c r="{referencia}" t="inlineStr"{estilo}><is><t>{escape(str(valor))}</t></is></c>'
+            )
+        linhas_xml.append(f'<row r="{indice_linha}">{"".join(celulas_xml)}</row>')
+
+    return (
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+        '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+        f'{colunas_xml}'
+        f'<sheetData>{"".join(linhas_xml)}</sheetData>'
+        '</worksheet>'
+    )
+
+
+def _gerar_arquivo_xlsx_formatado(
+    planilhas: list[dict[str, object]],
+) -> bytes:
+    arquivo = BytesIO()
+
+    with ZipFile(arquivo, 'w', ZIP_DEFLATED) as workbook:
+        planilhas_content_types = ''.join(
+            f'<Override PartName="/xl/worksheets/sheet{indice}.xml" '
+            'ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'
+            for indice, _ in enumerate(planilhas, start=1)
+        )
+        planilhas_workbook = ''.join(
+            f'<sheet name="{escape(str(planilha["nome"]))}" sheetId="{indice}" r:id="rId{indice}"/>'
+            for indice, planilha in enumerate(planilhas, start=1)
+        )
+        planilhas_rels = ''.join(
+            f'<Relationship Id="rId{indice}" '
+            'Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" '
+            f'Target="worksheets/sheet{indice}.xml"/>'
+            for indice, _ in enumerate(planilhas, start=1)
+        )
+        styles_rel_id = len(planilhas) + 1
+
+        workbook.writestr(
+            '[Content_Types].xml',
+            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+            '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+            '<Default Extension="xml" ContentType="application/xml"/>'
+            '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
+            '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'
+            f'{planilhas_content_types}'
+            '</Types>',
+        )
+        workbook.writestr(
+            '_rels/.rels',
+            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+            '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>'
+            '</Relationships>',
+        )
+        workbook.writestr(
+            'xl/workbook.xml',
+            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" '
+            'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+            '<sheets>'
+            f'{planilhas_workbook}'
+            '</sheets>'
+            '</workbook>',
+        )
+        workbook.writestr(
+            'xl/_rels/workbook.xml.rels',
+            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+            f'{planilhas_rels}'
+            f'<Relationship Id="rId{styles_rel_id}" '
+            'Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" '
+            'Target="styles.xml"/>'
+            '</Relationships>',
+        )
+        workbook.writestr(
+            'xl/styles.xml',
+            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+            '<fonts count="2">'
+            '<font><sz val="11"/><name val="Calibri"/></font>'
+            '<font><b/><sz val="11"/><name val="Calibri"/></font>'
+            '</fonts>'
+            '<fills count="2">'
+            '<fill><patternFill patternType="none"/></fill>'
+            '<fill><patternFill patternType="gray125"/></fill>'
+            '</fills>'
+            '<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>'
+            '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'
+            '<cellXfs count="2">'
+            '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'
+            '<xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/>'
+            '</cellXfs>'
+            '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>'
+            '</styleSheet>',
+        )
+
+        for indice, planilha in enumerate(planilhas, start=1):
+            workbook.writestr(
+                f'xl/worksheets/sheet{indice}.xml',
+                _xlsx_planilha_xml_formatada(
+                    planilha['linhas'],
+                    larguras_colunas=planilha.get('larguras_colunas'),
+                    linhas_negrito=set(planilha.get('linhas_negrito', set())),
+                ),
+            )
+
+    return arquivo.getvalue()
+
+
 def _gerar_planilha_modelo_lancamentos_xlsx() -> bytes:
     return _gerar_arquivo_xlsx(
         [
@@ -8444,6 +8575,177 @@ def _calcular_totalizador_coluna(
     return None
 
 
+def _obter_colunas_visiveis_tabela_personalizada(tabela: TabelaPersonalizada) -> list[ColunaPersonalizada]:
+    return list(
+        TabelaPersonalizadaLinhaForm.colunas_editaveis_queryset(tabela).prefetch_related('totalizadores')
+    )
+
+
+def _obter_queryset_linhas_tabela_personalizada(tabela: TabelaPersonalizada):
+    return (
+        LinhaTabelaPersonalizada.objects.filter(
+            tabela=tabela,
+            status=LinhaTabelaPersonalizada.StatusLinha.ATIVA,
+        )
+        .prefetch_related('valores__coluna')
+        .order_by('ordem', 'pk')
+    )
+
+
+def _filtrar_linhas_tabela_personalizada(
+    linhas_queryset,
+    colunas_visiveis: list[ColunaPersonalizada],
+    termo_busca_linhas: str,
+):
+    termo_normalizado = _normalizar_texto_busca_linhas(termo_busca_linhas)
+    if not termo_normalizado:
+        return list(linhas_queryset)
+
+    colunas_visiveis_ids = {coluna.pk for coluna in colunas_visiveis}
+    return [
+        linha
+        for linha in linhas_queryset
+        if _linha_corresponde_busca_tabela_personalizada(
+            linha,
+            colunas_visiveis_ids,
+            termo_normalizado,
+        )
+    ]
+
+
+def _montar_renderizacao_linhas_tabela_personalizada(
+    colunas_visiveis: list[ColunaPersonalizada],
+    linhas: list[LinhaTabelaPersonalizada],
+) -> tuple[list[dict[str, object]], list[dict[str, object]], bool]:
+    linhas_renderizadas = []
+    colunas_visiveis_ids = {coluna.pk for coluna in colunas_visiveis}
+    valores_totalizadores_por_coluna: dict[int, list[ValorTabelaPersonalizada]] = {
+        coluna.pk: [] for coluna in colunas_visiveis
+    }
+
+    for linha in linhas:
+        valores_linha_por_coluna = {
+            valor.coluna_id: valor
+            for valor in linha.valores.all()
+            if valor.coluna_id in colunas_visiveis_ids
+        }
+        for coluna_id, valor in valores_linha_por_coluna.items():
+            valores_totalizadores_por_coluna.setdefault(coluna_id, []).append(valor)
+        celulas = [
+            {
+                'coluna': coluna,
+                'valor': _formatar_valor_linha_tabela(coluna, valores_linha_por_coluna.get(coluna.pk)),
+            }
+            for coluna in colunas_visiveis
+        ]
+        linhas_renderizadas.append({'linha': linha, 'celulas': celulas})
+
+    totalizadores_renderizados = []
+    possui_totalizadores = False
+    for coluna in colunas_visiveis:
+        itens = []
+        for totalizador in coluna.totalizadores.all():
+            if not totalizador.ativo:
+                continue
+            resultado = _calcular_totalizador_coluna(
+                coluna,
+                totalizador.tipo_totalizador,
+                valores_totalizadores_por_coluna.get(coluna.pk, []),
+            )
+            if resultado is None:
+                continue
+            itens.append(
+                {
+                    'label': totalizador.get_tipo_totalizador_display(),
+                    'valor': _formatar_resultado_totalizador(
+                        coluna,
+                        totalizador.tipo_totalizador,
+                        resultado,
+                    ),
+                }
+            )
+        if itens:
+            possui_totalizadores = True
+        totalizadores_renderizados.append({'coluna': coluna, 'itens': itens})
+
+    return linhas_renderizadas, totalizadores_renderizados, possui_totalizadores
+
+
+def _montar_estado_linhas_tabela_personalizada(
+    tabela: TabelaPersonalizada,
+    termo_busca_linhas: str,
+) -> dict[str, object]:
+    colunas_visiveis = _obter_colunas_visiveis_tabela_personalizada(tabela)
+    linhas = _filtrar_linhas_tabela_personalizada(
+        _obter_queryset_linhas_tabela_personalizada(tabela),
+        colunas_visiveis,
+        termo_busca_linhas,
+    )
+    (
+        linhas_renderizadas,
+        totalizadores_renderizados,
+        possui_totalizadores,
+    ) = _montar_renderizacao_linhas_tabela_personalizada(colunas_visiveis, linhas)
+    return {
+        'colunas_visiveis': colunas_visiveis,
+        'linhas': linhas,
+        'linhas_renderizadas': linhas_renderizadas,
+        'totalizadores_renderizados': totalizadores_renderizados,
+        'possui_totalizadores': possui_totalizadores,
+    }
+
+
+def _montar_linhas_exportacao_tabela_personalizada_xlsx(
+    tabela: TabelaPersonalizada,
+    colunas_visiveis: list[ColunaPersonalizada],
+    linhas_renderizadas: list[dict[str, object]],
+    totalizadores_renderizados: list[dict[str, object]],
+) -> tuple[list[list[str]], list[int], set[int]]:
+    if not colunas_visiveis:
+        return (
+            [
+                [f'{tabela.nome} - controle interno sem efeito financeiro oficial'],
+                ['Nenhuma coluna visivel esta disponivel para exportacao nesta tabela.'],
+            ],
+            [42],
+            {1},
+        )
+
+    linhas_xlsx: list[list[str]] = [
+        [f'{tabela.nome} - controle interno sem efeito financeiro oficial'],
+        [coluna.nome for coluna in colunas_visiveis],
+    ]
+
+    for item in linhas_renderizadas:
+        linhas_xlsx.append([celula['valor'] or '' for celula in item['celulas']])
+
+    possui_totalizadores = any(item['itens'] for item in totalizadores_renderizados)
+    if possui_totalizadores:
+        linhas_xlsx.append(['' for _ in colunas_visiveis])
+        linhas_xlsx.append(
+            [
+                ' ; '.join(
+                    f"{item_totalizador['label']}: {item_totalizador['valor']}"
+                    for item_totalizador in totalizador_coluna['itens']
+                )
+                if totalizador_coluna['itens']
+                else ''
+                for totalizador_coluna in totalizadores_renderizados
+            ]
+        )
+
+    quantidades_colunas = len(colunas_visiveis)
+    larguras_colunas: list[int] = []
+    for indice in range(quantidades_colunas):
+        largura = max(
+            len(str(linha[indice])) if indice < len(linha) else 0
+            for linha in linhas_xlsx[1:]
+        )
+        larguras_colunas.append(max(14, min(42, largura + 3)))
+
+    return linhas_xlsx, larguras_colunas, {1, 2}
+
+
 class TabelaPersonalizadaLinhaBaseMixin:
     tabela_context_key = 'tabela_personalizada'
 
@@ -8476,92 +8778,23 @@ class TabelaPersonalizadaLinhaListView(FinanceiroPermissaoMixin, ListView):
 
     def dispatch(self, request, *args, **kwargs):
         self.tabela = get_object_or_404(TabelaPersonalizada, pk=self.kwargs['tabela_id'])
-        self.colunas_visiveis = list(
-            TabelaPersonalizadaLinhaForm.colunas_editaveis_queryset(self.tabela).prefetch_related('totalizadores')
-        )
         self.termo_busca_linhas = (request.GET.get('busca') or '').strip()
-        self.termo_busca_linhas_normalizado = _normalizar_texto_busca_linhas(self.termo_busca_linhas)
+        self.estado_linhas = _montar_estado_linhas_tabela_personalizada(
+            self.tabela,
+            self.termo_busca_linhas,
+        )
         return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
-        queryset = (
-            super()
-            .get_queryset()
-            .filter(tabela=self.tabela, status=LinhaTabelaPersonalizada.StatusLinha.ATIVA)
-            .prefetch_related('valores__coluna')
-            .order_by('ordem', 'pk')
-        )
-        if not self.termo_busca_linhas_normalizado:
-            return queryset
-
-        colunas_visiveis_ids = {coluna.pk for coluna in self.colunas_visiveis}
-        return [
-            linha
-            for linha in queryset
-            if _linha_corresponde_busca_tabela_personalizada(
-                linha,
-                colunas_visiveis_ids,
-                self.termo_busca_linhas_normalizado,
-            )
-        ]
+        return self.estado_linhas['linhas']
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        linhas_renderizadas = []
-        colunas_visiveis_ids = {coluna.pk for coluna in self.colunas_visiveis}
-        valores_totalizadores_por_coluna: dict[int, list[ValorTabelaPersonalizada]] = {
-            coluna.pk: [] for coluna in self.colunas_visiveis
-        }
-        for linha in context['linhas_personalizadas']:
-            valores_linha_por_coluna = {
-                valor.coluna_id: valor
-                for valor in linha.valores.all()
-                if valor.coluna_id in colunas_visiveis_ids
-            }
-            for coluna_id, valor in valores_linha_por_coluna.items():
-                valores_totalizadores_por_coluna.setdefault(coluna_id, []).append(valor)
-            celulas = [
-                {
-                    'coluna': coluna,
-                    'valor': _formatar_valor_linha_tabela(coluna, valores_linha_por_coluna.get(coluna.pk)),
-                }
-                for coluna in self.colunas_visiveis
-            ]
-            linhas_renderizadas.append({'linha': linha, 'celulas': celulas})
-
-        totalizadores_renderizados = []
-        possui_totalizadores = False
-        for coluna in self.colunas_visiveis:
-            itens = []
-            for totalizador in coluna.totalizadores.all():
-                if not totalizador.ativo:
-                    continue
-                resultado = _calcular_totalizador_coluna(
-                    coluna,
-                    totalizador.tipo_totalizador,
-                    valores_totalizadores_por_coluna.get(coluna.pk, []),
-                )
-                if resultado is None:
-                    continue
-                itens.append(
-                    {
-                        'label': totalizador.get_tipo_totalizador_display(),
-                        'valor': _formatar_resultado_totalizador(
-                            coluna,
-                            totalizador.tipo_totalizador,
-                            resultado,
-                        ),
-                    }
-                )
-            if itens:
-                possui_totalizadores = True
-            totalizadores_renderizados.append({'coluna': coluna, 'itens': itens})
-
         context['tabela_personalizada'] = self.tabela
-        context['colunas_visiveis'] = self.colunas_visiveis
-        context['linhas_renderizadas'] = linhas_renderizadas
-        context['totalizadores_renderizados'] = totalizadores_renderizados
-        context['possui_totalizadores_tabela_personalizada'] = possui_totalizadores
+        context['colunas_visiveis'] = self.estado_linhas['colunas_visiveis']
+        context['linhas_renderizadas'] = self.estado_linhas['linhas_renderizadas']
+        context['totalizadores_renderizados'] = self.estado_linhas['totalizadores_renderizados']
+        context['possui_totalizadores_tabela_personalizada'] = self.estado_linhas['possui_totalizadores']
         context['pode_preencher_linhas_tabela_personalizada'] = usuario_possui_permissao(
             self.request.user,
             PermissoesTabelasPersonalizadas.PREENCHER_LINHAS,
@@ -8570,9 +8803,53 @@ class TabelaPersonalizadaLinhaListView(FinanceiroPermissaoMixin, ListView):
             self.request.user,
             PermissoesTabelasPersonalizadas.EDITAR_LINHAS,
         )
+        context['pode_exportar_linhas_tabela_personalizada'] = usuario_possui_permissao(
+            self.request.user,
+            PermissoesTabelasPersonalizadas.EXPORTAR,
+        )
+        exportacao_url = reverse(
+            'financeiro:tabela-personalizada-linha-export-xlsx',
+            kwargs={'tabela_id': self.tabela.pk},
+        )
+        if self.termo_busca_linhas:
+            exportacao_url = f'{exportacao_url}?{urlencode({"busca": self.termo_busca_linhas})}'
+        context['exportacao_linhas_tabela_personalizada_url'] = exportacao_url
         context['termo_busca_linhas'] = self.termo_busca_linhas
         context['busca_linhas_ativa'] = bool(self.termo_busca_linhas)
         return context
+
+
+class TabelaPersonalizadaLinhaExportXlsxView(FinanceiroPermissaoMixin, View):
+    permissao_requerida = PermissoesTabelasPersonalizadas.EXPORTAR
+
+    def get(self, request, *args, **kwargs):
+        tabela = get_object_or_404(TabelaPersonalizada, pk=self.kwargs['tabela_id'])
+        termo_busca_linhas = (request.GET.get('busca') or '').strip()
+        estado_linhas = _montar_estado_linhas_tabela_personalizada(tabela, termo_busca_linhas)
+        linhas_xlsx, larguras_colunas, linhas_negrito = _montar_linhas_exportacao_tabela_personalizada_xlsx(
+            tabela,
+            estado_linhas['colunas_visiveis'],
+            estado_linhas['linhas_renderizadas'],
+            estado_linhas['totalizadores_renderizados'],
+        )
+        arquivo_exportacao = _gerar_arquivo_xlsx_formatado(
+            [
+                {
+                    'nome': 'Linhas',
+                    'linhas': linhas_xlsx,
+                    'larguras_colunas': larguras_colunas,
+                    'linhas_negrito': linhas_negrito,
+                }
+            ]
+        )
+        response = HttpResponse(
+            arquivo_exportacao,
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        )
+        response['Content-Disposition'] = (
+            f'attachment; filename="tabela_personalizada_{tabela.pk}_linhas.xlsx"'
+        )
+        return response
 
 
 class TabelaPersonalizadaLinhaCreateView(TabelaPersonalizadaLinhaBaseMixin, FinanceiroFormMixin, FormView):

@@ -157,14 +157,21 @@ Data de atualizacao: 2026-05-12
   - cobertura simples de texto, lista de opcoes, mes/competencia, numero, data e booleano
   - estado sem resultado com mensagem propria e acao `Limpar`
   - totalizadores do rodape refletindo exatamente o resultado filtrado mostrado na tela, sem alternancia entre total geral e total filtrado nesta etapa
+- exportacao XLSX da tela de linhas agora implementada com:
+  - rota propria protegida por `financeiro.tabelas_personalizadas.exportar`
+  - botao `Exportar XLSX` exibido apenas para usuario com permissao de exportar
+  - exportacao restrita a colunas ativas, visiveis, nao calculadas e nao `formula_controlada`
+  - exportacao restrita a linhas ativas da tabela atual e ao resultado filtrado pela busca quando houver termo ativo
+  - valores exportados com a mesma leitura formatada da tela de linhas
+  - totalizadores visiveis exportados no bloco final da planilha, refletindo apenas as linhas filtradas exibidas
+  - cabecalho simples indicando que se trata de controle interno sem efeito financeiro oficial
 - limites desta implementacao estrutural:
   - sem `FormulaColunaPersonalizada`
   - sem auditoria operacional propria da nova frente
-  - sem exportacao XLSX da nova frente
   - sem integracao com financeiro oficial
 - classificacao documental atualizada desta frente:
-  - implementar agora: estrutura minima de dados, permissoes executaveis, listagem minima somente leitura, cadastro inicial de metadados, configuracao inicial de colunas, preenchimento inicial de linhas, totalizadores controlados por coluna e busca textual simples concluidos
-  - pendencia proxima: abrir microetapa de exportacao XLSX da nova frente, ainda sem formulas guiadas e sem auditoria operacional propria
+  - implementar agora: estrutura minima de dados, permissoes executaveis, listagem minima somente leitura, cadastro inicial de metadados, configuracao inicial de colunas, preenchimento inicial de linhas, totalizadores controlados por coluna, busca textual simples e exportacao XLSX concluidos
+  - pendencia proxima: abrir microetapa de formulas guiadas por coluna, ainda sem auditoria operacional propria
   - backlog/futuro: agrupamentos por opcao, filtros avancados/compostos, visoes salvas, arrastar-e-soltar, importacao assistida e exemplos/templates
   - fora de escopo: planilha livre estilo Excel, integracao escrevente com financeiro e modelagem definitiva de banco nesta fase
   - risco a monitorar: perda de governanca e desvio da frente para comportamento de planilha livre

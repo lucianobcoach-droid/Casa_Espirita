@@ -1762,6 +1762,16 @@ Status consolidado: SPEC FUNCIONAL DOCUMENTAL CONSOLIDADA / BACKLOG TECNICO INCR
 - Fora de escopo:
   - importacao em massa;
   - sincronizacao com financeiro oficial.
+- Consolidacao da entrega:
+  - rota `controles-internos/tabelas-personalizadas/<tabela_id>/linhas/exportar-xlsx/` implementada no app `financeiro`
+  - permissao `financeiro.tabelas_personalizadas.exportar` aplicada no backend e no botao da tela de linhas
+  - exportacao limitada a colunas ativas, visiveis, nao calculadas e nao `formula_controlada`
+  - exportacao limitada a linhas ativas da tabela atual, respeitando a busca textual simples quando houver filtro ativo
+  - valores exportados usando a mesma leitura formatada da tela de linhas
+  - totalizadores visiveis incluidos no bloco final da planilha, refletindo o mesmo resultado filtrado da tela
+  - cabecalho simples reforcando que o arquivo representa controle interno sem efeito financeiro oficial
+- Proxima microetapa recomendada:
+  - abrir formulas guiadas por coluna, mantendo auditoria operacional propria fora do recorte imediato
 
 #### Microetapa 12 - formulas guiadas por coluna
 
