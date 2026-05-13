@@ -8542,6 +8542,65 @@ def _formatar_resultado_totalizador(coluna: ColunaPersonalizada, tipo_totalizado
     return format(valor, '.8f').rstrip('0').rstrip('.')
 
 
+def _formatar_decimal_brasileiro(
+    valor: Decimal,
+    *,
+    casas_decimais_maximas: int,
+    casas_decimais_fixas: bool = False,
+) -> str:
+    formato = f'.{casas_decimais_maximas}f'
+    texto = format(valor, formato)
+    if not casas_decimais_fixas:
+        texto = texto.rstrip('0').rstrip('.')
+    return texto.replace('.', ',')
+
+
+def _formatar_valor_linha_tabela_xlsx(coluna: ColunaPersonalizada, valor: ValorTabelaPersonalizada | None) -> str:
+    if valor is None:
+        return ''
+    if coluna.tipo_dado in {
+        ColunaPersonalizada.TipoDado.TEXTO_CURTO,
+        ColunaPersonalizada.TipoDado.TEXTO_LONGO,
+        ColunaPersonalizada.TipoDado.MES_COMPETENCIA,
+        ColunaPersonalizada.TipoDado.LISTA_OPCOES,
+    }:
+        return valor.valor_texto or ''
+    if coluna.tipo_dado == ColunaPersonalizada.TipoDado.BOOLEANO:
+        if valor.valor_booleano is None:
+            return ''
+        return 'Sim' if valor.valor_booleano else 'Nao'
+    if coluna.tipo_dado == ColunaPersonalizada.TipoDado.DATA:
+        return valor.valor_data.strftime('%d/%m/%Y') if valor.valor_data else ''
+    if valor.valor_numero is None:
+        return ''
+    if coluna.tipo_dado == ColunaPersonalizada.TipoDado.INTEIRO:
+        return str(int(valor.valor_numero))
+    if coluna.tipo_dado == ColunaPersonalizada.TipoDado.MONETARIO:
+        return f"R$ {_formatar_decimal_brasileiro(valor.valor_numero, casas_decimais_maximas=2, casas_decimais_fixas=True)}"
+    if coluna.tipo_dado == ColunaPersonalizada.TipoDado.PERCENTUAL:
+        return f"{_formatar_decimal_brasileiro(valor.valor_numero, casas_decimais_maximas=4)}%"
+    return _formatar_decimal_brasileiro(valor.valor_numero, casas_decimais_maximas=8)
+
+
+def _formatar_resultado_totalizador_xlsx(coluna: ColunaPersonalizada, tipo_totalizador: str, valor) -> str:
+    if tipo_totalizador == TotalizadorColunaPersonalizada.TipoTotalizador.CONTAGEM:
+        return str(valor)
+
+    if coluna.tipo_dado == ColunaPersonalizada.TipoDado.DATA:
+        return valor.strftime('%d/%m/%Y') if valor else ''
+
+    if valor is None:
+        return ''
+
+    if coluna.tipo_dado == ColunaPersonalizada.TipoDado.INTEIRO:
+        return str(int(valor))
+    if coluna.tipo_dado == ColunaPersonalizada.TipoDado.MONETARIO:
+        return f"R$ {_formatar_decimal_brasileiro(valor, casas_decimais_maximas=2, casas_decimais_fixas=True)}"
+    if coluna.tipo_dado == ColunaPersonalizada.TipoDado.PERCENTUAL:
+        return f"{_formatar_decimal_brasileiro(valor, casas_decimais_maximas=4)}%"
+    return _formatar_decimal_brasileiro(valor, casas_decimais_maximas=8)
+
+
 def _calcular_totalizador_coluna(
     coluna: ColunaPersonalizada,
     tipo_totalizador: str,
@@ -8698,8 +8757,7 @@ def _montar_estado_linhas_tabela_personalizada(
 def _montar_linhas_exportacao_tabela_personalizada_xlsx(
     tabela: TabelaPersonalizada,
     colunas_visiveis: list[ColunaPersonalizada],
-    linhas_renderizadas: list[dict[str, object]],
-    totalizadores_renderizados: list[dict[str, object]],
+    linhas: list[LinhaTabelaPersonalizada],
 ) -> tuple[list[list[str]], list[int], set[int]]:
     if not colunas_visiveis:
         return (
@@ -8716,23 +8774,50 @@ def _montar_linhas_exportacao_tabela_personalizada_xlsx(
         [coluna.nome for coluna in colunas_visiveis],
     ]
 
-    for item in linhas_renderizadas:
-        linhas_xlsx.append([celula['valor'] or '' for celula in item['celulas']])
-
-    possui_totalizadores = any(item['itens'] for item in totalizadores_renderizados)
-    if possui_totalizadores:
-        linhas_xlsx.append(['' for _ in colunas_visiveis])
+    colunas_visiveis_ids = {coluna.pk for coluna in colunas_visiveis}
+    valores_totalizadores_por_coluna: dict[int, list[ValorTabelaPersonalizada]] = {
+        coluna.pk: [] for coluna in colunas_visiveis
+    }
+    for linha in linhas:
+        valores_linha_por_coluna = {
+            valor.coluna_id: valor
+            for valor in linha.valores.all()
+            if valor.coluna_id in colunas_visiveis_ids
+        }
+        for coluna_id, valor in valores_linha_por_coluna.items():
+            valores_totalizadores_por_coluna.setdefault(coluna_id, []).append(valor)
         linhas_xlsx.append(
             [
-                ' ; '.join(
-                    f"{item_totalizador['label']}: {item_totalizador['valor']}"
-                    for item_totalizador in totalizador_coluna['itens']
-                )
-                if totalizador_coluna['itens']
-                else ''
-                for totalizador_coluna in totalizadores_renderizados
+                _formatar_valor_linha_tabela_xlsx(coluna, valores_linha_por_coluna.get(coluna.pk))
+                for coluna in colunas_visiveis
             ]
         )
+
+    totalizadores_exportacao = []
+    possui_totalizadores = False
+    for coluna in colunas_visiveis:
+        itens_coluna = []
+        for totalizador in coluna.totalizadores.all():
+            if not totalizador.ativo:
+                continue
+            resultado = _calcular_totalizador_coluna(
+                coluna,
+                totalizador.tipo_totalizador,
+                valores_totalizadores_por_coluna.get(coluna.pk, []),
+            )
+            if resultado is None:
+                continue
+            itens_coluna.append(
+                f"{totalizador.get_tipo_totalizador_display()}: "
+                f"{_formatar_resultado_totalizador_xlsx(coluna, totalizador.tipo_totalizador, resultado)}"
+            )
+        if itens_coluna:
+            possui_totalizadores = True
+        totalizadores_exportacao.append(' ; '.join(itens_coluna))
+
+    if possui_totalizadores:
+        linhas_xlsx.append(['' for _ in colunas_visiveis])
+        linhas_xlsx.append(totalizadores_exportacao)
 
     quantidades_colunas = len(colunas_visiveis)
     larguras_colunas: list[int] = []
@@ -8829,8 +8914,7 @@ class TabelaPersonalizadaLinhaExportXlsxView(FinanceiroPermissaoMixin, View):
         linhas_xlsx, larguras_colunas, linhas_negrito = _montar_linhas_exportacao_tabela_personalizada_xlsx(
             tabela,
             estado_linhas['colunas_visiveis'],
-            estado_linhas['linhas_renderizadas'],
-            estado_linhas['totalizadores_renderizados'],
+            estado_linhas['linhas'],
         )
         arquivo_exportacao = _gerar_arquivo_xlsx_formatado(
             [

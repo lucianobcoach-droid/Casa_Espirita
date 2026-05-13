@@ -1340,3 +1340,18 @@ Consolidacao:
 
 Pendencia:
 - revisao visual mais ampla das secoes do formulario continua aberta para microetapa futura
+
+### 49. Tabelas personalizadas - exportacao XLSX com formato brasileiro
+
+Status apos microetapa funcional: IMPLEMENTADO
+
+Consolidacao:
+- a exportacao XLSX da tela de linhas agora usa formato brasileiro para valores numericos e totalizadores
+- padrao visual aplicado no arquivo:
+  - monetario com `R$` e virgula decimal
+  - decimal com virgula (ate 8 casas)
+  - percentual com virgula (ate 4 casas) e `%`
+- recorte funcional mantido:
+  - sem formulas guiadas
+  - sem auditoria operacional propria
+  - sem alteracao de financeiro oficial

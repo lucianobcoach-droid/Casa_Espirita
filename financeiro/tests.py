@@ -4838,6 +4838,14 @@ class TabelasPersonalizadasListViewTests(TestCase):
             coluna=colunas['monetario'],
             tipo_totalizador=TotalizadorColunaPersonalizada.TipoTotalizador.SOMA,
         )
+        TotalizadorColunaPersonalizada.objects.create(
+            coluna=colunas['decimal'],
+            tipo_totalizador=TotalizadorColunaPersonalizada.TipoTotalizador.SOMA,
+        )
+        TotalizadorColunaPersonalizada.objects.create(
+            coluna=colunas['percentual'],
+            tipo_totalizador=TotalizadorColunaPersonalizada.TipoTotalizador.SOMA,
+        )
         self._login_com_permissoes(
             'user-linha-totalizador-ignora-arquivada',
             [PermissoesTabelasPersonalizadas.VISUALIZAR],
@@ -5045,6 +5053,14 @@ class TabelasPersonalizadasListViewTests(TestCase):
             coluna=colunas['monetario'],
             tipo_totalizador=TotalizadorColunaPersonalizada.TipoTotalizador.SOMA,
         )
+        TotalizadorColunaPersonalizada.objects.create(
+            coluna=colunas['decimal'],
+            tipo_totalizador=TotalizadorColunaPersonalizada.TipoTotalizador.SOMA,
+        )
+        TotalizadorColunaPersonalizada.objects.create(
+            coluna=colunas['percentual'],
+            tipo_totalizador=TotalizadorColunaPersonalizada.TipoTotalizador.SOMA,
+        )
         self._login_com_permissoes(
             'user-linha-totalizador-filtrado',
             [PermissoesTabelasPersonalizadas.VISUALIZAR],
@@ -5104,6 +5120,14 @@ class TabelasPersonalizadasListViewTests(TestCase):
             coluna=colunas['monetario'],
             tipo_totalizador=TotalizadorColunaPersonalizada.TipoTotalizador.SOMA,
         )
+        TotalizadorColunaPersonalizada.objects.create(
+            coluna=colunas['decimal'],
+            tipo_totalizador=TotalizadorColunaPersonalizada.TipoTotalizador.SOMA,
+        )
+        TotalizadorColunaPersonalizada.objects.create(
+            coluna=colunas['percentual'],
+            tipo_totalizador=TotalizadorColunaPersonalizada.TipoTotalizador.SOMA,
+        )
         self._login_com_permissoes(
             'user-linha-exporta',
             [PermissoesTabelasPersonalizadas.EXPORTAR],
@@ -5126,9 +5150,12 @@ class TabelasPersonalizadasListViewTests(TestCase):
         self.assertIn('Valor unitario', conteudo)
         self.assertIn('Sabao liquido', conteudo)
         self.assertIn('Detergente concentrado', conteudo)
-        self.assertIn('R$ 50.72', conteudo)
-        self.assertIn('1.01499912', conteudo)
-        self.assertIn('Soma: R$ 70.62', conteudo)
+        self.assertIn('R$ 50,72', conteudo)
+        self.assertIn('1,01499912', conteudo)
+        self.assertIn('12,3456%', conteudo)
+        self.assertIn('Soma: R$ 70,62', conteudo)
+        self.assertIn('Soma: 3,015', conteudo)
+        self.assertIn('Soma: 16,8456%', conteudo)
         self.assertNotIn('Campo oculto', conteudo)
         self.assertNotIn('Campo arquivado', conteudo)
         self.assertNotIn('Campo calculado futuro', conteudo)
@@ -5168,8 +5195,8 @@ class TabelasPersonalizadasListViewTests(TestCase):
         conteudo = '\n'.join(' | '.join(linha) for linha in linhas)
         self.assertIn('Detergente concentrado', conteudo)
         self.assertNotIn('Sabao liquido', conteudo)
-        self.assertIn('Soma: R$ 19.90', conteudo)
-        self.assertNotIn('Soma: R$ 70.62', conteudo)
+        self.assertIn('Soma: R$ 19,90', conteudo)
+        self.assertNotIn('Soma: R$ 70,62', conteudo)
 
     def test_exportacao_xlsx_nao_altera_dados(self):
         colunas = self._criar_colunas_para_linhas()

@@ -3230,3 +3230,24 @@ Pendencia registrada:
 
 Proxima microetapa recomendada:
 - validar este refinamento em uso real e decidir se a proxima frente sera polimento visual geral do formulario ou abertura do termo por favorecido
+
+## 30. Tabelas personalizadas - exportacao XLSX em formato brasileiro
+
+Status: IMPLEMENTADO
+
+Consolidacao:
+- exportacao XLSX da tela de linhas ajustada para padrao brasileiro de exibicao numerica
+- valores exportados:
+  - decimal com virgula e ate 8 casas (sem zeros excedentes)
+  - monetario com prefixo `R$` e 2 casas
+  - percentual com virgula e ate 4 casas + `%`
+  - inteiro sem casas decimais
+- totalizadores exportados passaram a seguir o mesmo padrao visual brasileiro
+- recorte funcional preservado:
+  - colunas ativas/visiveis/nao calculadas
+  - linhas ativas
+  - busca ativa aplicada na exportacao
+  - totalizadores visiveis baseados nas linhas filtradas
+
+Proxima microetapa recomendada:
+- implementar formulas guiadas por coluna com whitelist e validacao segura

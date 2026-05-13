@@ -5687,3 +5687,17 @@ Não houve alteração de código funcional nesta etapa.
   - `competencias_payload`
   - `competencias_rateio_payload`
 - mantida a observacao de UX futura: as secoes do formulario ainda merecem uma revisao visual geral, mas isso ficou fora do escopo desta microetapa
+
+## Microetapa: ajuste de formato brasileiro no XLSX de tabelas personalizadas
+
+- exportacao XLSX de linhas da frente de tabelas personalizadas ajustada para formato brasileiro de numeros
+- padrao aplicado no arquivo:
+  - monetario: `R$ 50,72`
+  - decimal: `1,01499912`
+  - percentual: `12,3456%`
+- totalizadores no rodape da exportacao tambem passaram a usar virgula decimal no mesmo padrao
+- mantidos os guardrails da etapa:
+  - sem formulas guiadas
+  - sem auditoria operacional propria
+  - sem alteracao de model/migration/banco
+  - sem impacto em lancamentos, saldos, extrato, resumo, prestacao/fechamento e balancete

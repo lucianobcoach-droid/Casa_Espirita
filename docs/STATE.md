@@ -3980,3 +3980,19 @@ Riscos principais antes de migration:
   - `competencias_payload`
   - `competencias_rateio_payload`
 - permanece pendente uma revisao visual mais ampla das secoes do formulario, pois ainda existe mistura visual entre blocos fora do escopo desta microetapa
+
+## Microetapa: ajuste de formato brasileiro na exportacao XLSX de tabelas personalizadas
+
+- ajuste concluido na exportacao XLSX da tela de linhas para padrao brasileiro de exibicao
+- valores numericos no arquivo agora saem com virgula decimal:
+  - decimal: ate 8 casas, sem zeros excedentes
+  - monetario: `R$` com 2 casas
+  - percentual: ate 4 casas com sufixo `%`
+  - inteiro: sem casas decimais
+- totalizadores exportados passaram a seguir o mesmo padrao visual brasileiro
+- comportamento de escopo foi preservado:
+  - apenas colunas ativas/visiveis/nao calculadas
+  - apenas linhas ativas
+  - busca ativa refletida na exportacao
+  - totalizadores visiveis refletindo linhas filtradas
+- sem alteracao de model, migration, banco, formulas guiadas, auditoria operacional nova ou financeiro oficial
