@@ -6112,6 +6112,19 @@ Não houve alteração de código funcional nesta etapa.
   - criacao/edicao de linha
 - exportacao XLSX ficou fora do primeiro recorte da auditoria operacional; leitura, busca, filtros apenas de consulta e calculo em leitura ficaram fora
 
+## Microetapa: auditoria operacional minima de tabelas personalizadas
+
+- implementei a auditoria operacional minima da frente de tabelas personalizadas reutilizando `AuditoriaFinanceiro`
+- nao houve criacao de model novo, nem migration, nem alteracao estrutural de banco
+- eventos auditados no primeiro recorte:
+  - criacao/edicao de `TabelaPersonalizada`
+  - criacao/edicao de `ColunaPersonalizada`
+  - criacao/edicao de `LinhaTabelaPersonalizada`
+- alteracoes de opcoes de lista, filtro estruturado, totalizadores e formula passaram a aparecer no diff da auditoria da coluna por snapshot de `configuracao_json` e `totalizadores`
+- valores da linha passaram a entrar no snapshot de auditoria por `coluna_id`, `valor_texto`, `valor_numero`, `valor_data`, `valor_booleano` e `valor_json`
+- `valor_calculado` ficou explicitamente fora dos snapshots e a auditoria nao cobre calculo em leitura
+- exportacao XLSX permaneceu fora do recorte de auditoria, conforme decisao documental fechada
+
 ## Microetapa documental: decisao sobre auditoria da exportacao XLSX
 
 - decisao fechada no primeiro recorte da auditoria operacional de `Tabelas personalizadas`:

@@ -3861,3 +3861,23 @@ Snapshots futuros recomendados:
 Permissao recomendada:
 - recorte inicial usando a governanca ja existente de `financeiro.auditoria.listar`
 - permissao propria futura fica condicionada a revisao de volume/sensibilidade da frente
+
+## Microetapa: auditoria operacional minima de tabelas personalizadas
+
+Status:
+- implementado no primeiro recorte operacional, sem model novo e sem migration
+
+Consolidacao:
+- auditoria implementada reaproveitando `AuditoriaFinanceiro`
+- eventos cobertos:
+  - criacao/edicao de tabela
+  - criacao/edicao de coluna
+  - criacao/edicao de linha
+- alteracoes estruturais da coluna agora ficam rastreaveis no diff por snapshot:
+  - `configuracao_json` (opcoes, filtro, formula)
+  - `totalizadores`
+- snapshots de linha incluem valores persistidos por coluna, sem `valor_calculado`
+
+Limites mantidos:
+- exportacao XLSX continua fora da auditoria no primeiro recorte
+- leitura, busca, filtros de consulta e calculo em leitura continuam fora

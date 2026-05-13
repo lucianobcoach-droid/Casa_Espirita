@@ -1750,3 +1750,15 @@ Guardrails:
 - sem auditar calculo em leitura
 - sem impacto no financeiro oficial
 - sem model/migration nesta etapa documental
+
+Status apos implementacao:
+- IMPLEMENTADO NO PRIMEIRO RECORTE (OPERACIONAL MINIMO)
+
+Baixa desta frente:
+- auditoria minima entregue reaproveitando `AuditoriaFinanceiro`
+- eventos auditados:
+  - criacao/edicao de tabela
+  - criacao/edicao de coluna
+  - criacao/edicao de linha
+- alteracoes de opcoes, filtro, totalizadores e formula auditadas no diff da coluna
+- exportacao XLSX permanece fora do recorte inicial de auditoria

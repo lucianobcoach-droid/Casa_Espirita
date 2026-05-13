@@ -30,6 +30,7 @@ from .forms import (
 from .models import (
     AlocacaoCompetenciaFinanceira,
     AssinaturaInstitucional,
+    AuditoriaFinanceiro,
     CategoriaFinanceira,
     ColunaPersonalizada,
     ContaFinanceira,
@@ -4445,6 +4446,15 @@ class TabelasPersonalizadasListViewTests(TestCase):
         self.client.force_login(usuario)
         return usuario
 
+    def _auditorias_modelo(self, modelo: str):
+        return AuditoriaFinanceiro.objects.filter(modelo=modelo).order_by('-pk')
+
+    def _ultimo_log_modelo(self, modelo: str, registro_id: int | None = None):
+        queryset = self._auditorias_modelo(modelo)
+        if registro_id is not None:
+            queryset = queryset.filter(registro_id=registro_id)
+        return queryset.first()
+
     def _campo_coluna(self, coluna: ColunaPersonalizada) -> str:
         return TabelaPersonalizadaLinhaForm.campo_coluna_nome(coluna.pk)
 
@@ -5059,6 +5069,53 @@ class TabelasPersonalizadasListViewTests(TestCase):
         self.assertEqual(self.tabela.status, TabelaPersonalizada.StatusTabela.INATIVA)
         self.assertEqual(self.tabela.ordem, 3)
         self.assertEqual(self.tabela.atualizado_por, usuario)
+
+    def test_criacao_de_tabela_gera_auditoria(self):
+        self._login_com_permissoes(
+            'user-tabela-auditoria-create',
+            [PermissoesTabelasPersonalizadas.CRIAR],
+        )
+
+        response = self.client.post(
+            reverse('financeiro:tabela-personalizada-create'),
+            data={
+                'nome': 'Controle auditavel',
+                'descricao': 'Teste de auditoria de criacao.',
+                'status': TabelaPersonalizada.StatusTabela.ATIVA,
+                'ordem': 9,
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        tabela = TabelaPersonalizada.objects.get(nome='Controle auditavel')
+        log = self._ultimo_log_modelo('TabelaPersonalizada', registro_id=tabela.pk)
+        self.assertIsNotNone(log)
+        self.assertEqual(log.acao, AuditoriaFinanceiro.AcaoAuditoria.CREATE)
+        self.assertIn('nome', log.campos_alterados)
+        self.assertEqual(log.campos_alterados['nome']['after'], 'Controle auditavel')
+
+    def test_edicao_de_tabela_gera_auditoria_com_before_after(self):
+        self._login_com_permissoes(
+            'user-tabela-auditoria-update',
+            [PermissoesTabelasPersonalizadas.EDITAR_ESTRUTURA],
+        )
+
+        response = self.client.post(
+            reverse('financeiro:tabela-personalizada-update', kwargs={'pk': self.tabela.pk}),
+            data={
+                'nome': 'Controle auditado',
+                'descricao': 'Descricao atualizada para auditoria.',
+                'status': TabelaPersonalizada.StatusTabela.INATIVA,
+                'ordem': 4,
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        log = self._ultimo_log_modelo('TabelaPersonalizada', registro_id=self.tabela.pk)
+        self.assertIsNotNone(log)
+        self.assertEqual(log.acao, AuditoriaFinanceiro.AcaoAuditoria.UPDATE)
+        self.assertEqual(log.campos_alterados['nome']['before'], 'Controle de almoxarifado')
+        self.assertEqual(log.campos_alterados['nome']['after'], 'Controle auditado')
 
     def test_usuario_com_permissao_editar_estrutura_acessa_listagem_de_colunas(self):
         self._login_com_permissoes(
@@ -5870,6 +5927,187 @@ class TabelasPersonalizadasListViewTests(TestCase):
         coluna = ColunaPersonalizada.objects.get(nome='Codigo secundario')
         self.assertEqual(coluna.tabela, self.outra_tabela)
 
+    def test_criacao_de_coluna_gera_auditoria(self):
+        self._login_com_permissoes(
+            'user-coluna-auditoria-create',
+            [PermissoesTabelasPersonalizadas.EDITAR_ESTRUTURA],
+        )
+
+        response = self.client.post(
+            reverse('financeiro:tabela-personalizada-coluna-create', kwargs={'tabela_id': self.tabela.pk}),
+            data={
+                'nome': 'Campo auditado',
+                'tipo_dado': ColunaPersonalizada.TipoDado.TEXTO_CURTO,
+                'opcoes_lista': '',
+                'totalizadores_configurados': [],
+                'filtro_estruturado': '',
+                'obrigatoria': '',
+                'visivel': 'on',
+                'ordem': 6,
+                'status': ColunaPersonalizada.StatusColuna.ATIVA,
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        coluna = ColunaPersonalizada.objects.get(nome='Campo auditado')
+        log = self._ultimo_log_modelo('ColunaPersonalizada', registro_id=coluna.pk)
+        self.assertIsNotNone(log)
+        self.assertEqual(log.acao, AuditoriaFinanceiro.AcaoAuditoria.CREATE)
+        self.assertIn('nome', log.campos_alterados)
+
+    def test_edicao_de_coluna_gera_auditoria_com_opcoes_de_lista(self):
+        coluna = ColunaPersonalizada.objects.create(
+            tabela=self.tabela,
+            nome='Categoria interna',
+            tipo_dado=ColunaPersonalizada.TipoDado.LISTA_OPCOES,
+            configuracao_json={'opcoes': ['A']},
+        )
+        self._login_com_permissoes(
+            'user-coluna-auditoria-opcoes',
+            [PermissoesTabelasPersonalizadas.EDITAR_ESTRUTURA],
+        )
+
+        response = self.client.post(
+            reverse(
+                'financeiro:tabela-personalizada-coluna-update',
+                kwargs={'tabela_id': self.tabela.pk, 'pk': coluna.pk},
+            ),
+            data={
+                'nome': 'Categoria interna',
+                'tipo_dado': ColunaPersonalizada.TipoDado.LISTA_OPCOES,
+                'opcoes_lista': 'A\nB\nC',
+                'totalizadores_configurados': [],
+                'filtro_estruturado': '',
+                'obrigatoria': '',
+                'visivel': 'on',
+                'ordem': 0,
+                'status': ColunaPersonalizada.StatusColuna.ATIVA,
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        log = self._ultimo_log_modelo('ColunaPersonalizada', registro_id=coluna.pk)
+        self.assertIsNotNone(log)
+        self.assertIn('configuracao_json', log.campos_alterados)
+        self.assertIn('opcoes', log.campos_alterados['configuracao_json']['after'])
+
+    def test_edicao_de_coluna_gera_auditoria_com_filtro_estruturado(self):
+        coluna = ColunaPersonalizada.objects.create(
+            tabela=self.tabela,
+            nome='Valor filtravel auditado',
+            tipo_dado=ColunaPersonalizada.TipoDado.DECIMAL,
+            configuracao_json={},
+        )
+        self._login_com_permissoes(
+            'user-coluna-auditoria-filtro',
+            [PermissoesTabelasPersonalizadas.EDITAR_ESTRUTURA],
+        )
+
+        response = self.client.post(
+            reverse(
+                'financeiro:tabela-personalizada-coluna-update',
+                kwargs={'tabela_id': self.tabela.pk, 'pk': coluna.pk},
+            ),
+            data={
+                'nome': coluna.nome,
+                'tipo_dado': ColunaPersonalizada.TipoDado.DECIMAL,
+                'opcoes_lista': '',
+                'totalizadores_configurados': [],
+                'filtro_estruturado': 'on',
+                'obrigatoria': '',
+                'visivel': 'on',
+                'ordem': 0,
+                'status': ColunaPersonalizada.StatusColuna.ATIVA,
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        log = self._ultimo_log_modelo('ColunaPersonalizada', registro_id=coluna.pk)
+        self.assertIsNotNone(log)
+        self.assertIn('configuracao_json', log.campos_alterados)
+        self.assertIn('filtro', log.campos_alterados['configuracao_json']['after'])
+
+    def test_edicao_de_coluna_gera_auditoria_com_totalizadores(self):
+        coluna = ColunaPersonalizada.objects.create(
+            tabela=self.tabela,
+            nome='Consumo totalizavel auditado',
+            tipo_dado=ColunaPersonalizada.TipoDado.DECIMAL,
+        )
+        self._login_com_permissoes(
+            'user-coluna-auditoria-totalizador',
+            [PermissoesTabelasPersonalizadas.EDITAR_ESTRUTURA],
+        )
+
+        response = self.client.post(
+            reverse(
+                'financeiro:tabela-personalizada-coluna-update',
+                kwargs={'tabela_id': self.tabela.pk, 'pk': coluna.pk},
+            ),
+            data={
+                'nome': coluna.nome,
+                'tipo_dado': ColunaPersonalizada.TipoDado.DECIMAL,
+                'opcoes_lista': '',
+                'totalizadores_configurados': [TotalizadorColunaPersonalizada.TipoTotalizador.SOMA],
+                'filtro_estruturado': '',
+                'obrigatoria': '',
+                'visivel': 'on',
+                'ordem': 0,
+                'status': ColunaPersonalizada.StatusColuna.ATIVA,
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        log = self._ultimo_log_modelo('ColunaPersonalizada', registro_id=coluna.pk)
+        self.assertIsNotNone(log)
+        self.assertIn('totalizadores', log.campos_alterados)
+        self.assertTrue(log.campos_alterados['totalizadores']['after'])
+
+    def test_edicao_de_coluna_gera_auditoria_com_formula(self):
+        fontes = self._criar_colunas_fonte_formula()
+        coluna_formula = ColunaPersonalizada.objects.create(
+            tabela=self.tabela,
+            nome='Formula auditavel',
+            tipo_dado=ColunaPersonalizada.TipoDado.FORMULA_CONTROLADA,
+            calculada=True,
+            visivel=True,
+            configuracao_json={
+                'formula': {
+                    'habilitada': True,
+                    'operacao': ColunaPersonalizada.OperacaoFormula.SOMA,
+                    'operandos': [fontes['inteiro'].pk, fontes['decimal'].pk],
+                    'resultado_tipo': ColunaPersonalizada.TipoDado.DECIMAL,
+                    'casas_decimais': 8,
+                }
+            },
+        )
+        self._login_com_permissoes(
+            'user-coluna-auditoria-formula',
+            [
+                PermissoesTabelasPersonalizadas.EDITAR_ESTRUTURA,
+                PermissoesTabelasPersonalizadas.CONFIGURAR_FORMULA,
+            ],
+        )
+
+        response = self.client.post(
+            reverse(
+                'financeiro:tabela-personalizada-coluna-update',
+                kwargs={'tabela_id': self.tabela.pk, 'pk': coluna_formula.pk},
+            ),
+            data=self._dados_formula_coluna(
+                nome='Formula auditavel',
+                operacao=ColunaPersonalizada.OperacaoFormula.MULTIPLICACAO,
+                operandos=[fontes['inteiro'].pk, fontes['decimal'].pk],
+                resultado_tipo=ColunaPersonalizada.TipoDado.DECIMAL,
+                casas_decimais=6,
+            ),
+        )
+
+        self.assertEqual(response.status_code, 302)
+        log = self._ultimo_log_modelo('ColunaPersonalizada', registro_id=coluna_formula.pk)
+        self.assertIsNotNone(log)
+        self.assertIn('configuracao_json', log.campos_alterados)
+        self.assertIn('formula', log.campos_alterados['configuracao_json']['after'])
+
     def test_edicao_nao_permite_manipular_coluna_de_outra_tabela_pela_url(self):
         self._login_com_permissoes(
             'user-coluna-url-errada',
@@ -5918,6 +6156,105 @@ class TabelasPersonalizadasListViewTests(TestCase):
             self._valor_renderizado_coluna(response, 'Campo calculado futuro', linha_pk=linha.pk),
             '5,01499912',
         )
+
+    def test_criacao_de_linha_gera_auditoria_sem_valor_calculado(self):
+        colunas = self._criar_colunas_para_linhas()
+        self._login_com_permissoes(
+            'user-linha-auditoria-create',
+            [PermissoesTabelasPersonalizadas.PREENCHER_LINHAS],
+        )
+
+        response = self.client.post(
+            reverse('financeiro:tabela-personalizada-linha-create', kwargs={'tabela_id': self.tabela.pk}),
+            data={
+                self._campo_coluna(colunas['texto']): 'Linha auditada',
+                self._campo_coluna(colunas['inteiro']): '5',
+                self._campo_coluna(colunas['monetario']): '10,20',
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        linha = LinhaTabelaPersonalizada.objects.filter(tabela=self.tabela).latest('pk')
+        log = self._ultimo_log_modelo('LinhaTabelaPersonalizada', registro_id=linha.pk)
+        self.assertIsNotNone(log)
+        self.assertEqual(log.acao, AuditoriaFinanceiro.AcaoAuditoria.CREATE)
+        self.assertIn('valores', log.campos_alterados)
+        serialized = json.dumps(log.campos_alterados, ensure_ascii=False)
+        self.assertNotIn('valor_calculado', serialized)
+
+    def test_edicao_de_linha_gera_auditoria_com_before_after(self):
+        colunas = self._criar_colunas_para_linhas()
+        linha = self._criar_linha_com_valores(colunas)
+        self._login_com_permissoes(
+            'user-linha-auditoria-update',
+            [PermissoesTabelasPersonalizadas.EDITAR_LINHAS],
+        )
+
+        response = self.client.post(
+            reverse(
+                'financeiro:tabela-personalizada-linha-update',
+                kwargs={'tabela_id': self.tabela.pk, 'pk': linha.pk},
+            ),
+            data={
+                self._campo_coluna(colunas['texto']): 'Sabao alterado',
+                self._campo_coluna(colunas['inteiro']): '9',
+                self._campo_coluna(colunas['monetario']): '22,30',
+                self._campo_coluna(colunas['decimal']): '1,01499912',
+                self._campo_coluna(colunas['percentual']): '12,3456',
+                self._campo_coluna(colunas['data']): '2026-05-08',
+                self._campo_coluna(colunas['competencia']): '05/2026',
+                self._campo_coluna(colunas['booleano']): '1',
+                self._campo_coluna(colunas['lista']): 'Limpeza',
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        log = self._ultimo_log_modelo('LinhaTabelaPersonalizada', registro_id=linha.pk)
+        self.assertIsNotNone(log)
+        self.assertEqual(log.acao, AuditoriaFinanceiro.AcaoAuditoria.UPDATE)
+        self.assertIn('valores', log.campos_alterados)
+        self.assertTrue(log.campos_alterados['valores']['before'])
+        self.assertTrue(log.campos_alterados['valores']['after'])
+
+    def test_exportacao_xlsx_nao_gera_auditoria(self):
+        colunas = self._criar_colunas_para_linhas()
+        self._criar_linha_com_valores(colunas)
+        self._login_com_permissoes(
+            'user-linha-auditoria-sem-xlsx',
+            [
+                PermissoesTabelasPersonalizadas.VISUALIZAR,
+                PermissoesTabelasPersonalizadas.EXPORTAR,
+            ],
+        )
+        total_antes = AuditoriaFinanceiro.objects.count()
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-export-xlsx', kwargs={'tabela_id': self.tabela.pk})
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(AuditoriaFinanceiro.objects.count(), total_antes)
+
+    def test_listagem_e_busca_nao_geram_auditoria(self):
+        colunas = self._criar_colunas_para_linhas()
+        self._criar_linha_com_valores(colunas)
+        self._login_com_permissoes(
+            'user-linha-auditoria-sem-leitura',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+        total_antes = AuditoriaFinanceiro.objects.count()
+
+        response_lista = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk})
+        )
+        response_busca = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk}),
+            {'busca': 'sabao'},
+        )
+
+        self.assertEqual(response_lista.status_code, 200)
+        self.assertEqual(response_busca.status_code, 200)
+        self.assertEqual(AuditoriaFinanceiro.objects.count(), total_antes)
 
     def test_listagem_de_linhas_calcula_subtracao_multiplicacao_e_divisao_em_tempo_de_leitura(self):
         colunas = self._criar_colunas_para_linhas()

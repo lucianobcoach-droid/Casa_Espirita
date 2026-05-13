@@ -269,6 +269,64 @@ def _snapshot_configuracao(configuracao: ConfiguracaoInstitucional) -> dict[str,
     return _snapshot_model(configuracao, ignore_fields={'criado_em', 'atualizado_em'})
 
 
+def _snapshot_tabela_personalizada(tabela: TabelaPersonalizada) -> dict[str, object]:
+    return {
+        'nome': tabela.nome,
+        'descricao': tabela.descricao,
+        'status': tabela.status,
+        'ordem': tabela.ordem,
+    }
+
+
+def _snapshot_totalizador_coluna_personalizada(
+    totalizador: TotalizadorColunaPersonalizada,
+) -> dict[str, object]:
+    return {
+        'tipo_totalizador': totalizador.tipo_totalizador,
+        'ativo': totalizador.ativo,
+    }
+
+
+def _snapshot_coluna_personalizada(coluna: ColunaPersonalizada) -> dict[str, object]:
+    return {
+        'nome': coluna.nome,
+        'tipo_dado': coluna.tipo_dado,
+        'obrigatoria': coluna.obrigatoria,
+        'visivel': coluna.visivel,
+        'ordem': coluna.ordem,
+        'calculada': coluna.calculada,
+        'status': coluna.status,
+        'configuracao_json': coluna.configuracao_json or {},
+        'totalizadores': [
+            _snapshot_totalizador_coluna_personalizada(totalizador)
+            for totalizador in coluna.totalizadores.order_by('tipo_totalizador', 'pk')
+        ],
+    }
+
+
+def _snapshot_valor_tabela_personalizada(valor: ValorTabelaPersonalizada) -> dict[str, object]:
+    return {
+        'coluna_id': valor.coluna_id,
+        'valor_texto': valor.valor_texto,
+        'valor_numero': _auditoria_normalizar_valor(valor.valor_numero),
+        'valor_data': _auditoria_normalizar_valor(valor.valor_data),
+        'valor_booleano': valor.valor_booleano,
+        'valor_json': valor.valor_json,
+    }
+
+
+def _snapshot_linha_tabela_personalizada(linha: LinhaTabelaPersonalizada) -> dict[str, object]:
+    return {
+        'status': linha.status,
+        'ordem': linha.ordem,
+        'tabela_id': linha.tabela_id,
+        'valores': [
+            _snapshot_valor_tabela_personalizada(valor)
+            for valor in linha.valores.select_related('coluna').order_by('coluna_id', 'pk')
+        ],
+    }
+
+
 def _build_auditoria_payload(
     antes: dict[str, object] | None,
     depois: dict[str, object] | None,
@@ -402,6 +460,57 @@ def _registrar_auditoria_configuracao(
         acao=acao,
         modelo='ConfiguracaoInstitucional',
         registro_id=configuracao.pk,
+        usuario=_auditoria_usuario(request),
+        campos_alterados=_build_auditoria_payload(antes, depois),
+    )
+
+
+def _registrar_auditoria_tabela_personalizada(
+    *,
+    request,
+    acao: str,
+    tabela: TabelaPersonalizada,
+    antes: dict[str, object] | None = None,
+    depois: dict[str, object] | None = None,
+) -> AuditoriaFinanceiro:
+    return AuditoriaFinanceiro.objects.create(
+        acao=acao,
+        modelo='TabelaPersonalizada',
+        registro_id=tabela.pk,
+        usuario=_auditoria_usuario(request),
+        campos_alterados=_build_auditoria_payload(antes, depois),
+    )
+
+
+def _registrar_auditoria_coluna_personalizada(
+    *,
+    request,
+    acao: str,
+    coluna: ColunaPersonalizada,
+    antes: dict[str, object] | None = None,
+    depois: dict[str, object] | None = None,
+) -> AuditoriaFinanceiro:
+    return AuditoriaFinanceiro.objects.create(
+        acao=acao,
+        modelo='ColunaPersonalizada',
+        registro_id=coluna.pk,
+        usuario=_auditoria_usuario(request),
+        campos_alterados=_build_auditoria_payload(antes, depois),
+    )
+
+
+def _registrar_auditoria_linha_tabela_personalizada(
+    *,
+    request,
+    acao: str,
+    linha: LinhaTabelaPersonalizada,
+    antes: dict[str, object] | None = None,
+    depois: dict[str, object] | None = None,
+) -> AuditoriaFinanceiro:
+    return AuditoriaFinanceiro.objects.create(
+        acao=acao,
+        modelo='LinhaTabelaPersonalizada',
+        registro_id=linha.pk,
         usuario=_auditoria_usuario(request),
         campos_alterados=_build_auditoria_payload(antes, depois),
     )
@@ -8325,7 +8434,14 @@ class TabelaPersonalizadaCreateView(FinanceiroFormMixin, CreateView):
         usuario = self.request.user if self.request.user.is_authenticated else None
         form.instance.criado_por = usuario
         form.instance.atualizado_por = usuario
-        return super().form_valid(form)
+        response = super().form_valid(form)
+        _registrar_auditoria_tabela_personalizada(
+            request=self.request,
+            acao=AuditoriaFinanceiro.AcaoAuditoria.CREATE,
+            tabela=self.object,
+            depois=_snapshot_tabela_personalizada(self.object),
+        )
+        return response
 
 
 class TabelaPersonalizadaUpdateView(FinanceiroFormMixin, UpdateView):
@@ -8339,11 +8455,22 @@ class TabelaPersonalizadaUpdateView(FinanceiroFormMixin, UpdateView):
     success_message = 'Tabela personalizada atualizada com sucesso.'
 
     def form_valid(self, form):
+        antes = _snapshot_tabela_personalizada(
+            TabelaPersonalizada.objects.get(pk=self.object.pk)
+        )
         usuario = self.request.user if self.request.user.is_authenticated else None
         if not form.instance.criado_por:
             form.instance.criado_por = usuario
         form.instance.atualizado_por = usuario
-        return super().form_valid(form)
+        response = super().form_valid(form)
+        _registrar_auditoria_tabela_personalizada(
+            request=self.request,
+            acao=AuditoriaFinanceiro.AcaoAuditoria.UPDATE,
+            tabela=self.object,
+            antes=antes,
+            depois=_snapshot_tabela_personalizada(self.object),
+        )
+        return response
 
 
 class TabelaPersonalizadaColunaListView(FinanceiroPermissaoMixin, ListView):
@@ -8409,7 +8536,14 @@ class TabelaPersonalizadaColunaCreateView(FinanceiroFormMixin, CreateView):
 
     def form_valid(self, form):
         form.instance.tabela = self.tabela
-        return super().form_valid(form)
+        response = super().form_valid(form)
+        _registrar_auditoria_coluna_personalizada(
+            request=self.request,
+            acao=AuditoriaFinanceiro.AcaoAuditoria.CREATE,
+            coluna=self.object,
+            depois=_snapshot_coluna_personalizada(self.object),
+        )
+        return response
 
 
 class TabelaPersonalizadaColunaUpdateView(FinanceiroFormMixin, UpdateView):
@@ -8459,6 +8593,20 @@ class TabelaPersonalizadaColunaUpdateView(FinanceiroFormMixin, UpdateView):
         context = super().get_context_data(**kwargs)
         context['tabela_personalizada'] = self.tabela
         return context
+
+    def form_valid(self, form):
+        antes = _snapshot_coluna_personalizada(
+            ColunaPersonalizada.objects.get(pk=self.object.pk)
+        )
+        response = super().form_valid(form)
+        _registrar_auditoria_coluna_personalizada(
+            request=self.request,
+            acao=AuditoriaFinanceiro.AcaoAuditoria.UPDATE,
+            coluna=self.object,
+            antes=antes,
+            depois=_snapshot_coluna_personalizada(self.object),
+        )
+        return response
 
 
 def _formatar_valor_linha_tabela(coluna: ColunaPersonalizada, valor: ValorTabelaPersonalizada | None) -> str:
@@ -9316,7 +9464,14 @@ class TabelaPersonalizadaLinhaCreateView(TabelaPersonalizadaLinhaBaseMixin, Fina
 
     def form_valid(self, form):
         self.object = form.save(usuario=self.request.user if self.request.user.is_authenticated else None)
-        return super().form_valid(form)
+        response = super().form_valid(form)
+        _registrar_auditoria_linha_tabela_personalizada(
+            request=self.request,
+            acao=AuditoriaFinanceiro.AcaoAuditoria.CREATE,
+            linha=self.object,
+            depois=_snapshot_linha_tabela_personalizada(self.object),
+        )
+        return response
 
 
 class TabelaPersonalizadaLinhaUpdateView(TabelaPersonalizadaLinhaBaseMixin, FinanceiroFormMixin, FormView):
@@ -9339,8 +9494,19 @@ class TabelaPersonalizadaLinhaUpdateView(TabelaPersonalizadaLinhaBaseMixin, Fina
         return self._get_return_to_url() or self.get_success_url()
 
     def form_valid(self, form):
+        antes = _snapshot_linha_tabela_personalizada(
+            LinhaTabelaPersonalizada.objects.get(pk=self.object.pk)
+        )
         self.object = form.save(usuario=self.request.user if self.request.user.is_authenticated else None)
-        return super().form_valid(form)
+        response = super().form_valid(form)
+        _registrar_auditoria_linha_tabela_personalizada(
+            request=self.request,
+            acao=AuditoriaFinanceiro.AcaoAuditoria.UPDATE,
+            linha=self.object,
+            antes=antes,
+            depois=_snapshot_linha_tabela_personalizada(self.object),
+        )
+        return response
 
 
 class CategoriaFinanceiraUpdateView(FinanceiroFormMixin, UpdateView):

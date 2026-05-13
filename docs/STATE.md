@@ -4470,6 +4470,31 @@ Riscos principais antes de migration:
   - valores da linha: slots persistidos (`valor_texto`, `valor_numero`, `valor_data`, `valor_booleano`, `valor_json`)
   - fora do snapshot: `valor_calculado` e qualquer calculo em leitura
 - permissao:
+
+## Microetapa: auditoria operacional minima de tabelas personalizadas
+
+- implementacao funcional concluida no primeiro recorte, sem model novo e sem migration
+- base reaproveitada:
+  - `AuditoriaFinanceiro`
+  - mesmos campos estruturais (`acao`, `modelo`, `registro_id`, `usuario`, `campos_alterados`)
+- eventos auditados neste recorte:
+  - criacao/edicao de tabela personalizada
+  - criacao/edicao de coluna personalizada
+  - alteracoes de `configuracao_json` (opcoes de lista, filtro estruturado, formula)
+  - alteracoes de totalizadores da coluna (snapshot dentro da auditoria da coluna)
+  - criacao/edicao de linha personalizada
+- snapshots aplicados:
+  - tabela: `nome`, `descricao`, `status`, `ordem`
+  - coluna: `nome`, `tipo_dado`, `obrigatoria`, `visivel`, `ordem`, `calculada`, `status`, `configuracao_json`, `totalizadores`
+  - linha: `status`, `ordem`, `tabela_id`, `valores`
+  - valores: `coluna_id`, `valor_texto`, `valor_numero`, `valor_data`, `valor_booleano`, `valor_json`
+- fora da auditoria neste recorte:
+  - exportacao XLSX
+  - visualizacao/listagem
+  - busca textual
+  - filtros de leitura
+  - calculo de formula em tempo de leitura
+  - `valor_calculado`
   - como recorte inicial mais seguro, a futura visualizacao da auditoria de tabelas pode reaproveitar a governanca atual de `financeiro.auditoria.listar`
   - permissao dedicada propria fica como avaliacao futura, se o volume ou a sensibilidade da frente justificar segmentacao
 - guardrails:
