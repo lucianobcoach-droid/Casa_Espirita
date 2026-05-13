@@ -3881,3 +3881,23 @@ Consolidacao:
 Limites mantidos:
 - exportacao XLSX continua fora da auditoria no primeiro recorte
 - leitura, busca, filtros de consulta e calculo em leitura continuam fora
+
+Status de validacao:
+- validado pela usuaria no primeiro recorte
+
+Consolidacao da validacao:
+- auditoria minima considerada aprovada para:
+  - criacao/edicao de tabela
+  - criacao/edicao de coluna
+  - alteracoes de opcoes/filtro/formula/totalizadores na coluna
+  - criacao/edicao de linha
+  - valores persistidos da linha no snapshot
+- limites preservados:
+  - sem auditoria de exportacao XLSX
+  - sem auditoria de visualizacao/busca/filtros de leitura
+  - sem auditoria de calculo em leitura
+  - sem `valor_calculado` no log
+  - sem model novo e sem migration
+
+Proxima frente recomendada:
+- abrir microetapa de refinamento de UX/fluxo das tabelas personalizadas, reduzindo fragmentacao entre cadastro de tabela, configuracao de colunas e preenchimento de linhas

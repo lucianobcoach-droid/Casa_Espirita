@@ -4503,3 +4503,23 @@ Riscos principais antes de migration:
   - sem auditar calculo em leitura
   - sem persistir `valor_calculado`
   - sem model ou migration nesta etapa
+
+Status de validacao da usuaria:
+- validada no primeiro recorte com aceite explicito: `Prossiga. Vamos dar como validada.`
+- validado:
+  - criacao/edicao de tabela personalizada
+  - criacao/edicao de coluna personalizada
+  - alteracoes de `configuracao_json` (opcoes, filtro, formula)
+  - alteracoes de totalizadores
+  - criacao/edicao de linha personalizada
+  - valores persistidos de linha no snapshot
+  - reaproveitamento de `AuditoriaFinanceiro`
+- limites mantidos:
+  - exportacao XLSX fora da auditoria
+  - visualizacao, busca e filtros de leitura fora da auditoria
+  - calculo de formula em leitura fora da auditoria
+  - `valor_calculado` fora da auditoria
+  - sem model novo e sem migration
+
+Proxima frente recomendada:
+- abrir microetapa de refinamento de UX/fluxo das `Tabelas personalizadas`, reduzindo fragmentacao entre cadastro de tabela, colunas e linhas

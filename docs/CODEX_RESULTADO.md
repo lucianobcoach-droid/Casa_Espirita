@@ -6125,6 +6125,27 @@ Não houve alteração de código funcional nesta etapa.
 - `valor_calculado` ficou explicitamente fora dos snapshots e a auditoria nao cobre calculo em leitura
 - exportacao XLSX permaneceu fora do recorte de auditoria, conforme decisao documental fechada
 
+## Microetapa documental: validacao da auditoria operacional minima de tabelas personalizadas
+
+- validacao da usuaria registrada com aceite explicito: `Prossiga. Vamos dar como validada.`
+- validado no primeiro recorte:
+  - criacao/edicao de tabela personalizada
+  - criacao/edicao de coluna personalizada
+  - alteracoes de `configuracao_json` (opcoes de lista, filtros estruturados, formulas)
+  - alteracoes de totalizadores
+  - criacao/edicao de linha personalizada
+  - valores persistidos da linha no snapshot de auditoria
+  - reaproveitamento de `AuditoriaFinanceiro`
+- limites mantidos e validados:
+  - exportacao XLSX fora da auditoria
+  - visualizacao, busca e filtros apenas de leitura fora da auditoria
+  - calculo de formula em leitura fora da auditoria
+  - `valor_calculado` fora da auditoria
+  - sem model novo e sem migration
+  - sem impacto no financeiro oficial
+- proxima frente recomendada:
+  - refinamento de UX/fluxo de `Tabelas personalizadas` para reduzir fragmentacao entre cadastro de tabela, colunas e linhas
+
 ## Microetapa documental: decisao sobre auditoria da exportacao XLSX
 
 - decisao fechada no primeiro recorte da auditoria operacional de `Tabelas personalizadas`:
