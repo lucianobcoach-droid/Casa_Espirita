@@ -32,15 +32,13 @@
     }
 
     .financeiro-linha-search {
-        display: flex;
-        align-items: end;
-        flex-wrap: wrap;
+        display: grid;
         gap: 0.75rem;
         padding: 0.95rem 0.95rem 0;
     }
 
     .financeiro-linha-search-field {
-        flex: 1 1 18rem;
+        min-width: 0;
     }
 
     .financeiro-linha-search-field .label {
@@ -65,6 +63,110 @@
         display: flex;
         gap: 0.5rem;
         flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .financeiro-linha-filtros {
+        display: grid;
+        gap: 0.85rem;
+        padding: 0 0.95rem;
+    }
+
+    .financeiro-linha-filtros-card {
+        display: grid;
+        gap: 0.85rem;
+        padding: 0.95rem;
+        border: 1px solid #d7e2f0;
+        border-radius: 0.95rem;
+        background: #f8fbff;
+    }
+
+    .financeiro-linha-filtros-title {
+        color: #153a73;
+        font-weight: 700;
+    }
+
+    .financeiro-linha-filtros-subtitle {
+        color: #475569;
+        font-size: 0.82rem;
+        line-height: 1.45;
+    }
+
+    .financeiro-linha-filtros-grid {
+        display: grid;
+        gap: 0.85rem;
+        grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+    }
+
+    .financeiro-linha-filtro-item {
+        display: grid;
+        gap: 0.55rem;
+        padding: 0.8rem;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.85rem;
+        background: #fff;
+    }
+
+    .financeiro-linha-filtro-item-title {
+        color: #334155;
+        font-weight: 700;
+    }
+
+    .financeiro-linha-filtro-item-meta {
+        color: #64748b;
+        font-size: 0.78rem;
+        line-height: 1.35;
+    }
+
+    .financeiro-linha-filtro-fields {
+        display: grid;
+        gap: 0.6rem;
+    }
+
+    .financeiro-linha-filtro-range {
+        display: grid;
+        gap: 0.6rem;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .financeiro-linha-filtro-range.is-hidden,
+    .financeiro-linha-filtro-single.is-hidden {
+        display: none;
+    }
+
+    .financeiro-linha-filtro-item .label {
+        margin-bottom: 0.22rem;
+        color: #334155;
+        font-size: 0.82rem;
+        font-weight: 600;
+    }
+
+    .financeiro-linha-filtro-item .input,
+    .financeiro-linha-filtro-item .select select {
+        min-height: 2.4rem;
+        border-radius: 0.75rem;
+        border-color: #d7e2f0;
+        box-shadow: none;
+    }
+
+    .financeiro-linha-filtro-item .input:focus,
+    .financeiro-linha-filtro-item .select select:focus {
+        border-color: #206bc4;
+        box-shadow: 0 0 0 0.2rem rgba(32, 107, 196, 0.12);
+    }
+
+    .financeiro-linha-filtro-item .help {
+        margin-top: 0.22rem;
+    }
+
+    .financeiro-linha-filtro-item .help.is-danger {
+        color: #c0392b;
+    }
+
+    .financeiro-linha-search-footer {
+        display: flex;
+        justify-content: flex-end;
+        padding: 0 0.95rem 0.95rem;
     }
 
     .financeiro-linha-empty {
@@ -119,6 +221,12 @@
         font-size: 0.82rem;
         line-height: 1.35;
     }
+
+    @media screen and (max-width: 768px) {
+        .financeiro-linha-filtro-range {
+            grid-template-columns: 1fr;
+        }
+    }
 </style>
 
 <div class="financeiro-linha-page">
@@ -164,11 +272,67 @@
                     placeholder="Digite texto, numero, data, competencia ou opcao visivel"
                 >
             </div>
-            <div class="financeiro-linha-search-actions">
-                <button class="button is-light" type="submit">Buscar</button>
-                {% if busca_linhas_ativa %}
-                    <a class="button" href="{% url 'financeiro:tabela-personalizada-linha-list' tabela_personalizada.pk %}">Limpar</a>
-                {% endif %}
+
+            {% if possui_filtros_estruturados_tabela_personalizada %}
+                <div class="financeiro-linha-filtros">
+                    <div class="financeiro-linha-filtros-card">
+                        <div>
+                            <div class="financeiro-linha-filtros-title">Filtros estruturados</div>
+                            <div class="financeiro-linha-filtros-subtitle">
+                                Exibidos apenas para colunas visiveis e habilitadas na estrutura. Eles complementam a busca textual simples da tela.
+                            </div>
+                        </div>
+                        <div class="financeiro-linha-filtros-grid">
+                            {% for filtro in filtro_estruturado_form.filtros_render %}
+                                <div class="financeiro-linha-filtro-item" data-filtro-estruturado-grupo>
+                                    <div>
+                                        <div class="financeiro-linha-filtro-item-title">{{ filtro.coluna.nome }}</div>
+                                        <div class="financeiro-linha-filtro-item-meta">
+                                            {{ filtro.coluna.get_tipo_dado_display }}.
+                                            Operadores: {{ filtro.operadores|join:', ' }}.
+                                        </div>
+                                    </div>
+                                    <div class="financeiro-linha-filtro-fields">
+                                        <div class="field">
+                                            <label class="label" for="{{ filtro.operador_field.id_for_label }}">Operador</label>
+                                            <div class="control select is-fullwidth">{{ filtro.operador_field }}</div>
+                                            {% for error in filtro.operador_field.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+                                        </div>
+                                        <div class="field financeiro-linha-filtro-single" data-filtro-single>
+                                            <label class="label" for="{{ filtro.valor_field.id_for_label }}">Valor</label>
+                                            <div class="control">{{ filtro.valor_field }}</div>
+                                            {% if filtro.valor_field.help_text %}<p class="help">{{ filtro.valor_field.help_text }}</p>{% endif %}
+                                            {% for error in filtro.valor_field.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+                                        </div>
+                                        <div class="financeiro-linha-filtro-range" data-filtro-range>
+                                            <div class="field">
+                                                <label class="label" for="{{ filtro.inicio_field.id_for_label }}">Inicial</label>
+                                                <div class="control">{{ filtro.inicio_field }}</div>
+                                                {% if filtro.inicio_field.help_text %}<p class="help">{{ filtro.inicio_field.help_text }}</p>{% endif %}
+                                                {% for error in filtro.inicio_field.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+                                            </div>
+                                            <div class="field">
+                                                <label class="label" for="{{ filtro.fim_field.id_for_label }}">Final</label>
+                                                <div class="control">{{ filtro.fim_field }}</div>
+                                                {% if filtro.fim_field.help_text %}<p class="help">{{ filtro.fim_field.help_text }}</p>{% endif %}
+                                                {% for error in filtro.fim_field.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <div class="financeiro-linha-search-footer">
+                <div class="financeiro-linha-search-actions">
+                    <button class="button is-light" type="submit">Buscar</button>
+                    {% if busca_linhas_ativa or filtros_estruturados_ativos %}
+                        <a class="button" href="{% url 'financeiro:tabela-personalizada-linha-list' tabela_personalizada.pk %}">Limpar</a>
+                    {% endif %}
+                </div>
             </div>
         </form>
 
@@ -219,6 +383,12 @@
                                         <a class="button is-light" href="{% url 'financeiro:tabela-personalizada-linha-list' tabela_personalizada.pk %}">
                                             Limpar
                                         </a>
+                                    {% elif filtros_estruturados_ativos %}
+                                        <div class="financeiro-linha-empty-title">Nenhuma linha encontrada para os filtros informados.</div>
+                                        <div>Revise os valores do filtro estruturado ou limpe os filtros para voltar a ver todas as linhas ativas desta tabela.</div>
+                                        <a class="button is-light" href="{% url 'financeiro:tabela-personalizada-linha-list' tabela_personalizada.pk %}">
+                                            Limpar
+                                        </a>
                                     {% else %}
                                         <div class="financeiro-linha-empty-title">Nenhuma linha cadastrada ainda para esta tabela.</div>
                                         <div>Cadastre a primeira linha para comecar a preencher este controle interno.</div>
@@ -265,4 +435,33 @@
         </div>
     </section>
 </div>
+<script>
+    (function () {
+        const grupos = document.querySelectorAll('[data-filtro-estruturado-grupo]');
+
+        function syncGrupo(grupo) {
+            const operatorSelect = grupo.querySelector('select');
+            const single = grupo.querySelector('[data-filtro-single]');
+            const range = grupo.querySelector('[data-filtro-range]');
+            if (!operatorSelect || !single || !range) {
+                return;
+            }
+            const operador = operatorSelect.value;
+            const usaIntervalo = operador === 'entre';
+            single.classList.toggle('is-hidden', !operador || usaIntervalo);
+            range.classList.toggle('is-hidden', !usaIntervalo);
+        }
+
+        grupos.forEach((grupo) => {
+            const operatorSelect = grupo.querySelector('select');
+            if (!operatorSelect) {
+                return;
+            }
+            operatorSelect.addEventListener('change', function () {
+                syncGrupo(grupo);
+            });
+            syncGrupo(grupo);
+        });
+    })();
+</script>
 {% endblock %}

@@ -137,6 +137,7 @@
                         <th>Obrigatoria</th>
                         <th>Visivel</th>
                         <th>Ordem</th>
+                        <th>Filtro estruturado</th>
                         <th>Totalizadores</th>
                         <th>Status</th>
                         <th>Acoes</th>
@@ -158,6 +159,11 @@
                                 </span>
                             </td>
                             <td>{{ coluna.ordem }}</td>
+                            <td>
+                                <span class="financeiro-coluna-flag {% if coluna.filtro_estruturado_habilitado %}is-yes{% else %}is-no{% endif %}">
+                                    {% if coluna.filtro_estruturado_habilitado %}Habilitado{% else %}Nao{% endif %}
+                                </span>
+                            </td>
                             <td>
                                 {% with totalizadores_ativos=coluna.totalizadores.all %}
                                     <div class="financeiro-coluna-totalizadores">
@@ -186,7 +192,7 @@
                         </tr>
                     {% empty %}
                         <tr>
-                            <td colspan="8" class="financeiro-coluna-empty">
+                            <td colspan="9" class="financeiro-coluna-empty">
                                 Nenhuma coluna personalizada cadastrada ate o momento para esta tabela.
                             </td>
                         </tr>

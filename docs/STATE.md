@@ -165,6 +165,16 @@ Data de atualizacao: 2026-05-12
   - valores exportados com a mesma leitura formatada da tela de linhas
   - totalizadores visiveis exportados no bloco final da planilha, refletindo apenas as linhas filtradas exibidas
   - cabecalho simples indicando que se trata de controle interno sem efeito financeiro oficial
+- filtros configuraveis por coluna agora implementados no primeiro recorte com:
+  - persistencia em `ColunaPersonalizada.configuracao_json.filtro`, sem migration
+  - habilitacao explicita por coluna, sem filtro automatico para toda a tabela
+  - recorte inicial restrito a `data`, `mes_competencia`, `inteiro`, `decimal`, `monetario` e `percentual`
+  - operadores derivados automaticamente do `tipo_dado`
+  - tipos inelegiveis mantendo filtro desabilitado/limpo de forma segura
+  - tela de linhas exibindo area de filtros estruturados apenas quando houver coluna visivel e habilitada
+  - resultado final combinando `busca textual simples + filtros estruturados`
+  - totalizadores e exportacao XLSX refletindo o mesmo resultado filtrado da tela
+  - fora do recorte: texto avancado, multiplas opcoes de lista, booleano, visoes salvas, agrupamentos, dashboard e logica composta avancada
 - limites desta implementacao estrutural:
   - sem `FormulaColunaPersonalizada`
   - sem auditoria operacional propria da nova frente
@@ -4050,3 +4060,24 @@ Riscos principais antes de migration:
   - se `configuracao_json` deixar de ser suficiente para governanca, indexacao, auditoria propria ou configuracoes mais complexas
 - proxima microetapa recomendada:
   - implementar a configuracao de filtros no cadastro da coluna e a aplicacao basica dos filtros estruturados na tela de linhas, ainda sem filtros avancados
+
+## Microetapa: filtros estruturados por coluna nas tabelas personalizadas
+
+- implementado o primeiro recorte funcional dos filtros configuraveis por coluna, sem migration e sem alterar o financeiro oficial
+- a configuracao ficou centralizada em `ColunaPersonalizada.configuracao_json.filtro`
+- apenas colunas explicitamente habilitadas entram na area de filtros da tela de linhas
+- recorte funcional entregue:
+  - `data`: `entre`, `igual`, `antes`, `depois`
+  - `mes_competencia`: `entre`, `igual`
+  - `inteiro`, `decimal`, `monetario`, `percentual`: `entre`, `igual`, `maior`, `menor`
+- busca textual simples foi preservada e passou a conviver com os filtros estruturados
+- totalizadores e exportacao XLSX agora respeitam busca + filtros estruturados ativos no mesmo estado da tela
+- filtros invalidos passaram a exibir mensagem clara sem quebrar a pagina
+- mantidos os guardrails:
+  - sem formula guiada
+  - sem filtro booleano
+  - sem multiplas opcoes de lista
+  - sem visoes salvas
+  - sem agrupamentos
+  - sem dashboard
+  - sem alteracao de lancamentos, saldos, extrato, resumo, prestacao/fechamento ou balancete

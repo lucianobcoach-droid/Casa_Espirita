@@ -23,6 +23,7 @@ from .forms import (
     LancamentoFinanceiroGrupoRateioForm,
     PessoaFinanceiraForm,
     TabelaPersonalizadaForm,
+    TabelaPersonalizadaLinhaFiltroEstruturadoForm,
     TabelaPersonalizadaLinhaForm,
 )
 from .models import (
@@ -4030,6 +4031,38 @@ class TabelasPersonalizadasListViewTests(TestCase):
     def _campo_coluna(self, coluna: ColunaPersonalizada) -> str:
         return TabelaPersonalizadaLinhaForm.campo_coluna_nome(coluna.pk)
 
+    def _habilitar_filtro_estruturado(self, coluna: ColunaPersonalizada):
+        configuracao = dict(coluna.configuracao_json or {})
+        configuracao['filtro'] = {
+            'habilitado': True,
+            'operadores': list(ColunaPersonalizada.operadores_filtro_por_tipo_dado(coluna.tipo_dado)),
+        }
+        coluna.configuracao_json = configuracao
+        coluna.save()
+        return coluna
+
+    def _dados_filtro_estruturado(
+        self,
+        coluna: ColunaPersonalizada,
+        *,
+        operador: str,
+        valor: str | None = None,
+        inicio: str | None = None,
+        fim: str | None = None,
+        busca: str | None = None,
+    ) -> dict[str, str]:
+        dados: dict[str, str] = {}
+        if busca is not None:
+            dados['busca'] = busca
+        dados[TabelaPersonalizadaLinhaFiltroEstruturadoForm.campo_operador_nome(coluna.pk)] = operador
+        if valor is not None:
+            dados[TabelaPersonalizadaLinhaFiltroEstruturadoForm.campo_valor_nome(coluna.pk)] = valor
+        if inicio is not None:
+            dados[TabelaPersonalizadaLinhaFiltroEstruturadoForm.campo_inicio_nome(coluna.pk)] = inicio
+        if fim is not None:
+            dados[TabelaPersonalizadaLinhaFiltroEstruturadoForm.campo_fim_nome(coluna.pk)] = fim
+        return dados
+
     def _criar_colunas_para_linhas(self):
         texto = ColunaPersonalizada.objects.create(
             tabela=self.tabela,
@@ -4514,6 +4547,28 @@ class TabelasPersonalizadasListViewTests(TestCase):
         self.assertContains(response, 'estrutura das colunas')
         self.assertContains(response, 'totalizadores controlados por coluna')
 
+    def test_listagem_de_colunas_indica_filtro_estruturado_habilitado(self):
+        self.coluna_existente.tipo_dado = ColunaPersonalizada.TipoDado.DECIMAL
+        self.coluna_existente.configuracao_json = {
+            'filtro': {
+                'habilitado': True,
+                'operadores': ['entre', 'igual', 'maior', 'menor'],
+            }
+        }
+        self.coluna_existente.save()
+        self._login_com_permissoes(
+            'user-coluna-lista-filtro',
+            [PermissoesTabelasPersonalizadas.EDITAR_ESTRUTURA],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-coluna-list', kwargs={'tabela_id': self.tabela.pk})
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Filtro estruturado')
+        self.assertContains(response, 'Habilitado')
+
     def test_usuario_sem_permissao_editar_estrutura_nao_acessa_colunas(self):
         self._login_com_permissoes(
             'user-coluna-list-sem-permissao',
@@ -4680,6 +4735,98 @@ class TabelasPersonalizadasListViewTests(TestCase):
         totalizador.refresh_from_db()
         self.assertFalse(totalizador.ativo)
 
+    def test_form_de_coluna_permite_habilitar_filtro_estruturado_em_tipo_elegivel(self):
+        form = ColunaPersonalizadaForm(
+            data={
+                'nome': 'Data filtravel',
+                'tipo_dado': ColunaPersonalizada.TipoDado.DATA,
+                'opcoes_lista': '',
+                'totalizadores_configurados': [],
+                'filtro_estruturado': 'on',
+                'obrigatoria': '',
+                'visivel': 'on',
+                'ordem': 2,
+                'status': ColunaPersonalizada.StatusColuna.ATIVA,
+            }
+        )
+
+        self.assertTrue(form.is_valid(), form.errors)
+        coluna = form.save(commit=False)
+        coluna.tabela = self.tabela
+        coluna.save()
+        self.assertEqual(
+            coluna.configuracao_json['filtro'],
+            {
+                'habilitado': True,
+                'operadores': ['entre', 'igual', 'antes', 'depois'],
+            },
+        )
+        self.assertTrue(coluna.filtro_estruturado_habilitado)
+
+    def test_form_de_coluna_limpa_filtro_estruturado_ao_mudar_para_tipo_inelegivel(self):
+        coluna = ColunaPersonalizada.objects.create(
+            tabela=self.tabela,
+            nome='Valor filtravel',
+            tipo_dado=ColunaPersonalizada.TipoDado.DECIMAL,
+            visivel=True,
+            configuracao_json={
+                'filtro': {
+                    'habilitado': True,
+                    'operadores': ['entre', 'igual', 'maior', 'menor'],
+                }
+            },
+        )
+
+        form = ColunaPersonalizadaForm(
+            data={
+                'nome': 'Valor filtravel',
+                'tipo_dado': ColunaPersonalizada.TipoDado.TEXTO_CURTO,
+                'opcoes_lista': '',
+                'totalizadores_configurados': [],
+                'filtro_estruturado': 'on',
+                'obrigatoria': '',
+                'visivel': 'on',
+                'ordem': 0,
+                'status': ColunaPersonalizada.StatusColuna.ATIVA,
+            },
+            instance=coluna,
+        )
+
+        self.assertTrue(form.is_valid(), form.errors)
+        form.save()
+        coluna.refresh_from_db()
+        self.assertNotIn('filtro', coluna.configuracao_json)
+        self.assertFalse(coluna.filtro_estruturado_habilitado)
+
+    def test_form_de_coluna_preserva_opcoes_da_lista_ao_editar_coluna_inelegivel_para_filtro(self):
+        coluna = ColunaPersonalizada.objects.create(
+            tabela=self.tabela,
+            nome='Categoria filtrada',
+            tipo_dado=ColunaPersonalizada.TipoDado.LISTA_OPCOES,
+            visivel=True,
+            configuracao_json={'opcoes': ['Material', 'Limpeza', 'Apoio']},
+        )
+
+        form = ColunaPersonalizadaForm(
+            data={
+                'nome': 'Categoria filtrada',
+                'tipo_dado': ColunaPersonalizada.TipoDado.LISTA_OPCOES,
+                'opcoes_lista': 'Material\nLimpeza\nApoio',
+                'totalizadores_configurados': [],
+                'filtro_estruturado': '',
+                'obrigatoria': '',
+                'visivel': 'on',
+                'ordem': 0,
+                'status': ColunaPersonalizada.StatusColuna.ATIVA,
+            },
+            instance=coluna,
+        )
+
+        self.assertTrue(form.is_valid(), form.errors)
+        form.save()
+        coluna.refresh_from_db()
+        self.assertEqual(coluna.configuracao_json, {'opcoes': ['Material', 'Limpeza', 'Apoio']})
+
     def test_coluna_criada_fica_vinculada_a_tabela_correta(self):
         self._login_com_permissoes(
             'user-coluna-vinculo',
@@ -4745,6 +4892,39 @@ class TabelasPersonalizadasListViewTests(TestCase):
         self.assertNotContains(response, 'Campo oculto')
         self.assertNotContains(response, 'Campo arquivado')
         self.assertNotContains(response, 'Campo calculado futuro')
+
+    def test_tela_de_linhas_exibe_filtros_apenas_quando_houver_coluna_habilitada(self):
+        colunas = self._criar_colunas_para_linhas()
+        self._criar_linha_com_valores(colunas)
+        self._habilitar_filtro_estruturado(colunas['data'])
+        self._login_com_permissoes(
+            'user-linha-com-filtro',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk})
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Filtros estruturados')
+        self.assertContains(response, 'Data de entrada')
+        self.assertContains(response, 'Operadores: Entre, Igual, Antes, Depois.')
+
+    def test_tela_de_linhas_nao_exibe_filtros_quando_nao_houver_coluna_habilitada(self):
+        colunas = self._criar_colunas_para_linhas()
+        self._criar_linha_com_valores(colunas)
+        self._login_com_permissoes(
+            'user-linha-sem-filtro',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk})
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'Filtros estruturados')
 
     def test_totalizador_nao_aparece_sem_configuracao_na_tela_de_linhas(self):
         colunas = self._criar_colunas_para_linhas()
@@ -5045,6 +5225,189 @@ class TabelasPersonalizadasListViewTests(TestCase):
         self.assertContains(response, 'Nenhuma linha encontrada para a busca informada.')
         self.assertContains(response, 'Limpar')
 
+    def test_filtro_de_data_funciona_com_entre_igual_antes_e_depois(self):
+        colunas = self._criar_colunas_para_linhas()
+        self._criar_linha_com_valores(colunas)
+        self._criar_segunda_linha_com_valores(colunas)
+        self._habilitar_filtro_estruturado(colunas['data'])
+        self._login_com_permissoes(
+            'user-linha-filtro-data',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+
+        url = reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk})
+
+        response_igual = self.client.get(
+            url,
+            self._dados_filtro_estruturado(
+                colunas['data'],
+                operador=ColunaPersonalizada.OperadorFiltro.IGUAL,
+                valor='08/05/2026',
+            ),
+        )
+        self.assertContains(response_igual, 'Sabao liquido')
+        self.assertNotContains(response_igual, 'Detergente concentrado')
+
+        response_antes = self.client.get(
+            url,
+            self._dados_filtro_estruturado(
+                colunas['data'],
+                operador=ColunaPersonalizada.OperadorFiltro.ANTES,
+                valor='09/05/2026',
+            ),
+        )
+        self.assertContains(response_antes, 'Sabao liquido')
+        self.assertNotContains(response_antes, 'Detergente concentrado')
+
+        response_depois = self.client.get(
+            url,
+            self._dados_filtro_estruturado(
+                colunas['data'],
+                operador=ColunaPersonalizada.OperadorFiltro.DEPOIS,
+                valor='09/05/2026',
+            ),
+        )
+        self.assertContains(response_depois, 'Detergente concentrado')
+        self.assertNotContains(response_depois, 'Sabao liquido')
+
+        response_entre = self.client.get(
+            url,
+            self._dados_filtro_estruturado(
+                colunas['data'],
+                operador=ColunaPersonalizada.OperadorFiltro.ENTRE,
+                inicio='08/05/2026',
+                fim='09/05/2026',
+            ),
+        )
+        self.assertContains(response_entre, 'Sabao liquido')
+        self.assertNotContains(response_entre, 'Detergente concentrado')
+
+    def test_filtro_de_competencia_funciona_com_igual_e_entre(self):
+        colunas = self._criar_colunas_para_linhas()
+        self._criar_linha_com_valores(colunas)
+        self._criar_segunda_linha_com_valores(colunas)
+        self._habilitar_filtro_estruturado(colunas['competencia'])
+        self._login_com_permissoes(
+            'user-linha-filtro-competencia',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+
+        url = reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk})
+        response_igual = self.client.get(
+            url,
+            self._dados_filtro_estruturado(
+                colunas['competencia'],
+                operador=ColunaPersonalizada.OperadorFiltro.IGUAL,
+                valor='06/2026',
+            ),
+        )
+        self.assertContains(response_igual, 'Detergente concentrado')
+        self.assertNotContains(response_igual, 'Sabao liquido')
+
+        response_entre = self.client.get(
+            url,
+            self._dados_filtro_estruturado(
+                colunas['competencia'],
+                operador=ColunaPersonalizada.OperadorFiltro.ENTRE,
+                inicio='05/2026',
+                fim='06/2026',
+            ),
+        )
+        self.assertContains(response_entre, 'Detergente concentrado')
+        self.assertContains(response_entre, 'Sabao liquido')
+
+    def test_filtro_numerico_funciona_com_entre_igual_maior_menor_e_aceita_virgula_ou_ponto(self):
+        colunas = self._criar_colunas_para_linhas()
+        self._criar_linha_com_valores(colunas)
+        self._criar_segunda_linha_com_valores(colunas)
+        self._habilitar_filtro_estruturado(colunas['decimal'])
+        self._login_com_permissoes(
+            'user-linha-filtro-numerico',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+
+        url = reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk})
+
+        response_igual_virgula = self.client.get(
+            url,
+            self._dados_filtro_estruturado(
+                colunas['decimal'],
+                operador=ColunaPersonalizada.OperadorFiltro.IGUAL,
+                valor='1,01499912',
+            ),
+        )
+        self.assertContains(response_igual_virgula, 'Sabao liquido')
+        self.assertNotContains(response_igual_virgula, 'Detergente concentrado')
+
+        response_igual_ponto = self.client.get(
+            url,
+            self._dados_filtro_estruturado(
+                colunas['decimal'],
+                operador=ColunaPersonalizada.OperadorFiltro.IGUAL,
+                valor='2.00000088',
+            ),
+        )
+        self.assertContains(response_igual_ponto, 'Detergente concentrado')
+        self.assertNotContains(response_igual_ponto, 'Sabao liquido')
+
+        response_maior = self.client.get(
+            url,
+            self._dados_filtro_estruturado(
+                colunas['decimal'],
+                operador=ColunaPersonalizada.OperadorFiltro.MAIOR,
+                valor='2',
+            ),
+        )
+        self.assertContains(response_maior, 'Detergente concentrado')
+        self.assertNotContains(response_maior, 'Sabao liquido')
+
+        response_menor = self.client.get(
+            url,
+            self._dados_filtro_estruturado(
+                colunas['decimal'],
+                operador=ColunaPersonalizada.OperadorFiltro.MENOR,
+                valor='2',
+            ),
+        )
+        self.assertContains(response_menor, 'Sabao liquido')
+        self.assertNotContains(response_menor, 'Detergente concentrado')
+
+        response_entre = self.client.get(
+            url,
+            self._dados_filtro_estruturado(
+                colunas['decimal'],
+                operador=ColunaPersonalizada.OperadorFiltro.ENTRE,
+                inicio='1',
+                fim='1,5',
+            ),
+        )
+        self.assertContains(response_entre, 'Sabao liquido')
+        self.assertNotContains(response_entre, 'Detergente concentrado')
+
+    def test_busca_textual_combina_com_filtro_estruturado(self):
+        colunas = self._criar_colunas_para_linhas()
+        self._criar_linha_com_valores(colunas)
+        self._criar_segunda_linha_com_valores(colunas)
+        self._habilitar_filtro_estruturado(colunas['competencia'])
+        self._login_com_permissoes(
+            'user-linha-busca-com-filtro',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk}),
+            self._dados_filtro_estruturado(
+                colunas['competencia'],
+                operador=ColunaPersonalizada.OperadorFiltro.IGUAL,
+                valor='06/2026',
+                busca='detergente',
+            ),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Detergente concentrado')
+        self.assertNotContains(response, 'Sabao liquido')
+
     def test_totalizadores_refletem_apenas_linhas_filtradas(self):
         colunas = self._criar_colunas_para_linhas()
         self._criar_linha_com_valores(colunas)
@@ -5073,6 +5436,34 @@ class TabelasPersonalizadasListViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, '<strong>Soma:</strong> R$ 19.90', html=True)
+        self.assertNotContains(response, '<strong>Soma:</strong> R$ 70.62', html=True)
+
+    def test_totalizadores_refletem_busca_e_filtro_estruturado(self):
+        colunas = self._criar_colunas_para_linhas()
+        self._criar_linha_com_valores(colunas)
+        self._criar_segunda_linha_com_valores(colunas)
+        self._habilitar_filtro_estruturado(colunas['competencia'])
+        TotalizadorColunaPersonalizada.objects.create(
+            coluna=colunas['monetario'],
+            tipo_totalizador=TotalizadorColunaPersonalizada.TipoTotalizador.SOMA,
+        )
+        self._login_com_permissoes(
+            'user-linha-totalizador-busca-filtro',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk}),
+            self._dados_filtro_estruturado(
+                colunas['competencia'],
+                operador=ColunaPersonalizada.OperadorFiltro.IGUAL,
+                valor='05/2026',
+                busca='sabao',
+            ),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '<strong>Soma:</strong> R$ 50.72', html=True)
         self.assertNotContains(response, '<strong>Soma:</strong> R$ 70.62', html=True)
 
     def test_botao_exportar_xlsx_aparece_apenas_para_usuario_com_permissao(self):
@@ -5197,6 +5588,62 @@ class TabelasPersonalizadasListViewTests(TestCase):
         self.assertNotIn('Sabao liquido', conteudo)
         self.assertIn('Soma: R$ 19,90', conteudo)
         self.assertNotIn('Soma: R$ 70,62', conteudo)
+
+    def test_exportacao_xlsx_respeita_busca_e_filtro_estruturado(self):
+        colunas = self._criar_colunas_para_linhas()
+        self._criar_linha_com_valores(colunas)
+        self._criar_segunda_linha_com_valores(colunas)
+        self._habilitar_filtro_estruturado(colunas['competencia'])
+        TotalizadorColunaPersonalizada.objects.create(
+            coluna=colunas['monetario'],
+            tipo_totalizador=TotalizadorColunaPersonalizada.TipoTotalizador.SOMA,
+        )
+        self._login_com_permissoes(
+            'user-linha-exporta-busca-filtro',
+            [PermissoesTabelasPersonalizadas.EXPORTAR],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-export-xlsx', kwargs={'tabela_id': self.tabela.pk}),
+            self._dados_filtro_estruturado(
+                colunas['competencia'],
+                operador=ColunaPersonalizada.OperadorFiltro.IGUAL,
+                valor='05/2026',
+                busca='sabao',
+            ),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        linhas = self._ler_linhas_xlsx(response.content)
+        conteudo = '\n'.join(' | '.join(linha) for linha in linhas)
+        self.assertIn('Sabao liquido', conteudo)
+        self.assertNotIn('Detergente concentrado', conteudo)
+        self.assertIn('Soma: R$ 50,72', conteudo)
+        self.assertNotIn('Soma: R$ 70,62', conteudo)
+
+    def test_filtro_estruturado_invalido_exibe_mensagem_clara_sem_quebrar_pagina(self):
+        colunas = self._criar_colunas_para_linhas()
+        self._criar_linha_com_valores(colunas)
+        self._criar_segunda_linha_com_valores(colunas)
+        self._habilitar_filtro_estruturado(colunas['data'])
+        self._login_com_permissoes(
+            'user-linha-filtro-invalido',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk}),
+            self._dados_filtro_estruturado(
+                colunas['data'],
+                operador=ColunaPersonalizada.OperadorFiltro.IGUAL,
+                valor='2026-05-08',
+            ),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Informe uma data valida no formato DD/MM/AAAA.')
+        self.assertContains(response, 'Sabao liquido')
+        self.assertContains(response, 'Detergente concentrado')
 
     def test_exportacao_xlsx_nao_altera_dados(self):
         colunas = self._criar_colunas_para_linhas()

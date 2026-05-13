@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from datetime import date
 from decimal import Decimal, InvalidOperation
 from uuid import uuid4
@@ -528,6 +529,14 @@ class ColunaPersonalizadaForm(forms.ModelForm):
         label='Totalizadores',
         help_text='Selecione apenas totalizadores compativeis com o tipo de dado desta coluna.',
     )
+    filtro_estruturado = forms.BooleanField(
+        required=False,
+        label='Habilitar filtro estruturado',
+        help_text=(
+            'Disponivel apenas para data, mes/competencia, inteiro, decimal, monetario e percentual. '
+            'Os operadores sao derivados automaticamente do tipo de dado.'
+        ),
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -539,6 +548,18 @@ class ColunaPersonalizadaForm(forms.ModelForm):
         self.fields['tipo_dado'].choices = tipos_permitidos
         self.fields['ordem'].widget.attrs.update({'min': 0})
         self.totalizadores_render = []
+        self.tipos_filtro_estruturado = ColunaPersonalizada.tipos_elegiveis_filtro_estruturado()
+        self.filtros_estruturados_render = [
+            {
+                'tipo_dado': tipo_dado,
+                'label': dict(ColunaPersonalizada.TipoDado.choices).get(tipo_dado, tipo_dado),
+                'operadores': [
+                    ColunaPersonalizada.rotulo_operador_filtro(operador)
+                    for operador in ColunaPersonalizada.operadores_filtro_por_tipo_dado(tipo_dado)
+                ],
+            }
+            for tipo_dado in self.tipos_filtro_estruturado
+        ]
 
         configuracao = self.instance.configuracao_json if getattr(self.instance, 'pk', None) else {}
         if isinstance(configuracao, dict):
@@ -547,6 +568,9 @@ class ColunaPersonalizadaForm(forms.ModelForm):
                 self.initial['opcoes_lista'] = '\n'.join(
                     opcao for opcao in opcoes if isinstance(opcao, str) and opcao.strip()
                 )
+            filtro = configuracao.get('filtro', {})
+            if isinstance(filtro, dict) and not self.is_bound:
+                self.initial['filtro_estruturado'] = bool(filtro.get('habilitado'))
 
         if self.is_bound:
             totalizadores_key = self.add_prefix('totalizadores_configurados')
@@ -617,12 +641,36 @@ class ColunaPersonalizadaForm(forms.ModelForm):
         cleaned_data = super().clean()
         tipo_dado = cleaned_data.get('tipo_dado')
         opcoes = cleaned_data.get('opcoes_lista') or []
+        filtro_estruturado = bool(cleaned_data.get('filtro_estruturado'))
 
         if tipo_dado == ColunaPersonalizada.TipoDado.LISTA_OPCOES and not opcoes:
             self.add_error('opcoes_lista', 'Informe ao menos uma opcao para este tipo de coluna.')
 
         if tipo_dado != ColunaPersonalizada.TipoDado.LISTA_OPCOES and opcoes:
             self.add_error('opcoes_lista', 'As opcoes so podem ser preenchidas para o tipo Lista de opcoes.')
+
+        if filtro_estruturado and not ColunaPersonalizada.filtro_estruturado_elegivel(tipo_dado):
+            cleaned_data['filtro_estruturado'] = False
+            filtro_estruturado = False
+
+        configuracao_json = {}
+        if isinstance(getattr(self.instance, 'configuracao_json', None), dict):
+            configuracao_json = dict(self.instance.configuracao_json)
+
+        if tipo_dado == ColunaPersonalizada.TipoDado.LISTA_OPCOES:
+            configuracao_json['opcoes'] = opcoes
+        else:
+            configuracao_json.pop('opcoes', None)
+
+        if filtro_estruturado and ColunaPersonalizada.filtro_estruturado_elegivel(tipo_dado):
+            configuracao_json['filtro'] = {
+                'habilitado': True,
+                'operadores': list(ColunaPersonalizada.operadores_filtro_por_tipo_dado(tipo_dado)),
+            }
+        else:
+            configuracao_json.pop('filtro', None)
+
+        self.instance.configuracao_json = configuracao_json or {}
 
         return cleaned_data
 
@@ -633,10 +681,26 @@ class ColunaPersonalizadaForm(forms.ModelForm):
         tipo_dado = self.cleaned_data.get('tipo_dado')
         opcoes = self.cleaned_data.get('opcoes_lista') or []
         totalizadores = self.cleaned_data.get('totalizadores_configurados') or []
+        filtro_estruturado = bool(self.cleaned_data.get('filtro_estruturado'))
+
+        configuracao_json = {}
+        if isinstance(getattr(self.instance, 'configuracao_json', None), dict):
+            configuracao_json = dict(self.instance.configuracao_json)
+
         if tipo_dado == ColunaPersonalizada.TipoDado.LISTA_OPCOES:
-            instance.configuracao_json = {'opcoes': opcoes}
+            configuracao_json['opcoes'] = opcoes
         else:
-            instance.configuracao_json = {}
+            configuracao_json.pop('opcoes', None)
+
+        if filtro_estruturado and ColunaPersonalizada.filtro_estruturado_elegivel(tipo_dado):
+            configuracao_json['filtro'] = {
+                'habilitado': True,
+                'operadores': list(ColunaPersonalizada.operadores_filtro_por_tipo_dado(tipo_dado)),
+            }
+        else:
+            configuracao_json.pop('filtro', None)
+
+        instance.configuracao_json = configuracao_json or {}
 
         if commit:
             instance.save()
@@ -669,6 +733,207 @@ class ColunaPersonalizadaForm(forms.ModelForm):
             'ordem': 'Valores menores aparecem primeiro na estrutura da tabela.',
             'status': 'Use para manter a coluna ativa, inativa ou arquivada na estrutura.',
         }
+
+
+def _competencia_para_indice_ordenacao(valor: str) -> int | None:
+    if not valor or not re.match(r'^(0[1-9]|1[0-2])/\d{4}$', valor):
+        return None
+    mes, ano = valor.split('/')
+    return int(ano) * 12 + int(mes)
+
+
+class TabelaPersonalizadaLinhaFiltroEstruturadoForm(forms.Form):
+    campo_prefixo = 'filtro_coluna_'
+
+    @classmethod
+    def campo_operador_nome(cls, coluna_id: int) -> str:
+        return f'{cls.campo_prefixo}{coluna_id}_operador'
+
+    @classmethod
+    def campo_valor_nome(cls, coluna_id: int) -> str:
+        return f'{cls.campo_prefixo}{coluna_id}_valor'
+
+    @classmethod
+    def campo_inicio_nome(cls, coluna_id: int) -> str:
+        return f'{cls.campo_prefixo}{coluna_id}_inicio'
+
+    @classmethod
+    def campo_fim_nome(cls, coluna_id: int) -> str:
+        return f'{cls.campo_prefixo}{coluna_id}_fim'
+
+    def __init__(self, *args, colunas: list[ColunaPersonalizada], **kwargs):
+        self.colunas = colunas
+        self.filtros_render: list[dict[str, object]] = []
+        super().__init__(*args, **kwargs)
+
+        for coluna in self.colunas:
+            operador_field_name = self.campo_operador_nome(coluna.pk)
+            valor_field_name = self.campo_valor_nome(coluna.pk)
+            inicio_field_name = self.campo_inicio_nome(coluna.pk)
+            fim_field_name = self.campo_fim_nome(coluna.pk)
+            operadores = ColunaPersonalizada.operadores_filtro_por_tipo_dado(coluna.tipo_dado)
+
+            self.fields[operador_field_name] = forms.ChoiceField(
+                required=False,
+                label='Operador',
+                choices=[('', 'Sem filtro')]
+                + [
+                    (operador, ColunaPersonalizada.rotulo_operador_filtro(operador))
+                    for operador in operadores
+                ],
+            )
+            self.fields[valor_field_name] = self._build_valor_field(coluna, prefixo='Valor')
+            self.fields[inicio_field_name] = self._build_valor_field(coluna, prefixo='Inicial')
+            self.fields[fim_field_name] = self._build_valor_field(coluna, prefixo='Final')
+
+            self.filtros_render.append(
+                {
+                    'coluna': coluna,
+                    'operador_field': self[operador_field_name],
+                    'valor_field': self[valor_field_name],
+                    'inicio_field': self[inicio_field_name],
+                    'fim_field': self[fim_field_name],
+                    'operadores': [
+                        ColunaPersonalizada.rotulo_operador_filtro(operador) for operador in operadores
+                    ],
+                }
+            )
+
+    def _build_valor_field(self, coluna: ColunaPersonalizada, *, prefixo: str) -> forms.Field:
+        comum = {'required': False, 'label': prefixo}
+        if coluna.tipo_dado == ColunaPersonalizada.TipoDado.DATA:
+            return forms.DateField(
+                input_formats=['%d/%m/%Y'],
+                widget=forms.TextInput(
+                    attrs={
+                        'placeholder': 'DD/MM/AAAA',
+                        'autocomplete': 'off',
+                    }
+                ),
+                error_messages={'invalid': 'Informe uma data valida no formato DD/MM/AAAA.'},
+                **comum,
+            )
+        if coluna.tipo_dado == ColunaPersonalizada.TipoDado.MES_COMPETENCIA:
+            return forms.RegexField(
+                regex=r'^(0[1-9]|1[0-2])/\d{4}$',
+                widget=forms.TextInput(
+                    attrs={
+                        'placeholder': 'MM/AAAA',
+                        'autocomplete': 'off',
+                    }
+                ),
+                error_messages={'invalid': 'Use o formato MM/AAAA.'},
+                **comum,
+            )
+        if coluna.tipo_dado == ColunaPersonalizada.TipoDado.INTEIRO:
+            return forms.IntegerField(
+                widget=forms.TextInput(
+                    attrs={
+                        'inputmode': 'numeric',
+                        'autocomplete': 'off',
+                        'placeholder': 'Ex.: 10',
+                    }
+                ),
+                error_messages={'invalid': 'Este filtro aceita apenas numeros inteiros.'},
+                **comum,
+            )
+        if coluna.tipo_dado == ColunaPersonalizada.TipoDado.DECIMAL:
+            return DecimalBRField(
+                max_digits=20,
+                decimal_places=8,
+                placeholder='Ex.: 1,01499912',
+                help_text='Aceita ate 8 casas decimais.',
+                **comum,
+            )
+        if coluna.tipo_dado == ColunaPersonalizada.TipoDado.MONETARIO:
+            return DecimalBRField(
+                max_digits=20,
+                decimal_places=2,
+                placeholder='Ex.: 10,50',
+                help_text='Aceita ate 2 casas decimais.',
+                **comum,
+            )
+        if coluna.tipo_dado == ColunaPersonalizada.TipoDado.PERCENTUAL:
+            return DecimalBRField(
+                max_digits=20,
+                decimal_places=4,
+                placeholder='Ex.: 12,3456',
+                help_text='Aceita ate 4 casas decimais.',
+                **comum,
+            )
+        return forms.CharField(required=False, disabled=True, label=prefixo)
+
+    def possui_entrada_ativa(self) -> bool:
+        if not self.is_bound:
+            return False
+        if not hasattr(self.data, 'items'):
+            return False
+        return any(
+            str(chave).startswith(self.campo_prefixo) and str(valor).strip()
+            for chave, valor in self.data.items()
+        )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        filtros_aplicados: list[dict[str, object]] = []
+
+        for coluna in self.colunas:
+            operador_nome = self.campo_operador_nome(coluna.pk)
+            valor_nome = self.campo_valor_nome(coluna.pk)
+            inicio_nome = self.campo_inicio_nome(coluna.pk)
+            fim_nome = self.campo_fim_nome(coluna.pk)
+            operador = cleaned_data.get(operador_nome) or ''
+            valor = cleaned_data.get(valor_nome)
+            valor_inicial = cleaned_data.get(inicio_nome)
+            valor_final = cleaned_data.get(fim_nome)
+            valor_bruto = (self.data.get(valor_nome) or '').strip() if self.is_bound else ''
+            inicio_bruto = (self.data.get(inicio_nome) or '').strip() if self.is_bound else ''
+            fim_bruto = (self.data.get(fim_nome) or '').strip() if self.is_bound else ''
+
+            if not operador:
+                if valor_bruto or inicio_bruto or fim_bruto:
+                    self.add_error(operador_nome, 'Selecione um operador para aplicar este filtro.')
+                continue
+
+            if operador == ColunaPersonalizada.OperadorFiltro.ENTRE:
+                if valor_inicial in (None, ''):
+                    self.add_error(inicio_nome, 'Informe o valor inicial do intervalo.')
+                if valor_final in (None, ''):
+                    self.add_error(fim_nome, 'Informe o valor final do intervalo.')
+                if self.errors.get(inicio_nome) or self.errors.get(fim_nome):
+                    continue
+                if self._comparavel_filtro(coluna, valor_inicial) > self._comparavel_filtro(coluna, valor_final):
+                    self.add_error(fim_nome, 'O valor final precisa ser maior ou igual ao valor inicial.')
+                    continue
+                filtros_aplicados.append(
+                    {
+                        'coluna': coluna,
+                        'operador': operador,
+                        'valor_inicial': valor_inicial,
+                        'valor_final': valor_final,
+                    }
+                )
+                continue
+
+            if valor in (None, ''):
+                self.add_error(valor_nome, 'Informe um valor para este filtro.')
+                continue
+
+            filtros_aplicados.append(
+                {
+                    'coluna': coluna,
+                    'operador': operador,
+                    'valor': valor,
+                }
+            )
+
+        cleaned_data['filtros_aplicados'] = filtros_aplicados
+        return cleaned_data
+
+    def _comparavel_filtro(self, coluna: ColunaPersonalizada, valor):
+        if coluna.tipo_dado == ColunaPersonalizada.TipoDado.MES_COMPETENCIA:
+            return _competencia_para_indice_ordenacao(valor)
+        return valor
 
 
 class TabelaPersonalizadaLinhaForm(forms.Form):

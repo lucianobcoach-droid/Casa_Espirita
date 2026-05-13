@@ -3254,7 +3254,7 @@ Proxima microetapa recomendada:
 
 ## 31. Tabelas personalizadas - filtros configuraveis por coluna
 
-Status: FUTURO PRIORITARIO
+Status: IMPLEMENTADO NO PRIMEIRO RECORTE CONTROLADO
 
 Consolidacao:
 - a busca textual simples continua como recurso existente e deve permanecer
@@ -3317,6 +3317,24 @@ SPEC tecnica curta da implementacao incremental:
 - risco tecnico principal a monitorar:
   - deixar `configuracao_json` crescer de forma desorganizada; por isso, o bloco de filtro deve nascer aninhado, curto e derivado do `tipo_dado`
 
+Implementacao realizada:
+- o primeiro recorte foi implementado em `ColunaPersonalizada.configuracao_json.filtro`, sem migration
+- a configuracao passou a ser feita no proprio formulario da coluna, apenas para tipos elegiveis
+- a listagem de colunas passou a indicar visualmente quando o filtro estruturado esta habilitado
+- a tela de linhas passou a exibir filtros estruturados apenas quando houver coluna ativa/visivel/habilitada
+- busca textual simples permanece separada e complementar
+- totalizadores e exportacao XLSX passaram a respeitar busca + filtros estruturados ativos no mesmo fluxo de tela
+- filtros invalidos passaram a exibir mensagem clara sem quebrar a pagina
+
+Pendencias futuras desta frente:
+- filtro avancado por texto
+- filtro por multiplas opcoes de lista
+- filtro booleano
+- visoes salvas
+- agrupamentos
+- dashboard
+- logica composta avancada
+
 Fora do primeiro recorte:
 - filtro avancado por texto
 - filtro por multiplas opcoes de lista
@@ -3333,7 +3351,7 @@ Riscos principais:
 - risco de abrir configuracao frouxa demais sem governanca por coluna
 
 Proxima microetapa recomendada:
-- implementar a configuracao de filtros no formulario de coluna e a aplicacao basica dos filtros estruturados na tela de linhas, ainda usando `configuracao_json` e sem abrir migration
+- apos este recorte, abrir a auditoria tecnica dedicada dos recibos/documentos atuais para preparar a SPEC segura do `Recibo especial`
 
 ## 32. Documentos financeiros - recibo especial em lote
 

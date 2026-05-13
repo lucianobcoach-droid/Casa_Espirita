@@ -1358,7 +1358,7 @@ Consolidacao:
 
 ### 50. Tabelas personalizadas - filtros configuraveis por coluna
 
-Status: FUTURO PRIORITARIO
+Status: IMPLEMENTADO NO PRIMEIRO RECORTE / COM EVOLUCOES FUTURAS
 
 Consolidacao:
 - a usuaria aprovou como proxima melhoria da frente de tabelas personalizadas a capacidade de escolher, por coluna, quais campos poderao virar filtros estruturados na tela de linhas
@@ -1391,6 +1391,20 @@ Consolidacao:
   - necessidade de indexacao/consulta mais forte no banco
   - surgimento de visoes salvas, auditoria propria de filtros ou composicoes mais avancadas
 
+Status apos implementacao:
+- `configuracao_json.filtro` passou a ser o ponto real de persistencia no primeiro recorte
+- a configuracao ficou restrita a colunas elegiveis e habilitadas explicitamente
+- a tela de linhas passou a combinar `busca textual + filtros estruturados`
+- totalizadores e exportacao XLSX passaram a respeitar o mesmo resultado filtrado
+- permanecem fora desta entrega:
+  - texto avancado
+  - multiplas opcoes de lista
+  - booleano
+  - visoes salvas
+  - agrupamentos
+  - dashboard
+  - logica composta avancada
+
 Fora do primeiro recorte:
 - texto avancado
 - multiplas opcoes de lista
@@ -1401,7 +1415,7 @@ Fora do primeiro recorte:
 - logica composta avancada
 
 Proxima microetapa recomendada:
-- implementar os filtros configuraveis por coluna no formulario de estrutura e na tela de linhas antes de abrir novas frentes documentais de recibo especial
+- apos os filtros por coluna, executar auditoria tecnica dedicada dos recibos/documentos atuais para abrir a SPEC segura do `Recibo especial`
 
 ### 51. Documentos financeiros - recibo especial em lote com favorecido manual
 

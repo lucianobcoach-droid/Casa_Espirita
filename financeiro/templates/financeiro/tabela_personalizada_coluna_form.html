@@ -162,6 +162,27 @@
         display: none;
     }
 
+    .financeiro-coluna-form-filtro-box {
+        display: grid;
+        gap: 0.45rem;
+        padding: 0.85rem 0.95rem;
+        border: 1px solid #d7e2f0;
+        border-radius: 0.95rem;
+        background: #f8fbff;
+    }
+
+    .financeiro-coluna-form-filtro-box.is-hidden {
+        display: none;
+    }
+
+    .financeiro-coluna-form-filtro-types {
+        display: grid;
+        gap: 0.22rem;
+        color: #475569;
+        font-size: 0.8rem;
+        line-height: 1.35;
+    }
+
     @media screen and (max-width: 1023px) {
         .financeiro-coluna-form-grid-duo {
             grid-template-columns: 1fr;
@@ -243,6 +264,30 @@
                         </div>
                     </div>
 
+                    <div class="field financeiro-coluna-form-field">
+                        <label class="label">{{ form.filtro_estruturado.label }}</label>
+                        <div
+                            class="financeiro-coluna-form-filtro-box"
+                            id="financeiro-filtro-estruturado-box"
+                            data-tipos-dado="{{ form.tipos_filtro_estruturado|join:' ' }}"
+                        >
+                            <label class="financeiro-coluna-form-checkbox" for="{{ form.filtro_estruturado.id_for_label }}">
+                                {{ form.filtro_estruturado }}
+                                <span>{{ form.filtro_estruturado.label }}</span>
+                            </label>
+                            {% if form.filtro_estruturado.help_text %}<p class="help">{{ form.filtro_estruturado.help_text }}</p>{% endif %}
+                            <div class="financeiro-coluna-form-filtro-types">
+                                {% for filtro_tipo in form.filtros_estruturados_render %}
+                                    <div>
+                                        <strong>{{ filtro_tipo.label }}:</strong>
+                                        {{ filtro_tipo.operadores|join:', ' }}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            {% for error in form.filtro_estruturado.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+                        </div>
+                    </div>
+
                     <div class="financeiro-coluna-form-grid-duo">
                         <div class="field financeiro-coluna-form-field">
                             <label class="label" for="{{ form.ordem.id_for_label }}">{{ form.ordem.label }}</label>
@@ -292,6 +337,8 @@
     (function () {
         const tipoDado = document.getElementById('{{ form.tipo_dado.id_for_label }}');
         const options = document.querySelectorAll('[data-totalizador-option]');
+        const filtroBox = document.getElementById('financeiro-filtro-estruturado-box');
+        const filtroCheckbox = document.getElementById('{{ form.filtro_estruturado.id_for_label }}');
 
         function syncTotalizadores() {
             const tipoSelecionado = tipoDado ? tipoDado.value : '';
@@ -309,9 +356,27 @@
             });
         }
 
+        function syncFiltroEstruturado() {
+            if (!filtroBox || !filtroCheckbox) {
+                return;
+            }
+            const tipoSelecionado = tipoDado ? tipoDado.value : '';
+            const tiposDado = (filtroBox.dataset.tiposDado || '').split(' ').filter(Boolean);
+            const compativel = Boolean(tipoSelecionado) && tiposDado.includes(tipoSelecionado);
+            filtroBox.classList.toggle('is-hidden', !compativel);
+            filtroCheckbox.disabled = !compativel;
+            if (!compativel) {
+                filtroCheckbox.checked = false;
+            }
+        }
+
         if (tipoDado) {
-            tipoDado.addEventListener('change', syncTotalizadores);
+            tipoDado.addEventListener('change', function () {
+                syncTotalizadores();
+                syncFiltroEstruturado();
+            });
             syncTotalizadores();
+            syncFiltroEstruturado();
         }
     })();
 </script>

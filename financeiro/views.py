@@ -2,6 +2,7 @@
 
 import json
 import math
+import re
 import unicodedata
 from calendar import monthrange
 from datetime import date, datetime, timedelta
@@ -38,6 +39,7 @@ from .forms import (
     LancamentoFinanceiroGrupoRateioForm,
     PessoaFinanceiraForm,
     TabelaPersonalizadaForm,
+    TabelaPersonalizadaLinhaFiltroEstruturadoForm,
     TabelaPersonalizadaLinhaForm,
     categorias_vinculaveis_queryset,
 )
@@ -8506,6 +8508,13 @@ def _representacoes_busca_valor_linha(
     return (base, base.replace('.', ','))
 
 
+def _competencia_para_ordenacao_filtro(valor: str | None) -> int | None:
+    if not valor or not re.match(r'^(0[1-9]|1[0-2])/\d{4}$', valor):
+        return None
+    mes, ano = valor.split('/')
+    return int(ano) * 12 + int(mes)
+
+
 def _linha_corresponde_busca_tabela_personalizada(
     linha: LinhaTabelaPersonalizada,
     colunas_visiveis_ids: set[int],
@@ -8521,6 +8530,81 @@ def _linha_corresponde_busca_tabela_personalizada(
             if termo_normalizado in _normalizar_texto_busca_linhas(representacao):
                 return True
     return False
+
+
+def _valor_comparavel_filtro_linha(
+    coluna: ColunaPersonalizada,
+    valor: ValorTabelaPersonalizada | None,
+):
+    if valor is None:
+        return None
+    if coluna.tipo_dado == ColunaPersonalizada.TipoDado.DATA:
+        return valor.valor_data
+    if coluna.tipo_dado == ColunaPersonalizada.TipoDado.MES_COMPETENCIA:
+        return _competencia_para_ordenacao_filtro(valor.valor_texto)
+    if coluna.tipo_dado == ColunaPersonalizada.TipoDado.INTEIRO:
+        return int(valor.valor_numero) if valor.valor_numero is not None else None
+    if coluna.tipo_dado in {
+        ColunaPersonalizada.TipoDado.DECIMAL,
+        ColunaPersonalizada.TipoDado.MONETARIO,
+        ColunaPersonalizada.TipoDado.PERCENTUAL,
+    }:
+        return valor.valor_numero
+    return None
+
+
+def _valor_comparavel_filtro_entrada(coluna: ColunaPersonalizada, valor):
+    if coluna.tipo_dado == ColunaPersonalizada.TipoDado.MES_COMPETENCIA:
+        return _competencia_para_ordenacao_filtro(valor)
+    return valor
+
+
+def _valor_corresponde_filtro_estruturado(
+    coluna: ColunaPersonalizada,
+    valor: ValorTabelaPersonalizada | None,
+    filtro: dict[str, object],
+) -> bool:
+    valor_linha = _valor_comparavel_filtro_linha(coluna, valor)
+    if valor_linha is None:
+        return False
+
+    operador = filtro.get('operador')
+    if operador == ColunaPersonalizada.OperadorFiltro.ENTRE:
+        valor_inicial = _valor_comparavel_filtro_entrada(coluna, filtro.get('valor_inicial'))
+        valor_final = _valor_comparavel_filtro_entrada(coluna, filtro.get('valor_final'))
+        if valor_inicial is None or valor_final is None:
+            return False
+        return valor_inicial <= valor_linha <= valor_final
+
+    valor_referencia = _valor_comparavel_filtro_entrada(coluna, filtro.get('valor'))
+    if valor_referencia is None:
+        return False
+    if operador == ColunaPersonalizada.OperadorFiltro.IGUAL:
+        return valor_linha == valor_referencia
+    if operador == ColunaPersonalizada.OperadorFiltro.ANTES:
+        return valor_linha < valor_referencia
+    if operador == ColunaPersonalizada.OperadorFiltro.DEPOIS:
+        return valor_linha > valor_referencia
+    if operador == ColunaPersonalizada.OperadorFiltro.MAIOR:
+        return valor_linha > valor_referencia
+    if operador == ColunaPersonalizada.OperadorFiltro.MENOR:
+        return valor_linha < valor_referencia
+    return True
+
+
+def _linha_corresponde_filtros_estruturados_tabela_personalizada(
+    linha: LinhaTabelaPersonalizada,
+    filtros_estruturados: list[dict[str, object]],
+) -> bool:
+    if not filtros_estruturados:
+        return True
+
+    valores_por_coluna = {valor.coluna_id: valor for valor in linha.valores.all()}
+    for filtro in filtros_estruturados:
+        coluna = filtro['coluna']
+        if not _valor_corresponde_filtro_estruturado(coluna, valores_por_coluna.get(coluna.pk), filtro):
+            return False
+    return True
 
 
 def _formatar_resultado_totalizador(coluna: ColunaPersonalizada, tipo_totalizador: str, valor) -> str:
@@ -8640,6 +8724,14 @@ def _obter_colunas_visiveis_tabela_personalizada(tabela: TabelaPersonalizada) ->
     )
 
 
+def _obter_colunas_filtraveis_tabela_personalizada(tabela: TabelaPersonalizada) -> list[ColunaPersonalizada]:
+    return [
+        coluna
+        for coluna in _obter_colunas_visiveis_tabela_personalizada(tabela)
+        if coluna.filtro_estruturado_habilitado
+    ]
+
+
 def _obter_queryset_linhas_tabela_personalizada(tabela: TabelaPersonalizada):
     return (
         LinhaTabelaPersonalizada.objects.filter(
@@ -8655,21 +8747,28 @@ def _filtrar_linhas_tabela_personalizada(
     linhas_queryset,
     colunas_visiveis: list[ColunaPersonalizada],
     termo_busca_linhas: str,
+    filtros_estruturados: list[dict[str, object]] | None = None,
 ):
+    linhas = list(linhas_queryset)
     termo_normalizado = _normalizar_texto_busca_linhas(termo_busca_linhas)
-    if not termo_normalizado:
-        return list(linhas_queryset)
-
-    colunas_visiveis_ids = {coluna.pk for coluna in colunas_visiveis}
-    return [
-        linha
-        for linha in linhas_queryset
-        if _linha_corresponde_busca_tabela_personalizada(
-            linha,
-            colunas_visiveis_ids,
-            termo_normalizado,
-        )
-    ]
+    if termo_normalizado:
+        colunas_visiveis_ids = {coluna.pk for coluna in colunas_visiveis}
+        linhas = [
+            linha
+            for linha in linhas
+            if _linha_corresponde_busca_tabela_personalizada(
+                linha,
+                colunas_visiveis_ids,
+                termo_normalizado,
+            )
+        ]
+    if filtros_estruturados:
+        linhas = [
+            linha
+            for linha in linhas
+            if _linha_corresponde_filtros_estruturados_tabela_personalizada(linha, filtros_estruturados)
+        ]
+    return linhas
 
 
 def _montar_renderizacao_linhas_tabela_personalizada(
@@ -8733,12 +8832,14 @@ def _montar_renderizacao_linhas_tabela_personalizada(
 def _montar_estado_linhas_tabela_personalizada(
     tabela: TabelaPersonalizada,
     termo_busca_linhas: str,
+    filtros_estruturados: list[dict[str, object]] | None = None,
 ) -> dict[str, object]:
     colunas_visiveis = _obter_colunas_visiveis_tabela_personalizada(tabela)
     linhas = _filtrar_linhas_tabela_personalizada(
         _obter_queryset_linhas_tabela_personalizada(tabela),
         colunas_visiveis,
         termo_busca_linhas,
+        filtros_estruturados,
     )
     (
         linhas_renderizadas,
@@ -8747,6 +8848,9 @@ def _montar_estado_linhas_tabela_personalizada(
     ) = _montar_renderizacao_linhas_tabela_personalizada(colunas_visiveis, linhas)
     return {
         'colunas_visiveis': colunas_visiveis,
+        'colunas_filtraveis': [
+            coluna for coluna in colunas_visiveis if coluna.filtro_estruturado_habilitado
+        ],
         'linhas': linhas,
         'linhas_renderizadas': linhas_renderizadas,
         'totalizadores_renderizados': totalizadores_renderizados,
@@ -8864,9 +8968,21 @@ class TabelaPersonalizadaLinhaListView(FinanceiroPermissaoMixin, ListView):
     def dispatch(self, request, *args, **kwargs):
         self.tabela = get_object_or_404(TabelaPersonalizada, pk=self.kwargs['tabela_id'])
         self.termo_busca_linhas = (request.GET.get('busca') or '').strip()
+        self.colunas_filtraveis = _obter_colunas_filtraveis_tabela_personalizada(self.tabela)
+        self.filtro_estruturado_form = TabelaPersonalizadaLinhaFiltroEstruturadoForm(
+            request.GET or None,
+            colunas=self.colunas_filtraveis,
+        )
+        self.filtros_estruturados_aplicados = []
+        if self.filtro_estruturado_form.is_valid():
+            self.filtros_estruturados_aplicados = self.filtro_estruturado_form.cleaned_data.get(
+                'filtros_aplicados',
+                [],
+            )
         self.estado_linhas = _montar_estado_linhas_tabela_personalizada(
             self.tabela,
             self.termo_busca_linhas,
+            self.filtros_estruturados_aplicados,
         )
         return super().dispatch(request, *args, **kwargs)
 
@@ -8877,9 +8993,13 @@ class TabelaPersonalizadaLinhaListView(FinanceiroPermissaoMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['tabela_personalizada'] = self.tabela
         context['colunas_visiveis'] = self.estado_linhas['colunas_visiveis']
+        context['colunas_filtraveis'] = self.estado_linhas['colunas_filtraveis']
         context['linhas_renderizadas'] = self.estado_linhas['linhas_renderizadas']
         context['totalizadores_renderizados'] = self.estado_linhas['totalizadores_renderizados']
         context['possui_totalizadores_tabela_personalizada'] = self.estado_linhas['possui_totalizadores']
+        context['filtro_estruturado_form'] = self.filtro_estruturado_form
+        context['possui_filtros_estruturados_tabela_personalizada'] = bool(self.colunas_filtraveis)
+        context['filtros_estruturados_ativos'] = self.filtro_estruturado_form.possui_entrada_ativa()
         context['pode_preencher_linhas_tabela_personalizada'] = usuario_possui_permissao(
             self.request.user,
             PermissoesTabelasPersonalizadas.PREENCHER_LINHAS,
@@ -8896,8 +9016,9 @@ class TabelaPersonalizadaLinhaListView(FinanceiroPermissaoMixin, ListView):
             'financeiro:tabela-personalizada-linha-export-xlsx',
             kwargs={'tabela_id': self.tabela.pk},
         )
-        if self.termo_busca_linhas:
-            exportacao_url = f'{exportacao_url}?{urlencode({"busca": self.termo_busca_linhas})}'
+        filtros_ativos = self.request.GET.urlencode()
+        if filtros_ativos:
+            exportacao_url = f'{exportacao_url}?{filtros_ativos}'
         context['exportacao_linhas_tabela_personalizada_url'] = exportacao_url
         context['termo_busca_linhas'] = self.termo_busca_linhas
         context['busca_linhas_ativa'] = bool(self.termo_busca_linhas)
@@ -8910,7 +9031,34 @@ class TabelaPersonalizadaLinhaExportXlsxView(FinanceiroPermissaoMixin, View):
     def get(self, request, *args, **kwargs):
         tabela = get_object_or_404(TabelaPersonalizada, pk=self.kwargs['tabela_id'])
         termo_busca_linhas = (request.GET.get('busca') or '').strip()
-        estado_linhas = _montar_estado_linhas_tabela_personalizada(tabela, termo_busca_linhas)
+        colunas_filtraveis = _obter_colunas_filtraveis_tabela_personalizada(tabela)
+        filtro_estruturado_form = TabelaPersonalizadaLinhaFiltroEstruturadoForm(
+            request.GET or None,
+            colunas=colunas_filtraveis,
+        )
+        if not filtro_estruturado_form.is_valid() and filtro_estruturado_form.possui_entrada_ativa():
+            messages.error(
+                request,
+                'Revise os filtros estruturados antes de exportar a tabela personalizada.',
+            )
+            url_listagem = reverse(
+                'financeiro:tabela-personalizada-linha-list',
+                kwargs={'tabela_id': tabela.pk},
+            )
+            filtros_ativos = request.GET.urlencode()
+            if filtros_ativos:
+                return redirect(f'{url_listagem}?{filtros_ativos}')
+            return redirect(url_listagem)
+        filtros_estruturados_aplicados = (
+            filtro_estruturado_form.cleaned_data.get('filtros_aplicados', [])
+            if filtro_estruturado_form.is_valid()
+            else []
+        )
+        estado_linhas = _montar_estado_linhas_tabela_personalizada(
+            tabela,
+            termo_busca_linhas,
+            filtros_estruturados_aplicados,
+        )
         linhas_xlsx, larguras_colunas, linhas_negrito = _montar_linhas_exportacao_tabela_personalizada_xlsx(
             tabela,
             estado_linhas['colunas_visiveis'],

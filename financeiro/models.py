@@ -745,6 +745,14 @@ class ColunaPersonalizada(models.Model):
         LISTA_OPCOES = 'lista_opcoes', 'Lista de opcoes'
         FORMULA_CONTROLADA = 'formula_controlada', 'Formula controlada'
 
+    class OperadorFiltro(models.TextChoices):
+        ENTRE = 'entre', 'Entre'
+        IGUAL = 'igual', 'Igual'
+        ANTES = 'antes', 'Antes'
+        DEPOIS = 'depois', 'Depois'
+        MAIOR = 'maior', 'Maior que'
+        MENOR = 'menor', 'Menor que'
+
     tabela = models.ForeignKey(
         TabelaPersonalizada,
         on_delete=models.CASCADE,
@@ -772,6 +780,68 @@ class ColunaPersonalizada(models.Model):
 
     def __str__(self) -> str:
         return f'{self.tabela.nome} - {self.nome}'
+
+    @classmethod
+    def tipos_elegiveis_filtro_estruturado(cls) -> tuple[str, ...]:
+        return (
+            cls.TipoDado.DATA,
+            cls.TipoDado.MES_COMPETENCIA,
+            cls.TipoDado.INTEIRO,
+            cls.TipoDado.DECIMAL,
+            cls.TipoDado.MONETARIO,
+            cls.TipoDado.PERCENTUAL,
+        )
+
+    @classmethod
+    def filtro_estruturado_elegivel(cls, tipo_dado: str | None) -> bool:
+        return tipo_dado in cls.tipos_elegiveis_filtro_estruturado()
+
+    @classmethod
+    def operadores_filtro_por_tipo_dado(cls, tipo_dado: str | None) -> tuple[str, ...]:
+        if tipo_dado == cls.TipoDado.DATA:
+            return (
+                cls.OperadorFiltro.ENTRE,
+                cls.OperadorFiltro.IGUAL,
+                cls.OperadorFiltro.ANTES,
+                cls.OperadorFiltro.DEPOIS,
+            )
+        if tipo_dado == cls.TipoDado.MES_COMPETENCIA:
+            return (
+                cls.OperadorFiltro.ENTRE,
+                cls.OperadorFiltro.IGUAL,
+            )
+        if tipo_dado in {
+            cls.TipoDado.INTEIRO,
+            cls.TipoDado.DECIMAL,
+            cls.TipoDado.MONETARIO,
+            cls.TipoDado.PERCENTUAL,
+        }:
+            return (
+                cls.OperadorFiltro.ENTRE,
+                cls.OperadorFiltro.IGUAL,
+                cls.OperadorFiltro.MAIOR,
+                cls.OperadorFiltro.MENOR,
+            )
+        return ()
+
+    @classmethod
+    def rotulo_operador_filtro(cls, operador: str) -> str:
+        try:
+            return cls.OperadorFiltro(operador).label
+        except ValueError:
+            return operador
+
+    @property
+    def filtro_estruturado_config(self) -> dict[str, object]:
+        configuracao = self.configuracao_json if isinstance(self.configuracao_json, dict) else {}
+        filtro = configuracao.get('filtro', {})
+        return filtro if isinstance(filtro, dict) else {}
+
+    @property
+    def filtro_estruturado_habilitado(self) -> bool:
+        if not self.filtro_estruturado_elegivel(self.tipo_dado):
+            return False
+        return bool(self.filtro_estruturado_config.get('habilitado'))
 
     def clean(self) -> None:
         super().clean()
@@ -808,6 +878,27 @@ class ColunaPersonalizada(models.Model):
                     opcoes_normalizadas.add(opcao_normalizada)
                 if len(opcoes) > 20:
                     errors['configuracao_json'] = 'Lista de opcoes aceita no maximo 20 itens no MVP.'
+
+        if isinstance(configuracao, dict) and 'filtro' in configuracao:
+            filtro = configuracao.get('filtro')
+            if not isinstance(filtro, dict):
+                errors['configuracao_json'] = 'A configuracao de filtro da coluna precisa ser um objeto JSON.'
+            else:
+                habilitado = filtro.get('habilitado', False)
+                operadores = filtro.get('operadores', [])
+                operadores_esperados = list(self.operadores_filtro_por_tipo_dado(self.tipo_dado))
+
+                if not isinstance(habilitado, bool):
+                    errors['configuracao_json'] = 'A configuracao de filtro da coluna exige habilitado como booleano.'
+                elif habilitado and not self.filtro_estruturado_elegivel(self.tipo_dado):
+                    errors['configuracao_json'] = (
+                        'Filtro estruturado so pode ser habilitado para data, mes/competencia e tipos numericos nesta etapa.'
+                    )
+
+                if not isinstance(operadores, list) or any(not isinstance(valor, str) for valor in operadores):
+                    errors['configuracao_json'] = 'A configuracao de filtro da coluna exige operadores em uma lista textual.'
+                elif habilitado and operadores != operadores_esperados:
+                    errors['configuracao_json'] = 'Os operadores do filtro estruturado devem ser derivados do tipo da coluna.'
 
         if self.tabela_id and nome_normalizado and self.status != self.StatusColuna.ARQUIVADA:
             queryset = type(self).objects.filter(tabela=self.tabela).exclude(status=self.StatusColuna.ARQUIVADA)

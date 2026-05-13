@@ -5766,3 +5766,29 @@ Não houve alteração de código funcional nesta etapa.
   - abrir model/migration propria apenas se o JSON ficar insuficiente para governanca, indexacao, visoes salvas, auditoria propria ou configuracoes mais complexas
 - proxima microetapa recomendada:
   - implementar a configuracao de filtros no formulario de coluna e a aplicacao basica desses filtros na tela de linhas, ainda sem formulas guiadas nem filtros avancados
+
+## Microetapa: filtros estruturados por coluna nas tabelas personalizadas
+
+- etapa funcional controlada concluida, limitada ao primeiro recorte de filtros estruturados por coluna, sem migration, sem formulas guiadas e sem filtros avancados
+- implementacao entregue com:
+  - configuracao explicita no `ColunaPersonalizadaForm`
+  - persistencia em `configuracao_json.filtro`
+  - limpeza segura da configuracao ao mudar a coluna para tipo inelegivel
+  - indicacao visual na listagem de colunas quando o filtro estruturado esta habilitado
+  - area de filtros estruturados na tela de linhas apenas quando houver coluna visivel/habilitada
+  - combinacao de `busca textual simples + filtros estruturados`
+  - totalizadores e exportacao XLSX refletindo o mesmo recorte filtrado
+- tipos/operadores entregues no primeiro recorte:
+  - `data`: `entre`, `igual`, `antes`, `depois`
+  - `mes_competencia`: `entre`, `igual`
+  - `inteiro`, `decimal`, `monetario`, `percentual`: `entre`, `igual`, `maior`, `menor`
+- guardrails preservados:
+  - sem migration
+  - sem model novo
+  - sem formula guiada
+  - sem filtro booleano
+  - sem multiplas opcoes de lista
+  - sem visoes salvas
+  - sem agrupamentos
+  - sem dashboard
+  - sem impacto em `LancamentoFinanceiro` e no financeiro oficial
