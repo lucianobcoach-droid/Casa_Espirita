@@ -4365,3 +4365,44 @@ Riscos principais antes de migration:
   - sem impacto no financeiro oficial
 - proxima microetapa recomendada:
   - manter totalizadores em calculadas fora do MVP e seguir para homologacao/auditoria operacional da frente
+
+## Microetapa documental: homologacao do MVP de tabelas personalizadas
+
+- consolidacao registrada do primeiro recorte funcional do MVP de `Tabelas personalizadas`, com entrega operacional integrada de:
+  - estrutura, permissoes e menu/listagem
+  - cadastro de tabelas e colunas
+  - listas de opcoes
+  - linhas e valores editaveis por tipo
+  - busca textual
+  - filtros estruturados por coluna comum
+  - totalizadores em colunas comuns
+  - exportacao XLSX
+  - formulas guiadas por coluna
+  - calculo de formula em tempo de leitura
+  - busca e XLSX refletindo valor calculado
+  - UX autodidata no formulario de colunas
+- limites mantidos explicitamente fora do MVP atual:
+  - totalizadores em colunas calculadas
+  - filtros estruturados em colunas calculadas
+  - formula livre estilo Excel
+  - formula por celula
+  - importacao
+  - edicao em massa
+  - agrupamentos
+  - visoes salvas
+  - dashboard
+  - auditoria operacional propria da frente
+  - qualquer integracao escrevente com financeiro oficial
+- diretriz de continuidade:
+  - resultado calculado segue sem persistencia em `valor_calculado`
+  - sem alteracao de lancamentos, saldos, extrato, resumo, prestacao/fechamento ou balancete
+- proxima frente recomendada:
+  - abrir microetapa de SPEC/auditoria tecnica para auditoria operacional propria da frente de tabelas personalizadas, decidindo trilha de eventos para:
+    - criacao/edicao de tabela
+    - criacao/edicao de coluna
+    - alteracao de opcoes de lista
+    - alteracao de filtros
+    - alteracao de totalizadores
+    - configuracao/alteracao de formula
+    - criacao/edicao de linhas
+    - exportacao XLSX, se confirmada como evento auditavel

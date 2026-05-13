@@ -1675,3 +1675,39 @@ Reabertura futura, se necessaria:
 - ignorando linhas com resultado vazio
 - mantendo tela e XLSX com o mesmo rodape
 - comecando, se aprovado, por `soma` e `contagem`
+
+### 58. Tabelas personalizadas - homologacao documental do MVP
+
+Status: DOCUMENTADO (MVP FUNCIONAL CONSOLIDADO)
+
+Consolidacao:
+- o primeiro recorte funcional da frente de tabelas personalizadas foi consolidado documentalmente como entregue
+- escopo consolidado no MVP atual:
+  - estrutura, permissoes, menu/listagem
+  - cadastro de tabelas e colunas
+  - listas de opcoes
+  - linhas e valores editaveis
+  - busca textual simples
+  - filtros estruturados por coluna comum
+  - totalizadores em colunas comuns
+  - exportacao XLSX
+  - formulas guiadas por coluna
+  - calculo em tempo de leitura
+  - busca e XLSX considerando valor calculado
+  - UX autodidata no formulario de colunas
+
+Limites mantidos fora do MVP:
+- totalizadores em colunas calculadas
+- filtros estruturados em colunas calculadas
+- formula livre estilo Excel
+- formula por celula
+- importacao
+- edicao em massa
+- agrupamentos
+- visoes salvas
+- dashboard
+- auditoria operacional propria
+- integracao escrevente com financeiro oficial
+
+Proxima frente recomendada:
+- abrir microetapa de SPEC/auditoria tecnica da auditoria operacional propria da frente para decidir trilha de eventos auditaveis de estrutura, formula, linhas e exportacao

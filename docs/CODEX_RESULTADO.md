@@ -6053,3 +6053,32 @@ Não houve alteração de código funcional nesta etapa.
   - `py manage.py check` OK
   - `py -m compileall financeiro configuracoes` OK
   - `py manage.py test financeiro configuracoes` OK
+
+## Microetapa documental: homologacao do MVP de tabelas personalizadas
+
+- baixa documental de consolidacao do primeiro recorte funcional do MVP de `Tabelas personalizadas`
+- consolidado como entregue no estado atual:
+  - estrutura, permissoes e menu/listagem
+  - cadastro de tabelas e colunas
+  - listas de opcoes
+  - linhas e valores editaveis
+  - busca textual simples
+  - filtros estruturados por coluna comum
+  - totalizadores em colunas comuns
+  - exportacao XLSX
+  - formulas guiadas por coluna
+  - calculo de formula em leitura
+  - busca textual e XLSX refletindo valor calculado
+  - UX autodidata no formulario de colunas
+- limites mantidos fora do recorte:
+  - totalizadores em colunas calculadas
+  - filtros estruturados em colunas calculadas
+  - formula livre estilo Excel e formula por celula
+  - importacao, edicao em massa, agrupamentos, visoes salvas e dashboard
+  - auditoria operacional propria da frente
+  - integracao escrevente com financeiro oficial
+- guardrails reforcados:
+  - sem persistencia em `valor_calculado`
+  - sem impacto em `LancamentoFinanceiro` e no financeiro oficial
+- proxima frente recomendada:
+  - microetapa de SPEC/auditoria tecnica da auditoria operacional propria da frente, com decisao de trilha auditavel para estrutura, formula, linhas e exportacao

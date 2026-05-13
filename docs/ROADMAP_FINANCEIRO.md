@@ -3745,3 +3745,51 @@ Condicoes para eventual reabertura futura:
 
 Proxima microetapa recomendada:
 - manter o tema fechado no MVP e priorizar homologacao/auditoria operacional da frente antes de reabrir totalizadores em calculadas
+
+## Microetapa documental: homologacao do MVP de tabelas personalizadas
+
+Status:
+- consolidado funcionalmente no primeiro recorte, com auditoria operacional propria ainda pendente
+
+Consolidacao do MVP:
+- frente de tabelas personalizadas entregue com:
+  - estrutura, permissoes e menu/listagem
+  - cadastro de tabelas e colunas
+  - listas de opcoes
+  - linhas e valores editaveis por tipo
+  - busca textual simples
+  - filtros estruturados por coluna comum
+  - totalizadores em colunas comuns
+  - exportacao XLSX
+  - formulas guiadas por coluna
+  - calculo de formula em leitura
+  - busca e XLSX refletindo valor calculado
+  - UX autodidata no formulario de colunas
+
+Limites mantidos no MVP:
+- totalizadores em colunas calculadas
+- filtros estruturados em colunas calculadas
+- formula livre estilo Excel
+- formula por celula
+- importacao
+- edicao em massa
+- agrupamentos
+- visoes salvas
+- dashboard
+- auditoria operacional propria
+- integracao escrevente com financeiro oficial
+
+Guardrails de continuidade:
+- resultado calculado permanece sem persistencia em `valor_calculado`
+- sem alteracao em financeiro oficial, lancamentos, saldos, extrato, resumo, prestacao/fechamento ou balancete
+
+Proxima frente recomendada:
+- abrir SPEC/auditoria tecnica da auditoria operacional propria da frente de tabelas personalizadas para decidir trilha de eventos de:
+  - criacao/edicao de tabela
+  - criacao/edicao de coluna
+  - alteracao de opcoes de lista
+  - alteracao de filtros
+  - alteracao de totalizadores
+  - configuracao/alteracao de formula
+  - criacao/edicao de linhas
+  - exportacao XLSX, se confirmada como evento auditavel
