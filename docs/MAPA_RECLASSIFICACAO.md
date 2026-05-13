@@ -1493,3 +1493,10 @@ Atualizacao de refinamento:
 - ajuste de ortografia/pontuacao dos textos fixos do recibo especial
 - busca por favorecido destinatario adicionada no formulario com filtro por trecho do nome, sem mudar regra de validacao por ID
 - nenhum impacto nos fluxos atuais de recibo, termo anual ou dados operacionais
+
+Atualizacao de refinamento de UX:
+- o fluxo de selecao do favorecido no `Recibo especial` foi ajustado para nao exibir dois campos visiveis ao usuario
+- permaneceu apenas um campo pesquisavel visivel, com selecao por resultados e gravacao do ID real no campo do formulario
+- o comportamento de busca foi reforcado para trecho do nome, ignorando caixa e acentos
+- o envio sem selecao valida passou a ter mensagem clara na tela
+- o cabecalho da tela de selecao recebeu ajuste de espaco para evitar sobreposicao de titulo/subtitulo

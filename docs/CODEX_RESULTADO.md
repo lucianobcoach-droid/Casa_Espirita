@@ -5864,3 +5864,14 @@ Não houve alteração de código funcional nesta etapa.
   - ausencia de `RECIBO ESPECIAL`
   - ausencia de `Favorecido original`
   - preservacao da descricao composta `descricao - nome do favorecido original`
+
+## Microetapa: correcao de UX da escolha de favorecido no recibo especial
+
+- corrigi a tela de selecao do favorecido destinatario para remover a duplicidade visual de campos
+- com JavaScript ativo, fica visivel apenas um campo de busca; o select real por ID permanece no form para validacao e envio
+- implementei lista de resultados local no proprio template, com busca por trecho do nome, sem diferenciar caixa e sem diferenciar acentos
+- ao alterar o texto depois de selecionar um favorecido, a selecao real e limpa automaticamente para evitar envio de ID incorreto
+- adicionei validacao de submit no frontend para bloquear envio sem favorecido valido selecionado
+- mantive fallback sem JavaScript via `<noscript>` para o select do Django
+- ajustei o cabecalho da tela para usar `financeiro-page-subtitle`, eliminando a sobreposicao de titulo/subtitulo
+- cobertura de testes ampliada para garantir presenca do campo pesquisavel unico e da estrutura de selecao oculta

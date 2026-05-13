@@ -3951,6 +3951,26 @@ class LancamentoReciboEspecialTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn('favorecido_destinatario', response.context['form'].errors)
 
+    def test_form_recibo_especial_exibe_apenas_campo_pesquisavel_visivel(self):
+        self._login_com_permissoes(
+            'user-recibo-especial-form-campo-pesquisa',
+            [
+                'financeiro.lancamentos.listar',
+                'financeiro.lancamentos.emitir_recibo',
+            ],
+        )
+        ids = f'{self.receita_maria.pk},{self.receita_joao.pk}'
+        response = self.client.get(
+            reverse('financeiro:lancamento-recibo-especial-selecionar-favorecido'),
+            {'ids': ids, 'filtros': ''},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'id="recibo-especial-favorecido-search"')
+        self.assertContains(response, 'recibo-especial-form-select-hidden')
+        self.assertContains(response, 'id="recibo-especial-favorecido-results"')
+        self.assertContains(response, 'id="recibo-especial-favorecido-search-error"')
+
     def test_recibo_especial_bloqueia_favorecido_destinatario_inexistente(self):
         self._login_com_permissoes(
             'user-recibo-especial-destinatario-invalido',

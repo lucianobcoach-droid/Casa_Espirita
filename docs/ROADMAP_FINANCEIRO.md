@@ -3502,3 +3502,11 @@ Status do refinamento curto:
 - textos fixos foram revisados com acentuacao e pontuacao
 - formulario de escolha do favorecido ganhou busca local por trecho do nome (sem rota adicional)
 - recorte funcional segue isolado, sem alterar recibos homologados ou regras de lancamento
+
+Status do refinamento de UX:
+- a escolha de favorecido do `Recibo especial` passou a usar um unico campo pesquisavel visivel
+- o select real por ID foi mantido oculto para preservar validacao backend e contrato de envio
+- busca local por nome passou a operar por trecho, ignorando caixa e acentos
+- envio sem selecao valida foi reforcado com mensagem clara no formulario
+- fallback sem JavaScript mantido por `<noscript>`
+- cabecalho da tela de selecao ajustado para evitar sobreposicao entre titulo e subtitulo

@@ -4175,3 +4175,14 @@ Riscos principais antes de migration:
   - termo anual
   - lancamentos, favorecido real e descricao persistida
   - saldos e relatorios oficiais
+
+## Microetapa: correcao de UX na escolha de favorecido do recibo especial
+
+- tela de selecao do favorecido destinatario ajustada para exibir apenas um campo pesquisavel visivel
+- select real por ID foi mantido no formulario, porem oculto no fluxo com JavaScript ativo, preservando validacao server-side
+- busca local passou a funcionar por trecho do nome, ignorando acentos e caixa
+- ao editar o texto apos selecionar um favorecido, o ID selecionado e limpo para evitar envio inconsistente
+- envio sem selecao valida mostra mensagem clara no formulario
+- fallback com `<noscript>` mantido para uso do select quando JavaScript estiver desativado
+- cabecalho da tela do recibo especial ajustado para evitar sobreposicao de titulo/subtitulo
+- sem alteracao de regra de negocio, sem alteracao em recibos atuais, termo anual, lancamentos, saldos ou relatorios oficiais

@@ -44,12 +44,7 @@
         width: 100%;
     }
 
-    .recibo-especial-form-field .control > input,
-    .recibo-especial-form-field .control > textarea,
-    .recibo-especial-form-field .control > select,
-    .recibo-especial-form-field .control .input,
-    .recibo-especial-form-field .control .textarea,
-    .recibo-especial-form-field .control .select select {
+    .recibo-especial-form-search-input {
         min-height: 2.5rem;
         width: 100%;
         padding: 0.55rem 0.8rem;
@@ -58,6 +53,63 @@
         background: #fff;
         box-shadow: none;
         color: #182433;
+    }
+
+    .recibo-especial-form-select-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .recibo-especial-form-results {
+        margin-top: 0.45rem;
+        max-height: 12rem;
+        overflow-y: auto;
+        border: 1px solid #d7e2f0;
+        border-radius: 8px;
+        background: #fff;
+    }
+
+    .recibo-especial-form-results[hidden] {
+        display: none;
+    }
+
+    .recibo-especial-form-result {
+        width: 100%;
+        border: 0;
+        text-align: left;
+        background: transparent;
+        padding: 0.52rem 0.65rem;
+        cursor: pointer;
+    }
+
+    .recibo-especial-form-result:hover,
+    .recibo-especial-form-result:focus {
+        background: #f3f7fd;
+        outline: none;
+    }
+
+    .recibo-especial-form-selected {
+        margin-top: 0.42rem;
+        color: #1f5134;
+        font-size: 0.9rem;
+        line-height: 1.35;
+    }
+
+    .recibo-especial-form-selected[hidden] {
+        display: none;
+    }
+
+    .recibo-especial-form-search-error {
+        margin-top: 0.4rem;
+        color: #b91c1c;
+        font-size: 0.82rem;
+    }
+
+    .recibo-especial-form-search-error[hidden] {
+        display: none;
     }
 
     .recibo-especial-form-table-wrap {
@@ -85,13 +137,6 @@
         text-transform: uppercase;
     }
 
-    .recibo-especial-form-total {
-        display: flex;
-        justify-content: flex-end;
-        font-weight: 700;
-        color: #1f5134;
-    }
-
     .recibo-especial-form-actions {
         display: flex;
         align-items: center;
@@ -100,18 +145,14 @@
         padding-top: 0.85rem;
         border-top: 1px solid #edf2f7;
     }
-
-    .recibo-especial-form-search {
-        margin-bottom: 0.45rem;
-    }
 </style>
 
 <div class="recibo-especial-form-page">
     <div class="financeiro-page-header financeiro-page-head">
         <div class="financeiro-page-header-main">
             <h1 class="title financeiro-page-title">{{ page_title }}</h1>
-            <p class="subtitle is-6 mb-0">
-                Escolha manualmente o favorecido que será exibido como destinatário principal do documento.
+            <p class="financeiro-page-subtitle">
+                Escolha manualmente o favorecido que sera exibido como destinatario principal do documento.
             </p>
         </div>
     </div>
@@ -120,7 +161,7 @@
         <div class="recibo-especial-form-body">
             <div class="recibo-especial-form-notice">
                 <strong>Recorte desta etapa:</strong>
-                emissão documental isolada, sem alterar o favorecido real, os lançamentos ou qualquer saldo/relatório financeiro.
+                emissao documental isolada, sem alterar o favorecido real, os lancamentos ou qualquer saldo/relatorio financeiro.
             </div>
 
             {% if form.non_field_errors %}
@@ -129,30 +170,60 @@
                 </div>
             {% endif %}
 
-            <form method="post">
+            <form method="post" id="recibo-especial-form">
                 {% csrf_token %}
                 {{ form.ids }}
                 {{ form.filtros }}
                 <div class="recibo-especial-form-grid">
                     <div class="field recibo-especial-form-field">
-                        <label class="label" for="{{ form.favorecido_destinatario.id_for_label }}">
+                        <label class="label" for="recibo-especial-favorecido-search">
                             {{ form.favorecido_destinatario.label }}
                         </label>
-                        <div class="control recibo-especial-form-search">
+
+                        <div class="control">
                             <input
                                 type="text"
                                 id="recibo-especial-favorecido-search"
-                                class="input"
+                                class="recibo-especial-form-search-input"
                                 placeholder="Buscar favorecido por nome"
                                 autocomplete="off"
+                                aria-describedby="recibo-especial-favorecido-ajuda"
                             >
                         </div>
-                        <div class="control">
+
+                        <div
+                            id="recibo-especial-favorecido-results"
+                            class="recibo-especial-form-results"
+                            role="listbox"
+                            hidden
+                        ></div>
+
+                        <p
+                            id="recibo-especial-favorecido-selected"
+                            class="recibo-especial-form-selected"
+                            hidden
+                        ></p>
+
+                        <p
+                            id="recibo-especial-favorecido-search-error"
+                            class="recibo-especial-form-search-error"
+                            hidden
+                        >
+                            Selecione um favorecido valido na lista de resultados.
+                        </p>
+
+                        <div class="recibo-especial-form-select-hidden" aria-hidden="true">
                             {{ form.favorecido_destinatario }}
                         </div>
-                        {% if form.favorecido_destinatario.help_text %}
-                            <p class="help">{{ form.favorecido_destinatario.help_text }}</p>
-                        {% endif %}
+                        <noscript>
+                            <div class="control mt-2">
+                                {{ form.favorecido_destinatario }}
+                            </div>
+                        </noscript>
+
+                        <p id="recibo-especial-favorecido-ajuda" class="help">
+                            Digite um trecho do nome e selecione um favorecido da lista.
+                        </p>
                         {% for error in form.favorecido_destinatario.errors %}
                             <p class="help is-danger">{{ error }}</p>
                         {% endfor %}
@@ -167,7 +238,7 @@
 
             <div class="content mb-0">
                 <p class="mb-2">
-                    <strong>Lançamentos selecionados:</strong> {{ quantidade_lancamentos }}
+                    <strong>Lancamentos selecionados:</strong> {{ quantidade_lancamentos }}
                 </p>
                 <p class="mb-3">
                     <strong>Valor total:</strong> R$ {{ valor_total_lancamentos }}
@@ -179,7 +250,7 @@
                     <thead>
                         <tr>
                             <th>Data</th>
-                            <th>Descrição atual</th>
+                            <th>Descricao atual</th>
                             <th>Favorecido original</th>
                             <th>Documento</th>
                             <th>Valor</th>
@@ -203,9 +274,14 @@
 </div>
 <script>
     (function () {
+        const form = document.getElementById('recibo-especial-form');
         const input = document.getElementById('recibo-especial-favorecido-search');
         const select = document.getElementById('{{ form.favorecido_destinatario.id_for_label }}');
-        if (!input || !select) {
+        const results = document.getElementById('recibo-especial-favorecido-results');
+        const selectedInfo = document.getElementById('recibo-especial-favorecido-selected');
+        const searchError = document.getElementById('recibo-especial-favorecido-search-error');
+
+        if (!form || !input || !select || !results || !selectedInfo || !searchError) {
             return;
         }
 
@@ -214,34 +290,99 @@
             .normalize('NFD')
             .replace(/[\u0300-\u036f]/g, '');
 
-        const syncOptions = () => {
-            const term = normalize(input.value);
-            let visibleCount = 0;
-            for (const option of select.options) {
-                if (!option.value) {
-                    option.hidden = false;
-                    continue;
-                }
-                const matches = !term || normalize(option.text).includes(term);
-                option.hidden = !matches;
-                if (matches) {
-                    visibleCount += 1;
-                }
-            }
+        const options = Array.from(select.options)
+            .filter((option) => option.value)
+            .map((option) => ({
+                value: option.value,
+                label: option.text.trim(),
+                normalized: normalize(option.text),
+            }));
 
-            if (select.selectedOptions.length) {
-                const selected = select.selectedOptions[0];
-                if (selected && selected.hidden) {
-                    select.value = '';
-                }
-            }
+        let selectedLabel = '';
 
-            if (!visibleCount && term) {
-                select.value = '';
-            }
+        const clearSelection = () => {
+            select.value = '';
+            selectedLabel = '';
+            selectedInfo.hidden = true;
+            selectedInfo.textContent = '';
         };
 
-        input.addEventListener('input', syncOptions);
+        const clearError = () => {
+            searchError.hidden = true;
+        };
+
+        const showError = () => {
+            searchError.hidden = false;
+        };
+
+        const selectOption = (option) => {
+            select.value = option.value;
+            input.value = option.label;
+            selectedLabel = option.label;
+            selectedInfo.textContent = `Selecionado: ${option.label}`;
+            selectedInfo.hidden = false;
+            results.hidden = true;
+            results.innerHTML = '';
+            clearError();
+        };
+
+        const renderResults = () => {
+            const term = normalize(input.value);
+
+            if (selectedLabel && input.value.trim() !== selectedLabel) {
+                clearSelection();
+            }
+
+            if (!term) {
+                results.hidden = true;
+                results.innerHTML = '';
+                clearError();
+                return;
+            }
+
+            const matches = options.filter((option) => option.normalized.includes(term)).slice(0, 30);
+            if (!matches.length) {
+                results.hidden = true;
+                results.innerHTML = '';
+                return;
+            }
+
+            results.innerHTML = '';
+            matches.forEach((option) => {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'recibo-especial-form-result';
+                button.textContent = option.label;
+                button.addEventListener('click', () => selectOption(option));
+                results.appendChild(button);
+            });
+            results.hidden = false;
+        };
+
+        input.addEventListener('input', renderResults);
+
+        input.addEventListener('focus', () => {
+            if (input.value.trim()) {
+                renderResults();
+            }
+        });
+
+        document.addEventListener('click', (event) => {
+            if (event.target === input || results.contains(event.target)) {
+                return;
+            }
+            results.hidden = true;
+        });
+
+        form.addEventListener('submit', (event) => {
+            if (!select.value) {
+                event.preventDefault();
+                showError();
+                input.focus();
+                return;
+            }
+            clearError();
+        });
     })();
 </script>
 {% endblock %}
