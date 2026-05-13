@@ -16,7 +16,7 @@
                 {% if recibo.nome_instituicao and not recibo.logo_url %}
                     <div class="recibo-identidade-texto">
                         <span class="recibo-instituicao">{{ recibo.nome_instituicao }}</span>
-                        <span class="recibo-identidade-subtitulo">Documento financeiro especial</span>
+                        <span class="recibo-identidade-subtitulo">Documento financeiro</span>
                     </div>
                 {% elif not recibo.logo_url %}
                     <div class="recibo-identidade-faixa"></div>
@@ -26,7 +26,7 @@
 
         <div class="recibo-topo">
             <div class="recibo-titulo-box">
-                <h1 class="recibo-titulo">RECIBO ESPECIAL</h1>
+                <h1 class="recibo-titulo">RECIBO</h1>
             </div>
             <div class="recibo-valor-box">
                 <span class="recibo-valor-label">Valor recebido</span>
@@ -42,12 +42,12 @@
                 <span class="recibo-valor-texto">{{ recibo.pessoa_nome }}</span>.
             </p>
             <p class="recibo-linha">
-                <span class="recibo-campo">A importancia de</span>
+                <span class="recibo-campo">A importância de</span>
                 <span class="recibo-valor-texto">{{ recibo.valor_extenso }}</span>.
             </p>
             <p class="recibo-linha">
                 <span class="recibo-campo">Referente aos</span>
-                <span class="recibo-valor-texto">lancamentos listados abaixo</span>.
+                <span class="recibo-valor-texto">lançamentos listados abaixo</span>.
             </p>
             {% if recibo.itens %}
                 <div class="recibo-itens-table-wrap">
@@ -55,7 +55,7 @@
                         <thead>
                             <tr>
                                 <th class="recibo-itens-col-data">Data</th>
-                                <th class="recibo-itens-col-desc">Descricao</th>
+                                <th class="recibo-itens-col-desc">Descrição</th>
                                 <th class="recibo-itens-col-doc">Documento</th>
                                 <th class="recibo-itens-col-valor">Valor</th>
                             </tr>
@@ -75,14 +75,14 @@
             {% endif %}
             {% if recibo.data_fallback %}
                 <p class="recibo-aviso">
-                    A data de recebimento nao foi informada. Este recibo usa a data documental disponivel no lancamento.
+                    A data de recebimento não foi informada. Este recibo usa a data documental disponível no lançamento.
                 </p>
             {% endif %}
             <p class="recibo-data-local">
                 {% if recibo.cidade %}
-                    {{ recibo.cidade }}, {{ recibo.data_humana }}
+                    {{ recibo.cidade }}, {{ recibo.data_humana }}.
                 {% else %}
-                    {{ recibo.data_humana }}
+                    {{ recibo.data_humana }}.
                 {% endif %}
             </p>
         </div>

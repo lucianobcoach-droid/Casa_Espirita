@@ -3496,3 +3496,9 @@ Status apos implementacao funcional minima:
 
 Proximo passo recomendado:
 - homologar visualmente o `Recibo especial` com casos reais de uso e decidir se a frente exigira permissao dedicada e auditoria documental propria
+
+Status do refinamento curto:
+- documento impresso do `Recibo especial` agora usa titulo `RECIBO`
+- textos fixos foram revisados com acentuacao e pontuacao
+- formulario de escolha do favorecido ganhou busca local por trecho do nome (sem rota adicional)
+- recorte funcional segue isolado, sem alterar recibos homologados ou regras de lancamento

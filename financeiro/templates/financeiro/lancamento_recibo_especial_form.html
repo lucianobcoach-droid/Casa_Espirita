@@ -100,6 +100,10 @@
         padding-top: 0.85rem;
         border-top: 1px solid #edf2f7;
     }
+
+    .recibo-especial-form-search {
+        margin-bottom: 0.45rem;
+    }
 </style>
 
 <div class="recibo-especial-form-page">
@@ -107,7 +111,7 @@
         <div class="financeiro-page-header-main">
             <h1 class="title financeiro-page-title">{{ page_title }}</h1>
             <p class="subtitle is-6 mb-0">
-                Escolha manualmente o favorecido que sera exibido como destinatario principal do documento.
+                Escolha manualmente o favorecido que será exibido como destinatário principal do documento.
             </p>
         </div>
     </div>
@@ -116,7 +120,7 @@
         <div class="recibo-especial-form-body">
             <div class="recibo-especial-form-notice">
                 <strong>Recorte desta etapa:</strong>
-                emissao documental isolada, sem alterar o favorecido real, os lancamentos ou qualquer saldo/relatorio financeiro.
+                emissão documental isolada, sem alterar o favorecido real, os lançamentos ou qualquer saldo/relatório financeiro.
             </div>
 
             {% if form.non_field_errors %}
@@ -134,6 +138,15 @@
                         <label class="label" for="{{ form.favorecido_destinatario.id_for_label }}">
                             {{ form.favorecido_destinatario.label }}
                         </label>
+                        <div class="control recibo-especial-form-search">
+                            <input
+                                type="text"
+                                id="recibo-especial-favorecido-search"
+                                class="input"
+                                placeholder="Buscar favorecido por nome"
+                                autocomplete="off"
+                            >
+                        </div>
                         <div class="control">
                             {{ form.favorecido_destinatario }}
                         </div>
@@ -154,7 +167,7 @@
 
             <div class="content mb-0">
                 <p class="mb-2">
-                    <strong>Lancamentos selecionados:</strong> {{ quantidade_lancamentos }}
+                    <strong>Lançamentos selecionados:</strong> {{ quantidade_lancamentos }}
                 </p>
                 <p class="mb-3">
                     <strong>Valor total:</strong> R$ {{ valor_total_lancamentos }}
@@ -166,7 +179,7 @@
                     <thead>
                         <tr>
                             <th>Data</th>
-                            <th>Descricao atual</th>
+                            <th>Descrição atual</th>
                             <th>Favorecido original</th>
                             <th>Documento</th>
                             <th>Valor</th>
@@ -188,4 +201,47 @@
         </div>
     </section>
 </div>
+<script>
+    (function () {
+        const input = document.getElementById('recibo-especial-favorecido-search');
+        const select = document.getElementById('{{ form.favorecido_destinatario.id_for_label }}');
+        if (!input || !select) {
+            return;
+        }
+
+        const normalize = (value) => (value || '')
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '');
+
+        const syncOptions = () => {
+            const term = normalize(input.value);
+            let visibleCount = 0;
+            for (const option of select.options) {
+                if (!option.value) {
+                    option.hidden = false;
+                    continue;
+                }
+                const matches = !term || normalize(option.text).includes(term);
+                option.hidden = !matches;
+                if (matches) {
+                    visibleCount += 1;
+                }
+            }
+
+            if (select.selectedOptions.length) {
+                const selected = select.selectedOptions[0];
+                if (selected && selected.hidden) {
+                    select.value = '';
+                }
+            }
+
+            if (!visibleCount && term) {
+                select.value = '';
+            }
+        };
+
+        input.addEventListener('input', syncOptions);
+    })();
+</script>
 {% endblock %}

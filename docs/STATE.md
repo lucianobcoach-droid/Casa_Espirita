@@ -4155,3 +4155,23 @@ Riscos principais antes de migration:
   - `py manage.py check` OK
   - `py -m compileall financeiro configuracoes` OK
   - `py manage.py test financeiro configuracoes` OK
+
+## Microetapa: refino textual do recibo especial e busca de favorecido
+
+- ajuste visual/textual concluido apenas no fluxo do `Recibo especial`, sem alterar regra de negocio
+- titulo impresso do documento especial ajustado para `RECIBO`, mantendo no sistema o nome da acao `Recibo especial`
+- textos fixos do documento especial refinados com acentuacao e pontuacao:
+  - `A importância de`
+  - `Referente aos lançamentos listados abaixo.`
+  - `Descrição`
+  - data/local finalizados com ponto
+- formulario de escolha de favorecido destinatario recebeu busca textual progressiva por trecho do nome:
+  - filtro local no proprio template
+  - ignora maiusculas/minusculas e acentos
+  - sem rota nova, sem AJAX e com fallback natural quando JavaScript estiver desativado
+- preservado:
+  - recibo em lote atual
+  - recibos por favorecido atuais
+  - termo anual
+  - lancamentos, favorecido real e descricao persistida
+  - saldos e relatorios oficiais

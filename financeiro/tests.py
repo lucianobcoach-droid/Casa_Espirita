@@ -3989,10 +3989,14 @@ class LancamentoReciboEspecialTests(TestCase):
             },
         )
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'RECIBO ESPECIAL')
+        self.assertContains(response, 'RECIBO')
+        self.assertNotContains(response, 'RECIBO ESPECIAL')
         self.assertContains(response, self.destinatario_manual.nome)
         self.assertContains(response, 'Pagamento de cesta basica - Maria Silva')
         self.assertContains(response, 'Pagamento de cesta basica - Joao Souza')
+        self.assertContains(response, 'A importância de')
+        self.assertContains(response, 'lançamentos listados abaixo')
+        self.assertContains(response, 'Descrição')
         self.assertNotContains(response, 'destinatario manual')
         self.assertNotContains(
             response,

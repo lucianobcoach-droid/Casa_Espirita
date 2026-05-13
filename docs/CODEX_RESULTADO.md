@@ -5847,3 +5847,20 @@ Não houve alteração de código funcional nesta etapa.
   - `py manage.py check` OK
   - `py -m compileall financeiro configuracoes` OK
   - `py manage.py test financeiro configuracoes` OK
+
+## Microetapa: refino textual do recibo especial e busca do favorecido
+
+- refinei somente o fluxo do `Recibo especial`, sem alteracao de regra funcional
+- no documento impresso:
+  - troquei `RECIBO ESPECIAL` por `RECIBO`
+  - mantive o nome da acao no sistema como `Recibo especial`
+  - corrigi textos fixos com acentuacao e pontuacao
+- no formulario de escolha do favorecido destinatario:
+  - adicionei campo de busca por trecho do nome, com filtro no proprio select
+  - a busca ignora caixa e acentos (ex.: `pacelli` encontra `PACELLI`)
+  - sem endpoint novo e sem alterar validacao por ID
+- testes atualizados para garantir:
+  - titulo impresso `RECIBO`
+  - ausencia de `RECIBO ESPECIAL`
+  - ausencia de `Favorecido original`
+  - preservacao da descricao composta `descricao - nome do favorecido original`

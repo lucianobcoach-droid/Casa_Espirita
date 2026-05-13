@@ -1487,3 +1487,9 @@ Status apos implementacao:
 
 Pendencia futura remanescente:
 - homologacao visual/documental do `Recibo especial` e decisao sobre permissao dedicada e auditoria propria da nova acao
+
+Atualizacao de refinamento:
+- titulo impresso do documento especial reduzido para `RECIBO`
+- ajuste de ortografia/pontuacao dos textos fixos do recibo especial
+- busca por favorecido destinatario adicionada no formulario com filtro por trecho do nome, sem mudar regra de validacao por ID
+- nenhum impacto nos fluxos atuais de recibo, termo anual ou dados operacionais

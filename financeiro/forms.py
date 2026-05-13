@@ -1190,9 +1190,9 @@ class TabelaPersonalizadaLinhaForm(forms.Form):
 class LancamentoFinanceiroReciboEspecialForm(forms.Form):
     favorecido_destinatario = forms.ModelChoiceField(
         queryset=PessoaFinanceira.objects.none(),
-        label='Favorecido destinatario',
+        label='Favorecido destinatário',
         empty_label='Selecione um favorecido',
-        help_text='Escolha o favorecido que aparecera como destinatario principal do recibo especial.',
+        help_text='Escolha o favorecido que aparecerá como destinatário principal do recibo especial.',
     )
     ids = forms.CharField(widget=forms.HiddenInput())
     filtros = forms.CharField(required=False, widget=forms.HiddenInput())
