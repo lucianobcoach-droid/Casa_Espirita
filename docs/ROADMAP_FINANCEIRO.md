@@ -3510,3 +3510,24 @@ Status do refinamento de UX:
 - envio sem selecao valida foi reforcado com mensagem clara no formulario
 - fallback sem JavaScript mantido por `<noscript>`
 - cabecalho da tela de selecao ajustado para evitar sobreposicao entre titulo e subtitulo
+
+Status de homologacao da usuaria:
+- primeiro recorte funcional/visual do `Recibo especial em lote` homologado localmente com retorno `Esta OK`
+- validado:
+  - fluxo funcional do recibo especial
+  - titulo impresso `RECIBO`
+  - busca por trecho do nome do favorecido
+  - campo pesquisavel unico (sem duplicidade visual)
+  - sobreposicao de titulo/subtitulo corrigida
+  - descricao composta `descricao atual - nome do favorecido original`
+- preservado:
+  - recibo em lote atual
+  - recibos por favorecido atuais
+  - termo anual
+  - lancamentos e favorecido real
+  - sem impacto no financeiro oficial
+
+Pendencias futuras opcionais:
+- permissao dedicada para o `Recibo especial`
+- auditoria operacional propria
+- ajustes finos de impressao, caso o uso real indique necessidade

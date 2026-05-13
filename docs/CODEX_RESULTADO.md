@@ -5875,3 +5875,25 @@ Não houve alteração de código funcional nesta etapa.
 - mantive fallback sem JavaScript via `<noscript>` para o select do Django
 - ajustei o cabecalho da tela para usar `financeiro-page-subtitle`, eliminando a sobreposicao de titulo/subtitulo
 - cobertura de testes ampliada para garantir presenca do campo pesquisavel unico e da estrutura de selecao oculta
+
+## Microetapa documental: registro de homologacao do recibo especial em lote
+
+- microetapa exclusivamente documental, sem alteracao de codigo, templates, models, migrations ou banco
+- homologacao da usuaria registrada para o primeiro recorte funcional/visual do `Recibo especial em lote` com retorno: `Esta OK`
+- itens homologados:
+  - fluxo funcional completo do recibo especial
+  - titulo impresso `RECIBO`
+  - busca de favorecido por trecho do nome
+  - exibicao de apenas um campo pesquisavel (sem duplicidade visual de campo + select)
+  - correcao da sobreposicao de titulo/subtitulo
+  - descricao final no formato `descricao atual - nome do favorecido original`
+- guardrails mantidos e homologados:
+  - sem alteracao de recibo em lote atual
+  - sem alteracao de recibos por favorecido atuais
+  - sem alteracao de termo anual
+  - sem alteracao de lancamentos e favorecido real
+  - sem impacto em saldos, extrato, resumo, prestacao/fechamento e balancete
+- pendencias futuras opcionais registradas:
+  - permissao dedicada para o `Recibo especial`
+  - auditoria operacional propria da acao
+  - ajustes finos de impressao se surgirem em uso real

@@ -1500,3 +1500,22 @@ Atualizacao de refinamento de UX:
 - o comportamento de busca foi reforcado para trecho do nome, ignorando caixa e acentos
 - o envio sem selecao valida passou a ter mensagem clara na tela
 - o cabecalho da tela de selecao recebeu ajuste de espaco para evitar sobreposicao de titulo/subtitulo
+
+Atualizacao de homologacao:
+- a usuaria homologou localmente o primeiro recorte funcional/visual do `Recibo especial em lote` com retorno `Esta OK`
+- escopo homologado:
+  - fluxo funcional da nova acao documental isolada
+  - titulo impresso `RECIBO`
+  - busca de favorecido por trecho do nome
+  - campo pesquisavel unico (sem dois campos visiveis)
+  - correcao da sobreposicao de titulo/subtitulo
+  - descricao composta `descricao atual - nome do favorecido original`
+- preservacoes homologadas:
+  - recibo em lote atual sem alteracao
+  - recibos por favorecido atuais sem alteracao
+  - termo anual sem alteracao
+  - lancamentos e favorecido real sem alteracao
+- pendencias futuras opcionais mantidas:
+  - permissao dedicada para o recibo especial
+  - auditoria operacional propria
+  - ajustes finos de impressao se surgirem no uso real

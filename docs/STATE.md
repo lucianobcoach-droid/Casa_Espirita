@@ -4186,3 +4186,27 @@ Riscos principais antes de migration:
 - fallback com `<noscript>` mantido para uso do select quando JavaScript estiver desativado
 - cabecalho da tela do recibo especial ajustado para evitar sobreposicao de titulo/subtitulo
 - sem alteracao de regra de negocio, sem alteracao em recibos atuais, termo anual, lancamentos, saldos ou relatorios oficiais
+
+## Homologacao da usuaria: recibo especial em lote (primeiro recorte)
+
+- homologacao local registrada pela usuaria com retorno: `Esta OK`
+- fluxo funcional validado:
+  - selecao em lote
+  - escolha manual de favorecido destinatario
+  - emissao do recibo especial sem alterar lancamentos
+- validacoes de UX e impressao confirmadas:
+  - titulo impresso `RECIBO`
+  - busca de favorecido por trecho do nome
+  - ausencia de dois campos visiveis de selecao (campo pesquisavel unico)
+  - correcao da sobreposicao de titulo/subtitulo nas telas novas do fluxo
+  - descricao composta no formato `descricao atual - nome do favorecido original`
+- preservacoes confirmadas:
+  - recibo em lote atual preservado
+  - recibos por favorecido atuais preservados
+  - termo anual preservado
+  - lancamentos e favorecido real preservados
+  - sem impacto em saldos, extrato, resumo, prestacao/fechamento e balancete
+- pendencias futuras opcionais registradas:
+  - permissao dedicada para `Recibo especial`
+  - auditoria operacional propria da nova acao
+  - ajustes finos de impressao apenas se surgirem necessidades em uso real
