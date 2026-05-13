@@ -1375,6 +1375,21 @@ Consolidacao:
 - recomendacao tecnica inicial registrada:
   - tentar configuracao por `ColunaPersonalizada.configuracao_json`
   - se isso nao bastar, abrir microetapa propria com model/migration
+- auditoria tecnica complementar desta pendencia:
+  - `ColunaPersonalizada` ja usa `configuracao_json` com validacao controlada para `lista_opcoes`
+  - `ColunaPersonalizadaForm` ja concentra configuracoes documentais/operacionais da coluna, inclusive totalizadores
+  - a tela de linhas ja reutiliza um pipeline unico para `busca -> renderizacao -> totalizadores -> exportacao XLSX`
+  - por isso, o primeiro recorte dos filtros por coluna foi classificado como compativel com configuracao em JSON, sem migration imediata
+- decisao documental desta microetapa:
+  - usar bloco aninhado `configuracao_json.filtro` no primeiro recorte
+  - manter operadores derivados do `tipo_dado`, sem configuracao livre por usuaria
+  - exibir filtros estruturados apenas quando existir pelo menos uma coluna habilitada
+  - combinar `busca textual simples + filtros estruturados` no mesmo resultado final da tela
+  - fazer totalizadores e exportacao XLSX refletirem esse mesmo resultado filtrado
+- gatilhos para reclassificar como `REQUER MODEL/MIGRATION` antes de implementar:
+  - crescimento do JSON para multiplos modos ou metadados independentes do tipo
+  - necessidade de indexacao/consulta mais forte no banco
+  - surgimento de visoes salvas, auditoria propria de filtros ou composicoes mais avancadas
 
 Fora do primeiro recorte:
 - texto avancado
@@ -1386,7 +1401,7 @@ Fora do primeiro recorte:
 - logica composta avancada
 
 Proxima microetapa recomendada:
-- implementar os filtros configuraveis por coluna antes de abrir novas frentes documentais de recibo especial
+- implementar os filtros configuraveis por coluna no formulario de estrutura e na tela de linhas antes de abrir novas frentes documentais de recibo especial
 
 ### 51. Documentos financeiros - recibo especial em lote com favorecido manual
 

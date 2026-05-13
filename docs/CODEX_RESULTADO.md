@@ -5742,3 +5742,27 @@ Não houve alteração de código funcional nesta etapa.
 - ordem recomendada registrada:
   - 1. filtros configuraveis por coluna
   - 2. auditoria tecnica + implementacao do recibo especial em lote
+
+## Microetapa documental: auditoria e SPEC curta de filtros por coluna
+
+- microetapa exclusivamente documental, sem alteracao de Python, template, JS/CSS, model, migration ou banco
+- auditei a base tecnica atual da frente de tabelas personalizadas em `models`, `forms`, `views`, `urls`, templates e testes
+- achado principal:
+  - o primeiro recorte de filtros estruturados por coluna cabe no padrao atual da frente usando `ColunaPersonalizada.configuracao_json`, sem migration imediata
+- justificativa tecnica registrada:
+  - `configuracao_json` ja e usado de forma controlada para `lista_opcoes`
+  - `ColunaPersonalizadaForm` ja centraliza configuracoes derivadas do tipo da coluna
+  - a tela de linhas ja compartilha um pipeline unico entre busca textual, totalizadores e exportacao XLSX
+- direcao de implementacao documentada:
+  - criar bloco aninhado `configuracao_json.filtro`
+  - manter habilitacao explicita por coluna, sem filtro automatico para toda coluna
+  - permitir no primeiro recorte apenas:
+    - `data`: `entre`, `igual`, `antes`, `depois`
+    - `mes/competencia`: `entre`, `igual`
+    - `inteiro`, `decimal`, `monetario`, `percentual`: `entre`, `igual`, `maior`, `menor`
+  - manter busca textual simples coexistindo com os filtros estruturados
+  - fazer totalizadores e exportacao XLSX refletirem o resultado combinado de busca + filtros
+- guardrail tecnico registrado:
+  - abrir model/migration propria apenas se o JSON ficar insuficiente para governanca, indexacao, visoes salvas, auditoria propria ou configuracoes mais complexas
+- proxima microetapa recomendada:
+  - implementar a configuracao de filtros no formulario de coluna e a aplicacao basica desses filtros na tela de linhas, ainda sem formulas guiadas nem filtros avancados

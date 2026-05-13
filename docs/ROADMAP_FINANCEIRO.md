@@ -3279,6 +3279,44 @@ Consolidacao:
   - avaliar se a configuracao pode nascer em `ColunaPersonalizada.configuracao_json` no primeiro recorte
   - se a governanca exigir campos explicitos, abrir microetapa propria com model/migration
 
+SPEC tecnica curta da implementacao incremental:
+- resultado da auditoria:
+  - `ColunaPersonalizada` ja usa `configuracao_json` para `lista_opcoes`
+  - `ColunaPersonalizadaForm` ja centraliza configuracoes controladas por coluna sem abrir model auxiliar
+  - a tela de linhas ja possui pipeline unico para busca textual, totalizadores e exportacao XLSX
+  - por isso, o primeiro recorte de filtros estruturados pode nascer sem migration, desde que a configuracao fique aninhada e governada no JSON da coluna
+- decisao recomendada para o primeiro recorte:
+  - usar `ColunaPersonalizada.configuracao_json` com bloco dedicado de filtro, sem misturar com `opcoes`
+  - formato conceitual sugerido:
+    - `configuracao_json.opcoes` continua reservado para `lista_opcoes`
+    - `configuracao_json.filtro` passa a concentrar a configuracao do filtro estruturado
+    - exemplo conceitual:
+      - `{"filtro": {"habilitado": true, "operadores": ["entre", "igual"]}}`
+- criterio para permanecer sem migration:
+  - a configuracao continua restrita ao formulario de coluna
+  - os operadores continuam derivados do `tipo_dado`, e nao livres
+  - a aplicacao do filtro continua acoplada a uma unica tela de linhas por tabela
+  - nao ha necessidade de indexacao propria, visoes salvas ou compartilhamento transversal da configuracao
+- quando abrir model/migration propria:
+  - se a configuracao crescer para multiplos modos por coluna, defaults complexos ou metadados independentes do `tipo_dado`
+  - se o filtro precisar de consulta/indexacao mais forte no banco em vez de montagem controlada na camada atual da tela
+  - se a frente passar a exigir visoes salvas, auditoria propria de configuracao de filtros ou relacionamentos extras entre filtros
+- orientacao de UX/estrutura:
+  - a configuracao deve aparecer no cadastro da coluna como opcao explicita, e nao como comportamento automatico
+  - a tela de linhas deve exibir area de filtros estruturados apenas quando houver pelo menos uma coluna com filtro habilitado
+  - busca textual simples permanece separada e complementar
+  - resultado final da tela deve aplicar `busca textual + filtros estruturados`
+- validacoes tecnicas esperadas:
+  - `data`: aceitar formato brasileiro e operadores `entre`, `igual`, `antes`, `depois`
+  - `mes/competencia`: aceitar `MM/AAAA` e operadores `entre` e `igual`
+  - `inteiro`, `decimal`, `monetario`, `percentual`: aceitar virgula ou ponto e operadores `entre`, `igual`, `maior`, `menor`
+  - filtros invalidos devem renderizar mensagem clara e manter a pagina funcional
+- impacto controlado na frente atual:
+  - totalizadores devem refletir o resultado filtrado por busca + filtros, sem alternancia entre total geral e total filtrado
+  - exportacao XLSX deve reaproveitar o mesmo estado filtrado da tela, sem exportacao paralela
+- risco tecnico principal a monitorar:
+  - deixar `configuracao_json` crescer de forma desorganizada; por isso, o bloco de filtro deve nascer aninhado, curto e derivado do `tipo_dado`
+
 Fora do primeiro recorte:
 - filtro avancado por texto
 - filtro por multiplas opcoes de lista
@@ -3295,7 +3333,7 @@ Riscos principais:
 - risco de abrir configuracao frouxa demais sem governanca por coluna
 
 Proxima microetapa recomendada:
-- auditar a estrutura atual de colunas/linhas e abrir a implementacao incremental dos filtros configuraveis por coluna
+- implementar a configuracao de filtros no formulario de coluna e a aplicacao basica dos filtros estruturados na tela de linhas, ainda usando `configuracao_json` e sem abrir migration
 
 ## 32. Documentos financeiros - recibo especial em lote
 

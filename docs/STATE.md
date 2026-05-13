@@ -4021,3 +4021,32 @@ Riscos principais antes de migration:
 - ordem recomendada consolidada:
   - primeiro filtros configuraveis por coluna nas tabelas personalizadas
   - depois auditoria tecnica e implementacao do recibo especial em lote
+
+## Microetapa documental: auditoria e especificacao curta dos filtros por coluna
+
+- auditoria tecnica/documental concluida sobre a frente atual de tabelas personalizadas, sem alteracao funcional
+- direcao registrada:
+  - o primeiro recorte dos filtros estruturados por coluna pode usar `ColunaPersonalizada.configuracao_json`, sem migration imediata
+  - a configuracao deve nascer em bloco aninhado proprio, separado de `opcoes_lista`
+  - o formulario de coluna continua como ponto de entrada da configuracao, sem filtro automatico para toda coluna
+- tipos e operadores aprovados para o primeiro recorte:
+  - `data`: `entre`, `igual`, `antes`, `depois`
+  - `mes/competencia`: `entre`, `igual`
+  - `inteiro`, `decimal`, `monetario`, `percentual`: `entre`, `igual`, `maior`, `menor`
+- convivencia com o que ja existe:
+  - busca textual simples permanece ativa
+  - filtros estruturados entram como complemento
+  - totalizadores devem refletir busca + filtros
+  - exportacao XLSX deve refletir busca + filtros quando a implementacao funcional existir
+- fora do primeiro recorte mantido:
+  - texto avancado
+  - multiplas opcoes de lista
+  - booleano
+  - visoes salvas
+  - agrupamentos
+  - dashboard
+  - logica composta avancada
+- gatilho para abrir model/migration antes de implementar:
+  - se `configuracao_json` deixar de ser suficiente para governanca, indexacao, auditoria propria ou configuracoes mais complexas
+- proxima microetapa recomendada:
+  - implementar a configuracao de filtros no cadastro da coluna e a aplicacao basica dos filtros estruturados na tela de linhas, ainda sem filtros avancados
