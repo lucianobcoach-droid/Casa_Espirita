@@ -557,7 +557,10 @@ class ColunaPersonalizadaForm(forms.ModelForm):
             (ColunaPersonalizada.TipoDado.MONETARIO, 'Monetario'),
         ],
         label='Tipo do resultado',
-        help_text='No primeiro recorte, o resultado pode ser decimal ou monetario.',
+        help_text=(
+            'Neste primeiro recorte, o resultado da formula pode ser Decimal ou Monetario. '
+            'Use Decimal com 0 casas quando quiser um resultado sem casas decimais.'
+        ),
     )
     formula_casas_decimais = forms.IntegerField(
         required=False,

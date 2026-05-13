@@ -3694,3 +3694,17 @@ Guardrails mantidos:
 
 Proxima decisao recomendada:
 - definir em microetapa propria se colunas calculadas permanecerao fora de totalizadores no MVP ou se abrirao uma regra segura e explicita para o rodape
+
+## Microetapa: UX de "Tipo do resultado" nas formulas guiadas
+
+Status:
+- implementado refinamento de clareza textual no campo `Tipo do resultado`
+
+Consolidacao:
+- `Decimal` e `Monetario` permanecem como unicos tipos de resultado do primeiro recorte
+- microcopy do formulario passou a explicar o motivo e orientar o uso de `Decimal` com `0` casas quando necessario
+
+Guardrails preservados:
+- sem liberar `Inteiro` e `Percentual` nesta etapa
+- sem alteracao de calculo da formula
+- sem alteracao de busca, XLSX, filtros ou totalizadores

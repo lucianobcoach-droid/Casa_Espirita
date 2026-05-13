@@ -4321,3 +4321,15 @@ Riscos principais antes de migration:
   - sem alteracao em `LancamentoFinanceiro` e no financeiro oficial
 - proxima microetapa recomendada:
   - decidir explicitamente se colunas calculadas participarao de totalizadores ou se esse recorte deve permanecer fora do MVP
+
+## Microetapa: clareza de UX no campo "Tipo do resultado" da formula guiada
+
+- ajuste aplicado apenas em microcopy do formulario de coluna para reduzir duvida no campo `Tipo do resultado`
+- ficou explicito no proprio campo que, no primeiro recorte, os tipos disponiveis sao:
+  - `Decimal`
+  - `Monetario`
+- a ajuda tambem orienta que `Decimal` com `0` casas cobre resultado sem casas decimais
+- mantido sem alteracao funcional:
+  - sem liberar `Inteiro`
+  - sem liberar `Percentual`
+  - sem alteracao de calculo, busca, XLSX, filtros ou totalizadores

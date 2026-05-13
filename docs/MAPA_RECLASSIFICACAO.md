@@ -1629,3 +1629,18 @@ Guardrails preservados:
 - filtros estruturados continuam fora para calculadas
 - totalizadores continuam fora para calculadas
 - sem impacto em `LancamentoFinanceiro` e no financeiro oficial
+
+### 56. Tabelas personalizadas - clareza do tipo de resultado da formula
+
+Status: IMPLEMENTADO
+
+Consolidacao:
+- formulario de coluna recebeu esclarecimento textual no campo `Tipo do resultado`
+- primeiro recorte permanece restrito a:
+  - `Decimal`
+  - `Monetario`
+- orientacao explicita adicionada: `Decimal` com `0` casas pode ser usado para resultado sem casas decimais
+
+Fora desta etapa:
+- liberar `Inteiro` e `Percentual` como resultado de formula
+- qualquer alteracao em calculo, busca, XLSX, filtros estruturados ou totalizadores

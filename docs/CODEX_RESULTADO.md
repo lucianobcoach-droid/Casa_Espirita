@@ -5903,6 +5903,18 @@ Não houve alteração de código funcional nesta etapa.
   - sem totalizador para calculadas
   - sem impacto em `LancamentoFinanceiro` e no financeiro oficial
 
+## Microetapa: ajuste de clareza no tipo de resultado da formula guiada
+
+- refinamento exclusivo de UX/microcopy no formulario de colunas
+- o campo `Tipo do resultado` agora explica de forma direta que o primeiro recorte aceita apenas:
+  - `Decimal`
+  - `Monetario`
+- a mensagem orienta uso de `Decimal` com `0` casas para resultado sem casas decimais
+- sem alteracao funcional:
+  - sem liberar `Inteiro` ou `Percentual`
+  - sem alterar calculo da formula
+  - sem alterar busca, XLSX, filtros estruturados ou totalizadores
+
 ## Microetapa: formulas guiadas por coluna - Onda 2
 
 - implementei o calculo funcional das formulas guiadas apenas na leitura da listagem de linhas

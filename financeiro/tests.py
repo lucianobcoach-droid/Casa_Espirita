@@ -5260,6 +5260,14 @@ class TabelasPersonalizadasListViewTests(TestCase):
             response,
             'A formula e aplicada por coluna e usa apenas colunas numericas da mesma linha.',
         )
+        self.assertContains(
+            response,
+            'Neste primeiro recorte, o resultado da formula pode ser Decimal ou Monetario.',
+        )
+        self.assertContains(
+            response,
+            'Use Decimal com 0 casas quando quiser um resultado sem casas decimais.',
+        )
         self.assertContains(response, 'O totalizador aparece no rodape da tabela de linhas.')
 
     def test_usuario_com_permissao_cria_coluna_valida(self):
