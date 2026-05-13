@@ -1905,6 +1905,23 @@ Status consolidado: SPEC FUNCIONAL DOCUMENTAL CONSOLIDADA / BACKLOG TECNICO INCR
     - 2. calculo + exibicao somente leitura na listagem de linhas
     - 3. integracao controlada com busca/XLSX e decisao separada sobre totalizadores em colunas calculadas
 
+Status apos Onda 1:
+- configuracao visual da formula guiada implementada apenas na estrutura da coluna
+- persistencia inicial entregue em `ColunaPersonalizada.configuracao_json.formula`, sem migration
+- liberacao controlada apenas para quem possui `financeiro.tabelas_personalizadas.configurar_formula`
+- validacoes estruturais entregues:
+  - operacoes limitadas a `soma`, `subtracao`, `multiplicacao` e `divisao`
+  - fontes limitadas a colunas numericas ativas, visiveis, da mesma tabela e nao calculadas
+  - resultado limitado a `decimal` e `monetario`
+  - bloqueio de formula sobre formula, uso da propria coluna, configuracao incompleta e quantidade invalida de operandos
+- preservado nesta onda:
+  - sem calculo funcional
+  - sem preenchimento de `valor_calculado`
+  - sem exibicao de resultado calculado na tela de linhas
+  - sem impacto em busca, filtros, totalizadores e XLSX
+- proxima onda recomendada:
+  - implementar o calculo e a exibicao somente leitura das colunas calculadas na listagem de linhas
+
 #### Microetapa 13 - auditoria operacional
 
 - Objetivo:

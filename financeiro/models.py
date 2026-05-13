@@ -753,6 +753,12 @@ class ColunaPersonalizada(models.Model):
         MAIOR = 'maior', 'Maior que'
         MENOR = 'menor', 'Menor que'
 
+    class OperacaoFormula(models.TextChoices):
+        SOMA = 'soma', 'Soma'
+        SUBTRACAO = 'subtracao', 'Subtracao'
+        MULTIPLICACAO = 'multiplicacao', 'Multiplicacao'
+        DIVISAO = 'divisao', 'Divisao'
+
     tabela = models.ForeignKey(
         TabelaPersonalizada,
         on_delete=models.CASCADE,
@@ -831,6 +837,41 @@ class ColunaPersonalizada(models.Model):
         except ValueError:
             return operador
 
+    @classmethod
+    def tipos_elegiveis_formula_fonte(cls) -> tuple[str, ...]:
+        return (
+            cls.TipoDado.INTEIRO,
+            cls.TipoDado.DECIMAL,
+            cls.TipoDado.MONETARIO,
+            cls.TipoDado.PERCENTUAL,
+        )
+
+    @classmethod
+    def tipos_elegiveis_formula_resultado(cls) -> tuple[str, ...]:
+        return (
+            cls.TipoDado.DECIMAL,
+            cls.TipoDado.MONETARIO,
+        )
+
+    @classmethod
+    def operacoes_formula_guiada(cls) -> tuple[str, ...]:
+        return tuple(valor for valor, _rotulo in cls.OperacaoFormula.choices)
+
+    @classmethod
+    def rotulo_operacao_formula(cls, operacao: str) -> str:
+        try:
+            return cls.OperacaoFormula(operacao).label
+        except ValueError:
+            return operacao
+
+    @classmethod
+    def limite_casas_decimais_formula(cls, tipo_resultado: str | None) -> tuple[int, int] | None:
+        if tipo_resultado == cls.TipoDado.MONETARIO:
+            return (2, 2)
+        if tipo_resultado == cls.TipoDado.DECIMAL:
+            return (0, 8)
+        return None
+
     @property
     def filtro_estruturado_config(self) -> dict[str, object]:
         configuracao = self.configuracao_json if isinstance(self.configuracao_json, dict) else {}
@@ -843,11 +884,120 @@ class ColunaPersonalizada(models.Model):
             return False
         return bool(self.filtro_estruturado_config.get('habilitado'))
 
+    @property
+    def formula_config(self) -> dict[str, object]:
+        configuracao = self.configuracao_json if isinstance(self.configuracao_json, dict) else {}
+        formula = configuracao.get('formula', {})
+        return formula if isinstance(formula, dict) else {}
+
+    @property
+    def formula_habilitada(self) -> bool:
+        if self.tipo_dado != self.TipoDado.FORMULA_CONTROLADA or not self.calculada:
+            return False
+        return bool(self.formula_config.get('habilitada'))
+
+    @classmethod
+    def validar_configuracao_formula_guiada(
+        cls,
+        *,
+        coluna: ColunaPersonalizada,
+        configuracao_formula: object,
+    ) -> dict[str, str]:
+        errors: dict[str, str] = {}
+
+        if not isinstance(configuracao_formula, dict):
+            return {'formula': 'A formula guiada precisa ser salva como um objeto JSON valido.'}
+
+        habilitada = configuracao_formula.get('habilitada')
+        operacao = configuracao_formula.get('operacao')
+        operandos = configuracao_formula.get('operandos')
+        resultado_tipo = configuracao_formula.get('resultado_tipo')
+        casas_decimais = configuracao_formula.get('casas_decimais')
+
+        if habilitada is not True:
+            errors['formula'] = 'A formula guiada desta etapa precisa ser salva como habilitada.'
+
+        if operacao not in cls.operacoes_formula_guiada():
+            errors['operacao'] = 'Selecione uma operacao guiada valida para a formula.'
+
+        operandos_ids: list[int] = []
+        if not isinstance(operandos, list):
+            errors['operandos'] = 'Selecione ao menos duas colunas numericas como operandos da formula.'
+        else:
+            for valor in operandos:
+                try:
+                    operandos_ids.append(int(valor))
+                except (TypeError, ValueError):
+                    errors['operandos'] = 'Selecione apenas colunas validas como operandos da formula.'
+                    break
+
+        if 'operandos' not in errors:
+            if len(operandos_ids) < 2:
+                errors['operandos'] = 'A formula guiada exige pelo menos duas colunas de origem.'
+            elif operacao in {cls.OperacaoFormula.SUBTRACAO, cls.OperacaoFormula.DIVISAO} and len(operandos_ids) != 2:
+                errors['operandos'] = 'Subtracao e divisao exigem exatamente dois operandos nesta etapa.'
+
+        if resultado_tipo not in cls.tipos_elegiveis_formula_resultado():
+            errors['resultado_tipo'] = 'Selecione um tipo de resultado valido para a formula guiada.'
+
+        if not isinstance(casas_decimais, int):
+            errors['casas_decimais'] = 'Informe a quantidade de casas decimais da formula guiada.'
+        else:
+            limites = cls.limite_casas_decimais_formula(resultado_tipo)
+            if limites is None:
+                errors['casas_decimais'] = 'Nao foi possivel definir as casas decimais para o tipo de resultado informado.'
+            else:
+                minimo, maximo = limites
+                if not minimo <= casas_decimais <= maximo:
+                    if minimo == maximo:
+                        errors['casas_decimais'] = f'Este tipo de resultado exige exatamente {minimo} casas decimais.'
+                    else:
+                        errors['casas_decimais'] = (
+                            f'Este tipo de resultado aceita de {minimo} a {maximo} casas decimais.'
+                        )
+
+        tabela = coluna.tabela if getattr(coluna, 'tabela_id', None) else None
+        if tabela is not None and 'operandos' not in errors:
+            operandos_queryset = cls.objects.filter(
+                tabela=tabela,
+                pk__in=set(operandos_ids),
+            )
+            operandos_lookup = {
+                operando.pk: operando
+                for operando in operandos_queryset
+            }
+
+            for operando_id in operandos_ids:
+                operando = operandos_lookup.get(operando_id)
+                if operando is None:
+                    errors['operandos'] = 'Selecione apenas colunas da mesma tabela como operandos da formula.'
+                    break
+                if coluna.pk and operando.pk == coluna.pk:
+                    errors['operandos'] = 'A propria coluna calculada nao pode ser usada como operando da formula.'
+                    break
+                if operando.calculada or operando.tipo_dado == cls.TipoDado.FORMULA_CONTROLADA:
+                    errors['operandos'] = 'Nao e permitido criar formula sobre outra coluna calculada nesta etapa.'
+                    break
+                if operando.status != cls.StatusColuna.ATIVA:
+                    errors['operandos'] = 'Use apenas colunas ativas como origem da formula guiada.'
+                    break
+                if not operando.visivel:
+                    errors['operandos'] = 'Use apenas colunas visiveis como origem da formula guiada.'
+                    break
+                if operando.tipo_dado not in cls.tipos_elegiveis_formula_fonte():
+                    errors['operandos'] = (
+                        'A formula guiada desta etapa aceita apenas colunas inteiras, decimais, monetarias ou percentuais.'
+                    )
+                    break
+
+        return errors
+
     def clean(self) -> None:
         super().clean()
         errors: dict[str, str] = {}
         nome_normalizado = _normalizar_identificador_textual(self.nome)
         configuracao = self.configuracao_json or {}
+        skip_formula_validation = getattr(self, '_skip_formula_json_validation', False)
 
         if not nome_normalizado:
             errors['nome'] = 'Informe o nome da coluna.'
@@ -899,6 +1049,22 @@ class ColunaPersonalizada(models.Model):
                     errors['configuracao_json'] = 'A configuracao de filtro da coluna exige operadores em uma lista textual.'
                 elif habilitado and operadores != operadores_esperados:
                     errors['configuracao_json'] = 'Os operadores do filtro estruturado devem ser derivados do tipo da coluna.'
+
+        if not skip_formula_validation:
+            if isinstance(configuracao, dict) and 'formula' in configuracao:
+                if self.tipo_dado != self.TipoDado.FORMULA_CONTROLADA or not self.calculada:
+                    errors['configuracao_json'] = (
+                        'A configuracao de formula guiada so pode existir em colunas marcadas como formula_controlada.'
+                    )
+                else:
+                    formula_errors = self.validar_configuracao_formula_guiada(
+                        coluna=self,
+                        configuracao_formula=configuracao.get('formula'),
+                    )
+                    if formula_errors:
+                        errors['configuracao_json'] = ' '.join(formula_errors.values())
+            elif self.tipo_dado == self.TipoDado.FORMULA_CONTROLADA:
+                errors['configuracao_json'] = 'Coluna formula_controlada exige configuracao_json.formula valida nesta etapa.'
 
         if self.tabela_id and nome_normalizado and self.status != self.StatusColuna.ARQUIVADA:
             queryset = type(self).objects.filter(tabela=self.tabela).exclude(status=self.StatusColuna.ARQUIVADA)

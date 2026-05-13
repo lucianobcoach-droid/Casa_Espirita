@@ -4229,3 +4229,33 @@ Riscos principais antes de migration:
   - permissao dedicada para `Recibo especial`
   - auditoria operacional propria da nova acao
   - ajustes finos de impressao apenas se surgirem necessidades em uso real
+
+## Microetapa: formulas guiadas por coluna - Onda 1
+
+- primeira onda funcional entregue apenas na estrutura da coluna, sem calculo ativo
+- `ColunaPersonalizadaForm` passou a expor a secao `Formula guiada` apenas para usuario com `financeiro.tabelas_personalizadas.configurar_formula`
+- configuracao persistida em `configuracao_json.formula`, mantendo:
+  - `habilitada`
+  - `operacao`
+  - `operandos`
+  - `resultado_tipo`
+  - `casas_decimais`
+- validacao estrutural implementada para bloquear:
+  - formula fora de `tipo_dado=formula_controlada`
+  - coluna de formula sem `calculada=True`
+  - operacao fora da whitelist
+  - operandos fora da mesma tabela
+  - operandos nao numericos, invisiveis, inativos ou calculados
+  - uso da propria coluna
+  - formula sobre formula
+  - formula incompleta
+  - `subtracao` e `divisao` com quantidade invalida de operandos
+- listagem de colunas agora indica quando a formula guiada esta configurada
+- preservado nesta onda:
+  - sem calculo funcional
+  - sem preenchimento de `valor_calculado`
+  - sem exibicao de calculo nas linhas
+  - sem alteracao em busca, filtros, totalizadores ou XLSX
+  - sem impacto em `LancamentoFinanceiro` ou no financeiro oficial
+- proxima microetapa recomendada:
+  - abrir a Onda 2 com calculo/exibicao somente leitura das colunas calculadas na tela de linhas

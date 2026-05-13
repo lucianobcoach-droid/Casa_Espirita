@@ -4245,11 +4245,32 @@ class TabelasPersonalizadasEstruturaBaseTests(TestCase):
             valor.full_clean()
 
     def test_coluna_calculada_bloqueia_valor_manual(self):
+        coluna_origem_a = ColunaPersonalizada.objects.create(
+            tabela=self.tabela,
+            nome='Origem inteira',
+            tipo_dado=ColunaPersonalizada.TipoDado.INTEIRO,
+            visivel=True,
+        )
+        coluna_origem_b = ColunaPersonalizada.objects.create(
+            tabela=self.tabela,
+            nome='Origem decimal',
+            tipo_dado=ColunaPersonalizada.TipoDado.DECIMAL,
+            visivel=True,
+        )
         coluna = ColunaPersonalizada.objects.create(
             tabela=self.tabela,
             nome='Total',
             tipo_dado=ColunaPersonalizada.TipoDado.FORMULA_CONTROLADA,
             calculada=True,
+            configuracao_json={
+                'formula': {
+                    'habilitada': True,
+                    'operacao': ColunaPersonalizada.OperacaoFormula.SOMA,
+                    'operandos': [coluna_origem_a.pk, coluna_origem_b.pk],
+                    'resultado_tipo': ColunaPersonalizada.TipoDado.DECIMAL,
+                    'casas_decimais': 8,
+                }
+            },
         )
         linha = LinhaTabelaPersonalizada.objects.create(tabela=self.tabela)
         valor = ValorTabelaPersonalizada(
@@ -4458,6 +4479,65 @@ class TabelasPersonalizadasListViewTests(TestCase):
             dados[TabelaPersonalizadaLinhaFiltroEstruturadoForm.campo_fim_nome(coluna.pk)] = fim
         return dados
 
+    def _criar_colunas_fonte_formula(self):
+        sequencia = ColunaPersonalizada.objects.filter(tabela=self.tabela).count() + 1
+        return {
+            'inteiro': ColunaPersonalizada.objects.create(
+                tabela=self.tabela,
+                nome=f'Quantidade base {sequencia}',
+                tipo_dado=ColunaPersonalizada.TipoDado.INTEIRO,
+                visivel=True,
+                ordem=30 + sequencia,
+            ),
+            'decimal': ColunaPersonalizada.objects.create(
+                tabela=self.tabela,
+                nome=f'Consumo base {sequencia}',
+                tipo_dado=ColunaPersonalizada.TipoDado.DECIMAL,
+                visivel=True,
+                ordem=31 + sequencia,
+            ),
+            'monetario': ColunaPersonalizada.objects.create(
+                tabela=self.tabela,
+                nome=f'Valor base {sequencia}',
+                tipo_dado=ColunaPersonalizada.TipoDado.MONETARIO,
+                visivel=True,
+                ordem=32 + sequencia,
+            ),
+            'percentual': ColunaPersonalizada.objects.create(
+                tabela=self.tabela,
+                nome=f'Percentual base {sequencia}',
+                tipo_dado=ColunaPersonalizada.TipoDado.PERCENTUAL,
+                visivel=True,
+                ordem=33 + sequencia,
+            ),
+        }
+
+    def _dados_formula_coluna(
+        self,
+        *,
+        nome='Campo calculado guiado',
+        operacao=ColunaPersonalizada.OperacaoFormula.SOMA,
+        operandos=None,
+        resultado_tipo=ColunaPersonalizada.TipoDado.DECIMAL,
+        casas_decimais=8,
+        visivel='on',
+    ):
+        return {
+            'nome': nome,
+            'tipo_dado': ColunaPersonalizada.TipoDado.FORMULA_CONTROLADA,
+            'opcoes_lista': '',
+            'totalizadores_configurados': [],
+            'filtro_estruturado': '',
+            'formula_operacao': operacao,
+            'formula_operandos': [str(valor) for valor in (operandos or [])],
+            'formula_resultado_tipo': resultado_tipo,
+            'formula_casas_decimais': casas_decimais,
+            'obrigatoria': '',
+            'visivel': visivel,
+            'ordem': 40,
+            'status': ColunaPersonalizada.StatusColuna.ATIVA,
+        }
+
     def _criar_colunas_para_linhas(self):
         texto = ColunaPersonalizada.objects.create(
             tabela=self.tabela,
@@ -4557,6 +4637,15 @@ class TabelasPersonalizadasListViewTests(TestCase):
             obrigatoria=False,
             visivel=True,
             ordem=19,
+            configuracao_json={
+                'formula': {
+                    'habilitada': True,
+                    'operacao': ColunaPersonalizada.OperacaoFormula.SOMA,
+                    'operandos': [inteiro.pk, decimal.pk],
+                    'resultado_tipo': ColunaPersonalizada.TipoDado.DECIMAL,
+                    'casas_decimais': 8,
+                }
+            },
         )
         return {
             'texto': texto,
@@ -4940,7 +5029,7 @@ class TabelasPersonalizadasListViewTests(TestCase):
         self.assertContains(response, 'Estrutura da tabela')
         self.assertContains(response, 'Observacao interna')
         self.assertContains(response, 'estrutura das colunas')
-        self.assertContains(response, 'totalizadores controlados por coluna')
+        self.assertContains(response, 'totalizadores por coluna')
 
     def test_listagem_de_colunas_indica_filtro_estruturado_habilitado(self):
         self.coluna_existente.tipo_dado = ColunaPersonalizada.TipoDado.DECIMAL
@@ -4964,6 +5053,37 @@ class TabelasPersonalizadasListViewTests(TestCase):
         self.assertContains(response, 'Filtro estruturado')
         self.assertContains(response, 'Habilitado')
 
+    def test_listagem_de_colunas_indica_formula_guiada_configurada(self):
+        fontes = self._criar_colunas_fonte_formula()
+        ColunaPersonalizada.objects.create(
+            tabela=self.tabela,
+            nome='Total configurado',
+            tipo_dado=ColunaPersonalizada.TipoDado.FORMULA_CONTROLADA,
+            calculada=True,
+            visivel=True,
+            configuracao_json={
+                'formula': {
+                    'habilitada': True,
+                    'operacao': ColunaPersonalizada.OperacaoFormula.SOMA,
+                    'operandos': [fontes['inteiro'].pk, fontes['decimal'].pk],
+                    'resultado_tipo': ColunaPersonalizada.TipoDado.DECIMAL,
+                    'casas_decimais': 8,
+                }
+            },
+        )
+        self._login_com_permissoes(
+            'user-coluna-lista-formula',
+            [PermissoesTabelasPersonalizadas.EDITAR_ESTRUTURA],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-coluna-list', kwargs={'tabela_id': self.tabela.pk})
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Formula guiada')
+        self.assertContains(response, 'Configurada')
+
     def test_usuario_sem_permissao_editar_estrutura_nao_acessa_colunas(self):
         self._login_com_permissoes(
             'user-coluna-list-sem-permissao',
@@ -4976,12 +5096,26 @@ class TabelasPersonalizadasListViewTests(TestCase):
 
         self.assertEqual(response.status_code, 403)
 
-    def test_form_de_coluna_nao_expoe_formula_controlada_nem_calculada(self):
+    def test_form_de_coluna_sem_permissao_nao_expoe_formula_controlada_nem_calculada(self):
         form = ColunaPersonalizadaForm()
         valores_tipo = {valor for valor, _rotulo in form.fields['tipo_dado'].choices}
 
         self.assertNotIn(ColunaPersonalizada.TipoDado.FORMULA_CONTROLADA, valores_tipo)
         self.assertNotIn('calculada', form.fields)
+        self.assertNotIn('formula_operacao', form.fields)
+
+    def test_form_de_coluna_com_permissao_expoe_formula_guiada(self):
+        fontes = self._criar_colunas_fonte_formula()
+        form = ColunaPersonalizadaForm(
+            tabela=self.tabela,
+            pode_configurar_formula=True,
+        )
+        valores_tipo = {valor for valor, _rotulo in form.fields['tipo_dado'].choices}
+
+        self.assertIn(ColunaPersonalizada.TipoDado.FORMULA_CONTROLADA, valores_tipo)
+        self.assertIn('formula_operacao', form.fields)
+        self.assertIn('formula_operandos', form.fields)
+        self.assertIn(str(fontes['inteiro'].pk), {valor for valor, _rotulo in form.fields['formula_operandos'].choices})
 
     def test_usuario_com_permissao_cria_coluna_valida(self):
         self._login_com_permissoes(
@@ -5010,6 +5144,45 @@ class TabelasPersonalizadasListViewTests(TestCase):
         self.assertEqual(coluna.tipo_dado, ColunaPersonalizada.TipoDado.LISTA_OPCOES)
         self.assertEqual(coluna.configuracao_json, {'opcoes': ['Material', 'Limpeza', 'Apoio']})
         self.assertFalse(coluna.calculada)
+
+    def test_usuario_com_permissao_configurar_formula_cria_formula_valida(self):
+        fontes = self._criar_colunas_fonte_formula()
+        self._login_com_permissoes(
+            'user-coluna-formula-criar',
+            [
+                PermissoesTabelasPersonalizadas.EDITAR_ESTRUTURA,
+                PermissoesTabelasPersonalizadas.CONFIGURAR_FORMULA,
+            ],
+        )
+
+        response = self.client.post(
+            reverse('financeiro:tabela-personalizada-coluna-create', kwargs={'tabela_id': self.tabela.pk}),
+            data=self._dados_formula_coluna(
+                nome='Total guiado',
+                operacao=ColunaPersonalizada.OperacaoFormula.SOMA,
+                operandos=[fontes['inteiro'].pk, fontes['decimal'].pk, fontes['percentual'].pk],
+                resultado_tipo=ColunaPersonalizada.TipoDado.DECIMAL,
+                casas_decimais=8,
+            ),
+        )
+
+        self.assertRedirects(
+            response,
+            reverse('financeiro:tabela-personalizada-coluna-list', kwargs={'tabela_id': self.tabela.pk}),
+        )
+        coluna = ColunaPersonalizada.objects.get(tabela=self.tabela, nome='Total guiado')
+        self.assertTrue(coluna.calculada)
+        self.assertEqual(coluna.tipo_dado, ColunaPersonalizada.TipoDado.FORMULA_CONTROLADA)
+        self.assertEqual(
+            coluna.configuracao_json['formula'],
+            {
+                'habilitada': True,
+                'operacao': ColunaPersonalizada.OperacaoFormula.SOMA,
+                'operandos': [fontes['inteiro'].pk, fontes['decimal'].pk, fontes['percentual'].pk],
+                'resultado_tipo': ColunaPersonalizada.TipoDado.DECIMAL,
+                'casas_decimais': 8,
+            },
+        )
 
     def test_usuario_com_permissao_edita_coluna_valida(self):
         self._login_com_permissoes(
@@ -5045,21 +5218,321 @@ class TabelasPersonalizadasListViewTests(TestCase):
         self.assertEqual(self.coluna_existente.ordem, 9)
         self.assertEqual(self.coluna_existente.status, ColunaPersonalizada.StatusColuna.INATIVA)
 
-    def test_form_bloqueia_formula_controlada_nesta_etapa(self):
+    def test_usuario_com_permissao_configurar_formula_pode_atualizar_formula_existente(self):
+        fontes = self._criar_colunas_fonte_formula()
+        coluna_formula = ColunaPersonalizada.objects.create(
+            tabela=self.tabela,
+            nome='Margem calculada',
+            tipo_dado=ColunaPersonalizada.TipoDado.FORMULA_CONTROLADA,
+            calculada=True,
+            visivel=True,
+            configuracao_json={
+                'formula': {
+                    'habilitada': True,
+                    'operacao': ColunaPersonalizada.OperacaoFormula.SOMA,
+                    'operandos': [fontes['inteiro'].pk, fontes['decimal'].pk],
+                    'resultado_tipo': ColunaPersonalizada.TipoDado.DECIMAL,
+                    'casas_decimais': 8,
+                }
+            },
+        )
+        self._login_com_permissoes(
+            'user-coluna-formula-editar',
+            [
+                PermissoesTabelasPersonalizadas.EDITAR_ESTRUTURA,
+                PermissoesTabelasPersonalizadas.CONFIGURAR_FORMULA,
+            ],
+        )
+
+        response = self.client.post(
+            reverse(
+                'financeiro:tabela-personalizada-coluna-update',
+                kwargs={'tabela_id': self.tabela.pk, 'pk': coluna_formula.pk},
+            ),
+            data=self._dados_formula_coluna(
+                nome='Margem calculada',
+                operacao=ColunaPersonalizada.OperacaoFormula.MULTIPLICACAO,
+                operandos=[fontes['decimal'].pk, fontes['percentual'].pk],
+                resultado_tipo=ColunaPersonalizada.TipoDado.MONETARIO,
+                casas_decimais=2,
+            ),
+        )
+
+        self.assertRedirects(
+            response,
+            reverse('financeiro:tabela-personalizada-coluna-list', kwargs={'tabela_id': self.tabela.pk}),
+        )
+        coluna_formula.refresh_from_db()
+        self.assertEqual(
+            coluna_formula.configuracao_json['formula'],
+            {
+                'habilitada': True,
+                'operacao': ColunaPersonalizada.OperacaoFormula.MULTIPLICACAO,
+                'operandos': [fontes['decimal'].pk, fontes['percentual'].pk],
+                'resultado_tipo': ColunaPersonalizada.TipoDado.MONETARIO,
+                'casas_decimais': 2,
+            },
+        )
+
+    def test_usuario_sem_permissao_configurar_formula_nao_consegue_criar_formula(self):
+        fontes = self._criar_colunas_fonte_formula()
+        self._login_com_permissoes(
+            'user-coluna-sem-formula',
+            [PermissoesTabelasPersonalizadas.EDITAR_ESTRUTURA],
+        )
+
+        response = self.client.post(
+            reverse('financeiro:tabela-personalizada-coluna-create', kwargs={'tabela_id': self.tabela.pk}),
+            data=self._dados_formula_coluna(
+                operandos=[fontes['inteiro'].pk, fontes['decimal'].pk],
+            ),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(
+            ColunaPersonalizada.objects.filter(tabela=self.tabela, nome='Campo calculado guiado').exists()
+        )
+
+    def test_usuario_sem_permissao_configurar_formula_recebe_403_ao_editar_formula_existente(self):
+        fontes = self._criar_colunas_fonte_formula()
+        coluna_formula = ColunaPersonalizada.objects.create(
+            tabela=self.tabela,
+            nome='Margem calculada',
+            tipo_dado=ColunaPersonalizada.TipoDado.FORMULA_CONTROLADA,
+            calculada=True,
+            visivel=True,
+            configuracao_json={
+                'formula': {
+                    'habilitada': True,
+                    'operacao': ColunaPersonalizada.OperacaoFormula.SOMA,
+                    'operandos': [fontes['inteiro'].pk, fontes['decimal'].pk],
+                    'resultado_tipo': ColunaPersonalizada.TipoDado.DECIMAL,
+                    'casas_decimais': 8,
+                }
+            },
+        )
+        self._login_com_permissoes(
+            'user-coluna-formula-bloqueada',
+            [PermissoesTabelasPersonalizadas.EDITAR_ESTRUTURA],
+        )
+
+        response = self.client.get(
+            reverse(
+                'financeiro:tabela-personalizada-coluna-update',
+                kwargs={'tabela_id': self.tabela.pk, 'pk': coluna_formula.pk},
+            )
+        )
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_form_bloqueia_formula_com_operacao_invalida(self):
+        fontes = self._criar_colunas_fonte_formula()
         form = ColunaPersonalizadaForm(
+            tabela=self.tabela,
+            pode_configurar_formula=True,
             data={
-                'nome': 'Formula futura',
-                'tipo_dado': ColunaPersonalizada.TipoDado.FORMULA_CONTROLADA,
-                'opcoes_lista': '',
-                'obrigatoria': '',
-                'visivel': 'on',
-                'ordem': 1,
-                'status': ColunaPersonalizada.StatusColuna.ATIVA,
-            }
+                **self._dados_formula_coluna(
+                    nome='Formula futura',
+                    operandos=[fontes['inteiro'].pk, fontes['decimal'].pk],
+                ),
+                'formula_operacao': 'potencia',
+            },
         )
 
         self.assertFalse(form.is_valid())
-        self.assertIn('tipo_dado', form.errors)
+        self.assertIn('formula_operacao', form.errors)
+
+    def test_form_bloqueia_formula_com_operando_textual_data_lista_booleano_ou_competencia(self):
+        coluna_texto = ColunaPersonalizada.objects.create(
+            tabela=self.tabela,
+            nome='Texto origem',
+            tipo_dado=ColunaPersonalizada.TipoDado.TEXTO_CURTO,
+            visivel=True,
+        )
+        coluna_data = ColunaPersonalizada.objects.create(
+            tabela=self.tabela,
+            nome='Data origem',
+            tipo_dado=ColunaPersonalizada.TipoDado.DATA,
+            visivel=True,
+        )
+        coluna_lista = ColunaPersonalizada.objects.create(
+            tabela=self.tabela,
+            nome='Lista origem',
+            tipo_dado=ColunaPersonalizada.TipoDado.LISTA_OPCOES,
+            visivel=True,
+            configuracao_json={'opcoes': ['A', 'B']},
+        )
+        coluna_booleano = ColunaPersonalizada.objects.create(
+            tabela=self.tabela,
+            nome='Booleano origem',
+            tipo_dado=ColunaPersonalizada.TipoDado.BOOLEANO,
+            visivel=True,
+        )
+        coluna_competencia = ColunaPersonalizada.objects.create(
+            tabela=self.tabela,
+            nome='Competencia origem',
+            tipo_dado=ColunaPersonalizada.TipoDado.MES_COMPETENCIA,
+            visivel=True,
+        )
+        base_numerica = ColunaPersonalizada.objects.create(
+            tabela=self.tabela,
+            nome='Numero base',
+            tipo_dado=ColunaPersonalizada.TipoDado.DECIMAL,
+            visivel=True,
+        )
+
+        for operando_invalido in (
+            coluna_texto,
+            coluna_data,
+            coluna_lista,
+            coluna_booleano,
+            coluna_competencia,
+        ):
+            form = ColunaPersonalizadaForm(
+                tabela=self.tabela,
+                pode_configurar_formula=True,
+                data=self._dados_formula_coluna(
+                    nome=f'Formula {operando_invalido.pk}',
+                    operandos=[base_numerica.pk, operando_invalido.pk],
+                ),
+            )
+
+            self.assertFalse(form.is_valid())
+            self.assertIn('formula_operandos', form.errors)
+
+    def test_form_bloqueia_formula_com_operando_inexistente_invisivel_ou_inativo(self):
+        base_a = ColunaPersonalizada.objects.create(
+            tabela=self.tabela,
+            nome='Base A',
+            tipo_dado=ColunaPersonalizada.TipoDado.DECIMAL,
+            visivel=True,
+        )
+        base_invisivel = ColunaPersonalizada.objects.create(
+            tabela=self.tabela,
+            nome='Base invisivel',
+            tipo_dado=ColunaPersonalizada.TipoDado.DECIMAL,
+            visivel=False,
+        )
+        base_inativa = ColunaPersonalizada.objects.create(
+            tabela=self.tabela,
+            nome='Base inativa',
+            tipo_dado=ColunaPersonalizada.TipoDado.DECIMAL,
+            visivel=True,
+            status=ColunaPersonalizada.StatusColuna.INATIVA,
+        )
+
+        for operandos in (
+            [base_a.pk, 999999],
+            [base_a.pk, base_invisivel.pk],
+            [base_a.pk, base_inativa.pk],
+        ):
+            form = ColunaPersonalizadaForm(
+                tabela=self.tabela,
+                pode_configurar_formula=True,
+                data=self._dados_formula_coluna(
+                    nome=f'Formula bloqueada {operandos[-1]}',
+                    operandos=operandos,
+                ),
+            )
+
+            self.assertFalse(form.is_valid())
+            self.assertIn('formula_operandos', form.errors)
+
+    def test_form_bloqueia_formula_sobre_formula_existente(self):
+        fontes = self._criar_colunas_fonte_formula()
+        coluna_formula = ColunaPersonalizada.objects.create(
+            tabela=self.tabela,
+            nome='Formula base',
+            tipo_dado=ColunaPersonalizada.TipoDado.FORMULA_CONTROLADA,
+            calculada=True,
+            visivel=True,
+            configuracao_json={
+                'formula': {
+                    'habilitada': True,
+                    'operacao': ColunaPersonalizada.OperacaoFormula.SOMA,
+                    'operandos': [fontes['inteiro'].pk, fontes['decimal'].pk],
+                    'resultado_tipo': ColunaPersonalizada.TipoDado.DECIMAL,
+                    'casas_decimais': 8,
+                }
+            },
+        )
+        form = ColunaPersonalizadaForm(
+            tabela=self.tabela,
+            pode_configurar_formula=True,
+            data=self._dados_formula_coluna(
+                nome='Formula dependente',
+                operandos=[fontes['monetario'].pk, coluna_formula.pk],
+            ),
+        )
+
+        self.assertFalse(form.is_valid())
+        self.assertIn('formula_operandos', form.errors)
+
+    def test_form_bloqueia_formula_com_operando_na_propria_coluna(self):
+        fontes = self._criar_colunas_fonte_formula()
+        coluna_formula = ColunaPersonalizada.objects.create(
+            tabela=self.tabela,
+            nome='Formula editavel',
+            tipo_dado=ColunaPersonalizada.TipoDado.FORMULA_CONTROLADA,
+            calculada=True,
+            visivel=True,
+            configuracao_json={
+                'formula': {
+                    'habilitada': True,
+                    'operacao': ColunaPersonalizada.OperacaoFormula.SOMA,
+                    'operandos': [fontes['inteiro'].pk, fontes['decimal'].pk],
+                    'resultado_tipo': ColunaPersonalizada.TipoDado.DECIMAL,
+                    'casas_decimais': 8,
+                }
+            },
+        )
+        form = ColunaPersonalizadaForm(
+            tabela=self.tabela,
+            pode_configurar_formula=True,
+            instance=coluna_formula,
+            data=self._dados_formula_coluna(
+                nome='Formula editavel',
+                operandos=[fontes['inteiro'].pk, coluna_formula.pk],
+            ),
+        )
+
+        self.assertFalse(form.is_valid())
+        self.assertIn('formula_operandos', form.errors)
+
+    def test_form_bloqueia_formula_incompleta(self):
+        fontes = self._criar_colunas_fonte_formula()
+        form = ColunaPersonalizadaForm(
+            tabela=self.tabela,
+            pode_configurar_formula=True,
+            data={
+                **self._dados_formula_coluna(
+                    nome='Formula incompleta',
+                    operandos=[fontes['inteiro'].pk],
+                ),
+                'formula_resultado_tipo': '',
+                'formula_casas_decimais': '',
+            },
+        )
+
+        self.assertFalse(form.is_valid())
+        self.assertIn('formula_operandos', form.errors)
+        self.assertIn('formula_resultado_tipo', form.errors)
+        self.assertIn('formula_casas_decimais', form.errors)
+
+    def test_form_bloqueia_divisao_com_quantidade_invalida_de_operandos(self):
+        fontes = self._criar_colunas_fonte_formula()
+        form = ColunaPersonalizadaForm(
+            tabela=self.tabela,
+            pode_configurar_formula=True,
+            data=self._dados_formula_coluna(
+                nome='Formula divisao',
+                operacao=ColunaPersonalizada.OperacaoFormula.DIVISAO,
+                operandos=[fontes['inteiro'].pk, fontes['decimal'].pk, fontes['monetario'].pk],
+            ),
+        )
+
+        self.assertFalse(form.is_valid())
+        self.assertIn('formula_operandos', form.errors)
 
     def test_form_de_coluna_permite_configurar_totalizador_compativel(self):
         form = ColunaPersonalizadaForm(

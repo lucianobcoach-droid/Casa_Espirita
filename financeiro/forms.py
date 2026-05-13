@@ -537,18 +537,59 @@ class ColunaPersonalizadaForm(forms.ModelForm):
             'Os operadores sao derivados automaticamente do tipo de dado.'
         ),
     )
+    formula_operacao = forms.ChoiceField(
+        required=False,
+        choices=ColunaPersonalizada.OperacaoFormula.choices,
+        label='Operacao guiada',
+        help_text='Escolha uma operacao segura. Esta etapa nao aceita expressao livre.',
+    )
+    formula_operandos = forms.MultipleChoiceField(
+        required=False,
+        choices=(),
+        widget=forms.CheckboxSelectMultiple,
+        label='Colunas de origem',
+        help_text='Selecione apenas colunas numericas ativas e visiveis da mesma tabela.',
+    )
+    formula_resultado_tipo = forms.ChoiceField(
+        required=False,
+        choices=[
+            (ColunaPersonalizada.TipoDado.DECIMAL, 'Decimal'),
+            (ColunaPersonalizada.TipoDado.MONETARIO, 'Monetario'),
+        ],
+        label='Tipo do resultado',
+        help_text='No primeiro recorte, o resultado pode ser decimal ou monetario.',
+    )
+    formula_casas_decimais = forms.IntegerField(
+        required=False,
+        min_value=0,
+        max_value=8,
+        label='Casas decimais',
+        help_text='Use ate 8 casas para decimal. Resultado monetario exige 2 casas.',
+        widget=forms.NumberInput(attrs={'min': 0, 'max': 8}),
+    )
 
     def __init__(self, *args, **kwargs):
+        self.tabela = kwargs.pop('tabela', None)
+        self.pode_configurar_formula = kwargs.pop('pode_configurar_formula', False)
         super().__init__(*args, **kwargs)
-        tipos_permitidos = [
-            escolha
-            for escolha in self.fields['tipo_dado'].choices
-            if escolha[0] != ColunaPersonalizada.TipoDado.FORMULA_CONTROLADA
-        ]
-        self.fields['tipo_dado'].choices = tipos_permitidos
+        if self.tabela is not None and not getattr(self.instance, 'tabela_id', None):
+            self.instance.tabela = self.tabela
+
+        if not self.pode_configurar_formula:
+            tipos_permitidos = [
+                escolha
+                for escolha in self.fields['tipo_dado'].choices
+                if escolha[0] != ColunaPersonalizada.TipoDado.FORMULA_CONTROLADA
+            ]
+            self.fields['tipo_dado'].choices = tipos_permitidos
+            self.fields.pop('formula_operacao', None)
+            self.fields.pop('formula_operandos', None)
+            self.fields.pop('formula_resultado_tipo', None)
+            self.fields.pop('formula_casas_decimais', None)
         self.fields['ordem'].widget.attrs.update({'min': 0})
         self.totalizadores_render = []
         self.tipos_filtro_estruturado = ColunaPersonalizada.tipos_elegiveis_filtro_estruturado()
+        self.tipo_formula_controlada = ColunaPersonalizada.TipoDado.FORMULA_CONTROLADA
         self.filtros_estruturados_render = [
             {
                 'tipo_dado': tipo_dado,
@@ -560,6 +601,25 @@ class ColunaPersonalizadaForm(forms.ModelForm):
             }
             for tipo_dado in self.tipos_filtro_estruturado
         ]
+        self.tipos_formula_fonte = ColunaPersonalizada.tipos_elegiveis_formula_fonte()
+        self.formula_resultados_render = [
+            {
+                'tipo_dado': tipo_dado,
+                'label': dict(ColunaPersonalizada.TipoDado.choices).get(tipo_dado, tipo_dado),
+                'casas_decimais': ColunaPersonalizada.limite_casas_decimais_formula(tipo_dado),
+            }
+            for tipo_dado in ColunaPersonalizada.tipos_elegiveis_formula_resultado()
+        ]
+
+        if self.pode_configurar_formula:
+            colunas_formula = list(self._colunas_formula_queryset())
+            self.fields['formula_operandos'].choices = [
+                (
+                    str(coluna.pk),
+                    f'{coluna.nome} ({coluna.get_tipo_dado_display()})',
+                )
+                for coluna in colunas_formula
+            ]
 
         configuracao = self.instance.configuracao_json if getattr(self.instance, 'pk', None) else {}
         if isinstance(configuracao, dict):
@@ -571,6 +631,12 @@ class ColunaPersonalizadaForm(forms.ModelForm):
             filtro = configuracao.get('filtro', {})
             if isinstance(filtro, dict) and not self.is_bound:
                 self.initial['filtro_estruturado'] = bool(filtro.get('habilitado'))
+            formula = configuracao.get('formula', {})
+            if self.pode_configurar_formula and isinstance(formula, dict) and not self.is_bound:
+                self.initial['formula_operacao'] = formula.get('operacao', '')
+                self.initial['formula_operandos'] = [str(valor) for valor in formula.get('operandos', [])]
+                self.initial['formula_resultado_tipo'] = formula.get('resultado_tipo', '')
+                self.initial['formula_casas_decimais'] = formula.get('casas_decimais')
 
         if self.is_bound:
             totalizadores_key = self.add_prefix('totalizadores_configurados')
@@ -601,10 +667,26 @@ class ColunaPersonalizadaForm(forms.ModelForm):
             for valor, rotulo in TotalizadorColunaPersonalizada.TipoTotalizador.choices
         ]
 
+    def _colunas_formula_queryset(self):
+        tabela = self.tabela or getattr(self.instance, 'tabela', None)
+        queryset = ColunaPersonalizada.objects.none()
+        if not tabela:
+            return queryset
+        queryset = ColunaPersonalizada.objects.filter(
+            tabela=tabela,
+            status=ColunaPersonalizada.StatusColuna.ATIVA,
+            visivel=True,
+            calculada=False,
+            tipo_dado__in=ColunaPersonalizada.tipos_elegiveis_formula_fonte(),
+        ).order_by('ordem', 'nome', 'pk')
+        if getattr(self.instance, 'pk', None):
+            queryset = queryset.exclude(pk=self.instance.pk)
+        return queryset
+
     def clean_tipo_dado(self):
         tipo_dado = self.cleaned_data.get('tipo_dado')
-        if tipo_dado == ColunaPersonalizada.TipoDado.FORMULA_CONTROLADA:
-            raise ValidationError('Formula controlada ainda nao pode ser configurada nesta etapa.')
+        if tipo_dado == ColunaPersonalizada.TipoDado.FORMULA_CONTROLADA and not self.pode_configurar_formula:
+            raise ValidationError('Voce nao possui permissao para configurar formula guiada nesta etapa.')
         return tipo_dado
 
     def clean_totalizadores_configurados(self):
@@ -670,13 +752,51 @@ class ColunaPersonalizadaForm(forms.ModelForm):
         else:
             configuracao_json.pop('filtro', None)
 
+        formula_config = None
+        if tipo_dado == ColunaPersonalizada.TipoDado.FORMULA_CONTROLADA:
+            if not self.pode_configurar_formula:
+                self.add_error('tipo_dado', 'Voce nao possui permissao para configurar formula guiada nesta etapa.')
+            else:
+                formula_config = {
+                    'habilitada': True,
+                    'operacao': cleaned_data.get('formula_operacao'),
+                    'operandos': [int(valor) for valor in (cleaned_data.get('formula_operandos') or [])],
+                    'resultado_tipo': cleaned_data.get('formula_resultado_tipo'),
+                    'casas_decimais': cleaned_data.get('formula_casas_decimais'),
+                }
+                self.instance.tipo_dado = ColunaPersonalizada.TipoDado.FORMULA_CONTROLADA
+                self.instance.calculada = True
+                formula_errors = ColunaPersonalizada.validar_configuracao_formula_guiada(
+                    coluna=self.instance,
+                    configuracao_formula=formula_config,
+                )
+                if formula_errors:
+                    if 'formula' in formula_errors:
+                        self.add_error(None, formula_errors['formula'])
+                    if 'operacao' in formula_errors:
+                        self.add_error('formula_operacao', formula_errors['operacao'])
+                    if 'operandos' in formula_errors:
+                        self.add_error('formula_operandos', formula_errors['operandos'])
+                    if 'resultado_tipo' in formula_errors:
+                        self.add_error('formula_resultado_tipo', formula_errors['resultado_tipo'])
+                    if 'casas_decimais' in formula_errors:
+                        self.add_error('formula_casas_decimais', formula_errors['casas_decimais'])
+
+        if formula_config:
+            configuracao_json['formula'] = formula_config
+        else:
+            configuracao_json.pop('formula', None)
+
         self.instance.configuracao_json = configuracao_json or {}
+        self.instance.calculada = tipo_dado == ColunaPersonalizada.TipoDado.FORMULA_CONTROLADA
+        self.instance._skip_formula_json_validation = True
 
         return cleaned_data
 
     def save(self, commit=True):
         instance = super().save(commit=False)
-        instance.calculada = False
+        instance.calculada = self.cleaned_data.get('tipo_dado') == ColunaPersonalizada.TipoDado.FORMULA_CONTROLADA
+        instance._skip_formula_json_validation = False
 
         tipo_dado = self.cleaned_data.get('tipo_dado')
         opcoes = self.cleaned_data.get('opcoes_lista') or []
@@ -699,6 +819,17 @@ class ColunaPersonalizadaForm(forms.ModelForm):
             }
         else:
             configuracao_json.pop('filtro', None)
+
+        if instance.calculada:
+            configuracao_json['formula'] = {
+                'habilitada': True,
+                'operacao': self.cleaned_data.get('formula_operacao'),
+                'operandos': [int(valor) for valor in (self.cleaned_data.get('formula_operandos') or [])],
+                'resultado_tipo': self.cleaned_data.get('formula_resultado_tipo'),
+                'casas_decimais': self.cleaned_data.get('formula_casas_decimais'),
+            }
+        else:
+            configuracao_json.pop('formula', None)
 
         instance.configuracao_json = configuracao_json or {}
 

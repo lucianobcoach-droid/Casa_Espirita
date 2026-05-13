@@ -183,6 +183,35 @@
         line-height: 1.35;
     }
 
+    .financeiro-coluna-form-formula-box {
+        display: grid;
+        gap: 0.75rem;
+        padding: 0.9rem 0.95rem;
+        border: 1px solid #d7e2f0;
+        border-radius: 0.95rem;
+        background: #f8fbff;
+    }
+
+    .financeiro-coluna-form-formula-box.is-hidden {
+        display: none;
+    }
+
+    .financeiro-coluna-form-formula-grid {
+        display: grid;
+        gap: 0.95rem;
+    }
+
+    .financeiro-coluna-form-formula-grid .checkbox {
+        display: grid;
+        gap: 0.45rem;
+    }
+
+    .financeiro-coluna-form-formula-grid .checkbox label {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
     @media screen and (max-width: 1023px) {
         .financeiro-coluna-form-grid-duo {
             grid-template-columns: 1fr;
@@ -204,7 +233,7 @@
         <div class="financeiro-coluna-form-body">
             <div class="financeiro-coluna-form-notice">
                 <strong>Recorte atual:</strong>
-                sem preenchimento de linhas nesta etapa. Formulas guiadas seguem futuras. Totalizadores aqui continuam como configuracao controlada por coluna.
+                esta etapa permite apenas configurar a formula guiada com validacao estrutural segura. O calculo da formula continuara em microetapa posterior.
             </div>
 
             {% if form.non_field_errors %}
@@ -288,6 +317,67 @@
                         </div>
                     </div>
 
+                    {% if form.pode_configurar_formula and form.formula_operacao %}
+                        <div class="field financeiro-coluna-form-field">
+                            <label class="label">Formula guiada</label>
+                            <div
+                                class="financeiro-coluna-form-formula-box"
+                                id="financeiro-formula-guiada-box"
+                                data-formula-tipo="{{ form.tipo_formula_controlada }}"
+                            >
+                                <p class="help">
+                                    A formula sera aplicada por coluna, usando apenas colunas numericas da mesma linha.
+                                </p>
+                                <p class="help">
+                                    Esta microetapa so registra a configuracao segura da formula. O calculo ainda nao sera executado nas linhas nem na exportacao.
+                                </p>
+
+                                <div class="financeiro-coluna-form-grid-duo">
+                                    <div class="field financeiro-coluna-form-field">
+                                        <label class="label" for="{{ form.formula_operacao.id_for_label }}">{{ form.formula_operacao.label }}</label>
+                                        <div class="control">{{ form.formula_operacao }}</div>
+                                        {% if form.formula_operacao.help_text %}<p class="help">{{ form.formula_operacao.help_text }}</p>{% endif %}
+                                        {% for error in form.formula_operacao.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+                                    </div>
+
+                                    <div class="field financeiro-coluna-form-field">
+                                        <label class="label" for="{{ form.formula_resultado_tipo.id_for_label }}">{{ form.formula_resultado_tipo.label }}</label>
+                                        <div class="control">{{ form.formula_resultado_tipo }}</div>
+                                        {% if form.formula_resultado_tipo.help_text %}<p class="help">{{ form.formula_resultado_tipo.help_text }}</p>{% endif %}
+                                        {% for error in form.formula_resultado_tipo.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+                                    </div>
+                                </div>
+
+                                <div class="field financeiro-coluna-form-field">
+                                    <label class="label" for="{{ form.formula_casas_decimais.id_for_label }}">{{ form.formula_casas_decimais.label }}</label>
+                                    <div class="control">{{ form.formula_casas_decimais }}</div>
+                                    {% if form.formula_casas_decimais.help_text %}<p class="help">{{ form.formula_casas_decimais.help_text }}</p>{% endif %}
+                                    {% for error in form.formula_casas_decimais.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+                                </div>
+
+                                <div class="field financeiro-coluna-form-field">
+                                    <label class="label">{{ form.formula_operandos.label }}</label>
+                                    <div class="financeiro-coluna-form-formula-grid">
+                                        <div class="checkbox">{{ form.formula_operandos }}</div>
+                                    </div>
+                                    {% if form.formula_operandos.help_text %}<p class="help">{{ form.formula_operandos.help_text }}</p>{% endif %}
+                                    <p class="help">Subtracao e divisao aceitam exatamente dois operandos. Soma e multiplicacao aceitam duas ou mais colunas nesta onda.</p>
+                                    {% for formula_resultado in form.formula_resultados_render %}
+                                        <p class="help">
+                                            <strong>{{ formula_resultado.label }}:</strong>
+                                            {% if formula_resultado.casas_decimais.0 == formula_resultado.casas_decimais.1 %}
+                                                {{ formula_resultado.casas_decimais.0 }} casa(s) obrigatoria(s).
+                                            {% else %}
+                                                de {{ formula_resultado.casas_decimais.0 }} a {{ formula_resultado.casas_decimais.1 }} casas decimais.
+                                            {% endif %}
+                                        </p>
+                                    {% endfor %}
+                                    {% for error in form.formula_operandos.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+
                     <div class="financeiro-coluna-form-grid-duo">
                         <div class="field financeiro-coluna-form-field">
                             <label class="label" for="{{ form.ordem.id_for_label }}">{{ form.ordem.label }}</label>
@@ -339,6 +429,7 @@
         const options = document.querySelectorAll('[data-totalizador-option]');
         const filtroBox = document.getElementById('financeiro-filtro-estruturado-box');
         const filtroCheckbox = document.getElementById('{{ form.filtro_estruturado.id_for_label }}');
+        const formulaBox = document.getElementById('financeiro-formula-guiada-box');
 
         function syncTotalizadores() {
             const tipoSelecionado = tipoDado ? tipoDado.value : '';
@@ -370,13 +461,24 @@
             }
         }
 
+        function syncFormulaGuiada() {
+            if (!formulaBox) {
+                return;
+            }
+            const tipoSelecionado = tipoDado ? tipoDado.value : '';
+            const tipoFormula = formulaBox.dataset.formulaTipo || '';
+            formulaBox.classList.toggle('is-hidden', tipoSelecionado !== tipoFormula);
+        }
+
         if (tipoDado) {
             tipoDado.addEventListener('change', function () {
                 syncTotalizadores();
                 syncFiltroEstruturado();
+                syncFormulaGuiada();
             });
             syncTotalizadores();
             syncFiltroEstruturado();
+            syncFormulaGuiada();
         }
     })();
 </script>

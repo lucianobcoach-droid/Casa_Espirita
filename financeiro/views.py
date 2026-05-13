@@ -8368,6 +8368,10 @@ class TabelaPersonalizadaColunaListView(FinanceiroPermissaoMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['tabela_personalizada'] = self.tabela
+        context['pode_configurar_formula_tabela_personalizada'] = usuario_possui_permissao(
+            self.request.user,
+            PermissoesTabelasPersonalizadas.CONFIGURAR_FORMULA,
+        )
         return context
 
 
@@ -8388,6 +8392,15 @@ class TabelaPersonalizadaColunaCreateView(FinanceiroFormMixin, CreateView):
 
     def get_cancel_url(self):
         return self._get_return_to_url() or self.get_success_url()
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['tabela'] = self.tabela
+        kwargs['pode_configurar_formula'] = usuario_possui_permissao(
+            self.request.user,
+            PermissoesTabelasPersonalizadas.CONFIGURAR_FORMULA,
+        )
+        return kwargs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -8415,11 +8428,32 @@ class TabelaPersonalizadaColunaUpdateView(FinanceiroFormMixin, UpdateView):
     def get_queryset(self):
         return super().get_queryset().filter(tabela=self.tabela)
 
+    def get_object(self, queryset=None):
+        objeto = super().get_object(queryset)
+        if (
+            objeto.tipo_dado == ColunaPersonalizada.TipoDado.FORMULA_CONTROLADA
+            and not usuario_possui_permissao(
+                self.request.user,
+                PermissoesTabelasPersonalizadas.CONFIGURAR_FORMULA,
+            )
+        ):
+            raise PermissionDenied('Voce nao possui permissao para editar formula guiada.')
+        return objeto
+
     def get_success_url(self):
         return reverse('financeiro:tabela-personalizada-coluna-list', kwargs={'tabela_id': self.tabela.pk})
 
     def get_cancel_url(self):
         return self._get_return_to_url() or self.get_success_url()
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['tabela'] = self.tabela
+        kwargs['pode_configurar_formula'] = usuario_possui_permissao(
+            self.request.user,
+            PermissoesTabelasPersonalizadas.CONFIGURAR_FORMULA,
+        )
+        return kwargs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

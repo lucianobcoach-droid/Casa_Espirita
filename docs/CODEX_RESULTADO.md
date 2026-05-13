@@ -5938,3 +5938,30 @@ Não houve alteração de código funcional nesta etapa.
   - permissao dedicada para o `Recibo especial`
   - auditoria operacional propria da acao
   - ajustes finos de impressao se surgirem em uso real
+
+## Microetapa: formulas guiadas por coluna - Onda 1
+
+- implementei apenas a camada de configuracao visual e validacao estrutural das formulas guiadas nas tabelas personalizadas
+- a configuracao passou a ser salva em `ColunaPersonalizada.configuracao_json.formula`, sem migration
+- a permissao `financeiro.tabelas_personalizadas.configurar_formula` passou a governar a criacao/edicao de colunas `formula_controlada`
+- usuarios com apenas `editar_estrutura` continuam editando colunas comuns, mas nao conseguem criar nem alterar formula
+- a validacao estrutural ficou concentrada em form + model para bloquear:
+  - operacao fora da whitelist
+  - operando fora da mesma tabela
+  - operando nao numerico, invisivel, inativo ou calculado
+  - uso da propria coluna
+  - formula sobre formula
+  - configuracao incompleta
+  - quantidade invalida de operandos em `subtracao` e `divisao`
+- a listagem de colunas agora indica quando a formula guiada esta configurada
+- preservado nesta onda:
+  - sem calculo funcional
+  - sem preenchimento de `valor_calculado`
+  - sem exibicao de calculo na tela de linhas
+  - sem alteracao de busca, filtros, totalizadores ou XLSX
+  - sem impacto em `LancamentoFinanceiro` e no financeiro oficial
+- validacoes executadas:
+  - `py manage.py makemigrations --check --dry-run` OK
+  - `py manage.py check` OK
+  - `py -m compileall financeiro configuracoes` OK
+  - `py manage.py test financeiro configuracoes` OK

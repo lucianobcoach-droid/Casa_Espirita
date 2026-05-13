@@ -1528,3 +1528,47 @@ Atualizacao de homologacao:
   - permissao dedicada para o recibo especial
   - auditoria operacional propria
   - ajustes finos de impressao se surgirem no uso real
+
+### 52. Tabelas personalizadas - formulas guiadas por coluna / Onda 1
+
+Status: IMPLEMENTADO PARCIALMENTE (CONFIGURACAO VISUAL + VALIDACAO ESTRUTURAL, SEM CALCULO)
+
+Consolidacao:
+- a SPEC curta de formulas guiadas foi convertida na primeira onda funcional, restrita a configuracao da formula na estrutura da coluna
+- a persistencia inicial ficou em `ColunaPersonalizada.configuracao_json.formula`, sem migration
+- a liberacao da formula ficou separada de `editar_estrutura`, exigindo `financeiro.tabelas_personalizadas.configurar_formula`
+- a secao visual de formula guiada passou a usar campos orientados, sem expressao textual livre
+
+Validacoes entregues:
+- operacoes permitidas apenas:
+  - `soma`
+  - `subtracao`
+  - `multiplicacao`
+  - `divisao`
+- colunas-fonte permitidas apenas quando forem:
+  - da mesma tabela
+  - numericas
+  - ativas
+  - visiveis
+  - nao calculadas
+- resultado permitido apenas para:
+  - `decimal`
+  - `monetario`
+- bloqueios estruturais entregues:
+  - formula fora de `tipo_dado=formula_controlada`
+  - coluna de formula sem `calculada=True`
+  - formula sobre formula
+  - uso da propria coluna
+  - configuracao incompleta
+  - operando invalido
+  - operando textual/data/competencia/lista/booleano
+  - `subtracao` e `divisao` com quantidade invalida de operandos
+
+Guardrails preservados:
+- sem calculo funcional
+- sem alteracao de `valor_calculado`
+- sem alteracao de busca, filtros, totalizadores e XLSX
+- sem impacto em `LancamentoFinanceiro` e no financeiro oficial
+
+Proxima microetapa recomendada:
+- Onda 2 de formulas guiadas: calcular e exibir o resultado somente leitura na listagem de linhas, ainda sem integrar totalizador sobre calculada

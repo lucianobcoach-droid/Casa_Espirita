@@ -125,7 +125,7 @@
     <section class="financeiro-coluna-card">
         <div class="financeiro-coluna-note">
             <strong>Recorte atual:</strong>
-            esta etapa configura a estrutura das colunas e os totalizadores controlados por coluna. O preenchimento de linhas continua separado e formulas guiadas seguem para microetapas futuras.
+            esta etapa configura a estrutura das colunas, os totalizadores por coluna e a definicao segura de formulas guiadas. O calculo da formula continuara separado em microetapa posterior.
         </div>
 
         <div class="financeiro-coluna-table-wrap">
@@ -138,6 +138,7 @@
                         <th>Visivel</th>
                         <th>Ordem</th>
                         <th>Filtro estruturado</th>
+                        <th>Formula guiada</th>
                         <th>Totalizadores</th>
                         <th>Status</th>
                         <th>Acoes</th>
@@ -162,6 +163,11 @@
                             <td>
                                 <span class="financeiro-coluna-flag {% if coluna.filtro_estruturado_habilitado %}is-yes{% else %}is-no{% endif %}">
                                     {% if coluna.filtro_estruturado_habilitado %}Habilitado{% else %}Nao{% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="financeiro-coluna-flag {% if coluna.formula_habilitada %}is-yes{% else %}is-no{% endif %}">
+                                    {% if coluna.formula_habilitada %}Configurada{% elif coluna.calculada %}Calculada{% else %}Nao{% endif %}
                                 </span>
                             </td>
                             <td>
@@ -192,7 +198,7 @@
                         </tr>
                     {% empty %}
                         <tr>
-                            <td colspan="9" class="financeiro-coluna-empty">
+                            <td colspan="10" class="financeiro-coluna-empty">
                                 Nenhuma coluna personalizada cadastrada ate o momento para esta tabela.
                             </td>
                         </tr>
