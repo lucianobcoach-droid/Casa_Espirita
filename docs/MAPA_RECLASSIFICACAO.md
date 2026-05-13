@@ -1419,7 +1419,7 @@ Proxima microetapa recomendada:
 
 ### 51. Documentos financeiros - recibo especial em lote com favorecido manual
 
-Status: FUTURO DOCUMENTAL / AGUARDANDO AUDITORIA TECNICA
+Status: AUDITADO TECNICAMENTE / PRONTO PARA SPEC FUNCIONAL SEGURA
 
 Consolidacao:
 - a usuaria aprovou uma nova acao documental futura, separada dos recibos atuais
@@ -1440,5 +1440,35 @@ Consolidacao:
 Dependencia obrigatoria:
 - antes de implementar, precisa haver auditoria tecnica do fluxo atual de recibos, incluindo views, templates, helpers, recebimento dos ids selecionados e validacao do favorecido
 
+Achados da auditoria:
+- a listagem de lancamentos oferece hoje a acao em lote `Recibos em lote` e envia os selecionados para `LancamentoFinanceiroAcoesLoteView`
+- essa acao resolve ids simples e grupos de rateio no backend e redireciona para `lancamento-recibos-por-favorecido`
+- o recibo em lote tecnico atual (`lancamento-recibo-lote`) existe, mas so aceita lancamentos do mesmo favorecido
+- nesse fluxo tecnico, o destinatario atual do documento continua vindo do primeiro favorecido do lote e os itens continuam consolidados apenas por descricao exatamente igual
+- os recibos por favorecido atuais aceitam multiplos favorecidos e geram um recibo por grupo, usando o mesmo template base do recibo atual
+- o termo anual usa fluxo, view e template separados, baseados nos filtros da listagem, e deve permanecer intocado
+- todos esses fluxos usam a permissao `financeiro.lancamentos.emitir_recibo`
+- a mesma listagem separa acao documental por linha, acao em lote e botao proprio do termo anual
+- os testes encontrados hoje cobrem melhor a exibicao das acoes documentais na listagem do que o contrato interno do fluxo futuro especial
+
+SPEC segura consolidada:
+- o `Recibo especial` deve nascer como acao nova e isolada
+- nao deve alterar:
+  - recibo em lote atual
+  - recibos por favorecido atuais
+  - termo anual de quitacao
+  - lancamentos
+  - favorecido real dos lancamentos
+- deve aceitar lancamentos selecionados de varios favorecidos
+- deve exigir escolha manual de um favorecido cadastrado como destinatario principal
+- deve compor cada item como `descricao atual - nome do favorecido original`
+- nao deve usar `Favorecido original`
+- nao deve usar `Favorecido original: Nome`
+
+Arquitetura recomendada:
+- criar nova view intermediaria para validar selecao e escolher o favorecido
+- criar nova view/template de emissao documental final ou parcial nova derivada do recibo atual
+- preservar helpers e templates atuais dos recibos homologados, evitando condicoes excepcionais dentro deles
+
 Proxima microetapa recomendada:
-- apos os filtros por coluna, executar auditoria tecnica dedicada dos recibos/documentos atuais para abrir a SPEC segura do `Recibo especial`
+- apos esta auditoria, abrir implementacao funcional minima do `Recibo especial` com testes de nao regressao dos documentos atuais

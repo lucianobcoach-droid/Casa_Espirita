@@ -4081,3 +4081,46 @@ Riscos principais antes de migration:
   - sem agrupamentos
   - sem dashboard
   - sem alteracao de lancamentos, saldos, extrato, resumo, prestacao/fechamento ou balancete
+
+## Microetapa documental: auditoria dos recibos para o futuro recibo especial
+
+- auditoria tecnica/documental concluida sobre os fluxos atuais de recibos e documentos financeiros, sem alteracao funcional
+- recibo em lote tecnico atual confirmado no codigo:
+  - view `LancamentoFinanceiroReciboLoteView`
+  - rota `financeiro:lancamento-recibo-lote`
+  - template `financeiro/lancamento_recibo.html` com parcial `_lancamento_recibo_documento.html`
+  - exige ids validos, lancamentos existentes, todos com favorecido, todos `receita` e todos do mesmo favorecido
+  - o destinatario principal do documento continua vindo de `pessoa_nome` montado a partir do primeiro lancamento do lote
+  - os itens atuais continuam sendo consolidados por `_agrupar_itens_recibo_por_descricao`, apenas quando a descricao e exatamente igual
+- fluxo real atual acionado pela listagem confirmado:
+  - a acao `Recibos em lote` da `lancamento_list` envia selecionados para `LancamentoFinanceiroAcoesLoteView`
+  - o backend resolve ids simples e grupos de rateio em `_resolver_lancamentos_para_acoes_em_lote`
+  - depois redireciona para `LancamentoFinanceiroRecibosPorFavorecidoView`
+  - essa view aceita multiplos favorecidos, agrupa os lancamentos por pessoa e gera um recibo por favorecido
+  - a mesma listagem tambem mantem acao documental por linha via `recibo_url` e o botao separado do `Termo anual de quitacao`, evitando misturar os fluxos
+- termo anual confirmado como fluxo separado:
+  - view `LancamentoFinanceiroTermoAnualQuitacaoView`
+  - rota `financeiro:lancamento-termo-anual-quitacao`
+  - template `financeiro/lancamento_documentos_por_favorecido.html`
+  - usa filtros da listagem, nao ids selecionados
+  - restringe internamente para `receita`, `quitado`, com favorecido e sem rateio, dentro de um unico ano
+- permissao atual dos fluxos documentais auditados:
+  - `financeiro.lancamentos.emitir_recibo`
+- testes atuais auditados:
+  - a cobertura encontrada hoje esta mais forte na exibicao das acoes documentais da `lancamento_list`
+  - a futura implementacao do `Recibo especial` deve nascer com testes proprios de contrato, validacao de selecao, escolha do favorecido manual e nao regressao dos recibos homologados
+- SPEC segura consolidada para o futuro `Recibo especial`:
+  - deve nascer como acao nova e isolada
+  - nao deve alterar recibo em lote atual, recibos por favorecido atuais nem termo anual
+  - deve aceitar lancamentos selecionados de varios favorecidos
+  - deve exigir escolha manual de um favorecido cadastrado como destinatario principal
+  - deve compor cada item como `descricao atual - nome do favorecido original`
+  - nao deve usar `Favorecido original`
+  - nao deve usar `Favorecido original: Nome`
+  - nao deve alterar o favorecido real do lancamento nem qualquer dado operacional
+- arquitetura recomendada:
+  - nova view intermediaria para validar selecao e escolher favorecido
+  - nova view/template documental final, ou parcial nova derivada do recibo atual
+  - preservar os helpers e templates atuais dos fluxos homologados, evitando mudar o contrato do recibo em lote e dos recibos por favorecido
+- risco principal registrado:
+  - contaminar a regra atual de mesmo favorecido do recibo em lote tecnico e quebrar documentos ja homologados

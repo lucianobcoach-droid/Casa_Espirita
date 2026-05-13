@@ -5792,3 +5792,29 @@ Não houve alteração de código funcional nesta etapa.
   - sem agrupamentos
   - sem dashboard
   - sem impacto em `LancamentoFinanceiro` e no financeiro oficial
+
+## Microetapa documental: auditoria tecnica dos recibos para o futuro recibo especial
+
+- microetapa exclusivamente documental, sem alteracao de Python, template, JS/CSS, model, migration ou banco
+- auditei `views`, `urls`, templates, helper documental e testes ligados aos fluxos atuais de recibo e termo anual
+- achados principais:
+  - a listagem de lancamentos hoje aciona `Recibos em lote` por `LancamentoFinanceiroAcoesLoteView`, que resolve ids/grupos e redireciona para `LancamentoFinanceiroRecibosPorFavorecidoView`
+  - o recibo em lote tecnico de mesmo favorecido continua existindo em `LancamentoFinanceiroReciboLoteView`, com regra dura de favorecido unico
+  - nesse fluxo tecnico, o destinatario segue vindo de `pessoa_nome` derivado do primeiro lancamento e os itens seguem consolidados apenas por descricao exatamente igual
+  - os recibos por favorecido atuais aceitam multiplos favorecidos e geram um documento por grupo usando o mesmo template base do recibo atual
+  - o termo anual de quitacao usa fluxo separado, baseado em filtros da listagem e template proprio
+  - a `lancamento_list` ainda separa acao documental por linha (`recibo_url`) da acao em lote e do botao proprio do termo anual
+  - todos os fluxos documentais auditados usam `financeiro.lancamentos.emitir_recibo`
+  - a cobertura encontrada hoje esta mais forte na exposicao das acoes documentais da listagem do que no contrato interno dos fluxos de recibo
+- SPEC segura registrada:
+  - o futuro `Recibo especial` deve nascer como acao nova e isolada
+  - deve aceitar lancamentos selecionados de varios favorecidos
+  - deve exigir escolha manual de um favorecido cadastrado como destinatario principal
+  - deve compor cada item como `descricao atual - nome do favorecido original`
+  - nao deve usar `Favorecido original` nem `Favorecido original: Nome`
+  - nao deve alterar recibos atuais, termo anual, lancamentos ou favorecido real
+- arquitetura recomendada:
+  - nova view intermediaria para validar ids selecionados e escolher favorecido
+  - nova view/template documental final, evitando condicoes excepcionais dentro do contrato atual dos recibos homologados
+- risco principal registrado:
+  - quebrar a regra atual de mesmo favorecido do recibo em lote tecnico ao tentar reutiliza-lo de forma indevida

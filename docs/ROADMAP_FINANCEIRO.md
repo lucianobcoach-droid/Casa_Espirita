@@ -3355,7 +3355,7 @@ Proxima microetapa recomendada:
 
 ## 32. Documentos financeiros - recibo especial em lote
 
-Status: FUTURO DOCUMENTAL / EXIGE AUDITORIA TECNICA
+Status: AUDITADO TECNICAMENTE / PRONTO PARA SPEC FUNCIONAL SEGURA
 
 Consolidacao:
 - foi registrada nova demanda de emissao documental separada dos recibos atuais
@@ -3391,10 +3391,92 @@ Auditoria tecnica obrigatoria antes da implementacao:
 - identificar como o favorecido e validado hoje
 - decidir se a nova frente usara view/template novos ou helper reaproveitado com parametro, sem quebrar o comportamento atual
 
+Resultado da auditoria tecnica:
+- listagem de lancamentos:
+  - a acao documental em lote atual aparece em `financeiro/templates/financeiro/lancamento_list.html` como `Recibos em lote`
+  - a selecao em lote envia `lancamentos_selecionados` e `filtros_retorno` para `financeiro:LancamentoFinanceiroAcoesLoteView`
+  - o backend resolve selecoes simples e grupos de rateio via `_resolver_lancamentos_para_acoes_em_lote`
+  - hoje, para recibos em lote, a listagem sempre redireciona para `financeiro:lancamento-recibos-por-favorecido`, nunca para a rota tecnica de mesmo favorecido
+- recibo em lote tecnico atual:
+  - view: `LancamentoFinanceiroReciboLoteView`
+  - url: `financeiro:lancamento-recibo-lote`
+  - template: `financeiro/lancamento_recibo.html` + parcial `financeiro/_lancamento_recibo_documento.html`
+  - recebe ids por `GET`
+  - valida obrigatoriamente:
+    - ids validos
+    - lancamentos existentes
+    - todos com favorecido
+    - todos do tipo `receita`
+    - todos do mesmo favorecido
+  - o destinatario principal do documento nasce do `pessoa_nome` do primeiro lancamento
+  - os itens do lote sao montados por `_agrupar_itens_recibo_por_descricao`, com consolidacao por descricao exatamente igual
+- recibos por favorecido atuais:
+  - view: `LancamentoFinanceiroRecibosPorFavorecidoView`
+  - url: `financeiro:lancamento-recibos-por-favorecido`
+  - template: `financeiro/lancamento_recibo.html` + parcial `financeiro/_lancamento_recibo_documento.html`
+  - aceita ids de multiplos favorecidos
+  - valida apenas:
+    - existencia de ids
+    - lancamentos com favorecido
+    - lancamentos do tipo `receita`
+  - depois agrupa os lancamentos por favorecido e gera um recibo por grupo, com `recibo_grupos`
+  - nao exige favorecido unico; essa view e a que hoje suporta o fluxo real acionado pela listagem
+- termo anual:
+  - view: `LancamentoFinanceiroTermoAnualQuitacaoView`
+  - url: `financeiro:lancamento-termo-anual-quitacao`
+  - template: `financeiro/lancamento_documentos_por_favorecido.html`
+  - nao usa ids selecionados; usa os filtros ativos da listagem
+  - exige periodo com `data_inicial` e `data_final` dentro do mesmo ano
+  - restringe internamente para `receita`, `quitado`, com favorecido e sem rateio
+- helper/documento a preservar:
+  - o recibo atual centraliza o contexto em `_montar_contexto_recibo_documento`
+  - o layout reutilizado fica em `lancamento_recibo.html` + `_lancamento_recibo_documento.html`
+  - o termo anual usa template proprio e deve permanecer isolado
+- acoes documentais na listagem:
+  - a `lancamento_list` mantem acao documental por linha via `recibo_url`
+  - a acao em lote `Recibos em lote` continua separada e nao deve ser reaproveitada como alias do futuro fluxo especial
+  - o `Termo anual de quitacao` continua como botao proprio baseado nos filtros da listagem, nao nos ids selecionados
+- permissao atual:
+  - todos os fluxos documentais auditados usam `financeiro.lancamentos.emitir_recibo`
+- testes atuais encontrados:
+  - ha cobertura da presenca/ausencia das acoes documentais na listagem de lancamentos
+  - nao apareceu suite dedicada forte para o contrato interno do recibo em lote tecnico, dos recibos por favorecido e do futuro `Recibo especial`; isso precisa entrar junto da implementacao funcional
+
 Riscos principais:
 - contaminar o fluxo atual dos recibos com regra excepcional
 - quebrar validacoes/documentos ja homologados
 - misturar emissao documental com alteracao indevida de dados operacionais
 
+Arquitetura recomendada:
+- criar acao nova e isolada na listagem, sem reaproveitar o label `Recibos em lote`
+- criar view nova para o fluxo especial, em duas etapas:
+  - etapa 1: receber ids selecionados e validar selecao documental minima
+  - etapa 2: exigir escolha manual de um favorecido cadastrado antes de renderizar o documento
+- criar template proprio do `Recibo especial` ou parcial nova derivada do recibo atual, evitando condicoes excessivas dentro do template atual
+- preservar `_montar_contexto_recibo_documento` para os fluxos homologados e, se houver reaproveitamento, faze-lo por helper novo ou adaptador explicito, sem alterar o contrato atual de `recibo em lote` e `recibos por favorecido`
+- manter a descricao especial como composicao nova por item:
+  - `descricao atual - nome do favorecido original`
+  - sem `Favorecido original`
+  - sem `Favorecido original: Nome`
+- a acao nova so deve aparecer na listagem quando a rota/view minima ja existir, evitando link quebrado
+
+SPEC segura consolidada:
+- o `Recibo especial` deve nascer como nova acao documental, separada de:
+  - `lancamento-recibo-lote`
+  - `lancamento-recibos-por-favorecido`
+  - `lancamento-termo-anual-quitacao`
+- deve aceitar ids selecionados da listagem, inclusive quando vierem de grupos de rateio ja resolvidos pelo backend atual
+- deve validar:
+  - ids selecionados existentes
+  - ao menos um lancamento selecionado
+  - todos os lancamentos com favorecido
+  - todos os lancamentos do tipo `receita`
+  - favorecido destinatario escolhido manualmente e existente no cadastro
+- nao deve:
+  - alterar favorecido real do lancamento
+  - alterar descricao original persistida
+  - alterar saldos, relatorios ou qualquer dado operacional
+- o documento final deve usar o favorecido escolhido como destinatario principal e compor cada item com o nome do favorecido original somente como complemento textual da descricao
+
 Proxima microetapa recomendada:
-- executar auditoria tecnica documental do fluxo atual de recibos antes de qualquer implementacao
+- implementar o fluxo funcional minimo do `Recibo especial` apenas como acao nova e isolada, com escolha manual de favorecido e testes de nao regressao dos recibos existentes
