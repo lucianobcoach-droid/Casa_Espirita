@@ -1,6 +1,6 @@
 # STATE
 
-Data de atualizacao: 2026-05-12
+Data de atualizacao: 2026-05-13
 
 ## SPEC funcional consolidada: construtor de tabelas personalizadas configuraveis
 
@@ -181,7 +181,7 @@ Data de atualizacao: 2026-05-12
   - sem integracao com financeiro oficial
 - classificacao documental atualizada desta frente:
   - implementar agora: estrutura minima de dados, permissoes executaveis, listagem minima somente leitura, cadastro inicial de metadados, configuracao inicial de colunas, preenchimento inicial de linhas, totalizadores controlados por coluna, busca textual simples e exportacao XLSX concluidos
-  - pendencia proxima: abrir microetapa de formulas guiadas por coluna, ainda sem auditoria operacional propria
+  - pendencia proxima: implementar formulas guiadas por coluna a partir da SPEC tecnica curta agora consolidada, ainda sem auditoria operacional propria
   - backlog/futuro: agrupamentos por opcao, filtros avancados/compostos, visoes salvas, arrastar-e-soltar, importacao assistida e exemplos/templates
   - fora de escopo: planilha livre estilo Excel, integracao escrevente com financeiro e modelagem definitiva de banco nesta fase
   - risco a monitorar: perda de governanca e desvio da frente para comportamento de planilha livre
@@ -206,6 +206,25 @@ Data de atualizacao: 2026-05-12
   - qualquer alteracao em banco real exige backup e autorizacao
   - arquivos SQLite nao devem ser versionados
   - a frente segue sem integracao escrevente com o financeiro oficial
+- SPEC tecnica curta de formulas guiadas por coluna agora consolidada com esta direcao:
+  - persistencia inicial recomendada em `ColunaPersonalizada.configuracao_json.formula`, sem migration no primeiro recorte
+  - formula vinculada a coluna marcada como calculada + `tipo_dado=formula_controlada`, sem formula por celula
+  - colunas-fonte iniciais restritas a `inteiro`, `decimal`, `monetario` e `percentual`
+  - tipo de resultado inicial recomendado: `decimal` e `monetario`, deixando `inteiro` e `percentual` para evolucao posterior
+  - whitelist inicial restrita a `soma`, `subtracao`, `multiplicacao` e `divisao`
+  - fora do primeiro recorte: parenteses, `min`, `max`, arredondamento, percentual derivado e qualquer expressao textual livre
+  - operandos devem ficar restritos a colunas da mesma tabela, da mesma linha, ativas, visiveis, nao calculadas e nao arquivadas
+  - primeiro recorte recomendado sem formula sobre formula, reduzindo risco de dependencia circular e ordem de recalculo
+  - coluna calculada deve continuar fora do formulario de criacao/edicao de linhas e aparecer apenas como leitura na listagem e no XLSX
+  - quando faltar valor de operando, o comportamento seguro recomendado e resultado vazio, sem assumir zero silenciosamente
+  - busca textual pode passar a considerar o valor calculado quando o calculo estiver implementado; filtro estruturado e totalizador sobre coluna calculada ficam fora do primeiro recorte
+  - exportacao XLSX deve levar apenas o valor final calculado, sem formula Excel e mantendo o padrao brasileiro
+  - a permissao a usar na configuracao continua sendo `financeiro.tabelas_personalizadas.configurar_formula`, separada de `editar_estrutura`
+  - a auditoria operacional propria segue fora da primeira entrega de formulas e deve entrar em microetapa posterior
+- proxima microetapa mais segura agora recomendada para formulas:
+  - 1) configuracao visual + validacao estrutural da formula na coluna
+  - 2) calculo e exibicao somente leitura na listagem de linhas
+  - 3) integracao controlada com busca/XLSX e decisao posterior sobre totalizadores em colunas calculadas
 
 ## Validacao da alocacao de competencias no lancamento simples
 

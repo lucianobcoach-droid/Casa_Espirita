@@ -1,6 +1,6 @@
 # ROADMAP FINANCEIRO
 
-Data: 2026-05-08
+Data: 2026-05-13
 
 ## 0.21. SPEC funcional inicial: construtor de tabelas personalizadas configuraveis
 
@@ -1776,35 +1776,134 @@ Status consolidado: SPEC FUNCIONAL DOCUMENTAL CONSOLIDADA / BACKLOG TECNICO INCR
 #### Microetapa 12 - formulas guiadas por coluna
 
 - Objetivo:
-  - abrir a parte mais sensivel da frente de forma isolada e controlada.
+  - abrir a parte mais sensivel da frente de forma isolada, controlada e sem transformar a tabela personalizada em planilha livre.
 - Escopo:
   - formula aplicada a coluna inteira;
   - sem formula celula por celula;
   - sem formula livre estilo Excel;
   - apenas colunas da mesma linha;
-  - operadores e funcoes por whitelist;
-  - bloqueio de dependencias inseguras.
+  - operadores por whitelist curta;
+  - bloqueio de dependencias inseguras;
+  - coluna calculada fora do form de linhas e exibida apenas como leitura;
+  - valor calculado aparecendo na listagem de linhas e, quando liberado, no XLSX.
+- SPEC tecnica curta consolidada nesta microetapa documental:
+  - armazenamento inicial recomendado em `ColunaPersonalizada.configuracao_json.formula`, sem migration no primeiro recorte
+  - estrutura JSON sugerida:
+    - `configuracao_json.formula.habilitada`
+    - `configuracao_json.formula.operacao`
+    - `configuracao_json.formula.operandos`
+    - `configuracao_json.formula.resultado_tipo`
+    - `configuracao_json.formula.casas_decimais`
+  - justificativa para ficar em JSON no primeiro recorte:
+    - `configuracao_json` ja e usado com governanca para `opcoes` e `filtro`
+    - o model ja possui `calculada=True`, `tipo_dado=formula_controlada` e `valor_calculado`
+    - a complexidade inicial cabe em configuracao curta, sem exigir model/migration proprios antes da homologacao do fluxo
+  - gatilhos para abrir model/migration antes de ampliar a frente:
+    - versoes multiplas de formula
+    - dependencia entre formulas calculadas
+    - necessidade de auditoria propria detalhada da estrutura
+    - necessidade de indexacao/consulta estrutural fora do fluxo atual
+- Tipos-fonte recomendados para o primeiro recorte:
+  - `inteiro`
+  - `decimal`
+  - `monetario`
+  - `percentual`
+- Tipos fora do primeiro recorte como fonte:
+  - `data`
+  - `mes_competencia`
+  - `texto_curto`
+  - `texto_longo`
+  - `booleano`
+  - `lista_opcoes`
+- Tipo de resultado recomendado no primeiro recorte:
+  - `decimal`
+  - `monetario`
+- Tipos de resultado adiados:
+  - `inteiro`
+  - `percentual`
+- Whitelist inicial recomendada:
+  - `soma`
+  - `subtracao`
+  - `multiplicacao`
+  - `divisao`
+- Fora do primeiro recorte:
+  - parenteses
+  - `min`
+  - `max`
+  - arredondamento configuravel
+  - percentual derivado
+  - qualquer expressao textual livre digitada pela usuaria
+- Regra de seguranca consolidada:
+  - sem `eval`
+  - sem `exec`
+  - sem macro/script
+  - sem referencia livre por nome digitado
+  - sem formula por celula
+  - sem referencia entre tabelas
+  - sem leitura/escrita em `LancamentoFinanceiro`
+  - sem alteracao de saldo, extrato, resumo, prestacao/fechamento ou balancete
+- Validacoes necessarias:
+  - bloquear formula em coluna nao marcada como calculada
+  - bloquear uso da propria coluna como operando
+  - bloquear formula sobre coluna calculada no primeiro recorte
+  - bloquear coluna-fonte fora da mesma tabela/linha
+  - bloquear coluna-fonte arquivada ou invisivel
+  - bloquear formula incompleta
+  - bloquear divisao por zero com mensagem clara
+  - impedir edicao manual do valor calculado
+- Comportamento recomendado na tela de linhas:
+  - coluna calculada continua fora do form de criacao/edicao
+  - calculo refeito no pipeline central da tela antes de renderizar, buscar e exportar
+  - se faltar valor de operando, o resultado deve ficar vazio no primeiro recorte, sem assumir zero silenciosamente
+- Busca, filtros, totalizadores e XLSX:
+  - busca textual pode passar a considerar o valor calculado quando a etapa de calculo entrar
+  - filtro estruturado em coluna calculada fica fora do primeiro recorte
+  - totalizador sobre coluna calculada fica fora do primeiro recorte por cautela contra divergencia entre tela, XLSX e calculo
+  - XLSX deve exportar apenas o valor final calculado, sem formula Excel e com formato brasileiro
+- Permissoes:
+  - usar a permissao existente `financeiro.tabelas_personalizadas.configurar_formula`
+  - manter separacao de `editar_estrutura`
+  - usuarios com permissao apenas de visualizacao continuam vendo o resultado calculado na tela, sem editar a formula
 - Arquivos provaveis a consultar:
-  - camada estrutural da tabela;
-  - validacoes de backend;
-  - UX/documentacao da frente.
+  - `financeiro/models.py`
+  - `financeiro/forms.py`
+  - `financeiro/views.py`
+  - `financeiro/templates/financeiro/tabela_personalizada_coluna_form.html`
+  - `financeiro/templates/financeiro/tabela_personalizada_linha_list.html`
+  - `financeiro/templates/financeiro/tabela_personalizada_linha_form.html`
+  - `financeiro/tests.py`
 - Risco:
   - virar vetor para comportamento de planilha livre;
-  - criar dependencia circular ou regra dificil de auditar.
+  - criar expressao textual insegura;
+  - criar dependencia circular ou regra dificil de auditar;
+  - gerar divergencia entre tela, busca, totalizador e XLSX;
+  - induzir leitura equivocada como se a frente alterasse o financeiro oficial.
 - Envolve model/migration/banco:
-  - possivelmente ajustes de estrutura, conforme SPEC tecnica aprovada.
+  - nao no primeiro recorte recomendado; reavaliar somente se o JSON deixar de ser suficiente.
 - Validacoes esperadas:
   - bloqueio de referencia circular;
   - bloqueio de referencia entre tabelas;
   - bloqueio de codigo executavel;
-  - calculo restrito a whitelist.
+  - calculo restrito a whitelist;
+  - bloqueio de divisao por zero;
+  - bloqueio de formula manualmente inconsistente;
+  - resultado vazio quando operando obrigatorio nao estiver preenchido.
 - Dependencias anteriores:
-  - microetapas 2, 7 e 8.
+  - microetapas 2, 7, 8, 9, 10 e 11.
 - Fora de escopo:
   - macros;
   - scripts;
   - referencias livres;
-  - escrita em outras tabelas ou no financeiro.
+  - escrita em outras tabelas ou no financeiro;
+  - formula sobre formula;
+  - filtro estruturado em coluna calculada;
+  - totalizador em coluna calculada;
+  - auditoria operacional propria desta frente.
+- Proxima microetapa recomendada:
+  - dividir a entrega em tres ondas seguras:
+    - 1. configuracao da formula na estrutura da coluna, com validacao forte e sem calculo ainda
+    - 2. calculo + exibicao somente leitura na listagem de linhas
+    - 3. integracao controlada com busca/XLSX e decisao separada sobre totalizadores em colunas calculadas
 
 #### Microetapa 13 - auditoria operacional
 

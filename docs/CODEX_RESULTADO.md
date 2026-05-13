@@ -1,6 +1,47 @@
 # CODEX_RESULTADO
 
-Data: 2026-05-12
+Data: 2026-05-13
+
+## Microetapa documental: SPEC tecnica curta de formulas guiadas por coluna
+
+- microetapa exclusivamente documental, sem alteracao de Python, template, JS/CSS, model, migration ou banco
+- confirmei antes de alterar:
+  - branch `feat/reinicio-financeiro`
+  - arvore limpa
+  - ausencia de commits locais pendentes
+  - ausencia de commits remotos pendentes
+  - `fetch` concluido sem erro
+- auditei a frente atual de tabelas personalizadas em `models`, `forms`, `views`, `urls`, templates, testes e migration de permissoes
+- achados tecnicos principais que embasaram a SPEC:
+  - `ColunaPersonalizada` ja possui `calculada`, `tipo_dado=formula_controlada` e `configuracao_json`
+  - `ValorTabelaPersonalizada` ja possui `valor_calculado`, mas a coluna calculada continua bloqueando valor manual nesta etapa
+  - `ColunaPersonalizadaForm` ainda bloqueia `formula_controlada` no fluxo atual, o que abre espaco para uma microetapa isolada de configuracao de formula
+  - a tela de linhas, a busca, os filtros estruturados, os totalizadores e o XLSX ja compartilham pipeline unico de renderizacao
+  - hoje a frente exclui colunas calculadas do form de linhas e tambem bloqueia totalizador em coluna calculada
+  - a permissao `financeiro.tabelas_personalizadas.configurar_formula` ja existe e esta separada de `editar_estrutura`
+- decisao tecnica consolidada:
+  - usar `ColunaPersonalizada.configuracao_json.formula` no primeiro recorte, sem migration
+  - manter formula por coluna, calculada linha a linha, apenas com colunas da mesma tabela e da mesma linha
+  - restringir fontes iniciais a `inteiro`, `decimal`, `monetario` e `percentual`
+  - restringir resultado inicial a `decimal` e `monetario`
+  - restringir operadores iniciais a `soma`, `subtracao`, `multiplicacao` e `divisao`
+  - deixar fora do primeiro recorte: parenteses, `min`, `max`, arredondamento, percentual derivado, formula sobre formula, filtro estruturado em calculada e totalizador em calculada
+- seguranca consolidada:
+  - sem `eval`
+  - sem `exec`
+  - sem texto livre estilo Excel
+  - sem macro/script
+  - sem referencia entre tabelas
+  - sem leitura/escrita no financeiro oficial
+  - sem impacto em `LancamentoFinanceiro`, saldos, extrato, resumo, prestacao/fechamento ou balancete
+- recomendacao de implementacao mais segura registrada:
+  - 1. configuracao visual da formula na coluna, com validacao estrutural
+  - 2. calculo + exibicao somente leitura na listagem de linhas
+  - 3. integracao controlada com busca/XLSX e decisao posterior sobre totalizadores em colunas calculadas
+- baixa documental consolidada:
+  - pendencia de `formulas guiadas por coluna` deixou de estar apenas como proximo item generico
+  - a frente agora tem SPEC tecnica curta consolidada para orientar a futura implementacao incremental
+  - a auditoria operacional propria continua separada e posterior
 
 ## Microetapa tecnica: exportacao XLSX das linhas personalizadas
 

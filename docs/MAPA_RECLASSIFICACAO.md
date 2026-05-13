@@ -596,6 +596,15 @@ Consolidacao desta baixa documental:
 - reclassificacao da pendencia proxima apos a exportacao:
   - deixa de ser `exportacao XLSX`
   - passa a ser `formulas guiadas por coluna`, mantendo auditoria operacional propria fora do recorte imediato
+- status apos SPEC tecnica curta desta microetapa:
+  - `SPEC TECNICA CURTA DE FORMULAS GUIADAS CONSOLIDADA / AGUARDANDO IMPLEMENTACAO INCREMENTAL`
+- consolidacao registrada:
+  - recomendacao inicial de persistencia em `configuracao_json.formula`, sem migration no primeiro recorte
+  - fontes iniciais restritas a `inteiro`, `decimal`, `monetario` e `percentual`
+  - resultado inicial recomendado restrito a `decimal` e `monetario`
+  - operadores iniciais restritos a `soma`, `subtracao`, `multiplicacao` e `divisao`
+  - formula sobre formula, totalizador em coluna calculada e filtro estruturado em calculada ficam fora do primeiro recorte
+  - proxima etapa mais segura passa a ser configuracao da formula na estrutura da coluna antes do calculo e da integracao com tela/XLSX
 - guardrails reforcados:
   - qualquer alteracao em banco real exige backup e autorizacao
   - arquivos SQLite nao devem ser versionados
