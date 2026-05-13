@@ -199,6 +199,18 @@
         white-space: nowrap;
     }
 
+    .financeiro-linha-coluna-tag {
+        display: inline-flex;
+        margin-top: 0.28rem;
+        padding: 0.12rem 0.45rem;
+        border-radius: 999px;
+        background: #eff6ff;
+        color: #1d4ed8;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.01em;
+    }
+
     .financeiro-linha-totalizadores-row th,
     .financeiro-linha-totalizadores-row td {
         vertical-align: top;
@@ -257,7 +269,7 @@
     <section class="financeiro-linha-card">
         <div class="financeiro-linha-note">
             <strong>Recorte atual:</strong>
-            esta etapa permite preenchimento basico de linhas, busca textual simples, totalizadores configurados por coluna e exportacao XLSX refletindo a leitura atual da tela. Formulas guiadas seguem fora do recorte. Controle interno sem impacto financeiro oficial.
+            esta etapa permite preenchimento basico de linhas, busca textual simples, totalizadores configurados por coluna, exportacao XLSX refletindo a leitura atual da tela e exibicao somente leitura de formulas guiadas na grade. O calculo acontece apenas na leitura da listagem, sem persistencia e ainda sem integracao com busca, filtros estruturados, totalizadores ou XLSX. Controle interno sem impacto financeiro oficial.
         </div>
 
         <form method="get" class="financeiro-linha-search">
@@ -342,7 +354,12 @@
                     <tr>
                         <th>Linha</th>
                         {% for coluna in colunas_visiveis %}
-                            <th>{{ coluna.nome }}</th>
+                            <th>
+                                {{ coluna.nome }}
+                                {% if coluna.calculada and coluna.formula_habilitada %}
+                                    <div class="financeiro-linha-coluna-tag">Calculada</div>
+                                {% endif %}
+                            </th>
                         {% endfor %}
                         {% if pode_editar_linhas_tabela_personalizada %}<th>Acoes</th>{% endif %}
                     </tr>

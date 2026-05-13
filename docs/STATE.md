@@ -4259,3 +4259,30 @@ Riscos principais antes de migration:
   - sem impacto em `LancamentoFinanceiro` ou no financeiro oficial
 - proxima microetapa recomendada:
   - abrir a Onda 2 com calculo/exibicao somente leitura das colunas calculadas na tela de linhas
+
+## Microetapa: formulas guiadas por coluna - Onda 2
+
+- o calculo funcional das formulas guiadas passou a acontecer somente em tempo de leitura na listagem de linhas
+- a coluna calculada agora aparece na grade como leitura:
+  - continua fora do formulario de criacao/edicao de linha
+  - continua sem persistencia em `valor_calculado`
+  - continua sem escrita em banco
+- o motor desta onda permanece fechado e controlado:
+  - sem `eval`
+  - sem `exec`
+  - sem expressao textual livre
+  - apenas `soma`, `subtracao`, `multiplicacao` e `divisao`
+  - apenas operandos numericos da mesma linha e da mesma tabela
+- comportamento seguro consolidado:
+  - operando ausente produz resultado vazio
+  - divisao por zero produz resultado vazio
+  - resultado `decimal` respeita `casas_decimais`
+  - resultado `monetario` e exibido com 2 casas e formato brasileiro na tela
+- guardrails mantidos nesta onda:
+  - busca textual continua sem considerar coluna calculada
+  - filtros estruturados continuam sem considerar coluna calculada
+  - totalizadores continuam fora para coluna calculada
+  - exportacao XLSX continua sem incluir valor calculado
+  - sem impacto em `LancamentoFinanceiro` e no financeiro oficial
+- proxima microetapa recomendada:
+  - avaliar Onda 3 para integrar formulas guiadas de forma controlada com busca e XLSX, mantendo totalizadores sobre calculadas ainda sob decisao explicita

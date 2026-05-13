@@ -1908,6 +1908,17 @@ Status consolidado: SPEC FUNCIONAL DOCUMENTAL CONSOLIDADA / BACKLOG TECNICO INCR
 Status apos Onda 1:
 - configuracao visual da formula guiada implementada apenas na estrutura da coluna
 - persistencia inicial entregue em `ColunaPersonalizada.configuracao_json.formula`, sem migration
+- calculo, busca, filtros, totalizadores e XLSX com coluna calculada permaneciam fora do recorte imediato
+
+Status apos Onda 2:
+- calculo da formula guiada implementado apenas em tempo de leitura na listagem de linhas
+- coluna calculada exibida como leitura na grade, sem entrar no formulario de linha
+- operando ausente e divisao por zero produzem resultado vazio, sem erro de pagina
+- `valor_calculado` continua sem uso e sem persistencia
+- busca, filtros estruturados, totalizadores e XLSX continuam fora da integracao com colunas calculadas nesta etapa
+
+Proxima microetapa recomendada:
+- abrir onda propria para decidir integracao controlada com busca e XLSX antes de avaliar totalizadores sobre calculadas
 - liberacao controlada apenas para quem possui `financeiro.tabelas_personalizadas.configurar_formula`
 - validacoes estruturais entregues:
   - operacoes limitadas a `soma`, `subtracao`, `multiplicacao` e `divisao`

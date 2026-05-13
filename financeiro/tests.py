@@ -4538,6 +4538,27 @@ class TabelasPersonalizadasListViewTests(TestCase):
             'status': ColunaPersonalizada.StatusColuna.ATIVA,
         }
 
+    def _configurar_formula_coluna(
+        self,
+        coluna: ColunaPersonalizada,
+        *,
+        operacao: str,
+        operandos: list[int],
+        resultado_tipo: str = ColunaPersonalizada.TipoDado.DECIMAL,
+        casas_decimais: int = 8,
+    ) -> ColunaPersonalizada:
+        coluna.configuracao_json = {
+            'formula': {
+                'habilitada': True,
+                'operacao': operacao,
+                'operandos': operandos,
+                'resultado_tipo': resultado_tipo,
+                'casas_decimais': casas_decimais,
+            }
+        }
+        coluna.save()
+        return coluna
+
     def _criar_colunas_para_linhas(self):
         texto = ColunaPersonalizada.objects.create(
             tabela=self.tabela,
@@ -4776,6 +4797,21 @@ class TabelasPersonalizadasListViewTests(TestCase):
             self._campo_coluna(colunas['texto']): 'Linha base',
             self._campo_coluna(colunas['inteiro']): '1',
         }
+
+    def _valor_renderizado_coluna(
+        self,
+        response,
+        nome_coluna: str,
+        *,
+        linha_pk: int | None = None,
+    ) -> str | None:
+        for item in response.context['linhas_renderizadas']:
+            if linha_pk is not None and item['linha'].pk != linha_pk:
+                continue
+            for celula in item['celulas']:
+                if celula['coluna'].nome == nome_coluna:
+                    return celula['valor']
+        return None
 
     def _ler_linhas_xlsx(self, conteudo: bytes) -> list[list[str]]:
         with ZipFile(BytesIO(conteudo)) as arquivo_xlsx:
@@ -5739,7 +5775,7 @@ class TabelasPersonalizadasListViewTests(TestCase):
 
     def test_usuario_com_permissao_visualizar_acessa_listagem_de_linhas(self):
         colunas = self._criar_colunas_para_linhas()
-        self._criar_linha_com_valores(colunas)
+        linha = self._criar_linha_com_valores(colunas)
         self._login_com_permissoes(
             'user-linha-list',
             [PermissoesTabelasPersonalizadas.VISUALIZAR],
@@ -5757,9 +5793,125 @@ class TabelasPersonalizadasListViewTests(TestCase):
         self.assertContains(response, 'R$ 50.72')
         self.assertContains(response, '1.01499912')
         self.assertContains(response, '12.3456%')
+        self.assertContains(response, 'Campo calculado futuro')
+        self.assertContains(response, 'Calculada')
         self.assertNotContains(response, 'Campo oculto')
         self.assertNotContains(response, 'Campo arquivado')
-        self.assertNotContains(response, 'Campo calculado futuro')
+        self.assertEqual(
+            self._valor_renderizado_coluna(response, 'Campo calculado futuro', linha_pk=linha.pk),
+            '5,01499912',
+        )
+
+    def test_listagem_de_linhas_calcula_subtracao_multiplicacao_e_divisao_em_tempo_de_leitura(self):
+        colunas = self._criar_colunas_para_linhas()
+        linha = self._criar_linha_com_valores(colunas)
+        self._login_com_permissoes(
+            'user-linha-formula-operacoes',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+        url = reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk})
+
+        self._configurar_formula_coluna(
+            colunas['formula'],
+            operacao=ColunaPersonalizada.OperacaoFormula.SUBTRACAO,
+            operandos=[colunas['percentual'].pk, colunas['inteiro'].pk],
+            resultado_tipo=ColunaPersonalizada.TipoDado.DECIMAL,
+            casas_decimais=4,
+        )
+        response_subtracao = self.client.get(url)
+        self.assertEqual(
+            self._valor_renderizado_coluna(response_subtracao, 'Campo calculado futuro', linha_pk=linha.pk),
+            '8,3456',
+        )
+
+        self._configurar_formula_coluna(
+            colunas['formula'],
+            operacao=ColunaPersonalizada.OperacaoFormula.MULTIPLICACAO,
+            operandos=[colunas['percentual'].pk, colunas['inteiro'].pk],
+            resultado_tipo=ColunaPersonalizada.TipoDado.DECIMAL,
+            casas_decimais=4,
+        )
+        response_multiplicacao = self.client.get(url)
+        self.assertEqual(
+            self._valor_renderizado_coluna(response_multiplicacao, 'Campo calculado futuro', linha_pk=linha.pk),
+            '49,3824',
+        )
+
+        self._configurar_formula_coluna(
+            colunas['formula'],
+            operacao=ColunaPersonalizada.OperacaoFormula.DIVISAO,
+            operandos=[colunas['percentual'].pk, colunas['inteiro'].pk],
+            resultado_tipo=ColunaPersonalizada.TipoDado.DECIMAL,
+            casas_decimais=4,
+        )
+        response_divisao = self.client.get(url)
+        self.assertEqual(response_divisao.status_code, 200)
+        self.assertEqual(
+            self._valor_renderizado_coluna(response_divisao, 'Campo calculado futuro', linha_pk=linha.pk),
+            '3,0864',
+        )
+
+    def test_listagem_de_linhas_formata_resultado_monetario_com_duas_casas(self):
+        colunas = self._criar_colunas_para_linhas()
+        linha = self._criar_linha_com_valores(colunas)
+        self._configurar_formula_coluna(
+            colunas['formula'],
+            operacao=ColunaPersonalizada.OperacaoFormula.SOMA,
+            operandos=[colunas['monetario'].pk, colunas['inteiro'].pk],
+            resultado_tipo=ColunaPersonalizada.TipoDado.MONETARIO,
+            casas_decimais=2,
+        )
+        self._login_com_permissoes(
+            'user-linha-formula-monetaria',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk})
+        )
+
+        self.assertEqual(
+            self._valor_renderizado_coluna(response, 'Campo calculado futuro', linha_pk=linha.pk),
+            'R$ 54,72',
+        )
+
+    def test_listagem_de_linhas_deixa_formula_vazia_quando_operando_esta_ausente_ou_divisao_tem_zero(self):
+        colunas = self._criar_colunas_para_linhas()
+        linha_sem_decimal = self._criar_linha_com_valores(colunas)
+        ValorTabelaPersonalizada.objects.filter(
+            linha=linha_sem_decimal,
+            coluna=colunas['decimal'],
+        ).delete()
+        linha_divisao_zero = self._criar_segunda_linha_com_valores(colunas)
+        ValorTabelaPersonalizada.objects.filter(
+            linha=linha_divisao_zero,
+            coluna=colunas['inteiro'],
+        ).update(valor_numero=Decimal('0'))
+        self._configurar_formula_coluna(
+            colunas['formula'],
+            operacao=ColunaPersonalizada.OperacaoFormula.DIVISAO,
+            operandos=[colunas['decimal'].pk, colunas['inteiro'].pk],
+            resultado_tipo=ColunaPersonalizada.TipoDado.DECIMAL,
+            casas_decimais=4,
+        )
+        self._login_com_permissoes(
+            'user-linha-formula-vazia',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk})
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            self._valor_renderizado_coluna(response, 'Campo calculado futuro', linha_pk=linha_sem_decimal.pk),
+            '',
+        )
+        self.assertEqual(
+            self._valor_renderizado_coluna(response, 'Campo calculado futuro', linha_pk=linha_divisao_zero.pk),
+            '',
+        )
 
     def test_tela_de_linhas_exibe_filtros_apenas_quando_houver_coluna_habilitada(self):
         colunas = self._criar_colunas_para_linhas()
@@ -6025,12 +6177,7 @@ class TabelasPersonalizadasListViewTests(TestCase):
 
     def test_busca_nao_considera_coluna_calculada_formula(self):
         colunas = self._criar_colunas_para_linhas()
-        linha = self._criar_linha_com_valores(colunas)
-        ValorTabelaPersonalizada.objects.create(
-            linha=linha,
-            coluna=colunas['formula'],
-            valor_calculado='segredo-formula',
-        )
+        self._criar_linha_com_valores(colunas)
         self._login_com_permissoes(
             'user-linha-busca-formula',
             [PermissoesTabelasPersonalizadas.VISUALIZAR],
@@ -6038,7 +6185,7 @@ class TabelasPersonalizadasListViewTests(TestCase):
 
         response = self.client.get(
             reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk}),
-            {'busca': 'segredo-formula'},
+            {'busca': '5,01499912'},
         )
 
         self.assertEqual(response.status_code, 200)

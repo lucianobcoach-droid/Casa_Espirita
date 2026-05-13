@@ -6,7 +6,7 @@ import re
 import unicodedata
 from calendar import monthrange
 from datetime import date, datetime, timedelta
-from decimal import ROUND_CEILING, Decimal
+from decimal import ROUND_CEILING, ROUND_HALF_UP, Decimal
 from io import BytesIO
 from urllib.parse import urlencode, urlsplit, urlunsplit, parse_qsl
 from uuid import uuid4
@@ -8759,6 +8759,16 @@ def _obter_colunas_visiveis_tabela_personalizada(tabela: TabelaPersonalizada) ->
     )
 
 
+def _obter_colunas_listagem_tabela_personalizada(tabela: TabelaPersonalizada) -> list[ColunaPersonalizada]:
+    return list(
+        ColunaPersonalizada.objects.filter(
+            tabela=tabela,
+            status=ColunaPersonalizada.StatusColuna.ATIVA,
+            visivel=True,
+        ).prefetch_related('totalizadores')
+    )
+
+
 def _obter_colunas_filtraveis_tabela_personalizada(tabela: TabelaPersonalizada) -> list[ColunaPersonalizada]:
     return [
         coluna
@@ -8806,14 +8816,121 @@ def _filtrar_linhas_tabela_personalizada(
     return linhas
 
 
+def _obter_valor_numerico_formula(valor: ValorTabelaPersonalizada | None) -> Decimal | None:
+    if valor is None or valor.valor_numero is None:
+        return None
+    if valor.coluna.tipo_dado not in ColunaPersonalizada.tipos_elegiveis_formula_fonte():
+        return None
+    return valor.valor_numero
+
+
+def _quantizar_resultado_formula(
+    valor: Decimal,
+    *,
+    resultado_tipo: str,
+    casas_decimais: int,
+) -> Decimal:
+    casas = 2 if resultado_tipo == ColunaPersonalizada.TipoDado.MONETARIO else casas_decimais
+    expoente = Decimal('1').scaleb(-casas)
+    return valor.quantize(expoente, rounding=ROUND_HALF_UP)
+
+
+def _formatar_resultado_formula_tabela(
+    resultado: Decimal | None,
+    *,
+    resultado_tipo: str,
+    casas_decimais: int,
+) -> str:
+    if resultado is None:
+        return ''
+    if resultado_tipo == ColunaPersonalizada.TipoDado.MONETARIO:
+        return (
+            'R$ '
+            f"{_formatar_decimal_brasileiro(resultado, casas_decimais_maximas=2, casas_decimais_fixas=True)}"
+        )
+    return _formatar_decimal_brasileiro(
+        resultado,
+        casas_decimais_maximas=casas_decimais,
+        casas_decimais_fixas=True,
+    )
+
+
+def _calcular_valor_formula_guiada_linha(
+    coluna: ColunaPersonalizada,
+    valores_linha_por_coluna: dict[int, ValorTabelaPersonalizada],
+) -> str:
+    if not (
+        coluna.calculada
+        and coluna.tipo_dado == ColunaPersonalizada.TipoDado.FORMULA_CONTROLADA
+        and coluna.formula_habilitada
+    ):
+        return ''
+
+    configuracao_formula = coluna.formula_config
+    operacao = configuracao_formula.get('operacao')
+    operandos_ids = configuracao_formula.get('operandos', [])
+    resultado_tipo = configuracao_formula.get('resultado_tipo')
+    casas_decimais = configuracao_formula.get('casas_decimais')
+
+    if not (
+        isinstance(operandos_ids, list)
+        and operandos_ids
+        and resultado_tipo in ColunaPersonalizada.tipos_elegiveis_formula_resultado()
+        and isinstance(casas_decimais, int)
+    ):
+        return ''
+
+    operandos: list[Decimal] = []
+    for operando_id in operandos_ids:
+        if not isinstance(operando_id, int):
+            return ''
+        valor_operando = _obter_valor_numerico_formula(valores_linha_por_coluna.get(operando_id))
+        if valor_operando is None:
+            return ''
+        operandos.append(valor_operando)
+
+    try:
+        if operacao == ColunaPersonalizada.OperacaoFormula.SOMA:
+            resultado = sum(operandos, Decimal('0'))
+        elif operacao == ColunaPersonalizada.OperacaoFormula.SUBTRACAO:
+            if len(operandos) != 2:
+                return ''
+            resultado = operandos[0] - operandos[1]
+        elif operacao == ColunaPersonalizada.OperacaoFormula.MULTIPLICACAO:
+            resultado = Decimal('1')
+            for operando in operandos:
+                resultado *= operando
+        elif operacao == ColunaPersonalizada.OperacaoFormula.DIVISAO:
+            if len(operandos) != 2 or operandos[1] == Decimal('0'):
+                return ''
+            resultado = operandos[0] / operandos[1]
+        else:
+            return ''
+    except ArithmeticError:
+        return ''
+
+    resultado_quantizado = _quantizar_resultado_formula(
+        resultado,
+        resultado_tipo=resultado_tipo,
+        casas_decimais=casas_decimais,
+    )
+    return _formatar_resultado_formula_tabela(
+        resultado_quantizado,
+        resultado_tipo=resultado_tipo,
+        casas_decimais=casas_decimais,
+    )
+
+
 def _montar_renderizacao_linhas_tabela_personalizada(
     colunas_visiveis: list[ColunaPersonalizada],
+    colunas_totalizaveis: list[ColunaPersonalizada],
     linhas: list[LinhaTabelaPersonalizada],
 ) -> tuple[list[dict[str, object]], list[dict[str, object]], bool]:
     linhas_renderizadas = []
     colunas_visiveis_ids = {coluna.pk for coluna in colunas_visiveis}
+    colunas_totalizaveis_ids = {coluna.pk for coluna in colunas_totalizaveis}
     valores_totalizadores_por_coluna: dict[int, list[ValorTabelaPersonalizada]] = {
-        coluna.pk: [] for coluna in colunas_visiveis
+        coluna.pk: [] for coluna in colunas_totalizaveis
     }
 
     for linha in linhas:
@@ -8823,11 +8940,16 @@ def _montar_renderizacao_linhas_tabela_personalizada(
             if valor.coluna_id in colunas_visiveis_ids
         }
         for coluna_id, valor in valores_linha_por_coluna.items():
-            valores_totalizadores_por_coluna.setdefault(coluna_id, []).append(valor)
+            if coluna_id in colunas_totalizaveis_ids:
+                valores_totalizadores_por_coluna.setdefault(coluna_id, []).append(valor)
         celulas = [
             {
                 'coluna': coluna,
-                'valor': _formatar_valor_linha_tabela(coluna, valores_linha_por_coluna.get(coluna.pk)),
+                'valor': (
+                    _calcular_valor_formula_guiada_linha(coluna, valores_linha_por_coluna)
+                    if coluna.calculada and coluna.tipo_dado == ColunaPersonalizada.TipoDado.FORMULA_CONTROLADA
+                    else _formatar_valor_linha_tabela(coluna, valores_linha_por_coluna.get(coluna.pk))
+                ),
             }
             for coluna in colunas_visiveis
         ]
@@ -8870,6 +8992,7 @@ def _montar_estado_linhas_tabela_personalizada(
     filtros_estruturados: list[dict[str, object]] | None = None,
 ) -> dict[str, object]:
     colunas_visiveis = _obter_colunas_visiveis_tabela_personalizada(tabela)
+    colunas_listagem = _obter_colunas_listagem_tabela_personalizada(tabela)
     linhas = _filtrar_linhas_tabela_personalizada(
         _obter_queryset_linhas_tabela_personalizada(tabela),
         colunas_visiveis,
@@ -8880,12 +9003,13 @@ def _montar_estado_linhas_tabela_personalizada(
         linhas_renderizadas,
         totalizadores_renderizados,
         possui_totalizadores,
-    ) = _montar_renderizacao_linhas_tabela_personalizada(colunas_visiveis, linhas)
+    ) = _montar_renderizacao_linhas_tabela_personalizada(colunas_listagem, colunas_visiveis, linhas)
     return {
-        'colunas_visiveis': colunas_visiveis,
+        'colunas_visiveis': colunas_listagem,
         'colunas_filtraveis': [
             coluna for coluna in colunas_visiveis if coluna.filtro_estruturado_habilitado
         ],
+        'colunas_exportacao': colunas_visiveis,
         'linhas': linhas,
         'linhas_renderizadas': linhas_renderizadas,
         'totalizadores_renderizados': totalizadores_renderizados,
@@ -9096,7 +9220,7 @@ class TabelaPersonalizadaLinhaExportXlsxView(FinanceiroPermissaoMixin, View):
         )
         linhas_xlsx, larguras_colunas, linhas_negrito = _montar_linhas_exportacao_tabela_personalizada_xlsx(
             tabela,
-            estado_linhas['colunas_visiveis'],
+            estado_linhas['colunas_exportacao'],
             estado_linhas['linhas'],
         )
         arquivo_exportacao = _gerar_arquivo_xlsx_formatado(

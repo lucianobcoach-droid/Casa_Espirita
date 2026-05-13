@@ -5889,6 +5889,32 @@ Não houve alteração de código funcional nesta etapa.
   - `py -m compileall financeiro configuracoes` OK
   - `py manage.py test financeiro configuracoes` OK
 
+## Microetapa: formulas guiadas por coluna - Onda 2
+
+- implementei o calculo funcional das formulas guiadas apenas na leitura da listagem de linhas
+- a grade de linhas passou a exibir colunas calculadas como leitura, sem reabrir o formulario de linha para esses campos
+- o calculo usa somente:
+  - operacao configurada
+  - operandos da mesma linha
+  - `resultado_tipo`
+  - `casas_decimais`
+- comportamento seguro aplicado:
+  - operando ausente retorna celula vazia
+  - divisao por zero retorna celula vazia
+  - sem erro 500
+  - sem persistencia em `valor_calculado`
+- preservado nesta onda:
+  - busca continua ignorando calculadas
+  - filtros estruturados continuam ignorando calculadas
+  - totalizadores continuam fora para calculadas
+  - XLSX continua sem incluir valor calculado
+  - sem impacto em `LancamentoFinanceiro` e no financeiro oficial
+- validacoes executadas:
+  - `py manage.py makemigrations --check --dry-run` OK
+  - `py manage.py check` OK
+  - `py -m compileall financeiro configuracoes` OK
+  - `py manage.py test financeiro configuracoes` OK
+
 ## Microetapa: refino textual do recibo especial e busca do favorecido
 
 - refinei somente o fluxo do `Recibo especial`, sem alteracao de regra funcional

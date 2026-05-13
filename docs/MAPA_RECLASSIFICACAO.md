@@ -1572,3 +1572,31 @@ Guardrails preservados:
 
 Proxima microetapa recomendada:
 - Onda 2 de formulas guiadas: calcular e exibir o resultado somente leitura na listagem de linhas, ainda sem integrar totalizador sobre calculada
+
+### 53. Tabelas personalizadas - formulas guiadas por coluna / Onda 2
+
+Status: IMPLEMENTADO PARCIALMENTE (CALCULO EM LEITURA + EXIBICAO SOMENTE LEITURA)
+
+Consolidacao:
+- a formula guiada passou a ser calculada apenas em tempo de leitura na listagem de linhas
+- a coluna calculada agora aparece na grade, mas continua fora do formulario de criacao/edicao de linhas
+- a persistencia continua ausente:
+  - sem uso de `valor_calculado`
+  - sem migration
+  - sem escrita em banco para o resultado
+
+Comportamento seguro entregue:
+- operando ausente gera celula vazia
+- divisao por zero gera celula vazia
+- `decimal` respeita `casas_decimais`
+- `monetario` aparece com 2 casas e formato brasileiro na tela
+
+Guardrails preservados:
+- busca textual continua sem considerar calculadas
+- filtros estruturados continuam sem considerar calculadas
+- totalizadores continuam fora para calculadas
+- exportacao XLSX continua sem incluir valor calculado
+- sem impacto em `LancamentoFinanceiro` e no financeiro oficial
+
+Proxima microetapa recomendada:
+- decidir em microetapa propria se busca e XLSX passarao a refletir colunas calculadas antes de abrir qualquer conversa sobre totalizadores em calculadas
