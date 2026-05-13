@@ -1772,5 +1772,44 @@ Consolidacao da validacao:
 - sem model novo, sem migration, sem impacto no financeiro oficial
 
 Proxima frente recomendada:
-- REFINAMENTO DE UX/FUXO DAS TABELAS PERSONALIZADAS
+- REFINAMENTO DE UX/FLUXO DAS TABELAS PERSONALIZADAS
 - foco: reduzir fragmentacao operacional entre cadastro da tabela, configuracao de colunas e preenchimento de linhas
+
+Status apos fechamento documental desta microetapa: SPEC DE UX UNIFICADA CONSOLIDADA / BACKLOG
+
+Consolidacao:
+- fluxo atual auditado e registrado como fragmentado entre:
+  - dados gerais da tabela
+  - configuracao de colunas
+  - preenchimento de linhas
+- direcao de UX consolidada:
+  - a tabela aberta passa a ser a tela central de trabalho da frente
+  - a listagem de linhas e o candidato mais seguro para assumir esse papel no primeiro recorte
+- primeiro recorte recomendado:
+  - manter a tela de linhas como principal
+  - centralizar no topo:
+    - `Nova linha`
+    - `Configurar colunas`
+    - `Editar tabela`
+    - `Exportar XLSX`
+  - reaproveitar rotas atuais
+  - manter busca, filtros, grade e totalizadores na mesma tela
+  - nao remover telas antigas ainda
+- ondas futuras registradas:
+  - Onda 1: centralizacao da tela principal da tabela
+  - Onda 2: aproximacao da configuracao de colunas ao contexto da tabela
+  - Onda 3: avaliacao de cadastro de linha em painel, modal ou inline conforme uso real
+- fora do primeiro recorte:
+  - edicao inline de celula
+  - modal complexo
+  - importacao
+  - edicao em massa
+  - dashboard
+  - visoes salvas
+  - reescrita de rotas
+  - remocao de telas antigas
+  - alteracao de models, banco, auditoria, calculos, formulas, filtros, totalizadores ou XLSX
+- preservacoes obrigatorias:
+  - manter permissoes atuais da frente
+  - manter auditoria operacional minima ja validada
+  - impedir duplicidade de logs na futura mudanca de UX

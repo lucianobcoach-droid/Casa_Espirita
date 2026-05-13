@@ -4523,3 +4523,71 @@ Status de validacao da usuaria:
 
 Proxima frente recomendada:
 - abrir microetapa de refinamento de UX/fluxo das `Tabelas personalizadas`, reduzindo fragmentacao entre cadastro de tabela, colunas e linhas
+
+## Microetapa documental: SPEC de UX unificada das tabelas personalizadas
+
+- auditoria tecnica/documental concluida, sem implementacao
+- fluxo atual mapeado:
+  - listagem de tabelas com filtros por nome/status e acoes separadas para `Linhas`, `Colunas` e `Editar`
+  - formulario proprio para dados gerais da tabela
+  - listagem propria para estrutura de colunas
+  - formulario proprio para configuracao de colunas, filtros, totalizadores e formulas
+  - listagem propria de linhas com busca, filtros estruturados, exportacao XLSX, grade e totalizadores
+  - formulario proprio para criacao/edicao de linhas
+  - permissoes atuais preservadas por rota/acao:
+    - `visualizar`
+    - `preencher_linhas`
+    - `editar_linhas`
+    - `editar_estrutura`
+    - `configurar_formula`
+    - `exportar`
+  - auditoria operacional minima ja validada e ligada apenas aos pontos de salvamento de tabela, coluna e linha
+- problema de UX registrado:
+  - o fluxo operacional ficou fragmentado entre telas separadas para dados gerais da tabela, configuracao de colunas e preenchimento de linhas
+  - a usuaria precisa alternar entre paginas irmas para gerir um mesmo controle interno
+- direcao recomendada:
+  - tratar a tela da propria tabela como centro de trabalho
+  - fluxo-alvo:
+    - `Tabelas personalizadas`
+    - abrir uma tabela
+    - dentro dela gerenciar linhas, busca, filtros, exportacao, colunas e dados gerais da tabela
+- primeiro recorte mais seguro:
+  - manter a grade de linhas como tela principal da tabela
+  - adicionar no topo acoes claras para:
+    - `Nova linha`
+    - `Configurar colunas`
+    - `Editar tabela`
+    - `Exportar XLSX`
+  - manter busca, filtros estruturados, grade e totalizadores na mesma tela
+  - reaproveitar rotas atuais
+  - nao criar modal complexo
+  - nao remover telas antigas neste primeiro recorte
+- ondas futuras recomendadas:
+  - Onda 1:
+    - melhorar a tela principal da tabela, centralizando linhas e acoes principais
+  - Onda 2:
+    - melhorar a configuracao de colunas dentro do contexto da tabela
+  - Onda 3:
+    - avaliar cadastro de linha em painel, modal ou inline apenas se o uso real justificar
+- fora do primeiro recorte:
+  - edicao inline de celula
+  - modal complexo
+  - arrastar e soltar colunas
+  - importacao
+  - edicao em massa
+  - dashboard
+  - visoes salvas
+  - reescrever rotas
+  - remover telas antigas
+  - alterar models
+  - alterar banco
+  - alterar auditoria
+  - alterar calculos, formulas, filtros, totalizadores ou XLSX
+- guardrails:
+  - preservar permissao por acao ja validada
+  - preservar auditoria existente sem duplicar logs
+  - nao remover os pontos atuais de auditoria em criacao/edicao de tabela, coluna e linha
+  - manter a mudanca futura restrita a navegacao/UX no primeiro recorte
+
+Proxima frente recomendada:
+- implementar a Onda 1 da UX unificada, promovendo a listagem de linhas a tela central da tabela com acoes superiores para editar tabela, configurar colunas, criar linha e exportar XLSX

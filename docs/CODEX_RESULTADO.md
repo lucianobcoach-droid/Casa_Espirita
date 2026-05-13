@@ -6164,3 +6164,56 @@ Não houve alteração de código funcional nesta etapa.
   - criacao/edicao de linha
 - reabertura futura:
   - possivel em microetapa propria se houver necessidade de seguranca, controle de acesso ou rastreabilidade de extracoes
+
+## Microetapa documental: SPEC de UX unificada das tabelas personalizadas
+
+- auditei o fluxo atual de `Tabelas personalizadas` em `views`, `urls`, `forms`, `permissoes`, templates e testes, sem alteracao funcional
+- confirmei a fragmentacao atual entre:
+  - listagem de tabelas
+  - edicao da tabela
+  - estrutura de colunas
+  - preenchimento de linhas
+- a base atual ja oferece uma tela naturalmente mais forte para virar centro operacional:
+  - `tabela_personalizada_linha_list`
+  - ela ja concentra busca, filtros estruturados, exportacao XLSX, grade e totalizadores
+- SPEC curta consolidada:
+  - a tabela aberta deve virar a tela central de trabalho
+  - o primeiro recorte mais seguro deve manter a grade de linhas como tela principal
+  - no topo dessa tela devem ficar acoes claras para:
+    - `Nova linha`
+    - `Configurar colunas`
+    - `Editar tabela`
+    - `Exportar XLSX`
+  - as rotas atuais devem ser reaproveitadas
+  - as telas antigas devem ser preservadas neste primeiro momento
+  - nao abrir modal complexo nem reescrever navegacao estrutural agora
+- ondas futuras registradas:
+  - Onda 1:
+    - centralizar linhas e acoes principais na tela da tabela
+  - Onda 2:
+    - aproximar a configuracao de colunas do contexto da tabela
+  - Onda 3:
+    - avaliar painel, modal ou entrada inline de linha apenas se o uso real justificar
+- preservacoes obrigatorias registradas:
+  - permissoes atuais:
+    - `visualizar`
+    - `preencher_linhas`
+    - `editar_linhas`
+    - `editar_estrutura`
+    - `configurar_formula`
+    - `exportar`
+  - auditoria operacional minima ja validada:
+    - criacao/edicao de tabela
+    - criacao/edicao de coluna
+    - criacao/edicao de linha
+  - a futura evolucao de UX nao pode duplicar logs nem remover auditoria
+- fora do primeiro recorte:
+  - edicao inline de celula
+  - modal complexo
+  - importacao
+  - edicao em massa
+  - dashboard
+  - visoes salvas
+  - reescrita de rotas
+  - remocao de telas antigas
+  - qualquer alteracao em calculo, formula, filtro, totalizador ou XLSX

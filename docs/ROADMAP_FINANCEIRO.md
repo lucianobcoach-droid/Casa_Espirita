@@ -3901,3 +3901,84 @@ Consolidacao da validacao:
 
 Proxima frente recomendada:
 - abrir microetapa de refinamento de UX/fluxo das tabelas personalizadas, reduzindo fragmentacao entre cadastro de tabela, configuracao de colunas e preenchimento de linhas
+
+## Microetapa documental: SPEC de UX unificada das tabelas personalizadas
+
+Status:
+- documentado, sem implementacao
+
+Problema registrado:
+- o uso atual das tabelas personalizadas ficou fragmentado entre:
+  - cadastro/edicao da tabela
+  - configuracao de colunas
+  - preenchimento de linhas
+- a usuaria precisa alternar entre paginas separadas para trabalhar no mesmo controle interno
+
+Fluxo atual auditado:
+- listagem de tabelas com acesso separado para `Linhas`, `Colunas` e `Editar`
+- tela propria de dados gerais da tabela
+- tela propria de colunas
+- tela propria de linhas com busca, filtros estruturados, exportacao XLSX, grade e totalizadores
+- formularios proprios de coluna e linha
+- permissao e auditoria ja acopladas aos pontos de escrita existentes
+
+Direcao recomendada:
+- a tabela aberta deve virar a tela central de trabalho da frente
+- fluxo desejado:
+  - `Tabelas personalizadas`
+  - abrir uma tabela
+  - dentro dela gerenciar linhas, busca, filtros, exportacao, colunas e dados gerais
+
+Primeiro recorte seguro:
+- manter a listagem de linhas como tela principal da tabela
+- centralizar no topo desta tela as acoes:
+  - `Nova linha`
+  - `Configurar colunas`
+  - `Editar tabela`
+  - `Exportar XLSX`
+- manter na mesma tela:
+  - busca
+  - filtros estruturados
+  - grade
+  - totalizadores
+- reaproveitar rotas atuais
+- nao criar modal complexo
+- nao remover telas antigas agora
+
+Ondas futuras:
+- Onda 1:
+  - melhorar a tela principal da tabela, centralizando linhas e acoes principais
+- Onda 2:
+  - melhorar a configuracao de colunas dentro do contexto da tabela
+- Onda 3:
+  - avaliar cadastro de linha em painel, modal ou inline apenas se o uso real justificar
+
+Fora do primeiro recorte:
+- edicao inline de celula
+- modal complexo
+- arrastar e soltar colunas
+- importacao
+- edicao em massa
+- dashboard
+- visoes salvas
+- reescrever rotas
+- remover telas antigas
+- alterar models, banco ou auditoria
+- alterar calculos, formulas, filtros, totalizadores ou XLSX
+
+Preservacoes obrigatorias:
+- permissoes:
+  - `visualizar`
+  - `preencher_linhas`
+  - `editar_linhas`
+  - `editar_estrutura`
+  - `configurar_formula`
+  - `exportar`
+- auditoria operacional minima ja validada:
+  - criacao/edicao de tabela
+  - criacao/edicao de coluna
+  - criacao/edicao de linha
+- a evolucao futura de UX nao pode duplicar logs nem remover auditoria
+
+Proxima microetapa recomendada:
+- implementar a Onda 1 da UX unificada, promovendo a tela de linhas a tela principal da tabela e adicionando acoes de contexto no topo
