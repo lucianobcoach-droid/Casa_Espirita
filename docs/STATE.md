@@ -4405,7 +4405,7 @@ Riscos principais antes de migration:
     - alteracao de totalizadores
     - configuracao/alteracao de formula
     - criacao/edicao de linhas
-    - exportacao XLSX, se confirmada como evento auditavel
+    - exportacao XLSX, se houver reabertura futura como evento auditavel
 
 ## Microetapa documental: SPEC da auditoria operacional de tabelas personalizadas
 
@@ -4433,8 +4433,10 @@ Riscos principais antes de migration:
   - configuracao/alteracao de formula
   - criacao de linha
   - edicao de linha
-- decisao pendente:
-  - exportacao XLSX como evento auditavel
+- decisao fechada para o primeiro recorte:
+  - exportacao XLSX fica fora da auditoria operacional inicial das tabelas personalizadas
+  - motivo: e acao de leitura/extracao e nao altera dados ou estrutura
+  - reabertura futura: permitida apenas se houver necessidade de seguranca, controle de acesso ou rastreabilidade de extracoes
 - fora do primeiro recorte:
   - visualizacao de tela
   - busca simples

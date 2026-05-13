@@ -1710,7 +1710,7 @@ Limites mantidos fora do MVP:
 - integracao escrevente com financeiro oficial
 
 Proxima frente recomendada:
-- abrir microetapa de SPEC/auditoria tecnica da auditoria operacional propria da frente para decidir trilha de eventos auditaveis de estrutura, formula, linhas e exportacao
+- abrir microetapa de SPEC/auditoria tecnica da auditoria operacional propria da frente para decidir trilha de eventos auditaveis de estrutura, formula e linhas; exportacao XLSX fica fora do primeiro recorte
 
 ### 59. Tabelas personalizadas - SPEC da auditoria operacional propria
 
@@ -1729,8 +1729,14 @@ Eventos obrigatorios do primeiro recorte futuro:
 - configuracao/alteracao de formula
 - criacao/edicao de linha
 
-Decisao pendente:
-- exportacao XLSX como evento auditavel
+Decisao fechada para o primeiro recorte:
+- exportacao XLSX nao entra como evento auditavel inicial
+- justificativa:
+  - e acao de leitura/extracao
+  - nao altera dado nem estrutura
+  - manter fora agora reduz volume de logs e melhora leitura da auditoria operacional
+- reabertura futura:
+  - possivel em microetapa propria, se houver necessidade de seguranca, controle de acesso ou rastreabilidade de extracoes
 
 Fora do primeiro recorte:
 - visualizacao de tela

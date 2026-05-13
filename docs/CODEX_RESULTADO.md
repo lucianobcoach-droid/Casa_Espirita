@@ -6110,4 +6110,23 @@ Não houve alteração de código funcional nesta etapa.
   - alteracao de totalizadores
   - configuracao/alteracao de formula
   - criacao/edicao de linha
-- exportacao XLSX ficou documentada como decisao pendente; leitura, busca, filtros apenas de consulta e calculo em leitura ficaram fora
+- exportacao XLSX ficou fora do primeiro recorte da auditoria operacional; leitura, busca, filtros apenas de consulta e calculo em leitura ficaram fora
+
+## Microetapa documental: decisao sobre auditoria da exportacao XLSX
+
+- decisao fechada no primeiro recorte da auditoria operacional de `Tabelas personalizadas`:
+  - exportacao XLSX nao sera auditada neste recorte inicial
+- justificativa registrada:
+  - exportacao XLSX e acao de leitura/extracao
+  - nao altera dado nem estrutura
+  - auditar neste momento aumentaria volume de logs e reduziria legibilidade da trilha operacional
+- escopo que permanece auditavel no primeiro recorte:
+  - criacao/edicao de tabela
+  - criacao/edicao de coluna
+  - alteracao de opcoes de lista
+  - alteracao de filtro estruturado
+  - alteracao de totalizadores
+  - configuracao/alteracao de formula
+  - criacao/edicao de linha
+- reabertura futura:
+  - possivel em microetapa propria se houver necessidade de seguranca, controle de acesso ou rastreabilidade de extracoes

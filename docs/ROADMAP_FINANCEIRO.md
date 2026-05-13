@@ -3792,7 +3792,7 @@ Proxima frente recomendada:
   - alteracao de totalizadores
   - configuracao/alteracao de formula
   - criacao/edicao de linhas
-  - exportacao XLSX, se confirmada como evento auditavel
+  - exportacao XLSX, apenas se houver reabertura futura como evento auditavel
 
 ## Microetapa documental: SPEC da auditoria operacional de tabelas personalizadas
 
@@ -3817,8 +3817,13 @@ Eventos obrigatorios do primeiro recorte futuro:
 - criacao de linha
 - edicao de linha
 
-Decisao pendente:
-- exportacao XLSX como evento auditavel
+Decisao fechada para o primeiro recorte:
+- exportacao XLSX fica fora da auditoria operacional inicial
+- justificativa:
+  - e acao de leitura/extracao, nao de alteracao de dado
+  - auditar agora pode elevar volume de logs e poluir a leitura operacional da trilha
+- reabertura futura:
+  - permitida se surgir necessidade de seguranca, controle de acesso ou rastreabilidade de extracoes
 
 Fora do primeiro recorte:
 - visualizacao de tela
