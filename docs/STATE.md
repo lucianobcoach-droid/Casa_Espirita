@@ -4014,7 +4014,9 @@ Riscos principais antes de migration:
 - direcao registrada para recibo especial:
   - deve nascer como nova acao documental isolada, sem alterar recibo em lote atual, recibos por favorecido atuais ou termo anual de quitacao
   - a usuaria podera selecionar lancamentos de varios favorecidos e escolher manualmente um favorecido cadastrado para ser o destinatario principal do documento
-  - os favorecidos originais dos lancamentos devem aparecer complementarmente na descricao de cada item
+  - os favorecidos originais dos lancamentos devem aparecer complementarmente na descricao de cada item apenas pelo nome compondo a descricao atual
+  - nao deve aparecer rotulo `Favorecido original` nem a frase `Favorecido original: Nome`
+  - exemplo aprovado: `Pagamento de cesta basica - Maria Silva`
   - a implementacao futura exige auditoria previa de views, templates e helpers dos recibos atuais
 - ordem recomendada consolidada:
   - primeiro filtros configuraveis por coluna nas tabelas personalizadas

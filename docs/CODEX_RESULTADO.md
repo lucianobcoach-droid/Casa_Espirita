@@ -5720,9 +5720,25 @@ Não houve alteração de código funcional nesta etapa.
 - recibo especial ficou documentado com:
   - nova acao futura e isolada
   - escolha manual de favorecido destinatario
-  - manutencao dos favorecidos originais apenas na descricao dos itens
+  - manutencao dos favorecidos originais apenas na descricao dos itens, como nome compondo a descricao atual
+  - sem uso do rotulo `Favorecido original` e sem frase `Favorecido original: Nome`
   - proibicao de alterar recibos atuais, termo anual, lancamentos e financeiro oficial
   - necessidade de auditar recibos atuais antes de definir implementacao segura
+
+## Microetapa documental: ajuste da regra textual do recibo especial em lote
+
+- ajuste documental pontual concluido para clarificar a composicao da descricao dos itens no futuro `Recibo especial em lote`
+- regra corrigida:
+  - o nome do favorecido original entra apenas como texto complementar na propria descricao atual do item
+  - nao usar rotulo `Favorecido original`
+  - nao usar a frase `Favorecido original: Nome`
+- exemplo correto consolidado:
+  - `Pagamento de cesta basica - Maria Silva`
+- guardrails preservados:
+  - sem alteracao dos recibos atuais
+  - sem alteracao do termo anual
+  - sem alteracao de lancamentos
+  - sem impacto no financeiro oficial
 - ordem recomendada registrada:
   - 1. filtros configuraveis por coluna
   - 2. auditoria tecnica + implementacao do recibo especial em lote

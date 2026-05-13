@@ -3311,7 +3311,13 @@ Consolidacao:
   - aciona nova opcao documental
   - escolhe manualmente um favorecido cadastrado
   - sistema gera documento em lote no nome desse favorecido selecionado
-  - cada item do recibo preserva a descricao atual e acrescenta o favorecido original do lancamento
+  - cada item do recibo preserva a descricao atual e acrescenta somente o nome do favorecido original do lancamento como complemento textual da propria descricao
+- regra de composicao da descricao no recibo especial:
+  - nao usar o rotulo `Favorecido original`
+  - nao usar a frase `Favorecido original: Nome`
+  - compor apenas a descricao atual com o nome do favorecido original
+  - exemplo correto: `Pagamento de cesta basica - Maria Silva`
+  - exemplo incorreto: `Pagamento de cesta basica - Favorecido original: Maria Silva`
 - regra documental central:
   - o documento e apenas emissao; nao altera favorecido real, lancamentos, saldos ou relatorios financeiros
 

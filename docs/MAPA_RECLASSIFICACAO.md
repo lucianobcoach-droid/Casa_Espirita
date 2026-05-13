@@ -1395,7 +1395,11 @@ Status: FUTURO DOCUMENTAL / AGUARDANDO AUDITORIA TECNICA
 Consolidacao:
 - a usuaria aprovou uma nova acao documental futura, separada dos recibos atuais
 - a ideia e permitir selecionar lancamentos de varios favorecidos e escolher manualmente um favorecido cadastrado para aparecer como destinatario principal do recibo
-- os favorecidos originais dos lancamentos devem continuar aparecendo no corpo/descricao dos itens
+- os favorecidos originais dos lancamentos devem continuar aparecendo no corpo/descricao dos itens apenas como nome compondo a descricao atual, sem rotulo adicional
+- regra textual aprovada:
+  - usar composicao do tipo `Descricao atual - Nome do favorecido`
+  - nao usar `Favorecido original`
+  - nao usar `Favorecido original: Nome`
 - a frente deve ser isolada e nao pode alterar:
   - recibo em lote atual
   - recibos por favorecido atuais
