@@ -136,6 +136,9 @@
         border-radius: 0.95rem;
         background: #f8fbff;
     }
+    .financeiro-coluna-form-totalizadores.is-hidden {
+        display: none;
+    }
 
     .financeiro-coluna-form-totalizadores-grid {
         display: grid;
@@ -172,6 +175,10 @@
     }
 
     .financeiro-coluna-form-filtro-box.is-hidden {
+        display: none;
+    }
+
+    .financeiro-coluna-form-lista-box.is-hidden {
         display: none;
     }
 
@@ -260,9 +267,14 @@
                         {% for error in form.tipo_dado.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
                     </div>
 
-                    <div class="field financeiro-coluna-form-field">
+                    <div
+                        class="field financeiro-coluna-form-field financeiro-coluna-form-lista-box"
+                        id="financeiro-opcoes-lista-box"
+                        data-lista-tipo="lista_opcoes"
+                    >
                         <label class="label" for="{{ form.opcoes_lista.id_for_label }}">{{ form.opcoes_lista.label }}</label>
                         <div class="control">{{ form.opcoes_lista }}</div>
+                        <p class="help">Use este campo apenas quando o tipo da coluna for Lista de opcoes.</p>
                         {% if form.opcoes_lista.help_text %}<p class="help">{{ form.opcoes_lista.help_text }}</p>{% endif %}
                         {% for error in form.opcoes_lista.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
                     </div>
@@ -288,6 +300,7 @@
                                 {% endfor %}
                             </div>
                             {% if form.totalizadores_configurados.help_text %}<p class="help">{{ form.totalizadores_configurados.help_text }}</p>{% endif %}
+                            <p class="help">O totalizador aparece no rodape da tabela de linhas.</p>
                             <p class="help">As opcoes mudam conforme o tipo de dado e totalizadores incompativeis ficam ocultos e desmarcados.</p>
                             {% for error in form.totalizadores_configurados.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
                         </div>
@@ -304,6 +317,7 @@
                                 {{ form.filtro_estruturado }}
                                 <span>{{ form.filtro_estruturado.label }}</span>
                             </label>
+                            <p class="help">Este filtro aparecera na tela de linhas para facilitar a busca por periodo ou valor.</p>
                             {% if form.filtro_estruturado.help_text %}<p class="help">{{ form.filtro_estruturado.help_text }}</p>{% endif %}
                             <div class="financeiro-coluna-form-filtro-types">
                                 {% for filtro_tipo in form.filtros_estruturados_render %}
@@ -328,6 +342,7 @@
                                 <p class="help">
                                     A formula sera aplicada por coluna, usando apenas colunas numericas da mesma linha.
                                 </p>
+                                <p class="help">A formula e aplicada por coluna e usa apenas colunas numericas da mesma linha.</p>
                                 <p class="help">
                                     Esta microetapa so registra a configuracao segura da formula. O calculo ainda nao sera executado nas linhas nem na exportacao.
                                 </p>
@@ -427,16 +442,32 @@
     (function () {
         const tipoDado = document.getElementById('{{ form.tipo_dado.id_for_label }}');
         const options = document.querySelectorAll('[data-totalizador-option]');
+        const listaBox = document.getElementById('financeiro-opcoes-lista-box');
         const filtroBox = document.getElementById('financeiro-filtro-estruturado-box');
         const filtroCheckbox = document.getElementById('{{ form.filtro_estruturado.id_for_label }}');
         const formulaBox = document.getElementById('financeiro-formula-guiada-box');
 
-        function syncTotalizadores() {
+        function syncOpcoesLista() {
+            if (!listaBox) {
+                return;
+            }
             const tipoSelecionado = tipoDado ? tipoDado.value : '';
+            const tipoLista = listaBox.dataset.listaTipo || 'lista_opcoes';
+            listaBox.classList.toggle('is-hidden', tipoSelecionado !== tipoLista);
+        }
+
+        function syncTotalizadores() {
+            const totalizadoresBox = document.getElementById('financeiro-totalizadores-configurados');
+            if (!totalizadoresBox) {
+                return;
+            }
+            const tipoSelecionado = tipoDado ? tipoDado.value : '';
+            const formulaAtiva = formulaBox && !formulaBox.classList.contains('is-hidden');
+            let possuiCompativel = false;
             options.forEach((option) => {
                 const tiposDado = (option.dataset.tiposDado || '').split(' ').filter(Boolean);
                 const checkbox = option.querySelector('input[type="checkbox"]');
-                const compativel = Boolean(tipoSelecionado) && tiposDado.includes(tipoSelecionado);
+                const compativel = !formulaAtiva && Boolean(tipoSelecionado) && tiposDado.includes(tipoSelecionado);
                 option.classList.toggle('is-hidden', !compativel);
                 if (checkbox) {
                     checkbox.disabled = !compativel;
@@ -444,7 +475,11 @@
                         checkbox.checked = false;
                     }
                 }
+                if (compativel) {
+                    possuiCompativel = true;
+                }
             });
+            totalizadoresBox.classList.toggle('is-hidden', !possuiCompativel);
         }
 
         function syncFiltroEstruturado() {
@@ -472,13 +507,16 @@
 
         if (tipoDado) {
             tipoDado.addEventListener('change', function () {
-                syncTotalizadores();
+                syncOpcoesLista();
                 syncFiltroEstruturado();
                 syncFormulaGuiada();
+                syncTotalizadores();
             });
+            syncOpcoesLista();
+            syncFormulaGuiada();
             syncTotalizadores();
             syncFiltroEstruturado();
-            syncFormulaGuiada();
+            syncTotalizadores();
         }
     })();
 </script>

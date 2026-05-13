@@ -1919,6 +1919,22 @@ Status apos Onda 2:
 
 Proxima microetapa recomendada:
 - abrir onda propria para decidir integracao controlada com busca e XLSX antes de avaliar totalizadores sobre calculadas
+
+#### Microetapa 12.2.1 - UX autodidata do formulario de colunas
+
+- Objetivo:
+  - reduzir ambiguidade no cadastro de colunas exibindo apenas blocos relevantes por tipo.
+- Entregue:
+  - `Opcoes da lista` restrito a `lista_opcoes`
+  - `Formula guiada` restrita a `formula_controlada` + permissao `configurar_formula`
+  - `Filtro estruturado` restrito aos tipos elegiveis
+  - `Totalizadores` visivel apenas com compatibilidade de tipo e oculto em formula
+  - microcopy curta contextual nos quatro blocos
+- Guardrails mantidos:
+  - sem mudanca de regra de negocio
+  - sem mudanca do calculo de formulas da Onda 2
+  - sem integrar formula com busca/filtro/totalizador/XLSX
+  - sem model/migration/banco
 - liberacao controlada apenas para quem possui `financeiro.tabelas_personalizadas.configurar_formula`
 - validacoes estruturais entregues:
   - operacoes limitadas a `soma`, `subtracao`, `multiplicacao` e `divisao`

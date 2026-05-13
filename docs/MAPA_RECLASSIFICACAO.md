@@ -1600,3 +1600,17 @@ Guardrails preservados:
 
 Proxima microetapa recomendada:
 - decidir em microetapa propria se busca e XLSX passarao a refletir colunas calculadas antes de abrir qualquer conversa sobre totalizadores em calculadas
+
+### 54. Tabelas personalizadas - UX autodidata no formulario de colunas
+
+Status: IMPLEMENTADO
+
+Consolidacao:
+- formulario de colunas passou a mostrar blocos contextuais apenas quando o tipo selecionado exigir
+- recorte entregue:
+  - `opcoes_lista` apenas em `lista_opcoes`
+  - `formula guiada` apenas com permissao e em `formula_controlada`
+  - `filtro estruturado` apenas para tipos elegiveis
+  - `totalizadores` apenas quando compativeis com o tipo atual
+- comportamento dinamico em JavaScript local, sem rota, sem AJAX e sem dependencia externa
+- calculo de formula, regras de persistencia e contratos de busca/filtro/totalizador/XLSX preservados

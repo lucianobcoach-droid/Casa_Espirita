@@ -4286,3 +4286,19 @@ Riscos principais antes de migration:
   - sem impacto em `LancamentoFinanceiro` e no financeiro oficial
 - proxima microetapa recomendada:
   - avaliar Onda 3 para integrar formulas guiadas de forma controlada com busca e XLSX, mantendo totalizadores sobre calculadas ainda sob decisao explicita
+
+## Microetapa: UX autodidata do formulario de colunas
+
+- o formulario de coluna foi refinado para exibir blocos apenas quando fizerem sentido para o tipo selecionado
+- comportamento visual dinamico aplicado sem salvar a pagina:
+  - `Opcoes da lista` aparece apenas para `lista_opcoes`
+  - `Formula guiada` aparece apenas para `formula_controlada` e somente para usuario com permissao `configurar_formula`
+  - `Filtro estruturado` aparece apenas para tipos elegiveis (`data`, `mes_competencia`, `inteiro`, `decimal`, `monetario`, `percentual`)
+  - `Totalizadores` aparece apenas quando houver opcoes compativeis com o tipo atual e fica oculto para coluna de formula
+- microcopy curta adicionada para orientar uso de lista, filtro, formula e totalizadores
+- regras funcionais preservadas:
+  - salvamento de `configuracao_json.opcoes`
+  - salvamento de `configuracao_json.filtro`
+  - salvamento de `configuracao_json.formula`
+  - calculo da formula na listagem de linhas mantido sem alteracao
+  - sem alteracao em `LancamentoFinanceiro` e no financeiro oficial

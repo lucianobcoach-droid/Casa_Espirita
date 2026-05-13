@@ -5915,6 +5915,22 @@ Não houve alteração de código funcional nesta etapa.
   - `py -m compileall financeiro configuracoes` OK
   - `py manage.py test financeiro configuracoes` OK
 
+## Microetapa: melhoria de UX no formulario de colunas personalizadas
+
+- refinei a UX do template `tabela_personalizada_coluna_form` para leitura autodidata por tipo de coluna
+- os blocos passaram a responder dinamicamente ao `tipo_dado` sem submit:
+  - lista de opcoes: visivel apenas para `lista_opcoes`
+  - formula guiada: visivel apenas para `formula_controlada` e com permissao de `configurar_formula`
+  - filtro estruturado: visivel apenas para tipos elegiveis
+  - totalizadores: visivel apenas quando houver totalizadores compativeis e oculto em formula
+- inclui microcopy curta para cada bloco contextual
+- cobertura de testes ampliada para template/permissao/microcopy e nao regressao do fluxo existente
+- validacoes executadas:
+  - `py manage.py makemigrations --check --dry-run` OK
+  - `py manage.py check` OK
+  - `py -m compileall financeiro configuracoes` OK
+  - `py manage.py test financeiro configuracoes` OK
+
 ## Microetapa: refino textual do recibo especial e busca do favorecido
 
 - refinei somente o fluxo do `Recibo especial`, sem alteracao de regra funcional

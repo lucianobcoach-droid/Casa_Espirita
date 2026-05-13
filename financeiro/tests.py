@@ -5153,6 +5153,106 @@ class TabelasPersonalizadasListViewTests(TestCase):
         self.assertIn('formula_operandos', form.fields)
         self.assertIn(str(fontes['inteiro'].pk), {valor for valor, _rotulo in form.fields['formula_operandos'].choices})
 
+    def test_formulario_coluna_oculta_bloco_de_opcoes_lista_quando_tipo_nao_e_lista(self):
+        self._login_com_permissoes(
+            'user-coluna-form-lista-oculta',
+            [PermissoesTabelasPersonalizadas.EDITAR_ESTRUTURA],
+        )
+
+        response = self.client.get(
+            reverse(
+                'financeiro:tabela-personalizada-coluna-update',
+                kwargs={'tabela_id': self.tabela.pk, 'pk': self.coluna_existente.pk},
+            )
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            'id="financeiro-opcoes-lista-box"',
+        )
+        self.assertContains(
+            response,
+            'data-lista-tipo="lista_opcoes"',
+            html=False,
+        )
+
+    def test_formulario_coluna_mostra_formula_apenas_com_permissao_e_tipo_formula(self):
+        fontes = self._criar_colunas_fonte_formula()
+        coluna_formula = ColunaPersonalizada.objects.create(
+            tabela=self.tabela,
+            nome='Formula visivel',
+            tipo_dado=ColunaPersonalizada.TipoDado.FORMULA_CONTROLADA,
+            calculada=True,
+            visivel=True,
+            configuracao_json={
+                'formula': {
+                    'habilitada': True,
+                    'operacao': ColunaPersonalizada.OperacaoFormula.SOMA,
+                    'operandos': [fontes['inteiro'].pk, fontes['decimal'].pk],
+                    'resultado_tipo': ColunaPersonalizada.TipoDado.DECIMAL,
+                    'casas_decimais': 8,
+                }
+            },
+        )
+        self._login_com_permissoes(
+            'user-coluna-formula-template-permissao',
+            [
+                PermissoesTabelasPersonalizadas.EDITAR_ESTRUTURA,
+                PermissoesTabelasPersonalizadas.CONFIGURAR_FORMULA,
+            ],
+        )
+
+        response_com_permissao = self.client.get(
+            reverse(
+                'financeiro:tabela-personalizada-coluna-update',
+                kwargs={'tabela_id': self.tabela.pk, 'pk': coluna_formula.pk},
+            )
+        )
+        self.assertContains(response_com_permissao, 'id="financeiro-formula-guiada-box"')
+        self.assertNotContains(
+            response_com_permissao,
+            'id="financeiro-formula-guiada-box" class="financeiro-coluna-form-formula-box is-hidden"',
+            html=False,
+        )
+
+        self._login_com_permissoes(
+            'user-coluna-formula-template-sem-permissao',
+            [PermissoesTabelasPersonalizadas.EDITAR_ESTRUTURA],
+        )
+        response_sem_permissao = self.client.get(
+            reverse(
+                'financeiro:tabela-personalizada-coluna-update',
+                kwargs={'tabela_id': self.tabela.pk, 'pk': coluna_formula.pk},
+            )
+        )
+        self.assertEqual(response_sem_permissao.status_code, 403)
+
+    def test_formulario_coluna_exibe_textos_de_microcopy_da_ux_autodidata(self):
+        self._login_com_permissoes(
+            'user-coluna-form-microcopy',
+            [
+                PermissoesTabelasPersonalizadas.EDITAR_ESTRUTURA,
+                PermissoesTabelasPersonalizadas.CONFIGURAR_FORMULA,
+            ],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-coluna-create', kwargs={'tabela_id': self.tabela.pk})
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Use este campo apenas quando o tipo da coluna for Lista de opcoes.')
+        self.assertContains(
+            response,
+            'Este filtro aparecera na tela de linhas para facilitar a busca por periodo ou valor.',
+        )
+        self.assertContains(
+            response,
+            'A formula e aplicada por coluna e usa apenas colunas numericas da mesma linha.',
+        )
+        self.assertContains(response, 'O totalizador aparece no rodape da tabela de linhas.')
+
     def test_usuario_com_permissao_cria_coluna_valida(self):
         self._login_com_permissoes(
             'user-coluna-criar',
