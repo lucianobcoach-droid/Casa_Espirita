@@ -113,11 +113,11 @@
             </p>
         </div>
         <div class="financeiro-page-header-actions">
-            <a class="button is-primary" href="{% url 'financeiro:tabela-personalizada-coluna-create' tabela_personalizada.pk %}">
+            <a class="button is-primary" href="{{ nova_coluna_tabela_personalizada_url }}">
                 Nova coluna
             </a>
-            <a class="button is-light" href="{% url 'financeiro:tabela-personalizada-list' %}">
-                Voltar para tabelas
+            <a class="button is-light" href="{{ voltar_tabela_personalizada_url }}">
+                {% if return_to %}Voltar para tabela{% else %}Voltar para tabelas{% endif %}
             </a>
         </div>
     </div>
@@ -191,7 +191,7 @@
                                 </span>
                             </td>
                             <td>
-                                <a class="button is-small is-light" href="{% url 'financeiro:tabela-personalizada-coluna-update' tabela_personalizada.pk coluna.pk %}">
+                                <a class="button is-small is-light" href="{% url 'financeiro:tabela-personalizada-coluna-update' tabela_personalizada.pk coluna.pk %}{% if return_to %}?return_to={{ return_to|urlencode }}{% endif %}">
                                     Editar
                                 </a>
                             </td>

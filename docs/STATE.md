@@ -4591,3 +4591,35 @@ Proxima frente recomendada:
 
 Proxima frente recomendada:
 - implementar a Onda 1 da UX unificada, promovendo a listagem de linhas a tela central da tabela com acoes superiores para editar tabela, configurar colunas, criar linha e exportar XLSX
+
+## Microetapa: Onda 1 da UX unificada das tabelas personalizadas
+
+- implementacao funcional concluida no primeiro recorte de UX unificada
+- a tela de linhas passou a assumir o papel de tela central da tabela personalizada
+- o topo da tela agora exibe:
+  - nome da tabela
+  - descricao curta quando existir
+  - status
+  - quantidade de colunas ativas
+  - quantidade de linhas ativas
+  - indicacao explicita de controle interno sem efeito no financeiro oficial
+- acoes principais centralizadas no topo, respeitando permissao:
+  - `Nova linha` para `preencher_linhas`
+  - `Configurar colunas` para `editar_estrutura`
+  - `Editar tabela` para `editar_estrutura`
+  - `Exportar XLSX` para `exportar`
+- busca, filtros estruturados, grade e totalizadores permaneceram na mesma tela, sem alteracao funcional
+- a listagem de tabelas foi ajustada para priorizar `Abrir tabela` como acao principal da frente
+- o fluxo de configuracao de colunas passou a aceitar retorno seguro para a tela principal da tabela, sem rota nova
+- limites preservados:
+  - sem model novo
+  - sem migration
+  - sem alteracao de banco
+  - sem rota nova
+  - sem modal
+  - sem edicao inline
+  - sem alteracao em calculos, formulas, filtros, totalizadores, XLSX ou auditoria funcional
+  - sem impacto no financeiro oficial
+
+Proxima frente recomendada:
+- abrir a Onda 2 da UX unificada para aproximar a configuracao de colunas do contexto da propria tabela, sem remover as telas antigas

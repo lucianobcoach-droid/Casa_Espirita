@@ -165,7 +165,7 @@
 
         <div class="financeiro-tabela-personalizada-note">
             <strong>Recorte atual:</strong>
-            esta etapa libera metadados, estrutura de colunas e preenchimento basico de linhas. Formulas, totalizadores e exportacao entram nas proximas microetapas.
+            a tela principal de trabalho de cada controle fica em `Abrir tabela`, reunindo linhas, busca, filtros, totalizadores e exportacao sem efeito no financeiro oficial.
         </div>
 
         <div class="financeiro-tabela-personalizada-table-wrap">
@@ -184,7 +184,15 @@
                 <tbody>
                 {% for tabela in tabelas_personalizadas %}
                     <tr>
-                        <td>{{ tabela.nome }}</td>
+                        <td>
+                            {% if pode_acessar_linhas_tabela_personalizada %}
+                                <a href="{% url 'financeiro:tabela-personalizada-linha-list' tabela.pk %}">
+                                    {{ tabela.nome }}
+                                </a>
+                            {% else %}
+                                {{ tabela.nome }}
+                            {% endif %}
+                        </td>
                         <td>
                             {% if tabela.descricao %}
                                 <span class="financeiro-tabela-personalizada-description">{{ tabela.descricao|truncatechars:110 }}</span>
@@ -204,15 +212,15 @@
                             <td class="financeiro-tabela-personalizada-actions">
                                 {% if pode_acessar_linhas_tabela_personalizada %}
                                     <a class="button is-small is-light" href="{% url 'financeiro:tabela-personalizada-linha-list' tabela.pk %}">
-                                        Linhas
+                                        Abrir tabela
                                     </a>
                                 {% endif %}
                                 {% if pode_editar_estrutura_tabela_personalizada %}
                                     <a class="button is-small is-light" href="{% url 'financeiro:tabela-personalizada-coluna-list' tabela.pk %}">
-                                        Colunas
+                                        Configurar colunas
                                     </a>
                                     <a class="button is-small is-light" href="{% url 'financeiro:tabela-personalizada-update' tabela.pk %}">
-                                        Editar
+                                        Editar tabela
                                     </a>
                                 {% endif %}
                             </td>

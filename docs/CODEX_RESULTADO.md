@@ -6217,3 +6217,28 @@ Não houve alteração de código funcional nesta etapa.
   - reescrita de rotas
   - remocao de telas antigas
   - qualquer alteracao em calculo, formula, filtro, totalizador ou XLSX
+
+## Microetapa: Onda 1 da UX unificada das tabelas personalizadas
+
+- implementei a primeira onda da UX unificada promovendo `tabela_personalizada_linha_list` a tela central de trabalho da tabela
+- a tela de linhas passou a exibir no topo:
+  - nome da tabela
+  - descricao curta
+  - status
+  - quantidade de colunas ativas
+  - quantidade de linhas ativas
+  - aviso de controle interno sem efeito no financeiro oficial
+- as acoes principais ficaram centralizadas no topo, com as permissoes ja existentes:
+  - `Nova linha`
+  - `Configurar colunas`
+  - `Editar tabela`
+  - `Exportar XLSX`
+- busca, filtros estruturados, grade e totalizadores permaneceram na mesma tela sem alteracao de regra
+- a listagem de tabelas passou a priorizar `Abrir tabela` como acao principal, reduzindo a sensacao de fluxo separado
+- o fluxo de `Configurar colunas` passou a preservar retorno seguro para a tela principal da tabela, sem rota nova e sem mexer em auditoria
+- preservado nesta microetapa:
+  - sem model novo
+  - sem migration
+  - sem alteracao em calculos, formulas, filtros, totalizadores ou XLSX
+  - sem alteracao da auditoria operacional minima ja validada
+  - sem impacto em `LancamentoFinanceiro` e no financeiro oficial

@@ -4972,8 +4972,8 @@ class TabelasPersonalizadasListViewTests(TestCase):
         response = self.client.get(reverse('financeiro:tabela-personalizada-create'))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Cadastro apenas dos dados gerais da tabela personalizada.')
-        self.assertContains(response, 'a configuracao de colunas sera liberada em microetapa posterior.')
+        self.assertContains(response, 'Edicao dos dados gerais da tabela dentro do fluxo da propria tabela personalizada.')
+        self.assertContains(response, 'a estrutura de colunas e o preenchimento de linhas continuam acessiveis pela tela principal da tabela.')
 
     def test_usuario_sem_permissao_criar_recebe_403_na_criacao(self):
         self._login_com_permissoes(
@@ -5028,7 +5028,7 @@ class TabelasPersonalizadasListViewTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Cadastro apenas dos dados gerais da tabela personalizada.')
+        self.assertContains(response, 'Edicao dos dados gerais da tabela dentro do fluxo da propria tabela personalizada.')
         self.assertContains(response, self.tabela.nome)
 
     def test_usuario_sem_permissao_editar_estrutura_recebe_403_na_edicao(self):
@@ -6142,6 +6142,18 @@ class TabelasPersonalizadasListViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Preenchimento de linhas')
+        self.assertContains(response, self.tabela.nome)
+        self.assertContains(response, self.tabela.descricao)
+        self.assertContains(response, self.tabela.get_status_display())
+        self.assertContains(
+            response,
+            f'{self.tabela.colunas.filter(status=ColunaPersonalizada.StatusColuna.ATIVA).count()} coluna(s) ativa(s)',
+        )
+        self.assertContains(
+            response,
+            f'{self.tabela.linhas.filter(status=LinhaTabelaPersonalizada.StatusLinha.ATIVA).count()} linha(s) ativa(s)',
+        )
+        self.assertContains(response, 'Controle interno sem efeito no financeiro oficial')
         self.assertContains(response, 'Sabao liquido')
         self.assertContains(response, 'Limpeza')
         self.assertContains(response, 'Sim')
@@ -7015,6 +7027,73 @@ class TabelasPersonalizadasListViewTests(TestCase):
         )
         self.assertContains(response, 'Exportar XLSX')
 
+    def test_tela_de_linhas_exibe_acoes_principais_conforme_permissoes(self):
+        colunas = self._criar_colunas_para_linhas()
+        self._criar_linha_com_valores(colunas)
+        self._login_com_permissoes(
+            'user-linha-acoes-topo',
+            [
+                PermissoesTabelasPersonalizadas.VISUALIZAR,
+                PermissoesTabelasPersonalizadas.PREENCHER_LINHAS,
+                PermissoesTabelasPersonalizadas.EDITAR_ESTRUTURA,
+                PermissoesTabelasPersonalizadas.EXPORTAR,
+            ],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk})
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            reverse('financeiro:tabela-personalizada-linha-create', kwargs={'tabela_id': self.tabela.pk}),
+        )
+        self.assertContains(response, 'Nova linha')
+        self.assertContains(
+            response,
+            reverse('financeiro:tabela-personalizada-coluna-list', kwargs={'tabela_id': self.tabela.pk}),
+        )
+        self.assertContains(response, 'Configurar colunas')
+        self.assertContains(
+            response,
+            reverse('financeiro:tabela-personalizada-update', kwargs={'pk': self.tabela.pk}),
+        )
+        self.assertContains(response, 'Editar tabela')
+        self.assertContains(
+            response,
+            reverse('financeiro:tabela-personalizada-linha-export-xlsx', kwargs={'tabela_id': self.tabela.pk}),
+        )
+        self.assertContains(response, 'Exportar XLSX')
+
+    def test_tela_de_linhas_oculta_acoes_indevidas_para_usuario_apenas_visualizador(self):
+        colunas = self._criar_colunas_para_linhas()
+        self._criar_linha_com_valores(colunas)
+        self._login_com_permissoes(
+            'user-linha-acoes-bloqueadas',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk})
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(
+            response,
+            reverse('financeiro:tabela-personalizada-linha-create', kwargs={'tabela_id': self.tabela.pk}),
+        )
+        self.assertNotContains(
+            response,
+            reverse('financeiro:tabela-personalizada-coluna-list', kwargs={'tabela_id': self.tabela.pk}),
+        )
+        self.assertNotContains(
+            response,
+            reverse('financeiro:tabela-personalizada-update', kwargs={'pk': self.tabela.pk}),
+        )
+        self.assertNotContains(response, 'Configurar colunas')
+        self.assertNotContains(response, 'Editar tabela')
+
     def test_botao_exportar_xlsx_nao_aparece_sem_permissao(self):
         colunas = self._criar_colunas_para_linhas()
         self._criar_linha_com_valores(colunas)
@@ -7680,7 +7759,7 @@ class TabelasPersonalizadasListViewTests(TestCase):
 
         self.assertEqual(response.status_code, 404)
 
-    def test_listagem_exibe_acao_linhas_para_usuario_com_visualizar(self):
+    def test_listagem_exibe_acao_abrir_tabela_para_usuario_com_visualizar(self):
         self._login_com_permissoes(
             'user-menu-linhas-visualizar',
             [PermissoesTabelasPersonalizadas.VISUALIZAR],
@@ -7693,7 +7772,7 @@ class TabelasPersonalizadasListViewTests(TestCase):
             response,
             reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk}),
         )
-        self.assertContains(response, 'Linhas')
+        self.assertContains(response, 'Abrir tabela')
 
     def test_listagem_de_linhas_com_usuario_apenas_visualizador_oculta_acoes_de_escrita(self):
         colunas = self._criar_colunas_para_linhas()
@@ -7833,7 +7912,7 @@ class TabelasPersonalizadasListViewTests(TestCase):
             response,
             reverse('financeiro:tabela-personalizada-coluna-list', kwargs={'tabela_id': self.tabela.pk}),
         )
-        self.assertContains(response, 'Colunas')
+        self.assertContains(response, 'Configurar colunas')
 
     def test_listagem_oculta_acao_colunas_sem_permissao_editar_estrutura(self):
         self._login_com_permissoes(

@@ -8473,7 +8473,7 @@ class TabelaPersonalizadaUpdateView(FinanceiroFormMixin, UpdateView):
         return response
 
 
-class TabelaPersonalizadaColunaListView(FinanceiroPermissaoMixin, ListView):
+class TabelaPersonalizadaColunaListView(FinanceiroReturnToMixin, FinanceiroPermissaoMixin, ListView):
     permissao_requerida = PermissoesTabelasPersonalizadas.EDITAR_ESTRUTURA
     model = ColunaPersonalizada
     template_name = 'financeiro/tabela_personalizada_coluna_list.html'
@@ -8494,10 +8494,20 @@ class TabelaPersonalizadaColunaListView(FinanceiroPermissaoMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        return_to = self._get_return_to_url()
         context['tabela_personalizada'] = self.tabela
         context['pode_configurar_formula_tabela_personalizada'] = usuario_possui_permissao(
             self.request.user,
             PermissoesTabelasPersonalizadas.CONFIGURAR_FORMULA,
+        )
+        context['return_to'] = return_to
+        context['voltar_tabela_personalizada_url'] = (
+            return_to
+            or reverse('financeiro:tabela-personalizada-list')
+        )
+        context['nova_coluna_tabela_personalizada_url'] = _append_query_params(
+            reverse('financeiro:tabela-personalizada-coluna-create', kwargs={'tabela_id': self.tabela.pk}),
+            {'return_to': return_to or None},
         )
         return context
 
@@ -9351,6 +9361,16 @@ class TabelaPersonalizadaLinhaListView(FinanceiroPermissaoMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        quantidade_colunas_ativas = self.tabela.colunas.filter(
+            status=ColunaPersonalizada.StatusColuna.ATIVA,
+        ).count()
+        quantidade_linhas_ativas = self.tabela.linhas.filter(
+            status=LinhaTabelaPersonalizada.StatusLinha.ATIVA,
+        ).count()
+        pode_editar_estrutura = usuario_possui_permissao(
+            self.request.user,
+            PermissoesTabelasPersonalizadas.EDITAR_ESTRUTURA,
+        )
         context['tabela_personalizada'] = self.tabela
         context['colunas_visiveis'] = self.estado_linhas['colunas_visiveis']
         context['colunas_filtraveis'] = self.estado_linhas['colunas_filtraveis']
@@ -9371,6 +9391,17 @@ class TabelaPersonalizadaLinhaListView(FinanceiroPermissaoMixin, ListView):
         context['pode_exportar_linhas_tabela_personalizada'] = usuario_possui_permissao(
             self.request.user,
             PermissoesTabelasPersonalizadas.EXPORTAR,
+        )
+        context['pode_editar_estrutura_tabela_personalizada'] = pode_editar_estrutura
+        context['quantidade_colunas_ativas_tabela_personalizada'] = quantidade_colunas_ativas
+        context['quantidade_linhas_ativas_tabela_personalizada'] = quantidade_linhas_ativas
+        context['configurar_colunas_tabela_personalizada_url'] = _append_query_params(
+            reverse('financeiro:tabela-personalizada-coluna-list', kwargs={'tabela_id': self.tabela.pk}),
+            {'return_to': self.request.get_full_path()},
+        )
+        context['editar_tabela_personalizada_url'] = _append_query_params(
+            reverse('financeiro:tabela-personalizada-update', kwargs={'pk': self.tabela.pk}),
+            {'return_to': self.request.get_full_path()},
         )
         exportacao_url = reverse(
             'financeiro:tabela-personalizada-linha-export-xlsx',

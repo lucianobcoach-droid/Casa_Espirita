@@ -1813,3 +1813,20 @@ Consolidacao:
   - manter permissoes atuais da frente
   - manter auditoria operacional minima ja validada
   - impedir duplicidade de logs na futura mudanca de UX
+
+Status apos implementacao desta microetapa: ONDA 1 DA UX UNIFICADA IMPLEMENTADA / BACKLOG
+
+Consolidacao:
+- a tela de linhas virou a tela principal operacional da tabela personalizada
+- o cabecalho contextual agora mostra nome, descricao, status, quantidade de colunas ativas, quantidade de linhas ativas e indicacao de controle interno
+- as acoes `Nova linha`, `Configurar colunas`, `Editar tabela` e `Exportar XLSX` ficaram centralizadas no topo respeitando as permissoes ja existentes
+- a listagem de tabelas passou a destacar `Abrir tabela` como acao principal da frente
+- busca, filtros estruturados, grade e totalizadores permanecem no mesmo lugar e sem mudanca de regra
+- auditoria minima validada foi preservada sem duplicidade de logs
+
+Limites mantidos:
+- sem rota nova
+- sem remocao de telas antigas
+- sem modal
+- sem edicao inline
+- sem alteracao de model, banco, calculos, formulas, filtros, totalizadores, XLSX ou auditoria funcional

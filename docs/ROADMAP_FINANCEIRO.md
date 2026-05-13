@@ -3982,3 +3982,36 @@ Preservacoes obrigatorias:
 
 Proxima microetapa recomendada:
 - implementar a Onda 1 da UX unificada, promovendo a tela de linhas a tela principal da tabela e adicionando acoes de contexto no topo
+
+## Microetapa: Onda 1 da UX unificada das tabelas personalizadas
+
+Status:
+- implementado no primeiro recorte
+
+Consolidacao:
+- a tela de linhas agora e a tela principal operacional da tabela
+- cabecalho contextual implementado com:
+  - nome
+  - descricao curta
+  - status
+  - quantidade de colunas ativas
+  - quantidade de linhas ativas
+  - indicacao de controle interno sem efeito no financeiro oficial
+- acoes principais no topo, sem rota nova:
+  - `Nova linha`
+  - `Configurar colunas`
+  - `Editar tabela`
+  - `Exportar XLSX`
+- a listagem de tabelas passa a priorizar `Abrir tabela` como acao principal da frente
+- busca, filtros estruturados, grade e totalizadores permanecem concentrados na mesma tela
+
+Limites preservados:
+- sem remover telas antigas
+- sem modal
+- sem edicao inline
+- sem alteracao de calculos, formulas, filtros, totalizadores ou XLSX
+- sem alteracao da auditoria funcional
+- sem model/migration/banco
+
+Proxima frente recomendada:
+- abrir a Onda 2 da UX unificada para melhorar a configuracao de colunas dentro do contexto da tabela
