@@ -1614,3 +1614,18 @@ Consolidacao:
   - `totalizadores` apenas quando compativeis com o tipo atual
 - comportamento dinamico em JavaScript local, sem rota, sem AJAX e sem dependencia externa
 - calculo de formula, regras de persistencia e contratos de busca/filtro/totalizador/XLSX preservados
+
+### 55. Tabelas personalizadas - formulas guiadas por coluna / Onda 3
+
+Status: IMPLEMENTADO PARCIALMENTE (BUSCA + XLSX)
+
+Consolidacao:
+- busca textual simples agora considera colunas calculadas visiveis, ativas e com formula habilitada pelo valor final formatado
+- exportacao XLSX agora inclui colunas calculadas visiveis com o valor final calculado, sem formula Excel e sem configuracao interna exposta
+- operando ausente e divisao por zero continuam gerando celula vazia
+
+Guardrails preservados:
+- sem persistencia em `valor_calculado`
+- filtros estruturados continuam fora para calculadas
+- totalizadores continuam fora para calculadas
+- sem impacto em `LancamentoFinanceiro` e no financeiro oficial

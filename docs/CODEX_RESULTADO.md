@@ -5889,6 +5889,20 @@ Não houve alteração de código funcional nesta etapa.
   - `py -m compileall financeiro configuracoes` OK
   - `py manage.py test financeiro configuracoes` OK
 
+## Microetapa: formulas guiadas por coluna - Onda 3
+
+- conectei o valor calculado das colunas `formula_controlada` com a busca textual simples e com a exportacao XLSX
+- resultado entregue:
+  - busca textual agora encontra linhas por valor calculado decimal e monetario formatado
+  - XLSX agora inclui colunas calculadas visiveis com o valor final ja calculado
+  - operando ausente e divisao por zero continuam gerando celula vazia
+- guardrails preservados:
+  - sem persistencia em `valor_calculado`
+  - sem formula Excel no arquivo
+  - sem filtro estruturado para calculadas
+  - sem totalizador para calculadas
+  - sem impacto em `LancamentoFinanceiro` e no financeiro oficial
+
 ## Microetapa: formulas guiadas por coluna - Onda 2
 
 - implementei o calculo funcional das formulas guiadas apenas na leitura da listagem de linhas

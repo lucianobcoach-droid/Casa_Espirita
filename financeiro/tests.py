@@ -1,4 +1,5 @@
 import json
+import re
 from datetime import date
 from decimal import Decimal
 from io import BytesIO
@@ -4841,6 +4842,14 @@ class TabelasPersonalizadasListViewTests(TestCase):
             for linha in planilha_tree.findall('main:sheetData/main:row', namespace_planilha):
                 valores = []
                 for celula in linha.findall('main:c', namespace_planilha):
+                    referencia = celula.get('r', '')
+                    correspondencia = re.match(r'([A-Z]+)\d+$', referencia)
+                    if correspondencia:
+                        indice_coluna = 0
+                        for letra in correspondencia.group(1):
+                            indice_coluna = (indice_coluna * 26) + (ord(letra) - ord('A') + 1)
+                        while len(valores) < indice_coluna - 1:
+                            valores.append('')
                     texto = ''.join(celula.itertext())
                     valores.append(texto)
                 linhas.append(valores)
@@ -6275,7 +6284,7 @@ class TabelasPersonalizadasListViewTests(TestCase):
         self.assertContains(response, 'Nenhuma linha encontrada para a busca informada.')
         self.assertNotContains(response, 'Sabao liquido')
 
-    def test_busca_nao_considera_coluna_calculada_formula(self):
+    def test_busca_encontra_linha_por_valor_calculado_decimal(self):
         colunas = self._criar_colunas_para_linhas()
         self._criar_linha_com_valores(colunas)
         self._login_com_permissoes(
@@ -6289,8 +6298,66 @@ class TabelasPersonalizadasListViewTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Nenhuma linha encontrada para a busca informada.')
-        self.assertNotContains(response, 'Sabao liquido')
+        self.assertContains(response, 'Sabao liquido')
+        self.assertNotContains(response, 'Nenhuma linha encontrada para a busca informada.')
+
+    def test_busca_encontra_linha_por_valor_calculado_monetario(self):
+        colunas = self._criar_colunas_para_linhas()
+        self._criar_linha_com_valores(colunas)
+        self._configurar_formula_coluna(
+            colunas['formula'],
+            operacao=ColunaPersonalizada.OperacaoFormula.SOMA,
+            operandos=[colunas['monetario'].pk, colunas['inteiro'].pk],
+            resultado_tipo=ColunaPersonalizada.TipoDado.MONETARIO,
+            casas_decimais=2,
+        )
+        self._login_com_permissoes(
+            'user-linha-busca-formula-monetaria',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk}),
+            {'busca': '54,72'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Sabao liquido')
+        self.assertNotContains(response, 'Nenhuma linha encontrada para a busca informada.')
+
+    def test_busca_nao_considera_coluna_calculada_invisivel_inativa_ou_sem_formula_valida(self):
+        colunas = self._criar_colunas_para_linhas()
+        self._criar_linha_com_valores(colunas)
+        self._login_com_permissoes(
+            'user-linha-busca-formula-invalida',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+
+        colunas['formula'].visivel = False
+        colunas['formula'].save(update_fields=['visivel'])
+        response_invisivel = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk}),
+            {'busca': '5,01499912'},
+        )
+        self.assertContains(response_invisivel, 'Nenhuma linha encontrada para a busca informada.')
+
+        colunas['formula'].visivel = True
+        colunas['formula'].status = ColunaPersonalizada.StatusColuna.ARQUIVADA
+        colunas['formula'].save(update_fields=['visivel', 'status'])
+        response_arquivada = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk}),
+            {'busca': '5,01499912'},
+        )
+        self.assertContains(response_arquivada, 'Nenhuma linha encontrada para a busca informada.')
+
+        colunas['formula'].status = ColunaPersonalizada.StatusColuna.ATIVA
+        colunas['formula'].save(update_fields=['status'])
+        ColunaPersonalizada.objects.filter(pk=colunas['formula'].pk).update(configuracao_json={})
+        response_sem_formula = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk}),
+            {'busca': '5,01499912'},
+        )
+        self.assertContains(response_sem_formula, 'Nenhuma linha encontrada para a busca informada.')
 
     def test_busca_restringe_resultado_a_tabela_correta(self):
         coluna_outra_tabela = ColunaPersonalizada.objects.create(
@@ -6499,7 +6566,7 @@ class TabelasPersonalizadasListViewTests(TestCase):
         self.assertContains(response_entre, 'Sabao liquido')
         self.assertNotContains(response_entre, 'Detergente concentrado')
 
-    def test_busca_textual_combina_com_filtro_estruturado(self):
+    def test_busca_textual_combina_valor_calculado_com_filtro_estruturado_comum(self):
         colunas = self._criar_colunas_para_linhas()
         self._criar_linha_com_valores(colunas)
         self._criar_segunda_linha_com_valores(colunas)
@@ -6514,14 +6581,14 @@ class TabelasPersonalizadasListViewTests(TestCase):
             self._dados_filtro_estruturado(
                 colunas['competencia'],
                 operador=ColunaPersonalizada.OperadorFiltro.IGUAL,
-                valor='06/2026',
-                busca='detergente',
+                valor='05/2026',
+                busca='5,01499912',
             ),
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Detergente concentrado')
-        self.assertNotContains(response, 'Sabao liquido')
+        self.assertContains(response, 'Sabao liquido')
+        self.assertNotContains(response, 'Detergente concentrado')
 
     def test_totalizadores_refletem_apenas_linhas_filtradas(self):
         colunas = self._criar_colunas_para_linhas()
@@ -6659,12 +6726,40 @@ class TabelasPersonalizadasListViewTests(TestCase):
         self.assertIn('R$ 50,72', conteudo)
         self.assertIn('1,01499912', conteudo)
         self.assertIn('12,3456%', conteudo)
+        self.assertIn('Campo calculado futuro', conteudo)
+        self.assertIn('5,01499912', conteudo)
         self.assertIn('Soma: R$ 70,62', conteudo)
         self.assertIn('Soma: 3,015', conteudo)
         self.assertIn('Soma: 16,8456%', conteudo)
         self.assertNotIn('Campo oculto', conteudo)
         self.assertNotIn('Campo arquivado', conteudo)
-        self.assertNotIn('Campo calculado futuro', conteudo)
+        self.assertNotIn('=SOMA(', conteudo)
+        self.assertNotIn('operacao', conteudo)
+        self.assertNotIn('operandos', conteudo)
+
+    def test_exportacao_xlsx_inclui_valor_calculado_monetario_em_padrao_brasileiro(self):
+        colunas = self._criar_colunas_para_linhas()
+        self._criar_linha_com_valores(colunas)
+        self._configurar_formula_coluna(
+            colunas['formula'],
+            operacao=ColunaPersonalizada.OperacaoFormula.SOMA,
+            operandos=[colunas['monetario'].pk, colunas['inteiro'].pk],
+            resultado_tipo=ColunaPersonalizada.TipoDado.MONETARIO,
+            casas_decimais=2,
+        )
+        self._login_com_permissoes(
+            'user-linha-exporta-formula-monetaria',
+            [PermissoesTabelasPersonalizadas.EXPORTAR],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-export-xlsx', kwargs={'tabela_id': self.tabela.pk})
+        )
+
+        self.assertEqual(response.status_code, 200)
+        conteudo = '\n'.join(' | '.join(linha) for linha in self._ler_linhas_xlsx(response.content))
+        self.assertIn('Campo calculado futuro', conteudo)
+        self.assertIn('R$ 54,72', conteudo)
 
     def test_usuario_sem_permissao_exportar_recebe_403(self):
         self._login_com_permissoes(
@@ -6704,6 +6799,33 @@ class TabelasPersonalizadasListViewTests(TestCase):
         self.assertIn('Soma: R$ 19,90', conteudo)
         self.assertNotIn('Soma: R$ 70,62', conteudo)
 
+    def test_exportacao_xlsx_respeita_busca_por_valor_calculado(self):
+        colunas = self._criar_colunas_para_linhas()
+        self._criar_linha_com_valores(colunas)
+        self._criar_segunda_linha_com_valores(colunas)
+        self._configurar_formula_coluna(
+            colunas['formula'],
+            operacao=ColunaPersonalizada.OperacaoFormula.SOMA,
+            operandos=[colunas['monetario'].pk, colunas['inteiro'].pk],
+            resultado_tipo=ColunaPersonalizada.TipoDado.MONETARIO,
+            casas_decimais=2,
+        )
+        self._login_com_permissoes(
+            'user-linha-exporta-busca-formula',
+            [PermissoesTabelasPersonalizadas.EXPORTAR],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-export-xlsx', kwargs={'tabela_id': self.tabela.pk}),
+            {'busca': '54,72'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        conteudo = '\n'.join(' | '.join(linha) for linha in self._ler_linhas_xlsx(response.content))
+        self.assertIn('Sabao liquido', conteudo)
+        self.assertNotIn('Detergente concentrado', conteudo)
+        self.assertIn('R$ 54,72', conteudo)
+
     def test_exportacao_xlsx_respeita_busca_e_filtro_estruturado(self):
         colunas = self._criar_colunas_para_linhas()
         self._criar_linha_com_valores(colunas)
@@ -6735,6 +6857,41 @@ class TabelasPersonalizadasListViewTests(TestCase):
         self.assertNotIn('Detergente concentrado', conteudo)
         self.assertIn('Soma: R$ 50,72', conteudo)
         self.assertNotIn('Soma: R$ 70,62', conteudo)
+
+    def test_exportacao_xlsx_deixa_celula_vazia_para_formula_com_operando_ausente_ou_divisao_por_zero(self):
+        colunas = self._criar_colunas_para_linhas()
+        linha_sem_decimal = self._criar_linha_com_valores(colunas)
+        ValorTabelaPersonalizada.objects.filter(
+            linha=linha_sem_decimal,
+            coluna=colunas['decimal'],
+        ).delete()
+        linha_divisao_zero = self._criar_segunda_linha_com_valores(colunas)
+        ValorTabelaPersonalizada.objects.filter(
+            linha=linha_divisao_zero,
+            coluna=colunas['inteiro'],
+        ).update(valor_numero=Decimal('0'))
+        self._configurar_formula_coluna(
+            colunas['formula'],
+            operacao=ColunaPersonalizada.OperacaoFormula.DIVISAO,
+            operandos=[colunas['decimal'].pk, colunas['inteiro'].pk],
+            resultado_tipo=ColunaPersonalizada.TipoDado.DECIMAL,
+            casas_decimais=4,
+        )
+        self._login_com_permissoes(
+            'user-linha-exporta-formula-vazia',
+            [PermissoesTabelasPersonalizadas.EXPORTAR],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-export-xlsx', kwargs={'tabela_id': self.tabela.pk})
+        )
+
+        self.assertEqual(response.status_code, 200)
+        linhas = self._ler_linhas_xlsx(response.content)
+        cabecalho = linhas[1]
+        indice_formula = cabecalho.index('Campo calculado futuro')
+        self.assertEqual(linhas[2][indice_formula], '')
+        self.assertEqual(linhas[3][indice_formula], '')
 
     def test_filtro_estruturado_invalido_exibe_mensagem_clara_sem_quebrar_pagina(self):
         colunas = self._criar_colunas_para_linhas()

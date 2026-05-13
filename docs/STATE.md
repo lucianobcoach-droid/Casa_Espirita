@@ -4302,3 +4302,22 @@ Riscos principais antes de migration:
   - salvamento de `configuracao_json.formula`
   - calculo da formula na listagem de linhas mantido sem alteracao
   - sem alteracao em `LancamentoFinanceiro` e no financeiro oficial
+
+## Microetapa: formulas guiadas por coluna - Onda 3
+
+- a busca textual simples da tela de linhas passou a considerar o valor calculado exibido nas colunas `formula_controlada`, desde que a coluna esteja ativa, visivel e com formula habilitada
+- a exportacao XLSX da tela de linhas passou a incluir colunas calculadas visiveis com o valor final ja calculado e formatado em padrao brasileiro
+- o calculo continua somente em tempo de leitura:
+  - sem persistencia em `valor_calculado`
+  - sem escrita em banco
+  - sem formula Excel no arquivo exportado
+- comportamento seguro consolidado:
+  - operando ausente continua gerando celula vazia
+  - divisao por zero continua gerando celula vazia
+  - busca e XLSX ignoram calculadas invisiveis, inativas ou sem formula valida
+- guardrails mantidos nesta onda:
+  - filtros estruturados continuam fora para colunas calculadas
+  - totalizadores continuam fora para colunas calculadas
+  - sem alteracao em `LancamentoFinanceiro` e no financeiro oficial
+- proxima microetapa recomendada:
+  - decidir explicitamente se colunas calculadas participarao de totalizadores ou se esse recorte deve permanecer fora do MVP

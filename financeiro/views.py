@@ -8552,16 +8552,34 @@ def _competencia_para_ordenacao_filtro(valor: str | None) -> int | None:
 
 def _linha_corresponde_busca_tabela_personalizada(
     linha: LinhaTabelaPersonalizada,
-    colunas_visiveis_ids: set[int],
+    colunas_busca: list[ColunaPersonalizada],
     termo_normalizado: str,
 ) -> bool:
     if not termo_normalizado:
         return True
 
+    colunas_visiveis_ids = {coluna.pk for coluna in colunas_busca}
+    valores_linha_por_coluna = {
+        valor.coluna_id: valor
+        for valor in linha.valores.all()
+        if valor.coluna_id in colunas_visiveis_ids
+    }
+
     for valor in linha.valores.all():
         if valor.coluna_id not in colunas_visiveis_ids:
             continue
         for representacao in _representacoes_busca_valor_linha(valor.coluna, valor):
+            if termo_normalizado in _normalizar_texto_busca_linhas(representacao):
+                return True
+
+    for coluna in colunas_busca:
+        if not (
+            coluna.calculada
+            and coluna.tipo_dado == ColunaPersonalizada.TipoDado.FORMULA_CONTROLADA
+            and coluna.formula_habilitada
+        ):
+            continue
+        for representacao in _representacoes_busca_formula_linha(coluna, valores_linha_por_coluna):
             if termo_normalizado in _normalizar_texto_busca_linhas(representacao):
                 return True
     return False
@@ -8790,20 +8808,19 @@ def _obter_queryset_linhas_tabela_personalizada(tabela: TabelaPersonalizada):
 
 def _filtrar_linhas_tabela_personalizada(
     linhas_queryset,
-    colunas_visiveis: list[ColunaPersonalizada],
+    colunas_busca: list[ColunaPersonalizada],
     termo_busca_linhas: str,
     filtros_estruturados: list[dict[str, object]] | None = None,
 ):
     linhas = list(linhas_queryset)
     termo_normalizado = _normalizar_texto_busca_linhas(termo_busca_linhas)
     if termo_normalizado:
-        colunas_visiveis_ids = {coluna.pk for coluna in colunas_visiveis}
         linhas = [
             linha
             for linha in linhas
             if _linha_corresponde_busca_tabela_personalizada(
                 linha,
-                colunas_visiveis_ids,
+                colunas_busca,
                 termo_normalizado,
             )
         ]
@@ -8859,12 +8876,27 @@ def _calcular_valor_formula_guiada_linha(
     coluna: ColunaPersonalizada,
     valores_linha_por_coluna: dict[int, ValorTabelaPersonalizada],
 ) -> str:
+    resultado_formula = _resolver_resultado_formula_guiada_linha(coluna, valores_linha_por_coluna)
+    if resultado_formula is None:
+        return ''
+    resultado_quantizado, resultado_tipo, casas_decimais = resultado_formula
+    return _formatar_resultado_formula_tabela(
+        resultado_quantizado,
+        resultado_tipo=resultado_tipo,
+        casas_decimais=casas_decimais,
+    )
+
+
+def _resolver_resultado_formula_guiada_linha(
+    coluna: ColunaPersonalizada,
+    valores_linha_por_coluna: dict[int, ValorTabelaPersonalizada],
+) -> tuple[Decimal, str, int] | None:
     if not (
         coluna.calculada
         and coluna.tipo_dado == ColunaPersonalizada.TipoDado.FORMULA_CONTROLADA
         and coluna.formula_habilitada
     ):
-        return ''
+        return None
 
     configuracao_formula = coluna.formula_config
     operacao = configuracao_formula.get('operacao')
@@ -8878,15 +8910,15 @@ def _calcular_valor_formula_guiada_linha(
         and resultado_tipo in ColunaPersonalizada.tipos_elegiveis_formula_resultado()
         and isinstance(casas_decimais, int)
     ):
-        return ''
+        return None
 
     operandos: list[Decimal] = []
     for operando_id in operandos_ids:
         if not isinstance(operando_id, int):
-            return ''
+            return None
         valor_operando = _obter_valor_numerico_formula(valores_linha_por_coluna.get(operando_id))
         if valor_operando is None:
-            return ''
+            return None
         operandos.append(valor_operando)
 
     try:
@@ -8894,7 +8926,7 @@ def _calcular_valor_formula_guiada_linha(
             resultado = sum(operandos, Decimal('0'))
         elif operacao == ColunaPersonalizada.OperacaoFormula.SUBTRACAO:
             if len(operandos) != 2:
-                return ''
+                return None
             resultado = operandos[0] - operandos[1]
         elif operacao == ColunaPersonalizada.OperacaoFormula.MULTIPLICACAO:
             resultado = Decimal('1')
@@ -8902,23 +8934,36 @@ def _calcular_valor_formula_guiada_linha(
                 resultado *= operando
         elif operacao == ColunaPersonalizada.OperacaoFormula.DIVISAO:
             if len(operandos) != 2 or operandos[1] == Decimal('0'):
-                return ''
+                return None
             resultado = operandos[0] / operandos[1]
         else:
-            return ''
+            return None
     except ArithmeticError:
-        return ''
+        return None
 
     resultado_quantizado = _quantizar_resultado_formula(
         resultado,
         resultado_tipo=resultado_tipo,
         casas_decimais=casas_decimais,
     )
-    return _formatar_resultado_formula_tabela(
-        resultado_quantizado,
-        resultado_tipo=resultado_tipo,
-        casas_decimais=casas_decimais,
-    )
+    return resultado_quantizado, resultado_tipo, casas_decimais
+
+
+def _representacoes_busca_formula_linha(
+    coluna: ColunaPersonalizada,
+    valores_linha_por_coluna: dict[int, ValorTabelaPersonalizada],
+) -> tuple[str, ...]:
+    resultado_formula = _resolver_resultado_formula_guiada_linha(coluna, valores_linha_por_coluna)
+    if resultado_formula is None:
+        return ()
+
+    resultado_quantizado, resultado_tipo, casas_decimais = resultado_formula
+    if resultado_tipo == ColunaPersonalizada.TipoDado.MONETARIO:
+        base = format(resultado_quantizado, '.2f')
+        return (base, base.replace('.', ','), f'R$ {base}', f'R$ {base.replace(".", ",")}')
+
+    base = format(resultado_quantizado, f'.{casas_decimais}f')
+    return (base, base.replace('.', ','))
 
 
 def _montar_renderizacao_linhas_tabela_personalizada(
@@ -8991,11 +9036,11 @@ def _montar_estado_linhas_tabela_personalizada(
     termo_busca_linhas: str,
     filtros_estruturados: list[dict[str, object]] | None = None,
 ) -> dict[str, object]:
-    colunas_visiveis = _obter_colunas_visiveis_tabela_personalizada(tabela)
     colunas_listagem = _obter_colunas_listagem_tabela_personalizada(tabela)
+    colunas_visiveis = _obter_colunas_visiveis_tabela_personalizada(tabela)
     linhas = _filtrar_linhas_tabela_personalizada(
         _obter_queryset_linhas_tabela_personalizada(tabela),
-        colunas_visiveis,
+        colunas_listagem,
         termo_busca_linhas,
         filtros_estruturados,
     )
@@ -9009,7 +9054,8 @@ def _montar_estado_linhas_tabela_personalizada(
         'colunas_filtraveis': [
             coluna for coluna in colunas_visiveis if coluna.filtro_estruturado_habilitado
         ],
-        'colunas_exportacao': colunas_visiveis,
+        'colunas_exportacao': colunas_listagem,
+        'colunas_totalizaveis': colunas_visiveis,
         'linhas': linhas,
         'linhas_renderizadas': linhas_renderizadas,
         'totalizadores_renderizados': totalizadores_renderizados,
@@ -9019,10 +9065,11 @@ def _montar_estado_linhas_tabela_personalizada(
 
 def _montar_linhas_exportacao_tabela_personalizada_xlsx(
     tabela: TabelaPersonalizada,
-    colunas_visiveis: list[ColunaPersonalizada],
+    colunas_exportacao: list[ColunaPersonalizada],
+    colunas_totalizaveis: list[ColunaPersonalizada],
     linhas: list[LinhaTabelaPersonalizada],
 ) -> tuple[list[list[str]], list[int], set[int]]:
-    if not colunas_visiveis:
+    if not colunas_exportacao:
         return (
             [
                 [f'{tabela.nome} - controle interno sem efeito financeiro oficial'],
@@ -9034,31 +9081,37 @@ def _montar_linhas_exportacao_tabela_personalizada_xlsx(
 
     linhas_xlsx: list[list[str]] = [
         [f'{tabela.nome} - controle interno sem efeito financeiro oficial'],
-        [coluna.nome for coluna in colunas_visiveis],
+        [coluna.nome for coluna in colunas_exportacao],
     ]
 
-    colunas_visiveis_ids = {coluna.pk for coluna in colunas_visiveis}
+    colunas_exportacao_ids = {coluna.pk for coluna in colunas_exportacao}
+    colunas_totalizaveis_ids = {coluna.pk for coluna in colunas_totalizaveis}
     valores_totalizadores_por_coluna: dict[int, list[ValorTabelaPersonalizada]] = {
-        coluna.pk: [] for coluna in colunas_visiveis
+        coluna.pk: [] for coluna in colunas_totalizaveis
     }
     for linha in linhas:
         valores_linha_por_coluna = {
             valor.coluna_id: valor
             for valor in linha.valores.all()
-            if valor.coluna_id in colunas_visiveis_ids
+            if valor.coluna_id in colunas_exportacao_ids or valor.coluna_id in colunas_totalizaveis_ids
         }
         for coluna_id, valor in valores_linha_por_coluna.items():
-            valores_totalizadores_por_coluna.setdefault(coluna_id, []).append(valor)
+            if coluna_id in colunas_totalizaveis_ids:
+                valores_totalizadores_por_coluna.setdefault(coluna_id, []).append(valor)
         linhas_xlsx.append(
             [
-                _formatar_valor_linha_tabela_xlsx(coluna, valores_linha_por_coluna.get(coluna.pk))
-                for coluna in colunas_visiveis
+                (
+                    _calcular_valor_formula_guiada_linha(coluna, valores_linha_por_coluna)
+                    if coluna.calculada and coluna.tipo_dado == ColunaPersonalizada.TipoDado.FORMULA_CONTROLADA
+                    else _formatar_valor_linha_tabela_xlsx(coluna, valores_linha_por_coluna.get(coluna.pk))
+                )
+                for coluna in colunas_exportacao
             ]
         )
 
     totalizadores_exportacao = []
     possui_totalizadores = False
-    for coluna in colunas_visiveis:
+    for coluna in colunas_exportacao:
         itens_coluna = []
         for totalizador in coluna.totalizadores.all():
             if not totalizador.ativo:
@@ -9079,10 +9132,10 @@ def _montar_linhas_exportacao_tabela_personalizada_xlsx(
         totalizadores_exportacao.append(' ; '.join(itens_coluna))
 
     if possui_totalizadores:
-        linhas_xlsx.append(['' for _ in colunas_visiveis])
+        linhas_xlsx.append(['' for _ in colunas_exportacao])
         linhas_xlsx.append(totalizadores_exportacao)
 
-    quantidades_colunas = len(colunas_visiveis)
+    quantidades_colunas = len(colunas_exportacao)
     larguras_colunas: list[int] = []
     for indice in range(quantidades_colunas):
         largura = max(
@@ -9221,6 +9274,7 @@ class TabelaPersonalizadaLinhaExportXlsxView(FinanceiroPermissaoMixin, View):
         linhas_xlsx, larguras_colunas, linhas_negrito = _montar_linhas_exportacao_tabela_personalizada_xlsx(
             tabela,
             estado_linhas['colunas_exportacao'],
+            estado_linhas['colunas_totalizaveis'],
             estado_linhas['linhas'],
         )
         arquivo_exportacao = _gerar_arquivo_xlsx_formatado(

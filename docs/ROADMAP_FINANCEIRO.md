@@ -3674,3 +3674,23 @@ Pendencias futuras opcionais:
 - permissao dedicada para o `Recibo especial`
 - auditoria operacional propria
 - ajustes finos de impressao, caso o uso real indique necessidade
+
+## Microetapa: formulas guiadas por coluna - Onda 3
+
+Status:
+- implementado o recorte de integracao controlada com busca textual simples e exportacao XLSX
+
+Consolidacao:
+- a busca textual simples agora considera colunas calculadas visiveis, ativas e com formula habilitada pelo valor final formatado
+- a exportacao XLSX agora inclui colunas calculadas visiveis com o valor final calculado em padrao brasileiro
+- operando ausente e divisao por zero continuam gerando celula vazia
+
+Guardrails mantidos:
+- sem persistencia em `valor_calculado`
+- sem formula Excel no XLSX
+- sem filtro estruturado para calculadas
+- sem totalizador para calculadas
+- sem impacto no financeiro oficial
+
+Proxima decisao recomendada:
+- definir em microetapa propria se colunas calculadas permanecerao fora de totalizadores no MVP ou se abrirao uma regra segura e explicita para o rodape
