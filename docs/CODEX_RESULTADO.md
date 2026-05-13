@@ -5701,3 +5701,28 @@ Não houve alteração de código funcional nesta etapa.
   - sem auditoria operacional propria
   - sem alteracao de model/migration/banco
   - sem impacto em lancamentos, saldos, extrato, resumo, prestacao/fechamento e balancete
+
+## Microetapa documental: classifica filtros por coluna e recibo especial
+
+- microetapa exclusivamente documental, sem alteracao de Python, template, JS/CSS, model, migration ou banco
+- registrei duas melhorias novas solicitadas pela usuaria:
+  - filtros configuraveis por coluna nas tabelas personalizadas
+  - recibo especial em lote com favorecido escolhido manualmente
+- classificacao registrada:
+  - filtros por coluna: pendencia proxima da frente de tabelas personalizadas
+  - recibo especial: pendencia proxima/documental da frente de documentos/recibos, com auditoria tecnica obrigatoria antes de implementar
+- filtros por coluna ficaram documentados com:
+  - tipos prioritarios do primeiro recorte
+  - operadores sugeridos por tipo
+  - fora de escopo inicial
+  - regra de convivencia com a busca textual simples
+  - direcao tecnica inicial usando `configuracao_json` se for suficiente
+- recibo especial ficou documentado com:
+  - nova acao futura e isolada
+  - escolha manual de favorecido destinatario
+  - manutencao dos favorecidos originais apenas na descricao dos itens
+  - proibicao de alterar recibos atuais, termo anual, lancamentos e financeiro oficial
+  - necessidade de auditar recibos atuais antes de definir implementacao segura
+- ordem recomendada registrada:
+  - 1. filtros configuraveis por coluna
+  - 2. auditoria tecnica + implementacao do recibo especial em lote

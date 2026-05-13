@@ -1355,3 +1355,57 @@ Consolidacao:
   - sem formulas guiadas
   - sem auditoria operacional propria
   - sem alteracao de financeiro oficial
+
+### 50. Tabelas personalizadas - filtros configuraveis por coluna
+
+Status: FUTURO PRIORITARIO
+
+Consolidacao:
+- a usuaria aprovou como proxima melhoria da frente de tabelas personalizadas a capacidade de escolher, por coluna, quais campos poderao virar filtros estruturados na tela de linhas
+- a busca textual simples continua valida e nao sera substituida
+- primeiro recorte priorizado:
+  - data
+  - mes/competencia
+  - inteiro
+  - decimal
+  - monetario
+  - percentual
+- operadores sugeridos por tipo ja registrados nos documentos oficiais
+- totalizadores e exportacao XLSX futura devem respeitar os filtros ativos quando essa camada existir
+- recomendacao tecnica inicial registrada:
+  - tentar configuracao por `ColunaPersonalizada.configuracao_json`
+  - se isso nao bastar, abrir microetapa propria com model/migration
+
+Fora do primeiro recorte:
+- texto avancado
+- multiplas opcoes de lista
+- booleano
+- visoes salvas
+- agrupamentos
+- dashboard
+- logica composta avancada
+
+Proxima microetapa recomendada:
+- implementar os filtros configuraveis por coluna antes de abrir novas frentes documentais de recibo especial
+
+### 51. Documentos financeiros - recibo especial em lote com favorecido manual
+
+Status: FUTURO DOCUMENTAL / AGUARDANDO AUDITORIA TECNICA
+
+Consolidacao:
+- a usuaria aprovou uma nova acao documental futura, separada dos recibos atuais
+- a ideia e permitir selecionar lancamentos de varios favorecidos e escolher manualmente um favorecido cadastrado para aparecer como destinatario principal do recibo
+- os favorecidos originais dos lancamentos devem continuar aparecendo no corpo/descricao dos itens
+- a frente deve ser isolada e nao pode alterar:
+  - recibo em lote atual
+  - recibos por favorecido atuais
+  - termo anual de quitacao
+  - lancamentos
+  - favorecido real dos lancamentos
+  - financeiro oficial
+
+Dependencia obrigatoria:
+- antes de implementar, precisa haver auditoria tecnica do fluxo atual de recibos, incluindo views, templates, helpers, recebimento dos ids selecionados e validacao do favorecido
+
+Proxima microetapa recomendada:
+- apos os filtros por coluna, executar auditoria tecnica dedicada dos recibos/documentos atuais para abrir a SPEC segura do `Recibo especial`

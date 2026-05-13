@@ -3251,3 +3251,88 @@ Consolidacao:
 
 Proxima microetapa recomendada:
 - implementar formulas guiadas por coluna com whitelist e validacao segura
+
+## 31. Tabelas personalizadas - filtros configuraveis por coluna
+
+Status: FUTURO PRIORITARIO
+
+Consolidacao:
+- a busca textual simples continua como recurso existente e deve permanecer
+- a proxima evolucao desejada e adicionar filtros estruturados configuraveis por coluna, sem abrir filtro automatico para toda coluna da tabela
+- a decisao funcional aprovada e que a permissao/configuracao do filtro fique vinculada a cada `ColunaPersonalizada`
+- tipos priorizados para o primeiro recorte:
+  - `data`
+  - `mes/competencia`
+  - `inteiro`
+  - `decimal`
+  - `monetario`
+  - `percentual`
+- operadores sugeridos:
+  - `data`: `entre`, `igual a`, `antes de`, `depois de`
+  - `mes/competencia`: `entre`, `igual a`
+  - numericos (`inteiro`, `decimal`, `monetario`, `percentual`): `entre`, `igual a`, `maior que`, `menor que`
+- regras de convivencia com a tela atual:
+  - filtros estruturados complementam a busca textual simples; nao a substituem
+  - totalizadores devem refletir o resultado filtrado, como ja ocorre com a busca
+  - exportacao XLSX futura deve respeitar filtros ativos quando essa camada existir
+- recomendacao tecnica inicial:
+  - avaliar se a configuracao pode nascer em `ColunaPersonalizada.configuracao_json` no primeiro recorte
+  - se a governanca exigir campos explicitos, abrir microetapa propria com model/migration
+
+Fora do primeiro recorte:
+- filtro avancado por texto
+- filtro por multiplas opcoes de lista
+- filtro por booleano
+- visoes salvas
+- agrupamentos
+- dashboard
+- combinacao logica avancada
+- filtros automaticos em todas as colunas
+
+Riscos principais:
+- pressao para transformar a tela em analise livre/planilha livre
+- complexidade de UX na combinacao entre busca simples e filtros estruturados
+- risco de abrir configuracao frouxa demais sem governanca por coluna
+
+Proxima microetapa recomendada:
+- auditar a estrutura atual de colunas/linhas e abrir a implementacao incremental dos filtros configuraveis por coluna
+
+## 32. Documentos financeiros - recibo especial em lote
+
+Status: FUTURO DOCUMENTAL / EXIGE AUDITORIA TECNICA
+
+Consolidacao:
+- foi registrada nova demanda de emissao documental separada dos recibos atuais
+- nome sugerido para a futura acao:
+  - `Recibo especial`
+  - `Recibo especial em lote`
+- fluxo futuro sugerido:
+  - usuaria seleciona lancamentos na listagem
+  - aciona nova opcao documental
+  - escolhe manualmente um favorecido cadastrado
+  - sistema gera documento em lote no nome desse favorecido selecionado
+  - cada item do recibo preserva a descricao atual e acrescenta o favorecido original do lancamento
+- regra documental central:
+  - o documento e apenas emissao; nao altera favorecido real, lancamentos, saldos ou relatorios financeiros
+
+Guardrails obrigatorios:
+- nao alterar o recibo em lote atual
+- nao alterar o recibo por favorecido atual
+- nao alterar o termo anual de quitacao
+- nao alterar regras atuais dos documentos existentes
+- nao alterar lancamentos nem favorecido real dos lancamentos
+
+Auditoria tecnica obrigatoria antes da implementacao:
+- auditar a acao atual de recibo em lote
+- auditar templates, views e helpers dos recibos atuais
+- identificar como os lancamentos selecionados sao recebidos
+- identificar como o favorecido e validado hoje
+- decidir se a nova frente usara view/template novos ou helper reaproveitado com parametro, sem quebrar o comportamento atual
+
+Riscos principais:
+- contaminar o fluxo atual dos recibos com regra excepcional
+- quebrar validacoes/documentos ja homologados
+- misturar emissao documental com alteracao indevida de dados operacionais
+
+Proxima microetapa recomendada:
+- executar auditoria tecnica documental do fluxo atual de recibos antes de qualquer implementacao

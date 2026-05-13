@@ -3996,3 +3996,26 @@ Riscos principais antes de migration:
   - busca ativa refletida na exportacao
   - totalizadores visiveis refletindo linhas filtradas
 - sem alteracao de model, migration, banco, formulas guiadas, auditoria operacional nova ou financeiro oficial
+
+## Microetapa documental: classificacao de filtros configuraveis e recibo especial
+
+- foram registradas, sem implementacao funcional, duas novas pendencias aprovadas pela usuaria:
+  - filtros configuraveis por coluna nas tabelas personalizadas
+  - recibo especial em lote com favorecido selecionado manualmente
+- classificacao consolidada:
+  - filtros por coluna entram como pendencia proxima da frente de tabelas personalizadas
+  - recibo especial entra como pendencia proxima/documental da frente de documentos/recibos e exige auditoria tecnica propria antes de implementacao
+- direcao registrada para filtros por coluna:
+  - a busca textual simples continua existindo e nao sera substituida
+  - os filtros estruturados devem ser configuraveis por coluna, nao automaticos para todas as colunas
+  - primeiro recorte prioriza `data`, `mes/competencia`, `inteiro`, `decimal`, `monetario` e `percentual`
+  - totalizadores e exportacao XLSX futura devem refletir o resultado filtrado
+  - recomendacao tecnica inicial: avaliar configuracao em `ColunaPersonalizada.configuracao_json` antes de abrir model/migration propria
+- direcao registrada para recibo especial:
+  - deve nascer como nova acao documental isolada, sem alterar recibo em lote atual, recibos por favorecido atuais ou termo anual de quitacao
+  - a usuaria podera selecionar lancamentos de varios favorecidos e escolher manualmente um favorecido cadastrado para ser o destinatario principal do documento
+  - os favorecidos originais dos lancamentos devem aparecer complementarmente na descricao de cada item
+  - a implementacao futura exige auditoria previa de views, templates e helpers dos recibos atuais
+- ordem recomendada consolidada:
+  - primeiro filtros configuraveis por coluna nas tabelas personalizadas
+  - depois auditoria tecnica e implementacao do recibo especial em lote
