@@ -1711,3 +1711,36 @@ Limites mantidos fora do MVP:
 
 Proxima frente recomendada:
 - abrir microetapa de SPEC/auditoria tecnica da auditoria operacional propria da frente para decidir trilha de eventos auditaveis de estrutura, formula, linhas e exportacao
+
+### 59. Tabelas personalizadas - SPEC da auditoria operacional propria
+
+Status: DOCUMENTADO (SEM IMPLEMENTACAO)
+
+Consolidacao:
+- foi auditada a base atual da auditoria do `financeiro` e os pontos de escrita da frente de `Tabelas personalizadas`
+- a recomendacao mais segura do primeiro recorte e reaproveitar `AuditoriaFinanceiro`, com helpers/snapshots especificos da frente
+
+Eventos obrigatorios do primeiro recorte futuro:
+- criacao/edicao de tabela
+- criacao/edicao de coluna
+- alteracao de opcoes de lista
+- alteracao de filtro estruturado
+- alteracao de totalizadores
+- configuracao/alteracao de formula
+- criacao/edicao de linha
+
+Decisao pendente:
+- exportacao XLSX como evento auditavel
+
+Fora do primeiro recorte:
+- visualizacao de tela
+- busca simples
+- filtros usados apenas para leitura
+- calculo de formula em leitura
+- navegacao comum
+
+Guardrails:
+- sem persistir `valor_calculado`
+- sem auditar calculo em leitura
+- sem impacto no financeiro oficial
+- sem model/migration nesta etapa documental

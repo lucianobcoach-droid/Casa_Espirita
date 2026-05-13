@@ -4406,3 +4406,73 @@ Riscos principais antes de migration:
     - configuracao/alteracao de formula
     - criacao/edicao de linhas
     - exportacao XLSX, se confirmada como evento auditavel
+
+## Microetapa documental: SPEC da auditoria operacional de tabelas personalizadas
+
+- auditoria tecnica/documental concluida, sem implementacao
+- achados sobre a auditoria atual do financeiro:
+  - a base atual usa o model `AuditoriaFinanceiro`
+  - cada evento guarda:
+    - `acao`
+    - `modelo`
+    - `registro_id`
+    - `data_hora`
+    - `usuario`
+    - `campos_alterados`
+  - o helper atual normaliza snapshots por campo concreto do model e grava diff `before`/`after` em JSON
+  - hoje a auditoria ja e chamada diretamente em `views.py` para lancamentos, contas, pessoas, categorias, centros de custo, assinaturas e configuracoes
+  - nao ha camada equivalente ainda para `Tabelas personalizadas`
+- eventos auditaveis obrigatorios do primeiro recorte futuro:
+  - criacao de tabela
+  - edicao de tabela
+  - criacao de coluna
+  - edicao de coluna
+  - alteracao de opcoes de lista
+  - alteracao de filtro estruturado
+  - alteracao de totalizadores
+  - configuracao/alteracao de formula
+  - criacao de linha
+  - edicao de linha
+- decisao pendente:
+  - exportacao XLSX como evento auditavel
+- fora do primeiro recorte:
+  - visualizacao de tela
+  - busca simples
+  - filtros usados apenas para leitura
+  - calculo de formula em tempo de leitura
+  - navegacao comum
+- arquitetura recomendada:
+  - reaproveitar `AuditoriaFinanceiro` no primeiro recorte, com helpers/snapshots especificos para `Tabelas personalizadas`
+  - motivo:
+    - menor risco estrutural
+    - padrao ja homologado no financeiro
+    - evita abrir model/migration antes de validar volume e semantica dos eventos
+- conteudo minimo recomendado por evento:
+  - usuario
+  - data/hora
+  - tipo de evento
+  - tabela afetada
+  - coluna afetada, quando houver
+  - linha afetada, quando houver
+  - resumo da acao
+  - estado anterior
+  - estado posterior
+  - campos alterados
+  - origem da acao
+- snapshots recomendados:
+  - tabela: nome, descricao, status, ordem
+  - coluna: nome, tipo_dado, obrigatoria, visivel, ordem, calculada, status
+  - configuracao JSON: `opcoes`, `filtro`, `formula`
+  - totalizadores: lista ativa por coluna
+  - linha: status, ordem, tabela, ids de referencia
+  - valores da linha: slots persistidos (`valor_texto`, `valor_numero`, `valor_data`, `valor_booleano`, `valor_json`)
+  - fora do snapshot: `valor_calculado` e qualquer calculo em leitura
+- permissao:
+  - como recorte inicial mais seguro, a futura visualizacao da auditoria de tabelas pode reaproveitar a governanca atual de `financeiro.auditoria.listar`
+  - permissao dedicada propria fica como avaliacao futura, se o volume ou a sensibilidade da frente justificar segmentacao
+- guardrails:
+  - sem impacto no financeiro oficial
+  - sem alterar lancamentos, saldos, extrato, resumo, prestacao/fechamento ou balancete
+  - sem auditar calculo em leitura
+  - sem persistir `valor_calculado`
+  - sem model ou migration nesta etapa

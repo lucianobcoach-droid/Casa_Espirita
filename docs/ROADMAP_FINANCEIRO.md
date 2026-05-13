@@ -3793,3 +3793,66 @@ Proxima frente recomendada:
   - configuracao/alteracao de formula
   - criacao/edicao de linhas
   - exportacao XLSX, se confirmada como evento auditavel
+
+## Microetapa documental: SPEC da auditoria operacional de tabelas personalizadas
+
+Status:
+- auditoria tecnica concluida e recorte futuro especificado, sem implementacao
+
+Auditoria atual do financeiro:
+- base existente em `AuditoriaFinanceiro`
+- diff atual em `campos_alterados` com pares `before`/`after`
+- registro de `usuario`, `data_hora`, `acao`, `modelo` e `registro_id`
+- helpers existentes em `views.py` suficientes para inspirar o padrao da nova frente
+
+Eventos obrigatorios do primeiro recorte futuro:
+- criacao de tabela
+- edicao de tabela
+- criacao de coluna
+- edicao de coluna
+- alteracao de opcoes de lista
+- alteracao de filtro estruturado
+- alteracao de totalizadores
+- configuracao/alteracao de formula
+- criacao de linha
+- edicao de linha
+
+Decisao pendente:
+- exportacao XLSX como evento auditavel
+
+Fora do primeiro recorte:
+- visualizacao de tela
+- busca simples
+- filtros usados apenas para leitura
+- calculo de formula em tempo de leitura
+- navegacao comum
+
+Arquitetura recomendada:
+- reaproveitar `AuditoriaFinanceiro` no primeiro recorte, com helpers e snapshots especificos de `Tabelas personalizadas`
+- manter model proprio como avaliacao futura apenas se a frente exigir semantica, permissao ou volume incompatibilizados com a auditoria atual
+
+Conteudo minimo por evento:
+- usuario
+- data/hora
+- tipo de evento
+- tabela afetada
+- coluna afetada, quando houver
+- linha afetada, quando houver
+- resumo da acao
+- estado anterior
+- estado posterior
+- campos alterados
+- origem da acao
+
+Snapshots futuros recomendados:
+- tabela
+- coluna
+- `configuracao_json`
+- totalizadores ativos
+- linha
+- valores persistidos da linha
+- sem incluir `valor_calculado` nem calculo em leitura
+
+Permissao recomendada:
+- recorte inicial usando a governanca ja existente de `financeiro.auditoria.listar`
+- permissao propria futura fica condicionada a revisao de volume/sensibilidade da frente

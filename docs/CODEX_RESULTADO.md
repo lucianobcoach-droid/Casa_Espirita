@@ -6082,3 +6082,32 @@ Não houve alteração de código funcional nesta etapa.
   - sem impacto em `LancamentoFinanceiro` e no financeiro oficial
 - proxima frente recomendada:
   - microetapa de SPEC/auditoria tecnica da auditoria operacional propria da frente, com decisao de trilha auditavel para estrutura, formula, linhas e exportacao
+
+## Microetapa documental: SPEC da auditoria operacional de tabelas personalizadas
+
+- auditei a base atual da auditoria do financeiro e os pontos de escrita da frente de `Tabelas personalizadas`
+- confirmei que a auditoria atual usa `AuditoriaFinanceiro` com:
+  - `acao`
+  - `modelo`
+  - `registro_id`
+  - `data_hora`
+  - `usuario`
+  - `campos_alterados`
+- confirmei tambem que o diff atual nasce de helpers de snapshot + `_build_auditoria_payload`, sem engine paralela ou model separado
+- mapeamento dos eventos atuais da frente:
+  - criacao/edicao de tabela nas views `TabelaPersonalizadaCreateView` e `TabelaPersonalizadaUpdateView`
+  - criacao/edicao de coluna nas views `TabelaPersonalizadaColunaCreateView` e `TabelaPersonalizadaColunaUpdateView`, com mudancas profundas concentradas em `ColunaPersonalizadaForm.save()`
+  - alteracoes de opcoes, filtros, totalizadores e formula dentro de `configuracao_json` e da ativacao de `TotalizadorColunaPersonalizada`
+  - criacao/edicao de linha em `TabelaPersonalizadaLinhaForm.save()`
+  - exportacao XLSX em `TabelaPersonalizadaLinhaExportXlsxView`
+- recomendacao consolidada:
+  - reaproveitar `AuditoriaFinanceiro` no primeiro recorte da auditoria de tabelas, adicionando helpers/snapshots especificos da frente
+- eventos obrigatorios futuros do primeiro recorte:
+  - criacao/edicao de tabela
+  - criacao/edicao de coluna
+  - alteracao de opcoes de lista
+  - alteracao de filtro estruturado
+  - alteracao de totalizadores
+  - configuracao/alteracao de formula
+  - criacao/edicao de linha
+- exportacao XLSX ficou documentada como decisao pendente; leitura, busca, filtros apenas de consulta e calculo em leitura ficaram fora
