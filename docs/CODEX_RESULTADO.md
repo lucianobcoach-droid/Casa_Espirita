@@ -5818,3 +5818,32 @@ Não houve alteração de código funcional nesta etapa.
   - nova view/template documental final, evitando condicoes excepcionais dentro do contrato atual dos recibos homologados
 - risco principal registrado:
   - quebrar a regra atual de mesmo favorecido do recibo em lote tecnico ao tentar reutiliza-lo de forma indevida
+
+## Microetapa: recibo especial em lote
+
+- implementei a primeira versao funcional do `Recibo especial` como nova acao documental em lote da listagem de lancamentos
+- o fluxo ficou dividido em duas etapas:
+  - selecao atual dos lancamentos na `lancamento_list`
+  - escolha manual do favorecido destinatario antes da emissao final
+- criei rotas, views, form e templates proprios do `Recibo especial`, sem alterar o contrato dos recibos homologados
+- regra final aplicada no documento:
+  - destinatario principal = favorecido escolhido manualmente
+  - cada item = `descricao atual - nome do favorecido original`
+  - sem `Favorecido original`
+  - sem `Favorecido original: Nome`
+- mantive intactos:
+  - recibo em lote tecnico de mesmo favorecido
+  - recibos por favorecido atuais
+  - termo anual de quitacao
+  - favorecido real e descricao persistida dos lancamentos
+- cobertura de testes adicionada para:
+  - exibicao da nova acao com permissao adequada
+  - bloqueios de selecao vazia, sem favorecido e sem receita
+  - exigencia de favorecido destinatario manual
+  - emissao final com descricao composta correta
+  - nao regressao do recibo em lote atual, recibos por favorecido e termo anual
+- validacoes executadas:
+  - `py manage.py makemigrations --check --dry-run` OK
+  - `py manage.py check` OK
+  - `py -m compileall financeiro configuracoes` OK
+  - `py manage.py test financeiro configuracoes` OK

@@ -1472,3 +1472,18 @@ Arquitetura recomendada:
 
 Proxima microetapa recomendada:
 - apos esta auditoria, abrir implementacao funcional minima do `Recibo especial` com testes de nao regressao dos documentos atuais
+
+Status apos implementacao:
+- o `Recibo especial` foi implementado como acao nova e isolada da `lancamento_list`
+- o fluxo agora possui:
+  - selecao em lote reaproveitando os ids resolvidos pelo backend atual
+  - etapa intermediaria de escolha manual do favorecido destinatario
+  - emissao final em template proprio, sem alterar o template homologado dos recibos atuais
+- guardrails preservados:
+  - o recibo em lote tecnico continua exigindo mesmo favorecido
+  - os recibos por favorecido continuam agrupando por pessoa
+  - o termo anual continua com rota e template proprios
+  - o favorecido real e a descricao persistida dos lancamentos nao sao alterados
+
+Pendencia futura remanescente:
+- homologacao visual/documental do `Recibo especial` e decisao sobre permissao dedicada e auditoria propria da nova acao

@@ -1,0 +1,270 @@
+{% extends 'financeiro/base.html' %}
+{% load financeiro_format %}
+{% block title %}{{ page_title }}{% endblock %}
+{% block content %}
+<style>
+    .recibo-documento {
+        max-width: 860px;
+        margin: 0 auto;
+        background: #fff;
+        border: 1.4px solid #d1c7b8;
+        border-top-width: 4px;
+        box-shadow: 0 14px 34px rgba(52, 46, 36, 0.08);
+        display: block;
+        width: 100%;
+    }
+
+    .recibo-page-actions {
+        max-width: 860px;
+        margin: 0 auto 1rem;
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .recibo-header {
+        padding: 2rem 2.15rem 1.3rem;
+        border-bottom: 1.4px solid #d8d1c4;
+        display: grid;
+        gap: 1.05rem;
+    }
+
+    .recibo-identidade {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .recibo-identidade-bloco {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.45rem;
+        min-height: 72px;
+        width: 100%;
+    }
+
+    .recibo-identidade-bloco.sem-logo {
+        gap: 0.25rem;
+    }
+
+    .recibo-logo {
+        max-height: 84px;
+        max-width: 250px;
+        object-fit: contain;
+        display: block;
+        flex-shrink: 0;
+    }
+
+    .recibo-identidade-texto {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.12rem;
+    }
+
+    .recibo-instituicao {
+        font-size: 1.08rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        color: #2d2a24;
+    }
+
+    .recibo-identidade-subtitulo {
+        font-size: 0.8rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: #776e61;
+    }
+
+    .recibo-identidade-faixa {
+        width: min(220px, 100%);
+        height: 2px;
+        background: linear-gradient(90deg, transparent 0%, #c8beaf 18%, #c8beaf 82%, transparent 100%);
+    }
+
+    .recibo-topo {
+        display: flex;
+        justify-content: space-between;
+        align-items: end;
+        gap: 1rem;
+        padding-top: 0.35rem;
+    }
+
+    .recibo-titulo {
+        font-size: 1.95rem;
+        letter-spacing: 0.12em;
+        margin: 0;
+        font-weight: 700;
+        color: #2d2a24;
+    }
+
+    .recibo-meta {
+        margin: 0.3rem 0 0;
+        color: #5f584d;
+        font-size: 0.92rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.65rem 1rem;
+    }
+
+    .recibo-meta-numero {
+        display: inline-flex;
+        align-items: baseline;
+        gap: 0.35rem;
+    }
+
+    .recibo-meta-numero strong {
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        font-size: 0.78rem;
+        color: #6c6458;
+    }
+
+    .recibo-valor-box {
+        flex: 0 0 auto;
+        min-width: 12rem;
+        text-align: right;
+    }
+
+    .recibo-valor-label {
+        display: block;
+        margin-bottom: 0.28rem;
+        font-size: 0.78rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: #736a5a;
+    }
+
+    .recibo-valor {
+        margin: 0;
+        font-size: 1.95rem;
+        font-weight: 700;
+        color: #1f5134;
+        line-height: 1.1;
+    }
+
+    .recibo-corpo {
+        padding: 1.7rem 2.15rem 1.3rem;
+    }
+
+    .recibo-texto {
+        font-size: 1.02rem;
+        line-height: 1.68;
+        color: #2e2a24;
+    }
+
+    .recibo-linha {
+        margin: 0 0 0.75rem;
+    }
+
+    .recibo-campo {
+        display: inline;
+        font-weight: 600;
+    }
+
+    .recibo-valor-texto {
+        display: inline;
+        border-bottom: 1px solid #bfb5a3;
+        padding-bottom: 0.08rem;
+    }
+
+    .recibo-aviso {
+        margin-top: 0.9rem;
+        color: #6a6258;
+        font-size: 0.92rem;
+    }
+
+    .recibo-data-local {
+        margin-top: 1.15rem;
+        text-align: right;
+        color: #4f493f;
+        font-size: 0.98rem;
+    }
+
+    .recibo-itens {
+        margin: 0.75rem 0 0;
+        padding-left: 0;
+        list-style: none;
+        color: #3b362e;
+        font-size: 0.98rem;
+        line-height: 1.5;
+    }
+
+    .recibo-itens li {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 0.4rem 0.6rem;
+    }
+
+    .recibo-itens li + li {
+        margin-top: 0.45rem;
+    }
+
+    .recibo-item-valor {
+        font-weight: 600;
+        color: #2d2a24;
+        margin-left: 0.35rem;
+    }
+
+    .recibo-rodape {
+        padding: 0 2.15rem 1.15rem;
+    }
+
+    .recibo-mensagem {
+        border-top: 1.4px solid #ddd4c5;
+        border-bottom: 1.4px solid #ddd4c5;
+        padding: 1.05rem 0.95rem;
+        margin-bottom: 1.1rem;
+        color: #322d27;
+        text-align: center;
+        background: linear-gradient(180deg, #fdfbf7 0%, #faf7f1 100%);
+    }
+
+    .recibo-assinatura {
+        margin-top: 1.25rem;
+        text-align: center;
+    }
+
+    .recibo-assinatura-texto {
+        font-family: "Segoe Script", "Brush Script MT", "Lucida Handwriting", cursive;
+        font-size: 1.8rem;
+        font-weight: 500;
+        line-height: 1.1;
+        margin-bottom: 0.25rem;
+        letter-spacing: 0.03em;
+        color: #2f2a24;
+    }
+
+    .recibo-assinatura-nome {
+        margin: 0.05rem 0 0;
+        font-weight: 600;
+        color: #2f2a24;
+    }
+
+    .recibo-assinatura-cargo {
+        margin: 0.15rem 0 0;
+        font-size: 0.95rem;
+        color: #60584e;
+    }
+
+    .recibo-assinatura-linha {
+        width: min(320px, 100%);
+        margin: 0 auto 0.35rem;
+        border-bottom: 1px solid #433d34;
+        height: 1rem;
+    }
+</style>
+
+<div class="recibo-page-actions no-print" aria-label="Acoes do recibo especial">
+    <button class="button is-light" type="button" onclick="window.print()">Imprimir</button>
+    <a class="button is-light" href="{{ trocar_favorecido_url }}">Trocar favorecido</a>
+    <a class="button" href="{{ cancel_url }}">Voltar</a>
+</div>
+
+{% include 'financeiro/_lancamento_recibo_especial_documento.html' with recibo=recibo_documento %}
+{% endblock %}

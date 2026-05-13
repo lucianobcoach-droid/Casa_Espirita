@@ -3687,6 +3687,372 @@ class LancamentoListagemAcoesTests(TestCase):
         self.assertEqual(response_get.status_code, 200)
 
 
+class LancamentoReciboEspecialTests(TestCase):
+    def setUp(self):
+        self.conta = ContaFinanceira.objects.create(
+            nome='Conta recibo especial',
+            saldo_inicial=Decimal('10.00'),
+            data_saldo_inicial=date(2026, 1, 1),
+        )
+        self.pessoa_maria = PessoaFinanceira.objects.create(
+            codigo='P-MARIA-REC',
+            nome='Maria Silva',
+            contribuinte_recorrente=True,
+        )
+        self.pessoa_joao = PessoaFinanceira.objects.create(
+            codigo='P-JOAO-REC',
+            nome='Joao Souza',
+            contribuinte_recorrente=True,
+        )
+        self.destinatario_manual = PessoaFinanceira.objects.create(
+            codigo='P-DEST-REC',
+            nome='Favorecido Destinatario',
+            contribuinte_recorrente=False,
+        )
+        self.categoria_receita = CategoriaFinanceira.objects.create(
+            nome='Receita recibo especial',
+            tipo=CategoriaFinanceira.TipoCategoria.RECEITA,
+        )
+        self.subcategoria_receita = CategoriaFinanceira.objects.create(
+            nome='Subcategoria receita recibo especial',
+            tipo=CategoriaFinanceira.TipoCategoria.RECEITA,
+            categoria_pai=self.categoria_receita,
+        )
+        self.categoria_despesa = CategoriaFinanceira.objects.create(
+            nome='Despesa recibo especial',
+            tipo=CategoriaFinanceira.TipoCategoria.DESPESA,
+        )
+        self.subcategoria_despesa = CategoriaFinanceira.objects.create(
+            nome='Subcategoria despesa recibo especial',
+            tipo=CategoriaFinanceira.TipoCategoria.DESPESA,
+            categoria_pai=self.categoria_despesa,
+        )
+        self.receita_maria = LancamentoFinanceiro.objects.create(
+            descricao='Pagamento de cesta basica',
+            tipo=LancamentoFinanceiro.TipoLancamento.RECEITA,
+            status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+            valor=Decimal('120.00'),
+            data_competencia=date(2026, 2, 10),
+            data_pagamento=date(2026, 2, 10),
+            numero_documento='REC-ESP-001',
+            pessoa=self.pessoa_maria,
+            categoria=self.subcategoria_receita,
+            conta=self.conta,
+        )
+        self.receita_joao = LancamentoFinanceiro.objects.create(
+            descricao='Pagamento de cesta basica',
+            tipo=LancamentoFinanceiro.TipoLancamento.RECEITA,
+            status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+            valor=Decimal('80.00'),
+            data_competencia=date(2026, 3, 11),
+            data_pagamento=date(2026, 3, 11),
+            numero_documento='REC-ESP-002',
+            pessoa=self.pessoa_joao,
+            categoria=self.subcategoria_receita,
+            conta=self.conta,
+        )
+        self.receita_sem_favorecido = LancamentoFinanceiro.objects.create(
+            descricao='Receita sem favorecido',
+            tipo=LancamentoFinanceiro.TipoLancamento.RECEITA,
+            status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+            valor=Decimal('30.00'),
+            data_competencia=date(2026, 3, 12),
+            data_pagamento=date(2026, 3, 12),
+            numero_documento='REC-ESP-003',
+            pessoa=self.pessoa_maria,
+            categoria=self.subcategoria_receita,
+            conta=self.conta,
+        )
+        LancamentoFinanceiro.objects.filter(pk=self.receita_sem_favorecido.pk).update(pessoa=None)
+        self.receita_sem_favorecido.refresh_from_db()
+        self.despesa_maria = LancamentoFinanceiro.objects.create(
+            descricao='Despesa diversa',
+            tipo=LancamentoFinanceiro.TipoLancamento.DESPESA,
+            status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+            valor=Decimal('45.00'),
+            data_competencia=date(2026, 3, 13),
+            data_pagamento=date(2026, 3, 13),
+            numero_documento='REC-ESP-004',
+            pessoa=self.pessoa_maria,
+            categoria=self.subcategoria_despesa,
+            conta=self.conta,
+        )
+
+    def _garantir_permissao(self, codigo: str) -> PermissaoSistema:
+        permissao = PermissaoSistema.objects.filter(codigo=codigo).first()
+        if permissao:
+            return permissao
+        partes = codigo.split('.')
+        modulo = partes[0] if len(partes) > 0 else 'financeiro'
+        recurso = partes[1] if len(partes) > 1 else 'geral'
+        acao = '.'.join(partes[2:]) if len(partes) > 2 else 'acessar'
+        return PermissaoSistema.objects.create(
+            codigo=codigo,
+            nome=codigo,
+            modulo=modulo,
+            recurso=recurso,
+            acao=acao,
+            ativo=True,
+        )
+
+    def _login_com_permissoes(self, username: str, codigos_permissao: list[str]):
+        user_model = get_user_model()
+        usuario = user_model.objects.create_user(
+            username=username,
+            password='senha-forte-123',
+            email=f'{username}@teste.local',
+            is_active=True,
+        )
+        perfil = PerfilAcesso.objects.create(
+            codigo=f'perfil-{username}',
+            nome=f'Perfil {username}',
+            ativo=True,
+        )
+        for codigo in codigos_permissao:
+            perfil.permissoes.add(self._garantir_permissao(codigo))
+        UsuarioPerfilAcesso.objects.create(usuario=usuario, perfil=perfil)
+        self.client.force_login(usuario)
+
+    def test_listagem_exibe_recibo_especial_apenas_com_permissao(self):
+        self._login_com_permissoes(
+            'user-recibo-especial-ok',
+            [
+                'financeiro.lancamentos.listar',
+                'financeiro.lancamentos.emitir_recibo',
+            ],
+        )
+        response = self.client.get(reverse('financeiro:lancamento-list'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Recibo especial')
+
+    def test_listagem_sem_permissao_emitir_recibo_oculta_recibo_especial(self):
+        self._login_com_permissoes(
+            'user-recibo-especial-sem-permissao',
+            [
+                'financeiro.lancamentos.listar',
+            ],
+        )
+        response = self.client.get(reverse('financeiro:lancamento-list'))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'Recibo especial')
+
+    def test_fluxo_recibo_especial_bloqueia_usuario_sem_permissao(self):
+        self._login_com_permissoes(
+            'user-recibo-especial-bloqueado',
+            [
+                'financeiro.lancamentos.listar',
+            ],
+        )
+        ids = f'{self.receita_maria.pk},{self.receita_joao.pk}'
+        response = self.client.get(
+            reverse('financeiro:lancamento-recibo-especial-selecionar-favorecido'),
+            {'ids': ids},
+        )
+        self.assertEqual(response.status_code, 403)
+        response_final = self.client.get(
+            reverse('financeiro:lancamento-recibo-especial'),
+            {'ids': ids, 'destinatario': self.destinatario_manual.pk},
+        )
+        self.assertEqual(response_final.status_code, 403)
+
+    def test_recibo_especial_bloqueia_selecao_vazia(self):
+        self._login_com_permissoes(
+            'user-recibo-especial-vazio',
+            [
+                'financeiro.lancamentos.listar',
+                'financeiro.lancamentos.emitir_recibo',
+            ],
+        )
+        response = self.client.post(
+            reverse('financeiro:lancamento-acoes-lote'),
+            {
+                'acao_lote': 'recibo_especial',
+                'filtros_retorno': '',
+            },
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        mensagens = [str(message) for message in response.context['messages']]
+        self.assertTrue(any('Selecione pelo menos um' in mensagem for mensagem in mensagens))
+
+    def test_recibo_especial_bloqueia_lancamento_sem_favorecido(self):
+        self._login_com_permissoes(
+            'user-recibo-especial-sem-favorecido',
+            [
+                'financeiro.lancamentos.listar',
+                'financeiro.lancamentos.emitir_recibo',
+            ],
+        )
+        response = self.client.post(
+            reverse('financeiro:lancamento-acoes-lote'),
+            {
+                'acao_lote': 'recibo_especial',
+                'lancamentos_selecionados': [str(self.receita_sem_favorecido.pk)],
+                'filtros_retorno': '',
+            },
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Recibo especial exige lancamentos com favorecido.')
+
+    def test_recibo_especial_bloqueia_lancamento_que_nao_e_receita(self):
+        self._login_com_permissoes(
+            'user-recibo-especial-despesa',
+            [
+                'financeiro.lancamentos.listar',
+                'financeiro.lancamentos.emitir_recibo',
+            ],
+        )
+        response = self.client.post(
+            reverse('financeiro:lancamento-acoes-lote'),
+            {
+                'acao_lote': 'recibo_especial',
+                'lancamentos_selecionados': [str(self.despesa_maria.pk)],
+                'filtros_retorno': '',
+            },
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Recibo especial so pode ser emitido para lancamentos do tipo receita.')
+
+    def test_recibo_especial_aceita_multiplos_favorecidos(self):
+        self._login_com_permissoes(
+            'user-recibo-especial-multiplos',
+            [
+                'financeiro.lancamentos.listar',
+                'financeiro.lancamentos.emitir_recibo',
+            ],
+        )
+        response = self.client.post(
+            reverse('financeiro:lancamento-acoes-lote'),
+            {
+                'acao_lote': 'recibo_especial',
+                'lancamentos_selecionados': [str(self.receita_maria.pk), str(self.receita_joao.pk)],
+                'filtros_retorno': 'status=quitado',
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse('financeiro:lancamento-recibo-especial-selecionar-favorecido'), response['Location'])
+        self.assertIn(f'ids={self.receita_maria.pk}%2C{self.receita_joao.pk}', response['Location'])
+
+    def test_recibo_especial_exige_favorecido_destinatario_manual(self):
+        self._login_com_permissoes(
+            'user-recibo-especial-form',
+            [
+                'financeiro.lancamentos.listar',
+                'financeiro.lancamentos.emitir_recibo',
+            ],
+        )
+        ids = f'{self.receita_maria.pk},{self.receita_joao.pk}'
+        response = self.client.post(
+            reverse('financeiro:lancamento-recibo-especial-selecionar-favorecido'),
+            {'ids': ids, 'filtros': ''},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('favorecido_destinatario', response.context['form'].errors)
+
+    def test_recibo_especial_bloqueia_favorecido_destinatario_inexistente(self):
+        self._login_com_permissoes(
+            'user-recibo-especial-destinatario-invalido',
+            [
+                'financeiro.lancamentos.listar',
+                'financeiro.lancamentos.emitir_recibo',
+            ],
+        )
+        ids = f'{self.receita_maria.pk},{self.receita_joao.pk}'
+        response = self.client.post(
+            reverse('financeiro:lancamento-recibo-especial-selecionar-favorecido'),
+            {
+                'ids': ids,
+                'filtros': '',
+                'favorecido_destinatario': '999999',
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('favorecido_destinatario', response.context['form'].errors)
+
+    def test_recibo_especial_final_usa_destinatario_manual_e_descricao_composta(self):
+        self._login_com_permissoes(
+            'user-recibo-especial-final',
+            [
+                'financeiro.lancamentos.listar',
+                'financeiro.lancamentos.emitir_recibo',
+            ],
+        )
+        ids = f'{self.receita_maria.pk},{self.receita_joao.pk}'
+        response = self.client.get(
+            reverse('financeiro:lancamento-recibo-especial'),
+            {
+                'ids': ids,
+                'destinatario': self.destinatario_manual.pk,
+                'filtros': 'status=quitado',
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'RECIBO ESPECIAL')
+        self.assertContains(response, self.destinatario_manual.nome)
+        self.assertContains(response, 'Pagamento de cesta basica - Maria Silva')
+        self.assertContains(response, 'Pagamento de cesta basica - Joao Souza')
+        self.assertNotContains(response, 'Favorecido original')
+        self.receita_maria.refresh_from_db()
+        self.receita_joao.refresh_from_db()
+        self.conta.refresh_from_db()
+        self.assertEqual(self.receita_maria.pessoa_id, self.pessoa_maria.pk)
+        self.assertEqual(self.receita_joao.pessoa_id, self.pessoa_joao.pk)
+        self.assertEqual(self.conta.saldo_inicial, Decimal('10.00'))
+
+    def test_recibo_em_lote_atual_continua_exigindo_mesmo_favorecido(self):
+        self._login_com_permissoes(
+            'user-recibo-lote-atual',
+            [
+                'financeiro.lancamentos.listar',
+                'financeiro.lancamentos.emitir_recibo',
+            ],
+        )
+        ids = f'{self.receita_maria.pk},{self.receita_joao.pk}'
+        response = self.client.get(
+            reverse('financeiro:lancamento-recibo-lote'),
+            {'ids': ids},
+        )
+        self.assertEqual(response.status_code, 302)
+
+    def test_recibos_por_favorecido_atuais_continuam_agrupando_por_favorecido(self):
+        self._login_com_permissoes(
+            'user-recibos-por-favorecido-atual',
+            [
+                'financeiro.lancamentos.listar',
+                'financeiro.lancamentos.emitir_recibo',
+            ],
+        )
+        ids = f'{self.receita_maria.pk},{self.receita_joao.pk}'
+        response = self.client.get(
+            reverse('financeiro:lancamento-recibos-por-favorecido'),
+            {'ids': ids},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context['recibo_grupos']), 2)
+        self.assertContains(response, self.pessoa_maria.nome)
+        self.assertContains(response, self.pessoa_joao.nome)
+
+    def test_termo_anual_permanece_com_mesma_rota_e_template(self):
+        self._login_com_permissoes(
+            'user-termo-anual-sem-regressao',
+            [
+                'financeiro.lancamentos.listar',
+                'financeiro.lancamentos.emitir_recibo',
+            ],
+        )
+        response = self.client.get(
+            reverse('financeiro:lancamento-termo-anual-quitacao'),
+            {
+                'data_inicial': '2026-02-01',
+                'data_final': '2026-03-31',
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'financeiro/lancamento_documentos_por_favorecido.html')
+
+
 class TabelasPersonalizadasEstruturaBaseTests(TestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_user(

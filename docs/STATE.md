@@ -4124,3 +4124,34 @@ Riscos principais antes de migration:
   - preservar os helpers e templates atuais dos fluxos homologados, evitando mudar o contrato do recibo em lote e dos recibos por favorecido
 - risco principal registrado:
   - contaminar a regra atual de mesmo favorecido do recibo em lote tecnico e quebrar documentos ja homologados
+
+## Microetapa: implementacao funcional minima do recibo especial em lote
+
+- fluxo funcional minimo do `Recibo especial` implementado como acao documental nova e isolada na `lancamento_list`
+- a acao em lote `Recibo especial` passa a coexistir com `Recibos em lote`, sem substituir o fluxo atual
+- o backend atual de acoes em lote passou a redirecionar a nova acao para uma etapa intermediaria propria de escolha manual do favorecido destinatario
+- novas rotas criadas:
+  - `financeiro:lancamento-recibo-especial-selecionar-favorecido`
+  - `financeiro:lancamento-recibo-especial`
+- regra funcional implementada:
+  - aceita lancamentos selecionados de varios favorecidos
+  - exige que todos os lancamentos selecionados tenham favorecido
+  - exige que todos os lancamentos sejam do tipo `receita`
+  - exige escolha manual de um favorecido cadastrado e ativo como destinatario principal
+  - nao altera o favorecido real do lancamento
+  - nao altera descricao persistida, saldo, extrato, resumo, prestacao/fechamento ou balancete
+- regra de descricao implementada no documento final:
+  - cada item preserva a descricao atual e acrescenta apenas o nome do favorecido original
+  - exemplo aplicado: `Pagamento de cesta basica - Maria Silva`
+  - proibido e nao usado: `Favorecido original`
+  - proibido e nao usado: `Favorecido original: Nome`
+- isolamento tecnico preservado:
+  - `LancamentoFinanceiroReciboLoteView` continua exigindo mesmo favorecido
+  - `LancamentoFinanceiroRecibosPorFavorecidoView` continua agrupando por favorecido
+  - `LancamentoFinanceiroTermoAnualQuitacaoView` continua com rota e template proprios
+  - o template homologado `_lancamento_recibo_documento.html` nao foi alterado
+- validacoes executadas nesta microetapa:
+  - `py manage.py makemigrations --check --dry-run` OK
+  - `py manage.py check` OK
+  - `py -m compileall financeiro configuracoes` OK
+  - `py manage.py test financeiro configuracoes` OK

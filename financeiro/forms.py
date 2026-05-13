@@ -1187,6 +1187,33 @@ class TabelaPersonalizadaLinhaForm(forms.Form):
         return self.linha
 
 
+class LancamentoFinanceiroReciboEspecialForm(forms.Form):
+    favorecido_destinatario = forms.ModelChoiceField(
+        queryset=PessoaFinanceira.objects.none(),
+        label='Favorecido destinatario',
+        empty_label='Selecione um favorecido',
+        help_text='Escolha o favorecido que aparecera como destinatario principal do recibo especial.',
+    )
+    ids = forms.CharField(widget=forms.HiddenInput())
+    filtros = forms.CharField(required=False, widget=forms.HiddenInput())
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['favorecido_destinatario'].queryset = PessoaFinanceira.objects.filter(ativo=True).order_by('nome')
+        self.fields['favorecido_destinatario'].widget.attrs.update(
+            {
+                'class': 'input',
+            }
+        )
+
+    def clean_ids(self) -> str:
+        ids_raw = (self.cleaned_data.get('ids') or '').strip()
+        ids = [valor for valor in ids_raw.split(',') if valor.strip().isdigit()]
+        if not ids:
+            raise ValidationError('Selecione lancamentos validos para emitir o recibo especial.')
+        return ','.join(ids)
+
+
 class LancamentoFinanceiroForm(forms.ModelForm):
     lancamento_com_rateio = forms.BooleanField(required=False, label='Lancamento com rateio')
     salvar_como_regra_automatica = forms.BooleanField(

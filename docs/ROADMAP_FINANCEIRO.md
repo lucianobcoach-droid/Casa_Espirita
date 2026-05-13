@@ -3480,3 +3480,19 @@ SPEC segura consolidada:
 
 Proxima microetapa recomendada:
 - implementar o fluxo funcional minimo do `Recibo especial` apenas como acao nova e isolada, com escolha manual de favorecido e testes de nao regressao dos recibos existentes
+
+Status apos implementacao funcional minima:
+- a acao `Recibo especial` passou a existir na listagem de lancamentos como fluxo separado de `Recibos em lote`
+- o fluxo ja cobre:
+  - selecao em lote
+  - escolha manual de favorecido destinatario
+  - documento unico para lancamentos de varios favorecidos
+  - composicao do item como `descricao atual - nome do favorecido original`
+- o fluxo permanece sem:
+  - PDF proprio
+  - auditoria operacional dedicada do recibo especial
+  - permissao exclusiva separada de `financeiro.lancamentos.emitir_recibo`
+  - refinamentos visuais/documentais apos homologacao real
+
+Proximo passo recomendado:
+- homologar visualmente o `Recibo especial` com casos reais de uso e decidir se a frente exigira permissao dedicada e auditoria documental propria

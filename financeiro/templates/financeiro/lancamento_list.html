@@ -873,6 +873,7 @@
                                 {% endif %}
                                 {% if pode_emitir_recibo %}
                                 <option value="emitir_recibos">Recibos em lote</option>
+                                <option value="recibo_especial">Recibo especial</option>
                                 {% endif %}
                                 {% if pode_acao_lote_excluir %}
                                 <option value="excluir">Excluir selecionados</option>
@@ -1640,7 +1641,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            if (acao === 'emitir_recibos' || acao === 'recibo_lote' || acao === 'recibos_lote_por_favorecido') {
+            if (acao === 'emitir_recibos' || acao === 'recibo_especial' || acao === 'recibo_lote' || acao === 'recibos_lote_por_favorecido') {
                 return;
             }
 

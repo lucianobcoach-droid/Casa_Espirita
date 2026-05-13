@@ -35,6 +35,7 @@ from .forms import (
     ConfiguracaoInstitucionalForm,
     CentroCustoForm,
     ContaFinanceiraForm,
+    LancamentoFinanceiroReciboEspecialForm,
     LancamentoFinanceiroForm,
     LancamentoFinanceiroGrupoRateioForm,
     PessoaFinanceiraForm,
@@ -9994,6 +9995,7 @@ class LancamentoFinanceiroAcoesLoteView(FinanceiroPermissaoMixin, View):
             return 'financeiro.lancamentos.acoes_em_lote_excluir'
         if (self.request.POST.get('acao_lote') or '').strip() in {
             'emitir_recibos',
+            'recibo_especial',
             'recibo_lote',
             'recibos_lote_por_favorecido',
         }:
@@ -10107,6 +10109,28 @@ class LancamentoFinanceiroAcoesLoteView(FinanceiroPermissaoMixin, View):
                 query_params['filtros'] = filtros_retorno
             url_recibos = reverse('financeiro:lancamento-recibos-por-favorecido')
             return redirect(f'{url_recibos}?{urlencode(query_params)}')
+
+        if acao_lote == 'recibo_especial':
+            pessoas_ids = {lancamento.pessoa_id for lancamento in lancamentos}
+            if None in pessoas_ids:
+                messages.warning(
+                    request,
+                    'Recibo especial exige lancamentos com favorecido.',
+                )
+                return self._redirect_listagem(request)
+            if any(lancamento.tipo != LancamentoFinanceiro.TipoLancamento.RECEITA for lancamento in lancamentos):
+                messages.warning(
+                    request,
+                    'Recibo especial so pode ser emitido para lancamentos do tipo receita.',
+                )
+                return self._redirect_listagem(request)
+            ids_param = ','.join(str(lancamento.pk) for lancamento in lancamentos)
+            filtros_retorno = (request.POST.get('filtros_retorno') or '').strip()
+            query_params = {'ids': ids_param}
+            if filtros_retorno:
+                query_params['filtros'] = filtros_retorno
+            url_recibo_especial = reverse('financeiro:lancamento-recibo-especial-selecionar-favorecido')
+            return redirect(f'{url_recibo_especial}?{urlencode(query_params)}')
 
         messages.warning(request, 'Escolha uma aÃ§Ã£o em lote vÃ¡lida para os lanÃ§amentos selecionados.')
         return self._redirect_listagem(request)
@@ -10618,6 +10642,228 @@ class LancamentoFinanceiroGrupoRateioUpdateView(FinanceiroFormMixin, UpdateView)
             }
         )
         return redirect(self._get_return_to_url() or f"{reverse('financeiro:lancamento-list')}?{query_string}")
+
+
+def _montar_url_listagem_lancamentos_por_filtros(filtros_raw: str = '') -> str:
+    url_listagem = reverse('financeiro:lancamento-list')
+    filtros = (filtros_raw or '').strip()
+    if filtros:
+        return f'{url_listagem}?{filtros}'
+    return url_listagem
+
+
+def _parse_ids_lancamentos_documentais(ids_raw: str) -> list[int]:
+    return [int(valor) for valor in (ids_raw or '').split(',') if valor.strip().isdigit()]
+
+
+def _carregar_lancamentos_documentais(ids_raw: str) -> tuple[list[LancamentoFinanceiro], str]:
+    ids = _parse_ids_lancamentos_documentais(ids_raw)
+    if not ids:
+        return [], 'Selecione lancamentos validos para continuar.'
+
+    lancamentos = list(
+        LancamentoFinanceiro.objects.filter(pk__in=ids)
+        .select_related('pessoa', 'categoria')
+        .order_by('data_pagamento', 'data_competencia', 'pk')
+    )
+    if not lancamentos:
+        return [], 'Nenhum lancamento encontrado para emissao documental.'
+    return lancamentos, ''
+
+
+def _validar_lancamentos_recibo_especial(lancamentos: list[LancamentoFinanceiro]) -> str:
+    if not lancamentos:
+        return 'Nenhum lancamento foi encontrado para emitir o recibo especial.'
+    if any(lancamento.pessoa_id is None for lancamento in lancamentos):
+        return 'Recibo especial exige lancamentos com favorecido.'
+    if any(lancamento.tipo != LancamentoFinanceiro.TipoLancamento.RECEITA for lancamento in lancamentos):
+        return 'Recibo especial so pode ser emitido para lancamentos do tipo receita.'
+    return ''
+
+
+def _descricao_item_recibo_especial(lancamento: LancamentoFinanceiro) -> str:
+    descricao = (lancamento.descricao or '').strip() or '(Sem descricao)'
+    favorecido_original = (lancamento.pessoa.nome or '').strip() if lancamento.pessoa else ''
+    if favorecido_original:
+        return f'{descricao} - {favorecido_original}'
+    return descricao
+
+
+def _montar_itens_recibo_especial(
+    lancamentos: list[LancamentoFinanceiro],
+) -> list[dict[str, object]]:
+    itens = []
+    for lancamento in lancamentos:
+        itens.append(
+            {
+                'descricao': _descricao_item_recibo_especial(lancamento),
+                'valor': lancamento.valor,
+                'data': _data_lancamento_documental(lancamento),
+                'data_label': (
+                    _data_lancamento_documental(lancamento).strftime('%d/%m/%Y')
+                    if _data_lancamento_documental(lancamento)
+                    else '-'
+                ),
+                'documento_label': (lancamento.numero_documento or '').strip() or '-',
+                'ordem_data': _data_lancamento_documental(lancamento) or date.today(),
+                'ordem_pk': lancamento.pk,
+            }
+        )
+    return sorted(itens, key=lambda item: (item['ordem_data'], item['ordem_pk']))
+
+
+def _montar_contexto_recibo_especial_documento(
+    lancamentos: list[LancamentoFinanceiro],
+    favorecido_destinatario: PessoaFinanceira,
+) -> dict[str, object]:
+    lancamentos_ordenados = sorted(
+        lancamentos,
+        key=lambda lancamento: (_data_lancamento_documental(lancamento) or date.today(), lancamento.pk),
+    )
+    total_valor = sum((lancamento.valor for lancamento in lancamentos_ordenados), Decimal('0.00'))
+    datas = [
+        _data_lancamento_documental(lancamento)
+        for lancamento in lancamentos_ordenados
+        if _data_lancamento_documental(lancamento)
+    ]
+    data_recibo = max(datas) if datas else date.today()
+    return {
+        'lote': True,
+        'especial': True,
+        'numero_documento': 'Especial',
+        'valor_total': total_valor,
+        'itens': _montar_itens_recibo_especial(lancamentos_ordenados),
+        'pessoa_nome': favorecido_destinatario.nome,
+        'referente': 'os lancamentos listados abaixo',
+        'data_principal': data_recibo,
+        'data_humana': _data_documental_por_extenso(data_recibo),
+        'valor_extenso': _valor_por_extenso(total_valor),
+        'data_fallback': any(lancamento.data_pagamento is None for lancamento in lancamentos_ordenados),
+        **_contexto_recibo_institucional(usar_mensagem_categoria=False),
+    }
+
+
+class LancamentoFinanceiroReciboEspecialSelecionarFavorecidoView(FinanceiroPermissaoMixin, FormView):
+    permissao_requerida = 'financeiro.lancamentos.emitir_recibo'
+    template_name = 'financeiro/lancamento_recibo_especial_form.html'
+    form_class = LancamentoFinanceiroReciboEspecialForm
+
+    def _obter_ids_raw(self) -> str:
+        return (self.request.POST.get('ids') or self.request.GET.get('ids') or '').strip()
+
+    def _obter_filtros_retorno(self) -> str:
+        return (self.request.POST.get('filtros') or self.request.GET.get('filtros') or '').strip()
+
+    def _redirect_listagem(self, mensagem: str):
+        if mensagem:
+            messages.warning(self.request, mensagem)
+        return redirect(_montar_url_listagem_lancamentos_por_filtros(self._obter_filtros_retorno()))
+
+    def _obter_lancamentos_validos(self) -> tuple[list[LancamentoFinanceiro], str]:
+        lancamentos, erro = _carregar_lancamentos_documentais(self._obter_ids_raw())
+        if erro:
+            return lancamentos, 'Selecione lancamentos validos para emitir o recibo especial.'
+        erro_validacao = _validar_lancamentos_recibo_especial(lancamentos)
+        if erro_validacao:
+            return lancamentos, erro_validacao
+        return lancamentos, ''
+
+    def get_initial(self):
+        initial = super().get_initial()
+        initial['ids'] = self._obter_ids_raw()
+        initial['filtros'] = self._obter_filtros_retorno()
+        return initial
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        lancamentos, _ = self._obter_lancamentos_validos()
+        total = sum((lancamento.valor for lancamento in lancamentos), Decimal('0.00'))
+        context.update(
+            {
+                'page_title': 'Recibo especial em lote',
+                'submit_label': 'Gerar recibo especial',
+                'cancel_url': _montar_url_listagem_lancamentos_por_filtros(self._obter_filtros_retorno()),
+                'lancamentos_selecionados': lancamentos,
+                'quantidade_lancamentos': len(lancamentos),
+                'valor_total_lancamentos': _formatar_moeda_brl(total),
+            }
+        )
+        return context
+
+    def get(self, request, *args, **kwargs):
+        _, erro = self._obter_lancamentos_validos()
+        if erro:
+            return self._redirect_listagem(erro)
+        return super().get(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        lancamentos, erro = self._obter_lancamentos_validos()
+        if erro:
+            return self._redirect_listagem(erro)
+        favorecido_destinatario = form.cleaned_data['favorecido_destinatario']
+        query_params = {
+            'ids': ','.join(str(lancamento.pk) for lancamento in lancamentos),
+            'destinatario': favorecido_destinatario.pk,
+        }
+        filtros_retorno = self._obter_filtros_retorno()
+        if filtros_retorno:
+            query_params['filtros'] = filtros_retorno
+        url_recibo = reverse('financeiro:lancamento-recibo-especial')
+        return redirect(f'{url_recibo}?{urlencode(query_params)}')
+
+
+class LancamentoFinanceiroReciboEspecialView(FinanceiroPermissaoMixin, TemplateView):
+    permissao_requerida = 'financeiro.lancamentos.emitir_recibo'
+    template_name = 'financeiro/lancamento_recibo_especial.html'
+
+    def _obter_filtros_retorno(self) -> str:
+        return (self.request.GET.get('filtros') or '').strip()
+
+    def _redirect_listagem(self, mensagem: str):
+        if mensagem:
+            messages.warning(self.request, mensagem)
+        return redirect(_montar_url_listagem_lancamentos_por_filtros(self._obter_filtros_retorno()))
+
+    def _build_context(self):
+        lancamentos, erro = _carregar_lancamentos_documentais((self.request.GET.get('ids') or '').strip())
+        if erro:
+            return None, 'Selecione lancamentos validos para emitir o recibo especial.'
+
+        erro_validacao = _validar_lancamentos_recibo_especial(lancamentos)
+        if erro_validacao:
+            return None, erro_validacao
+
+        destinatario_raw = (self.request.GET.get('destinatario') or '').strip()
+        if not destinatario_raw.isdigit():
+            return None, 'Selecione um favorecido destinatario valido para emitir o recibo especial.'
+
+        favorecido_destinatario = PessoaFinanceira.objects.filter(pk=int(destinatario_raw), ativo=True).first()
+        if not favorecido_destinatario:
+            return None, 'Selecione um favorecido destinatario valido para emitir o recibo especial.'
+
+        filtros_retorno = self._obter_filtros_retorno()
+        query_params = {'ids': ','.join(str(lancamento.pk) for lancamento in lancamentos)}
+        if filtros_retorno:
+            query_params['filtros'] = filtros_retorno
+        url_escolha = reverse('financeiro:lancamento-recibo-especial-selecionar-favorecido')
+        return (
+            {
+                'page_title': f'Recibo especial - {favorecido_destinatario.nome}',
+                'cancel_url': _montar_url_listagem_lancamentos_por_filtros(filtros_retorno),
+                'trocar_favorecido_url': f'{url_escolha}?{urlencode(query_params)}',
+                'recibo_documento': _montar_contexto_recibo_especial_documento(
+                    lancamentos,
+                    favorecido_destinatario,
+                ),
+            },
+            '',
+        )
+
+    def get(self, request, *args, **kwargs):
+        context, erro = self._build_context()
+        if erro:
+            return self._redirect_listagem(erro)
+        return self.render_to_response(context)
 
 
 class LancamentoFinanceiroReciboView(FinanceiroPermissaoMixin, DetailView):

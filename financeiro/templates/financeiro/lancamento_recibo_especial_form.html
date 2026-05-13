@@ -1,0 +1,191 @@
+{% extends 'financeiro/base.html' %}
+{% load financeiro_format %}
+{% block title %}{{ page_title }}{% endblock %}
+{% block content %}
+<style>
+    .recibo-especial-form-page {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .recibo-especial-form-card {
+        border: 1px solid rgba(203, 213, 225, 0.85);
+        border-radius: 1rem;
+        background: #fff;
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.045);
+        overflow: hidden;
+    }
+
+    .recibo-especial-form-body {
+        padding: 1rem 1.05rem 1.05rem;
+        display: grid;
+        gap: 1rem;
+    }
+
+    .recibo-especial-form-notice {
+        padding: 0.9rem 1rem;
+        border: 1px solid #dce7f5;
+        border-radius: 0.95rem;
+        background: linear-gradient(180deg, #f8fbff 0%, #f4f8fc 100%);
+        color: #334155;
+    }
+
+    .recibo-especial-form-grid {
+        display: grid;
+        gap: 0.95rem;
+    }
+
+    .recibo-especial-form-field .label {
+        margin-bottom: 0.22rem;
+    }
+
+    .recibo-especial-form-field .control,
+    .recibo-especial-form-field .control > * {
+        width: 100%;
+    }
+
+    .recibo-especial-form-field .control > input,
+    .recibo-especial-form-field .control > textarea,
+    .recibo-especial-form-field .control > select,
+    .recibo-especial-form-field .control .input,
+    .recibo-especial-form-field .control .textarea,
+    .recibo-especial-form-field .control .select select {
+        min-height: 2.5rem;
+        width: 100%;
+        padding: 0.55rem 0.8rem;
+        border: 1px solid #d7e2f0;
+        border-radius: 8px;
+        background: #fff;
+        box-shadow: none;
+        color: #182433;
+    }
+
+    .recibo-especial-form-table-wrap {
+        overflow-x: auto;
+    }
+
+    .recibo-especial-form-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.92rem;
+    }
+
+    .recibo-especial-form-table th,
+    .recibo-especial-form-table td {
+        padding: 0.58rem 0.5rem;
+        border-bottom: 1px solid #eadfce;
+        text-align: left;
+        vertical-align: top;
+    }
+
+    .recibo-especial-form-table th {
+        color: #6b6256;
+        font-size: 0.75rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+    }
+
+    .recibo-especial-form-total {
+        display: flex;
+        justify-content: flex-end;
+        font-weight: 700;
+        color: #1f5134;
+    }
+
+    .recibo-especial-form-actions {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.45rem;
+        padding-top: 0.85rem;
+        border-top: 1px solid #edf2f7;
+    }
+</style>
+
+<div class="recibo-especial-form-page">
+    <div class="financeiro-page-header financeiro-page-head">
+        <div class="financeiro-page-header-main">
+            <h1 class="title financeiro-page-title">{{ page_title }}</h1>
+            <p class="subtitle is-6 mb-0">
+                Escolha manualmente o favorecido que sera exibido como destinatario principal do documento.
+            </p>
+        </div>
+    </div>
+
+    <section class="recibo-especial-form-card">
+        <div class="recibo-especial-form-body">
+            <div class="recibo-especial-form-notice">
+                <strong>Recorte desta etapa:</strong>
+                emissao documental isolada, sem alterar o favorecido real, os lancamentos ou qualquer saldo/relatorio financeiro.
+            </div>
+
+            {% if form.non_field_errors %}
+                <div class="notification is-danger">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <form method="post">
+                {% csrf_token %}
+                {{ form.ids }}
+                {{ form.filtros }}
+                <div class="recibo-especial-form-grid">
+                    <div class="field recibo-especial-form-field">
+                        <label class="label" for="{{ form.favorecido_destinatario.id_for_label }}">
+                            {{ form.favorecido_destinatario.label }}
+                        </label>
+                        <div class="control">
+                            {{ form.favorecido_destinatario }}
+                        </div>
+                        {% if form.favorecido_destinatario.help_text %}
+                            <p class="help">{{ form.favorecido_destinatario.help_text }}</p>
+                        {% endif %}
+                        {% for error in form.favorecido_destinatario.errors %}
+                            <p class="help is-danger">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="recibo-especial-form-actions">
+                    <button class="button is-primary" type="submit">{{ submit_label }}</button>
+                    <a class="button" href="{{ cancel_url }}">Voltar</a>
+                </div>
+            </form>
+
+            <div class="content mb-0">
+                <p class="mb-2">
+                    <strong>Lancamentos selecionados:</strong> {{ quantidade_lancamentos }}
+                </p>
+                <p class="mb-3">
+                    <strong>Valor total:</strong> R$ {{ valor_total_lancamentos }}
+                </p>
+            </div>
+
+            <div class="recibo-especial-form-table-wrap">
+                <table class="recibo-especial-form-table">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Descricao atual</th>
+                            <th>Favorecido original</th>
+                            <th>Documento</th>
+                            <th>Valor</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for lancamento in lancamentos_selecionados %}
+                            <tr>
+                                <td>{{ lancamento.data_pagamento|default:lancamento.data_competencia|date:'d/m/Y' }}</td>
+                                <td>{{ lancamento.descricao }}</td>
+                                <td>{{ lancamento.pessoa.nome }}</td>
+                                <td>{{ lancamento.numero_documento|default:'-' }}</td>
+                                <td>R$ {{ lancamento.valor|br_money }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}
