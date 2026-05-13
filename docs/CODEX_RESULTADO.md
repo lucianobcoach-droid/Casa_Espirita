@@ -5889,6 +5889,26 @@ Não houve alteração de código funcional nesta etapa.
   - `py -m compileall financeiro configuracoes` OK
   - `py manage.py test financeiro configuracoes` OK
 
+## Microetapa documental: SPEC de totalizadores em colunas calculadas
+
+- auditei o estado atual dos totalizadores comuns e das formulas guiadas sem alterar codigo
+- confirmei no fluxo atual que:
+  - totalizadores do rodape da tela e do XLSX nascem do mesmo pipeline
+  - busca textual e filtros estruturados comuns reduzem primeiro as linhas e so depois recalculam o rodape
+  - colunas calculadas continuam bloqueadas em model, configuracao e montagem de `colunas_totalizaveis`
+- confirmei no fluxo atual das formulas que:
+  - o valor calculado e resolvido apenas em tempo de leitura
+  - a grade, a busca textual e o XLSX ja usam esse valor final formatado
+  - operando ausente e divisao por zero continuam gerando celula vazia
+  - `valor_calculado` continua sem persistencia
+- recomendacao consolidada para o MVP:
+  - manter colunas calculadas fora dos totalizadores
+- motivo da recomendacao:
+  - evita dupla leitura quando a formula deriva de colunas que ja sao totalizadas
+  - evita agregar resultado derivado vazio/invalido como se fosse numero operacional simples
+  - preserva a coerencia atual entre tela, busca e XLSX sem abrir nova camada de agregacao sobre dado nao persistido
+- eventual reabertura futura deve ocorrer apenas em microetapa propria e, se aprovada, comecar no maximo por `soma` e `contagem` sobre o valor final calculado
+
 ## Microetapa: formulas guiadas por coluna - Onda 3
 
 - conectei o valor calculado das colunas `formula_controlada` com a busca textual simples e com a exportacao XLSX

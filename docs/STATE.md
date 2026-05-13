@@ -4333,3 +4333,35 @@ Riscos principais antes de migration:
   - sem liberar `Inteiro`
   - sem liberar `Percentual`
   - sem alteracao de calculo, busca, XLSX, filtros ou totalizadores
+
+## Microetapa documental: SPEC de totalizadores em colunas calculadas
+
+- auditoria tecnica/documental concluida, sem implementacao funcional
+- achados consolidados:
+  - totalizadores atuais seguem restritos a colunas comuns configuradas explicitamente na estrutura
+  - rodape da tela e rodape do XLSX compartilham o mesmo pipeline de totalizacao
+  - busca textual e filtros estruturados comuns continuam reduzindo primeiro as linhas e so depois recalculando o rodape
+  - colunas calculadas continuam fora dos totalizadores por bloqueio no model, na configuracao da coluna e na montagem de `colunas_totalizaveis`
+  - formulas guiadas seguem calculadas apenas em tempo de leitura, entram na grade, na busca textual e no XLSX, e permanecem sem persistencia em `valor_calculado`
+  - operando ausente e divisao por zero continuam gerando celula vazia
+- decisao recomendada para o MVP:
+  - manter colunas calculadas fora dos totalizadores
+- justificativa:
+  - evita dupla leitura quando a formula deriva de colunas que ja possuem rodape proprio
+  - evita agregar resultado derivado vazio como se fosse numero operacional comum
+  - preserva a coerencia atual entre tela e XLSX sem abrir agregacao nova sobre dado nao persistido
+- reabertura futura, se houver necessidade homologada:
+  - apenas em microetapa propria
+  - apenas para `resultado_tipo` `decimal` ou `monetario`
+  - totalizando o valor final calculado, nunca os operandos
+  - ignorando linhas com resultado vazio
+  - mantendo tela e XLSX com o mesmo rodape
+  - comecando, se aprovado, por `soma` e `contagem`
+- guardrails preservados:
+  - sem persistencia em `valor_calculado`
+  - sem model, migration, banco ou SQLite
+  - sem formula livre, `eval` ou `exec`
+  - sem filtros estruturados para calculadas nesta etapa
+  - sem impacto no financeiro oficial
+- proxima microetapa recomendada:
+  - manter totalizadores em calculadas fora do MVP e seguir para homologacao/auditoria operacional da frente

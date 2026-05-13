@@ -1644,3 +1644,34 @@ Consolidacao:
 Fora desta etapa:
 - liberar `Inteiro` e `Percentual` como resultado de formula
 - qualquer alteracao em calculo, busca, XLSX, filtros estruturados ou totalizadores
+
+### 57. Tabelas personalizadas - SPEC de totalizadores em colunas calculadas
+
+Status: DOCUMENTADO (SEM IMPLEMENTACAO)
+
+Consolidacao:
+- foi auditado o estado atual da frente apos formulas guiadas, busca textual e XLSX em colunas calculadas
+- os totalizadores atuais seguem restritos a colunas comuns configuradas explicitamente e calculados pelo mesmo pipeline da tela e do XLSX
+- colunas calculadas continuam fora dos totalizadores por bloqueio coerente em model, configuracao e montagem de `colunas_totalizaveis`
+- as formulas continuam:
+  - calculadas apenas em tempo de leitura
+  - sem persistencia em `valor_calculado`
+  - exibidas na grade
+  - consideradas na busca textual
+  - exportadas no XLSX como valor final
+
+Decisao recomendada:
+- manter colunas calculadas fora dos totalizadores no MVP
+
+Justificativa:
+- evita leitura duplicada quando a formula deriva de colunas que ja possuem rodape
+- evita agregar resultados vazios por operando ausente ou divisao por zero como se fossem numeros comuns
+- preserva o recorte atual ja homologavel de grade + busca + XLSX sem abrir nova camada de ambiguidade no rodape
+
+Reabertura futura, se necessaria:
+- apenas em microetapa propria
+- apenas para `resultado_tipo` `decimal` e `monetario`
+- totalizando o valor final calculado, nunca os operandos
+- ignorando linhas com resultado vazio
+- mantendo tela e XLSX com o mesmo rodape
+- comecando, se aprovado, por `soma` e `contagem`

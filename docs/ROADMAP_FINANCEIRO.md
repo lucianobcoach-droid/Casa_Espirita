@@ -3708,3 +3708,40 @@ Guardrails preservados:
 - sem liberar `Inteiro` e `Percentual` nesta etapa
 - sem alteracao de calculo da formula
 - sem alteracao de busca, XLSX, filtros ou totalizadores
+
+## Microetapa documental: SPEC de totalizadores em colunas calculadas
+
+Status:
+- auditoria tecnica concluida e decisao funcional documentada, sem implementacao
+
+Decisao do recorte:
+- no MVP atual, colunas calculadas permanecem fora dos totalizadores do rodape
+
+Base tecnica da decisao:
+- o rodape atual da tela e o rodape do XLSX compartilham o mesmo pipeline de totalizacao
+- colunas calculadas hoje ja entram:
+  - na grade como leitura
+  - na busca textual
+  - no XLSX como valor final
+- colunas calculadas ainda nao entram:
+  - nos filtros estruturados
+  - nos totalizadores
+- o valor calculado continua nao persistido e segue resolvido apenas em tempo de leitura
+
+Motivos para manter fora:
+- evitar dupla interpretacao quando a formula deriva de colunas que ja aparecem totalizadas
+- evitar somar/agregar resultados vazios gerados por operando ausente ou divisao por zero
+- evitar abrir rodape derivado antes de existir necessidade operacional homologada
+
+Condicoes para eventual reabertura futura:
+- microetapa propria
+- apenas `resultado_tipo` `decimal` ou `monetario`
+- totalizador operando sobre o valor final calculado
+- linhas com resultado vazio ignoradas
+- mesma exibicao no rodape da tela e no rodape do XLSX
+- recorte inicial futuro, se aprovado:
+  - `soma`
+  - `contagem`
+
+Proxima microetapa recomendada:
+- manter o tema fechado no MVP e priorizar homologacao/auditoria operacional da frente antes de reabrir totalizadores em calculadas
