@@ -27,12 +27,6 @@
         <div class="recibo-topo">
             <div class="recibo-titulo-box">
                 <h1 class="recibo-titulo">RECIBO ESPECIAL</h1>
-                <p class="recibo-meta">
-                    <span class="recibo-meta-numero">
-                        <strong>Lote</strong>
-                        <span>destinatario manual</span>
-                    </span>
-                </p>
             </div>
             <div class="recibo-valor-box">
                 <span class="recibo-valor-label">Valor recebido</span>
@@ -56,28 +50,34 @@
                 <span class="recibo-valor-texto">lancamentos listados abaixo</span>.
             </p>
             {% if recibo.itens %}
-                <ul class="recibo-itens">
-                    {% for item in recibo.itens %}
-                        <li>
-                            <strong>{{ item.data_label }}</strong>
-                            &mdash;
-                            {{ item.descricao }}
-                            {% if item.documento_label %}
-                                <span>- {{ item.documento_label }}</span>
-                            {% endif %}
-                            <span class="recibo-item-valor">R$ {{ item.valor|br_money }}</span>
-                        </li>
-                    {% endfor %}
-                </ul>
+                <div class="recibo-itens-table-wrap">
+                    <table class="recibo-itens-table">
+                        <thead>
+                            <tr>
+                                <th class="recibo-itens-col-data">Data</th>
+                                <th class="recibo-itens-col-desc">Descricao</th>
+                                <th class="recibo-itens-col-doc">Documento</th>
+                                <th class="recibo-itens-col-valor">Valor</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in recibo.itens %}
+                                <tr>
+                                    <td class="recibo-itens-col-data">{{ item.data_label }}</td>
+                                    <td class="recibo-itens-col-desc">{{ item.descricao }}</td>
+                                    <td class="recibo-itens-col-doc">{{ item.documento_label }}</td>
+                                    <td class="recibo-itens-col-valor">R$ {{ item.valor|br_money }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             {% endif %}
             {% if recibo.data_fallback %}
                 <p class="recibo-aviso">
                     A data de recebimento nao foi informada. Este recibo usa a data documental disponivel no lancamento.
                 </p>
             {% endif %}
-            <p class="recibo-aviso">
-                Documento especial em lote com destinatario principal escolhido manualmente, sem alterar os lancamentos originais.
-            </p>
             <p class="recibo-data-local">
                 {% if recibo.cidade %}
                     {{ recibo.cidade }}, {{ recibo.data_humana }}

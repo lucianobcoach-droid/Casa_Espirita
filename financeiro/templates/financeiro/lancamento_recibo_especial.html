@@ -185,30 +185,57 @@
         font-size: 0.98rem;
     }
 
-    .recibo-itens {
-        margin: 0.75rem 0 0;
-        padding-left: 0;
-        list-style: none;
+    .recibo-itens-table-wrap {
+        margin-top: 0.7rem;
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    .recibo-itens-table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+        font-size: 0.9rem;
+        line-height: 1.35;
         color: #3b362e;
-        font-size: 0.98rem;
-        line-height: 1.5;
     }
 
-    .recibo-itens li {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: baseline;
-        gap: 0.4rem 0.6rem;
+    .recibo-itens-table th,
+    .recibo-itens-table td {
+        border-bottom: 1px solid #e7ddce;
+        padding: 0.42rem 0.42rem;
+        vertical-align: top;
     }
 
-    .recibo-itens li + li {
-        margin-top: 0.45rem;
+    .recibo-itens-table th {
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-size: 0.72rem;
+        color: #6f6558;
+        text-align: left;
     }
 
-    .recibo-item-valor {
+    .recibo-itens-col-data {
+        width: 6.2rem;
+        white-space: nowrap;
+    }
+
+    .recibo-itens-col-doc {
+        width: 7.2rem;
+        white-space: nowrap;
+    }
+
+    .recibo-itens-col-valor {
+        width: 7.4rem;
+        white-space: nowrap;
+        text-align: right !important;
         font-weight: 600;
         color: #2d2a24;
-        margin-left: 0.35rem;
+    }
+
+    .recibo-itens-col-desc {
+        word-break: break-word;
+        overflow-wrap: anywhere;
     }
 
     .recibo-rodape {
@@ -257,6 +284,13 @@
         margin: 0 auto 0.35rem;
         border-bottom: 1px solid #433d34;
         height: 1rem;
+    }
+
+    @media print {
+        .recibo-itens-table {
+            font-size: 0.84rem;
+            line-height: 1.28;
+        }
     }
 </style>
 

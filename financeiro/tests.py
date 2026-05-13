@@ -3993,6 +3993,11 @@ class LancamentoReciboEspecialTests(TestCase):
         self.assertContains(response, self.destinatario_manual.nome)
         self.assertContains(response, 'Pagamento de cesta basica - Maria Silva')
         self.assertContains(response, 'Pagamento de cesta basica - Joao Souza')
+        self.assertNotContains(response, 'destinatario manual')
+        self.assertNotContains(
+            response,
+            'Documento especial em lote com destinatario principal escolhido manualmente, sem alterar os lancamentos originais.',
+        )
         self.assertNotContains(response, 'Favorecido original')
         self.receita_maria.refresh_from_db()
         self.receita_joao.refresh_from_db()
