@@ -1830,3 +1830,21 @@ Limites mantidos:
 - sem modal
 - sem edicao inline
 - sem alteracao de model, banco, calculos, formulas, filtros, totalizadores, XLSX ou auditoria funcional
+
+Status apos homologacao desta microetapa: ONDA 1 DA UX UNIFICADA HOMOLOGADA / BACKLOG
+
+Consolidacao da homologacao:
+- aceite visual explicito da usuaria: `Aprovado.`
+- commit tecnico de referencia: `f15d30e`
+- homologado:
+  - tela de linhas consolidada como tela central da tabela
+  - cabecalho contextual completo
+  - acoes principais no topo
+  - `Abrir tabela` como acao principal da listagem
+  - retorno seguro entre configuracao de colunas e tela da tabela
+  - preservacao de busca, filtros, grade, totalizadores, permissoes e auditoria funcional
+  - sem impacto no financeiro oficial
+
+Proxima frente recomendada:
+- ONDA 2 DA UX UNIFICADA
+- foco: aproximar a configuracao de colunas do contexto da tabela sem remover as telas antigas neste recorte

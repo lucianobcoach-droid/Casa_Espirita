@@ -6242,3 +6242,19 @@ Não houve alteração de código funcional nesta etapa.
   - sem alteracao em calculos, formulas, filtros, totalizadores ou XLSX
   - sem alteracao da auditoria operacional minima ja validada
   - sem impacto em `LancamentoFinanceiro` e no financeiro oficial
+
+## Microetapa documental: homologacao da Onda 1 da UX unificada
+
+- homologacao visual registrada pela usuaria com aceite explicito: `Aprovado.`
+- commit base da homologacao: `f15d30e`
+- itens homologados:
+  - tela de linhas como tela central da tabela
+  - cabecalho contextual com nome, descricao, status, colunas ativas, linhas ativas e aviso de controle interno
+  - acoes principais no topo
+  - `Abrir tabela` como acao principal da listagem
+  - retorno seguro entre configuracao de colunas e tela da tabela
+  - preservacao de busca, filtros, grade e totalizadores
+  - preservacao de permissoes e da auditoria funcional
+  - ausencia de impacto no financeiro oficial
+- proxima frente recomendada:
+  - Onda 2 da UX unificada, aproximando a configuracao de colunas do contexto da tabela

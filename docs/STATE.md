@@ -4623,3 +4623,17 @@ Proxima frente recomendada:
 
 Proxima frente recomendada:
 - abrir a Onda 2 da UX unificada para aproximar a configuracao de colunas do contexto da propria tabela, sem remover as telas antigas
+
+Status de homologacao da usuaria:
+- homologada visualmente no primeiro recorte da Onda 1 com aceite explicito: `Aprovado.`
+- base tecnica homologada: commit `f15d30e`
+- validado pela usuaria:
+  - tela de linhas consolidada como tela central da tabela
+  - cabecalho contextual com nome, descricao, status, colunas ativas, linhas ativas e aviso de controle interno
+  - acoes principais no topo
+  - `Abrir tabela` como acao principal da listagem
+  - retorno seguro entre configuracao de colunas e tela da tabela
+  - preservacao de busca, filtros, grade e totalizadores
+  - preservacao de permissoes
+  - preservacao da auditoria funcional
+  - ausencia de impacto no financeiro oficial

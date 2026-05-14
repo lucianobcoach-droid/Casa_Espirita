@@ -4015,3 +4015,18 @@ Limites preservados:
 
 Proxima frente recomendada:
 - abrir a Onda 2 da UX unificada para melhorar a configuracao de colunas dentro do contexto da tabela
+
+Status de homologacao:
+- APROVADO PELA USUARIA
+
+Consolidacao da homologacao:
+- aceite visual explicito: `Aprovado.`
+- base tecnica validada: commit `f15d30e`
+- consolidado como homologado no primeiro recorte:
+  - tela de linhas como tela central da tabela
+  - cabecalho contextual completo
+  - acoes principais no topo
+  - `Abrir tabela` na listagem
+  - retorno seguro entre colunas e tela da tabela
+  - preservacao de busca, filtros, grade, totalizadores, permissoes e auditoria
+  - sem impacto no financeiro oficial
