@@ -6343,3 +6343,14 @@ Não houve alteração de código funcional nesta etapa.
   - duas linhas controladas da mesma subcategoria como blocos independentes
   - total apos lancamento no assistente simples e rateado
   - reabertura/edicao sem dupla contagem do proprio registro
+
+## Microetapa: regras automaticas por descricao apos o botao `+`
+
+- corrigi a precedencia entre o rascunho restaurado pelo botao `+` e a regra automatica aplicada por descricao
+- a regra agora volta a prevalecer sobre o rascunho e sobrescreve todos os campos que ela propria possui
+- o endpoint das regras passou a devolver tambem o meta da subcategoria, permitindo recalcular `centro_custo_padrao` apos a aplicacao
+- quando a regra nao traz `centro_custo` explicito nem a subcategoria possui padrao, o campo e limpo para nao reaproveitar valor herdado do rascunho
+- `numero_documento` segue fora da restauracao do `+`
+- cobertura automatizada ampliada para:
+  - payload da regra com campos e meta da categoria
+  - guardrail de limpeza/reescrita no template do formulario

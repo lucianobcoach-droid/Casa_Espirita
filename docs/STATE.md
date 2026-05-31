@@ -4709,3 +4709,17 @@ Status de homologacao da usuaria:
   - o historico externo continua em `Ja registrado`
   - o proprio registro nao e contado duas vezes no historico
 - sem alteracao de calculo financeiro, extrato, resumo, prestacao/fechamento, balancete, recibos ou financeiro oficial
+
+## Microetapa: regras automaticas por descricao apos o botao `+`
+
+- no fluxo restaurado pelo botao `+`, os dados voltam apenas como rascunho operacional
+- quando uma regra automatica por descricao e aplicada:
+  - ela prevalece sobre o rascunho restaurado
+  - todos os campos que a propria regra possui devem sobrescrever o rascunho
+  - `numero_documento` continua fora da restauracao
+- o payload da sugestao passou a levar tambem os metadados da subcategoria para recalcular `centro_custo_padrao` com seguranca
+- se a regra trouxer `centro_custo` explicito, ele prevalece
+- se a regra trouxer subcategoria sem `centro_custo` explicito:
+  - com `centro_custo_padrao`, o padrao e sugerido
+  - sem `centro_custo_padrao`, o campo fica vazio e editavel, sem reaproveitar valor herdado do rascunho
+- sem impacto em calculo financeiro, extrato, resumo, prestacao/fechamento, balancete, recibos, permissoes ou financeiro oficial

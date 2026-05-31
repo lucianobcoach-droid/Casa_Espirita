@@ -1172,6 +1172,8 @@
             option.text = payload.label;
             if (payload.meta) {
                 option.dataset.autocompleteMeta = JSON.stringify(payload.meta);
+            } else {
+                delete option.dataset.autocompleteMeta;
             }
             option.selected = true;
             field.value = option.value;
@@ -1207,11 +1209,12 @@
             const meta = getSelectedOptionMeta(categoriaField);
             const centroCustoPadrao = meta.centro_custo_padrao || null;
             const force = !!(options && options.force);
+            const clearWhenNoDefault = !!(options && options.clearWhenNoDefault);
             const centroCustoAtual = centroCustoField.value || '';
             const sugestaoAtiva = centroCustoField.dataset.financeiroCentroCustoSugestaoAtiva === 'true';
 
             if (!centroCustoPadrao) {
-                if (sugestaoAtiva && centroCustoAtual) {
+                if ((clearWhenNoDefault || sugestaoAtiva) && centroCustoAtual) {
                     aplicarCentroCustoSugerido(null);
                 }
                 delete centroCustoField.dataset.financeiroCentroCustoSugestaoAtiva;
@@ -1240,7 +1243,7 @@
             if (payload.centro_custo) {
                 aplicarCentroCustoSugerido(payload.centro_custo);
             } else {
-                aplicarCentroCustoPadraoDaCategoria({ force: true });
+                aplicarCentroCustoPadraoDaCategoria({ force: true, clearWhenNoDefault: true });
             }
             setSelectValueFromSugestao(contaDestinoField, payload.conta_destino);
             setSelectValueFromSugestao(document.querySelector('[name="conta"]'), payload.conta);

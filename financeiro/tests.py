@@ -38,6 +38,7 @@ from .models import (
     LinhaTabelaPersonalizada,
     LancamentoFinanceiro,
     PessoaFinanceira,
+    RegraLancamentoFinanceiro,
     TabelaPersonalizada,
     TotalizadorColunaPersonalizada,
     TipoContaFinanceira,
@@ -1987,6 +1988,41 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
             centro_custo_padrao=self.centro_custo_novo,
         )
 
+    def _garantir_permissao(self, codigo: str) -> PermissaoSistema:
+        permissao = PermissaoSistema.objects.filter(codigo=codigo).first()
+        if permissao:
+            return permissao
+        partes = codigo.split('.')
+        modulo = partes[0] if len(partes) > 0 else 'financeiro'
+        recurso = partes[1] if len(partes) > 1 else 'geral'
+        acao = '.'.join(partes[2:]) if len(partes) > 2 else 'acessar'
+        return PermissaoSistema.objects.create(
+            codigo=codigo,
+            nome=codigo,
+            modulo=modulo,
+            recurso=recurso,
+            acao=acao,
+            ativo=True,
+        )
+
+    def _login_com_permissoes(self, username: str, codigos_permissao: list[str]):
+        user_model = get_user_model()
+        usuario = user_model.objects.create_user(
+            username=username,
+            password='senha-forte-123',
+            email=f'{username}@teste.local',
+            is_active=True,
+        )
+        perfil = PerfilAcesso.objects.create(
+            codigo=f'perfil-{username}',
+            nome=f'Perfil {username}',
+            ativo=True,
+        )
+        for codigo in codigos_permissao:
+            perfil.permissoes.add(self._garantir_permissao(codigo))
+        UsuarioPerfilAcesso.objects.create(usuario=usuario, perfil=perfil)
+        self.client.force_login(usuario)
+
     def _dados_lancamento(self, **overrides):
         dados = {
             'descricao': 'Recebimento recorrente',
@@ -2265,6 +2301,42 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
             response.url,
             f"{reverse('financeiro:lancamento-create')}?restaurar_lancamento=1&return_to=%2Ffinanceiro%2Flancamentos%2F",
         )
+
+    def test_endpoint_regra_automatica_retorna_campos_e_meta_da_categoria(self):
+        self._login_com_permissoes(
+            'user-regra-endpoint',
+            ['financeiro.lancamentos.acessar_endpoints_auxiliares'],
+        )
+        regra = RegraLancamentoFinanceiro.objects.create(
+            descricao='Recebimento recorrente especial',
+            tipo=LancamentoFinanceiro.TipoLancamento.RECEITA,
+            pessoa=self.pessoa_recorrente,
+            categoria=self.categoria_controlada_2,
+            centro_custo=self.centro_custo_manual,
+            conta=self.conta,
+            observacoes='Observacao automatica',
+            ativa=True,
+        )
+
+        response = self.client.get(
+            reverse('financeiro:lancamento-regra-sugestoes'),
+            {'descricao': 'recorrente especial'},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()['results'][0]['payload']
+        self.assertEqual(payload['descricao'], regra.descricao)
+        self.assertEqual(payload['tipo'], regra.tipo)
+        self.assertEqual(payload['pessoa']['id'], self.pessoa_recorrente.pk)
+        self.assertEqual(payload['categoria']['id'], self.categoria_controlada_2.pk)
+        self.assertEqual(
+            payload['categoria']['meta']['centro_custo_padrao']['id'],
+            self.centro_custo_novo.pk,
+        )
+        self.assertEqual(payload['centro_custo']['id'], self.centro_custo_manual.pk)
+        self.assertEqual(payload['conta']['id'], self.conta.pk)
+        self.assertEqual(payload['observacoes'], 'Observacao automatica')
 
     def test_lancamento_sugere_centro_custo_padrao_quando_subcategoria_tem_padrao(self):
         form = LancamentoFinanceiroForm(data=self._dados_lancamento())
@@ -2620,6 +2692,8 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
         self.assertIn('centro_custo_padrao', html)
         self.assertIn('financeiroCentroCustoSugestaoAtiva', html)
         self.assertIn('aplicarCentroCustoSugerido(null)', html)
+        self.assertIn('clearWhenNoDefault', html)
+        self.assertIn('delete option.dataset.autocompleteMeta;', html)
         self.assertIn('reativarSugestoesDescricaoRestaurada()', html)
         self.assertIn("descricaoField.addEventListener('change', handleRegraSugestaoTrigger)", html)
         self.assertIn('Quitado', html)

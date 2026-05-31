@@ -179,3 +179,4 @@ Este documento consolida regras permanentes do sistema. Ele não substitui o his
 - `Contribuinte recorrente` pode ser alternado por atalho apenas na tela de favorecidos, respeitando a permissao de edicao e usando POST com CSRF.
 - No assistente de competencias, `Ja registrado` e referencia historica externa; `Valor deste lancamento` e o valor editavel do documento atual; `Total apos lancamento` e apenas leitura de apoio.
 - Em rateio, o assistente de competencias opera por linha controlada. Linhas nao controladas ficam fora do assistente e da validacao.
+- Quando uma regra automatica por descricao e aplicada no formulario de lancamento, ela prevalece sobre o rascunho restaurado pelo botao `+` e deve preencher/sobrescrever todos os campos que a propria regra possui, sem restaurar `numero_documento`.

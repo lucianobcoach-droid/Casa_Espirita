@@ -7296,7 +7296,20 @@ class RegraLancamentoFinanceiroSugestaoView(FinanceiroPermissaoMixin, View):
                             else None
                         ),
                         'categoria': (
-                            {'id': regra.categoria_id, 'label': str(regra.categoria)}
+                            {
+                                'id': regra.categoria_id,
+                                'label': str(regra.categoria),
+                                'meta': {
+                                    'centro_custo_padrao': (
+                                        {
+                                            'id': regra.categoria.centro_custo_padrao_id,
+                                            'label': str(regra.categoria.centro_custo_padrao),
+                                        }
+                                        if regra.categoria.centro_custo_padrao_id
+                                        else None
+                                    ),
+                                },
+                            }
                             if regra.categoria_id
                             else None
                         ),
