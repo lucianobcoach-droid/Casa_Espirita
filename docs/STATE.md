@@ -4651,3 +4651,13 @@ Status de homologacao da usuaria:
     - `Sem quitacao registrada` quando nao existe valor nem no proprio lancamento nem no historico externo
 - a edicao continua sem duplicar competencia do mesmo `mes/ano` dentro do lancamento; ao salvar novamente, o conjunto persistido e atualizado e meses removidos deixam de reaparecer na reabertura
 - sem alteracao de layout global, permissoes, recibos, relatorios, importacao/exportacao ou calculo financeiro oficial
+
+## Ajuste do botao `+` no lancamento financeiro
+
+- corrigido o fluxo de `Salvar e cadastrar outro` no formulario de lancamento financeiro
+- comportamento consolidado:
+  - `Salvar`: mantém o fluxo normal de gravacao sem reaproveitar os dados preenchidos
+  - `+`: salva o lancamento atual e reabre o formulario de criacao com os dados operacionais restaurados para facilitar um novo lancamento parecido
+- o novo formulario reaberto pelo `+` continua em modo de criacao, sem vinculo com o `pk` anterior
+- para evitar reaproveitamento indevido de identificador unico, `numero_documento` deixou de entrar no rascunho restaurado
+- a correcao anterior das competencias no proprio lancamento foi preservada; o rascunho do `+` continua carregando os payloads operacionais do formulario sem reabrir o registro salvo em modo de edicao

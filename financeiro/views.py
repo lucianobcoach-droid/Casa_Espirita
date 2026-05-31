@@ -4203,10 +4203,11 @@ class FinanceiroFormMixin(FinanceiroReturnToMixin, FinanceiroPermissaoMixin):
         return self.allow_save_and_stay and self.save_and_stay_param in self.request.POST
 
     def get_save_and_stay_url(self) -> str:
+        query_params = {'restaurar_lancamento': '1'}
         return_to = self._get_return_to_url()
-        if not return_to:
-            return self.request.path
-        return f'{self.request.path}?{urlencode({self.return_to_param: return_to})}'
+        if return_to:
+            query_params[self.return_to_param] = return_to
+        return f'{self.request.path}?{urlencode(query_params)}'
 
     def form_valid(self, form):
         response = super().form_valid(form)

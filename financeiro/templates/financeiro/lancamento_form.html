@@ -596,7 +596,7 @@
                             <a class="btn btn-outline-secondary" href="{{ cancel_url }}">Voltar</a>
                             <button class="btn btn-primary" type="submit">{{ submit_label }}</button>
                             {% if allow_save_and_stay %}
-                                <button class="btn btn-outline-primary" type="submit" name="{{ save_and_stay_param }}" value="1" title="Salvar e cadastrar outro" aria-label="Salvar e cadastrar outro">+</button>
+                                <button class="btn btn-outline-primary" type="submit" name="{{ save_and_stay_param }}" value="1" title="Salvar e cadastrar outro" aria-label="Salvar e cadastrar outro" data-financeiro-save-and-stay="true">+</button>
                             {% endif %}
                         </div>
                     </div>
@@ -701,6 +701,12 @@
         let regraSugestaoAtivadaPorUsuario = false;
         let regraSugestaoAplicacaoEmAndamento = false;
         const draftKey = 'financeiro:lancamento:draft';
+        const draftExcludedFields = new Set([
+            'csrfmiddlewaretoken',
+            'return_to',
+            'salvar_permanecer',
+            'numero_documento'
+        ]);
 
         function salvarDraftLancamento() {
             if (!lancamentoForm) return;
@@ -709,7 +715,7 @@
             campos.forEach(function (field) {
                 const name = field.name;
                 if (!name || field.disabled) return;
-                if (['csrfmiddlewaretoken', 'return_to', 'salvar_permanecer'].includes(name)) return;
+                if (draftExcludedFields.has(name)) return;
                 if (field.type === 'checkbox') {
                     dados[name] = { type: 'checkbox', checked: field.checked };
                     return;
@@ -2084,6 +2090,12 @@
 
         const lancamentoForm = document.querySelector('.financeiro-lancamento-form-shell');
         if (lancamentoForm) {
+            const saveAndStayButton = lancamentoForm.querySelector('[data-financeiro-save-and-stay="true"]');
+            if (saveAndStayButton) {
+                saveAndStayButton.addEventListener('click', function () {
+                    lancamentoForm.dataset.financeiroSaveAndStayRequested = 'true';
+                });
+            }
             lancamentoForm.addEventListener('submit', function () {
                 const camposMoeda = Array.from(lancamentoForm.querySelectorAll('[data-financeiro-moeda="true"]'));
                 camposMoeda.forEach(function (input) {
@@ -2095,6 +2107,9 @@
                 }
                 serializeCompetenciaRows();
                 serializeCompetenciasRateio();
+                if (lancamentoForm.dataset.financeiroSaveAndStayRequested === 'true') {
+                    salvarDraftLancamento();
+                }
             });
         }
         if (rateioToggle) rateioToggle.addEventListener('change', syncRateioState);

@@ -6273,3 +6273,11 @@ Não houve alteração de código funcional nesta etapa.
   - reabertura com competencia parcial marcada como `Parcial`
   - edicao que troca o `mes/ano` persistido sem duplicar competencia antiga
 - sem alteracao em permissoes, layout global, recibos, relatorios ou financeiro oficial
+
+## Microetapa: ajuste do botao `+` no lancamento financeiro
+
+- alinhei o comportamento de `Salvar e cadastrar outro` ao fluxo esperado do formulario de lancamento
+- o `+` agora salva e redireciona para o formulario de criacao com `restaurar_lancamento=1`, reaproveitando o rascunho operacional da tela
+- o rascunho passou a ser salvo apenas quando o envio parte do `+`, sem interferir no fluxo normal do botao `Salvar`
+- como guardrail tecnico, `numero_documento` foi retirado do rascunho restaurado para evitar reaproveitamento de identificador unico
+- mantive a tela reaberta em modo de novo cadastro e preservei a correcao recente de competencias na reabertura/edicao

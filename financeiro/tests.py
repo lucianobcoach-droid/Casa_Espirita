@@ -2062,6 +2062,48 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
             ],
         )
 
+    def test_botao_mais_redireciona_para_novo_formulario_com_restauracao(self):
+        dados = self._dados_lancamento(salvar_permanecer='1')
+        form = LancamentoFinanceiroForm(data=dados)
+
+        self.assertTrue(form.is_valid(), form.errors)
+
+        request = self._build_request('/financeiro/lancamentos/novo/', data=dados)
+        view = LancamentoFinanceiroCreateView()
+        view.request = request
+        view.object = None
+
+        response = view.form_valid(form)
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            response.url,
+            f"{reverse('financeiro:lancamento-create')}?restaurar_lancamento=1",
+        )
+        self.assertEqual(LancamentoFinanceiro.objects.count(), 1)
+
+    def test_botao_mais_preserva_return_to_no_redirecionamento(self):
+        dados = self._dados_lancamento(salvar_permanecer='1')
+        form = LancamentoFinanceiroForm(data=dados)
+
+        self.assertTrue(form.is_valid(), form.errors)
+
+        request = self._build_request(
+            '/financeiro/lancamentos/novo/?return_to=/financeiro/lancamentos/',
+            data=dados,
+        )
+        view = LancamentoFinanceiroCreateView()
+        view.request = request
+        view.object = None
+
+        response = view.form_valid(form)
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            response.url,
+            f"{reverse('financeiro:lancamento-create')}?restaurar_lancamento=1&return_to=%2Ffinanceiro%2Flancamentos%2F",
+        )
+
     def test_lancamento_simples_bloqueia_soma_divergente(self):
         form = LancamentoFinanceiroForm(
             data=self._dados_lancamento(
@@ -2353,6 +2395,8 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
             html,
         )
         self.assertIn('financeiro-competencia-assistente-status', html)
+        self.assertIn('data-financeiro-save-and-stay="true"', html)
+        self.assertIn("'numero_documento'", html)
         self.assertIn('Quitado', html)
         self.assertIn('Ja possui contribuicao', html)
         self.assertIn('Sem quitacao registrada', html)
