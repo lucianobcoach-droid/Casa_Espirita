@@ -4689,5 +4689,23 @@ Status de homologacao da usuaria:
 - o campo comum `centro_custo` deixou de ser a referencia visual do rateio; no rateio o centro de custo agora pertence a cada item
 - a integracao com competencias foi preservada:
   - centro de custo nao interfere na logica de subcategoria controlada
-  - a validacao/soma das competencias continua fechando por subcategoria controlada no rateio
 - sem alteracao em calculos financeiros, permissoes, relatorios, recibos ou financeiro oficial
+
+## Atalho de recorrencia e assistente de competencias por linha
+
+- a listagem de favorecidos ganhou um atalho por POST para marcar/desmarcar `contribuinte_recorrente`, com CSRF, retorno para a propria listagem, mensagem simples de sucesso e bloqueio por permissao de edicao
+- no assistente de competencias:
+  - `Ja registrado` agora representa apenas historico externo de outros lancamentos salvos da mesma pessoa + subcategoria + competencia
+  - `Valor deste lancamento` continua sendo o valor editavel e e a unica base de validacao do fechamento
+  - `Total apos lancamento` passou a aparecer como leitura de apoio, somando historico externo + valor digitado no documento atual
+- em lancamento simples, a critica de fechamento foi explicitada para o valor do proprio documento atual
+- em rateio:
+  - o assistente deixou de consolidar por subcategoria e passou a operar por linha controlada
+  - duas linhas controladas com a mesma subcategoria continuam separadas quando sao linhas distintas do rateio
+  - linhas nao controladas ficam fora do assistente e nao entram na validacao
+  - a identificacao do bloco passou a incluir ordem da linha, subcategoria e centro de custo quando houver
+- na edicao de lancamento/grupo:
+  - o proprio lancamento volta em `Valor deste lancamento`
+  - o historico externo continua em `Ja registrado`
+  - o proprio registro nao e contado duas vezes no historico
+- sem alteracao de calculo financeiro, extrato, resumo, prestacao/fechamento, balancete, recibos ou financeiro oficial

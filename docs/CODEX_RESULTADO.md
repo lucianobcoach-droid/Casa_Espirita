@@ -6318,7 +6318,6 @@ Não houve alteração de código funcional nesta etapa.
 - a subcategoria da linha pode sugerir `centro_custo_padrao` apenas para aquela linha; quando nao houver padrao, a linha permanece vazia e editavel
 - a edicao de grupo rateado passou a recarregar o centro de custo salvo em cada linha sem sobrescrever automaticamente ao abrir
 - mantive a regra de competencias isolada do centro de custo:
-  - a consolidacao para competencias continua por subcategoria controlada
   - o centro de custo nao entra no calculo/fechamento das competencias
 - cobertura automatizada ampliada para:
   - criacao com centros de custo diferentes por linha
@@ -6326,3 +6325,21 @@ Não houve alteração de código funcional nesta etapa.
   - atualizacao de uma linha sem sobrescrever o centro de custo das demais
   - linha sem `centro_custo_padrao` aceitando valor vazio
   - presenca do novo campo no template coordenado do rateio
+
+## Microetapa: atalho recorrente e assistente de competencias por linha
+
+- criei o atalho de recorrencia diretamente na listagem de favorecidos, reaproveitando `PessoaFinanceira.contribuinte_recorrente` com POST, CSRF, permissao de edicao e retorno para a propria tela
+- refinei a semantica do assistente:
+  - `Ja registrado` = referencia historica externa
+  - `Valor deste lancamento` = payload editavel do documento atual
+  - `Total apos lancamento` = leitura auxiliar (`Ja registrado + Valor deste lancamento`)
+- no lancamento simples, a mensagem de critica passou a fechar explicitamente contra o valor do lancamento atual
+- no rateio, o assistente deixou de consolidar por categoria e passou a validar por linha controlada, preservando linhas distintas mesmo quando usam a mesma subcategoria
+- linhas nao controladas do rateio continuam fora do assistente e da validacao
+- em edicao, o proprio lancamento/grupo continua fora de `Ja registrado`, evitando dupla contagem
+- cobertura automatizada ampliada para:
+  - atalho de marcar/desmarcar recorrencia com e sem permissao
+  - rateio misto sem comparacao contra o valor bruto do documento
+  - duas linhas controladas da mesma subcategoria como blocos independentes
+  - total apos lancamento no assistente simples e rateado
+  - reabertura/edicao sem dupla contagem do proprio registro

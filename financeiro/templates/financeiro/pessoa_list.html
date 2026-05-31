@@ -190,9 +190,21 @@
                             {% endif %}
                         </td>
                         <td>
-                            <span class="financeiro-pessoa-status{% if pessoa.contribuinte_recorrente %} is-active{% endif %}">
-                                {% if pessoa.contribuinte_recorrente %}Sim{% else %}N&atilde;o{% endif %}
-                            </span>
+                            <div class="is-flex is-align-items-center is-justify-content-space-between" style="gap: 0.75rem;">
+                                <span class="financeiro-pessoa-status{% if pessoa.contribuinte_recorrente %} is-active{% endif %}">
+                                    {% if pessoa.contribuinte_recorrente %}Sim{% else %}N&atilde;o{% endif %}
+                                </span>
+                                {% if pode_editar_pessoa %}
+                                    <form method="post" action="{% url 'financeiro:pessoa-recorrencia-toggle' pessoa.pk %}" class="is-inline-flex">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="return_to" value="{{ request.get_full_path }}">
+                                        <input type="hidden" name="contribuinte_recorrente" value="{% if pessoa.contribuinte_recorrente %}0{% else %}1{% endif %}">
+                                        <button class="button is-small is-light" type="submit">
+                                            {% if pessoa.contribuinte_recorrente %}Desmarcar{% else %}Marcar{% endif %}
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </div>
                         </td>
                         <td>
                             <span class="financeiro-pessoa-status{% if pessoa.ativo %} is-active{% endif %}">

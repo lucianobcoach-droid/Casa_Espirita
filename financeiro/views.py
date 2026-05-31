@@ -228,15 +228,23 @@ def _iterar_competencias_mensais(inicio: date, fim: date) -> list[tuple[int, int
 
 def _salvar_alocacoes_competencia_rateio(
     lancamentos: list[LancamentoFinanceiro],
-    competencias_por_categoria: dict[int, list[dict[str, object]]] | None,
+    competencias_por_linha: dict[str, list[dict[str, object]]] | None,
+    rateio_linhas: list[dict[str, object]] | None = None,
 ) -> None:
-    competencias_por_categoria = competencias_por_categoria or {}
-    for lancamento in lancamentos:
+    competencias_por_linha = competencias_por_linha or {}
+    rateio_linhas = rateio_linhas or []
+    for indice, lancamento in enumerate(lancamentos):
         if not lancamento.usa_controle_competencia():
             lancamento.alocacoes_competencia.all().delete()
             continue
 
-        linhas_competencia = competencias_por_categoria.get(lancamento.categoria_id, [])
+        linha_rateio = rateio_linhas[indice] if indice < len(rateio_linhas) else {}
+        chave_rateio = str(
+            linha_rateio.get('chave_rateio')
+            or linha_rateio.get('chave')
+            or f'linha-{lancamento.pk}'
+        )
+        linhas_competencia = competencias_por_linha.get(chave_rateio, [])
         lancamento.alocacoes_competencia.all().delete()
         for linha in linhas_competencia:
             lancamento.alocacoes_competencia.create(
@@ -8148,6 +8156,37 @@ class PessoaFinanceiraListView(FinanceiroPermissaoMixin, ListView):
         return context
 
 
+class PessoaFinanceiraRecorrenciaToggleView(FinanceiroReturnToMixin, FinanceiroPermissaoMixin, View):
+    permissao_requerida = 'financeiro.pessoas.editar'
+    success_url = reverse_lazy('financeiro:pessoa-list')
+
+    def post(self, request, *args, **kwargs):
+        pessoa = get_object_or_404(PessoaFinanceira, pk=kwargs['pk'])
+        antes = _snapshot_pessoa(pessoa)
+        novo_valor = str(request.POST.get('contribuinte_recorrente', '')).strip().lower() in {
+            '1',
+            'true',
+            'on',
+            'sim',
+        }
+        pessoa.contribuinte_recorrente = novo_valor
+        pessoa.save()
+        depois = _snapshot_pessoa(pessoa)
+        if antes != depois:
+            _registrar_auditoria_pessoa(
+                request=request,
+                acao=AuditoriaFinanceiro.AcaoAuditoria.UPDATE,
+                pessoa=pessoa,
+                antes=antes,
+                depois=depois,
+            )
+        if novo_valor:
+            messages.success(request, 'Favorecido marcado como contribuinte recorrente.')
+        else:
+            messages.success(request, 'Favorecido removido de contribuinte recorrente.')
+        return redirect(self.get_success_url())
+
+
 class PessoaFinanceiraHistoricoView(FinanceiroPermissaoMixin, DetailView):
     permissao_requerida = 'financeiro.lancamentos.listar'
     model = PessoaFinanceira
@@ -10632,7 +10671,7 @@ class LancamentoFinanceiroCreateView(FinanceiroFormMixin, CreateView):
             return response
 
         rateio_linhas = form.cleaned_data.get('rateio_linhas') or []
-        competencias_rateio_por_categoria = form.cleaned_data.get('competencias_rateio_por_categoria') or {}
+        competencias_rateio_por_linha = form.cleaned_data.get('competencias_rateio_por_linha') or {}
         grupo_rateio = form.cleaned_data.get('grupo_rateio') or uuid4().hex
         numero_documento = (form.cleaned_data.get('numero_documento') or '').strip()
 
@@ -10668,7 +10707,8 @@ class LancamentoFinanceiroCreateView(FinanceiroFormMixin, CreateView):
                 lancamentos_criados.append(lancamento)
             _salvar_alocacoes_competencia_rateio(
                 lancamentos_criados,
-                competencias_rateio_por_categoria,
+                competencias_rateio_por_linha,
+                rateio_linhas,
             )
             for lancamento in lancamentos_criados:
                 _registrar_auditoria_lancamento(
@@ -11009,7 +11049,7 @@ class LancamentoFinanceiroGrupoRateioUpdateView(FinanceiroFormMixin, UpdateView)
     def form_valid(self, form):
         grupo_lancamentos = self._get_grupo_lancamentos()
         rateio_linhas = form.cleaned_data.get('rateio_linhas') or []
-        competencias_rateio_por_categoria = form.cleaned_data.get('competencias_rateio_por_categoria') or {}
+        competencias_rateio_por_linha = form.cleaned_data.get('competencias_rateio_por_linha') or {}
         dados_comuns = {
             'descricao': form.cleaned_data['descricao'],
             'tipo': form.cleaned_data['tipo'],
@@ -11090,7 +11130,8 @@ class LancamentoFinanceiroGrupoRateioUpdateView(FinanceiroFormMixin, UpdateView)
 
             _salvar_alocacoes_competencia_rateio(
                 lancamentos_finais,
-                competencias_rateio_por_categoria,
+                competencias_rateio_por_linha,
+                rateio_linhas,
             )
 
         self.object = lancamentos_finais[0]

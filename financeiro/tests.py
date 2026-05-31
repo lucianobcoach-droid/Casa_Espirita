@@ -1740,6 +1740,41 @@ class FrequenciaMensalBaseCadastralTests(TestCase):
     def setUp(self):
         self.factory = RequestFactory()
 
+    def _garantir_permissao(self, codigo: str) -> PermissaoSistema:
+        permissao = PermissaoSistema.objects.filter(codigo=codigo).first()
+        if permissao:
+            return permissao
+        partes = codigo.split('.')
+        modulo = partes[0] if len(partes) > 0 else 'financeiro'
+        recurso = partes[1] if len(partes) > 1 else 'geral'
+        acao = '.'.join(partes[2:]) if len(partes) > 2 else 'acessar'
+        return PermissaoSistema.objects.create(
+            codigo=codigo,
+            nome=codigo,
+            modulo=modulo,
+            recurso=recurso,
+            acao=acao,
+            ativo=True,
+        )
+
+    def _login_com_permissoes(self, username: str, codigos_permissao: list[str]):
+        user_model = get_user_model()
+        usuario = user_model.objects.create_user(
+            username=username,
+            password='senha-forte-123',
+            email=f'{username}@teste.local',
+            is_active=True,
+        )
+        perfil = PerfilAcesso.objects.create(
+            codigo=f'perfil-{username}',
+            nome=f'Perfil {username}',
+            ativo=True,
+        )
+        for codigo in codigos_permissao:
+            perfil.permissoes.add(self._garantir_permissao(codigo))
+        UsuarioPerfilAcesso.objects.create(usuario=usuario, perfil=perfil)
+        self.client.force_login(usuario)
+
     def test_pessoa_financeira_default_contribuinte_recorrente_false(self):
         pessoa = PessoaFinanceira.objects.create(codigo='P900', nome='Pessoa teste')
 
@@ -1841,6 +1876,48 @@ class FrequenciaMensalBaseCadastralTests(TestCase):
 
         self.assertIn('Recorrente', html)
         self.assertIn('Sim', html)
+
+    def test_atalho_recorrente_altera_via_post(self):
+        pessoa = PessoaFinanceira.objects.create(codigo='P904', nome='Pessoa toggle')
+        self._login_com_permissoes(
+            'user-pessoa-toggle-ok',
+            ['financeiro.pessoas.listar', 'financeiro.pessoas.editar'],
+        )
+
+        response = self.client.post(
+            reverse('financeiro:pessoa-recorrencia-toggle', args=[pessoa.pk]),
+            {'contribuinte_recorrente': '1', 'return_to': reverse('financeiro:pessoa-list')},
+            follow=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        pessoa.refresh_from_db()
+        self.assertTrue(pessoa.contribuinte_recorrente)
+        self.assertContains(response, 'Favorecido marcado como contribuinte recorrente.')
+
+        response = self.client.post(
+            reverse('financeiro:pessoa-recorrencia-toggle', args=[pessoa.pk]),
+            {'contribuinte_recorrente': '0', 'return_to': reverse('financeiro:pessoa-list')},
+            follow=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        pessoa.refresh_from_db()
+        self.assertFalse(pessoa.contribuinte_recorrente)
+        self.assertContains(response, 'Favorecido removido de contribuinte recorrente.')
+
+    def test_atalho_recorrente_bloqueia_sem_permissao_editar(self):
+        pessoa = PessoaFinanceira.objects.create(codigo='P905', nome='Pessoa sem permissao')
+        self._login_com_permissoes('user-pessoa-toggle-no', ['financeiro.pessoas.listar'])
+
+        response = self.client.post(
+            reverse('financeiro:pessoa-recorrencia-toggle', args=[pessoa.pk]),
+            {'contribuinte_recorrente': '1', 'return_to': reverse('financeiro:pessoa-list')},
+        )
+
+        self.assertEqual(response.status_code, 403)
+        pessoa.refresh_from_db()
+        self.assertFalse(pessoa.contribuinte_recorrente)
 
     def test_template_categoria_list_mostra_indicador_controle_frequencia(self):
         categoria = CategoriaFinanceira.objects.create(
@@ -1958,12 +2035,12 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
             lancamento_com_rateio='on',
             valor_total_documento='130.00',
             rateio_payload=json.dumps([
-                {'categoria': str(self.categoria_controlada.pk), 'centro_custo': '', 'valor': '100.00'},
-                {'categoria': str(self.categoria_nao_controlada.pk), 'centro_custo': '', 'valor': '30.00'},
+                {'chave': 'linha-1', 'categoria': str(self.categoria_controlada.pk), 'centro_custo': '', 'valor': '100.00'},
+                {'chave': 'linha-2', 'categoria': str(self.categoria_nao_controlada.pk), 'centro_custo': '', 'valor': '30.00'},
             ]),
             competencias_payload='',
             competencias_rateio_payload=json.dumps({
-                str(self.categoria_controlada.pk): [
+                'linha-1': [
                     {'mes': '1', 'ano': '2026', 'valor': '50.00'},
                     {'mes': '2', 'ano': '2026', 'valor': '50.00'},
                 ]
@@ -2258,7 +2335,7 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
 
         self.assertFalse(form.is_valid())
         self.assertIn(
-            'A soma das competencias deve ser igual ao valor controlado do lancamento.',
+            'A soma das competencias deste lancamento precisa fechar com o valor do lancamento: R$ 100,00.',
             form.errors['competencias_payload'],
         )
 
@@ -2532,6 +2609,7 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
         self.assertIn('Situacao', html)
         self.assertIn('Ja registrado', html)
         self.assertIn('Valor deste lancamento', html)
+        self.assertIn('Total apos lancamento', html)
         self.assertIn(
             'Distribua o valor total entre as competencias. A soma informada deve fechar com o valor do lancamento.',
             html,
@@ -2557,7 +2635,7 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
 
         self.assertTrue(form.is_valid(), form.errors)
         self.assertEqual(
-            form.cleaned_data['competencias_rateio_por_categoria'][self.categoria_controlada.pk],
+            form.cleaned_data['competencias_rateio_por_linha']['linha-1'],
             [
                 {'mes_competencia': 1, 'ano_competencia': 2026, 'valor_alocado': Decimal('50.00')},
                 {'mes_competencia': 2, 'ano_competencia': 2026, 'valor_alocado': Decimal('50.00')},
@@ -2568,8 +2646,8 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
         dados = self._dados_rateio(
             valor_total_documento='150.00',
             rateio_payload=json.dumps([
-                {'categoria': str(self.categoria_controlada.pk), 'valor': '100.00'},
-                {'categoria': str(self.categoria_nao_controlada.pk), 'valor': '50.00'},
+                {'chave': 'linha-1', 'categoria': str(self.categoria_controlada.pk), 'valor': '100.00'},
+                {'chave': 'linha-2', 'categoria': str(self.categoria_nao_controlada.pk), 'valor': '50.00'},
             ]),
         )
         form = LancamentoFinanceiroForm(data=dados)
@@ -2579,7 +2657,7 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
     def test_rateio_bloqueia_quando_soma_competencias_da_parte_controlada_diverge(self):
         dados = self._dados_rateio(
             competencias_rateio_payload=json.dumps({
-                str(self.categoria_controlada.pk): [
+                'linha-1': [
                     {'mes': '1', 'ano': '2026', 'valor': '40.00'},
                     {'mes': '2', 'ano': '2026', 'valor': '50.00'},
                 ]
@@ -2589,19 +2667,19 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
 
         self.assertFalse(form.is_valid())
         self.assertIn(
-            f'A soma das competencias deve ser igual ao valor controlado da subcategoria no rateio: {self.categoria_controlada}.',
+            'A soma das competencias da linha "Linha 1 - Contribuicao mensal" precisa fechar com o valor rateado desta linha: R$ 100,00.',
             form.errors['competencias_rateio_payload'],
         )
 
     def test_rateio_bloqueia_competencia_duplicada_na_mesma_subcategoria_controlada(self):
         dados = self._dados_rateio(
             rateio_payload=json.dumps([
-                {'categoria': str(self.categoria_controlada.pk), 'valor': '110.00'},
-                {'categoria': str(self.categoria_nao_controlada.pk), 'valor': '30.00'},
+                {'chave': 'linha-1', 'categoria': str(self.categoria_controlada.pk), 'valor': '110.00'},
+                {'chave': 'linha-2', 'categoria': str(self.categoria_nao_controlada.pk), 'valor': '30.00'},
             ]),
             valor_total_documento='140.00',
             competencias_rateio_payload=json.dumps({
-                str(self.categoria_controlada.pk): [
+                'linha-1': [
                     {'mes': '1', 'ano': '2026', 'valor': '50.00'},
                     {'mes': '1', 'ano': '2026', 'valor': '60.00'},
                 ]
@@ -2611,11 +2689,11 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
 
         self.assertFalse(form.is_valid())
         self.assertIn(
-            f'{self.categoria_controlada}: Ja existe uma competencia informada para este mes/ano. Agrupe o valor em uma unica linha.',
+            'Linha 1 - Contribuicao mensal: Ja existe uma competencia informada para este mes/ano. Agrupe o valor em uma unica linha.',
             form.errors['competencias_rateio_payload'],
         )
         self.assertNotIn(
-            f'A soma das competencias deve ser igual ao valor controlado da subcategoria no rateio: {self.categoria_controlada}.',
+            'A soma das competencias da linha "Linha 1 - Contribuicao mensal" precisa fechar com o valor rateado desta linha: R$ 110,00.',
             form.errors['competencias_rateio_payload'],
         )
 
@@ -2629,14 +2707,14 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
         dados = self._dados_rateio(
             valor_total_documento='100.00',
             rateio_payload=json.dumps([
-                {'categoria': str(self.categoria_controlada.pk), 'valor': '60.00'},
-                {'categoria': str(outra_categoria_controlada.pk), 'valor': '40.00'},
+                {'chave': 'linha-1', 'categoria': str(self.categoria_controlada.pk), 'valor': '60.00'},
+                {'chave': 'linha-2', 'categoria': str(outra_categoria_controlada.pk), 'valor': '40.00'},
             ]),
             competencias_rateio_payload=json.dumps({
-                str(self.categoria_controlada.pk): [
+                'linha-1': [
                     {'mes': '1', 'ano': '2026', 'valor': '60.00'},
                 ],
-                str(outra_categoria_controlada.pk): [
+                'linha-2': [
                     {'mes': '1', 'ano': '2026', 'valor': '40.00'},
                 ],
             }),
@@ -2645,12 +2723,56 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
 
         self.assertTrue(form.is_valid(), form.errors)
         self.assertEqual(
-            form.cleaned_data['competencias_rateio_por_categoria'][self.categoria_controlada.pk],
+            form.cleaned_data['competencias_rateio_por_linha']['linha-1'],
             [{'mes_competencia': 1, 'ano_competencia': 2026, 'valor_alocado': Decimal('60.00')}],
         )
         self.assertEqual(
-            form.cleaned_data['competencias_rateio_por_categoria'][outra_categoria_controlada.pk],
+            form.cleaned_data['competencias_rateio_por_linha']['linha-2'],
             [{'mes_competencia': 1, 'ano_competencia': 2026, 'valor_alocado': Decimal('40.00')}],
+        )
+
+    def test_rateio_duas_linhas_controladas_mesma_subcategoria_geram_blocos_distintos(self):
+        dados = self._dados_rateio(
+            valor_total_documento='100.00',
+            rateio_payload=json.dumps([
+                {'chave': 'linha-a', 'categoria': str(self.categoria_controlada.pk), 'centro_custo': str(self.centro_custo_padrao.pk), 'valor': '60.00'},
+                {'chave': 'linha-b', 'categoria': str(self.categoria_controlada.pk), 'centro_custo': str(self.centro_custo_manual.pk), 'valor': '40.00'},
+            ]),
+            competencias_rateio_payload=json.dumps({
+                'linha-a': [{'mes': '1', 'ano': '2026', 'valor': '60.00'}],
+                'linha-b': [{'mes': '2', 'ano': '2026', 'valor': '40.00'}],
+            }),
+        )
+        form = LancamentoFinanceiroForm(data=dados)
+
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(
+            form.cleaned_data['competencias_rateio_por_linha']['linha-a'],
+            [{'mes_competencia': 1, 'ano_competencia': 2026, 'valor_alocado': Decimal('60.00')}],
+        )
+        self.assertEqual(
+            form.cleaned_data['competencias_rateio_por_linha']['linha-b'],
+            [{'mes_competencia': 2, 'ano_competencia': 2026, 'valor_alocado': Decimal('40.00')}],
+        )
+
+    def test_rateio_duas_linhas_controladas_critica_apenas_linha_divergente(self):
+        dados = self._dados_rateio(
+            valor_total_documento='100.00',
+            rateio_payload=json.dumps([
+                {'chave': 'linha-a', 'categoria': str(self.categoria_controlada.pk), 'centro_custo': str(self.centro_custo_padrao.pk), 'valor': '60.00'},
+                {'chave': 'linha-b', 'categoria': str(self.categoria_controlada.pk), 'centro_custo': str(self.centro_custo_manual.pk), 'valor': '40.00'},
+            ]),
+            competencias_rateio_payload=json.dumps({
+                'linha-a': [{'mes': '1', 'ano': '2026', 'valor': '60.00'}],
+                'linha-b': [{'mes': '2', 'ano': '2026', 'valor': '30.00'}],
+            }),
+        )
+        form = LancamentoFinanceiroForm(data=dados)
+
+        self.assertFalse(form.is_valid())
+        self.assertIn(
+            'A soma das competencias da linha "Linha 2 - Contribuicao mensal - CC101 - Manual recorrencia" precisa fechar com o valor rateado desta linha: R$ 40,00.',
+            form.errors['competencias_rateio_payload'],
         )
 
     def test_rateio_sem_pessoa_recorrente_nao_exige_competencias(self):
@@ -2661,7 +2783,7 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
         form = LancamentoFinanceiroForm(data=dados)
 
         self.assertTrue(form.is_valid(), form.errors)
-        self.assertEqual(form.cleaned_data['competencias_rateio_por_categoria'], {})
+        self.assertEqual(form.cleaned_data['competencias_rateio_por_linha'], {})
 
     def test_rateio_sem_subcategoria_controlada_nao_exige_competencias(self):
         dados = self._dados_rateio(
@@ -2674,7 +2796,7 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
         form = LancamentoFinanceiroForm(data=dados)
 
         self.assertTrue(form.is_valid(), form.errors)
-        self.assertEqual(form.cleaned_data['competencias_rateio_por_categoria'], {})
+        self.assertEqual(form.cleaned_data['competencias_rateio_por_linha'], {})
 
     def test_rateio_sem_padrao_permite_centro_custo_vazio_por_linha(self):
         dados = self._dados_rateio(
@@ -2719,26 +2841,29 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
             valor_total_documento='130.00',
             rateio_payload=json.dumps([
                 {
+                    'chave': 'linha-1',
                     'categoria': str(self.categoria_controlada.pk),
                     'centro_custo': str(self.centro_custo_padrao.pk),
                     'valor': '60.00',
                 },
                 {
+                    'chave': 'linha-2',
                     'categoria': str(self.categoria_controlada_2.pk),
                     'centro_custo': str(self.centro_custo_novo.pk),
                     'valor': '40.00',
                 },
                 {
+                    'chave': 'linha-3',
                     'categoria': str(self.categoria_nao_controlada.pk),
                     'centro_custo': str(self.centro_custo_manual.pk),
                     'valor': '30.00',
                 },
             ]),
             competencias_rateio_payload=json.dumps({
-                str(self.categoria_controlada.pk): [
+                'linha-1': [
                     {'mes': '1', 'ano': '2026', 'valor': '60.00'},
                 ],
-                str(self.categoria_controlada_2.pk): [
+                'linha-2': [
                     {'mes': '2', 'ano': '2026', 'valor': '40.00'},
                 ],
             }),
@@ -2771,7 +2896,7 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
             },
         )
 
-    def test_rateio_edicao_carrega_competencias_existentes_por_subcategoria(self):
+    def test_rateio_edicao_carrega_competencias_existentes_por_linha(self):
         grupo_rateio = 'grp-comp'
         lancamento_controlado = LancamentoFinanceiro.objects.create(
             descricao='Recebimento rateado',
@@ -2826,7 +2951,7 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
         self.assertEqual(
             form.competencias_rateio_iniciais,
             {
-                str(self.categoria_controlada.pk): [
+                f'linha-{lancamento_controlado.pk}': [
                     {'mes': '1', 'ano': '2026', 'valor': '40.00'},
                     {'mes': '2', 'ano': '2026', 'valor': '60.00'},
                 ]
@@ -2876,12 +3001,14 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
             [
                 {
                     'id': str(lancamento_1.pk),
+                    'chave': f'linha-{lancamento_1.pk}',
                     'categoria': str(self.categoria_controlada.pk),
                     'centro_custo': str(self.centro_custo_padrao.pk),
                     'valor': '100.00',
                 },
                 {
                     'id': str(lancamento_2.pk),
+                    'chave': f'linha-{lancamento_2.pk}',
                     'categoria': str(self.categoria_nao_controlada.pk),
                     'centro_custo': str(self.centro_custo_manual.pk),
                     'valor': '30.00',
@@ -2958,6 +3085,7 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
 
         self.assertEqual(janeiro['ja_registrado'], '50.00')
         self.assertEqual(janeiro['valor_lancamento'], '30.00')
+        self.assertEqual(janeiro['total_apos_lancamento'], '80.00')
 
     def test_assistente_rateio_exibe_grupo_apenas_para_subcategoria_controlada(self):
         grupo_rateio = 'grp-assistente-controlada'
@@ -3000,6 +3128,7 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
             form.assistente_competencia_rateio_grupos_iniciais[0]['categoria_id'],
             str(self.categoria_controlada.pk),
         )
+        self.assertIn('Linha 1 - Contribuicao mensal', form.assistente_competencia_rateio_grupos_iniciais[0]['linha_label'])
 
     def test_template_rateio_grupo_exibe_rotulos_do_assistente(self):
         grupo_rateio = 'grp-template'
@@ -3051,8 +3180,9 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
         self.assertIn('Situacao', html)
         self.assertIn('Ja registrado', html)
         self.assertIn('Valor deste lancamento', html)
+        self.assertIn('Total apos lancamento', html)
         self.assertIn(
-            'Distribua o valor da subcategoria entre as competencias. A soma informada deve fechar com o valor da subcategoria.',
+            'Distribua o valor desta linha controlada entre as competencias. A soma informada deve fechar com o valor rateado da linha.',
             html,
         )
         self.assertIn('financeiro-competencia-assistente-status', html)
@@ -3243,11 +3373,11 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
             'observacoes': '',
             'valor_total_documento': '130.00',
             'rateio_payload': json.dumps([
-                {'id': str(lancamento_controlado.pk), 'categoria': str(self.categoria_controlada.pk), 'centro_custo': '', 'valor': '100.00'},
-                {'id': str(lancamento_nao_controlado.pk), 'categoria': str(self.categoria_nao_controlada.pk), 'centro_custo': '', 'valor': '30.00'},
+                {'id': str(lancamento_controlado.pk), 'chave': f'linha-{lancamento_controlado.pk}', 'categoria': str(self.categoria_controlada.pk), 'centro_custo': '', 'valor': '100.00'},
+                {'id': str(lancamento_nao_controlado.pk), 'chave': f'linha-{lancamento_nao_controlado.pk}', 'categoria': str(self.categoria_nao_controlada.pk), 'centro_custo': '', 'valor': '30.00'},
             ]),
             'competencias_rateio_payload': json.dumps({
-                str(self.categoria_controlada.pk): [
+                f'linha-{lancamento_controlado.pk}': [
                     {'mes': '1', 'ano': '2026', 'valor': '50.00'},
                     {'mes': '1', 'ano': '2026', 'valor': '50.00'},
                 ],
@@ -3261,11 +3391,11 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
 
         self.assertFalse(form.is_valid())
         self.assertIn(
-            f'{self.categoria_controlada}: Ja existe uma competencia informada para este mes/ano. Agrupe o valor em uma unica linha.',
+            'Linha 1 - Contribuicao mensal: Ja existe uma competencia informada para este mes/ano. Agrupe o valor em uma unica linha.',
             form.errors['competencias_rateio_payload'],
         )
         self.assertNotIn(
-            f'A soma das competencias deve ser igual ao valor controlado da subcategoria no rateio: {self.categoria_controlada}.',
+            'A soma das competencias da linha "Linha 1 - Contribuicao mensal" precisa fechar com o valor rateado desta linha: R$ 100,00.',
             form.errors['competencias_rateio_payload'],
         )
 

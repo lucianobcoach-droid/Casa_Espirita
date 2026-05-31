@@ -176,3 +176,6 @@ Este documento consolida regras permanentes do sistema. Ele não substitui o his
 - Alocacoes de competencia vinculadas ao lancamento/linha controlada seguem exclusao por cascade; qualquer necessidade de restauracao futura deve ser tratada na frente de auditoria acionavel, nao na regra atual de competencias.
 - Subcategoria pode ter centro de custo padrao para sugerir preenchimento automatico no lancamento, sem impedir alteracao manual pelo usuario.
 - Em lancamento rateado, o centro de custo deve ser informado por linha do rateio. A subcategoria da linha pode sugerir um centro de custo padrao, mas o usuario pode alterar manualmente antes de salvar.
+- `Contribuinte recorrente` pode ser alternado por atalho apenas na tela de favorecidos, respeitando a permissao de edicao e usando POST com CSRF.
+- No assistente de competencias, `Ja registrado` e referencia historica externa; `Valor deste lancamento` e o valor editavel do documento atual; `Total apos lancamento` e apenas leitura de apoio.
+- Em rateio, o assistente de competencias opera por linha controlada. Linhas nao controladas ficam fora do assistente e da validacao.

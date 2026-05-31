@@ -433,8 +433,8 @@
                         <div class="financeiro-competencia-box">
                             <div class="financeiro-tabler-subhead">
                                 <div>
-                                    <p class="financeiro-tabler-subtitle">Competências atendidas da subcategoria controlada</p>
-                                    <p class="financeiro-tabler-meta">Cada subcategoria controlada do rateio fecha suas competências contra o próprio valor rateado.</p>
+                                    <p class="financeiro-tabler-subtitle">Competências atendidas por linha controlada</p>
+                                    <p class="financeiro-tabler-meta">Cada linha controlada do rateio fecha suas competências apenas contra o próprio valor rateado.</p>
                                 </div>
                             </div>
                             {% for error in form.competencias_rateio_payload.errors %}<p class="help is-danger mb-2">{{ error }}</p>{% endfor %}
@@ -443,14 +443,14 @@
                                     <div class="mb-4">
                                         <div class="financeiro-tabler-subhead">
                                             <div>
-                                                <p class="financeiro-tabler-subtitle">Competencias - {{ grupo.categoria_label }}</p>
+                                                <p class="financeiro-tabler-subtitle">Competencias - {{ grupo.linha_label }}</p>
                                                 <p class="financeiro-tabler-meta">Valor controlado: {{ grupo.valor_controlado_texto }}</p>
                                             </div>
                                         </div>
                                         <div class="financeiro-competencia-assistente">
                                             <div class="financeiro-competencia-assistente-copy">
                                                 <p class="financeiro-tabler-subtitle">Assistente de competencias</p>
-                                                <p class="financeiro-tabler-meta">Distribua o valor da subcategoria entre as competencias. A soma informada deve fechar com o valor da subcategoria.</p>
+                                                <p class="financeiro-tabler-meta">Distribua o valor desta linha controlada entre as competencias. A soma informada deve fechar com o valor rateado da linha.</p>
                                             </div>
                                             <div class="table-responsive">
                                                 <table class="table table-vcenter financeiro-competencia-assistente-table">
@@ -460,6 +460,7 @@
                                                             <th>Situacao</th>
                                                             <th>Ja registrado</th>
                                                             <th>Valor deste lancamento</th>
+                                                            <th>Total apos lancamento</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody class="financeiro-competencia-assistente-grid">
@@ -478,6 +479,11 @@
                                                                 </td>
                                                                 <td>
                                                                     <input type="text" class="form-control financeiro-competencia-assistente-input" value="{{ mes.valor_lancamento_texto }}" disabled>
+                                                                </td>
+                                                                <td>
+                                                                    <span class="financeiro-competencia-assistente-registered {% if not mes.total_apos_lancamento_texto %}is-empty{% endif %}">
+                                                                        {{ mes.total_apos_lancamento_texto|default:"-" }}
+                                                                    </span>
                                                                 </td>
                                                             </tr>
                                                         {% endfor %}
@@ -517,6 +523,7 @@
                                             <th>Situacao</th>
                                             <th>Ja registrado</th>
                                             <th>Valor deste lancamento</th>
+                                            <th>Total apos lancamento</th>
                                         </tr>
                                     </thead>
                                     <tbody class="financeiro-competencia-assistente-grid" data-financeiro-competencia-assistente-grid="true">
@@ -533,10 +540,15 @@
                                                         {{ mes.ja_registrado_texto|default:"-" }}
                                                     </span>
                                                 </td>
-                                                <td>
-                                                    <input type="text" class="form-control financeiro-competencia-assistente-input" value="{{ mes.valor_lancamento_texto }}" disabled>
-                                                </td>
-                                            </tr>
+                                            <td>
+                                                <input type="text" class="form-control financeiro-competencia-assistente-input" value="{{ mes.valor_lancamento_texto }}" disabled>
+                                            </td>
+                                            <td>
+                                                <span class="financeiro-competencia-assistente-registered {% if not mes.total_apos_lancamento_texto %}is-empty{% endif %}">
+                                                    {{ mes.total_apos_lancamento_texto|default:"-" }}
+                                                </span>
+                                            </td>
+                                        </tr>
                                         {% endfor %}
                                     </tbody>
                                 </table>
@@ -702,6 +714,7 @@
         let rateioRows = Array.isArray(rateioInicial) ? rateioInicial.slice() : [];
         let competenciasRows = Array.isArray(competenciasInicial) ? competenciasInicial.slice() : [];
         let competenciasRateioByCategoria = JSON.parse(JSON.stringify(competenciasRateioInicial || {}));
+        let rateioRowSequence = 0;
         let regraSugestaoRequestId = 0;
         let regraSugestaoAtivadaPorUsuario = false;
         let regraSugestaoAplicacaoEmAndamento = false;
@@ -901,6 +914,12 @@
             return porCategoria[competenciaKey(mes, ano)] || '';
         }
 
+        function formatarTotalAposLancamento(valorRegistrado, valorLancamento) {
+            return formatarCentavosMoeda(
+                parseMoedaParaCentavos(valorRegistrado) + parseMoedaParaCentavos(valorLancamento)
+            );
+        }
+
         function resolverStatusCompetencia(valorLancamento, valorControlado, valorRegistrado) {
             const valorLancamentoCentavos = parseMoedaParaCentavos(valorLancamento);
             const valorControladoCentavos = parseMoedaParaCentavos(valorControlado);
@@ -935,6 +954,18 @@
                 if (leftAno !== rightAno) return leftAno - rightAno;
                 return Number(left.mes || 0) - Number(right.mes || 0);
             });
+        }
+
+        function ensureRateioRowKey(row) {
+            if (!row) return '';
+            if (row.chave) return String(row.chave);
+            if (row.id) {
+                row.chave = `linha-${row.id}`;
+                return row.chave;
+            }
+            rateioRowSequence += 1;
+            row.chave = `nova-js-${rateioRowSequence}`;
+            return row.chave;
         }
 
         function findCompetenciaRow(rows, mes, ano) {
@@ -1398,7 +1429,9 @@
         function serializeRateioRows() {
             if (!rateioPayloadField) return;
             rateioPayloadField.value = JSON.stringify(rateioRows.map(function (row) {
+                const chave = ensureRateioRowKey(row);
                 return {
+                    chave: chave,
                     categoria: row.categoria || '',
                     centro_custo: row.centro_custo || '',
                     valor: row.valor || '',
@@ -1493,6 +1526,13 @@
                 inputCell.appendChild(input);
                 tr.appendChild(inputCell);
 
+                const totalCell = document.createElement('td');
+                const total = document.createElement('span');
+                total.className = `financeiro-competencia-assistente-registered ${parseMoedaParaCentavos(valorRegistrado) + parseMoedaParaCentavos(valorAtual) > 0 ? '' : 'is-empty'}`.trim();
+                total.textContent = formatarTotalAposLancamento(valorRegistrado, valorAtual);
+                totalCell.appendChild(total);
+                tr.appendChild(totalCell);
+
                 competenciaAssistenteGrid.appendChild(tr);
             });
         }
@@ -1524,30 +1564,35 @@
 
         function getRateioLinhasControladasConsolidadas() {
             if (!pessoaRecorrenteSelecionada()) return [];
-            const consolidadas = {};
-            rateioRows.forEach(function (row) {
+            const grupos = [];
+            rateioRows.forEach(function (row, index) {
+                const chaveRateio = ensureRateioRowKey(row);
                 const categoriaId = String(row.categoria || '');
                 if (!categoriaId || !competenciaCategoriasControladas.has(categoriaId)) return;
                 const categoriaMeta = getRateioCategoriaMeta(categoriaId);
                 if (!categoriaMeta) return;
-                if (!consolidadas[categoriaId]) {
-                    consolidadas[categoriaId] = {
-                        categoriaId: categoriaId,
-                        label: categoriaMeta.label,
-                        valorCentavos: 0,
-                    };
-                }
-                consolidadas[categoriaId].valorCentavos += parseMoedaParaCentavos(row.valor || '');
+                const centroCustoMeta = rateioCentrosCusto.find(function (centro) {
+                    return String(centro.id) === String(row.centro_custo || '');
+                });
+                grupos.push({
+                    chaveRateio: chaveRateio,
+                    categoriaId: categoriaId,
+                    label: categoriaMeta.label,
+                    centroCustoLabel: centroCustoMeta ? centroCustoMeta.label : '',
+                    valorCentavos: parseMoedaParaCentavos(row.valor || ''),
+                    ordemVisual: index + 1,
+                    linhaLabel: `Linha ${index + 1} - ${categoriaMeta.label}${centroCustoMeta ? ` - ${centroCustoMeta.label}` : ''}`,
+                });
             });
-            return Object.values(consolidadas);
+            return grupos;
         }
 
         function serializeCompetenciasRateio() {
             if (!competenciasRateioPayloadField) return;
             const payload = {};
             getRateioLinhasControladasConsolidadas().forEach(function (grupo) {
-                const categoriaId = String(grupo.categoriaId);
-                payload[categoriaId] = cloneCompetenciaRows(competenciasRateioByCategoria[categoriaId]);
+                const linhaKey = String(grupo.chaveRateio);
+                payload[linhaKey] = cloneCompetenciaRows(competenciasRateioByCategoria[linhaKey]);
             });
             competenciasRateioPayloadField.value = JSON.stringify(payload);
         }
@@ -1628,13 +1673,14 @@
         function renderRateioRows() {
             if (!rateioBody) return;
             rateioBody.innerHTML = '';
-            if (!rateioRows.length) rateioRows = [{ categoria: '', centro_custo: '', valor: '' }, { categoria: '', centro_custo: '', valor: '' }];
+            if (!rateioRows.length) rateioRows = [{ chave: 'nova-1', categoria: '', centro_custo: '', valor: '' }, { chave: 'nova-2', categoria: '', centro_custo: '', valor: '' }];
             const categoriasPermitidasIds = new Set(
                 getRateioCategoriasFiltradas().map(function (categoria) {
                     return String(categoria.id);
                 })
             );
             rateioRows.forEach(function (row, index) {
+                ensureRateioRowKey(row);
                 if (row.categoria && !categoriasPermitidasIds.has(String(row.categoria))) {
                     row.categoria = '';
                     row.centro_custo = '';
@@ -1811,7 +1857,7 @@
             );
         }
 
-        function createCompetenciaRateioMesSelect(categoriaId, selectedValue, rowIndex) {
+        function createCompetenciaRateioMesSelect(linhaKey, selectedValue, rowIndex) {
             const select = document.createElement('select');
             select.className = 'form-select';
             const emptyOption = document.createElement('option');
@@ -1839,14 +1885,14 @@
                 select.appendChild(option);
             });
             select.addEventListener('change', function () {
-                competenciasRateioByCategoria[categoriaId][rowIndex].mes = select.value;
+                competenciasRateioByCategoria[linhaKey][rowIndex].mes = select.value;
                 serializeCompetenciasRateio();
-                syncCompetenciaRateioAssistantForCategoria(categoriaId);
+                syncCompetenciaRateioAssistantForCategoria(linhaKey);
             });
             return select;
         }
 
-        function createCompetenciaRateioAnoInput(categoriaId, selectedValue, rowIndex) {
+        function createCompetenciaRateioAnoInput(linhaKey, selectedValue, rowIndex) {
             const input = document.createElement('input');
             input.type = 'number';
             input.min = '1900';
@@ -1855,14 +1901,14 @@
             input.className = 'form-control';
             input.value = selectedValue || '';
             input.addEventListener('input', function () {
-                competenciasRateioByCategoria[categoriaId][rowIndex].ano = input.value;
+                competenciasRateioByCategoria[linhaKey][rowIndex].ano = input.value;
                 serializeCompetenciasRateio();
-                syncCompetenciaRateioAssistantForCategoria(categoriaId);
+                syncCompetenciaRateioAssistantForCategoria(linhaKey);
             });
             return input;
         }
 
-        function createCompetenciaRateioValorInput(categoriaId, selectedValue, rowIndex) {
+        function createCompetenciaRateioValorInput(linhaKey, selectedValue, rowIndex) {
             const input = document.createElement('input');
             input.type = 'text';
             input.inputMode = 'numeric';
@@ -1870,13 +1916,13 @@
             input.className = 'form-control';
             const digitos = (selectedValue || '').toString().replace(/\D/g, '');
             input.value = formatarMoedaPtBr(digitos);
-            competenciasRateioByCategoria[categoriaId][rowIndex].valor = normalizarMoedaParaDecimal(digitos);
+            competenciasRateioByCategoria[linhaKey][rowIndex].valor = normalizarMoedaParaDecimal(digitos);
             input.addEventListener('input', function () {
                 const digitosAtualizados = input.value.replace(/\D/g, '');
                 input.value = formatarMoedaPtBr(digitosAtualizados);
-                competenciasRateioByCategoria[categoriaId][rowIndex].valor = normalizarMoedaParaDecimal(digitosAtualizados);
+                competenciasRateioByCategoria[linhaKey][rowIndex].valor = normalizarMoedaParaDecimal(digitosAtualizados);
                 serializeCompetenciasRateio();
-                syncCompetenciaRateioAssistantForCategoria(categoriaId);
+                syncCompetenciaRateioAssistantForCategoria(linhaKey);
             });
             return input;
         }
@@ -1891,9 +1937,9 @@
             }
 
             grupos.forEach(function (grupo) {
-                const categoriaId = String(grupo.categoriaId);
-                if (!Array.isArray(competenciasRateioByCategoria[categoriaId]) || !competenciasRateioByCategoria[categoriaId].length) {
-                    competenciasRateioByCategoria[categoriaId] = [{ mes: '', ano: '', valor: '' }];
+                const linhaKey = String(grupo.chaveRateio);
+                if (!Array.isArray(competenciasRateioByCategoria[linhaKey]) || !competenciasRateioByCategoria[linhaKey].length) {
+                    competenciasRateioByCategoria[linhaKey] = [{ mes: '', ano: '', valor: '' }];
                 }
 
                 const wrapper = document.createElement('div');
@@ -1904,7 +1950,7 @@
                 const headerCopy = document.createElement('div');
                 const title = document.createElement('p');
                 title.className = 'financeiro-tabler-subtitle';
-                title.textContent = `Competências — ${grupo.label}`;
+                title.textContent = `Competências — ${grupo.linhaLabel}`;
                 const meta = document.createElement('p');
                 meta.className = 'financeiro-tabler-meta';
                 meta.textContent = `Valor controlado: ${formatarCentavosMoeda(grupo.valorCentavos)}`;
@@ -1915,7 +1961,7 @@
                 addButton.className = 'btn btn-outline-primary btn-sm';
                 addButton.textContent = 'Adicionar competência';
                 addButton.addEventListener('click', function () {
-                    competenciasRateioByCategoria[categoriaId].push({ mes: '', ano: '', valor: '' });
+                    competenciasRateioByCategoria[linhaKey].push({ mes: '', ano: '', valor: '' });
                     renderCompetenciasRateioGroups();
                     serializeCompetenciasRateio();
                 });
@@ -1927,16 +1973,16 @@
                 assistenteBox.className = 'financeiro-competencia-assistente';
                 const assistenteCopy = document.createElement('div');
                 assistenteCopy.className = 'financeiro-competencia-assistente-copy';
-                assistenteCopy.innerHTML = '<p class="financeiro-tabler-subtitle">Assistente de competencias</p><p class="financeiro-tabler-meta">Distribua o valor da subcategoria entre as competencias. A soma informada deve fechar com o valor da subcategoria.</p>';
+                assistenteCopy.innerHTML = '<p class="financeiro-tabler-subtitle">Assistente de competencias</p><p class="financeiro-tabler-meta">Distribua o valor desta linha controlada entre as competencias. A soma informada deve fechar com o valor rateado da linha.</p>';
                 assistenteBox.appendChild(assistenteCopy);
                 const assistenteTableWrapper = document.createElement('div');
                 assistenteTableWrapper.className = 'table-responsive';
                 const assistenteTable = document.createElement('table');
                 assistenteTable.className = 'table table-vcenter financeiro-competencia-assistente-table';
-                assistenteTable.innerHTML = '<thead><tr><th>Mes</th><th>Situacao</th><th>Ja registrado</th><th>Valor deste lancamento</th></tr></thead>';
+                assistenteTable.innerHTML = '<thead><tr><th>Mes</th><th>Situacao</th><th>Ja registrado</th><th>Valor deste lancamento</th><th>Total apos lancamento</th></tr></thead>';
                 const assistenteGrid = document.createElement('tbody');
                 assistenteGrid.className = 'financeiro-competencia-assistente-grid';
-                assistenteGrid.dataset.financeiroCompetenciaRateioAssistenteGrid = categoriaId;
+                assistenteGrid.dataset.financeiroCompetenciaRateioAssistenteGrid = linhaKey;
                 assistenteTable.appendChild(assistenteGrid);
                 assistenteTableWrapper.appendChild(assistenteTable);
                 assistenteBox.appendChild(assistenteTableWrapper);
@@ -1948,38 +1994,38 @@
                 table.className = 'table table-vcenter financeiro-competencia-table';
                 table.innerHTML = '<thead><tr><th>Mês</th><th>Ano</th><th>Valor</th><th class="text-end">Ação</th></tr></thead>';
                 const tbody = document.createElement('tbody');
-                tbody.dataset.financeiroCompetenciaRateioBody = categoriaId;
+                tbody.dataset.financeiroCompetenciaRateioBody = linhaKey;
 
                 table.appendChild(tbody);
                 tableWrapper.appendChild(table);
                 wrapper.appendChild(tableWrapper);
                 competenciaRateioGroups.appendChild(wrapper);
-                renderCompetenciasRateioRowsForCategoria(categoriaId);
-                syncCompetenciaRateioAssistantForCategoria(categoriaId);
+                renderCompetenciasRateioRowsForCategoria(linhaKey);
+                syncCompetenciaRateioAssistantForCategoria(linhaKey);
             });
         }
 
-        function renderCompetenciasRateioRowsForCategoria(categoriaId) {
-            const tbody = document.querySelector(`[data-financeiro-competencia-rateio-body="${categoriaId}"]`);
+        function renderCompetenciasRateioRowsForCategoria(linhaKey) {
+            const tbody = document.querySelector(`[data-financeiro-competencia-rateio-body="${linhaKey}"]`);
             if (!tbody) return;
             tbody.innerHTML = '';
-            if (!Array.isArray(competenciasRateioByCategoria[categoriaId]) || !competenciasRateioByCategoria[categoriaId].length) {
-                competenciasRateioByCategoria[categoriaId] = [{ mes: '', ano: '', valor: '' }];
+            if (!Array.isArray(competenciasRateioByCategoria[linhaKey]) || !competenciasRateioByCategoria[linhaKey].length) {
+                competenciasRateioByCategoria[linhaKey] = [{ mes: '', ano: '', valor: '' }];
             }
 
-            competenciasRateioByCategoria[categoriaId].forEach(function (row, index) {
+            competenciasRateioByCategoria[linhaKey].forEach(function (row, index) {
                 const tr = document.createElement('tr');
 
                 const mesCell = document.createElement('td');
-                mesCell.appendChild(createCompetenciaRateioMesSelect(categoriaId, row.mes, index));
+                mesCell.appendChild(createCompetenciaRateioMesSelect(linhaKey, row.mes, index));
                 tr.appendChild(mesCell);
 
                 const anoCell = document.createElement('td');
-                anoCell.appendChild(createCompetenciaRateioAnoInput(categoriaId, row.ano, index));
+                anoCell.appendChild(createCompetenciaRateioAnoInput(linhaKey, row.ano, index));
                 tr.appendChild(anoCell);
 
                 const valorCell = document.createElement('td');
-                valorCell.appendChild(createCompetenciaRateioValorInput(categoriaId, row.valor, index));
+                valorCell.appendChild(createCompetenciaRateioValorInput(linhaKey, row.valor, index));
                 tr.appendChild(valorCell);
 
                 const acaoCell = document.createElement('td');
@@ -1989,7 +2035,7 @@
                 removeButton.className = 'btn btn-sm btn-outline-secondary';
                 removeButton.textContent = 'Remover';
                 removeButton.addEventListener('click', function () {
-                    competenciasRateioByCategoria[categoriaId].splice(index, 1);
+                    competenciasRateioByCategoria[linhaKey].splice(index, 1);
                     renderCompetenciasRateioGroups();
                     serializeCompetenciasRateio();
                 });
@@ -2000,31 +2046,32 @@
             });
         }
 
-        function syncCompetenciaRateioAssistantForCategoria(categoriaId) {
+        function syncCompetenciaRateioAssistantForCategoria(linhaKey) {
             const assistenteGrid = document.querySelector(
-                `[data-financeiro-competencia-rateio-assistente-grid="${categoriaId}"]`
+                `[data-financeiro-competencia-rateio-assistente-grid="${linhaKey}"]`
             );
             if (!assistenteGrid) return;
             assistenteGrid.innerHTML = '';
             const pessoaId = pessoaField ? pessoaField.value : '';
-            const rows = Array.isArray(competenciasRateioByCategoria[categoriaId])
-                ? competenciasRateioByCategoria[categoriaId]
+            const rows = Array.isArray(competenciasRateioByCategoria[linhaKey])
+                ? competenciasRateioByCategoria[linhaKey]
                 : [];
+            const grupoAtual = getRateioLinhasControladasConsolidadas().find(function (grupo) {
+                return String(grupo.chaveRateio) === String(linhaKey);
+            });
+            if (!grupoAtual) return;
             getCompetenciasSugeridas().forEach(function (competencia) {
                 const rowAtual = findCompetenciaRow(rows, competencia.mes, competencia.ano);
                 const valorAtual = rowAtual ? String(rowAtual.valor || '') : '';
                 const valorRegistrado = getCompetenciaRegistrada(
                     pessoaId,
-                    categoriaId,
+                    grupoAtual.categoriaId,
                     competencia.mes,
                     competencia.ano
                 );
-                const valorControladoAtual = getRateioLinhasControladasConsolidadas().find(function (grupo) {
-                    return String(grupo.categoriaId) === String(categoriaId);
-                });
                 const statusCompetencia = resolverStatusCompetencia(
                     valorAtual,
-                    valorControladoAtual ? normalizarMoedaParaDecimal(String(valorControladoAtual.valorCentavos || '')) : '',
+                    normalizarMoedaParaDecimal(String(grupoAtual.valorCentavos || '')),
                     valorRegistrado
                 );
                 const possuiRegistro = parseMoedaParaCentavos(valorRegistrado) > 0;
@@ -2065,22 +2112,29 @@
                 input.value = formatarMoedaPtBr((valorAtual || '').replace(/\D/g, ''));
                 input.setAttribute(
                     'aria-label',
-                    `Valor deste lancamento para ${competencia.label} em ${categoriaId}`
+                    `Valor deste lancamento para ${competencia.label} em ${grupoAtual.linhaLabel}`
                 );
                 input.addEventListener('input', function () {
                     const digitos = input.value.replace(/\D/g, '');
                     input.value = formatarMoedaPtBr(digitos);
                     upsertCompetenciaRow(
-                        competenciasRateioByCategoria[categoriaId],
+                        competenciasRateioByCategoria[linhaKey],
                         competencia.mes,
                         competencia.ano,
                         normalizarMoedaParaDecimal(digitos)
                     );
-                    renderCompetenciasRateioRowsForCategoria(categoriaId);
+                    renderCompetenciasRateioRowsForCategoria(linhaKey);
                     serializeCompetenciasRateio();
                 });
                 inputCell.appendChild(input);
                 tr.appendChild(inputCell);
+
+                const totalCell = document.createElement('td');
+                const total = document.createElement('span');
+                total.className = `financeiro-competencia-assistente-registered ${parseMoedaParaCentavos(valorRegistrado) + parseMoedaParaCentavos(valorAtual) > 0 ? '' : 'is-empty'}`.trim();
+                total.textContent = formatarTotalAposLancamento(valorRegistrado, valorAtual);
+                totalCell.appendChild(total);
+                tr.appendChild(totalCell);
 
                 assistenteGrid.appendChild(tr);
             });
@@ -2168,7 +2222,7 @@
             serializeRateioRows();
             if (rateioAddButton) {
                 rateioAddButton.addEventListener('click', function () {
-                    rateioRows.push({ categoria: '', centro_custo: '', valor: '' });
+                    rateioRows.push({ chave: '', categoria: '', centro_custo: '', valor: '' });
                     renderRateioRows();
                     serializeRateioRows();
                     syncCompetenciasRateioState();
