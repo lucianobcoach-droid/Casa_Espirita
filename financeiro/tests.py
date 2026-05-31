@@ -2163,6 +2163,18 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
         self.assertTrue(form.is_valid(), form.errors)
         self.assertEqual(form.cleaned_data['centro_custo'], self.centro_custo_manual)
 
+    def test_lancamento_sem_padrao_mantem_centro_custo_vazio(self):
+        form = LancamentoFinanceiroForm(
+            data=self._dados_lancamento(
+                categoria=str(self.categoria_nao_controlada.pk),
+                centro_custo='',
+                competencias_payload='',
+            )
+        )
+
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertIsNone(form.cleaned_data['centro_custo'])
+
     def test_edicao_aplica_padrao_da_nova_subcategoria_quando_usuario_troca_categoria(self):
         lancamento = self._criar_lancamento_controlado(valor='100.00')
         lancamento.centro_custo = self.centro_custo_manual
@@ -2177,6 +2189,22 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
 
         self.assertTrue(form.is_valid(), form.errors)
         self.assertEqual(form.cleaned_data['centro_custo'], self.centro_custo_novo)
+
+    def test_edicao_troca_subcategoria_com_padrao_para_sem_padrao_mantem_centro_custo_vazio(self):
+        lancamento = self._criar_lancamento_controlado(valor='100.00')
+        lancamento.centro_custo = self.centro_custo_padrao
+        lancamento.save()
+
+        dados = self._dados_lancamento(
+            categoria=str(self.categoria_nao_controlada.pk),
+            centro_custo='',
+            numero_documento=lancamento.numero_documento,
+            competencias_payload='',
+        )
+        form = LancamentoFinanceiroForm(data=dados, instance=lancamento)
+
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertIsNone(form.cleaned_data['centro_custo'])
 
     def test_lancamento_simples_bloqueia_soma_divergente(self):
         form = LancamentoFinanceiroForm(
@@ -2473,6 +2501,9 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
         self.assertIn("'numero_documento'", html)
         self.assertIn('centro_custo_padrao', html)
         self.assertIn('financeiroCentroCustoSugestaoAtiva', html)
+        self.assertIn('aplicarCentroCustoSugerido(null)', html)
+        self.assertIn('reativarSugestoesDescricaoRestaurada()', html)
+        self.assertIn("descricaoField.addEventListener('change', handleRegraSugestaoTrigger)", html)
         self.assertIn('Quitado', html)
         self.assertIn('Ja possui contribuicao', html)
         self.assertIn('Sem quitacao registrada', html)

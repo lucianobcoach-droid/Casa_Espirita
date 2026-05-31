@@ -4672,3 +4672,6 @@ Status de homologacao da usuaria:
   - ao trocar a subcategoria, a sugestao e recalculada conforme a nova subcategoria
 - no fluxo restaurado pelo botao `+`, o formulario agora recompõe melhor o estado interno das sugestoes e preserva os metadados da subcategoria restaurada para que centro de custo padrao e assistente de competencias continuem reagindo corretamente a novas alteracoes
 - sem impacto em calculo financeiro, extrato, resumo, prestacao/fechamento, balancete, recibos ou financeiro oficial
+- quando a subcategoria selecionada nao possui `centro_custo_padrao`, o campo `centro_custo` do lancamento permanece vazio e editavel
+- ao trocar de uma subcategoria com sugestao automatica para outra sem padrao, o centro de custo sugerido anteriormente e limpo sem bloquear a escolha manual
+- o formulario restaurado pelo botao `+` volta a manter ativas as sugestoes automaticas por `descricao`, preservando o comportamento esperado de um formulario novo

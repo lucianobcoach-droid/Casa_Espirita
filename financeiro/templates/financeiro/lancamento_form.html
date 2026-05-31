@@ -1176,6 +1176,9 @@
             const sugestaoAtiva = centroCustoField.dataset.financeiroCentroCustoSugestaoAtiva === 'true';
 
             if (!centroCustoPadrao) {
+                if (sugestaoAtiva && centroCustoAtual) {
+                    aplicarCentroCustoSugerido(null);
+                }
                 delete centroCustoField.dataset.financeiroCentroCustoSugestaoAtiva;
                 return;
             }
@@ -1280,6 +1283,15 @@
             if (regraSugestaoAplicacaoEmAndamento) return;
             regraSugestaoAtivadaPorUsuario = true;
             loadRegraSugestoes();
+        }
+
+        function reativarSugestoesDescricaoRestaurada() {
+            if (!descricaoField) return;
+            clearRegraSugestoes();
+            regraSugestaoAtivadaPorUsuario = !!descricaoField.value.trim();
+            if (regraSugestaoAtivadaPorUsuario) {
+                loadRegraSugestoes();
+            }
         }
 
         function renderHistoricoState(message, items, totais) {
@@ -2131,6 +2143,7 @@
             }
         }
         if (descricaoField) descricaoField.addEventListener('input', handleRegraSugestaoTrigger);
+        if (descricaoField) descricaoField.addEventListener('change', handleRegraSugestaoTrigger);
         if (descricaoField) descricaoField.addEventListener('focus', handleRegraSugestaoTrigger);
         if (descricaoField) {
             descricaoField.addEventListener('blur', function () {
@@ -2239,6 +2252,7 @@
             syncCompetenciasState();
             syncCompetenciasRateioState();
             renderCompetenciaAssistant();
+            reativarSugestoesDescricaoRestaurada();
         }
         const pessoaCriada = params.get('pessoa_criada');
         if (pessoaCriada && pessoaField) {

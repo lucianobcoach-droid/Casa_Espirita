@@ -6296,3 +6296,13 @@ Não houve alteração de código funcional nesta etapa.
   - preservacao de centro de custo manual
   - reaplicacao do padrao ao trocar a subcategoria na edicao
 - a correcao anterior das competencias permaneceu protegida
+
+## Microetapa: ajuste fino do centro de custo padrao e das sugestoes apos o botao `+`
+
+- corrigi o caso em que a subcategoria sem `centro_custo_padrao` precisava manter `centro_custo` vazio e editavel
+- ao trocar de uma subcategoria com sugestao automatica para outra sem padrao, o valor sugerido anteriormente agora e limpo sem bloquear preenchimento manual
+- o formulario restaurado pelo botao `+` voltou a reativar corretamente as sugestoes automaticas por `descricao`, mantendo o comportamento esperado de um formulario novo preenchido manualmente
+- reforcei a cobertura para:
+  - categoria sem padrao mantendo `centro_custo` vazio
+  - troca de categoria com padrao para categoria sem padrao sem reaproveitar sugestao antiga
+  - presenca do rearme das sugestoes no template do formulario
