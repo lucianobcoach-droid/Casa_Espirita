@@ -4661,3 +4661,14 @@ Status de homologacao da usuaria:
 - o novo formulario reaberto pelo `+` continua em modo de criacao, sem vinculo com o `pk` anterior
 - para evitar reaproveitamento indevido de identificador unico, `numero_documento` deixou de entrar no rascunho restaurado
 - a correcao anterior das competencias no proprio lancamento foi preservada; o rascunho do `+` continua carregando os payloads operacionais do formulario sem reabrir o registro salvo em modo de edicao
+
+## Centro de custo padrao por subcategoria no lancamento
+
+- subcategoria financeira passou a aceitar `centro_custo_padrao` opcional
+- a regra vale apenas para subcategorias usadas em lancamento; categoria pai nao aceita centro de custo padrao
+- no formulario de lancamento:
+  - ao selecionar uma subcategoria com centro de custo padrao, o sistema sugere automaticamente esse centro de custo
+  - o campo continua editavel e a alteracao manual do usuario permanece permitida
+  - ao trocar a subcategoria, a sugestao e recalculada conforme a nova subcategoria
+- no fluxo restaurado pelo botao `+`, o formulario agora recompõe melhor o estado interno das sugestoes e preserva os metadados da subcategoria restaurada para que centro de custo padrao e assistente de competencias continuem reagindo corretamente a novas alteracoes
+- sem impacto em calculo financeiro, extrato, resumo, prestacao/fechamento, balancete, recibos ou financeiro oficial

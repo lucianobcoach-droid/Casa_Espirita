@@ -205,6 +205,13 @@ class CategoriaFinanceira(models.Model):
         blank=True,
         null=True,
     )
+    centro_custo_padrao = models.ForeignKey(
+        'CentroCusto',
+        on_delete=models.PROTECT,
+        related_name='subcategorias_padrao',
+        blank=True,
+        null=True,
+    )
     controla_recorrencia_competencia = models.BooleanField(default=False)
     mensagem_recibo = models.TextField(blank=True)
     ativo = models.BooleanField(default=True)
@@ -218,6 +225,13 @@ class CategoriaFinanceira(models.Model):
 
     def __str__(self) -> str:
         return self.nome
+
+    def clean(self) -> None:
+        super().clean()
+        if self.centro_custo_padrao_id and not self.categoria_pai_id:
+            raise ValidationError(
+                {'centro_custo_padrao': 'Centro de custo padrao so pode ser definido para subcategorias.'}
+            )
 
     @property
     def label_completo(self) -> str:

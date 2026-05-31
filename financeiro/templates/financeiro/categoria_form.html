@@ -243,10 +243,12 @@
                     </div>
 
                     {% for field in form %}
-                        <div class="field financeiro-categoria-form-field{% if field.field.widget.input_type == 'checkbox' %} financeiro-categoria-form-field-boolean{% endif %}{% if field.name == 'categoria_pai' %} financeiro-categoria-form-parent-field{% endif %}"{% if field.name == 'categoria_pai' %} data-categoria-parent-field{% endif %}>
+                        <div class="field financeiro-categoria-form-field{% if field.field.widget.input_type == 'checkbox' %} financeiro-categoria-form-field-boolean{% endif %}{% if field.name == 'categoria_pai' %} financeiro-categoria-form-parent-field{% endif %}{% if field.name == 'centro_custo_padrao' %} financeiro-categoria-form-centro-custo-field{% endif %}"{% if field.name == 'categoria_pai' %} data-categoria-parent-field{% endif %}{% if field.name == 'centro_custo_padrao' %} data-categoria-centro-custo-field{% endif %}>
                             <label class="label" for="{{ field.id_for_label }}">
                                 {% if field.name == 'categoria_pai' %}
                                     Categoria
+                                {% elif field.name == 'centro_custo_padrao' %}
+                                    Centro de custo padrão
                                 {% elif field.name == 'tipo' %}
                                     Tipo
                                 {% elif field.name == 'nome' %}
@@ -267,6 +269,8 @@
                             </div>
                             {% if field.name == 'categoria_pai' %}
                                 <p class="help" data-categoria-parent-help>Selecione uma Categoria para cadastrar esta Subcategoria. Deixe em branco quando estiver cadastrando a propria Categoria.</p>
+                            {% elif field.name == 'centro_custo_padrao' %}
+                                <p class="help" data-categoria-centro-custo-help>Usado como sugestao automatica em novos lancamentos desta subcategoria. Pode ser alterado no lancamento.</p>
                             {% elif field.name == 'mensagem_recibo' %}
                                 <p class="help">Opcional. Quando preenchida, substitui a mensagem padrao simples do recibo para esta categoria ou subcategoria.</p>
                             {% elif field.help_text %}
@@ -297,11 +301,13 @@
         var modeOptions = Array.prototype.slice.call(document.querySelectorAll('[data-categoria-mode-option]'));
         var parentField = document.querySelector('[data-categoria-parent-field]');
         var parentSelect = document.getElementById('{{ form.categoria_pai.id_for_label }}');
+        var centroCustoField = document.querySelector('[data-categoria-centro-custo-field]');
+        var centroCustoSelect = document.getElementById('{{ form.centro_custo_padrao.id_for_label }}');
         var nameLabel = document.querySelector('[data-categoria-name-label]');
         var parentHelp = document.querySelector('[data-categoria-parent-help]');
         var modeHelp = document.querySelector('[data-categoria-mode-help]');
 
-        if (!modeControls.length || !parentField || !parentSelect || !nameLabel || !parentHelp || !modeHelp) {
+        if (!modeControls.length || !parentField || !parentSelect || !centroCustoField || !centroCustoSelect || !nameLabel || !parentHelp || !modeHelp) {
             return;
         }
 
@@ -319,9 +325,12 @@
 
             parentField.classList.toggle('is-hidden-by-mode', !isSubcategoria);
             parentSelect.disabled = !isSubcategoria;
+            centroCustoField.classList.toggle('is-hidden-by-mode', !isSubcategoria);
+            centroCustoSelect.disabled = !isSubcategoria;
 
             if (!isSubcategoria) {
                 parentSelect.value = '';
+                centroCustoSelect.value = '';
             }
 
             nameLabel.textContent = isSubcategoria ? 'Subcategoria' : 'Categoria';

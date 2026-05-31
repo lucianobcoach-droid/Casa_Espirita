@@ -32,6 +32,7 @@ from .models import (
     AssinaturaInstitucional,
     AuditoriaFinanceiro,
     CategoriaFinanceira,
+    CentroCusto,
     ColunaPersonalizada,
     ContaFinanceira,
     LinhaTabelaPersonalizada,
@@ -1787,6 +1788,39 @@ class FrequenciaMensalBaseCadastralTests(TestCase):
         categoria = form.save()
         self.assertTrue(categoria.controla_recorrencia_competencia)
 
+    def test_form_categoria_permite_definir_centro_custo_padrao_em_subcategoria(self):
+        centro_custo = CentroCusto.objects.create(codigo='CC900', nome='Contribuicao')
+        categoria_pai = CategoriaFinanceira.objects.create(
+            nome='Receitas',
+            tipo=CategoriaFinanceira.TipoCategoria.RECEITA,
+        )
+        form = CategoriaFinanceiraForm(
+            data={
+                'nome': 'Contribuicao mensal',
+                'tipo': CategoriaFinanceira.TipoCategoria.RECEITA,
+                'categoria_pai': str(categoria_pai.pk),
+                'centro_custo_padrao': str(centro_custo.pk),
+                'controla_recorrencia_competencia': '',
+                'mensagem_recibo': '',
+                'ativo': 'on',
+            }
+        )
+
+        self.assertTrue(form.is_valid(), form.errors)
+        categoria = form.save()
+        self.assertEqual(categoria.centro_custo_padrao, centro_custo)
+
+    def test_categoria_nao_permite_centro_custo_padrao_sem_categoria_pai(self):
+        centro_custo = CentroCusto.objects.create(codigo='CC901', nome='Geral')
+        categoria = CategoriaFinanceira(
+            nome='Receitas sem pai',
+            tipo=CategoriaFinanceira.TipoCategoria.RECEITA,
+            centro_custo_padrao=centro_custo,
+        )
+
+        with self.assertRaises(ValidationError):
+            categoria.full_clean()
+
     def test_template_pessoa_list_mostra_indicador_recorrente(self):
         pessoa = PessoaFinanceira.objects.create(
             codigo='P902',
@@ -1838,6 +1872,9 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
             saldo_inicial=Decimal('0.00'),
             data_saldo_inicial=date(2026, 1, 1),
         )
+        self.centro_custo_padrao = CentroCusto.objects.create(codigo='CC100', nome='Padrao recorrencia')
+        self.centro_custo_manual = CentroCusto.objects.create(codigo='CC101', nome='Manual recorrencia')
+        self.centro_custo_novo = CentroCusto.objects.create(codigo='CC102', nome='Novo padrao')
         self.pessoa_recorrente = PessoaFinanceira.objects.create(
             codigo='P950',
             nome='Contribuinte recorrente',
@@ -1857,12 +1894,20 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
             tipo=CategoriaFinanceira.TipoCategoria.RECEITA,
             categoria_pai=self.categoria_receita_pai,
             controla_recorrencia_competencia=True,
+            centro_custo_padrao=self.centro_custo_padrao,
         )
         self.categoria_nao_controlada = CategoriaFinanceira.objects.create(
             nome='Venda de livros',
             tipo=CategoriaFinanceira.TipoCategoria.RECEITA,
             categoria_pai=self.categoria_receita_pai,
             controla_recorrencia_competencia=False,
+        )
+        self.categoria_controlada_2 = CategoriaFinanceira.objects.create(
+            nome='Contribuicao especial',
+            tipo=CategoriaFinanceira.TipoCategoria.RECEITA,
+            categoria_pai=self.categoria_receita_pai,
+            controla_recorrencia_competencia=True,
+            centro_custo_padrao=self.centro_custo_novo,
         )
 
     def _dados_lancamento(self, **overrides):
@@ -2103,6 +2148,35 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
             response.url,
             f"{reverse('financeiro:lancamento-create')}?restaurar_lancamento=1&return_to=%2Ffinanceiro%2Flancamentos%2F",
         )
+
+    def test_lancamento_sugere_centro_custo_padrao_quando_subcategoria_tem_padrao(self):
+        form = LancamentoFinanceiroForm(data=self._dados_lancamento())
+
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(form.cleaned_data['centro_custo'], self.centro_custo_padrao)
+
+    def test_lancamento_respeita_centro_custo_manual_mesmo_com_padrao_na_subcategoria(self):
+        form = LancamentoFinanceiroForm(
+            data=self._dados_lancamento(centro_custo=str(self.centro_custo_manual.pk))
+        )
+
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(form.cleaned_data['centro_custo'], self.centro_custo_manual)
+
+    def test_edicao_aplica_padrao_da_nova_subcategoria_quando_usuario_troca_categoria(self):
+        lancamento = self._criar_lancamento_controlado(valor='100.00')
+        lancamento.centro_custo = self.centro_custo_manual
+        lancamento.save()
+
+        dados = self._dados_lancamento(
+            categoria=str(self.categoria_controlada_2.pk),
+            centro_custo='',
+            numero_documento=lancamento.numero_documento,
+        )
+        form = LancamentoFinanceiroForm(data=dados, instance=lancamento)
+
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(form.cleaned_data['centro_custo'], self.centro_custo_novo)
 
     def test_lancamento_simples_bloqueia_soma_divergente(self):
         form = LancamentoFinanceiroForm(
@@ -2397,6 +2471,8 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
         self.assertIn('financeiro-competencia-assistente-status', html)
         self.assertIn('data-financeiro-save-and-stay="true"', html)
         self.assertIn("'numero_documento'", html)
+        self.assertIn('centro_custo_padrao', html)
+        self.assertIn('financeiroCentroCustoSugestaoAtiva', html)
         self.assertIn('Quitado', html)
         self.assertIn('Ja possui contribuicao', html)
         self.assertIn('Sem quitacao registrada', html)

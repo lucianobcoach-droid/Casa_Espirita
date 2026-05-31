@@ -446,12 +446,21 @@ class PessoaFinanceiraForm(forms.ModelForm):
 
 
 class CategoriaFinanceiraForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        centro_custo_atual_id = getattr(self.instance, 'centro_custo_padrao_id', None)
+        self.fields['centro_custo_padrao'].queryset = (
+            CentroCusto.objects.filter(Q(ativo=True) | Q(pk=centro_custo_atual_id)).order_by('codigo', 'nome')
+        )
+        self.fields['centro_custo_padrao'].required = False
+
     class Meta:
         model = CategoriaFinanceira
         fields = [
             'nome',
             'tipo',
             'categoria_pai',
+            'centro_custo_padrao',
             'controla_recorrencia_competencia',
             'mensagem_recibo',
             'ativo',
@@ -465,6 +474,9 @@ class CategoriaFinanceiraForm(forms.ModelForm):
             ),
         }
         help_texts = {
+            'centro_custo_padrao': (
+                'Usado como sugestao automatica em novos lancamentos desta subcategoria. Pode ser alterado no lancamento.'
+            ),
             'controla_recorrencia_competencia': (
                 'Marque quando esta subcategoria deve entrar no controle de recorrencia por competencia.'
             ),
@@ -1399,6 +1411,7 @@ class LancamentoFinanceiroForm(forms.ModelForm):
     rateio_payload = forms.CharField(required=False, widget=forms.HiddenInput())
     competencias_payload = forms.CharField(required=False, widget=forms.HiddenInput())
     competencias_rateio_payload = forms.CharField(required=False, widget=forms.HiddenInput())
+    centro_custo_manualmente_editado = forms.BooleanField(required=False, widget=forms.HiddenInput())
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -1920,6 +1933,22 @@ class LancamentoFinanceiroForm(forms.ModelForm):
                     'categoria',
                     'Selecione uma subcategoria compativel com o tipo do lancamento.',
                 )
+            categoria = cleaned_data.get('categoria')
+            centro_custo = cleaned_data.get('centro_custo')
+            centro_custo_manualmente_editado = bool(cleaned_data.get('centro_custo_manualmente_editado'))
+            categoria_foi_trocada = bool(
+                self.instance.pk
+                and categoria
+                and self.instance.categoria_id != categoria.pk
+            )
+            if (
+                categoria
+                and categoria.centro_custo_padrao_id
+                and not centro_custo
+                and not centro_custo_manualmente_editado
+                and (not self.instance.pk or categoria_foi_trocada)
+            ):
+                cleaned_data['centro_custo'] = categoria.centro_custo_padrao
 
         if lancamento_com_rateio:
             cleaned_data['salvar_como_regra_automatica'] = False

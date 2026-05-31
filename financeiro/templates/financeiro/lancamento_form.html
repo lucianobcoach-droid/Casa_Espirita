@@ -638,6 +638,7 @@
         const categoriaField = document.querySelector('[name="categoria"]');
         const categoriaWrapper = document.querySelector('[data-financeiro-categoria-wrapper="true"]');
         const centroCustoField = document.querySelector('[name="centro_custo"]');
+        const centroCustoManualField = document.querySelector('[name="centro_custo_manualmente_editado"]');
         const centroCustoWrapper = document.querySelector('[data-financeiro-centro-custo-wrapper="true"]');
         const valorField = document.querySelector('[name="valor"]');
         const valorWrapper = document.querySelector('[data-financeiro-valor-wrapper="true"]');
@@ -727,7 +728,15 @@
                 if (field.tagName === 'SELECT') {
                     const selected = field.options[field.selectedIndex];
                     const label = field._autocompleteInput ? field._autocompleteInput.value : (selected ? selected.text : '');
-                    dados[name] = { type: 'select', value: field.value, label: label };
+                    let meta = {};
+                    if (selected && selected.dataset.autocompleteMeta) {
+                        try {
+                            meta = JSON.parse(selected.dataset.autocompleteMeta);
+                        } catch (error) {
+                            meta = {};
+                        }
+                    }
+                    dados[name] = { type: 'select', value: field.value, label: label, meta: meta };
                     return;
                 }
                 dados[name] = { type: 'input', value: field.value };
@@ -767,9 +776,14 @@
                 }
                 if (payload.type === 'select') {
                     if (payload.value) {
-                        setSelectValueFromSugestao(field, { id: payload.value, label: payload.label || '' });
+                        setSelectValueFromSugestao(field, {
+                            id: payload.value,
+                            label: payload.label || '',
+                            meta: payload.meta || {},
+                        });
                     } else {
                         field.value = '';
+                        if (field._autocompleteInput) field._autocompleteInput.value = '';
                     }
                     return;
                 }
@@ -981,6 +995,14 @@
                 const selected = select.options[select.selectedIndex];
                 return selected && selected.value ? selected.text : '';
             }
+            function setOptionMeta(option, item) {
+                if (!option) return;
+                if (item && item.meta) {
+                    option.dataset.autocompleteMeta = JSON.stringify(item.meta);
+                    return;
+                }
+                delete option.dataset.autocompleteMeta;
+            }
             function closeMenu() { menu.hidden = true; menu.innerHTML = ''; }
             function ensureOption(item) {
                 let option = Array.from(select.options).find((current) => current.value === String(item.id));
@@ -990,6 +1012,7 @@
                     select.appendChild(option);
                 }
                 option.text = item.label;
+                setOptionMeta(option, item);
                 return option;
             }
             function selectOption(item) {
@@ -1112,10 +1135,54 @@
                 field.appendChild(option);
             }
             option.text = payload.label;
+            if (payload.meta) {
+                option.dataset.autocompleteMeta = JSON.stringify(payload.meta);
+            }
             option.selected = true;
             field.value = option.value;
             if (field._autocompleteInput) field._autocompleteInput.value = option.text;
             field.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+
+        function getSelectedOptionMeta(field) {
+            if (!field) return {};
+            const selected = field.options[field.selectedIndex];
+            if (!selected || !selected.dataset.autocompleteMeta) return {};
+            try {
+                return JSON.parse(selected.dataset.autocompleteMeta);
+            } catch (error) {
+                return {};
+            }
+        }
+
+        function aplicarCentroCustoSugerido(payload) {
+            if (!centroCustoField) return;
+            centroCustoField.dataset.financeiroCentroCustoAplicando = 'true';
+            if (centroCustoManualField) centroCustoManualField.value = '';
+            setSelectValueFromSugestao(centroCustoField, payload);
+            if (payload && payload.id) {
+                centroCustoField.dataset.financeiroCentroCustoSugestaoAtiva = 'true';
+                return;
+            }
+            delete centroCustoField.dataset.financeiroCentroCustoSugestaoAtiva;
+        }
+
+        function aplicarCentroCustoPadraoDaCategoria(options) {
+            if (!categoriaField || !centroCustoField || centroCustoField.disabled) return;
+            const meta = getSelectedOptionMeta(categoriaField);
+            const centroCustoPadrao = meta.centro_custo_padrao || null;
+            const force = !!(options && options.force);
+            const centroCustoAtual = centroCustoField.value || '';
+            const sugestaoAtiva = centroCustoField.dataset.financeiroCentroCustoSugestaoAtiva === 'true';
+
+            if (!centroCustoPadrao) {
+                delete centroCustoField.dataset.financeiroCentroCustoSugestaoAtiva;
+                return;
+            }
+
+            if (force || !centroCustoAtual || sugestaoAtiva) {
+                aplicarCentroCustoSugerido(centroCustoPadrao);
+            }
         }
 
         function applyRegraSugestao(payload) {
@@ -1132,7 +1199,11 @@
             }
             setSelectValueFromSugestao(pessoaField, payload.pessoa);
             setSelectValueFromSugestao(categoriaField, payload.categoria);
-            setSelectValueFromSugestao(centroCustoField, payload.centro_custo);
+            if (payload.centro_custo) {
+                aplicarCentroCustoSugerido(payload.centro_custo);
+            } else {
+                aplicarCentroCustoPadraoDaCategoria({ force: true });
+            }
             setSelectValueFromSugestao(contaDestinoField, payload.conta_destino);
             setSelectValueFromSugestao(document.querySelector('[name="conta"]'), payload.conta);
             const observacoesField = document.querySelector('[name="observacoes"]');
@@ -2070,8 +2141,22 @@
         if (pessoaField) pessoaField.addEventListener('change', handleRegraSugestaoTrigger);
         if (pessoaField) pessoaField.addEventListener('change', syncCompetenciasState);
         if (pessoaField) pessoaField.addEventListener('change', syncCompetenciasRateioState);
+        if (centroCustoField) {
+            centroCustoField.addEventListener('change', function () {
+                if (centroCustoField.dataset.financeiroCentroCustoAplicando === 'true') {
+                    delete centroCustoField.dataset.financeiroCentroCustoAplicando;
+                    return;
+                }
+                if (centroCustoManualField) centroCustoManualField.value = 'on';
+                delete centroCustoField.dataset.financeiroCentroCustoSugestaoAtiva;
+            });
+        }
         if (categoriaField) categoriaField.addEventListener('change', syncCompetenciasState);
         if (categoriaField) categoriaField.addEventListener('change', renderCompetenciaAssistant);
+        if (categoriaField) categoriaField.addEventListener('change', function () {
+            aplicarCentroCustoPadraoDaCategoria({ force: true });
+            handleRegraSugestaoTrigger();
+        });
         if (tipoField) {
             tipoField.addEventListener('change', function () {
                 if (
@@ -2149,6 +2234,11 @@
         const params = new URLSearchParams(window.location.search);
         if (params.get('restaurar_lancamento') === '1') {
             restaurarDraftLancamento();
+            aplicarCentroCustoPadraoDaCategoria({ force: false });
+            syncRateioState();
+            syncCompetenciasState();
+            syncCompetenciasRateioState();
+            renderCompetenciaAssistant();
         }
         const pessoaCriada = params.get('pessoa_criada');
         if (pessoaCriada && pessoaField) {

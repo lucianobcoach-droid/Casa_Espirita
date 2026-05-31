@@ -6281,3 +6281,18 @@ Não houve alteração de código funcional nesta etapa.
 - o rascunho passou a ser salvo apenas quando o envio parte do `+`, sem interferir no fluxo normal do botao `Salvar`
 - como guardrail tecnico, `numero_documento` foi retirado do rascunho restaurado para evitar reaproveitamento de identificador unico
 - mantive a tela reaberta em modo de novo cadastro e preservei a correcao recente de competencias na reabertura/edicao
+
+## Microetapa: centro de custo padrao por subcategoria e recomposicao das sugestoes
+
+- adicionei `centro_custo_padrao` opcional em `CategoriaFinanceira`, restrito ao uso em subcategorias
+- no lancamento, a subcategoria agora pode sugerir automaticamente o centro de custo padrao sem bloquear alteracao manual pelo usuario
+- no backend, a sugestao entrou como fallback seguro quando o centro de custo vier vazio e nao houver indicacao de limpeza manual pelo usuario
+- no frontend, o autocomplete da subcategoria passou a carregar metadados do centro de custo padrao, e o formulario recompõe melhor o estado apos `restaurar_lancamento=1`
+- o rascunho do `+` passou a preservar tambem os metadados da subcategoria restaurada, evitando que regras dependentes parem de reagir apos a restauracao
+- a cobertura automatizada foi ampliada para:
+  - cadastro de subcategoria com centro de custo padrao
+  - bloqueio de centro de custo padrao em categoria pai
+  - sugestao automatica no lancamento
+  - preservacao de centro de custo manual
+  - reaplicacao do padrao ao trocar a subcategoria na edicao
+- a correcao anterior das competencias permaneceu protegida

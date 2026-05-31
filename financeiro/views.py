@@ -7166,7 +7166,7 @@ class CategoriaFinanceiraAutocompleteView(FinanceiroAutocompleteView):
     limit = 1000
 
     def get_queryset(self):
-        queryset = super().get_queryset().filter(categoria_pai__isnull=False)
+        queryset = super().get_queryset().filter(categoria_pai__isnull=False).select_related('centro_custo_padrao')
         tipo = self.request.GET.get('tipo', '').strip()
         if tipo in {
             LancamentoFinanceiro.TipoLancamento.RECEITA,
@@ -7174,6 +7174,27 @@ class CategoriaFinanceiraAutocompleteView(FinanceiroAutocompleteView):
         }:
             queryset = queryset.filter(tipo=tipo)
         return queryset
+
+    def get(self, request, *args, **kwargs):
+        results = []
+        for categoria in self.get_queryset()[: self.limit]:
+            results.append(
+                {
+                    'id': categoria.pk,
+                    'label': str(categoria),
+                    'meta': {
+                        'centro_custo_padrao': (
+                            {
+                                'id': categoria.centro_custo_padrao_id,
+                                'label': str(categoria.centro_custo_padrao),
+                            }
+                            if categoria.centro_custo_padrao_id
+                            else None
+                        ),
+                    },
+                }
+            )
+        return JsonResponse({'results': results})
 
 
 class ContaFinanceiraAutocompleteView(FinanceiroAutocompleteView):
