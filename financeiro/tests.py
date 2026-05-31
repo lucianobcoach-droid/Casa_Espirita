@@ -1958,8 +1958,8 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
             lancamento_com_rateio='on',
             valor_total_documento='130.00',
             rateio_payload=json.dumps([
-                {'categoria': str(self.categoria_controlada.pk), 'valor': '100.00'},
-                {'categoria': str(self.categoria_nao_controlada.pk), 'valor': '30.00'},
+                {'categoria': str(self.categoria_controlada.pk), 'centro_custo': '', 'valor': '100.00'},
+                {'categoria': str(self.categoria_nao_controlada.pk), 'centro_custo': '', 'valor': '30.00'},
             ]),
             competencias_payload='',
             competencias_rateio_payload=json.dumps({
@@ -1999,8 +1999,28 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
                 'return_to': '',
                 'save_and_stay_param': 'salvar_permanecer',
                 'rateio_categoria_opcoes': [
-                    {'id': self.categoria_controlada.pk, 'label': str(self.categoria_controlada), 'tipo': self.categoria_controlada.tipo},
-                    {'id': self.categoria_nao_controlada.pk, 'label': str(self.categoria_nao_controlada), 'tipo': self.categoria_nao_controlada.tipo},
+                    {
+                        'id': self.categoria_controlada.pk,
+                        'label': str(self.categoria_controlada),
+                        'tipo': self.categoria_controlada.tipo,
+                        'meta': {
+                            'centro_custo_padrao': {
+                                'id': self.centro_custo_padrao.pk,
+                                'label': str(self.centro_custo_padrao),
+                            }
+                        },
+                    },
+                    {
+                        'id': self.categoria_nao_controlada.pk,
+                        'label': str(self.categoria_nao_controlada),
+                        'tipo': self.categoria_nao_controlada.tipo,
+                        'meta': {'centro_custo_padrao': None},
+                    },
+                ],
+                'rateio_centro_custo_opcoes': [
+                    {'id': str(self.centro_custo_padrao.pk), 'label': str(self.centro_custo_padrao)},
+                    {'id': str(self.centro_custo_manual.pk), 'label': str(self.centro_custo_manual)},
+                    {'id': str(self.centro_custo_novo.pk), 'label': str(self.centro_custo_novo)},
                 ],
                 'competencia_pessoas_recorrentes_ids': [self.pessoa_recorrente.pk],
                 'competencia_categorias_controladas_ids': [self.categoria_controlada.pk],
@@ -2024,8 +2044,28 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
                 'grupo_rateio_valor_total': '130,00',
                 'grupo_rateio_linha_representativa': form.instance,
                 'rateio_categoria_opcoes': [
-                    {'id': self.categoria_controlada.pk, 'label': str(self.categoria_controlada), 'tipo': self.categoria_controlada.tipo},
-                    {'id': self.categoria_nao_controlada.pk, 'label': str(self.categoria_nao_controlada), 'tipo': self.categoria_nao_controlada.tipo},
+                    {
+                        'id': self.categoria_controlada.pk,
+                        'label': str(self.categoria_controlada),
+                        'tipo': self.categoria_controlada.tipo,
+                        'meta': {
+                            'centro_custo_padrao': {
+                                'id': self.centro_custo_padrao.pk,
+                                'label': str(self.centro_custo_padrao),
+                            }
+                        },
+                    },
+                    {
+                        'id': self.categoria_nao_controlada.pk,
+                        'label': str(self.categoria_nao_controlada),
+                        'tipo': self.categoria_nao_controlada.tipo,
+                        'meta': {'centro_custo_padrao': None},
+                    },
+                ],
+                'rateio_centro_custo_opcoes': [
+                    {'id': str(self.centro_custo_padrao.pk), 'label': str(self.centro_custo_padrao)},
+                    {'id': str(self.centro_custo_manual.pk), 'label': str(self.centro_custo_manual)},
+                    {'id': str(self.centro_custo_novo.pk), 'label': str(self.centro_custo_novo)},
                 ],
                 'competencia_pessoas_recorrentes_ids': [self.pessoa_recorrente.pk],
                 'competencia_categorias_controladas_ids': [self.categoria_controlada.pk],
@@ -2626,8 +2666,8 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
     def test_rateio_sem_subcategoria_controlada_nao_exige_competencias(self):
         dados = self._dados_rateio(
             rateio_payload=json.dumps([
-                {'categoria': str(self.categoria_nao_controlada.pk), 'valor': '70.00'},
-                {'categoria': str(self.categoria_nao_controlada.pk), 'valor': '60.00'},
+                {'categoria': str(self.categoria_nao_controlada.pk), 'centro_custo': '', 'valor': '70.00'},
+                {'categoria': str(self.categoria_nao_controlada.pk), 'centro_custo': '', 'valor': '60.00'},
             ]),
             competencias_rateio_payload='',
         )
@@ -2635,6 +2675,23 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
 
         self.assertTrue(form.is_valid(), form.errors)
         self.assertEqual(form.cleaned_data['competencias_rateio_por_categoria'], {})
+
+    def test_rateio_sem_padrao_permite_centro_custo_vazio_por_linha(self):
+        dados = self._dados_rateio(
+            rateio_payload=json.dumps([
+                {'categoria': str(self.categoria_nao_controlada.pk), 'centro_custo': '', 'valor': '70.00'},
+                {'categoria': str(self.categoria_nao_controlada.pk), 'centro_custo': '', 'valor': '60.00'},
+            ]),
+            competencias_rateio_payload='',
+        )
+
+        form = LancamentoFinanceiroForm(data=dados)
+
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(
+            [linha['centro_custo'] for linha in form.cleaned_data['rateio_linhas']],
+            [None, None],
+        )
 
     def test_rateio_cria_alocacoes_apenas_para_item_controlado(self):
         dados = self._dados_rateio()
@@ -2656,6 +2713,63 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
         lancamento_nao_controlado = next(l for l in lancamentos if l.categoria_id == self.categoria_nao_controlada.pk)
         self.assertEqual(lancamento_controlado.alocacoes_competencia.count(), 2)
         self.assertEqual(lancamento_nao_controlado.alocacoes_competencia.count(), 0)
+
+    def test_rateio_cria_centro_custo_por_linha(self):
+        dados = self._dados_rateio(
+            valor_total_documento='130.00',
+            rateio_payload=json.dumps([
+                {
+                    'categoria': str(self.categoria_controlada.pk),
+                    'centro_custo': str(self.centro_custo_padrao.pk),
+                    'valor': '60.00',
+                },
+                {
+                    'categoria': str(self.categoria_controlada_2.pk),
+                    'centro_custo': str(self.centro_custo_novo.pk),
+                    'valor': '40.00',
+                },
+                {
+                    'categoria': str(self.categoria_nao_controlada.pk),
+                    'centro_custo': str(self.centro_custo_manual.pk),
+                    'valor': '30.00',
+                },
+            ]),
+            competencias_rateio_payload=json.dumps({
+                str(self.categoria_controlada.pk): [
+                    {'mes': '1', 'ano': '2026', 'valor': '60.00'},
+                ],
+                str(self.categoria_controlada_2.pk): [
+                    {'mes': '2', 'ano': '2026', 'valor': '40.00'},
+                ],
+            }),
+        )
+        form = LancamentoFinanceiroForm(data=dados)
+
+        self.assertTrue(form.is_valid(), form.errors)
+
+        request = self._build_request('/financeiro/lancamentos/novo/', data=dados)
+        view = LancamentoFinanceiroCreateView()
+        view.request = request
+        view.object = None
+
+        response = view.form_valid(form)
+
+        self.assertEqual(response.status_code, 302)
+        lancamentos = list(
+            LancamentoFinanceiro.objects.filter(grupo_rateio=form.cleaned_data['grupo_rateio']).order_by('pk')
+        )
+        self.assertEqual(len(lancamentos), 3)
+        self.assertEqual(
+            {
+                lancamento.categoria_id: lancamento.centro_custo_id
+                for lancamento in lancamentos
+            },
+            {
+                self.categoria_controlada.pk: self.centro_custo_padrao.pk,
+                self.categoria_controlada_2.pk: self.centro_custo_novo.pk,
+                self.categoria_nao_controlada.pk: self.centro_custo_manual.pk,
+            },
+        )
 
     def test_rateio_edicao_carrega_competencias_existentes_por_subcategoria(self):
         grupo_rateio = 'grp-comp'
@@ -2717,6 +2831,62 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
                     {'mes': '2', 'ano': '2026', 'valor': '60.00'},
                 ]
             },
+        )
+
+    def test_rateio_edicao_carrega_centro_custo_existente_por_linha(self):
+        grupo_rateio = 'grp-centro-custo'
+        lancamento_1 = LancamentoFinanceiro.objects.create(
+            descricao='Recebimento rateado',
+            tipo=LancamentoFinanceiro.TipoLancamento.RECEITA,
+            status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+            valor=Decimal('100.00'),
+            data_competencia=date(2026, 3, 10),
+            data_pagamento=date(2026, 3, 10),
+            numero_documento='100326-CC1',
+            pessoa=self.pessoa_recorrente,
+            categoria=self.categoria_controlada,
+            centro_custo=self.centro_custo_padrao,
+            conta=self.conta,
+            com_rateio=True,
+            grupo_rateio=grupo_rateio,
+        )
+        lancamento_2 = LancamentoFinanceiro.objects.create(
+            descricao='Recebimento rateado',
+            tipo=LancamentoFinanceiro.TipoLancamento.RECEITA,
+            status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+            valor=Decimal('30.00'),
+            data_competencia=date(2026, 3, 10),
+            data_pagamento=date(2026, 3, 10),
+            numero_documento='100326-CC1',
+            pessoa=self.pessoa_recorrente,
+            categoria=self.categoria_nao_controlada,
+            centro_custo=self.centro_custo_manual,
+            conta=self.conta,
+            com_rateio=True,
+            grupo_rateio=grupo_rateio,
+        )
+
+        form = LancamentoFinanceiroGrupoRateioForm(
+            instance=lancamento_1,
+            grupo_lancamentos=[lancamento_1, lancamento_2],
+        )
+
+        self.assertEqual(
+            form.rateio_linhas_iniciais,
+            [
+                {
+                    'id': str(lancamento_1.pk),
+                    'categoria': str(self.categoria_controlada.pk),
+                    'centro_custo': str(self.centro_custo_padrao.pk),
+                    'valor': '100.00',
+                },
+                {
+                    'id': str(lancamento_2.pk),
+                    'categoria': str(self.categoria_nao_controlada.pk),
+                    'centro_custo': str(self.centro_custo_manual.pk),
+                    'valor': '30.00',
+                },
+            ],
         )
 
     def test_assistente_rateio_exibe_ja_registrado_e_valor_do_grupo_atual_separadamente(self):
@@ -2889,6 +3059,10 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
         self.assertIn('Ja possui contribuicao', html)
         self.assertIn('Sem quitacao registrada', html)
         self.assertIn('financeiro-rateio-grupo-competencias-registradas', html)
+        self.assertIn('Centro de custo', html)
+        self.assertIn('financeiro-rateio-grupo-centros-custo', html)
+        self.assertIn('createRateioCentroCustoSelect', html)
+        self.assertIn('centro_custo: row.centro_custo ||', html)
 
     def test_clone_rateado_nao_precarrega_competencias(self):
         grupo_rateio = 'grp-clone'
@@ -2994,8 +3168,8 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
             'observacoes': '',
             'valor_total_documento': '130.00',
             'rateio_payload': json.dumps([
-                {'id': str(lancamento_controlado.pk), 'categoria': str(self.categoria_nao_controlada.pk), 'valor': '100.00'},
-                {'id': str(lancamento_nao_controlado.pk), 'categoria': str(self.categoria_nao_controlada.pk), 'valor': '30.00'},
+                {'id': str(lancamento_controlado.pk), 'categoria': str(self.categoria_nao_controlada.pk), 'centro_custo': '', 'valor': '100.00'},
+                {'id': str(lancamento_nao_controlado.pk), 'categoria': str(self.categoria_nao_controlada.pk), 'centro_custo': '', 'valor': '30.00'},
             ]),
             'competencias_rateio_payload': '',
         }
@@ -3069,8 +3243,8 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
             'observacoes': '',
             'valor_total_documento': '130.00',
             'rateio_payload': json.dumps([
-                {'id': str(lancamento_controlado.pk), 'categoria': str(self.categoria_controlada.pk), 'valor': '100.00'},
-                {'id': str(lancamento_nao_controlado.pk), 'categoria': str(self.categoria_nao_controlada.pk), 'valor': '30.00'},
+                {'id': str(lancamento_controlado.pk), 'categoria': str(self.categoria_controlada.pk), 'centro_custo': '', 'valor': '100.00'},
+                {'id': str(lancamento_nao_controlado.pk), 'categoria': str(self.categoria_nao_controlada.pk), 'centro_custo': '', 'valor': '30.00'},
             ]),
             'competencias_rateio_payload': json.dumps({
                 str(self.categoria_controlada.pk): [
@@ -3094,6 +3268,96 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
             f'A soma das competencias deve ser igual ao valor controlado da subcategoria no rateio: {self.categoria_controlada}.',
             form.errors['competencias_rateio_payload'],
         )
+
+    def test_rateio_edicao_atualiza_centro_custo_por_linha_sem_sobrescrever_demais(self):
+        grupo_rateio = 'grp-centro-custo-update'
+        lancamento_1 = LancamentoFinanceiro.objects.create(
+            descricao='Recebimento rateado',
+            tipo=LancamentoFinanceiro.TipoLancamento.RECEITA,
+            status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+            valor=Decimal('80.00'),
+            data_competencia=date(2026, 3, 10),
+            data_pagamento=date(2026, 3, 10),
+            numero_documento='100326-CC2',
+            pessoa=self.pessoa_recorrente,
+            categoria=self.categoria_nao_controlada,
+            centro_custo=self.centro_custo_padrao,
+            conta=self.conta,
+            com_rateio=True,
+            grupo_rateio=grupo_rateio,
+        )
+        lancamento_2 = LancamentoFinanceiro.objects.create(
+            descricao='Recebimento rateado',
+            tipo=LancamentoFinanceiro.TipoLancamento.RECEITA,
+            status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+            valor=Decimal('50.00'),
+            data_competencia=date(2026, 3, 10),
+            data_pagamento=date(2026, 3, 10),
+            numero_documento='100326-CC2',
+            pessoa=self.pessoa_recorrente,
+            categoria=self.categoria_nao_controlada,
+            centro_custo=self.centro_custo_manual,
+            conta=self.conta,
+            com_rateio=True,
+            grupo_rateio=grupo_rateio,
+        )
+
+        dados = {
+            'descricao': 'Recebimento rateado',
+            'tipo': LancamentoFinanceiro.TipoLancamento.RECEITA,
+            'status': LancamentoFinanceiro.StatusLancamento.QUITADO,
+            'data_competencia': '2026-03-10',
+            'data_pagamento': '2026-03-10',
+            'numero_documento': '100326-CC2',
+            'pessoa': str(self.pessoa_recorrente.pk),
+            'centro_custo': '',
+            'conta': str(self.conta.pk),
+            'conta_destino': '',
+            'observacoes': '',
+            'valor_total_documento': '130.00',
+            'rateio_payload': json.dumps([
+                {
+                    'id': str(lancamento_1.pk),
+                    'categoria': str(self.categoria_nao_controlada.pk),
+                    'centro_custo': str(self.centro_custo_novo.pk),
+                    'valor': '80.00',
+                },
+                {
+                    'id': str(lancamento_2.pk),
+                    'categoria': str(self.categoria_nao_controlada.pk),
+                    'centro_custo': str(self.centro_custo_manual.pk),
+                    'valor': '50.00',
+                },
+            ]),
+            'competencias_rateio_payload': '',
+        }
+        form = LancamentoFinanceiroGrupoRateioForm(
+            data=dados,
+            instance=lancamento_1,
+            grupo_lancamentos=[lancamento_1, lancamento_2],
+        )
+
+        self.assertTrue(form.is_valid(), form.errors)
+
+        request = self._build_request('/financeiro/lancamentos/rateio/grp-centro-custo-update/editar/', data=dados)
+        view = LancamentoFinanceiroGrupoRateioUpdateView()
+        view.request = request
+        view.kwargs = {'grupo_rateio': grupo_rateio}
+        view._grupo_info_cache = {
+            'grupo_rateio': grupo_rateio,
+            'lancamentos': [lancamento_1, lancamento_2],
+            'erro': '',
+            'erro_codigo': '',
+            'representante': lancamento_1,
+        }
+
+        response = view.form_valid(form)
+
+        self.assertEqual(response.status_code, 302)
+        lancamento_1.refresh_from_db()
+        lancamento_2.refresh_from_db()
+        self.assertEqual(lancamento_1.centro_custo, self.centro_custo_novo)
+        self.assertEqual(lancamento_2.centro_custo, self.centro_custo_manual)
 
 
 class FrequenciaCompetenciasViewTests(TestCase):

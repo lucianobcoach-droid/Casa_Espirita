@@ -4675,3 +4675,19 @@ Status de homologacao da usuaria:
 - quando a subcategoria selecionada nao possui `centro_custo_padrao`, o campo `centro_custo` do lancamento permanece vazio e editavel
 - ao trocar de uma subcategoria com sugestao automatica para outra sem padrao, o centro de custo sugerido anteriormente e limpo sem bloquear a escolha manual
 - o formulario restaurado pelo botao `+` volta a manter ativas as sugestoes automaticas por `descricao`, preservando o comportamento esperado de um formulario novo
+
+## Centro de custo por linha no rateio
+
+- a persistencia atual do rateio ja suportava centro de custo por linha porque cada item do rateio continua sendo salvo como um `LancamentoFinanceiro` proprio; nao foi necessario criar model novo nem migration
+- em lancamento rateado:
+  - cada linha do rateio passou a exibir seu proprio campo `Centro de custo`
+  - a subcategoria da linha pode sugerir `centro_custo_padrao` apenas para aquela linha
+  - se a subcategoria nao tiver padrao, o centro de custo da linha fica vazio e editavel
+  - trocar a subcategoria recalcula a sugestao somente da linha alterada
+  - editar manualmente o centro de custo de uma linha continua permitido e o valor manual e preservado ao salvar
+- na reabertura da edicao coordenada do grupo rateado, cada linha volta com o centro de custo persistido sem sobrescrita automatica apenas por abrir a tela
+- o campo comum `centro_custo` deixou de ser a referencia visual do rateio; no rateio o centro de custo agora pertence a cada item
+- a integracao com competencias foi preservada:
+  - centro de custo nao interfere na logica de subcategoria controlada
+  - a validacao/soma das competencias continua fechando por subcategoria controlada no rateio
+- sem alteracao em calculos financeiros, permissoes, relatorios, recibos ou financeiro oficial

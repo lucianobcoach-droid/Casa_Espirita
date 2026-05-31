@@ -500,12 +500,13 @@
                     <div class="table-container">
                         <table class="table is-fullwidth is-narrow is-striped financeiro-rateio-table">
                             <thead>
-                            <tr><th>Categoria</th><th>Valor</th><th class="has-text-right">Acao</th></tr>
+                            <tr><th>Categoria</th><th>Centro de custo</th><th>Valor</th><th class="has-text-right">Acao</th></tr>
                             </thead>
                             <tbody data-financeiro-rateio-body="true"></tbody>
                             <tfoot class="financeiro-rateio-fechamento">
                             <tr>
                                 <td><span class="financeiro-rateio-fechamento-label">DIFERENCA A DETALHAR</span></td>
+                                <td></td>
                                 <td><span class="financeiro-rateio-fechamento-value" data-financeiro-rateio-diferenca="true">R$ 0,00</span></td>
                                 <td></td>
                             </tr>
@@ -620,6 +621,7 @@
 </div>
 
 {{ rateio_categoria_opcoes|json_script:'financeiro-rateio-grupo-categorias' }}
+{{ rateio_centro_custo_opcoes|json_script:'financeiro-rateio-grupo-centros-custo' }}
 {{ form.rateio_linhas_iniciais|json_script:'financeiro-rateio-grupo-inicial' }}
 {{ form.competencias_rateio_iniciais|json_script:'financeiro-rateio-grupo-competencias-inicial' }}
 {{ competencia_pessoas_recorrentes_ids|json_script:'financeiro-rateio-grupo-pessoas-recorrentes' }}
@@ -647,12 +649,14 @@
         const rateioStatusText = document.querySelector('[data-financeiro-rateio-status="true"]');
         const autocompleteFields = Array.from(document.querySelectorAll('[data-financeiro-autocomplete="true"]'));
         const rateioCategoriasNode = document.getElementById('financeiro-rateio-grupo-categorias');
+        const rateioCentrosCustoNode = document.getElementById('financeiro-rateio-grupo-centros-custo');
         const rateioInicialNode = document.getElementById('financeiro-rateio-grupo-inicial');
         const competenciasRateioInicialNode = document.getElementById('financeiro-rateio-grupo-competencias-inicial');
         const pessoasRecorrentesNode = document.getElementById('financeiro-rateio-grupo-pessoas-recorrentes');
         const categoriasControladasNode = document.getElementById('financeiro-rateio-grupo-categorias-controladas');
         const competenciasRegistradasNode = document.getElementById('financeiro-rateio-grupo-competencias-registradas');
         const rateioCategorias = rateioCategoriasNode ? JSON.parse(rateioCategoriasNode.textContent) : [];
+        const rateioCentrosCusto = rateioCentrosCustoNode ? JSON.parse(rateioCentrosCustoNode.textContent) : [];
         const rateioInicial = rateioInicialNode ? JSON.parse(rateioInicialNode.textContent) : [];
         const competenciasRateioInicial = competenciasRateioInicialNode ? JSON.parse(competenciasRateioInicialNode.textContent) : {};
         const pessoasRecorrentes = new Set(
@@ -944,6 +948,7 @@
                 return {
                     id: row.id || '',
                     categoria: row.categoria || '',
+                    centro_custo: row.centro_custo || '',
                     valor: row.valor || '',
                 };
             }));
@@ -968,6 +973,14 @@
             return rateioCategorias.find(function (categoria) {
                 return String(categoria.id) === String(categoriaId);
             }) || null;
+        }
+
+        function aplicarCentroCustoPadraoNaLinha(rowIndex) {
+            const row = rateioRows[rowIndex];
+            if (!row) return;
+            const categoriaMeta = getRateioCategoriaMeta(row.categoria);
+            const centroCustoPadrao = categoriaMeta && categoriaMeta.meta ? categoriaMeta.meta.centro_custo_padrao : null;
+            row.centro_custo = centroCustoPadrao && centroCustoPadrao.id ? String(centroCustoPadrao.id) : '';
         }
 
         function syncCompetenciaRateioAssistantForCategoria(categoriaId) {
@@ -1096,8 +1109,33 @@
             });
             select.addEventListener('change', function () {
                 rateioRows[rowIndex].categoria = select.value;
+                aplicarCentroCustoPadraoNaLinha(rowIndex);
+                renderRateioRows();
                 serializeRateioRows();
                 syncCompetenciasRateioState();
+            });
+            wrapper.appendChild(select);
+            return wrapper;
+        }
+
+        function createRateioCentroCustoSelect(selectedValue, rowIndex) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'select is-fullwidth';
+            const select = document.createElement('select');
+            const emptyOption = document.createElement('option');
+            emptyOption.value = '';
+            emptyOption.textContent = 'Opcional';
+            select.appendChild(emptyOption);
+            rateioCentrosCusto.forEach(function (centroCusto) {
+                const option = document.createElement('option');
+                option.value = String(centroCusto.id);
+                option.textContent = centroCusto.label;
+                if (String(selectedValue || '') === String(centroCusto.id)) option.selected = true;
+                select.appendChild(option);
+            });
+            select.addEventListener('change', function () {
+                rateioRows[rowIndex].centro_custo = select.value;
+                serializeRateioRows();
             });
             wrapper.appendChild(select);
             return wrapper;
@@ -1126,12 +1164,21 @@
         function renderRateioRows() {
             if (!rateioBody) return;
             rateioBody.innerHTML = '';
-            if (!rateioRows.length) rateioRows = [{ id: '', categoria: '', valor: '' }, { id: '', categoria: '', valor: '' }];
+            if (!rateioRows.length) {
+                rateioRows = [
+                    { id: '', categoria: '', centro_custo: '', valor: '' },
+                    { id: '', categoria: '', centro_custo: '', valor: '' },
+                ];
+            }
             rateioRows.forEach(function (row, index) {
                 const tr = document.createElement('tr');
                 const categoriaCell = document.createElement('td');
                 categoriaCell.appendChild(createRateioCategoriaSelect(row.categoria, index));
                 tr.appendChild(categoriaCell);
+
+                const centroCustoCell = document.createElement('td');
+                centroCustoCell.appendChild(createRateioCentroCustoSelect(row.centro_custo, index));
+                tr.appendChild(centroCustoCell);
 
                 const valorCell = document.createElement('td');
                 valorCell.appendChild(createRateioValorInput(row.valor, index));
@@ -1371,7 +1418,7 @@
             const isTransferencia = !!tipoField && tipoField.value === 'transferencia';
             syncConditionalField(contaDestinoField, contaDestinoWrapper, { visible: isTransferencia, required: isTransferencia, clearWhenHidden: !isTransferencia });
             syncConditionalField(pessoaField, pessoaWrapper, { visible: !isTransferencia, required: !isTransferencia, clearWhenHidden: isTransferencia });
-            syncConditionalField(centroCustoField, centroCustoWrapper, { visible: !isTransferencia, required: false, clearWhenHidden: isTransferencia });
+            syncConditionalField(centroCustoField, centroCustoWrapper, { visible: false, required: false, clearWhenHidden: false });
         }
 
         autocompleteFields.forEach(createAutocomplete);
@@ -1380,7 +1427,7 @@
 
         if (rateioAddButton) {
             rateioAddButton.addEventListener('click', function () {
-                rateioRows.push({ id: '', categoria: '', valor: '' });
+                rateioRows.push({ id: '', categoria: '', centro_custo: '', valor: '' });
                 renderRateioRows();
                 serializeRateioRows();
                 atualizarFechamentoRateio();

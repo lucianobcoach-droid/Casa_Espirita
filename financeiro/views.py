@@ -171,6 +171,37 @@ def _contexto_competencia_lancamento() -> dict[str, list[int]]:
     }
 
 
+def _montar_rateio_categoria_opcoes(tipo: str | None = None) -> list[dict[str, object]]:
+    return [
+        {
+            'id': categoria.pk,
+            'label': str(categoria),
+            'tipo': categoria.tipo,
+            'meta': {
+                'centro_custo_padrao': (
+                    {
+                        'id': categoria.centro_custo_padrao_id,
+                        'label': str(categoria.centro_custo_padrao),
+                    }
+                    if categoria.centro_custo_padrao_id
+                    else None
+                ),
+            },
+        }
+        for categoria in categorias_vinculaveis_queryset(tipo).select_related('centro_custo_padrao')
+    ]
+
+
+def _montar_rateio_centro_custo_opcoes(queryset) -> list[dict[str, str]]:
+    return [
+        {
+            'id': str(centro.pk),
+            'label': str(centro),
+        }
+        for centro in queryset
+    ]
+
+
 def _rotulo_competencia_mensal(ano: int, mes: int) -> str:
     return f'{MESES_PT_BR_ABREV[mes - 1]}/{ano}'
 
@@ -10579,10 +10610,10 @@ class LancamentoFinanceiroCreateView(FinanceiroFormMixin, CreateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['rateio_categoria_opcoes'] = [
-            {'id': categoria.pk, 'label': str(categoria), 'tipo': categoria.tipo}
-            for categoria in categorias_vinculaveis_queryset()
-        ]
+        context['rateio_categoria_opcoes'] = _montar_rateio_categoria_opcoes()
+        context['rateio_centro_custo_opcoes'] = _montar_rateio_centro_custo_opcoes(
+            context['form'].fields['centro_custo'].queryset
+        )
         context.update(_contexto_competencia_lancamento())
         return context
 
@@ -10618,7 +10649,6 @@ class LancamentoFinanceiroCreateView(FinanceiroFormMixin, CreateView):
             'data_pagamento': form.cleaned_data.get('data_pagamento'),
             'numero_documento': numero_documento,
             'pessoa': form.cleaned_data.get('pessoa'),
-            'centro_custo': form.cleaned_data.get('centro_custo'),
             'conta': form.cleaned_data['conta'],
             'conta_destino': form.cleaned_data.get('conta_destino'),
             'observacoes': form.cleaned_data.get('observacoes', ''),
@@ -10632,6 +10662,7 @@ class LancamentoFinanceiroCreateView(FinanceiroFormMixin, CreateView):
                 lancamento = LancamentoFinanceiro.objects.create(
                     **dados_comuns,
                     categoria=linha['categoria'],
+                    centro_custo=linha.get('centro_custo'),
                     valor=linha['valor'],
                 )
                 lancamentos_criados.append(lancamento)
@@ -10961,10 +10992,10 @@ class LancamentoFinanceiroGrupoRateioUpdateView(FinanceiroFormMixin, UpdateView)
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         grupo_lancamentos = self._get_grupo_lancamentos()
-        context['rateio_categoria_opcoes'] = [
-            {'id': categoria.pk, 'label': str(categoria), 'tipo': categoria.tipo}
-            for categoria in categorias_vinculaveis_queryset()
-        ]
+        context['rateio_categoria_opcoes'] = _montar_rateio_categoria_opcoes()
+        context['rateio_centro_custo_opcoes'] = _montar_rateio_centro_custo_opcoes(
+            context['form'].fields['centro_custo'].queryset
+        )
         context['grupo_rateio'] = grupo_lancamentos[0].grupo_rateio
         context['grupo_rateio_quantidade_linhas'] = len(grupo_lancamentos)
         context['grupo_rateio_valor_total'] = sum(
@@ -10987,7 +11018,6 @@ class LancamentoFinanceiroGrupoRateioUpdateView(FinanceiroFormMixin, UpdateView)
             'data_pagamento': form.cleaned_data.get('data_pagamento'),
             'numero_documento': (form.cleaned_data.get('numero_documento') or '').strip(),
             'pessoa': form.cleaned_data.get('pessoa'),
-            'centro_custo': form.cleaned_data.get('centro_custo'),
             'conta': form.cleaned_data['conta'],
             'conta_destino': form.cleaned_data.get('conta_destino'),
             'observacoes': form.cleaned_data.get('observacoes', ''),
@@ -11015,6 +11045,7 @@ class LancamentoFinanceiroGrupoRateioUpdateView(FinanceiroFormMixin, UpdateView)
                     for campo, valor in dados_comuns.items():
                         setattr(lancamento, campo, valor)
                     lancamento.categoria = linha['categoria']
+                    lancamento.centro_custo = linha.get('centro_custo')
                     lancamento.valor = linha['valor']
                     lancamento.save()
                     depois = _snapshot_lancamento(lancamento)
@@ -11032,6 +11063,7 @@ class LancamentoFinanceiroGrupoRateioUpdateView(FinanceiroFormMixin, UpdateView)
                 lancamento = LancamentoFinanceiro.objects.create(
                     **dados_comuns,
                     categoria=linha['categoria'],
+                    centro_custo=linha.get('centro_custo'),
                     valor=linha['valor'],
                 )
                 _registrar_auditoria_lancamento(

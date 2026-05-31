@@ -6306,3 +6306,23 @@ Não houve alteração de código funcional nesta etapa.
   - categoria sem padrao mantendo `centro_custo` vazio
   - troca de categoria com padrao para categoria sem padrao sem reaproveitar sugestao antiga
   - presenca do rearme das sugestoes no template do formulario
+
+## Microetapa: centro de custo por linha no rateio
+
+- confirmei que o rateio ja persiste cada item como um `LancamentoFinanceiro` proprio, entao a solucao reutilizou `LancamentoFinanceiro.centro_custo` por linha sem model novo nem migration
+- o formulario de lancamento rateado e a edicao coordenada do grupo passaram a exibir `Centro de custo` em cada linha do rateio
+- a linha do rateio agora serializa, valida e persiste:
+  - `categoria`
+  - `centro_custo`
+  - `valor`
+- a subcategoria da linha pode sugerir `centro_custo_padrao` apenas para aquela linha; quando nao houver padrao, a linha permanece vazia e editavel
+- a edicao de grupo rateado passou a recarregar o centro de custo salvo em cada linha sem sobrescrever automaticamente ao abrir
+- mantive a regra de competencias isolada do centro de custo:
+  - a consolidacao para competencias continua por subcategoria controlada
+  - o centro de custo nao entra no calculo/fechamento das competencias
+- cobertura automatizada ampliada para:
+  - criacao com centros de custo diferentes por linha
+  - reabertura da edicao com centro de custo persistido por linha
+  - atualizacao de uma linha sem sobrescrever o centro de custo das demais
+  - linha sem `centro_custo_padrao` aceitando valor vazio
+  - presenca do novo campo no template coordenado do rateio

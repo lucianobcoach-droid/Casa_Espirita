@@ -65,6 +65,12 @@ def contas_lancamento_queryset(*conta_extra_ids: int | str | None):
     return queryset.order_by('nome')
 
 
+def centros_custo_lancamento_queryset(*centro_extra_ids: int | str | None):
+    extras = [centro_id for centro_id in centro_extra_ids if centro_id]
+    queryset = CentroCusto.objects.filter(Q(ativo=True) | Q(pk__in=extras))
+    return queryset.order_by('codigo', 'nome')
+
+
 def _parse_competencias_payload(payload: str) -> list[dict[str, str]]:
     if not payload:
         return []
@@ -140,6 +146,25 @@ def _linhas_rateio_controladas(
         if categoria.controla_recorrencia_competencia and categoria.permite_vinculo_em_lancamento:
             linhas_controladas.append(linha)
     return linhas_controladas
+
+
+def _consolidar_rateio_controlado_por_categoria(
+    rateio_linhas: list[dict[str, object]] | None,
+) -> list[dict[str, object]]:
+    consolidadas: dict[int, dict[str, object]] = {}
+    for linha in rateio_linhas or []:
+        categoria = linha.get('categoria')
+        if not categoria:
+            continue
+        grupo = consolidadas.setdefault(
+            categoria.pk,
+            {
+                'categoria': categoria,
+                'valor': Decimal('0.00'),
+            },
+        )
+        grupo['valor'] += linha.get('valor') or Decimal('0.00')
+    return list(consolidadas.values())
 
 
 def _formatar_decimal_brl(valor: Decimal | str | None) -> str:
@@ -1431,6 +1456,7 @@ class LancamentoFinanceiroForm(forms.ModelForm):
             tipo=tipo_atual,
             categoria_extra_id=categoria_inicial_id,
         )
+        self.fields['centro_custo'].queryset = centros_custo_lancamento_queryset(self.instance.centro_custo_id)
         self.fields['conta'].queryset = contas_lancamento_queryset(self.instance.conta_id)
         self.fields['conta_destino'].queryset = contas_lancamento_queryset(self.instance.conta_destino_id)
         for field_name in ('data_competencia', 'data_pagamento'):
@@ -1485,8 +1511,8 @@ class LancamentoFinanceiroForm(forms.ModelForm):
                 ]
             else:
                 self.rateio_linhas_iniciais = [
-                    {'categoria': '', 'valor': ''},
-                    {'categoria': '', 'valor': ''},
+                    {'categoria': '', 'centro_custo': '', 'valor': ''},
+                    {'categoria': '', 'centro_custo': '', 'valor': ''},
                 ]
         self.competencias_bloco_visivel = bool(
             self.competencias_linhas_iniciais or (
@@ -1636,6 +1662,7 @@ class LancamentoFinanceiroForm(forms.ModelForm):
             linhas.append(
                 {
                     'categoria': str(item.get('categoria', '') or '').strip(),
+                    'centro_custo': str(item.get('centro_custo', '') or '').strip(),
                     'valor': str(item.get('valor', '') or '').strip(),
                 }
             )
@@ -1778,10 +1805,12 @@ class LancamentoFinanceiroForm(forms.ModelForm):
             cleaned_data.get('competencias_rateio_payload', '')
         )
         self.competencias_rateio_iniciais = competencias_por_categoria_brutas
-        linhas_controladas = _linhas_rateio_controladas(
-            tipo=cleaned_data.get('tipo'),
-            pessoa=cleaned_data.get('pessoa'),
-            rateio_linhas=cleaned_data.get('rateio_linhas'),
+        linhas_controladas = _consolidar_rateio_controlado_por_categoria(
+            _linhas_rateio_controladas(
+                tipo=cleaned_data.get('tipo'),
+                pessoa=cleaned_data.get('pessoa'),
+                rateio_linhas=cleaned_data.get('rateio_linhas'),
+            )
         )
         self.competencias_rateio_bloco_visivel = bool(
             linhas_controladas or self.competencias_rateio_iniciais
@@ -1833,8 +1862,8 @@ class LancamentoFinanceiroForm(forms.ModelForm):
 
         linhas_brutas = self._parse_rateio_payload(cleaned_data.get('rateio_payload', ''))
         self.rateio_linhas_iniciais = linhas_brutas or [
-            {'categoria': '', 'valor': ''},
-            {'categoria': '', 'valor': ''},
+            {'categoria': '', 'centro_custo': '', 'valor': ''},
+            {'categoria': '', 'centro_custo': '', 'valor': ''},
         ]
         if not linhas_brutas:
             self.add_error('rateio_payload', 'Informe ao menos 2 linhas de rateio validas.')
@@ -1842,15 +1871,19 @@ class LancamentoFinanceiroForm(forms.ModelForm):
 
         linhas_validas = 0
         soma_rateio = Decimal('0.00')
-        rateio_por_categoria: dict[int, dict[str, object]] = {}
+        rateio_linhas: list[dict[str, object]] = []
         categorias_disponiveis = {
             str(categoria.pk): categoria for categoria in categorias_vinculaveis_queryset(tipo)
+        }
+        centros_custo_disponiveis = {
+            str(centro.pk): centro for centro in self.fields['centro_custo'].queryset
         }
 
         for indice, linha in enumerate(linhas_brutas, start=1):
             categoria_id = linha.get('categoria', '')
+            centro_custo_id = linha.get('centro_custo', '')
             valor_raw = linha.get('valor', '')
-            if not categoria_id and not valor_raw:
+            if not categoria_id and not centro_custo_id and not valor_raw:
                 continue
 
             linhas_validas += 1
@@ -1876,15 +1909,24 @@ class LancamentoFinanceiroForm(forms.ModelForm):
                 self.add_error('rateio_payload', f'Linha {indice}: o valor precisa ser positivo.')
                 continue
 
+            centro_custo = None
+            if centro_custo_id:
+                centro_custo = centros_custo_disponiveis.get(str(centro_custo_id))
+                if centro_custo is None:
+                    self.add_error('rateio_payload', f'Linha {indice}: informe um centro de custo valido.')
+                    continue
+
             soma_rateio += valor
-            if categoria.pk not in rateio_por_categoria:
-                rateio_por_categoria[categoria.pk] = {'categoria': categoria, 'valor': Decimal('0.00')}
-            rateio_por_categoria[categoria.pk]['valor'] += valor
+            rateio_linhas.append(
+                {
+                    'categoria': categoria,
+                    'centro_custo': centro_custo,
+                    'valor': valor,
+                }
+            )
 
         if linhas_validas < 2:
             self.add_error('rateio_payload', 'Informe no minimo 2 linhas de rateio validas.')
-
-        rateio_linhas = list(rateio_por_categoria.values())
 
         if valor_total is not None and linhas_validas and soma_rateio != valor_total:
             self.add_error(
@@ -2090,8 +2132,12 @@ class LancamentoFinanceiroGrupoRateioForm(forms.ModelForm):
         for lancamento in self.grupo_lancamentos:
             conta_extra_ids.add(lancamento.conta_id)
             conta_extra_ids.add(lancamento.conta_destino_id)
+        centro_custo_extra_ids = {self.instance.centro_custo_id}
+        for lancamento in self.grupo_lancamentos:
+            centro_custo_extra_ids.add(lancamento.centro_custo_id)
         self.fields['conta'].queryset = contas_lancamento_queryset(*conta_extra_ids)
         self.fields['conta_destino'].queryset = contas_lancamento_queryset(*conta_extra_ids)
+        self.fields['centro_custo'].queryset = centros_custo_lancamento_queryset(*centro_custo_extra_ids)
         autocomplete_urls = {
             'pessoa': reverse_lazy('financeiro:autocomplete-pessoa'),
             'centro_custo': reverse_lazy('financeiro:autocomplete-centro-custo'),
@@ -2115,6 +2161,7 @@ class LancamentoFinanceiroGrupoRateioForm(forms.ModelForm):
                 {
                     'id': str(lancamento.pk),
                     'categoria': str(lancamento.categoria_id or ''),
+                    'centro_custo': str(lancamento.centro_custo_id or ''),
                     'valor': str(lancamento.valor or ''),
                 }
                 for lancamento in self.grupo_lancamentos
@@ -2192,16 +2239,18 @@ class LancamentoFinanceiroGrupoRateioForm(forms.ModelForm):
         tipo = cleaned_data.get('tipo') if cleaned_data else self._get_tipo_atual()
         pessoa = cleaned_data.get('pessoa') if cleaned_data else self._resolver_pessoa_atual()
         if cleaned_data is not None and cleaned_data.get('rateio_linhas'):
-            return _linhas_rateio_controladas(
-                tipo=tipo,
-                pessoa=pessoa,
-                rateio_linhas=cleaned_data.get('rateio_linhas'),
+            return _consolidar_rateio_controlado_por_categoria(
+                _linhas_rateio_controladas(
+                    tipo=tipo,
+                    pessoa=pessoa,
+                    rateio_linhas=cleaned_data.get('rateio_linhas'),
+                )
             )
 
         categorias_disponiveis = {
             str(categoria.pk): categoria for categoria in categorias_vinculaveis_queryset(tipo)
         }
-        consolidadas: dict[str, dict[str, object]] = {}
+        linhas_rateio: list[dict[str, object]] = []
         for linha in self.rateio_linhas_iniciais:
             categoria_id = str(linha.get('categoria', '') or '').strip()
             valor_raw = str(linha.get('valor', '') or '').strip()
@@ -2214,15 +2263,13 @@ class LancamentoFinanceiroGrupoRateioForm(forms.ModelForm):
                 continue
             if valor <= Decimal('0.00'):
                 continue
-            grupo = consolidadas.setdefault(
-                categoria_id,
-                {'categoria': categoria, 'valor': Decimal('0.00')},
+            linhas_rateio.append({'categoria': categoria, 'valor': valor})
+        return _consolidar_rateio_controlado_por_categoria(
+            _linhas_rateio_controladas(
+                tipo=tipo,
+                pessoa=pessoa,
+                rateio_linhas=linhas_rateio,
             )
-            grupo['valor'] += valor
-        return _linhas_rateio_controladas(
-            tipo=tipo,
-            pessoa=pessoa,
-            rateio_linhas=list(consolidadas.values()),
         )
 
     def _get_tipo_atual(self) -> str:
@@ -2277,6 +2324,7 @@ class LancamentoFinanceiroGrupoRateioForm(forms.ModelForm):
                 {
                     'id': str(item.get('id', '') or '').strip(),
                     'categoria': str(item.get('categoria', '') or '').strip(),
+                    'centro_custo': str(item.get('centro_custo', '') or '').strip(),
                     'valor': str(item.get('valor', '') or '').strip(),
                 }
             )
@@ -2397,8 +2445,8 @@ class LancamentoFinanceiroGrupoRateioForm(forms.ModelForm):
 
         linhas_brutas = self._parse_rateio_payload(cleaned_data.get('rateio_payload', ''))
         self.rateio_linhas_iniciais = linhas_brutas or self.rateio_linhas_iniciais or [
-            {'id': '', 'categoria': '', 'valor': ''},
-            {'id': '', 'categoria': '', 'valor': ''},
+            {'id': '', 'categoria': '', 'centro_custo': '', 'valor': ''},
+            {'id': '', 'categoria': '', 'centro_custo': '', 'valor': ''},
         ]
         if not linhas_brutas:
             self.add_error('rateio_payload', 'Informe ao menos 2 linhas de rateio validas.')
@@ -2408,15 +2456,19 @@ class LancamentoFinanceiroGrupoRateioForm(forms.ModelForm):
         categorias_disponiveis = {
             str(categoria.pk): categoria for categoria in categorias_vinculaveis_queryset(tipo)
         }
+        centros_custo_disponiveis = {
+            str(centro.pk): centro for centro in self.fields['centro_custo'].queryset
+        }
         linhas_validas = 0
         soma_rateio = Decimal('0.00')
-        rateio_por_categoria: dict[int, dict[str, object]] = {}
+        rateio_linhas: list[dict[str, object]] = []
 
         for indice, linha in enumerate(linhas_brutas, start=1):
             linha_id = linha.get('id', '')
             categoria_id = linha.get('categoria', '')
+            centro_custo_id = linha.get('centro_custo', '')
             valor_raw = linha.get('valor', '')
-            if not linha_id and not categoria_id and not valor_raw:
+            if not linha_id and not categoria_id and not centro_custo_id and not valor_raw:
                 continue
 
             if linha_id:
@@ -2452,21 +2504,26 @@ class LancamentoFinanceiroGrupoRateioForm(forms.ModelForm):
                 self.add_error('rateio_payload', f'Linha {indice}: o valor precisa ser positivo.')
                 continue
 
+            centro_custo = None
+            if centro_custo_id:
+                centro_custo = centros_custo_disponiveis.get(str(centro_custo_id))
+                if centro_custo is None:
+                    self.add_error('rateio_payload', f'Linha {indice}: informe um centro de custo valido.')
+                    continue
+
             soma_rateio += valor
-            if categoria.pk not in rateio_por_categoria:
-                rateio_por_categoria[categoria.pk] = {
+            rateio_linhas.append(
+                {
                     'id': linha_id,
                     'categoria': categoria,
-                    'valor': Decimal('0.00'),
+                    'centro_custo': centro_custo,
+                    'valor': valor,
                 }
-            elif linha_id and not rateio_por_categoria[categoria.pk].get('id'):
-                rateio_por_categoria[categoria.pk]['id'] = linha_id
-            rateio_por_categoria[categoria.pk]['valor'] += valor
+            )
 
         if linhas_validas < 2:
             self.add_error('rateio_payload', 'Informe no minimo 2 linhas de rateio validas.')
 
-        rateio_linhas = list(rateio_por_categoria.values())
         if valor_total is not None and linhas_validas and soma_rateio != valor_total:
             self.add_error(
                 'rateio_payload',
@@ -2474,10 +2531,12 @@ class LancamentoFinanceiroGrupoRateioForm(forms.ModelForm):
             )
 
         cleaned_data['rateio_linhas'] = rateio_linhas
-        linhas_controladas = _linhas_rateio_controladas(
-            tipo=cleaned_data.get('tipo'),
-            pessoa=cleaned_data.get('pessoa'),
-            rateio_linhas=rateio_linhas,
+        linhas_controladas = _consolidar_rateio_controlado_por_categoria(
+            _linhas_rateio_controladas(
+                tipo=cleaned_data.get('tipo'),
+                pessoa=cleaned_data.get('pessoa'),
+                rateio_linhas=rateio_linhas,
+            )
         )
         competencias_brutas = _parse_competencias_rateio_payload(
             cleaned_data.get('competencias_rateio_payload', '')

@@ -406,11 +406,12 @@
                             {% for error in form.rateio_payload.errors %}<p class="help is-danger mb-2">{{ error }}</p>{% endfor %}
                             <div class="table-responsive">
                                 <table class="table table-vcenter financeiro-rateio-table">
-                                    <thead><tr><th>Categoria</th><th>Valor</th><th class="text-end">Ação</th></tr></thead>
+                                    <thead><tr><th>Categoria</th><th>Centro de custo</th><th>Valor</th><th class="text-end">Ação</th></tr></thead>
                                     <tbody data-financeiro-rateio-body="true"></tbody>
                                     <tfoot class="financeiro-rateio-fechamento">
                                         <tr>
                                             <td><span class="financeiro-rateio-fechamento-label">DIFERENÇA A DETALHAR</span></td>
+                                            <td></td>
                                             <td><span class="financeiro-rateio-fechamento-value" data-financeiro-rateio-diferenca="true">R$ 0,00</span></td>
                                             <td></td>
                                         </tr>
@@ -621,6 +622,7 @@
     </div>
 </section>
 {{ rateio_categoria_opcoes|json_script:'financeiro-rateio-categorias' }}
+{{ rateio_centro_custo_opcoes|json_script:'financeiro-rateio-centros-custo' }}
 {{ form.rateio_linhas_iniciais|json_script:'financeiro-rateio-inicial' }}
 {{ form.competencias_linhas_iniciais|json_script:'financeiro-competencias-inicial' }}
 {{ form.competencias_rateio_iniciais|json_script:'financeiro-competencias-rateio-inicial' }}
@@ -683,6 +685,8 @@
         const competenciaAssistenteRegistradoNode = document.getElementById('financeiro-competencia-assistente-registrado');
         const quickCreateButtons = Array.from(document.querySelectorAll('[data-financeiro-quick-create]'));
         const rateioCategorias = rateioCategoriasNode ? JSON.parse(rateioCategoriasNode.textContent) : [];
+        const rateioCentrosCustoNode = document.getElementById('financeiro-rateio-centros-custo');
+        const rateioCentrosCusto = rateioCentrosCustoNode ? JSON.parse(rateioCentrosCustoNode.textContent) : [];
         const rateioInicial = rateioInicialNode ? JSON.parse(rateioInicialNode.textContent) : [];
         const competenciasInicial = competenciasInicialNode ? JSON.parse(competenciasInicialNode.textContent) : [];
         const competenciasRateioInicial = competenciasRateioInicialNode ? JSON.parse(competenciasRateioInicialNode.textContent) : {};
@@ -1394,7 +1398,11 @@
         function serializeRateioRows() {
             if (!rateioPayloadField) return;
             rateioPayloadField.value = JSON.stringify(rateioRows.map(function (row) {
-                return { categoria: row.categoria || '', valor: row.valor || '' };
+                return {
+                    categoria: row.categoria || '',
+                    centro_custo: row.centro_custo || '',
+                    valor: row.valor || '',
+                };
             }));
         }
 
@@ -1506,6 +1514,14 @@
             }) || null;
         }
 
+        function aplicarCentroCustoPadraoNaLinha(rowIndex) {
+            const row = rateioRows[rowIndex];
+            if (!row) return;
+            const categoriaMeta = getRateioCategoriaMeta(row.categoria);
+            const centroCustoPadrao = categoriaMeta && categoriaMeta.meta ? categoriaMeta.meta.centro_custo_padrao : null;
+            row.centro_custo = centroCustoPadrao && centroCustoPadrao.id ? String(centroCustoPadrao.id) : '';
+        }
+
         function getRateioLinhasControladasConsolidadas() {
             if (!pessoaRecorrenteSelecionada()) return [];
             const consolidadas = {};
@@ -1555,8 +1571,34 @@
             });
             select.addEventListener('change', function () {
                 rateioRows[rowIndex].categoria = select.value;
+                aplicarCentroCustoPadraoNaLinha(rowIndex);
+                renderRateioRows();
                 serializeRateioRows();
                 syncCompetenciasRateioState();
+            });
+            wrapper.appendChild(select);
+            return wrapper;
+        }
+
+        function createRateioCentroCustoSelect(selectedValue, rowIndex) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'financeiro-rateio-select';
+            const select = document.createElement('select');
+            select.className = 'form-select';
+            const emptyOption = document.createElement('option');
+            emptyOption.value = '';
+            emptyOption.textContent = 'Opcional';
+            select.appendChild(emptyOption);
+            rateioCentrosCusto.forEach(function (centro) {
+                const option = document.createElement('option');
+                option.value = String(centro.id);
+                option.textContent = centro.label;
+                if (String(selectedValue || '') === String(centro.id)) option.selected = true;
+                select.appendChild(option);
+            });
+            select.addEventListener('change', function () {
+                rateioRows[rowIndex].centro_custo = select.value;
+                serializeRateioRows();
             });
             wrapper.appendChild(select);
             return wrapper;
@@ -1586,7 +1628,7 @@
         function renderRateioRows() {
             if (!rateioBody) return;
             rateioBody.innerHTML = '';
-            if (!rateioRows.length) rateioRows = [{ categoria: '', valor: '' }, { categoria: '', valor: '' }];
+            if (!rateioRows.length) rateioRows = [{ categoria: '', centro_custo: '', valor: '' }, { categoria: '', centro_custo: '', valor: '' }];
             const categoriasPermitidasIds = new Set(
                 getRateioCategoriasFiltradas().map(function (categoria) {
                     return String(categoria.id);
@@ -1595,11 +1637,15 @@
             rateioRows.forEach(function (row, index) {
                 if (row.categoria && !categoriasPermitidasIds.has(String(row.categoria))) {
                     row.categoria = '';
+                    row.centro_custo = '';
                 }
                 const tr = document.createElement('tr');
                 const categoriaCell = document.createElement('td');
                 categoriaCell.appendChild(createRateioCategoriaSelect(row.categoria, index));
                 tr.appendChild(categoriaCell);
+                const centroCustoCell = document.createElement('td');
+                centroCustoCell.appendChild(createRateioCentroCustoSelect(row.centro_custo, index));
+                tr.appendChild(centroCustoCell);
                 const valorCell = document.createElement('td');
                 valorCell.appendChild(createRateioValorInput(row.valor, index));
                 tr.appendChild(valorCell);
@@ -2081,7 +2127,7 @@
             syncConditionalField(contaDestinoField, contaDestinoWrapper, { visible: isTransferencia, required: isTransferencia, clearWhenHidden: !isTransferencia });
             syncConditionalField(pessoaField, pessoaWrapper, { visible: !isTransferencia, required: !isTransferencia, clearWhenHidden: isTransferencia });
             syncConditionalField(categoriaField, categoriaWrapper, { visible: !isTransferencia && !isRateio, required: !isTransferencia && !isRateio, clearWhenHidden: isTransferencia || isRateio });
-            syncConditionalField(centroCustoField, centroCustoWrapper, { visible: !isTransferencia, required: false, clearWhenHidden: isTransferencia });
+            syncConditionalField(centroCustoField, centroCustoWrapper, { visible: !isTransferencia && !isRateio, required: false, clearWhenHidden: isTransferencia });
             syncConditionalField(valorField, valorWrapper, { visible: !isRateio, required: !isRateio, clearWhenHidden: false });
             syncConditionalField(valorTotalField, valorTotalWrapper, { visible: isRateio, required: isRateio, clearWhenHidden: false });
             if (rateioBox) {
@@ -2122,7 +2168,7 @@
             serializeRateioRows();
             if (rateioAddButton) {
                 rateioAddButton.addEventListener('click', function () {
-                    rateioRows.push({ categoria: '', valor: '' });
+                    rateioRows.push({ categoria: '', centro_custo: '', valor: '' });
                     renderRateioRows();
                     serializeRateioRows();
                     syncCompetenciasRateioState();

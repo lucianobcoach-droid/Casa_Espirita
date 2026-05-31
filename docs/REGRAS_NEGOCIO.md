@@ -175,3 +175,4 @@ Este documento consolida regras permanentes do sistema. Ele não substitui o his
 - No MVP inicial, nao abrir modulo separado de baixa; manter o fluxo no proprio lancamento e tratar termo por favorecido como segunda onda apos validacao da matriz.
 - Alocacoes de competencia vinculadas ao lancamento/linha controlada seguem exclusao por cascade; qualquer necessidade de restauracao futura deve ser tratada na frente de auditoria acionavel, nao na regra atual de competencias.
 - Subcategoria pode ter centro de custo padrao para sugerir preenchimento automatico no lancamento, sem impedir alteracao manual pelo usuario.
+- Em lancamento rateado, o centro de custo deve ser informado por linha do rateio. A subcategoria da linha pode sugerir um centro de custo padrao, mas o usuario pode alterar manualmente antes de salvar.
