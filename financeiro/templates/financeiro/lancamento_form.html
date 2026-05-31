@@ -877,6 +877,20 @@
             return porCategoria[competenciaKey(mes, ano)] || '';
         }
 
+        function resolverStatusCompetencia(valorLancamento, valorControlado, valorRegistrado) {
+            const valorLancamentoCentavos = parseMoedaParaCentavos(valorLancamento);
+            const valorControladoCentavos = parseMoedaParaCentavos(valorControlado);
+            const valorRegistradoCentavos = parseMoedaParaCentavos(valorRegistrado);
+            if (valorLancamentoCentavos > 0) {
+                if (valorControladoCentavos > 0 && valorLancamentoCentavos >= valorControladoCentavos) {
+                    return 'Quitado';
+                }
+                return 'Parcial';
+            }
+            if (valorRegistradoCentavos > 0) return 'Ja possui contribuicao';
+            return 'Sem quitacao registrada';
+        }
+
         function upsertCompetenciaRow(rows, mes, ano, valor) {
             const key = competenciaKey(mes, ano);
             const indice = rows.findIndex(function (row) {
@@ -1318,6 +1332,7 @@
 
             const pessoaId = pessoaField ? pessoaField.value : '';
             const categoriaId = categoriaField ? categoriaField.value : '';
+            const valorControladoAtual = valorField ? valorField.value : '';
             competenciaAssistenteGrid.innerHTML = '';
             getCompetenciasSugeridas().forEach(function (competencia) {
                 const rowAtual = findCompetenciaRow(competenciasRows, competencia.mes, competencia.ano);
@@ -1328,7 +1343,9 @@
                     competencia.mes,
                     competencia.ano
                 );
+                const statusCompetencia = resolverStatusCompetencia(valorAtual, valorControladoAtual, valorRegistrado);
                 const possuiRegistro = parseMoedaParaCentavos(valorRegistrado) > 0;
+                const possuiStatusPositivo = statusCompetencia !== 'Sem quitacao registrada';
 
                 const tr = document.createElement('tr');
 
@@ -1341,8 +1358,8 @@
 
                 const stateCell = document.createElement('td');
                 const state = document.createElement('span');
-                state.className = `financeiro-competencia-assistente-status ${possuiRegistro ? 'is-positive' : 'is-empty'}`;
-                state.textContent = possuiRegistro ? 'Ja possui contribuicao' : 'Sem quitacao registrada';
+                state.className = `financeiro-competencia-assistente-status ${possuiStatusPositivo ? 'is-positive' : 'is-empty'}`;
+                state.textContent = statusCompetencia;
                 stateCell.appendChild(state);
                 tr.appendChild(stateCell);
 
@@ -1867,7 +1884,16 @@
                     competencia.mes,
                     competencia.ano
                 );
+                const valorControladoAtual = getRateioLinhasControladasConsolidadas().find(function (grupo) {
+                    return String(grupo.categoriaId) === String(categoriaId);
+                });
+                const statusCompetencia = resolverStatusCompetencia(
+                    valorAtual,
+                    valorControladoAtual ? normalizarMoedaParaDecimal(String(valorControladoAtual.valorCentavos || '')) : '',
+                    valorRegistrado
+                );
                 const possuiRegistro = parseMoedaParaCentavos(valorRegistrado) > 0;
+                const possuiStatusPositivo = statusCompetencia !== 'Sem quitacao registrada';
 
                 const tr = document.createElement('tr');
 
@@ -1880,8 +1906,8 @@
 
                 const stateCell = document.createElement('td');
                 const state = document.createElement('span');
-                state.className = `financeiro-competencia-assistente-status ${possuiRegistro ? 'is-positive' : 'is-empty'}`;
-                state.textContent = possuiRegistro ? 'Ja possui contribuicao' : 'Sem quitacao registrada';
+                state.className = `financeiro-competencia-assistente-status ${possuiStatusPositivo ? 'is-positive' : 'is-empty'}`;
+                state.textContent = statusCompetencia;
                 stateCell.appendChild(state);
                 tr.appendChild(stateCell);
 

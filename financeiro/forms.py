@@ -245,6 +245,32 @@ def _iterar_meses_assistente(referencia: date) -> list[tuple[int, int]]:
     return competencias
 
 
+def _decimal_competencia(valor: Decimal | str | None) -> Decimal:
+    if valor in (None, ''):
+        return Decimal('0.00')
+    if isinstance(valor, Decimal):
+        return valor
+    try:
+        return Decimal(str(valor))
+    except (InvalidOperation, TypeError, ValueError):
+        return Decimal('0.00')
+
+
+def _resolver_status_competencia(
+    *,
+    valor_lancamento: Decimal,
+    valor_controlado: Decimal,
+    valor_registrado: Decimal,
+) -> str:
+    if valor_lancamento > Decimal('0.00'):
+        if valor_controlado > Decimal('0.00') and valor_lancamento >= valor_controlado:
+            return 'Quitado'
+        return 'Parcial'
+    if valor_registrado > Decimal('0.00'):
+        return 'Ja possui contribuicao'
+    return 'Sem quitacao registrada'
+
+
 def _montar_assistente_meses(
     *,
     referencia: date,
@@ -252,6 +278,7 @@ def _montar_assistente_meses(
     categoria_id: int | None,
     linhas_atuais: list[dict[str, str]],
     registro_lookup: dict[str, dict[str, dict[str, str]]],
+    valor_controlado: Decimal | str | None = None,
 ) -> list[dict[str, object]]:
     linhas_por_competencia: dict[str, str] = {}
     for linha in linhas_atuais:
@@ -277,7 +304,14 @@ def _montar_assistente_meses(
         chave = f'{ano_competencia:04d}-{mes_competencia:02d}'
         valor_registrado = registros_categoria.get(chave, '')
         valor_lancamento = linhas_por_competencia.get(chave, '')
-        possui_registro = bool(valor_registrado and Decimal(valor_registrado or '0.00') > Decimal('0.00'))
+        valor_registrado_decimal = _decimal_competencia(valor_registrado)
+        valor_lancamento_decimal = _decimal_competencia(valor_lancamento)
+        possui_registro = valor_registrado_decimal > Decimal('0.00')
+        status_texto = _resolver_status_competencia(
+            valor_lancamento=valor_lancamento_decimal,
+            valor_controlado=_decimal_competencia(valor_controlado),
+            valor_registrado=valor_registrado_decimal,
+        )
         meses.append(
             {
                 'chave': chave,
@@ -286,8 +320,8 @@ def _montar_assistente_meses(
                 'label': f'{MESES_PT_BR_ABREV[mes_competencia - 1]}/{ano_competencia}',
                 'ja_registrado': valor_registrado,
                 'ja_registrado_texto': _formatar_decimal_brl(valor_registrado) if possui_registro else '',
-                'ja_possui_contribuicao': possui_registro,
-                'status_texto': 'Ja possui contribuicao' if possui_registro else 'Sem quitacao registrada',
+                'ja_possui_contribuicao': status_texto != 'Sem quitacao registrada',
+                'status_texto': status_texto,
                 'valor_lancamento': valor_lancamento,
                 'valor_lancamento_texto': _formatar_decimal_brl(valor_lancamento).replace('R$ ', '')
                 if valor_lancamento
@@ -1570,6 +1604,7 @@ class LancamentoFinanceiroForm(forms.ModelForm):
             categoria_id=getattr(categoria, 'pk', None),
             linhas_atuais=self.competencias_linhas_iniciais,
             registro_lookup=self.assistente_competencia_registro_lookup,
+            valor_controlado=(cleaned_data or {}).get('valor') if cleaned_data else getattr(self.instance, 'valor', None),
         )
 
     def _parse_rateio_payload(self, payload: str) -> list[dict[str, str]]:
@@ -2186,6 +2221,7 @@ class LancamentoFinanceiroGrupoRateioForm(forms.ModelForm):
                         categoria_id=categoria.pk,
                         linhas_atuais=self.competencias_rateio_iniciais.get(str(categoria.pk), []),
                         registro_lookup=self.assistente_competencia_registro_lookup,
+                        valor_controlado=linha['valor'],
                     ),
                 }
             )

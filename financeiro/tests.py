@@ -2227,6 +2227,62 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
         self.assertTrue(form.assistente_competencia_bloco_visivel)
         self.assertEqual(janeiro['ja_registrado'], '50.00')
         self.assertEqual(janeiro['valor_lancamento'], '30.00')
+        self.assertEqual(janeiro['status_texto'], 'Parcial')
+
+    def test_assistente_simples_marca_competencia_do_proprio_lancamento_como_quitada_na_reabertura(self):
+        lancamento = self._criar_lancamento_controlado(valor='100.00')
+        AlocacaoCompetenciaFinanceira.objects.create(
+            lancamento=lancamento,
+            categoria=self.categoria_controlada,
+            ano_competencia=2026,
+            mes_competencia=5,
+            valor_alocado=Decimal('100.00'),
+        )
+
+        form = LancamentoFinanceiroForm(instance=lancamento)
+        maio = next(
+            mes for mes in form.assistente_competencia_meses_sugeridos
+            if mes['ano'] == 2026 and mes['mes'] == 5
+        )
+
+        self.assertEqual(maio['valor_lancamento'], '100.00')
+        self.assertEqual(maio['status_texto'], 'Quitado')
+
+    def test_edicao_atualiza_competencia_existente_sem_duplicar_mes_ano_antigo(self):
+        lancamento = self._criar_lancamento_controlado(valor='100.00')
+        AlocacaoCompetenciaFinanceira.objects.create(
+            lancamento=lancamento,
+            categoria=self.categoria_controlada,
+            ano_competencia=2026,
+            mes_competencia=5,
+            valor_alocado=Decimal('100.00'),
+        )
+
+        dados = self._dados_lancamento(
+            valor='100.00',
+            pessoa=str(lancamento.pessoa_id),
+            categoria=str(lancamento.categoria_id),
+            conta=str(lancamento.conta_id),
+            competencias_payload=json.dumps([
+                {'mes': '6', 'ano': '2026', 'valor': '100.00'},
+            ]),
+        )
+        form = LancamentoFinanceiroForm(data=dados, instance=lancamento)
+
+        self.assertTrue(form.is_valid(), form.errors)
+        form.save()
+
+        competencias = list(
+            lancamento.alocacoes_competencia.order_by('ano_competencia', 'mes_competencia').values_list(
+                'mes_competencia',
+                'ano_competencia',
+                'valor_alocado',
+            )
+        )
+        self.assertEqual(
+            competencias,
+            [(6, 2026, Decimal('100.00'))],
+        )
 
     def test_assistente_simples_aparece_na_edicao_sem_competencias_para_regularizacao(self):
         lancamento = self._criar_lancamento_controlado()
@@ -2297,6 +2353,7 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
             html,
         )
         self.assertIn('financeiro-competencia-assistente-status', html)
+        self.assertIn('Quitado', html)
         self.assertIn('Ja possui contribuicao', html)
         self.assertIn('Sem quitacao registrada', html)
         self.assertIn('name="competencias_payload"', html)

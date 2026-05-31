@@ -4637,3 +4637,17 @@ Status de homologacao da usuaria:
   - preservacao de permissoes
   - preservacao da auditoria funcional
   - ausencia de impacto no financeiro oficial
+
+## Correcao de reabertura/edicao das competencias no lancamento
+
+- corrigida a reabertura do formulario de lancamento com controle de competencias para que a grade superior do assistente considere tambem as competencias ja salvas no proprio documento
+- ao editar um lancamento ja salvo:
+  - a secao `Competencias atendidas` continua carregando as linhas persistidas em modo editavel
+  - a grade superior deixa de marcar a mesma competencia como `Sem quitacao registrada` quando o proprio lancamento ja possui valor salvo naquele mes/ano
+  - o status agora passa a refletir o valor do proprio lancamento:
+    - `Quitado` quando a competencia daquele mes cobre o valor controlado do lancamento
+    - `Parcial` quando existe valor salvo no proprio lancamento, mas abaixo do valor controlado
+    - `Ja possui contribuicao` quando nao ha valor no proprio lancamento, mas existe historico anterior em outros lancamentos
+    - `Sem quitacao registrada` quando nao existe valor nem no proprio lancamento nem no historico externo
+- a edicao continua sem duplicar competencia do mesmo `mes/ano` dentro do lancamento; ao salvar novamente, o conjunto persistido e atualizado e meses removidos deixam de reaparecer na reabertura
+- sem alteracao de layout global, permissoes, recibos, relatorios, importacao/exportacao ou calculo financeiro oficial

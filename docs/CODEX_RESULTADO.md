@@ -6258,3 +6258,18 @@ Não houve alteração de código funcional nesta etapa.
   - ausencia de impacto no financeiro oficial
 - proxima frente recomendada:
   - Onda 2 da UX unificada, aproximando a configuracao de colunas do contexto da tabela
+
+## Microetapa: correcao da reabertura/edicao de competencias no lancamento
+
+- corrigi a montagem do assistente de competencias no formulario de lancamento para que a grade superior considere as competencias ja persistidas no proprio documento ao reabrir a edicao
+- a derivacao de status passou a respeitar o valor salvo no lancamento atual:
+  - `Quitado` quando a competencia daquele mes fecha o valor controlado do lancamento
+  - `Parcial` quando existe valor no proprio lancamento, mas ele nao cobre o total controlado
+  - `Ja possui contribuicao` quando o mes nao tem valor neste lancamento, mas ja existe historico anterior em outro documento
+  - `Sem quitacao registrada` somente quando nao existe valor nem no proprio lancamento nem no historico externo
+- mantive a separacao entre `Ja registrado` e `Valor deste lancamento`, sem alterar a persistencia nem a regra de validacao de soma
+- reforcei a cobertura automatizada para:
+  - reabertura com competencia do proprio lancamento marcada como `Quitado`
+  - reabertura com competencia parcial marcada como `Parcial`
+  - edicao que troca o `mes/ano` persistido sem duplicar competencia antiga
+- sem alteracao em permissoes, layout global, recibos, relatorios ou financeiro oficial
