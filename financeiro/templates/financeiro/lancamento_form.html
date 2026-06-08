@@ -149,6 +149,12 @@
             <h1 class="title is-4 financeiro-page-title">{{ page_title }}</h1>
         </div>
         <div class="financeiro-page-header-actions">
+            {% if form.instance.pk and lancamento_auditoria_url %}
+                {% tem_permissao request.user 'financeiro.auditoria.listar' as pode_ver_auditoria_lancamento %}
+                {% if pode_ver_auditoria_lancamento %}
+                    <a class="btn btn-outline-primary btn-sm" href="{{ lancamento_auditoria_url }}">Histórico do documento</a>
+                {% endif %}
+            {% endif %}
             <a class="btn btn-outline-secondary btn-sm" href="{{ cancel_url }}">Voltar para lançamentos</a>
         </div>
     </div>
@@ -340,9 +346,7 @@
                                 <label class="label" for="{{ form.pessoa.id_for_label }}">{{ form.pessoa.label }}<span data-financeiro-required-marker="true"> *</span></label>
                                 <div class="financeiro-tabler-field-with-action">
                                     <div class="control">{{ form.pessoa }}</div>
-                                    {% if not form.instance.pk %}
-                                        <button class="btn btn-outline-secondary btn-sm financeiro-tabler-action-btn" type="button" data-financeiro-quick-create="pessoa" title="Novo favorecido" aria-label="Novo favorecido">+</button>
-                                    {% endif %}
+                                    <button class="btn btn-outline-secondary btn-sm financeiro-tabler-action-btn" type="button" data-financeiro-quick-create="pessoa" title="Novo favorecido" aria-label="Novo favorecido">+</button>
                                 </div>
                                 {% for error in form.pessoa.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
                             </div>
@@ -352,9 +356,7 @@
                                 <label class="label" for="{{ form.categoria.id_for_label }}">{{ form.categoria.label }}<span data-financeiro-required-marker="true"> *</span></label>
                                 <div class="financeiro-tabler-field-with-action">
                                     <div class="control">{{ form.categoria }}</div>
-                                    {% if not form.instance.pk %}
-                                        <button class="btn btn-outline-secondary btn-sm financeiro-tabler-action-btn" type="button" data-financeiro-quick-create="categoria" title="Nova categoria" aria-label="Nova categoria">+</button>
-                                    {% endif %}
+                                    <button class="btn btn-outline-secondary btn-sm financeiro-tabler-action-btn" type="button" data-financeiro-quick-create="categoria" title="Nova categoria" aria-label="Nova categoria">+</button>
                                 </div>
                                 {% for error in form.categoria.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
                             </div>
@@ -369,9 +371,7 @@
                                 <label class="label" for="{{ form.centro_custo.id_for_label }}">{{ form.centro_custo.label }}</label>
                                 <div class="financeiro-tabler-field-with-action">
                                     <div class="control">{{ form.centro_custo }}</div>
-                                    {% if not form.instance.pk %}
-                                        <button class="btn btn-outline-secondary btn-sm financeiro-tabler-action-btn" type="button" data-financeiro-quick-create="centro_custo" title="Novo centro de custo" aria-label="Novo centro de custo">+</button>
-                                    {% endif %}
+                                    <button class="btn btn-outline-secondary btn-sm financeiro-tabler-action-btn" type="button" data-financeiro-quick-create="centro_custo" title="Novo centro de custo" aria-label="Novo centro de custo">+</button>
                                 </div>
                                 {% for error in form.centro_custo.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
                             </div>
@@ -379,14 +379,20 @@
                         <div class="financeiro-col-4">
                             <div class="field financeiro-tabler-field">
                                 <label class="label" for="{{ form.conta.id_for_label }}">{{ form.conta.label }} *</label>
-                                <div class="control">{{ form.conta }}</div>
+                                <div class="financeiro-tabler-field-with-action">
+                                    <div class="control">{{ form.conta }}</div>
+                                    <button class="btn btn-outline-secondary btn-sm financeiro-tabler-action-btn" type="button" data-financeiro-quick-create="conta" title="Nova conta financeira" aria-label="Nova conta financeira">+</button>
+                                </div>
                                 {% for error in form.conta.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
                             </div>
                         </div>
                         <div class="financeiro-col-4" data-financeiro-conta-destino-wrapper="true">
                             <div class="field financeiro-tabler-field">
                                 <label class="label" for="{{ form.conta_destino.id_for_label }}">{{ form.conta_destino.label }}<span data-financeiro-required-marker="true"> *</span></label>
-                                <div class="control">{{ form.conta_destino }}</div>
+                                <div class="financeiro-tabler-field-with-action">
+                                    <div class="control">{{ form.conta_destino }}</div>
+                                    <button class="btn btn-outline-secondary btn-sm financeiro-tabler-action-btn" type="button" data-financeiro-quick-create="conta" title="Nova conta financeira" aria-label="Nova conta financeira">+</button>
+                                </div>
                                 {% for error in form.conta_destino.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
                             </div>
                         </div>
@@ -2382,6 +2388,7 @@
             pessoa: '{% url "financeiro:pessoa-create" %}',
             categoria: '{% url "financeiro:categoria-create" %}',
             centro_custo: '{% url "financeiro:centro-custo-create" %}',
+            conta: '{% url "financeiro:conta-create" %}',
         };
 
         quickCreateButtons.forEach(function (button) {

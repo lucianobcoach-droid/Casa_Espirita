@@ -57,14 +57,26 @@
         <h1 class="title financeiro-page-title">{{ page_title }}</h1>
     </div>
     <div class="financeiro-page-header-actions no-print">
-        <a class="button" href="{% url 'financeiro:lancamento-list' %}">Voltar para lançamentos</a>
+        {% if auditoria_return_to_url %}
+            <a class="button is-link is-light" href="{{ auditoria_return_to_url }}">Voltar ao documento</a>
+        {% endif %}
+        <a class="button" href="{% url 'financeiro:lancamento-list' %}">Voltar para lancamentos</a>
     </div>
 </div>
 
 <form method="get" class="financeiro-auditoria-filtros no-print">
+    {% if filtro_modelo %}<input type="hidden" name="modelo" value="{{ filtro_modelo }}">{% endif %}
+    {% if auditoria_return_to_url %}<input type="hidden" name="return_to" value="{{ auditoria_return_to_url }}">{% endif %}
+    {% if auditoria_contexto_documento %}
+        <div class="notification is-light mb-3">
+            <strong>Historico do documento</strong>
+            <span class="has-text-grey">LancamentoFinanceiro #{{ auditoria_contexto_documento.registro_id }}</span>
+            <input type="hidden" name="registro_id" value="{{ auditoria_contexto_documento.registro_id }}">
+        </div>
+    {% endif %}
     <div class="columns is-multiline">
         <div class="column is-12-mobile is-6-tablet is-3-desktop">
-            <label class="label">Ação</label>
+            <label class="label">Acao</label>
             <div class="select is-fullwidth">
                 <select name="acao">
                     <option value="">Todas</option>
@@ -82,12 +94,14 @@
             <label class="label">Data final</label>
             <input class="input" type="date" name="data_final" value="{{ filtro_data_final }}">
         </div>
-        <div class="column is-12-mobile is-6-tablet is-2-desktop">
-            <label class="label">ID do registro</label>
-            <input class="input" type="number" min="1" step="1" name="registro_id" value="{{ filtro_registro_id }}">
-        </div>
+        {% if not auditoria_contexto_documento %}
+            <div class="column is-12-mobile is-6-tablet is-2-desktop">
+                <label class="label">ID do registro</label>
+                <input class="input" type="number" min="1" step="1" name="registro_id" value="{{ filtro_registro_id }}">
+            </div>
+        {% endif %}
         <div class="column is-12-mobile is-6-tablet is-3-desktop">
-            <label class="label">Usuário</label>
+            <label class="label">Usuario</label>
             <div class="select is-fullwidth">
                 <select name="usuario">
                     <option value="">Todos</option>
@@ -101,7 +115,7 @@
             <label class="label">&nbsp;</label>
             <div class="buttons">
                 <button class="button is-link" type="submit">Aplicar filtros</button>
-                <a class="button is-light" href="{% url 'financeiro:auditoria-lancamento-list' %}">Limpar</a>
+                <a class="button is-light" href="{{ auditoria_clear_url }}">Limpar</a>
             </div>
         </div>
     </div>
@@ -117,10 +131,10 @@
                 <thead>
                 <tr>
                     <th>Data/Hora</th>
-                    <th>Ação</th>
+                    <th>Acao</th>
                     <th>Modelo</th>
                     <th>Registro</th>
-                    <th>Usuário</th>
+                    <th>Usuario</th>
                     <th>Campos alterados</th>
                 </tr>
                 </thead>

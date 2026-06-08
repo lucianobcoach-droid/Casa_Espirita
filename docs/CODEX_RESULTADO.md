@@ -6369,3 +6369,15 @@ Não houve alteração de código funcional nesta etapa.
   - exibicao/ocultacao do botao conforme permissao
   - bloqueio 403 sem permissao de exportacao
   - conferencias de filtros, totais e tipos de celula do XLSX
+
+## Microetapa: cadastros rapidos e historico no editar lancamento
+
+- liberei no editar lancamento os mesmos atalhos `+` do formulario de criacao e acrescentei o atalho de conta financeira no mesmo padrao visual
+- o formulario de edicao passou a expor um botao `Historico do documento` quando o usuario tem permissao de auditoria
+- a auditoria reutilizada continua sendo `AuditoriaFinanceiro`, agora com consulta contextual filtrada por `modelo=LancamentoFinanceiro` + `registro_id`
+- o filtro contextual do documento nao mistura eventos de outros modelos com o mesmo ID e manteve o retorno simples para a tela de edicao
+- a cobertura automatizada foi ampliada para:
+  - exibicao dos atalhos rapidos no editar
+  - exibicao/ocultacao do botao de historico conforme permissao
+  - filtro do historico restrito ao documento atual
+  - bloqueio 403 sem permissao de auditoria

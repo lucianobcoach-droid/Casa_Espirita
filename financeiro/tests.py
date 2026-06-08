@@ -2529,6 +2529,109 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
             f"{reverse('financeiro:lancamento-create')}?restaurar_lancamento=1&return_to=%2Ffinanceiro%2Flancamentos%2F",
         )
 
+    def test_edicao_exibe_cadastros_rapidos_e_historico_do_documento(self):
+        lancamento = self._criar_lancamento_controlado()
+        self._login_com_permissoes(
+            'user-edicao-com-historico',
+            [
+                'financeiro.lancamentos.editar',
+                'financeiro.auditoria.listar',
+            ],
+        )
+
+        response = self.client.get(reverse('financeiro:lancamento-update', kwargs={'pk': lancamento.pk}))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'data-financeiro-quick-create="pessoa"', html=False)
+        self.assertContains(response, 'data-financeiro-quick-create="categoria"', html=False)
+        self.assertContains(response, 'data-financeiro-quick-create="centro_custo"', html=False)
+        self.assertContains(response, 'data-financeiro-quick-create="conta"', count=2, html=False)
+        self.assertContains(response, reverse('financeiro:auditoria-lancamento-list'))
+        self.assertContains(
+            response,
+            f'modelo=LancamentoFinanceiro&amp;registro_id={lancamento.pk}',
+            html=False,
+        )
+
+    def test_edicao_sem_permissao_de_auditoria_oculta_historico_do_documento(self):
+        lancamento = self._criar_lancamento_controlado()
+        self._login_com_permissoes(
+            'user-edicao-sem-historico',
+            [
+                'financeiro.lancamentos.editar',
+            ],
+        )
+
+        response = self.client.get(reverse('financeiro:lancamento-update', kwargs={'pk': lancamento.pk}))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, reverse('financeiro:auditoria-lancamento-list'))
+
+    def test_historico_do_documento_filtra_apenas_lancamento_especifico(self):
+        lancamento = self._criar_lancamento_controlado()
+        self._login_com_permissoes(
+            'user-historico-documento',
+            [
+                'financeiro.auditoria.listar',
+            ],
+        )
+        AuditoriaFinanceiro.objects.create(
+            acao=AuditoriaFinanceiro.AcaoAuditoria.CREATE,
+            modelo='LancamentoFinanceiro',
+            registro_id=lancamento.pk,
+            usuario=get_user_model().objects.get(username='user-historico-documento'),
+            campos_alterados={'descricao': {'before': '-', 'after': lancamento.descricao}},
+        )
+        AuditoriaFinanceiro.objects.create(
+            acao=AuditoriaFinanceiro.AcaoAuditoria.UPDATE,
+            modelo='LancamentoFinanceiro',
+            registro_id=lancamento.pk,
+            usuario=get_user_model().objects.get(username='user-historico-documento'),
+            campos_alterados={'valor': {'before': '90.00', 'after': '100.00'}},
+        )
+        AuditoriaFinanceiro.objects.create(
+            acao=AuditoriaFinanceiro.AcaoAuditoria.UPDATE,
+            modelo='PessoaFinanceira',
+            registro_id=lancamento.pk,
+            usuario=get_user_model().objects.get(username='user-historico-documento'),
+            campos_alterados={'nome': {'before': 'A', 'after': 'B'}},
+        )
+
+        response = self.client.get(
+            reverse('financeiro:auditoria-lancamento-list'),
+            {
+                'modelo': 'LancamentoFinanceiro',
+                'registro_id': str(lancamento.pk),
+                'return_to': reverse('financeiro:lancamento-update', kwargs={'pk': lancamento.pk}),
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, f'LancamentoFinanceiro #{lancamento.pk}')
+        self.assertContains(response, 'Voltar ao documento')
+        self.assertContains(response, 'descricao')
+        self.assertContains(response, 'valor')
+        self.assertNotContains(response, 'PessoaFinanceira')
+
+    def test_historico_do_documento_exige_permissao_de_auditoria(self):
+        lancamento = self._criar_lancamento_controlado()
+        self._login_com_permissoes(
+            'user-sem-permissao-auditoria',
+            [
+                'financeiro.lancamentos.editar',
+            ],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:auditoria-lancamento-list'),
+            {
+                'modelo': 'LancamentoFinanceiro',
+                'registro_id': str(lancamento.pk),
+            },
+        )
+
+        self.assertEqual(response.status_code, 403)
+
     def test_endpoint_regra_automatica_retorna_campos_e_meta_da_categoria(self):
         self._login_com_permissoes(
             'user-regra-endpoint',

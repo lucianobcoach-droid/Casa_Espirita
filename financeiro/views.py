@@ -8147,13 +8147,35 @@ class AuditoriaLancamentoFinanceiroListView(FinanceiroPermissaoMixin, ListView):
             .select_related('usuario')
         )
 
+    def _get_modelo_filtrado(self) -> str:
+        modelo = self.request.GET.get('modelo', '').strip()
+        if modelo in self.modelos_auditados:
+            return modelo
+        return ''
+
+    def _get_return_to_url(self) -> str:
+        return_to = (self.request.GET.get('return_to') or '').strip()
+        if not return_to:
+            return ''
+        if not url_has_allowed_host_and_scheme(
+            return_to,
+            allowed_hosts={self.request.get_host()},
+            require_https=self.request.is_secure(),
+        ):
+            return ''
+        return return_to
+
     def get_queryset(self):
         queryset = self._get_base_queryset()
+        modelo = self._get_modelo_filtrado()
         acao = self.request.GET.get('acao', '').strip()
         data_inicial = self.request.GET.get('data_inicial', '').strip()
         data_final = self.request.GET.get('data_final', '').strip()
         registro_id = self.request.GET.get('registro_id', '').strip()
         usuario_id = self.request.GET.get('usuario', '').strip()
+
+        if modelo:
+            queryset = queryset.filter(modelo=modelo)
 
         if acao:
             queryset = queryset.filter(acao=acao)
@@ -8194,6 +8216,9 @@ class AuditoriaLancamentoFinanceiroListView(FinanceiroPermissaoMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        filtro_modelo = self._get_modelo_filtrado()
+        filtro_registro_id = self.request.GET.get('registro_id', '').strip()
+        return_to = self._get_return_to_url()
         usuarios_auditoria = []
         usuarios_vistos: set[int] = set()
         for auditoria in (
@@ -8207,13 +8232,33 @@ class AuditoriaLancamentoFinanceiroListView(FinanceiroPermissaoMixin, ListView):
                 usuarios_auditoria.append(usuario)
 
         context['page_title'] = 'Auditoria do Financeiro'
+        context['filtro_modelo'] = filtro_modelo
         context['filtro_acao'] = self.request.GET.get('acao', '').strip()
         context['filtro_data_inicial'] = self.request.GET.get('data_inicial', '').strip()
         context['filtro_data_final'] = self.request.GET.get('data_final', '').strip()
-        context['filtro_registro_id'] = self.request.GET.get('registro_id', '').strip()
+        context['filtro_registro_id'] = filtro_registro_id
         context['filtro_usuario'] = self.request.GET.get('usuario', '').strip()
         context['acoes_auditoria'] = AuditoriaFinanceiro.AcaoAuditoria.choices
         context['usuarios_auditoria'] = usuarios_auditoria
+        context['auditoria_return_to_url'] = return_to
+
+        limpar_params: dict[str, str] = {}
+        if filtro_modelo:
+            limpar_params['modelo'] = filtro_modelo
+        if filtro_registro_id:
+            limpar_params['registro_id'] = filtro_registro_id
+        if return_to:
+            limpar_params['return_to'] = return_to
+        limpar_url = reverse('financeiro:auditoria-lancamento-list')
+        if limpar_params:
+            limpar_url = f'{limpar_url}?{urlencode(limpar_params)}'
+        context['auditoria_clear_url'] = limpar_url
+
+        if filtro_modelo == 'LancamentoFinanceiro' and filtro_registro_id.isdigit():
+            context['auditoria_contexto_documento'] = {
+                'modelo': filtro_modelo,
+                'registro_id': int(filtro_registro_id),
+            }
         return context
 
 
@@ -11112,10 +11157,14 @@ class LancamentoFinanceiroUpdateView(FinanceiroFormMixin, UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['rateio_categoria_opcoes'] = [
-            {'id': categoria.pk, 'label': str(categoria), 'tipo': categoria.tipo}
-            for categoria in categorias_vinculaveis_queryset()
-        ]
+        context['rateio_categoria_opcoes'] = _montar_rateio_categoria_opcoes()
+        context['rateio_centro_custo_opcoes'] = _montar_rateio_centro_custo_opcoes(
+            context['form'].fields['centro_custo'].queryset
+        )
+        context['lancamento_auditoria_url'] = (
+            f"{reverse('financeiro:auditoria-lancamento-list')}?"
+            f"{urlencode({'modelo': 'LancamentoFinanceiro', 'registro_id': self.object.pk, 'return_to': self.request.get_full_path()})}"
+        )
         context.update(_contexto_competencia_lancamento())
         return context
 

@@ -181,3 +181,5 @@ Este documento consolida regras permanentes do sistema. Ele não substitui o his
 - Em rateio, o assistente de competencias opera por linha controlada. Linhas nao controladas ficam fora do assistente e da validacao.
 - Quando uma regra automatica por descricao e aplicada no formulario de lancamento, ela prevalece sobre o rascunho restaurado pelo botao `+` e deve preencher/sobrescrever todos os campos que a propria regra possui, sem restaurar `numero_documento`.
 - Extrato Financeiro pode ser exportado em XLSX respeitando os mesmos filtros e a mesma regra de calculo da tela, sem calculo paralelo divergente.
+- A tela de edicao de lancamento deve manter os mesmos atalhos de cadastro rapido da criacao para os cadastros auxiliares aplicaveis, preservando o retorno ao proprio formulario.
+- O historico de um documento/lancamento deve ser consultado a partir da `AuditoriaFinanceiro` existente, filtrado por `modelo=LancamentoFinanceiro` e `registro_id` do lancamento, sem misturar eventos de outros modelos com o mesmo ID.

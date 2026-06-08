@@ -4740,3 +4740,19 @@ Status de homologacao da usuaria:
   - mesma classificacao de receitas, despesas e transferencias no escopo selecionado
 - o botao `Exportar Excel` aparece apenas para usuario com permissao de exportacao reaproveitada do modulo financeiro
 - a exportacao nao altera lancamentos, saldos, transferencias, recibos, resumo, prestacao/fechamento, balancete ou financeiro oficial
+
+## Microetapa: cadastros rapidos e historico no editar lancamento
+
+- a tela de edicao de lancamento passou a exibir os mesmos atalhos `+` de cadastros auxiliares da criacao para:
+  - favorecido
+  - categoria
+  - centro de custo
+  - conta financeira
+- os atalhos continuam reutilizando o fluxo atual de retorno com `return_to` e restauracao do rascunho do formulario
+- o editar lancamento ganhou acesso simples ao historico do proprio documento por meio da auditoria existente
+- a consulta especifica do documento filtra `AuditoriaFinanceiro` por:
+  - `modelo=LancamentoFinanceiro`
+  - `registro_id` do lancamento atual
+- nessa consulta contextual, o usuario pode ver criacao/alteracoes do documento sem misturar eventos de outros modelos com o mesmo ID
+- a gravacao da auditoria nao foi alterada; apenas o acesso/consulta foi simplificado
+- sem impacto em calculo financeiro, extrato, resumo, prestacao/fechamento, balancete, recibos ou financeiro oficial
