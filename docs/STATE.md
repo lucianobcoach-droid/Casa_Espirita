@@ -4723,3 +4723,20 @@ Status de homologacao da usuaria:
   - com `centro_custo_padrao`, o padrao e sugerido
   - sem `centro_custo_padrao`, o campo fica vazio e editavel, sem reaproveitar valor herdado do rascunho
 - sem impacto em calculo financeiro, extrato, resumo, prestacao/fechamento, balancete, recibos, permissoes ou financeiro oficial
+
+## Microetapa: exportacao XLSX do Extrato Financeiro
+
+- o Extrato Financeiro agora pode ser exportado em `.xlsx`
+- a exportacao reutiliza o mesmo caminho de montagem do contexto da tela, sem calculo paralelo divergente
+- o arquivo respeita os filtros hoje existentes no Extrato:
+  - contas selecionadas
+  - periodo inicial/final
+  - exibicao de observacoes
+- o XLSX preserva a mesma leitura da tela:
+  - saldo anterior ou saldo inicial
+  - entradas do periodo
+  - saidas do periodo
+  - saldo final
+  - mesma classificacao de receitas, despesas e transferencias no escopo selecionado
+- o botao `Exportar Excel` aparece apenas para usuario com permissao de exportacao reaproveitada do modulo financeiro
+- a exportacao nao altera lancamentos, saldos, transferencias, recibos, resumo, prestacao/fechamento, balancete ou financeiro oficial

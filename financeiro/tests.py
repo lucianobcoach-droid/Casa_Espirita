@@ -49,6 +49,7 @@ from .views import (
     BalanceteInstitucionalFinanceiroView,
     ContaFinanceiraAutocompleteView,
     ExtratoFinanceiroView,
+    ExtratoFinanceiroExportacaoXlsxView,
     _gerar_arquivo_xlsx,
     _linha_exportacao_cadastro_auxiliar,
     LancamentoFinanceiroCloneView,
@@ -1420,6 +1421,41 @@ class ExtratoFinanceiroMultiplasContasTests(TestCase):
             date(2026, 3, 7),
         )
 
+    def _garantir_permissao(self, codigo: str) -> PermissaoSistema:
+        permissao = PermissaoSistema.objects.filter(codigo=codigo).first()
+        if permissao:
+            return permissao
+        partes = codigo.split('.')
+        modulo = partes[0] if len(partes) > 0 else 'financeiro'
+        recurso = partes[1] if len(partes) > 1 else 'geral'
+        acao = '.'.join(partes[2:]) if len(partes) > 2 else 'acessar'
+        return PermissaoSistema.objects.create(
+            codigo=codigo,
+            nome=codigo,
+            modulo=modulo,
+            recurso=recurso,
+            acao=acao,
+            ativo=True,
+        )
+
+    def _login_com_permissoes(self, username: str, codigos_permissao: list[str]):
+        user_model = get_user_model()
+        usuario = user_model.objects.create_user(
+            username=username,
+            password='senha-forte-123',
+            email=f'{username}@teste.local',
+            is_active=True,
+        )
+        perfil = PerfilAcesso.objects.create(
+            codigo=f'perfil-{username}',
+            nome=f'Perfil {username}',
+            ativo=True,
+        )
+        for codigo in codigos_permissao:
+            perfil.permissoes.add(self._garantir_permissao(codigo))
+        UsuarioPerfilAcesso.objects.create(usuario=usuario, perfil=perfil)
+        self.client.force_login(usuario)
+
     def _criar_transferencia(self, descricao, conta_origem, conta_destino, valor, data_pagamento):
         return LancamentoFinanceiro.objects.create(
             descricao=descricao,
@@ -1441,10 +1477,84 @@ class ExtratoFinanceiroMultiplasContasTests(TestCase):
     def _render_extrato(self, params):
         request = self.factory.get('/financeiro/extratos/', data=params)
         request.resolver_match = resolve('/financeiro/extratos/')
+        request.user = type('UserStub', (), {'is_authenticated': False, 'is_active': False})()
         view = ExtratoFinanceiroView()
         view.request = request
         context = view.get_context_data()
         return render_to_string('financeiro/conta_extrato.html', context, request=request), context
+
+    def _ler_linhas_xlsx(self, conteudo: bytes) -> list[list[str]]:
+        with ZipFile(BytesIO(conteudo)) as arquivo_xlsx:
+            workbook_tree = ElementTree.fromstring(arquivo_xlsx.read('xl/workbook.xml'))
+            namespace_workbook = {
+                'main': 'http://schemas.openxmlformats.org/spreadsheetml/2006/main',
+                'rel': 'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
+            }
+            primeiro_sheet = workbook_tree.find('main:sheets/main:sheet', namespace_workbook)
+            self.assertIsNotNone(primeiro_sheet)
+            relation_id = primeiro_sheet.get('{http://schemas.openxmlformats.org/officeDocument/2006/relationships}id')
+
+            relacoes_tree = ElementTree.fromstring(arquivo_xlsx.read('xl/_rels/workbook.xml.rels'))
+            namespace_rels = {'rel': 'http://schemas.openxmlformats.org/package/2006/relationships'}
+            destino = ''
+            for relacao in relacoes_tree.findall('rel:Relationship', namespace_rels):
+                if relacao.get('Id') == relation_id:
+                    destino = relacao.get('Target', '')
+                    break
+
+            self.assertTrue(destino)
+            caminho_planilha = f"xl/{destino.lstrip('./')}"
+            planilha_tree = ElementTree.fromstring(arquivo_xlsx.read(caminho_planilha))
+            namespace_planilha = {'main': 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'}
+
+            linhas = []
+            for linha in planilha_tree.findall('main:sheetData/main:row', namespace_planilha):
+                valores = []
+                for celula in linha.findall('main:c', namespace_planilha):
+                    referencia = celula.get('r', '')
+                    correspondencia = re.match(r'([A-Z]+)\d+$', referencia)
+                    if correspondencia:
+                        indice_coluna = 0
+                        for letra in correspondencia.group(1):
+                            indice_coluna = (indice_coluna * 26) + (ord(letra) - ord('A') + 1)
+                        while len(valores) < indice_coluna - 1:
+                            valores.append('')
+                    texto = ''.join(celula.itertext())
+                    valores.append(texto)
+                linhas.append(valores)
+            return linhas
+
+    def _ler_celulas_xlsx(self, conteudo: bytes) -> dict[str, dict[str, str]]:
+        with ZipFile(BytesIO(conteudo)) as arquivo_xlsx:
+            workbook_tree = ElementTree.fromstring(arquivo_xlsx.read('xl/workbook.xml'))
+            namespace_workbook = {
+                'main': 'http://schemas.openxmlformats.org/spreadsheetml/2006/main',
+                'rel': 'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
+            }
+            primeiro_sheet = workbook_tree.find('main:sheets/main:sheet', namespace_workbook)
+            self.assertIsNotNone(primeiro_sheet)
+            relation_id = primeiro_sheet.get('{http://schemas.openxmlformats.org/officeDocument/2006/relationships}id')
+
+            relacoes_tree = ElementTree.fromstring(arquivo_xlsx.read('xl/_rels/workbook.xml.rels'))
+            namespace_rels = {'rel': 'http://schemas.openxmlformats.org/package/2006/relationships'}
+            destino = ''
+            for relacao in relacoes_tree.findall('rel:Relationship', namespace_rels):
+                if relacao.get('Id') == relation_id:
+                    destino = relacao.get('Target', '')
+                    break
+
+            planilha_tree = ElementTree.fromstring(arquivo_xlsx.read(f"xl/{destino.lstrip('./')}"))
+            namespace_planilha = {'main': 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'}
+            celulas: dict[str, dict[str, str]] = {}
+            for celula in planilha_tree.findall('main:sheetData/main:row/main:c', namespace_planilha):
+                referencia = celula.get('r', '')
+                valor = ''.join(celula.itertext())
+                celulas[referencia] = {
+                    'type': celula.get('t', 'n'),
+                    'style': celula.get('s', ''),
+                    'value': valor,
+                }
+            return celulas
 
     def test_extrato_respeita_escopo_de_contas(self):
         periodo = {
@@ -1579,6 +1689,123 @@ class ExtratoFinanceiroMultiplasContasTests(TestCase):
         self.assertEqual(contexto['extrato_contas_selecionadas_label'], '4 contas selecionadas')
         self.assertIn('4 contas selecionadas', html)
         self.assertEqual(contexto['saldo_final'], Decimal('175.00'))
+
+    def test_url_resolve_para_view_de_exportacao_xlsx_do_extrato(self):
+        resolved = resolve(reverse('financeiro:extrato-exportacao-xlsx'))
+
+        self.assertIs(resolved.func.view_class, ExtratoFinanceiroExportacaoXlsxView)
+
+    def test_extrato_exibe_botao_exportar_excel_com_permissao(self):
+        self._login_com_permissoes(
+            'user-extrato-exporta',
+            [
+                'financeiro.extratos.visualizar',
+                'financeiro.lancamentos.exportar',
+            ],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:extrato-list'),
+            {
+                'contas_form': '1',
+                'contas': str(self.dinheiro.pk),
+                'data_inicial': '2026-03-01',
+                'data_final': '2026-03-31',
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Exportar Excel')
+        self.assertContains(response, reverse('financeiro:extrato-exportacao-xlsx'))
+        self.assertContains(response, 'data_inicial=2026-03-01')
+        self.assertContains(response, f'contas={self.dinheiro.pk}')
+
+    def test_extrato_oculta_botao_exportar_excel_sem_permissao(self):
+        self._login_com_permissoes(
+            'user-extrato-sem-exporta',
+            ['financeiro.extratos.visualizar'],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:extrato-list'),
+            {
+                'contas_form': '1',
+                'contas': str(self.dinheiro.pk),
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'Exportar Excel')
+
+    def test_exportacao_xlsx_do_extrato_respeita_filtros_e_totais(self):
+        self._login_com_permissoes(
+            'user-extrato-exporta-xlsx',
+            [
+                'financeiro.extratos.visualizar',
+                'financeiro.lancamentos.exportar',
+            ],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:extrato-exportacao-xlsx'),
+            {
+                'contas_form': '1',
+                'contas': str(self.dinheiro.pk),
+                'data_inicial': '2026-03-01',
+                'data_final': '2026-03-31',
+                'exibir_observacao': '1',
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response['Content-Type'],
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        )
+        self.assertIn('extrato_financeiro.xlsx', response['Content-Disposition'])
+
+        linhas = self._ler_linhas_xlsx(response.content)
+        conteudo = '\n'.join(' | '.join(linha) for linha in linhas)
+        self.assertIn('Extrato financeiro', conteudo)
+        self.assertIn('01/03/2026 a 31/03/2026', conteudo)
+        self.assertIn('Saldo anterior', conteudo)
+        self.assertIn('140.00', conteudo)
+        self.assertIn('70.00', conteudo)
+        self.assertIn('50.00', conteudo)
+        self.assertIn('160.00', conteudo)
+        self.assertIn('Dinheiro para banco', conteudo)
+        self.assertIn('Dinheiro para caixa externo', conteudo)
+        self.assertIn('Caixa externo para dinheiro', conteudo)
+        self.assertNotIn('Banco para dinheiro antes do periodo', conteudo)
+
+        celulas = self._ler_celulas_xlsx(response.content)
+        self.assertEqual(celulas['B7']['value'], '140.00')
+        self.assertEqual(celulas['B8']['value'], '70.00')
+        self.assertEqual(celulas['B9']['value'], '50.00')
+        self.assertEqual(celulas['B10']['value'], '160.00')
+        self.assertEqual(celulas['A13']['type'], 'n')
+        self.assertEqual(celulas['A13']['style'], '3')
+        self.assertEqual(celulas['L13']['style'], '2')
+        self.assertEqual(celulas['M13']['style'], '2')
+        self.assertEqual(celulas['N13']['style'], '2')
+
+    def test_exportacao_xlsx_do_extrato_bloqueia_usuario_sem_permissao(self):
+        self._login_com_permissoes(
+            'user-extrato-exporta-bloqueado',
+            ['financeiro.extratos.visualizar'],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:extrato-exportacao-xlsx'),
+            {
+                'contas_form': '1',
+                'contas': str(self.dinheiro.pk),
+                'data_inicial': '2026-03-01',
+                'data_final': '2026-03-31',
+            },
+        )
+
+        self.assertEqual(response.status_code, 403)
 
 
 class LancamentoListMultiContasTests(TestCase):

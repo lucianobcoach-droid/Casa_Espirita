@@ -1,7 +1,9 @@
 {% extends 'financeiro/base.html' %}
 {% load financeiro_format %}
+{% load financeiro_permissoes %}
 {% block title %}{{ page_title }}{% endblock %}
 {% block content %}
+{% tem_permissao request.user 'financeiro.lancamentos.exportar' as pode_exportar_extrato %}
 <style>
     .financeiro-extrato-page {
         display: grid;
@@ -969,6 +971,7 @@
         </div>
         <div class="financeiro-page-header-actions no-print">
             {% if tem_extrato %}
+                {% if pode_exportar_extrato %}<a class="button is-link is-light" href="{{ extrato_exportacao_xlsx_url }}">Exportar Excel</a>{% endif %}
                 <button class="button is-light" type="button" onclick="window.print()">Imprimir</button>
             {% endif %}
             {% if not show_conta_filter %}

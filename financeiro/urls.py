@@ -35,6 +35,7 @@ from .views import (
     ContaFinanceiraUpdateView,
     EvolucaoCategoriasFinanceiroView,
     ExtratoFinanceiroView,
+    ExtratoFinanceiroExportacaoXlsxView,
     FinanceiroHomeView,
     BalanceteInstitucionalFinanceiroView,
     FrequenciaCompetenciasView,
@@ -88,6 +89,7 @@ urlpatterns = [
     path('', RedirectView.as_view(pattern_name='financeiro:lancamento-list', permanent=False), name='home'),
     path('inicio/', FinanceiroHomeView.as_view(), name='home-secundaria'),
     path('extratos/', ExtratoFinanceiroView.as_view(), name='extrato-list'),
+    path('extratos/exportar-xlsx/', ExtratoFinanceiroExportacaoXlsxView.as_view(), name='extrato-exportacao-xlsx'),
     path('auditoria/lancamentos/', AuditoriaLancamentoFinanceiroListView.as_view(), name='auditoria-lancamento-list'),
     path('prestacao-contas/', PrestacaoContasFinanceiroView.as_view(), name='prestacao-contas'),
     path(

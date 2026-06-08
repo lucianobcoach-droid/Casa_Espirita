@@ -180,3 +180,4 @@ Este documento consolida regras permanentes do sistema. Ele não substitui o his
 - No assistente de competencias, `Ja registrado` e referencia historica externa; `Valor deste lancamento` e o valor editavel do documento atual; `Total apos lancamento` e apenas leitura de apoio.
 - Em rateio, o assistente de competencias opera por linha controlada. Linhas nao controladas ficam fora do assistente e da validacao.
 - Quando uma regra automatica por descricao e aplicada no formulario de lancamento, ela prevalece sobre o rascunho restaurado pelo botao `+` e deve preencher/sobrescrever todos os campos que a propria regra possui, sem restaurar `numero_documento`.
+- Extrato Financeiro pode ser exportado em XLSX respeitando os mesmos filtros e a mesma regra de calculo da tela, sem calculo paralelo divergente.

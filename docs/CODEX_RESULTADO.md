@@ -6354,3 +6354,18 @@ Não houve alteração de código funcional nesta etapa.
 - cobertura automatizada ampliada para:
   - payload da regra com campos e meta da categoria
   - guardrail de limpeza/reescrita no template do formulario
+
+## Microetapa: exportacao XLSX do Extrato Financeiro
+
+- implementei a rota de exportacao `.xlsx` do Extrato Financeiro, reaproveitando o mesmo contexto/calculo da tela
+- o botao `Exportar Excel` foi adicionado ao cabecalho do Extrato, preservando os filtros atuais pela query string
+- a exportacao passou a gerar uma aba `Extrato` com:
+  - cabecalho do relatorio
+  - resumo de saldo anterior/inicial, entradas, saidas e saldo final
+  - tabela de movimentos do universo filtrado
+- os valores monetarios passaram a sair como numeros no Excel e as datas como celulas de data
+- a cobertura automatizada foi ampliada para:
+  - rota da exportacao
+  - exibicao/ocultacao do botao conforme permissao
+  - bloqueio 403 sem permissao de exportacao
+  - conferencias de filtros, totais e tipos de celula do XLSX

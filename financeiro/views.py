@@ -24,6 +24,7 @@ from django.db.models.functions import Coalesce
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
+from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views import View
 from django.views.generic import CreateView, DeleteView, DetailView, FormView, ListView, TemplateView, UpdateView
@@ -1074,11 +1075,21 @@ def _gerar_arquivo_xlsx(planilhas: list[tuple[str, list[list[str]]]]) -> bytes:
     return arquivo.getvalue()
 
 
+def _xlsx_serializar_data_excel(valor: date | datetime) -> str:
+    if isinstance(valor, date) and not isinstance(valor, datetime):
+        valor = datetime.combine(valor, datetime.min.time())
+    base = datetime(1899, 12, 30)
+    delta = valor - base
+    serial = delta.days + ((delta.seconds + (delta.microseconds / 1000000)) / 86400)
+    return f'{serial:.10f}'.rstrip('0').rstrip('.')
+
+
 def _xlsx_planilha_xml_formatada(
-    linhas: list[list[str]],
+    linhas: list[list[object]],
     *,
     larguras_colunas: list[int] | None = None,
     linhas_negrito: set[int] | None = None,
+    freeze_row: int | None = None,
 ) -> str:
     linhas_negrito = linhas_negrito or set()
     colunas_xml = ''
@@ -1089,20 +1100,49 @@ def _xlsx_planilha_xml_formatada(
         )
         colunas_xml = f'<cols>{colunas}</cols>'
 
+    sheet_views_xml = ''
+    if freeze_row and freeze_row > 1:
+        sheet_views_xml = (
+            '<sheetViews>'
+            '<sheetView workbookViewId="0">'
+            f'<pane ySplit="{freeze_row - 1}" topLeftCell="A{freeze_row}" '
+            'activePane="bottomLeft" state="frozen"/>'
+            '</sheetView>'
+            '</sheetViews>'
+        )
+
     linhas_xml = []
     for indice_linha, linha in enumerate(linhas, start=1):
         celulas_xml = []
         for indice_coluna, valor in enumerate(linha, start=1):
             referencia = f'{_xlsx_coluna_referencia(indice_coluna)}{indice_linha}'
-            estilo = ' s="1"' if indice_linha in linhas_negrito else ''
+            estilo_indice = 1 if indice_linha in linhas_negrito else 0
+            tipo_celula = 'string'
+            valor_celula = valor
+
+            if isinstance(valor, dict):
+                tipo_celula = str(valor.get('type') or 'string')
+                valor_celula = valor.get('value')
+                estilo_indice = int(valor.get('style', estilo_indice))
+
+            estilo = f' s="{estilo_indice}"' if estilo_indice else ''
+            if tipo_celula == 'number' and valor_celula not in (None, ''):
+                celulas_xml.append(f'<c r="{referencia}"{estilo}><v>{escape(str(valor_celula))}</v></c>')
+                continue
+            if tipo_celula == 'date' and valor_celula:
+                celulas_xml.append(
+                    f'<c r="{referencia}"{estilo}><v>{_xlsx_serializar_data_excel(valor_celula)}</v></c>'
+                )
+                continue
             celulas_xml.append(
-                f'<c r="{referencia}" t="inlineStr"{estilo}><is><t>{escape(str(valor))}</t></is></c>'
+                f'<c r="{referencia}" t="inlineStr"{estilo}><is><t>{escape(str(valor_celula or ""))}</t></is></c>'
             )
         linhas_xml.append(f'<row r="{indice_linha}">{"".join(celulas_xml)}</row>')
 
     return (
         '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
         '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+        f'{sheet_views_xml}'
         f'{colunas_xml}'
         f'<sheetData>{"".join(linhas_xml)}</sheetData>'
         '</worksheet>'
@@ -1174,6 +1214,10 @@ def _gerar_arquivo_xlsx_formatado(
             'xl/styles.xml',
             '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
             '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+            '<numFmts count="2">'
+            '<numFmt numFmtId="164" formatCode="&quot;R$&quot; #,##0.00"/>'
+            '<numFmt numFmtId="165" formatCode="dd/mm/yyyy"/>'
+            '</numFmts>'
             '<fonts count="2">'
             '<font><sz val="11"/><name val="Calibri"/></font>'
             '<font><b/><sz val="11"/><name val="Calibri"/></font>'
@@ -1184,9 +1228,11 @@ def _gerar_arquivo_xlsx_formatado(
             '</fills>'
             '<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>'
             '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'
-            '<cellXfs count="2">'
+            '<cellXfs count="4">'
             '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'
             '<xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/>'
+            '<xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>'
+            '<xf numFmtId="165" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>'
             '</cellXfs>'
             '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>'
             '</styleSheet>',
@@ -1199,6 +1245,7 @@ def _gerar_arquivo_xlsx_formatado(
                     planilha['linhas'],
                     larguras_colunas=planilha.get('larguras_colunas'),
                     linhas_negrito=set(planilha.get('linhas_negrito', set())),
+                    freeze_row=planilha.get('freeze_row'),
                 ),
             )
 
@@ -1407,6 +1454,105 @@ def _gerar_planilha_exportacao_lancamentos_xlsx(lancamentos) -> bytes:
         [
             ('Modelo', linhas),
             ('Instrucoes', [['Item', 'Orientacao'], *LANCAMENTO_IMPORTACAO_MODELO_INSTRUCOES]),
+        ]
+    )
+
+
+def _celula_xlsx_texto(valor: object) -> dict[str, object]:
+    return {'value': '' if valor is None else str(valor), 'type': 'string'}
+
+
+def _celula_xlsx_numero(valor: Decimal | int | float | str | None, *, estilo: int | None = None) -> dict[str, object]:
+    if valor in (None, ''):
+        return {'value': '', 'type': 'string'}
+    celula = {'value': str(valor), 'type': 'number'}
+    if estilo is not None:
+        celula['style'] = estilo
+    return celula
+
+
+def _celula_xlsx_data(valor: date | datetime | None) -> dict[str, object]:
+    if not valor:
+        return {'value': '', 'type': 'string'}
+    return {'value': valor, 'type': 'date', 'style': 3}
+
+
+def _montar_planilha_extrato_financeiro_xlsx(contexto: dict[str, object]) -> bytes:
+    linhas: list[list[object]] = [
+        [_celula_xlsx_texto('Extrato financeiro')],
+        [_celula_xlsx_texto('Periodo'), _celula_xlsx_texto(contexto.get('periodo_label') or 'Periodo completo do escopo')],
+        [
+            _celula_xlsx_texto('Contas'),
+            _celula_xlsx_texto(
+                contexto.get('extrato_contas_selecionadas_label')
+                or contexto.get('contas_label')
+                or contexto.get('conta_label')
+                or 'Conforme filtros aplicados'
+            ),
+        ],
+        [_celula_xlsx_texto('Emitido em'), _celula_xlsx_texto(timezone.localtime().strftime('%d/%m/%Y %H:%M'))],
+        [],
+        [_celula_xlsx_texto('Resumo'), _celula_xlsx_texto('Valor')],
+        [
+            _celula_xlsx_texto('Saldo anterior' if contexto.get('saldo_anterior') is not None else 'Saldo inicial'),
+            _celula_xlsx_numero(contexto.get('saldo_anterior') or contexto.get('saldo_inicial') or Decimal('0.00'), estilo=2),
+        ],
+        [_celula_xlsx_texto('Entradas do periodo'), _celula_xlsx_numero(contexto.get('total_entradas_periodo') or Decimal('0.00'), estilo=2)],
+        [_celula_xlsx_texto('Saidas do periodo'), _celula_xlsx_numero(contexto.get('total_saidas_periodo') or Decimal('0.00'), estilo=2)],
+        [_celula_xlsx_texto('Saldo final'), _celula_xlsx_numero(contexto.get('saldo_final') or Decimal('0.00'), estilo=2)],
+        [],
+        [
+            _celula_xlsx_texto('Data pagamento'),
+            _celula_xlsx_texto('Data competencia'),
+            _celula_xlsx_texto('Tipo'),
+            _celula_xlsx_texto('Descricao'),
+            _celula_xlsx_texto('Favorecido'),
+            _celula_xlsx_texto('Categoria'),
+            _celula_xlsx_texto('Centro de custo'),
+            _celula_xlsx_texto('Conta origem'),
+            _celula_xlsx_texto('Conta destino'),
+            _celula_xlsx_texto('Numero do documento'),
+            _celula_xlsx_texto('Status'),
+            _celula_xlsx_texto('Entrada'),
+            _celula_xlsx_texto('Saida'),
+            _celula_xlsx_texto('Saldo apos movimento'),
+            _celula_xlsx_texto('Observacoes'),
+        ],
+    ]
+
+    mostrar_observacao = bool(contexto.get('mostrar_observacao'))
+    itens_extrato = contexto.get('itens_extrato') or []
+    for item in itens_extrato:
+        lancamento = item['lancamento']
+        linhas.append(
+            [
+                _celula_xlsx_data(lancamento.data_pagamento),
+                _celula_xlsx_data(lancamento.data_competencia),
+                _celula_xlsx_texto(lancamento.get_tipo_display()),
+                _celula_xlsx_texto(lancamento.descricao),
+                _celula_xlsx_texto(item.get('favorecido_exibicao') or '-'),
+                _celula_xlsx_texto(str(lancamento.categoria) if lancamento.categoria_id else '-'),
+                _celula_xlsx_texto(str(lancamento.centro_custo) if lancamento.centro_custo_id else '-'),
+                _celula_xlsx_texto(str(lancamento.conta) if lancamento.conta_id else '-'),
+                _celula_xlsx_texto(str(lancamento.conta_destino) if lancamento.conta_destino_id else '-'),
+                _celula_xlsx_texto(lancamento.numero_documento or '-'),
+                _celula_xlsx_texto(lancamento.get_status_display()),
+                _celula_xlsx_numero(item.get('entrada') or Decimal('0.00'), estilo=2),
+                _celula_xlsx_numero(item.get('saida') or Decimal('0.00'), estilo=2),
+                _celula_xlsx_numero(item.get('saldo_acumulado') or Decimal('0.00'), estilo=2),
+                _celula_xlsx_texto(item.get('observacoes_exibicao') if mostrar_observacao else ''),
+            ]
+        )
+
+    return _gerar_arquivo_xlsx_formatado(
+        [
+            {
+                'nome': 'Extrato',
+                'linhas': linhas,
+                'larguras_colunas': [18, 18, 14, 34, 28, 28, 24, 22, 22, 18, 14, 14, 14, 18, 36],
+                'linhas_negrito': {1, 6, 12},
+                'freeze_row': 13,
+            }
         ]
     )
 
@@ -7861,6 +8007,60 @@ class ExtratoContaMixin(FinanceiroPermissaoMixin):
         selecao_informada = filtro_enviado or todas_as_contas or bool(selected_ids_raw)
         return contas_selecionadas, [str(conta_id) for conta_id in selected_ids], todas_as_contas, selecao_informada
 
+    def _build_extrato_request_context(self) -> dict[str, object]:
+        data_inicial = self.request.GET.get('data_inicial', '').strip()
+        data_final = self.request.GET.get('data_final', '').strip()
+        mostrar_observacao = self._parse_checkbox('exibir_observacao')
+        contas = _contas_historicas_para_filtro(
+            data_inicial=data_inicial,
+            data_final=data_final,
+            status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+        )
+        contas_selecionadas, contas_selecionadas_ids, todas_as_contas, selecao_informada = self._parse_contas_extrato(contas)
+
+        context: dict[str, object] = {
+            'page_title': 'Extratos',
+            'contas': contas,
+            'conta_selecionada_id': contas_selecionadas_ids[0] if len(contas_selecionadas_ids) == 1 else '',
+            'contas_selecionadas_ids': contas_selecionadas_ids,
+            'todas_contas_selecionadas': todas_as_contas,
+            'tem_extrato': False,
+            'show_conta_filter': True,
+            'clear_extrato_url': reverse_lazy('financeiro:extrato-list'),
+            'mostrar_observacao': mostrar_observacao,
+            'data_inicial': data_inicial,
+            'data_final': data_final,
+            'periodo_label': self._montar_periodo_label(data_inicial, data_final, 'do escopo'),
+        }
+
+        if selecao_informada and not contas_selecionadas:
+            context['extrato_error'] = 'Selecione pelo menos uma conta para carregar o extrato.'
+            return context
+
+        if not contas_selecionadas:
+            return context
+
+        if len(contas_selecionadas) == 1 and not todas_as_contas:
+            conta = contas_selecionadas[0]
+            context.update(self._get_extrato_context(conta, data_inicial, data_final, mostrar_observacao))
+            context['contas_selecionadas'] = contas_selecionadas
+            context['contas_selecionadas_ids'] = contas_selecionadas_ids
+            context['todas_contas_selecionadas'] = False
+            context['page_title'] = f'Extratos - {conta.nome}'
+            return context
+
+        context.update(
+            self._get_extrato_escopo_context(
+                contas_selecionadas,
+                data_inicial,
+                data_final,
+                mostrar_observacao,
+                todas_as_contas=todas_as_contas,
+            )
+        )
+        context['page_title'] = f'Extratos - {context["contas_label"]}'
+        return context
+
 
 class ContaFinanceiraExtratoView(ExtratoContaMixin, DetailView):
     permissao_requerida = 'financeiro.extratos.visualizar'
@@ -7880,6 +8080,10 @@ class ContaFinanceiraExtratoView(ExtratoContaMixin, DetailView):
         context['show_conta_filter'] = False
         context['clear_extrato_url'] = reverse_lazy('financeiro:conta-extrato', kwargs={'pk': conta.pk})
         context['mostrar_observacao'] = mostrar_observacao
+        query = self.request.GET.copy()
+        query['conta'] = str(conta.pk)
+        exportacao_url = reverse('financeiro:extrato-exportacao-xlsx')
+        context['extrato_exportacao_xlsx_url'] = f'{exportacao_url}?{query.urlencode()}'
         return context
 
 
@@ -7889,52 +8093,34 @@ class ExtratoFinanceiroView(ExtratoContaMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        data_inicial = self.request.GET.get('data_inicial', '').strip()
-        data_final = self.request.GET.get('data_final', '').strip()
-        mostrar_observacao = self._parse_checkbox('exibir_observacao')
-        contas = _contas_historicas_para_filtro(
-            data_inicial=data_inicial,
-            data_final=data_final,
-            status=LancamentoFinanceiro.StatusLancamento.QUITADO,
-        )
-        contas_selecionadas, contas_selecionadas_ids, todas_as_contas, selecao_informada = self._parse_contas_extrato(contas)
-
-        context['page_title'] = 'Extratos'
-        context['contas'] = contas
-        context['conta_selecionada_id'] = contas_selecionadas_ids[0] if len(contas_selecionadas_ids) == 1 else ''
-        context['contas_selecionadas_ids'] = contas_selecionadas_ids
-        context['todas_contas_selecionadas'] = todas_as_contas
-        context['tem_extrato'] = False
-        context['show_conta_filter'] = True
-        context['clear_extrato_url'] = reverse_lazy('financeiro:extrato-list')
-        context['mostrar_observacao'] = mostrar_observacao
-        context['data_inicial'] = data_inicial
-        context['data_final'] = data_final
-        context['periodo_label'] = self._montar_periodo_label(data_inicial, data_final, 'do escopo')
-
-        if selecao_informada and not contas_selecionadas:
-            context['extrato_error'] = 'Selecione pelo menos uma conta para carregar o extrato.'
-        elif contas_selecionadas:
-            if len(contas_selecionadas) == 1 and not todas_as_contas:
-                conta = contas_selecionadas[0]
-                context.update(self._get_extrato_context(conta, data_inicial, data_final, mostrar_observacao))
-                context['contas_selecionadas'] = contas_selecionadas
-                context['contas_selecionadas_ids'] = contas_selecionadas_ids
-                context['todas_contas_selecionadas'] = False
-                context['page_title'] = f'Extratos - {conta.nome}'
-            else:
-                context.update(
-                    self._get_extrato_escopo_context(
-                        contas_selecionadas,
-                        data_inicial,
-                        data_final,
-                        mostrar_observacao,
-                        todas_as_contas=todas_as_contas,
-                    )
-                )
-                context['page_title'] = f'Extratos - {context["contas_label"]}'
-
+        context.update(self._build_extrato_request_context())
+        filtros = self.request.GET.urlencode()
+        exportacao_url = reverse('financeiro:extrato-exportacao-xlsx')
+        context['extrato_exportacao_xlsx_url'] = f'{exportacao_url}?{filtros}' if filtros else exportacao_url
         return context
+
+
+class ExtratoFinanceiroExportacaoXlsxView(ExtratoContaMixin, View):
+    permissao_requerida = 'financeiro.lancamentos.exportar'
+
+    def get(self, request, *args, **kwargs):
+        contexto = self._build_extrato_request_context()
+        if not contexto.get('tem_extrato'):
+            messages.error(
+                request,
+                contexto.get('extrato_error') or 'Selecione uma ou mais contas para exportar o extrato.',
+            )
+            url = reverse('financeiro:extrato-list')
+            filtros = request.GET.urlencode()
+            return redirect(f'{url}?{filtros}' if filtros else url)
+
+        arquivo_exportacao = _montar_planilha_extrato_financeiro_xlsx(contexto)
+        response = HttpResponse(
+            arquivo_exportacao,
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        )
+        response['Content-Disposition'] = 'attachment; filename="extrato_financeiro.xlsx"'
+        return response
 
 
 class AuditoriaLancamentoFinanceiroListView(FinanceiroPermissaoMixin, ListView):
