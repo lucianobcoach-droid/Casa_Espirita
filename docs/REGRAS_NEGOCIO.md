@@ -193,3 +193,5 @@ Este documento consolida regras permanentes do sistema. Ele não substitui o his
 - Em Tabelas personalizadas, a ordenacao manual da tela e temporaria, nao altera o campo `ordem` salvo das linhas e deve ser aplicada depois de busca/filtros e antes da impressao.
 - Em Tabelas personalizadas, a impressao deve respeitar o mesmo recorte atualmente exibido na tela: filtros, busca, status de linhas e colunas temporariamente selecionadas.
 - Em Tabelas personalizadas, a exportacao XLSX continua disponivel e pode respeitar a mesma selecao temporaria de colunas da visualizacao quando esse recorte estiver ativo.
+- No `Resumo Financeiro`, filtro por categoria/subcategoria afeta apenas a analise de receitas e despesas; composicao de saldo por conta, periodo, contas selecionadas e transferencias continuam seguindo a base compartilhada do relatorio.
+- No `Resumo Financeiro`, a leitura sintetica padrao deve agrupar por categoria pai; `Subcategoria` fica como detalhe opcional de visualizacao quando a usuaria marcar `Mostrar subcategoria`.

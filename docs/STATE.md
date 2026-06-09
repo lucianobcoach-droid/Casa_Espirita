@@ -4841,3 +4841,17 @@ Status de homologacao da usuaria:
   - filtro por categoria pai expandindo para subcategorias filhas
   - filtro por subcategoria restringindo apenas a subcategoria escolhida
 - a proxima microetapa recomendada e aplicar primeiro esse contrato ao `Resumo Financeiro`, reaproveitando o padrao ja maduro de `Evolucao por categorias`
+
+## Microetapa: filtro hierarquico de categoria/subcategoria no Resumo Financeiro
+
+- o `Resumo Financeiro` passou a aceitar filtro opcional por:
+  - `Categoria` (categoria pai)
+  - `Subcategoria`
+- o filtro por categoria pai expande para as subcategorias filhas e tambem considera categorias antigas sem pai quando elas forem a propria categoria selecionada
+- o filtro por subcategoria restringe apenas ao item operacional escolhido
+- quando a relacao entre categoria pai e subcategoria estiver inconsistente, o resumo ignora a subcategoria e avisa a usuaria sem quebrar a tela
+- a leitura padrao do resumo passou a consolidar receitas e despesas por categoria pai
+- a opcao `Mostrar subcategoria` permite trocar a visualizacao para colunas `Categoria | Subcategoria | Valor`, sem alterar a estrutura permanente do cadastro
+- o filtro hierarquico afeta apenas a analise de receitas e despesas do resumo
+- composicao de saldo por conta, periodo selecionado, contas selecionadas e transferencias continuam seguindo a mesma base compartilhada ja usada no relatorio
+- transferencias continuam fora do filtro de categoria/subcategoria e seguem apenas o periodo e o universo de contas

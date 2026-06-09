@@ -6457,3 +6457,18 @@ Não houve alteração de código funcional nesta etapa.
   - recibos/termos dependem da `categoria` atual como contexto documental e regra de unicidade
 - registrei classificacao por relatorio, oportunidade de melhoria, risco de mexer no calculo e prioridade sugerida
 - recomendei como proxima microetapa aplicar primeiro o contrato hierarquico ao `Resumo Financeiro`, reaproveitando o padrao ja maduro da tela de evolucao
+
+## Microetapa: filtro hierarquico no Resumo Financeiro
+
+- implementei no `Resumo Financeiro` o filtro por `Categoria` e `Subcategoria`, usando o mesmo contrato conceitual aprovado na auditoria transversal
+- a filtragem foi isolada na propria `ResumoFinanceiroView`, sem vazar para `Prestacao`, `Balancete` ou para a base compartilhada de saldo/composicao
+- a leitura padrao das tabelas do resumo agora agrega por categoria pai
+- a opcao `Mostrar subcategoria` abre detalhamento por `Categoria | Subcategoria | Valor`
+- transferencias, periodo, contas selecionadas e composicao de saldo continuaram inalterados
+- cobertura automatizada adicionada para:
+  - agrupamento padrao por categoria pai
+  - filtro por categoria pai
+  - filtro por subcategoria
+  - visualizacao com `Mostrar subcategoria`
+  - preservacao de transferencias e saldo fora do filtro hierarquico
+  - relacao invalida entre categoria pai e subcategoria

@@ -4921,10 +4921,221 @@ class ResumoFinanceiroView(FinanceiroPeriodoMixin, TemplateView):
     permissao_requerida = 'financeiro.resumo_financeiro.visualizar'
     template_name = 'financeiro/resumo.html'
 
+    def _parse_resumo_filtros_categoria(
+        self,
+    ) -> tuple[
+        list[CategoriaFinanceira],
+        list[CategoriaFinanceira],
+        CategoriaFinanceira | None,
+        CategoriaFinanceira | None,
+        bool,
+        str,
+    ]:
+        categorias_pai = list(
+            _ordenar_itens_insensivel(
+                CategoriaFinanceira.objects.filter(categoria_pai__isnull=True),
+                'nome',
+                'tipo',
+            )
+        )
+        subcategorias = list(
+            _ordenar_itens_insensivel(
+                CategoriaFinanceira.objects.filter(categoria_pai__isnull=False).select_related('categoria_pai'),
+                'categoria_pai__nome',
+                'nome',
+                'tipo',
+            )
+        )
+        categorias_pai_por_id = {str(categoria.id): categoria for categoria in categorias_pai}
+        subcategorias_por_id = {str(categoria.id): categoria for categoria in subcategorias}
+
+        categoria_pai = categorias_pai_por_id.get((self.request.GET.get('categoria_pai') or '').strip())
+        subcategoria = subcategorias_por_id.get((self.request.GET.get('subcategoria') or '').strip())
+        mostrar_subcategoria = self._parse_checkbox('mostrar_subcategoria')
+        categoria_filtro_error = ''
+
+        if categoria_pai and subcategoria and subcategoria.categoria_pai_id != categoria_pai.id:
+            categoria_filtro_error = (
+                'A subcategoria selecionada nao pertence a categoria informada. '
+                'O resumo manteve apenas o filtro de categoria.'
+            )
+            subcategoria = None
+
+        return (
+            categorias_pai,
+            subcategorias,
+            categoria_pai,
+            subcategoria,
+            mostrar_subcategoria,
+            categoria_filtro_error,
+        )
+
+    def _categoria_ids_do_resumo(
+        self,
+        categoria_pai: CategoriaFinanceira | None,
+        subcategorias: list[CategoriaFinanceira],
+    ) -> set[int]:
+        if not categoria_pai:
+            return set()
+        categoria_ids = {categoria_pai.id}
+        categoria_ids.update(
+            categoria.id
+            for categoria in subcategorias
+            if categoria.categoria_pai_id == categoria_pai.id
+        )
+        return categoria_ids
+
+    def _filtrar_lancamentos_resumo_por_categoria(
+        self,
+        lancamentos: list[LancamentoFinanceiro],
+        categoria_ids: set[int],
+        subcategoria: CategoriaFinanceira | None,
+    ) -> list[LancamentoFinanceiro]:
+        if subcategoria:
+            return [lancamento for lancamento in lancamentos if lancamento.categoria_id == subcategoria.id]
+        if categoria_ids:
+            return [lancamento for lancamento in lancamentos if lancamento.categoria_id in categoria_ids]
+        return lancamentos
+
+    def _label_categoria_pai_resumo(self, categoria: CategoriaFinanceira | None) -> str:
+        if not categoria:
+            return 'Sem categoria'
+        return categoria.categoria_pai.nome if categoria.categoria_pai_id else categoria.nome
+
+    def _label_subcategoria_resumo(self, categoria: CategoriaFinanceira | None) -> str:
+        if not categoria:
+            return 'Sem categoria'
+        if categoria.categoria_pai_id:
+            return categoria.nome
+        return 'Sem subcategoria'
+
+    def _agrupar_lancamentos_resumo_por_categoria(
+        self,
+        lancamentos: list[LancamentoFinanceiro],
+        *,
+        mostrar_subcategoria: bool,
+    ) -> tuple[list[dict[str, object]], Decimal]:
+        if mostrar_subcategoria:
+            agrupado: dict[tuple[str, str], Decimal] = {}
+            for lancamento in lancamentos:
+                categoria_label = self._label_categoria_pai_resumo(lancamento.categoria)
+                subcategoria_label = self._label_subcategoria_resumo(lancamento.categoria)
+                chave = (categoria_label, subcategoria_label)
+                agrupado[chave] = agrupado.get(chave, Decimal('0.00')) + lancamento.valor
+
+            itens = [
+                {
+                    'categoria': categoria_label,
+                    'subcategoria': subcategoria_label,
+                    'valor': valor,
+                }
+                for (categoria_label, subcategoria_label), valor in sorted(
+                    agrupado.items(),
+                    key=lambda item: (
+                        _texto_ordenacao_insensivel(item[0][0]),
+                        _texto_ordenacao_insensivel(item[0][1]),
+                    ),
+                )
+            ]
+            total = sum((item['valor'] for item in itens), Decimal('0.00'))
+            return itens, total
+
+        agrupado: dict[str, Decimal] = {}
+        for lancamento in lancamentos:
+            categoria_label = self._label_categoria_pai_resumo(lancamento.categoria)
+            agrupado[categoria_label] = agrupado.get(categoria_label, Decimal('0.00')) + lancamento.valor
+
+        itens = [
+            {'categoria': categoria_label, 'valor': valor}
+            for categoria_label, valor in sorted(
+                agrupado.items(),
+                key=lambda item: _texto_ordenacao_insensivel(item[0]),
+            )
+        ]
+        total = sum((item['valor'] for item in itens), Decimal('0.00'))
+        return itens, total
+
+    def _build_resumo_contexto_categoria(self, context: dict[str, object]) -> dict[str, object]:
+        (
+            categorias_pai,
+            subcategorias,
+            categoria_pai,
+            subcategoria,
+            mostrar_subcategoria,
+            categoria_filtro_error,
+        ) = self._parse_resumo_filtros_categoria()
+        categoria_ids = self._categoria_ids_do_resumo(categoria_pai, subcategorias)
+
+        receitas_filtradas = self._filtrar_lancamentos_resumo_por_categoria(
+            context.get('receitas_periodo', []),
+            categoria_ids,
+            subcategoria,
+        )
+        despesas_filtradas = self._filtrar_lancamentos_resumo_por_categoria(
+            context.get('despesas_periodo', []),
+            categoria_ids,
+            subcategoria,
+        )
+
+        total_receitas_filtradas = sum(
+            (lancamento.valor for lancamento in receitas_filtradas),
+            Decimal('0.00'),
+        )
+        total_despesas_filtradas = sum(
+            (lancamento.valor for lancamento in despesas_filtradas),
+            Decimal('0.00'),
+        )
+        receitas_por_categoria, total_receitas_por_categoria = self._agrupar_lancamentos_resumo_por_categoria(
+            receitas_filtradas,
+            mostrar_subcategoria=mostrar_subcategoria,
+        )
+        despesas_por_categoria, total_despesas_por_categoria = self._agrupar_lancamentos_resumo_por_categoria(
+            despesas_filtradas,
+            mostrar_subcategoria=mostrar_subcategoria,
+        )
+
+        return {
+            'categoria_pai_opcoes': categorias_pai,
+            'subcategoria_opcoes': subcategorias,
+            'categoria_pai_selecionada_id': str(categoria_pai.id) if categoria_pai else '',
+            'subcategoria_selecionada_id': str(subcategoria.id) if subcategoria else '',
+            'categoria_pai_selecionada_label': categoria_pai.nome if categoria_pai else '',
+            'subcategoria_selecionada_label': _label_categoria_evolucao(subcategoria) if subcategoria else '',
+            'mostrar_subcategoria': mostrar_subcategoria,
+            'resumo_filtro_categoria_ativo': bool(categoria_pai or subcategoria),
+            'resumo_exibe_subcategoria': mostrar_subcategoria,
+            'categoria_filtro_error': categoria_filtro_error,
+            'resumo_nota_categoria': (
+                'O filtro de categoria/subcategoria afeta a analise de receitas e despesas. '
+                'A composicao de saldo por conta continua seguindo o periodo e as contas selecionadas.'
+            ) if categoria_pai or subcategoria else '',
+            'filtros_relatorio_ativos': bool(
+                context.get('filtros_relatorio_ativos') or categoria_pai or subcategoria or mostrar_subcategoria
+            ),
+            'opcoes_relatorio_ativas': bool(
+                context.get('opcoes_relatorio_ativas') or mostrar_subcategoria
+            ),
+            'receitas_periodo': receitas_filtradas,
+            'despesas_periodo': despesas_filtradas,
+            'total_receitas_periodo': total_receitas_filtradas,
+            'total_despesas_periodo': total_despesas_filtradas,
+            'receitas_por_categoria': receitas_por_categoria,
+            'despesas_por_categoria': despesas_por_categoria,
+            'total_receitas_por_categoria': total_receitas_por_categoria,
+            'total_despesas_por_categoria': total_despesas_por_categoria,
+            'existe_lancamento_sem_categoria': any(
+                lancamento.categoria_id is None for lancamento in [*receitas_filtradas, *despesas_filtradas]
+            ),
+            'existe_lancamento_sem_centro_custo': any(
+                lancamento.centro_custo_id is None for lancamento in despesas_filtradas
+            ),
+        }
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['page_title'] = 'Resumo do Periodo'
         context.update(self._build_periodo_context())
+        context.update(self._build_resumo_contexto_categoria(context))
         return context
 
 

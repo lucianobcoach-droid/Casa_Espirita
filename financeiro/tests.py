@@ -3894,6 +3894,323 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
         self.assertEqual(lancamento_2.centro_custo, self.centro_custo_manual)
 
 
+class ResumoFinanceiroCategoriaViewTests(TestCase):
+    def setUp(self):
+        self.conta_principal = ContaFinanceira.objects.create(
+            nome='Conta resumo principal',
+            saldo_inicial=Decimal('100.00'),
+            data_saldo_inicial=date(2026, 1, 1),
+        )
+        self.conta_secundaria = ContaFinanceira.objects.create(
+            nome='Conta resumo secundaria',
+            saldo_inicial=Decimal('50.00'),
+            data_saldo_inicial=date(2026, 1, 1),
+        )
+        self.pessoa = PessoaFinanceira.objects.create(
+            codigo='P-RES-001',
+            nome='Favorecido resumo',
+        )
+        self.categoria_receita_pai = CategoriaFinanceira.objects.create(
+            nome='Doacoes',
+            tipo=CategoriaFinanceira.TipoCategoria.RECEITA,
+        )
+        self.subcategoria_mensalidade = CategoriaFinanceira.objects.create(
+            nome='Mensalidade',
+            tipo=CategoriaFinanceira.TipoCategoria.RECEITA,
+            categoria_pai=self.categoria_receita_pai,
+        )
+        self.subcategoria_campanha = CategoriaFinanceira.objects.create(
+            nome='Campanha',
+            tipo=CategoriaFinanceira.TipoCategoria.RECEITA,
+            categoria_pai=self.categoria_receita_pai,
+        )
+        self.categoria_receita_eventos = CategoriaFinanceira.objects.create(
+            nome='Eventos',
+            tipo=CategoriaFinanceira.TipoCategoria.RECEITA,
+        )
+        self.subcategoria_livros = CategoriaFinanceira.objects.create(
+            nome='Livros',
+            tipo=CategoriaFinanceira.TipoCategoria.RECEITA,
+            categoria_pai=self.categoria_receita_eventos,
+        )
+        self.categoria_legada = CategoriaFinanceira.objects.create(
+            nome='Categoria legada',
+            tipo=CategoriaFinanceira.TipoCategoria.RECEITA,
+        )
+        self.categoria_despesa_pai = CategoriaFinanceira.objects.create(
+            nome='Administrativo',
+            tipo=CategoriaFinanceira.TipoCategoria.DESPESA,
+        )
+        self.subcategoria_aluguel = CategoriaFinanceira.objects.create(
+            nome='Aluguel',
+            tipo=CategoriaFinanceira.TipoCategoria.DESPESA,
+            categoria_pai=self.categoria_despesa_pai,
+        )
+
+        LancamentoFinanceiro.objects.create(
+            descricao='Receita mensalidade',
+            tipo=LancamentoFinanceiro.TipoLancamento.RECEITA,
+            status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+            valor=Decimal('100.00'),
+            data_competencia=date(2026, 1, 10),
+            data_pagamento=date(2026, 1, 10),
+            numero_documento='RES-001',
+            pessoa=self.pessoa,
+            categoria=self.subcategoria_mensalidade,
+            conta=self.conta_principal,
+        )
+        LancamentoFinanceiro.objects.create(
+            descricao='Receita campanha',
+            tipo=LancamentoFinanceiro.TipoLancamento.RECEITA,
+            status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+            valor=Decimal('50.00'),
+            data_competencia=date(2026, 1, 11),
+            data_pagamento=date(2026, 1, 11),
+            numero_documento='RES-002',
+            pessoa=self.pessoa,
+            categoria=self.subcategoria_campanha,
+            conta=self.conta_principal,
+        )
+        LancamentoFinanceiro.objects.create(
+            descricao='Receita livros',
+            tipo=LancamentoFinanceiro.TipoLancamento.RECEITA,
+            status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+            valor=Decimal('70.00'),
+            data_competencia=date(2026, 1, 12),
+            data_pagamento=date(2026, 1, 12),
+            numero_documento='RES-003',
+            pessoa=self.pessoa,
+            categoria=self.subcategoria_livros,
+            conta=self.conta_principal,
+        )
+        LancamentoFinanceiro.objects.bulk_create(
+            [
+                LancamentoFinanceiro(
+                    descricao='Receita legada',
+                    tipo=LancamentoFinanceiro.TipoLancamento.RECEITA,
+                    status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+                    valor=Decimal('30.00'),
+                    data_competencia=date(2026, 1, 13),
+                    data_pagamento=date(2026, 1, 13),
+                    numero_documento='RES-004',
+                    pessoa=self.pessoa,
+                    categoria=self.categoria_legada,
+                    conta=self.conta_principal,
+                )
+            ]
+        )
+        LancamentoFinanceiro.objects.create(
+            descricao='Despesa aluguel',
+            tipo=LancamentoFinanceiro.TipoLancamento.DESPESA,
+            status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+            valor=Decimal('40.00'),
+            data_competencia=date(2026, 1, 14),
+            data_pagamento=date(2026, 1, 14),
+            numero_documento='RES-005',
+            pessoa=self.pessoa,
+            categoria=self.subcategoria_aluguel,
+            conta=self.conta_principal,
+        )
+        LancamentoFinanceiro.objects.create(
+            descricao='Transferencia externa',
+            tipo=LancamentoFinanceiro.TipoLancamento.TRANSFERENCIA,
+            status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+            valor=Decimal('25.00'),
+            data_competencia=date(2026, 1, 15),
+            data_pagamento=date(2026, 1, 15),
+            numero_documento='RES-006',
+            conta=self.conta_principal,
+            conta_destino=self.conta_secundaria,
+        )
+
+    def _garantir_permissao(self, codigo: str) -> PermissaoSistema:
+        permissao = PermissaoSistema.objects.filter(codigo=codigo).first()
+        if permissao:
+            return permissao
+        partes = codigo.split('.')
+        modulo = partes[0] if len(partes) > 0 else 'financeiro'
+        recurso = partes[1] if len(partes) > 1 else 'geral'
+        acao = '.'.join(partes[2:]) if len(partes) > 2 else 'acessar'
+        return PermissaoSistema.objects.create(
+            codigo=codigo,
+            nome=codigo,
+            modulo=modulo,
+            recurso=recurso,
+            acao=acao,
+            ativo=True,
+        )
+
+    def _login_com_permissoes(self, username: str, codigos_permissao: list[str]):
+        user_model = get_user_model()
+        usuario = user_model.objects.create_user(
+            username=username,
+            password='senha-forte-123',
+            email=f'{username}@teste.local',
+            is_active=True,
+        )
+        perfil = PerfilAcesso.objects.create(
+            codigo=f'perfil-{username}',
+            nome=f'Perfil {username}',
+            ativo=True,
+        )
+        for codigo in codigos_permissao:
+            perfil.permissoes.add(self._garantir_permissao(codigo))
+        UsuarioPerfilAcesso.objects.create(usuario=usuario, perfil=perfil)
+        self.client.force_login(usuario)
+
+    def _parametros_base(self, **overrides):
+        params = {
+            'data_inicial': '2026-01-01',
+            'data_final': '2026-01-31',
+            'contas': [str(self.conta_principal.pk)],
+            'mostrar_centro_custo': '0',
+            'exibir_transferencias': '0',
+            'mostrar_subcategoria': '0',
+            'categoria_pai': '',
+            'subcategoria': '',
+        }
+        params.update(overrides)
+        return params
+
+    def test_resumo_padrao_agrega_por_categoria_pai_sem_filtro(self):
+        self._login_com_permissoes(
+            'user-resumo-padrao',
+            ['financeiro.resumo_financeiro.visualizar'],
+        )
+
+        response = self.client.get(reverse('financeiro:resumo'), self._parametros_base())
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.context['resumo_exibe_subcategoria'])
+        self.assertEqual(
+            [(item['categoria'], item['valor']) for item in response.context['receitas_por_categoria']],
+            [
+                ('Categoria legada', Decimal('30.00')),
+                ('Doacoes', Decimal('150.00')),
+                ('Eventos', Decimal('70.00')),
+            ],
+        )
+        self.assertEqual(
+            [(item['categoria'], item['valor']) for item in response.context['despesas_por_categoria']],
+            [('Administrativo', Decimal('40.00'))],
+        )
+        self.assertEqual(response.context['total_receitas_periodo'], Decimal('250.00'))
+        self.assertContains(response, '<th>Categoria</th>', html=False)
+        self.assertNotContains(response, '<th>Subcategoria</th>', html=False)
+
+    def test_resumo_filtra_categoria_pai_incluindo_subcategorias_filhas(self):
+        self._login_com_permissoes(
+            'user-resumo-categoria-pai',
+            ['financeiro.resumo_financeiro.visualizar'],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:resumo'),
+            self._parametros_base(categoria_pai=str(self.categoria_receita_pai.pk)),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context['resumo_filtro_categoria_ativo'])
+        self.assertEqual(response.context['categoria_pai_selecionada_label'], 'Doacoes')
+        self.assertEqual(
+            [(item['categoria'], item['valor']) for item in response.context['receitas_por_categoria']],
+            [('Doacoes', Decimal('150.00'))],
+        )
+        self.assertEqual(response.context['total_receitas_periodo'], Decimal('150.00'))
+        self.assertEqual(response.context['saldo_final_consolidado'], Decimal('285.00'))
+        self.assertContains(response, 'O filtro de categoria/subcategoria afeta a analise de receitas e despesas.')
+
+    def test_resumo_filtra_subcategoria_especifica(self):
+        self._login_com_permissoes(
+            'user-resumo-subcategoria',
+            ['financeiro.resumo_financeiro.visualizar'],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:resumo'),
+            self._parametros_base(subcategoria=str(self.subcategoria_campanha.pk)),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['subcategoria_selecionada_label'], 'Doacoes / Campanha')
+        self.assertEqual(
+            [(item['categoria'], item['valor']) for item in response.context['receitas_por_categoria']],
+            [('Doacoes', Decimal('50.00'))],
+        )
+        self.assertEqual(response.context['total_receitas_periodo'], Decimal('50.00'))
+
+    def test_resumo_mostrar_subcategoria_exibe_colunas_separadas(self):
+        self._login_com_permissoes(
+            'user-resumo-subcategorias',
+            ['financeiro.resumo_financeiro.visualizar'],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:resumo'),
+            self._parametros_base(mostrar_subcategoria='1'),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context['resumo_exibe_subcategoria'])
+        self.assertEqual(
+            [(item['categoria'], item['subcategoria'], item['valor']) for item in response.context['receitas_por_categoria']],
+            [
+                ('Categoria legada', 'Sem subcategoria', Decimal('30.00')),
+                ('Doacoes', 'Campanha', Decimal('50.00')),
+                ('Doacoes', 'Mensalidade', Decimal('100.00')),
+                ('Eventos', 'Livros', Decimal('70.00')),
+            ],
+        )
+        self.assertContains(response, '<th>Subcategoria</th>', html=False)
+
+    def test_resumo_mantem_transferencias_e_saldos_fora_do_filtro_categoria(self):
+        self._login_com_permissoes(
+            'user-resumo-transferencias',
+            ['financeiro.resumo_financeiro.visualizar'],
+        )
+
+        response_sem_filtro = self.client.get(
+            reverse('financeiro:resumo'),
+            self._parametros_base(exibir_transferencias='1'),
+        )
+        response_filtrado = self.client.get(
+            reverse('financeiro:resumo'),
+            self._parametros_base(
+                exibir_transferencias='1',
+                categoria_pai=str(self.categoria_receita_pai.pk),
+            ),
+        )
+
+        self.assertEqual(response_sem_filtro.status_code, 200)
+        self.assertEqual(response_filtrado.status_code, 200)
+        self.assertEqual(response_sem_filtro.context['total_transferencias_periodo'], Decimal('25.00'))
+        self.assertEqual(response_filtrado.context['total_transferencias_periodo'], Decimal('25.00'))
+        self.assertEqual(
+            response_sem_filtro.context['saldo_final_consolidado'],
+            response_filtrado.context['saldo_final_consolidado'],
+        )
+        self.assertEqual(response_filtrado.context['contas_incluidas_label'], 'Conta resumo principal')
+
+    def test_resumo_ignora_subcategoria_incompativel_com_categoria_pai(self):
+        self._login_com_permissoes(
+            'user-resumo-relacao-invalida',
+            ['financeiro.resumo_financeiro.visualizar'],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:resumo'),
+            self._parametros_base(
+                categoria_pai=str(self.categoria_receita_pai.pk),
+                subcategoria=str(self.subcategoria_livros.pk),
+            ),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'A subcategoria selecionada nao pertence a categoria informada.')
+        self.assertEqual(response.context['subcategoria_selecionada_id'], '')
+        self.assertEqual(response.context['total_receitas_periodo'], Decimal('150.00'))
+
+
 class FrequenciaCompetenciasViewTests(TestCase):
     def setUp(self):
         self.conta = ContaFinanceira.objects.create(

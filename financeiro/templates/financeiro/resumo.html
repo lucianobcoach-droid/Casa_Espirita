@@ -376,6 +376,9 @@
                 <div class="financeiro-resumo-meta no-print">
                     {% if periodo_label %}<span class="financeiro-resumo-meta-item"><strong>Periodo:</strong> {{ periodo_label }}</span>{% endif %}
                     <span class="financeiro-resumo-meta-item"><strong>Contas:</strong> {{ contas_incluidas_label|default:'Todas as contas' }}</span>
+                    {% if categoria_pai_selecionada_label %}<span class="financeiro-resumo-meta-item"><strong>Categoria:</strong> {{ categoria_pai_selecionada_label }}</span>{% endif %}
+                    {% if subcategoria_selecionada_label %}<span class="financeiro-resumo-meta-item"><strong>Subcategoria:</strong> {{ subcategoria_selecionada_label }}</span>{% endif %}
+                    {% if resumo_exibe_subcategoria %}<span class="financeiro-resumo-meta-item"><strong>Leitura:</strong> Categoria + subcategoria</span>{% endif %}
                     {% if mostrar_centro_custo %}<span class="financeiro-resumo-meta-item"><strong>Leitura:</strong> Centro de custo visivel</span>{% endif %}
                     {% if exibir_transferencias %}<span class="financeiro-resumo-meta-item"><strong>Transferencias:</strong> Exibidas</span>{% endif %}
                 </div>
@@ -407,6 +410,8 @@
                             <span class="financeiro-resumo-filter-summary-text">
                                 {% if periodo_label %}
                                     <strong>Periodo:</strong> {{ periodo_label }} | <strong>Contas:</strong> {{ contas_incluidas_label|default:'Todas as contas' }}
+                                    {% if categoria_pai_selecionada_label %}| <strong>Categoria:</strong> {{ categoria_pai_selecionada_label }}{% endif %}
+                                    {% if subcategoria_selecionada_label %}| <strong>Subcategoria:</strong> {{ subcategoria_selecionada_label }}{% endif %}
                                 {% else %}
                                     Defina o periodo e as contas que entram no resumo.
                                 {% endif %}
@@ -463,6 +468,30 @@
                                 </div>
                                 <p class="help">Sem selecao explicita, o resumo considera todas as contas.</p>
                             </div>
+                            <div class="column is-12-mobile is-6-tablet is-3-desktop">
+                                <label class="label">Categoria</label>
+                                <div class="select is-fullwidth">
+                                    <select name="categoria_pai">
+                                        <option value="">Todas as categorias</option>
+                                        {% for categoria in categoria_pai_opcoes %}
+                                            <option value="{{ categoria.pk }}" {% if categoria_pai_selecionada_id == categoria.pk|stringformat:'s' %}selected{% endif %}>{{ categoria.nome }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <p class="help">O filtro por categoria inclui as subcategorias filhas e categorias antigas sem pai.</p>
+                            </div>
+                            <div class="column is-12-mobile is-6-tablet is-3-desktop">
+                                <label class="label">Subcategoria</label>
+                                <div class="select is-fullwidth">
+                                    <select name="subcategoria">
+                                        <option value="">Todas as subcategorias</option>
+                                        {% for categoria in subcategoria_opcoes %}
+                                            <option value="{{ categoria.pk }}" {% if subcategoria_selecionada_id == categoria.pk|stringformat:'s' %}selected{% endif %}>{{ categoria.categoria_pai.nome }} / {{ categoria.nome }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <p class="help">A subcategoria restringe a analise apenas ao item operacional selecionado.</p>
+                            </div>
                             <div class="column is-6-mobile is-3-tablet is-2-desktop">
                                 <label class="label">Data inicial</label>
                                 <input class="input" type="date" name="data_inicial" value="{{ data_inicial }}">
@@ -487,6 +516,13 @@
                                         Exibir transferencias
                                     </label>
                                 </div>
+                                <div class="field mt-2">
+                                    <label class="checkbox">
+                                        <input type="hidden" name="mostrar_subcategoria" value="0">
+                                        <input type="checkbox" name="mostrar_subcategoria" value="1" {% if resumo_exibe_subcategoria %}checked{% endif %}>
+                                        Mostrar subcategoria
+                                    </label>
+                                </div>
                             </div>
                             <div class="column is-12">
                                 <div class="buttons">
@@ -504,6 +540,9 @@
     {% if periodo_error %}
         <div class="notification is-warning">{{ periodo_error }}</div>
     {% else %}
+        {% if categoria_filtro_error %}
+            <div class="notification is-warning no-print">{{ categoria_filtro_error }}</div>
+        {% endif %}
         <div class="financeiro-resumo-card is-kpis">
             <div class="financeiro-resumo-kpi-head">
                 <div>
@@ -599,6 +638,9 @@
                                 </div>
                             </div>
                             <div class="financeiro-resumo-panel-body">
+                                {% if resumo_nota_categoria %}
+                                    <div class="notification is-info is-light no-print">{{ resumo_nota_categoria }}</div>
+                                {% endif %}
                                 {% if existe_lancamento_sem_categoria %}
                                     <p class="table-caption">Lancamentos sem categoria aparecem agrupados como "Sem categoria".</p>
                                 {% endif %}
@@ -619,6 +661,7 @@
                                                     <thead>
                                                     <tr>
                                                         <th>Categoria</th>
+                                                        {% if resumo_exibe_subcategoria %}<th>Subcategoria</th>{% endif %}
                                                         <th>Valor</th>
                                                     </tr>
                                                     </thead>
@@ -626,11 +669,12 @@
                                                     {% for item in receitas_por_categoria %}
                                                         <tr>
                                                             <td>{{ item.categoria }}</td>
+                                                            {% if resumo_exibe_subcategoria %}<td>{{ item.subcategoria }}</td>{% endif %}
                                                             <td class="has-text-link"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ item.valor|br_money }}</span></span></td>
                                                         </tr>
                                                     {% empty %}
                                                         <tr>
-                                                            <td colspan="2">Nao houve receitas para agrupar no periodo.</td>
+                                                            <td colspan="{% if resumo_exibe_subcategoria %}3{% else %}2{% endif %}">Nao houve receitas para agrupar no periodo.</td>
                                                         </tr>
                                                     {% endfor %}
                                                     </tbody>
@@ -658,6 +702,7 @@
                                                     <thead>
                                                     <tr>
                                                         <th>Categoria</th>
+                                                        {% if resumo_exibe_subcategoria %}<th>Subcategoria</th>{% endif %}
                                                         <th>Valor</th>
                                                     </tr>
                                                     </thead>
@@ -665,11 +710,12 @@
                                                     {% for item in despesas_por_categoria %}
                                                         <tr>
                                                             <td>{{ item.categoria }}</td>
+                                                            {% if resumo_exibe_subcategoria %}<td>{{ item.subcategoria }}</td>{% endif %}
                                                             <td class="has-text-danger"><span class="money-cell"><span class="money-symbol">R$</span><span class="money-number">{{ item.valor|br_money }}</span></span></td>
                                                         </tr>
                                                     {% empty %}
                                                         <tr>
-                                                            <td colspan="2">Nao houve despesas para agrupar no periodo.</td>
+                                                            <td colspan="{% if resumo_exibe_subcategoria %}3{% else %}2{% endif %}">Nao houve despesas para agrupar no periodo.</td>
                                                         </tr>
                                                     {% endfor %}
                                                     </tbody>
