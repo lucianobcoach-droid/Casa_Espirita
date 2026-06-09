@@ -195,3 +195,5 @@ Este documento consolida regras permanentes do sistema. Ele não substitui o his
 - Em Tabelas personalizadas, a exportacao XLSX continua disponivel e pode respeitar a mesma selecao temporaria de colunas da visualizacao quando esse recorte estiver ativo.
 - No `Resumo Financeiro`, filtro por categoria/subcategoria afeta apenas a analise de receitas e despesas; composicao de saldo por conta, periodo, contas selecionadas e transferencias continuam seguindo a base compartilhada do relatorio.
 - No `Resumo Financeiro`, a leitura sintetica padrao deve agrupar por categoria pai; `Subcategoria` fica como detalhe opcional de visualizacao quando a usuaria marcar `Mostrar subcategoria`.
+- Na `Listagem de lancamentos`, `Categoria` e `Subcategoria` devem aparecer como filtros separados: categoria pai expande para subcategorias filhas, subcategoria restringe apenas ao item escolhido, e transferencias sem categoria nao devem ser forcadas a entrar quando o filtro hierarquico estiver ativo.
+- A exportacao XLSX da `Listagem de lancamentos` deve respeitar o mesmo recorte de categoria/subcategoria aplicado na tela, sem criar logica paralela de filtro.

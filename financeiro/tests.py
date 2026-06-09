@@ -4747,6 +4747,15 @@ class LancamentoListagemAcoesTests(TestCase):
             categoria_pai=self.categoria_receita_pai,
             controla_recorrencia_competencia=False,
         )
+        self.categoria_receita_eventos = CategoriaFinanceira.objects.create(
+            nome='Eventos listagem',
+            tipo=CategoriaFinanceira.TipoCategoria.RECEITA,
+        )
+        self.subcategoria_evento = CategoriaFinanceira.objects.create(
+            nome='Evento beneficente',
+            tipo=CategoriaFinanceira.TipoCategoria.RECEITA,
+            categoria_pai=self.categoria_receita_eventos,
+        )
 
         self.lancamento_simples = LancamentoFinanceiro.objects.create(
             descricao='Receita simples',
@@ -4759,6 +4768,33 @@ class LancamentoListagemAcoesTests(TestCase):
             pessoa=self.pessoa,
             categoria=self.categoria_nao_controlada,
             conta=self.conta,
+        )
+        self.lancamento_evento = LancamentoFinanceiro.objects.create(
+            descricao='Receita evento',
+            tipo=LancamentoFinanceiro.TipoLancamento.RECEITA,
+            status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+            valor=Decimal('55.00'),
+            data_competencia=date(2026, 4, 4),
+            data_pagamento=date(2026, 4, 4),
+            numero_documento='LIST-004',
+            pessoa=self.pessoa,
+            categoria=self.subcategoria_evento,
+            conta=self.conta,
+        )
+        self.transferencia = LancamentoFinanceiro.objects.create(
+            descricao='Transferencia da listagem',
+            tipo=LancamentoFinanceiro.TipoLancamento.TRANSFERENCIA,
+            status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+            valor=Decimal('20.00'),
+            data_competencia=date(2026, 4, 5),
+            data_pagamento=date(2026, 4, 5),
+            numero_documento='LIST-005',
+            conta=self.conta,
+            conta_destino=ContaFinanceira.objects.create(
+                nome='Conta destino listagem',
+                saldo_inicial=Decimal('0.00'),
+                data_saldo_inicial=date(2026, 1, 1),
+            ),
         )
         self.lancamento_competencia = LancamentoFinanceiro.objects.create(
             descricao='Receita com competencia',
@@ -4816,6 +4852,43 @@ class LancamentoListagemAcoesTests(TestCase):
             mes_competencia=4,
             valor_alocado=Decimal('100.00'),
         )
+
+    def _ler_linhas_xlsx(self, conteudo: bytes) -> list[list[str]]:
+        with ZipFile(BytesIO(conteudo)) as arquivo_xlsx:
+            workbook_tree = ElementTree.fromstring(arquivo_xlsx.read('xl/workbook.xml'))
+            namespace_workbook = {
+                'main': 'http://schemas.openxmlformats.org/spreadsheetml/2006/main',
+                'rel': 'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
+            }
+            primeira_planilha = workbook_tree.find('main:sheets/main:sheet', namespace_workbook)
+            self.assertIsNotNone(primeira_planilha)
+            relationship_id = primeira_planilha.get('{http://schemas.openxmlformats.org/officeDocument/2006/relationships}id')
+            relacoes_tree = ElementTree.fromstring(arquivo_xlsx.read('xl/_rels/workbook.xml.rels'))
+            namespace_rel = {'rel': 'http://schemas.openxmlformats.org/package/2006/relationships'}
+            destino = None
+            for relation in relacoes_tree.findall('rel:Relationship', namespace_rel):
+                if relation.attrib.get('Id') == relationship_id:
+                    destino = relation.attrib.get('Target')
+                    break
+            self.assertTrue(destino)
+            planilha_tree = ElementTree.fromstring(arquivo_xlsx.read(f"xl/{destino.lstrip('./')}"))
+            namespace_planilha = {'main': 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'}
+
+            linhas = []
+            for linha in planilha_tree.findall('main:sheetData/main:row', namespace_planilha):
+                valores = []
+                for celula in linha.findall('main:c', namespace_planilha):
+                    referencia = celula.get('r', '')
+                    correspondencia = re.match(r'([A-Z]+)\d+$', referencia)
+                    if correspondencia:
+                        indice_coluna = 0
+                        for letra in correspondencia.group(1):
+                            indice_coluna = (indice_coluna * 26) + (ord(letra) - ord('A') + 1)
+                        while len(valores) < indice_coluna - 1:
+                            valores.append('')
+                    valores.append(''.join(celula.itertext()))
+                linhas.append(valores)
+            return linhas
 
     def _garantir_permissao(self, codigo: str) -> PermissaoSistema:
         permissao = PermissaoSistema.objects.filter(codigo=codigo).first()
@@ -4950,6 +5023,120 @@ class LancamentoListagemAcoesTests(TestCase):
         response = self.client.get(reverse('financeiro:lancamento-list'))
 
         self.assertEqual(response.status_code, 403)
+
+    def test_listagem_sem_filtros_hierarquicos_mantem_comportamento_atual(self):
+        self._login_com_permissoes('user-listagem-sem-filtro-hierarquico', ['financeiro.lancamentos.listar'])
+
+        response = self.client.get(reverse('financeiro:lancamento-list'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Receita simples')
+        self.assertContains(response, 'Receita com competencia')
+        self.assertContains(response, 'Receita evento')
+        self.assertContains(response, 'Transferencia da listagem')
+
+    def test_listagem_filtra_por_categoria_pai_expandindo_subcategorias(self):
+        self._login_com_permissoes('user-listagem-categoria-pai', ['financeiro.lancamentos.listar'])
+
+        response = self.client.get(
+            reverse('financeiro:lancamento-list'),
+            {'categoria_pai': str(self.categoria_receita_pai.pk)},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Receita simples')
+        self.assertContains(response, 'Receita com competencia')
+        self.assertNotContains(response, 'Receita evento')
+        self.assertNotContains(response, 'Transferencia da listagem')
+        self.assertEqual(response.context['categoria_pai_selecionada_label'], 'Receitas listagem')
+
+    def test_listagem_filtra_por_subcategoria_especifica(self):
+        self._login_com_permissoes('user-listagem-subcategoria', ['financeiro.lancamentos.listar'])
+
+        response = self.client.get(
+            reverse('financeiro:lancamento-list'),
+            {'subcategoria': str(self.categoria_controlada.pk)},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Receita com competencia')
+        self.assertNotContains(response, 'Receita simples')
+        self.assertNotContains(response, 'Receita evento')
+        self.assertNotContains(response, 'Transferencia da listagem')
+        self.assertEqual(
+            response.context['subcategoria_selecionada_label'],
+            'Receitas listagem / Contribuicao listagem',
+        )
+
+    def test_listagem_trata_relacao_invalida_entre_categoria_e_subcategoria(self):
+        self._login_com_permissoes('user-listagem-relacao-invalida', ['financeiro.lancamentos.listar'])
+
+        response = self.client.get(
+            reverse('financeiro:lancamento-list'),
+            {
+                'categoria_pai': str(self.categoria_receita_pai.pk),
+                'subcategoria': str(self.subcategoria_evento.pk),
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'A subcategoria selecionada nao pertence a categoria informada.')
+        self.assertContains(response, 'Receita simples')
+        self.assertContains(response, 'Receita com competencia')
+        self.assertNotContains(response, 'Receita evento')
+        self.assertEqual(response.context['subcategoria_selecionada_id'], '')
+
+    def test_listagem_preserva_demais_filtros_com_categoria_hierarquica(self):
+        self._login_com_permissoes('user-listagem-filtros-preservados', ['financeiro.lancamentos.listar'])
+
+        response = self.client.get(
+            reverse('financeiro:lancamento-list'),
+            {
+                'categoria_pai': str(self.categoria_receita_pai.pk),
+                'pessoa': str(self.pessoa.pk),
+                'numero_documento': 'LIST-002',
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Receita com competencia')
+        self.assertNotContains(response, 'Receita simples')
+        self.assertNotContains(response, 'Receita evento')
+
+    def test_listagem_aceita_parametro_legado_categoria_como_compatibilidade(self):
+        self._login_com_permissoes('user-listagem-categoria-legada', ['financeiro.lancamentos.listar'])
+
+        response = self.client.get(
+            reverse('financeiro:lancamento-list'),
+            {'categoria': str(self.categoria_controlada.pk)},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Receita com competencia')
+        self.assertNotContains(response, 'Receita simples')
+        self.assertEqual(
+            response.context['subcategoria_selecionada_label'],
+            'Receitas listagem / Contribuicao listagem',
+        )
+
+    def test_exportacao_xlsx_respeita_filtros_hierarquicos_da_listagem(self):
+        self._login_com_permissoes(
+            'user-listagem-exportacao-hierarquica',
+            ['financeiro.lancamentos.listar', 'financeiro.lancamentos.exportar'],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:lancamento-exportacao'),
+            {'categoria_pai': str(self.categoria_receita_pai.pk)},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('.xlsx', response['Content-Disposition'])
+        conteudo = '\n'.join(' | '.join(linha) for linha in self._ler_linhas_xlsx(response.content))
+        self.assertIn('Receita simples', conteudo)
+        self.assertIn('Receita com competencia', conteudo)
+        self.assertNotIn('Receita evento', conteudo)
+        self.assertNotIn('Transferencia da listagem', conteudo)
 
     def test_exclusao_de_grupo_rateado_remove_linhas_e_competencias(self):
         self._login_com_permissoes(

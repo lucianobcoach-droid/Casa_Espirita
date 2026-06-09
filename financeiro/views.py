@@ -3286,7 +3286,7 @@ def _filtrar_lancamentos_por_parametros(queryset, parametros):
     data_final = parametros.get('data_final', '').strip()
     contas_ids, _, todas_contas = _parse_contas_lancamentos_parametros(parametros)
     pessoa = parametros.get('pessoa', '').strip()
-    categoria = parametros.get('categoria', '').strip()
+    _, _, categoria_ids, _ = _resolver_filtro_hierarquico_categoria_lancamentos(parametros)
 
     if descricao:
         queryset = queryset.filter(descricao__icontains=descricao)
@@ -3304,10 +3304,74 @@ def _filtrar_lancamentos_por_parametros(queryset, parametros):
         queryset = queryset.filter(Q(conta_id__in=contas_ids) | Q(conta_destino_id__in=contas_ids))
     if pessoa:
         queryset = queryset.filter(pessoa_id=pessoa)
-    if categoria:
-        queryset = queryset.filter(categoria_id=categoria)
+    if categoria_ids:
+        queryset = queryset.filter(categoria_id__in=categoria_ids)
 
     return queryset
+
+
+def _opcoes_filtro_hierarquico_categorias_lancamentos() -> tuple[list[CategoriaFinanceira], list[CategoriaFinanceira]]:
+    categorias_pai = list(
+        _ordenar_itens_insensivel(
+            CategoriaFinanceira.objects.filter(categoria_pai__isnull=True),
+            'nome',
+            'tipo',
+        )
+    )
+    subcategorias = list(
+        _ordenar_itens_insensivel(
+            CategoriaFinanceira.objects.filter(categoria_pai__isnull=False).select_related('categoria_pai'),
+            'categoria_pai__nome',
+            'nome',
+            'tipo',
+        )
+    )
+    return categorias_pai, subcategorias
+
+
+def _resolver_filtro_hierarquico_categoria_lancamentos(
+    parametros,
+) -> tuple[CategoriaFinanceira | None, CategoriaFinanceira | None, set[int], str]:
+    categorias_pai, subcategorias = _opcoes_filtro_hierarquico_categorias_lancamentos()
+    categorias_pai_por_id = {str(categoria.pk): categoria for categoria in categorias_pai}
+    subcategorias_por_id = {str(categoria.pk): categoria for categoria in subcategorias}
+
+    categoria_pai_raw = (parametros.get('categoria_pai') or '').strip()
+    subcategoria_raw = (parametros.get('subcategoria') or '').strip()
+    categoria_legada_raw = (parametros.get('categoria') or '').strip()
+
+    categoria_pai = categorias_pai_por_id.get(categoria_pai_raw)
+    subcategoria = subcategorias_por_id.get(subcategoria_raw)
+
+    if not categoria_pai and not subcategoria and categoria_legada_raw:
+        categoria_legada = CategoriaFinanceira.objects.filter(pk=categoria_legada_raw).select_related('categoria_pai').first()
+        if categoria_legada:
+            if categoria_legada.categoria_pai_id:
+                subcategoria = categoria_legada
+            else:
+                categoria_pai = categoria_legada
+
+    erro = ''
+    if categoria_pai and subcategoria and subcategoria.categoria_pai_id != categoria_pai.pk:
+        erro = (
+            'A subcategoria selecionada nao pertence a categoria informada. '
+            'A listagem manteve apenas o filtro de categoria.'
+        )
+        subcategoria = None
+
+    if subcategoria:
+        return categoria_pai, subcategoria, {subcategoria.pk}, erro
+
+    if not categoria_pai:
+        return None, None, set(), erro
+
+    categoria_ids = {categoria_pai.pk}
+    categoria_ids.update(
+        categoria.pk
+        for categoria in subcategorias
+        if categoria.categoria_pai_id == categoria_pai.pk
+    )
+    return categoria_pai, None, categoria_ids, erro
 
 
 def _normalizar_data_filtro_historico(valor) -> date | None:
@@ -10915,6 +10979,10 @@ class LancamentoFinanceiroListView(FinanceiroPermissaoMixin, ListView):
         ordenacao_atual = _resolver_ordenacao_lancamentos_listagem(
             self.request.GET.get('ordenacao')
         )
+        categorias_pai_disponiveis, subcategorias_disponiveis = _opcoes_filtro_hierarquico_categorias_lancamentos()
+        categoria_pai_selecionada, subcategoria_selecionada, _, categoria_filtro_error = (
+            _resolver_filtro_hierarquico_categoria_lancamentos(self.request.GET)
+        )
         por_pagina = _resolver_lancamentos_por_pagina(self.request)
         contas_selecionadas_ids_raw, contas_selecionadas_ids, todas_contas_selecionadas = (
             _parse_contas_lancamentos_parametros(self.request.GET)
@@ -10927,7 +10995,15 @@ class LancamentoFinanceiroListView(FinanceiroPermissaoMixin, ListView):
         context['todas_contas_selecionadas'] = todas_contas_selecionadas
         context['quantidade_contas_selecionadas'] = len(contas_selecionadas_ids_raw)
         context['pessoas_disponiveis'] = PessoaFinanceira.objects.order_by('nome')
-        context['categorias_disponiveis'] = CategoriaFinanceira.objects.order_by('tipo', 'nome')
+        context['categorias_pai_disponiveis'] = categorias_pai_disponiveis
+        context['subcategorias_disponiveis'] = subcategorias_disponiveis
+        context['categoria_pai_selecionada_id'] = str(categoria_pai_selecionada.pk) if categoria_pai_selecionada else ''
+        context['subcategoria_selecionada_id'] = str(subcategoria_selecionada.pk) if subcategoria_selecionada else ''
+        context['categoria_pai_selecionada_label'] = categoria_pai_selecionada.nome if categoria_pai_selecionada else ''
+        context['subcategoria_selecionada_label'] = (
+            _label_categoria_evolucao(subcategoria_selecionada) if subcategoria_selecionada else ''
+        )
+        context['categoria_filtro_error'] = categoria_filtro_error
         lancamentos_visuais = _ordenar_lancamentos_visuais_listagem(
             _montar_lancamentos_visuais_listagem(context['lancamentos']),
             ordenacao_atual,
@@ -11035,6 +11111,8 @@ class LancamentoFinanceiroListView(FinanceiroPermissaoMixin, ListView):
                 'contas',
                 'todas_contas',
                 'pessoa',
+                'categoria_pai',
+                'subcategoria',
                 'categoria',
             ),
         )

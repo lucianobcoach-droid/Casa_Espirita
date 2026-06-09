@@ -4855,3 +4855,15 @@ Status de homologacao da usuaria:
 - o filtro hierarquico afeta apenas a analise de receitas e despesas do resumo
 - composicao de saldo por conta, periodo selecionado, contas selecionadas e transferencias continuam seguindo a mesma base compartilhada ja usada no relatorio
 - transferencias continuam fora do filtro de categoria/subcategoria e seguem apenas o periodo e o universo de contas
+
+## Microetapa: filtros separados de Categoria e Subcategoria na listagem de lancamentos
+
+- a `Listagem de lancamentos` passou a exibir filtros separados para:
+  - `Categoria`
+  - `Subcategoria`
+- `Categoria` lista apenas categorias pai e expande para as subcategorias filhas no resultado
+- `Subcategoria` lista apenas categorias vinculaveis ao lancamento e restringe apenas ao item operacional escolhido
+- o parametro legado `categoria` permanece como compatibilidade segura para links antigos, sem continuar exposto como filtro principal da interface
+- quando a relacao entre categoria pai e subcategoria estiver inconsistente, a listagem ignora a subcategoria e informa a usuaria sem quebrar a tela
+- transferencias continuam aparecendo normalmente sem filtro hierarquico e deixam de entrar quando o recorte de categoria/subcategoria estiver ativo
+- a exportacao XLSX da listagem passou a respeitar o mesmo recorte aplicado na tela

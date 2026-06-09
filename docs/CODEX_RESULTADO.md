@@ -6472,3 +6472,17 @@ Não houve alteração de código funcional nesta etapa.
   - visualizacao com `Mostrar subcategoria`
   - preservacao de transferencias e saldo fora do filtro hierarquico
   - relacao invalida entre categoria pai e subcategoria
+
+## Microetapa: filtros hierarquicos na listagem de lancamentos
+
+- separei os filtros publicos da listagem em `Categoria` e `Subcategoria`
+- a filtragem foi aplicada no mesmo helper usado pela listagem e pela exportacao XLSX, sem alterar extrato, resumo, prestacao, balancete ou recibos
+- mantive compatibilidade com o parametro antigo `categoria` para links ja existentes
+- a exportacao XLSX da listagem passou a respeitar o mesmo recorte hierarquico aplicado na tela
+- cobertura automatizada adicionada para:
+  - listagem sem filtros novos
+  - filtro por categoria pai
+  - filtro por subcategoria
+  - relacao invalida entre categoria e subcategoria
+  - preservacao dos filtros existentes
+  - exportacao XLSX respeitando o filtro hierarquico

@@ -644,6 +644,11 @@
         Edicao coordenada cancelada sem gravacao.
     </div>
 {% endif %}
+{% if categoria_filtro_error %}
+    <div class="notification is-warning is-light no-print">
+        {{ categoria_filtro_error }}
+    </div>
+{% endif %}
 <div class="financeiro-lancamento-page">
     <div class="financeiro-page-header financeiro-page-head">
         <div class="financeiro-page-header-main">
@@ -772,15 +777,30 @@
                             <div class="column is-12-mobile is-6-tablet is-4-desktop">
                                 <label class="label">Categoria</label>
                                 <div class="select is-fullwidth">
-                                    <select name="categoria">
+                                    <select name="categoria_pai">
                                         <option value="">Todas</option>
-                                        {% for categoria in categorias_disponiveis %}
-                                            <option value="{{ categoria.pk }}" {% if request.GET.categoria == categoria.pk|stringformat:'s' %}selected{% endif %}>
+                                        {% for categoria in categorias_pai_disponiveis %}
+                                            <option value="{{ categoria.pk }}" {% if categoria_pai_selecionada_id == categoria.pk|stringformat:'s' %}selected{% endif %}>
                                                 {{ categoria.nome }}
                                             </option>
                                         {% endfor %}
                                     </select>
                                 </div>
+                                <p class="help">A categoria inclui as subcategorias filhas no filtro.</p>
+                            </div>
+                            <div class="column is-12-mobile is-6-tablet is-4-desktop">
+                                <label class="label">Subcategoria</label>
+                                <div class="select is-fullwidth">
+                                    <select name="subcategoria">
+                                        <option value="">Todas</option>
+                                        {% for categoria in subcategorias_disponiveis %}
+                                            <option value="{{ categoria.pk }}" {% if subcategoria_selecionada_id == categoria.pk|stringformat:'s' %}selected{% endif %}>
+                                                {{ categoria.categoria_pai.nome }} / {{ categoria.nome }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <p class="help">A subcategoria restringe ao item operacional selecionado.</p>
                             </div>
                             <div class="column is-12-mobile is-6-tablet is-2-desktop">
                                 <label class="label">Exibir</label>
@@ -800,6 +820,13 @@
                                     <button class="button is-link is-fullwidth" type="submit">Filtrar</button>
                                     <a class="button is-light is-fullwidth" href="{% url 'financeiro:lancamento-list' %}">Limpar</a>
                                 </div>
+                                {% if categoria_pai_selecionada_label or subcategoria_selecionada_label %}
+                                    <p class="help mt-2">
+                                        {% if categoria_pai_selecionada_label %}<strong>Categoria:</strong> {{ categoria_pai_selecionada_label }}{% endif %}
+                                        {% if categoria_pai_selecionada_label and subcategoria_selecionada_label %} | {% endif %}
+                                        {% if subcategoria_selecionada_label %}<strong>Subcategoria:</strong> {{ subcategoria_selecionada_label }}{% endif %}
+                                    </p>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
