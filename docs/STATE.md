@@ -4867,3 +4867,23 @@ Status de homologacao da usuaria:
 - quando a relacao entre categoria pai e subcategoria estiver inconsistente, a listagem ignora a subcategoria e informa a usuaria sem quebrar a tela
 - transferencias continuam aparecendo normalmente sem filtro hierarquico e deixam de entrar quando o recorte de categoria/subcategoria estiver ativo
 - a exportacao XLSX da listagem passou a respeitar o mesmo recorte aplicado na tela
+
+## Microetapa: auditoria transversal de filtros e buscas do sistema
+
+- consolidei a auditoria documental em `docs/AUDITORIA_FILTROS_SISTEMA.md`
+- o diagnostico confirmou que o `financeiro` ja tem um nucleo mais maduro de filtros preservados em:
+  - `Lancamentos`
+  - `Resumo`
+  - `Extrato`
+  - `Prestacao`
+  - `Balancete`
+  - `Evolucao`
+  - `Tabelas personalizadas`
+- os principais gaps atuais ficaram concentrados em:
+  - `Auditoria do financeiro`
+  - `Historico do favorecido`
+  - cadastros auxiliares do `financeiro`
+  - listagens de `biblioteca`
+  - listagens de `configuracoes`
+- a proxima microetapa recomendada ficou definida como:
+  - ampliar busca textual e padronizar filtros de `Auditoria do financeiro` e `Historico do favorecido`, antes de abrir uma frente transversal em `biblioteca` e `configuracoes`

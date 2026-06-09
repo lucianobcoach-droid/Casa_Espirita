@@ -6486,3 +6486,18 @@ Não houve alteração de código funcional nesta etapa.
   - relacao invalida entre categoria e subcategoria
   - preservacao dos filtros existentes
   - exportacao XLSX respeitando o filtro hierarquico
+
+## Microetapa: auditoria transversal de filtros e buscas do sistema
+
+- executei auditoria apenas documental, sem mudanca funcional, consolidada em `docs/AUDITORIA_FILTROS_SISTEMA.md`
+- mapeei telas de `financeiro`, `biblioteca` e `configuracoes` com foco em:
+  - busca textual
+  - selecao multipla
+  - preservacao de filtros em paginacao, acoes, exportacao e impressao
+  - padronizacao de UX
+- o diagnostico mostrou:
+  - `financeiro` mais maduro nas telas analiticas principais
+  - maiores gaps atuais em `Auditoria`, `Historico do favorecido` e cadastros auxiliares
+  - `biblioteca` e `configuracoes` ainda sem camada minima de busca/filtros nas listagens
+- recomendei como proxima microetapa objetiva:
+  - ampliar busca textual e filtros de `Auditoria do financeiro` e `Historico do favorecido`
