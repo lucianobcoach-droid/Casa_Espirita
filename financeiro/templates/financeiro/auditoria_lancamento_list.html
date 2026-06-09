@@ -75,6 +75,10 @@
         </div>
     {% endif %}
     <div class="columns is-multiline">
+        <div class="column is-12-mobile is-6-tablet is-4-desktop">
+            <label class="label">Busca</label>
+            <input class="input" type="text" name="q" value="{{ filtro_busca }}" placeholder="Buscar por acao, usuario, modelo ou conteudo auditado">
+        </div>
         <div class="column is-12-mobile is-6-tablet is-3-desktop">
             <label class="label">Acao</label>
             <div class="select is-fullwidth">
@@ -114,7 +118,7 @@
         <div class="column is-12-mobile is-6-tablet is-2-desktop">
             <label class="label">&nbsp;</label>
             <div class="buttons">
-                <button class="button is-link" type="submit">Aplicar filtros</button>
+                <button class="button is-link" type="submit">Filtrar</button>
                 <a class="button is-light" href="{{ auditoria_clear_url }}">Limpar</a>
             </div>
         </div>

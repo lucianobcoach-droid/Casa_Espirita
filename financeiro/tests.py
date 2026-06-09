@@ -2613,6 +2613,45 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
         self.assertContains(response, 'valor')
         self.assertNotContains(response, 'PessoaFinanceira')
 
+    def test_historico_do_documento_permite_busca_textual_em_campos_auditados(self):
+        lancamento = self._criar_lancamento_controlado()
+        self._login_com_permissoes(
+            'user-busca-auditoria',
+            [
+                'financeiro.auditoria.listar',
+            ],
+        )
+        usuario = get_user_model().objects.get(username='user-busca-auditoria')
+        AuditoriaFinanceiro.objects.create(
+            acao=AuditoriaFinanceiro.AcaoAuditoria.UPDATE,
+            modelo='LancamentoFinanceiro',
+            registro_id=lancamento.pk,
+            usuario=usuario,
+            campos_alterados={'observacao': {'before': '-', 'after': 'competencia especial revisada'}},
+        )
+        AuditoriaFinanceiro.objects.create(
+            acao=AuditoriaFinanceiro.AcaoAuditoria.UPDATE,
+            modelo='LancamentoFinanceiro',
+            registro_id=lancamento.pk,
+            usuario=usuario,
+            campos_alterados={'valor': {'before': '90.00', 'after': '100.00'}},
+        )
+
+        response = self.client.get(
+            reverse('financeiro:auditoria-lancamento-list'),
+            {
+                'modelo': 'LancamentoFinanceiro',
+                'registro_id': str(lancamento.pk),
+                'q': 'especial revisada',
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'name="q"', html=False)
+        self.assertContains(response, 'observacao')
+        self.assertContains(response, 'competencia especial revisada')
+        self.assertNotContains(response, '<strong>valor</strong>:', html=False)
+
     def test_historico_do_documento_exige_permissao_de_auditoria(self):
         lancamento = self._criar_lancamento_controlado()
         self._login_com_permissoes(
@@ -4924,6 +4963,70 @@ class LancamentoListagemAcoesTests(TestCase):
             perfil.permissoes.add(self._garantir_permissao(codigo))
         UsuarioPerfilAcesso.objects.create(usuario=usuario, perfil=perfil)
         self.client.force_login(usuario)
+
+    def test_historico_do_favorecido_busca_por_categoria_centro_custo_e_conta(self):
+        self._login_com_permissoes(
+            'user-historico-favorecido-busca',
+            ['financeiro.lancamentos.listar'],
+        )
+        centro_custo = CentroCusto.objects.create(codigo='CC-LIST-HIST', nome='Centro pastoral')
+        self.lancamento_evento.centro_custo = centro_custo
+        self.lancamento_evento.observacoes = 'Registro do encontro fraterno'
+        self.lancamento_evento.save(update_fields=['centro_custo', 'observacoes'])
+
+        response_categoria = self.client.get(
+            reverse('financeiro:pessoa-historico', kwargs={'pk': self.pessoa.pk}),
+            {'q': 'Eventos listagem'},
+        )
+
+        self.assertEqual(response_categoria.status_code, 200)
+        self.assertContains(response_categoria, self.lancamento_evento.descricao)
+        self.assertNotContains(response_categoria, self.lancamento_simples.descricao)
+
+        response_centro_custo = self.client.get(
+            reverse('financeiro:pessoa-historico', kwargs={'pk': self.pessoa.pk}),
+            {'q': 'Centro pastoral'},
+        )
+
+        self.assertEqual(response_centro_custo.status_code, 200)
+        self.assertContains(response_centro_custo, self.lancamento_evento.descricao)
+        self.assertNotContains(response_centro_custo, self.lancamento_competencia.descricao)
+
+        response_conta = self.client.get(
+            reverse('financeiro:pessoa-historico', kwargs={'pk': self.pessoa.pk}),
+            {'q': 'Conta listagem'},
+        )
+
+        self.assertEqual(response_conta.status_code, 200)
+        self.assertContains(
+            response_conta,
+            'Buscar por descricao, documento, categoria, conta ou centro de custo',
+        )
+        self.assertContains(response_conta, self.lancamento_simples.descricao)
+        self.assertContains(response_conta, self.lancamento_evento.descricao)
+
+    def test_historico_do_favorecido_preserva_filtros_estruturados_com_busca_textual(self):
+        self._login_com_permissoes(
+            'user-historico-favorecido-filtros',
+            ['financeiro.lancamentos.listar'],
+        )
+        self.lancamento_evento.observacoes = 'Busca combinada por evento'
+        self.lancamento_evento.save(update_fields=['observacoes'])
+
+        response = self.client.get(
+            reverse('financeiro:pessoa-historico', kwargs={'pk': self.pessoa.pk}),
+            {
+                'tipo': LancamentoFinanceiro.TipoLancamento.RECEITA,
+                'status': LancamentoFinanceiro.StatusLancamento.QUITADO,
+                'conta': str(self.conta.pk),
+                'q': 'evento',
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.lancamento_evento.descricao)
+        self.assertNotContains(response, self.lancamento_competencia.descricao)
+        self.assertNotContains(response, self.transferencia.descricao)
 
     def test_listagem_exibe_acoes_completas_para_simples_competencia_e_rateio(self):
         self._login_com_permissoes(

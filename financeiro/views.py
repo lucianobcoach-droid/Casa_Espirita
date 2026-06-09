@@ -19,8 +19,8 @@ from django.contrib import messages
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db import transaction
-from django.db.models import Count, Q, Sum
-from django.db.models.functions import Coalesce
+from django.db.models import Count, Q, Sum, TextField
+from django.db.models.functions import Cast, Coalesce
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
@@ -8432,6 +8432,9 @@ class AuditoriaLancamentoFinanceiroListView(FinanceiroPermissaoMixin, ListView):
             return modelo
         return ''
 
+    def _get_busca_textual(self) -> str:
+        return (self.request.GET.get('q') or '').strip()
+
     def _get_return_to_url(self) -> str:
         return_to = (self.request.GET.get('return_to') or '').strip()
         if not return_to:
@@ -8445,13 +8448,16 @@ class AuditoriaLancamentoFinanceiroListView(FinanceiroPermissaoMixin, ListView):
         return return_to
 
     def get_queryset(self):
-        queryset = self._get_base_queryset()
+        queryset = self._get_base_queryset().annotate(
+            campos_alterados_texto=Cast('campos_alterados', output_field=TextField()),
+        )
         modelo = self._get_modelo_filtrado()
         acao = self.request.GET.get('acao', '').strip()
         data_inicial = self.request.GET.get('data_inicial', '').strip()
         data_final = self.request.GET.get('data_final', '').strip()
         registro_id = self.request.GET.get('registro_id', '').strip()
         usuario_id = self.request.GET.get('usuario', '').strip()
+        busca = self._get_busca_textual()
 
         if modelo:
             queryset = queryset.filter(modelo=modelo)
@@ -8491,6 +8497,19 @@ class AuditoriaLancamentoFinanceiroListView(FinanceiroPermissaoMixin, ListView):
             if usuario_id_valor is not None:
                 queryset = queryset.filter(usuario_id=usuario_id_valor)
 
+        if busca:
+            filtros_busca = (
+                Q(acao__icontains=busca)
+                | Q(modelo__icontains=busca)
+                | Q(usuario__username__icontains=busca)
+                | Q(usuario__first_name__icontains=busca)
+                | Q(usuario__last_name__icontains=busca)
+                | Q(campos_alterados_texto__icontains=busca)
+            )
+            if busca.isdigit():
+                filtros_busca |= Q(registro_id=int(busca))
+            queryset = queryset.filter(filtros_busca)
+
         return queryset.order_by('-data_hora', '-pk')
 
     def get_context_data(self, **kwargs):
@@ -8517,6 +8536,7 @@ class AuditoriaLancamentoFinanceiroListView(FinanceiroPermissaoMixin, ListView):
         context['filtro_data_final'] = self.request.GET.get('data_final', '').strip()
         context['filtro_registro_id'] = filtro_registro_id
         context['filtro_usuario'] = self.request.GET.get('usuario', '').strip()
+        context['filtro_busca'] = self._get_busca_textual()
         context['acoes_auditoria'] = AuditoriaFinanceiro.AcaoAuditoria.choices
         context['usuarios_auditoria'] = usuarios_auditoria
         context['auditoria_return_to_url'] = return_to
@@ -8745,6 +8765,14 @@ class PessoaFinanceiraHistoricoView(FinanceiroPermissaoMixin, DetailView):
             queryset = queryset.filter(
                 Q(descricao__icontains=busca)
                 | Q(numero_documento__icontains=busca)
+                | Q(categoria__nome__icontains=busca)
+                | Q(categoria__categoria_pai__nome__icontains=busca)
+                | Q(centro_custo__nome__icontains=busca)
+                | Q(conta__nome__icontains=busca)
+                | Q(conta_destino__nome__icontains=busca)
+                | Q(observacoes__icontains=busca)
+                | Q(tipo__icontains=busca)
+                | Q(status__icontains=busca)
             )
 
         return queryset.order_by('-data_operacional', '-pk')

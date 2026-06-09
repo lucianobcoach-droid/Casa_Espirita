@@ -4887,3 +4887,21 @@ Status de homologacao da usuaria:
   - listagens de `configuracoes`
 - a proxima microetapa recomendada ficou definida como:
   - ampliar busca textual e padronizar filtros de `Auditoria do financeiro` e `Historico do favorecido`, antes de abrir uma frente transversal em `biblioteca` e `configuracoes`
+
+## Microetapa: busca ampliada em Auditoria do financeiro e Historico do favorecido
+
+- a `Auditoria do financeiro` ganhou busca textual parcial sobre:
+  - acao
+  - modelo
+  - usuario
+  - `registro_id` numerico
+  - conteudo serializado de `campos_alterados`
+- os filtros estruturados existentes da auditoria foram preservados, sem abrir selecao multipla nesta etapa
+- o `Historico do favorecido` passou a buscar tambem por:
+  - categoria e categoria pai
+  - centro de custo
+  - conta e conta de destino
+  - observacoes
+  - tipo e status
+- a busca textual do historico continua combinavel com periodo, tipo, status e conta
+- nao houve alteracao em `Resumo`, `Extrato`, `Prestacao`, `Balancete`, `Listagem de lancamentos`, `Tabelas personalizadas`, `biblioteca` ou `configuracoes`

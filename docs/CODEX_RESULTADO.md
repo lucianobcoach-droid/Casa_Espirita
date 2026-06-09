@@ -6501,3 +6501,14 @@ Não houve alteração de código funcional nesta etapa.
   - `biblioteca` e `configuracoes` ainda sem camada minima de busca/filtros nas listagens
 - recomendei como proxima microetapa objetiva:
   - ampliar busca textual e filtros de `Auditoria do financeiro` e `Historico do favorecido`
+
+## Microetapa: busca ampliada em Auditoria do financeiro e Historico do favorecido
+
+- ampliei a busca textual da `Auditoria do financeiro` sem mexer em permissao, modelo ou auditoria funcional
+- a consulta agora encontra termos em acao, modelo, usuario, `registro_id` e no conteudo auditado de `campos_alterados`
+- ampliei a busca do `Historico do favorecido` para categoria, categoria pai, centro de custo, conta, conta de destino, observacoes, tipo e status
+- mantive os filtros estruturados atuais e a combinacao segura entre busca textual e filtros do historico
+- cobertura automatizada adicionada para:
+  - busca textual contextual no historico do documento
+  - busca ampliada do historico do favorecido
+  - combinacao de busca textual com filtros estruturados do historico
