@@ -183,3 +183,13 @@ Este documento consolida regras permanentes do sistema. Ele não substitui o his
 - Extrato Financeiro pode ser exportado em XLSX respeitando os mesmos filtros e a mesma regra de calculo da tela, sem calculo paralelo divergente.
 - A tela de edicao de lancamento deve manter os mesmos atalhos de cadastro rapido da criacao para os cadastros auxiliares aplicaveis, preservando o retorno ao proprio formulario.
 - O historico de um documento/lancamento deve ser consultado a partir da `AuditoriaFinanceiro` existente, filtrado por `modelo=LancamentoFinanceiro` e `registro_id` do lancamento, sem misturar eventos de outros modelos com o mesmo ID.
+- Em Tabelas personalizadas, a visualizacao operacional principal da tabela deve mostrar por padrao apenas colunas `ativas` e `visiveis` e apenas linhas `ativas`.
+- Em Tabelas personalizadas, remocao operacional de linhas e colunas deve priorizar acoes seguras por status/visibilidade (`Ocultar`, `Mostrar`, `Inativar`, `Reativar`, `Arquivar`) via `POST` com CSRF, evitando exclusao fisica destrutiva como acao principal.
+- Nas telas de estrutura/preenchimento de Tabelas personalizadas, titulo e subtitulo contextual nao podem ficar sobrepostos visualmente.
+- Em Tabelas personalizadas, coluna `formula_controlada` pode usar totalizador apenas quando a formula estiver valida e habilitada e o `resultado_tipo` for `decimal` ou `monetario`; o totalizador deve operar sobre o resultado calculado em leitura, sem persistencia nova de valor calculado.
+- Tabelas personalizadas possuem acoes seguras de status/visibilidade para uso cotidiano e tambem acao secundaria de exclusao definitiva para linhas e colunas, sempre via POST, com confirmacao e aviso de perda de dados vinculados.
+- Em Tabelas personalizadas, a escolha de colunas mostradas na tela e na impressao e temporaria e nao altera a configuracao estrutural `visivel` da coluna.
+- Em Tabelas personalizadas, a coluna de sistema `Linha / identificacao` faz parte apenas da visualizacao e pode ser mostrada ou ocultada temporariamente sem alterar a estrutura da tabela.
+- Em Tabelas personalizadas, a ordenacao manual da tela e temporaria, nao altera o campo `ordem` salvo das linhas e deve ser aplicada depois de busca/filtros e antes da impressao.
+- Em Tabelas personalizadas, a impressao deve respeitar o mesmo recorte atualmente exibido na tela: filtros, busca, status de linhas e colunas temporariamente selecionadas.
+- Em Tabelas personalizadas, a exportacao XLSX continua disponivel e pode respeitar a mesma selecao temporaria de colunas da visualizacao quando esse recorte estiver ativo.

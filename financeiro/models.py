@@ -910,6 +910,49 @@ class ColunaPersonalizada(models.Model):
             return False
         return bool(self.formula_config.get('habilitada'))
 
+    @property
+    def formula_resultado_tipo(self) -> str | None:
+        if not self.formula_habilitada:
+            return None
+        resultado_tipo = self.formula_config.get('resultado_tipo')
+        if resultado_tipo not in self.tipos_elegiveis_formula_resultado():
+            return None
+        return resultado_tipo
+
+    @property
+    def formula_casas_decimais(self) -> int | None:
+        if not self.formula_habilitada:
+            return None
+        casas_decimais = self.formula_config.get('casas_decimais')
+        if not isinstance(casas_decimais, int):
+            return None
+        limites = self.limite_casas_decimais_formula(self.formula_resultado_tipo)
+        if limites is None:
+            return None
+        minimo, maximo = limites
+        if not minimo <= casas_decimais <= maximo:
+            return None
+        return casas_decimais
+
+    def tipo_dado_totalizador(self) -> str | None:
+        if self.tipo_dado == self.TipoDado.FORMULA_CONTROLADA:
+            return self.formula_resultado_tipo
+        return self.tipo_dado
+
+    def tipos_totalizador_compativeis(self) -> tuple[str, ...]:
+        if self.tipo_dado == self.TipoDado.FORMULA_CONTROLADA:
+            if not self.formula_habilitada:
+                return ()
+            if self.validar_configuracao_formula_guiada(
+                coluna=self,
+                configuracao_formula=self.formula_config,
+            ):
+                return ()
+        tipo_totalizador = self.tipo_dado_totalizador()
+        if tipo_totalizador is None:
+            return ()
+        return TotalizadorColunaPersonalizada.tipos_compativeis_por_tipo_dado(tipo_totalizador)
+
     @classmethod
     def validar_configuracao_formula_guiada(
         cls,
@@ -1174,9 +1217,10 @@ class TotalizadorColunaPersonalizada(models.Model):
         errors: dict[str, str] = {}
 
         if self.coluna_id:
-            if self.coluna.calculada or self.coluna.tipo_dado == ColunaPersonalizada.TipoDado.FORMULA_CONTROLADA:
-                errors['coluna'] = 'Coluna calculada nao aceita totalizador nesta etapa.'
-            elif self.tipo_totalizador not in self.tipos_compativeis_por_tipo_dado(self.coluna.tipo_dado):
+            tipos_compativeis = self.coluna.tipos_totalizador_compativeis()
+            if not tipos_compativeis:
+                errors['coluna'] = 'Coluna calculada so aceita totalizador quando a formula estiver valida e habilitada.'
+            elif self.tipo_totalizador not in tipos_compativeis:
                 errors['tipo_totalizador'] = 'O totalizador informado nao e compativel com o tipo de dado da coluna.'
 
         if errors:

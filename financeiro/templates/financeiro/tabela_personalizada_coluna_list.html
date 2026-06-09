@@ -7,6 +7,17 @@
         gap: 0.9rem;
     }
 
+    .financeiro-coluna-page .financeiro-page-header-main {
+        display: grid;
+        gap: 0.35rem;
+        min-width: 0;
+    }
+
+    .financeiro-coluna-page .financeiro-page-title {
+        margin-bottom: 0;
+        line-height: 1.12;
+    }
+
     .financeiro-coluna-card {
         border: 1px solid rgba(203, 213, 225, 0.85);
         border-radius: 1rem;
@@ -102,6 +113,17 @@
         font-weight: 700;
         line-height: 1.1;
     }
+
+    .financeiro-coluna-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        align-items: center;
+    }
+
+    .financeiro-coluna-inline-form {
+        margin: 0;
+    }
 </style>
 
 <div class="financeiro-coluna-page">
@@ -109,7 +131,7 @@
         <div class="financeiro-page-header-main">
             <h1 class="title financeiro-page-title">Estrutura da tabela</h1>
             <p class="subtitle is-6 mb-0">
-                {{ tabela_personalizada.nome }}
+                Estrutura da tabela: {{ tabela_personalizada.nome }}
             </p>
         </div>
         <div class="financeiro-page-header-actions">
@@ -125,7 +147,7 @@
     <section class="financeiro-coluna-card">
         <div class="financeiro-coluna-note">
             <strong>Recorte atual:</strong>
-            esta etapa configura a estrutura das colunas, os totalizadores por coluna e a definicao segura de formulas guiadas. O calculo da formula continuara separado em microetapa posterior.
+            esta etapa configura a estrutura das colunas, os totalizadores por coluna e a definicao segura de formulas guiadas. A tela principal da tabela mostra apenas colunas ativas e visiveis por padrao.
         </div>
 
         <div class="financeiro-coluna-table-wrap">
@@ -190,9 +212,60 @@
                                     {{ coluna.get_status_display }}
                                 </span>
                             </td>
-                            <td>
+                            <td class="financeiro-coluna-actions">
                                 <a class="button is-small is-light" href="{% url 'financeiro:tabela-personalizada-coluna-update' tabela_personalizada.pk coluna.pk %}{% if return_to %}?return_to={{ return_to|urlencode }}{% endif %}">
                                     Editar
+                                </a>
+                                <form
+                                    method="post"
+                                    action="{% url 'financeiro:tabela-personalizada-coluna-action' tabela_personalizada.pk coluna.pk %}"
+                                    class="financeiro-coluna-inline-form"
+                                >
+                                    {% csrf_token %}
+                                    {% if return_to %}<input type="hidden" name="return_to" value="{{ return_to }}">{% endif %}
+                                    {% if coluna.visivel %}
+                                        <input type="hidden" name="acao" value="ocultar">
+                                        <button class="button is-small is-light" type="submit">Ocultar</button>
+                                    {% else %}
+                                        <input type="hidden" name="acao" value="mostrar">
+                                        <button class="button is-small is-light" type="submit">Mostrar</button>
+                                    {% endif %}
+                                </form>
+                                <form
+                                    method="post"
+                                    action="{% url 'financeiro:tabela-personalizada-coluna-action' tabela_personalizada.pk coluna.pk %}"
+                                    class="financeiro-coluna-inline-form"
+                                >
+                                    {% csrf_token %}
+                                    {% if return_to %}<input type="hidden" name="return_to" value="{{ return_to }}">{% endif %}
+                                    {% if coluna.status == 'ativa' %}
+                                        <input type="hidden" name="acao" value="inativar">
+                                        <button class="button is-small is-light" type="submit">Inativar</button>
+                                    {% elif coluna.status == 'inativa' %}
+                                        <input type="hidden" name="acao" value="reativar">
+                                        <button class="button is-small is-light" type="submit">Reativar</button>
+                                    {% else %}
+                                        <input type="hidden" name="acao" value="reativar">
+                                        <button class="button is-small is-light" type="submit">Reativar</button>
+                                    {% endif %}
+                                </form>
+                                {% if coluna.status != 'arquivada' %}
+                                    <form
+                                        method="post"
+                                        action="{% url 'financeiro:tabela-personalizada-coluna-action' tabela_personalizada.pk coluna.pk %}"
+                                        class="financeiro-coluna-inline-form"
+                                    >
+                                        {% csrf_token %}
+                                        {% if return_to %}<input type="hidden" name="return_to" value="{{ return_to }}">{% endif %}
+                                        <input type="hidden" name="acao" value="arquivar">
+                                        <button class="button is-small is-light" type="submit">Arquivar</button>
+                                    </form>
+                                {% endif %}
+                                <a
+                                    class="button is-small is-danger is-light"
+                                    href="{% url 'financeiro:tabela-personalizada-coluna-delete' tabela_personalizada.pk coluna.pk %}{% if return_to %}?return_to={{ return_to|urlencode }}{% endif %}"
+                                >
+                                    Excluir
                                 </a>
                             </td>
                         </tr>

@@ -5830,6 +5830,9 @@ class TabelasPersonalizadasListViewTests(TestCase):
                     return celula['valor']
         return None
 
+    def _ordem_linhas_renderizadas(self, response) -> list[int]:
+        return [item['linha'].pk for item in response.context['linhas_renderizadas']]
+
     def _ler_linhas_xlsx(self, conteudo: bytes) -> list[list[str]]:
         with ZipFile(BytesIO(conteudo)) as arquivo_xlsx:
             workbook_tree = ElementTree.fromstring(arquivo_xlsx.read('xl/workbook.xml'))
@@ -6161,6 +6164,155 @@ class TabelasPersonalizadasListViewTests(TestCase):
         self.assertContains(response, 'Filtro estruturado')
         self.assertContains(response, 'Habilitado')
 
+    def test_listagem_de_colunas_exibe_acoes_seguras_por_post(self):
+        self._login_com_permissoes(
+            'user-coluna-acoes-lista',
+            [PermissoesTabelasPersonalizadas.EDITAR_ESTRUTURA],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-coluna-list', kwargs={'tabela_id': self.tabela.pk})
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Ocultar')
+        self.assertContains(response, 'Inativar')
+        self.assertContains(response, 'Arquivar')
+        self.assertContains(
+            response,
+            reverse(
+                'financeiro:tabela-personalizada-coluna-action',
+                kwargs={'tabela_id': self.tabela.pk, 'pk': self.coluna_existente.pk},
+            ),
+        )
+
+    def test_acao_de_coluna_altera_visibilidade_e_status_com_auditoria(self):
+        self._login_com_permissoes(
+            'user-coluna-acao-status',
+            [PermissoesTabelasPersonalizadas.EDITAR_ESTRUTURA],
+        )
+        url = reverse(
+            'financeiro:tabela-personalizada-coluna-action',
+            kwargs={'tabela_id': self.tabela.pk, 'pk': self.coluna_existente.pk},
+        )
+        return_to = reverse('financeiro:tabela-personalizada-coluna-list', kwargs={'tabela_id': self.tabela.pk})
+
+        response_ocultar = self.client.post(url, {'acao': 'ocultar', 'return_to': return_to})
+
+        self.assertRedirects(response_ocultar, return_to)
+        self.coluna_existente.refresh_from_db()
+        self.assertFalse(self.coluna_existente.visivel)
+        log_ocultar = self._ultimo_log_modelo('ColunaPersonalizada', registro_id=self.coluna_existente.pk)
+        self.assertEqual(log_ocultar.campos_alterados['visivel']['before'], True)
+        self.assertEqual(log_ocultar.campos_alterados['visivel']['after'], False)
+
+        response_arquivar = self.client.post(url, {'acao': 'arquivar', 'return_to': return_to})
+
+        self.assertRedirects(response_arquivar, return_to)
+        self.coluna_existente.refresh_from_db()
+        self.assertEqual(self.coluna_existente.status, ColunaPersonalizada.StatusColuna.ARQUIVADA)
+        log_arquivar = self._ultimo_log_modelo('ColunaPersonalizada', registro_id=self.coluna_existente.pk)
+        self.assertEqual(log_arquivar.campos_alterados['status']['after'], ColunaPersonalizada.StatusColuna.ARQUIVADA)
+
+    def test_acao_de_coluna_exige_post_e_permissao(self):
+        url = reverse(
+            'financeiro:tabela-personalizada-coluna-action',
+            kwargs={'tabela_id': self.tabela.pk, 'pk': self.coluna_existente.pk},
+        )
+        self._login_com_permissoes(
+            'user-coluna-acao-get',
+            [PermissoesTabelasPersonalizadas.EDITAR_ESTRUTURA],
+        )
+
+        response_get = self.client.get(url)
+
+        self.assertEqual(response_get.status_code, 405)
+        self.coluna_existente.refresh_from_db()
+        self.assertTrue(self.coluna_existente.visivel)
+
+        self.client.logout()
+        self._login_com_permissoes(
+            'user-coluna-acao-sem-permissao',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+        response_forbidden = self.client.post(url, {'acao': 'ocultar'})
+        self.assertEqual(response_forbidden.status_code, 403)
+        self.coluna_existente.refresh_from_db()
+        self.assertTrue(self.coluna_existente.visivel)
+
+    def test_exclusao_definitiva_de_coluna_exige_confirmacao_e_apaga_apenas_a_coluna(self):
+        colunas = self._criar_colunas_para_linhas()
+        linha = self._criar_linha_com_valores(colunas)
+        self._criar_segunda_linha_com_valores(colunas)
+        coluna = colunas['monetario']
+        outras_colunas_ids = set(
+            ColunaPersonalizada.objects.filter(tabela=self.tabela).exclude(pk=coluna.pk).values_list('pk', flat=True)
+        )
+        self._login_com_permissoes(
+            'user-coluna-delete-definitivo',
+            [PermissoesTabelasPersonalizadas.EDITAR_ESTRUTURA],
+        )
+
+        url = reverse(
+            'financeiro:tabela-personalizada-coluna-delete',
+            kwargs={'tabela_id': self.tabela.pk, 'pk': coluna.pk},
+        )
+        return_to = reverse('financeiro:tabela-personalizada-coluna-list', kwargs={'tabela_id': self.tabela.pk})
+
+        response_get = self.client.get(url)
+
+        self.assertEqual(response_get.status_code, 200)
+        self.assertContains(response_get, 'Excluir coluna personalizada')
+        self.assertContains(
+            response_get,
+            'Excluir esta coluna apagara tambem os valores desta coluna nas linhas da tabela. Esta acao nao podera ser desfeita.',
+        )
+        self.assertTrue(ColunaPersonalizada.objects.filter(pk=coluna.pk).exists())
+
+        response_post = self.client.post(url, {'return_to': return_to})
+
+        self.assertRedirects(response_post, return_to)
+        self.assertFalse(ColunaPersonalizada.objects.filter(pk=coluna.pk).exists())
+        self.assertEqual(ValorTabelaPersonalizada.objects.filter(coluna_id=coluna.pk).count(), 0)
+        self.assertTrue(ColunaPersonalizada.objects.filter(pk__in=outras_colunas_ids).count() >= 1)
+        self.assertTrue(LinhaTabelaPersonalizada.objects.filter(pk=linha.pk).exists())
+        log = self._ultimo_log_modelo('ColunaPersonalizada', registro_id=coluna.pk)
+        self.assertIsNotNone(log)
+        self.assertEqual(log.acao, AuditoriaFinanceiro.AcaoAuditoria.DELETE)
+
+    def test_exclusao_definitiva_de_coluna_respeita_permissao(self):
+        url = reverse(
+            'financeiro:tabela-personalizada-coluna-delete',
+            kwargs={'tabela_id': self.tabela.pk, 'pk': self.coluna_existente.pk},
+        )
+        self._login_com_permissoes(
+            'user-coluna-delete-sem-permissao',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+
+        response = self.client.post(url)
+
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(ColunaPersonalizada.objects.filter(pk=self.coluna_existente.pk).exists())
+
+    def test_exclusao_definitiva_de_coluna_bloqueia_dependencia_de_formula(self):
+        colunas = self._criar_colunas_para_linhas()
+        self._login_com_permissoes(
+            'user-coluna-delete-bloqueio-formula',
+            [PermissoesTabelasPersonalizadas.EDITAR_ESTRUTURA],
+        )
+        url = reverse(
+            'financeiro:tabela-personalizada-coluna-delete',
+            kwargs={'tabela_id': self.tabela.pk, 'pk': colunas['inteiro'].pk},
+        )
+        return_to = reverse('financeiro:tabela-personalizada-coluna-list', kwargs={'tabela_id': self.tabela.pk})
+
+        response = self.client.post(url, {'return_to': return_to}, follow=True)
+
+        self.assertRedirects(response, return_to)
+        self.assertTrue(ColunaPersonalizada.objects.filter(pk=colunas['inteiro'].pk).exists())
+        self.assertContains(response, 'nao pode ser excluida porque ainda e usada como origem em formula guiada')
+
     def test_listagem_de_colunas_indica_formula_guiada_configurada(self):
         fontes = self._criar_colunas_fonte_formula()
         ColunaPersonalizada.objects.create(
@@ -6314,6 +6466,7 @@ class TabelasPersonalizadasListViewTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
+        self.assertContains(response, f'Estrutura da tabela: {self.tabela.nome}')
         self.assertContains(response, 'Use este campo apenas quando o tipo da coluna for Lista de opcoes.')
         self.assertContains(
             response,
@@ -6788,6 +6941,48 @@ class TabelasPersonalizadasListViewTests(TestCase):
         self.assertFalse(form.is_valid())
         self.assertIn('totalizadores_configurados', form.errors)
 
+    def test_form_de_coluna_permite_totalizador_em_formula_controlada_decimal_valida(self):
+        fontes = self._criar_colunas_fonte_formula()
+        form = ColunaPersonalizadaForm(
+            tabela=self.tabela,
+            pode_configurar_formula=True,
+            data={
+                **self._dados_formula_coluna(
+                    nome='Formula totalizavel decimal',
+                    operacao=ColunaPersonalizada.OperacaoFormula.SOMA,
+                    operandos=[fontes['inteiro'].pk, fontes['decimal'].pk],
+                    resultado_tipo=ColunaPersonalizada.TipoDado.DECIMAL,
+                    casas_decimais=4,
+                ),
+                'totalizadores_configurados': [
+                    TotalizadorColunaPersonalizada.TipoTotalizador.SOMA,
+                    TotalizadorColunaPersonalizada.TipoTotalizador.MEDIA,
+                ],
+            },
+        )
+
+        self.assertTrue(form.is_valid(), form.errors)
+
+    def test_form_de_coluna_bloqueia_totalizador_em_formula_incompleta(self):
+        fontes = self._criar_colunas_fonte_formula()
+        form = ColunaPersonalizadaForm(
+            tabela=self.tabela,
+            pode_configurar_formula=True,
+            data={
+                **self._dados_formula_coluna(
+                    nome='Formula totalizavel incompleta',
+                    operacao=ColunaPersonalizada.OperacaoFormula.SOMA,
+                    operandos=[fontes['inteiro'].pk],
+                    resultado_tipo=ColunaPersonalizada.TipoDado.DECIMAL,
+                    casas_decimais=2,
+                ),
+                'totalizadores_configurados': [TotalizadorColunaPersonalizada.TipoTotalizador.SOMA],
+            },
+        )
+
+        self.assertFalse(form.is_valid())
+        self.assertIn('totalizadores_configurados', form.errors)
+
     def test_form_de_coluna_limpa_totalizador_incompativel_ao_mudar_tipo(self):
         coluna = ColunaPersonalizada.objects.create(
             tabela=self.tabela,
@@ -7153,7 +7348,10 @@ class TabelasPersonalizadasListViewTests(TestCase):
         self.assertContains(response, self.tabela.get_status_display())
         self.assertContains(
             response,
-            f'{self.tabela.colunas.filter(status=ColunaPersonalizada.StatusColuna.ATIVA).count()} coluna(s) ativa(s)',
+            (
+                f"{self.tabela.colunas.filter(status=ColunaPersonalizada.StatusColuna.ATIVA, visivel=True).count()}"
+                ' coluna(s) ativa(s) e visiveis'
+            ),
         )
         self.assertContains(
             response,
@@ -7530,6 +7728,54 @@ class TabelasPersonalizadasListViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, '<strong>Soma:</strong> R$ 50.72', html=True)
         self.assertNotContains(response, '<strong>Soma:</strong> R$ 70.62', html=True)
+
+    def test_totalizador_de_formula_controlada_decimal_usa_resultado_calculado(self):
+        colunas = self._criar_colunas_para_linhas()
+        self._criar_linha_com_valores(colunas)
+        self._criar_segunda_linha_com_valores(colunas)
+        TotalizadorColunaPersonalizada.objects.create(
+            coluna=colunas['formula'],
+            tipo_totalizador=TotalizadorColunaPersonalizada.TipoTotalizador.SOMA,
+        )
+        self._login_com_permissoes(
+            'user-linha-totalizador-formula-decimal',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk})
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Campo calculado futuro')
+        self.assertContains(response, '<strong>Soma:</strong> 9.015', html=True)
+
+    def test_totalizador_de_formula_controlada_monetaria_usa_resultado_calculado(self):
+        colunas = self._criar_colunas_para_linhas()
+        self._configurar_formula_coluna(
+            colunas['formula'],
+            operacao=ColunaPersonalizada.OperacaoFormula.SOMA,
+            operandos=[colunas['monetario'].pk, colunas['inteiro'].pk],
+            resultado_tipo=ColunaPersonalizada.TipoDado.MONETARIO,
+            casas_decimais=2,
+        )
+        self._criar_linha_com_valores(colunas)
+        self._criar_segunda_linha_com_valores(colunas)
+        TotalizadorColunaPersonalizada.objects.create(
+            coluna=colunas['formula'],
+            tipo_totalizador=TotalizadorColunaPersonalizada.TipoTotalizador.SOMA,
+        )
+        self._login_com_permissoes(
+            'user-linha-totalizador-formula-monetaria',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk})
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '<strong>Soma:</strong> R$ 76.62', html=True)
 
     def test_busca_encontra_linha_por_texto(self):
         colunas = self._criar_colunas_para_linhas()
@@ -8072,6 +8318,170 @@ class TabelasPersonalizadasListViewTests(TestCase):
         )
         self.assertContains(response, 'Exportar XLSX')
 
+    def test_tela_de_linhas_exibe_visual_limpo_e_botao_imprimir(self):
+        colunas = self._criar_colunas_para_linhas()
+        self._criar_linha_com_valores(colunas)
+        self._login_com_permissoes(
+            'user-linha-visual-limpo',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk}),
+            {'visualizacao': 'limpa'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Visual padrao')
+        self.assertContains(response, 'Imprimir')
+        self.assertContains(response, 'Acoes administrativas')
+        self.assertNotContains(response, 'Recorte atual:')
+
+    def test_tela_de_linhas_permite_selecao_temporaria_de_colunas_por_query_string(self):
+        colunas = self._criar_colunas_para_linhas()
+        self._criar_linha_com_valores(colunas)
+        self._login_com_permissoes(
+            'user-linha-selecao-colunas',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk}),
+            {'colunas': f'{colunas["texto"].pk},{colunas["monetario"].pk}'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            [coluna.nome for coluna in response.context['colunas_visiveis']],
+            [colunas['texto'].nome, colunas['monetario'].nome],
+        )
+        self.assertTrue(response.context['personalizacao_colunas_tabela_personalizada_ativa'])
+
+    def test_tela_de_linhas_permite_ocultar_coluna_de_sistema_linha(self):
+        colunas = self._criar_colunas_para_linhas()
+        self._criar_linha_com_valores(colunas)
+        self._login_com_permissoes(
+            'user-linha-oculta-coluna-sistema',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk}),
+            {'colunas': str(colunas['texto'].pk)},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.context['mostrar_coluna_linha_tabela_personalizada'])
+        self.assertContains(response, 'Linha / identificacao')
+        self.assertNotContains(response, '<th>Linha</th>', html=False)
+        self.assertNotContains(response, 'Atualizada em')
+
+    def test_tela_de_linhas_retorna_para_todas_colunas_quando_query_de_selecao_e_invalida(self):
+        colunas = self._criar_colunas_para_linhas()
+        self._criar_linha_com_valores(colunas)
+        self._login_com_permissoes(
+            'user-linha-selecao-invalida',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk}),
+            {'colunas': '999999'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            [coluna.nome for coluna in response.context['colunas_visiveis']],
+            [coluna.nome for coluna in response.context['colunas_disponiveis_visualizacao']],
+        )
+        self.assertFalse(response.context['personalizacao_colunas_tabela_personalizada_ativa'])
+
+    def test_tela_de_linhas_nao_oferece_colunas_invisiveis_ou_arquivadas_na_selecao_temporaria(self):
+        colunas = self._criar_colunas_para_linhas()
+        self._criar_linha_com_valores(colunas)
+        self._login_com_permissoes(
+            'user-linha-opcoes-colunas',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk})
+        )
+
+        opcoes = {coluna.nome for coluna in response.context['colunas_disponiveis_visualizacao']}
+        self.assertIn(colunas['texto'].nome, opcoes)
+        self.assertIn(colunas['formula'].nome, opcoes)
+        self.assertNotIn(colunas['invisivel'].nome, opcoes)
+        self.assertNotIn(colunas['arquivada'].nome, opcoes)
+
+    def test_tela_de_linhas_ordena_por_texto_crescente(self):
+        colunas = self._criar_colunas_para_linhas()
+        linha_1 = self._criar_linha_com_valores(colunas)
+        linha_2 = self._criar_segunda_linha_com_valores(colunas)
+        self._login_com_permissoes(
+            'user-linha-ordena-texto',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk}),
+            {'ordenar': f'coluna_{colunas["texto"].pk}', 'direcao': 'asc'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(self._ordem_linhas_renderizadas(response)[:2], [linha_2.pk, linha_1.pk])
+
+    def test_tela_de_linhas_ordena_por_monetario_crescente_com_valor_numerico_real(self):
+        colunas = self._criar_colunas_para_linhas()
+        linha_1 = self._criar_linha_com_valores(colunas)
+        linha_2 = self._criar_segunda_linha_com_valores(colunas)
+        self._login_com_permissoes(
+            'user-linha-ordena-monetario',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk}),
+            {'ordenar': f'coluna_{colunas["monetario"].pk}', 'direcao': 'asc'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(self._ordem_linhas_renderizadas(response)[:2], [linha_2.pk, linha_1.pk])
+
+    def test_tela_de_linhas_ordena_por_data_decrescente(self):
+        colunas = self._criar_colunas_para_linhas()
+        linha_1 = self._criar_linha_com_valores(colunas)
+        linha_2 = self._criar_segunda_linha_com_valores(colunas)
+        self._login_com_permissoes(
+            'user-linha-ordena-data',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk}),
+            {'ordenar': f'coluna_{colunas["data"].pk}', 'direcao': 'desc'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(self._ordem_linhas_renderizadas(response)[:2], [linha_2.pk, linha_1.pk])
+
+    def test_tela_de_linhas_ordena_por_coluna_de_sistema_linha_decrescente(self):
+        colunas = self._criar_colunas_para_linhas()
+        linha_1 = self._criar_linha_com_valores(colunas)
+        linha_2 = self._criar_segunda_linha_com_valores(colunas)
+        self._login_com_permissoes(
+            'user-linha-ordena-sistema',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk}),
+            {'ordenar': 'sistema_linha', 'direcao': 'desc'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(self._ordem_linhas_renderizadas(response)[:2], [linha_2.pk, linha_1.pk])
+
     def test_tela_de_linhas_oculta_acoes_indevidas_para_usuario_apenas_visualizador(self):
         colunas = self._criar_colunas_para_linhas()
         self._criar_linha_com_valores(colunas)
@@ -8099,6 +8509,174 @@ class TabelasPersonalizadasListViewTests(TestCase):
         )
         self.assertNotContains(response, 'Configurar colunas')
         self.assertNotContains(response, 'Editar tabela')
+
+    def test_listagem_de_linhas_mostra_apenas_ativas_por_padrao_e_permite_filtrar_arquivadas(self):
+        colunas = self._criar_colunas_para_linhas()
+        self._criar_linha_com_valores(colunas)
+        linha_arquivada = self._criar_segunda_linha_com_valores(
+            colunas,
+            status=LinhaTabelaPersonalizada.StatusLinha.ARQUIVADA,
+        )
+        self._login_com_permissoes(
+            'user-linha-filtro-status',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+
+        url = reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk})
+        response_padrao = self.client.get(url)
+        response_arquivadas = self.client.get(url, {'status_linha': 'arquivadas'})
+
+        self.assertEqual(response_padrao.status_code, 200)
+        self.assertContains(response_padrao, 'Linhas exibidas')
+        self.assertContains(response_padrao, 'Somente ativas')
+        self.assertContains(response_padrao, 'Sabao liquido')
+        self.assertNotContains(response_padrao, 'Detergente concentrado')
+        self.assertEqual(response_arquivadas.status_code, 200)
+        self.assertContains(response_arquivadas, 'Detergente concentrado')
+        self.assertNotContains(response_arquivadas, 'Sabao liquido')
+        self.assertEqual(linha_arquivada.status, LinhaTabelaPersonalizada.StatusLinha.ARQUIVADA)
+
+    def test_acao_de_linha_arquiva_e_reativa_sem_excluir_registro(self):
+        colunas = self._criar_colunas_para_linhas()
+        linha = self._criar_linha_com_valores(colunas)
+        self._login_com_permissoes(
+            'user-linha-acao-status',
+            [
+                PermissoesTabelasPersonalizadas.EDITAR_LINHAS,
+                PermissoesTabelasPersonalizadas.VISUALIZAR,
+            ],
+        )
+
+        url = reverse(
+            'financeiro:tabela-personalizada-linha-action',
+            kwargs={'tabela_id': self.tabela.pk, 'pk': linha.pk},
+        )
+        return_to = reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk})
+        response_arquivar = self.client.post(url, {'acao': 'arquivar', 'return_to': return_to})
+
+        self.assertRedirects(response_arquivar, return_to)
+        linha.refresh_from_db()
+        self.assertEqual(linha.status, LinhaTabelaPersonalizada.StatusLinha.ARQUIVADA)
+        log_arquivar = self._ultimo_log_modelo('LinhaTabelaPersonalizada', registro_id=linha.pk)
+        self.assertEqual(log_arquivar.acao, AuditoriaFinanceiro.AcaoAuditoria.UPDATE)
+        self.assertEqual(log_arquivar.campos_alterados['status']['before'], LinhaTabelaPersonalizada.StatusLinha.ATIVA)
+        self.assertEqual(log_arquivar.campos_alterados['status']['after'], LinhaTabelaPersonalizada.StatusLinha.ARQUIVADA)
+
+        response_reativar = self.client.post(url, {'acao': 'reativar', 'return_to': return_to})
+
+        self.assertRedirects(response_reativar, return_to)
+        linha.refresh_from_db()
+        self.assertEqual(linha.status, LinhaTabelaPersonalizada.StatusLinha.ATIVA)
+        self.assertTrue(LinhaTabelaPersonalizada.objects.filter(pk=linha.pk).exists())
+
+    def test_acao_de_linha_exige_post_e_permissao(self):
+        colunas = self._criar_colunas_para_linhas()
+        linha = self._criar_linha_com_valores(colunas)
+        url = reverse(
+            'financeiro:tabela-personalizada-linha-action',
+            kwargs={'tabela_id': self.tabela.pk, 'pk': linha.pk},
+        )
+
+        self._login_com_permissoes(
+            'user-linha-acao-get',
+            [PermissoesTabelasPersonalizadas.EDITAR_LINHAS],
+        )
+        response_get = self.client.get(url)
+        self.assertEqual(response_get.status_code, 405)
+        linha.refresh_from_db()
+        self.assertEqual(linha.status, LinhaTabelaPersonalizada.StatusLinha.ATIVA)
+
+        self.client.logout()
+        self._login_com_permissoes(
+            'user-linha-acao-sem-permissao',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+        response_forbidden = self.client.post(url, {'acao': 'arquivar'})
+        self.assertEqual(response_forbidden.status_code, 403)
+        linha.refresh_from_db()
+        self.assertEqual(linha.status, LinhaTabelaPersonalizada.StatusLinha.ATIVA)
+
+    def test_exclusao_definitiva_de_linha_exige_confirmacao_e_apaga_apenas_a_linha(self):
+        colunas = self._criar_colunas_para_linhas()
+        linha = self._criar_linha_com_valores(colunas)
+        outra_linha = self._criar_segunda_linha_com_valores(colunas)
+        quantidade_valores_outra_linha = ValorTabelaPersonalizada.objects.filter(linha=outra_linha).count()
+        self._login_com_permissoes(
+            'user-linha-delete-definitivo',
+            [
+                PermissoesTabelasPersonalizadas.EDITAR_LINHAS,
+                PermissoesTabelasPersonalizadas.VISUALIZAR,
+            ],
+        )
+
+        url = reverse(
+            'financeiro:tabela-personalizada-linha-delete',
+            kwargs={'tabela_id': self.tabela.pk, 'pk': linha.pk},
+        )
+        return_to = reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk})
+
+        response_get = self.client.get(url)
+
+        self.assertEqual(response_get.status_code, 200)
+        self.assertContains(response_get, 'Excluir linha personalizada')
+        self.assertContains(
+            response_get,
+            'Excluir esta linha apagara tambem os valores preenchidos nela. Esta acao nao podera ser desfeita.',
+        )
+        self.assertTrue(LinhaTabelaPersonalizada.objects.filter(pk=linha.pk).exists())
+
+        response_post = self.client.post(url, {'return_to': return_to})
+
+        self.assertRedirects(response_post, return_to)
+        self.assertFalse(LinhaTabelaPersonalizada.objects.filter(pk=linha.pk).exists())
+        self.assertEqual(ValorTabelaPersonalizada.objects.filter(linha_id=linha.pk).count(), 0)
+        self.assertTrue(LinhaTabelaPersonalizada.objects.filter(pk=outra_linha.pk).exists())
+        self.assertEqual(
+            ValorTabelaPersonalizada.objects.filter(linha=outra_linha).count(),
+            quantidade_valores_outra_linha,
+        )
+        log = self._ultimo_log_modelo('LinhaTabelaPersonalizada', registro_id=linha.pk)
+        self.assertIsNotNone(log)
+        self.assertEqual(log.acao, AuditoriaFinanceiro.AcaoAuditoria.DELETE)
+
+    def test_exclusao_definitiva_de_linha_respeita_permissao(self):
+        colunas = self._criar_colunas_para_linhas()
+        linha = self._criar_linha_com_valores(colunas)
+        url = reverse(
+            'financeiro:tabela-personalizada-linha-delete',
+            kwargs={'tabela_id': self.tabela.pk, 'pk': linha.pk},
+        )
+        self._login_com_permissoes(
+            'user-linha-delete-sem-permissao',
+            [PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+
+        response = self.client.post(url)
+
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(LinhaTabelaPersonalizada.objects.filter(pk=linha.pk).exists())
+
+    def test_listagem_de_linhas_exibe_excluir_definitivamente_apenas_para_quem_pode_editar(self):
+        colunas = self._criar_colunas_para_linhas()
+        linha = self._criar_linha_com_valores(colunas)
+        self._login_com_permissoes(
+            'user-linha-delete-lista',
+            [PermissoesTabelasPersonalizadas.EDITAR_LINHAS, PermissoesTabelasPersonalizadas.VISUALIZAR],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk})
+        )
+
+        self.assertContains(response, 'Excluir')
+        self.assertNotContains(response, 'Excluir definitivamente')
+        self.assertContains(
+            response,
+            reverse(
+                'financeiro:tabela-personalizada-linha-delete',
+                kwargs={'tabela_id': self.tabela.pk, 'pk': linha.pk},
+            ),
+        )
 
     def test_botao_exportar_xlsx_nao_aparece_sem_permissao(self):
         colunas = self._criar_colunas_para_linhas()
@@ -8255,6 +8833,54 @@ class TabelasPersonalizadasListViewTests(TestCase):
         self.assertIn('Sabao liquido', conteudo)
         self.assertNotIn('Detergente concentrado', conteudo)
         self.assertIn('R$ 54,72', conteudo)
+
+    def test_exportacao_xlsx_respeita_colunas_selecionadas_na_visualizacao(self):
+        colunas = self._criar_colunas_para_linhas()
+        self._criar_linha_com_valores(colunas)
+        self._criar_segunda_linha_com_valores(colunas)
+        self._login_com_permissoes(
+            'user-linha-exporta-colunas-selecionadas',
+            [PermissoesTabelasPersonalizadas.EXPORTAR],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-export-xlsx', kwargs={'tabela_id': self.tabela.pk}),
+            {'colunas': f'{colunas["texto"].pk},{colunas["monetario"].pk}'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        conteudo = '\n'.join(' | '.join(linha) for linha in self._ler_linhas_xlsx(response.content))
+        self.assertIn('Descricao do item', conteudo)
+        self.assertIn('Valor unitario', conteudo)
+        self.assertIn('Sabao liquido', conteudo)
+        self.assertIn('R$ 50,72', conteudo)
+        self.assertNotIn('Quantidade prevista', conteudo)
+        self.assertNotIn('Campo calculado futuro', conteudo)
+
+    def test_exportacao_xlsx_respeita_ordenacao_atual_da_visualizacao(self):
+        colunas = self._criar_colunas_para_linhas()
+        self._criar_linha_com_valores(colunas)
+        self._criar_segunda_linha_com_valores(colunas)
+        self._login_com_permissoes(
+            'user-linha-exporta-ordenacao',
+            [PermissoesTabelasPersonalizadas.EXPORTAR],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:tabela-personalizada-linha-export-xlsx', kwargs={'tabela_id': self.tabela.pk}),
+            {
+                'ordenar': f'coluna_{colunas["texto"].pk}',
+                'direcao': 'asc',
+                'colunas': f'{colunas["texto"].pk},{colunas["monetario"].pk}',
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        linhas = self._ler_linhas_xlsx(response.content)
+        conteudo = [' | '.join(linha) for linha in linhas]
+        linha_detergente = next(indice for indice, linha in enumerate(conteudo) if 'Detergente concentrado' in linha)
+        linha_sabao = next(indice for indice, linha in enumerate(conteudo) if 'Sabao liquido' in linha)
+        self.assertLess(linha_detergente, linha_sabao)
 
     def test_exportacao_xlsx_respeita_busca_e_filtro_estruturado(self):
         colunas = self._criar_colunas_para_linhas()

@@ -4756,3 +4756,73 @@ Status de homologacao da usuaria:
 - nessa consulta contextual, o usuario pode ver criacao/alteracoes do documento sem misturar eventos de outros modelos com o mesmo ID
 - a gravacao da auditoria nao foi alterada; apenas o acesso/consulta foi simplificado
 - sem impacto em calculo financeiro, extrato, resumo, prestacao/fechamento, balancete, recibos ou financeiro oficial
+
+## Microetapa: UX operacional de tabelas personalizadas
+
+- corrigi a sobreposicao visual entre titulo e subtitulo nos formularios de:
+  - coluna personalizada
+  - linha personalizada
+  - tabela personalizada
+- a tela de linhas permaneceu como visualizacao operacional central da tabela e agora explicita melhor:
+  - nome
+  - descricao
+  - status
+  - quantidade de colunas ativas e visiveis
+  - quantidade de linhas ativas
+- a visualizacao principal continua limpa por padrao:
+  - mostra apenas colunas `ativas` e `visiveis`
+  - mostra apenas linhas `ativas`
+  - linhas arquivadas podem ser consultadas por filtro de status sem poluir a tela principal
+- a listagem de colunas ganhou acoes seguras por `POST` + `CSRF` para:
+  - `Ocultar` / `Mostrar`
+  - `Inativar` / `Reativar`
+  - `Arquivar`
+- a listagem de linhas ganhou acao segura por `POST` + `CSRF` para:
+  - `Arquivar`
+  - `Reativar`
+- nao houve exclusao fisica destrutiva de linhas/colunas; a remocao operacional continua sendo logica por status/visibilidade
+- a auditoria operacional ja validada foi preservada e passou a registrar tambem essas mudancas de status/visibilidade sem duplicar logs
+- sem alteracao em formulas, filtros estruturados, totalizadores, exportacao XLSX ou financeiro oficial
+
+## Complemento: totalizador em formula controlada
+
+- coluna `formula_controlada` passou a aceitar totalizador quando a formula estiver valida, habilitada e com `resultado_tipo` numerico elegivel:
+  - `decimal`
+  - `monetario`
+- o totalizador continua sem criar persistencia nova: usa o mesmo resultado calculado em tempo de leitura que ja aparece por linha na visualizacao da tabela
+- formulas incompletas, invalidas ou desabilitadas continuam sem aceitar totalizador
+- a coluna calculada continua sem aceitar valor manual
+- os totalizadores de colunas comuns permaneceram inalterados
+- a exportacao XLSX da tabela personalizada passou a refletir o mesmo totalizador calculado das formulas quando essa coluna estiver visivel e configurada
+
+## Complemento: exclusao definitiva de linhas e colunas personalizadas
+
+- as acoes seguras de uso cotidiano foram preservadas:
+  - linha: arquivar / reativar
+  - coluna: ocultar / mostrar / inativar / reativar / arquivar
+- alem delas, linhas e colunas passaram a ter acao secundaria de `Excluir`
+- a exclusao definitiva:
+  - usa tela de confirmacao
+  - usa `POST` com `CSRF`
+  - nao ocorre por `GET`
+  - exibe aviso explicito sobre perda dos dados vinculados
+- linha excluida remove tambem os valores daquela linha por cascade
+- coluna excluida remove os valores daquela coluna por cascade, sem apagar a tabela nem outras colunas/linhas
+- quando uma coluna ainda e usada como origem por outra formula guiada, a exclusao definitiva e bloqueada com mensagem clara
+- a auditoria operacional continua registrando essas exclusoes sem alterar o financeiro oficial
+
+## Microetapa: visualizacao limpa e impressao de tabela personalizada
+
+- a tela principal de linhas da tabela personalizada passou a oferecer selecao temporaria de colunas por query string, sem alterar a estrutura permanente da tabela
+- a coluna de sistema `Linha / identificacao` passou a ser controlavel na mesma selecao temporaria da visualizacao
+- a visualizacao tambem passou a aceitar ordenacao manual temporaria por query string, com:
+  - coluna escolhida pelo usuario
+  - direcao crescente ou decrescente
+- a visualizacao pode operar em `Visual limpo`, reduzindo o ruido administrativo sem remover acoes nem mudar permissoes
+- a impressao local passa a respeitar exatamente o recorte visivel:
+  - busca textual
+  - filtros estruturados aplicados
+  - filtro de status das linhas
+  - colunas temporariamente selecionadas
+  - ordenacao atual
+- a exportacao XLSX continua disponivel e, nesta etapa, tambem respeita a selecao temporaria de colunas exibidas

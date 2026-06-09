@@ -4406,6 +4406,8 @@ class FinanceiroDeleteMixin(FinanceiroReturnToMixin, FinanceiroPermissaoMixin, D
     template_name = 'financeiro/confirm_delete.html'
     success_message = 'Registro excluido com sucesso.'
     page_title = 'Confirmar exclusao'
+    confirm_button_label = 'Confirmar exclusao'
+    delete_warning_message = ''
     cancel_url = reverse_lazy('financeiro:home')
 
     def get_context_data(self, **kwargs):
@@ -4414,6 +4416,8 @@ class FinanceiroDeleteMixin(FinanceiroReturnToMixin, FinanceiroPermissaoMixin, D
         context['cancel_url'] = self.get_cancel_url()
         context['return_to'] = self._get_return_to_url()
         context['object_label'] = str(self.object)
+        context['confirm_button_label'] = self.confirm_button_label
+        context['delete_warning_message'] = self.delete_warning_message
         return context
 
     def form_valid(self, form):
@@ -8702,8 +8706,19 @@ class TabelaPersonalizadaListView(FinanceiroPermissaoMixin, ListView):
 
     def get_queryset(self):
         queryset = super().get_queryset().annotate(
-            quantidade_colunas=Count('colunas', distinct=True),
-            quantidade_linhas=Count('linhas', distinct=True),
+            quantidade_colunas=Count(
+                'colunas',
+                filter=Q(
+                    colunas__status=ColunaPersonalizada.StatusColuna.ATIVA,
+                    colunas__visivel=True,
+                ),
+                distinct=True,
+            ),
+            quantidade_linhas=Count(
+                'linhas',
+                filter=Q(linhas__status=LinhaTabelaPersonalizada.StatusLinha.ATIVA),
+                distinct=True,
+            ),
         )
         nome = self.request.GET.get('nome', '').strip()
         status = self.request.GET.get('status', '').strip()
@@ -8861,7 +8876,10 @@ class TabelaPersonalizadaColunaCreateView(FinanceiroFormMixin, CreateView):
         return super().dispatch(request, *args, **kwargs)
 
     def get_success_url(self):
-        return reverse('financeiro:tabela-personalizada-coluna-list', kwargs={'tabela_id': self.tabela.pk})
+        return self._get_return_to_url() or reverse(
+            'financeiro:tabela-personalizada-coluna-list',
+            kwargs={'tabela_id': self.tabela.pk},
+        )
 
     def get_cancel_url(self):
         return self._get_return_to_url() or self.get_success_url()
@@ -8953,6 +8971,144 @@ class TabelaPersonalizadaColunaUpdateView(FinanceiroFormMixin, UpdateView):
             depois=_snapshot_coluna_personalizada(self.object),
         )
         return response
+
+
+class TabelaPersonalizadaColunaDeleteView(FinanceiroDeleteMixin):
+    permissao_requerida = PermissoesTabelasPersonalizadas.EDITAR_ESTRUTURA
+    model = ColunaPersonalizada
+    page_title = 'Excluir coluna personalizada'
+    success_message = 'Coluna personalizada excluida com sucesso.'
+    confirm_button_label = 'Excluir'
+    delete_warning_message = (
+        'Excluir esta coluna apagara tambem os valores desta coluna nas linhas da tabela. '
+        'Esta acao nao podera ser desfeita.'
+    )
+
+    def dispatch(self, request, *args, **kwargs):
+        self.tabela = get_object_or_404(TabelaPersonalizada, pk=self.kwargs['tabela_id'])
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_queryset(self):
+        return super().get_queryset().filter(tabela=self.tabela)
+
+    def get_success_url(self):
+        return self._get_return_to_url() or reverse(
+            'financeiro:tabela-personalizada-coluna-list',
+            kwargs={'tabela_id': self.tabela.pk},
+        )
+
+    def get_cancel_url(self):
+        return self._get_return_to_url() or self.get_success_url()
+
+    def _colunas_dependentes_formula(self) -> list[ColunaPersonalizada]:
+        dependentes: list[ColunaPersonalizada] = []
+        for coluna in ColunaPersonalizada.objects.filter(
+            tabela=self.tabela,
+            tipo_dado=ColunaPersonalizada.TipoDado.FORMULA_CONTROLADA,
+            calculada=True,
+        ).exclude(pk=self.object.pk).order_by('ordem', 'nome', 'pk'):
+            operandos = coluna.formula_config.get('operandos', [])
+            if isinstance(operandos, list) and self.object.pk in operandos:
+                dependentes.append(coluna)
+        return dependentes
+
+    def form_valid(self, form):
+        self.object = self.get_object()
+        colunas_dependentes = self._colunas_dependentes_formula()
+        if colunas_dependentes:
+            nomes_dependentes = ', '.join(coluna.nome for coluna in colunas_dependentes[:3])
+            if len(colunas_dependentes) > 3:
+                nomes_dependentes = f'{nomes_dependentes} e outras'
+            messages.error(
+                self.request,
+                (
+                    'Esta coluna nao pode ser excluida porque ainda e usada como origem em formula guiada: '
+                    f'{nomes_dependentes}.'
+                ),
+            )
+            return redirect(self.get_cancel_url())
+        registro_id = self.object.pk
+        antes = _snapshot_coluna_personalizada(self.object)
+        with transaction.atomic():
+            self.object.delete()
+            AuditoriaFinanceiro.objects.create(
+                acao=AuditoriaFinanceiro.AcaoAuditoria.DELETE,
+                modelo='ColunaPersonalizada',
+                registro_id=registro_id,
+                usuario=_auditoria_usuario(self.request),
+                campos_alterados=_build_auditoria_payload(antes, None),
+            )
+        messages.success(self.request, self.success_message)
+        return redirect(self.get_success_url())
+
+
+class TabelaPersonalizadaColunaAcaoView(FinanceiroReturnToMixin, FinanceiroPermissaoMixin, View):
+    permissao_requerida = PermissoesTabelasPersonalizadas.EDITAR_ESTRUTURA
+
+    acoes_validas = {
+        'inativar': {
+            'status': ColunaPersonalizada.StatusColuna.INATIVA,
+            'mensagem': 'Coluna inativada com sucesso.',
+        },
+        'reativar': {
+            'status': ColunaPersonalizada.StatusColuna.ATIVA,
+            'mensagem': 'Coluna reativada com sucesso.',
+        },
+        'arquivar': {
+            'status': ColunaPersonalizada.StatusColuna.ARQUIVADA,
+            'mensagem': 'Coluna arquivada com sucesso.',
+        },
+        'ocultar': {
+            'visivel': False,
+            'mensagem': 'Coluna ocultada da tela principal com sucesso.',
+        },
+        'mostrar': {
+            'visivel': True,
+            'mensagem': 'Coluna exibida novamente na tela principal.',
+        },
+    }
+
+    def dispatch(self, request, *args, **kwargs):
+        self.tabela = get_object_or_404(TabelaPersonalizada, pk=self.kwargs['tabela_id'])
+        self.coluna = get_object_or_404(
+            ColunaPersonalizada,
+            pk=self.kwargs['pk'],
+            tabela=self.tabela,
+        )
+        return super().dispatch(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        acao = (request.POST.get('acao') or '').strip()
+        configuracao = self.acoes_validas.get(acao)
+        if configuracao is None:
+            raise Http404('Acao de coluna personalizada invalida.')
+
+        antes = _snapshot_coluna_personalizada(
+            ColunaPersonalizada.objects.prefetch_related('totalizadores').get(pk=self.coluna.pk)
+        )
+        campos_update = []
+        if 'status' in configuracao and self.coluna.status != configuracao['status']:
+            self.coluna.status = configuracao['status']
+            campos_update.append('status')
+        if 'visivel' in configuracao and self.coluna.visivel != configuracao['visivel']:
+            self.coluna.visivel = configuracao['visivel']
+            campos_update.append('visivel')
+
+        if campos_update:
+            self.coluna.save(update_fields=campos_update)
+            _registrar_auditoria_coluna_personalizada(
+                request=request,
+                acao=AuditoriaFinanceiro.AcaoAuditoria.UPDATE,
+                coluna=self.coluna,
+                antes=antes,
+                depois=_snapshot_coluna_personalizada(self.coluna),
+            )
+
+        messages.success(request, configuracao['mensagem'])
+        return redirect(
+            self._get_return_to_url()
+            or reverse('financeiro:tabela-personalizada-coluna-list', kwargs={'tabela_id': self.tabela.pk})
+        )
 
 
 def _formatar_valor_linha_tabela(coluna: ColunaPersonalizada, valor: ValorTabelaPersonalizada | None) -> str:
@@ -9158,18 +9314,25 @@ def _formatar_resultado_totalizador(coluna: ColunaPersonalizada, tipo_totalizado
     if tipo_totalizador == TotalizadorColunaPersonalizada.TipoTotalizador.CONTAGEM:
         return str(valor)
 
-    if coluna.tipo_dado == ColunaPersonalizada.TipoDado.DATA:
+    tipo_totalizador_coluna = coluna.tipo_dado_totalizador()
+    if tipo_totalizador_coluna == ColunaPersonalizada.TipoDado.DATA:
         return valor.strftime('%d/%m/%Y') if valor else ''
 
     if valor is None:
         return ''
 
-    if coluna.tipo_dado == ColunaPersonalizada.TipoDado.INTEIRO:
+    if tipo_totalizador_coluna == ColunaPersonalizada.TipoDado.INTEIRO:
         return str(int(valor))
-    if coluna.tipo_dado == ColunaPersonalizada.TipoDado.MONETARIO:
+    if tipo_totalizador_coluna == ColunaPersonalizada.TipoDado.MONETARIO:
         return f'R$ {valor:.2f}'
-    if coluna.tipo_dado == ColunaPersonalizada.TipoDado.PERCENTUAL:
+    if tipo_totalizador_coluna == ColunaPersonalizada.TipoDado.PERCENTUAL:
         return f"{format(valor, '.4f').rstrip('0').rstrip('.')}%"
+    if (
+        coluna.tipo_dado == ColunaPersonalizada.TipoDado.FORMULA_CONTROLADA
+        and tipo_totalizador_coluna == ColunaPersonalizada.TipoDado.DECIMAL
+        and coluna.formula_casas_decimais is not None
+    ):
+        return format(valor, f'.{coluna.formula_casas_decimais}f').rstrip('0').rstrip('.')
     return format(valor, '.8f').rstrip('0').rstrip('.')
 
 
@@ -9217,18 +9380,29 @@ def _formatar_resultado_totalizador_xlsx(coluna: ColunaPersonalizada, tipo_total
     if tipo_totalizador == TotalizadorColunaPersonalizada.TipoTotalizador.CONTAGEM:
         return str(valor)
 
-    if coluna.tipo_dado == ColunaPersonalizada.TipoDado.DATA:
+    tipo_totalizador_coluna = coluna.tipo_dado_totalizador()
+    if tipo_totalizador_coluna == ColunaPersonalizada.TipoDado.DATA:
         return valor.strftime('%d/%m/%Y') if valor else ''
 
     if valor is None:
         return ''
 
-    if coluna.tipo_dado == ColunaPersonalizada.TipoDado.INTEIRO:
+    if tipo_totalizador_coluna == ColunaPersonalizada.TipoDado.INTEIRO:
         return str(int(valor))
-    if coluna.tipo_dado == ColunaPersonalizada.TipoDado.MONETARIO:
+    if tipo_totalizador_coluna == ColunaPersonalizada.TipoDado.MONETARIO:
         return f"R$ {_formatar_decimal_brasileiro(valor, casas_decimais_maximas=2, casas_decimais_fixas=True)}"
-    if coluna.tipo_dado == ColunaPersonalizada.TipoDado.PERCENTUAL:
+    if tipo_totalizador_coluna == ColunaPersonalizada.TipoDado.PERCENTUAL:
         return f"{_formatar_decimal_brasileiro(valor, casas_decimais_maximas=4)}%"
+    if (
+        coluna.tipo_dado == ColunaPersonalizada.TipoDado.FORMULA_CONTROLADA
+        and tipo_totalizador_coluna == ColunaPersonalizada.TipoDado.DECIMAL
+        and coluna.formula_casas_decimais is not None
+    ):
+        return _formatar_decimal_brasileiro(
+            valor,
+            casas_decimais_maximas=coluna.formula_casas_decimais,
+            casas_decimais_fixas=True,
+        )
     return _formatar_decimal_brasileiro(valor, casas_decimais_maximas=8)
 
 
@@ -9236,7 +9410,25 @@ def _calcular_totalizador_coluna(
     coluna: ColunaPersonalizada,
     tipo_totalizador: str,
     valores: list[ValorTabelaPersonalizada],
+    *,
+    valores_formula: list[Decimal] | None = None,
 ):
+    if coluna.tipo_dado == ColunaPersonalizada.TipoDado.FORMULA_CONTROLADA:
+        numeros_formula = list(valores_formula or [])
+        if tipo_totalizador == TotalizadorColunaPersonalizada.TipoTotalizador.CONTAGEM:
+            return len(numeros_formula)
+        if not numeros_formula:
+            return None
+        if tipo_totalizador == TotalizadorColunaPersonalizada.TipoTotalizador.SOMA:
+            return sum(numeros_formula, Decimal('0'))
+        if tipo_totalizador == TotalizadorColunaPersonalizada.TipoTotalizador.MEDIA:
+            return sum(numeros_formula, Decimal('0')) / Decimal(len(numeros_formula))
+        if tipo_totalizador == TotalizadorColunaPersonalizada.TipoTotalizador.MINIMO:
+            return min(numeros_formula)
+        if tipo_totalizador == TotalizadorColunaPersonalizada.TipoTotalizador.MAXIMO:
+            return max(numeros_formula)
+        return None
+
     if tipo_totalizador == TotalizadorColunaPersonalizada.TipoTotalizador.CONTAGEM:
         return len(valores)
 
@@ -9267,7 +9459,13 @@ def _calcular_totalizador_coluna(
 
 def _obter_colunas_visiveis_tabela_personalizada(tabela: TabelaPersonalizada) -> list[ColunaPersonalizada]:
     return list(
-        TabelaPersonalizadaLinhaForm.colunas_editaveis_queryset(tabela).prefetch_related('totalizadores')
+        ColunaPersonalizada.objects.filter(
+            tabela=tabela,
+            status=ColunaPersonalizada.StatusColuna.ATIVA,
+            visivel=True,
+        )
+        .prefetch_related('totalizadores')
+        .order_by('ordem', 'nome', 'pk')
     )
 
 
@@ -9277,7 +9475,52 @@ def _obter_colunas_listagem_tabela_personalizada(tabela: TabelaPersonalizada) ->
             tabela=tabela,
             status=ColunaPersonalizada.StatusColuna.ATIVA,
             visivel=True,
-        ).prefetch_related('totalizadores')
+        )
+        .prefetch_related('totalizadores')
+        .order_by('ordem', 'nome', 'pk')
+    )
+
+
+def _resolver_colunas_mostradas_tabela_personalizada(
+    tabela: TabelaPersonalizada,
+    colunas_parametro: str,
+) -> tuple[list[ColunaPersonalizada], list[ColunaPersonalizada], list[int], bool, bool]:
+    colunas_disponiveis = _obter_colunas_visiveis_tabela_personalizada(tabela)
+    if not colunas_disponiveis:
+        return [], [], [], False, True
+
+    ids_disponiveis = {coluna.pk for coluna in colunas_disponiveis}
+    colunas_selecionadas_ids: list[int] = []
+    mostrar_coluna_linha = False
+    for trecho in (colunas_parametro or '').split(','):
+        valor = trecho.strip()
+        if not valor:
+            continue
+        if valor == 'sistema_linha':
+            mostrar_coluna_linha = True
+            continue
+        if not valor.isdigit():
+            continue
+        coluna_id = int(valor)
+        if coluna_id in ids_disponiveis and coluna_id not in colunas_selecionadas_ids:
+            colunas_selecionadas_ids.append(coluna_id)
+
+    if not colunas_selecionadas_ids and not mostrar_coluna_linha:
+        colunas_selecionadas_ids = [coluna.pk for coluna in colunas_disponiveis]
+        mostrar_coluna_linha = True
+
+    ids_selecionados = set(colunas_selecionadas_ids)
+    colunas_mostradas = [coluna for coluna in colunas_disponiveis if coluna.pk in ids_selecionados]
+    personalizacao_ativa = (
+        len(colunas_mostradas) != len(colunas_disponiveis)
+        or not mostrar_coluna_linha
+    )
+    return (
+        colunas_disponiveis,
+        colunas_mostradas,
+        colunas_selecionadas_ids,
+        personalizacao_ativa,
+        mostrar_coluna_linha,
     )
 
 
@@ -9289,15 +9532,17 @@ def _obter_colunas_filtraveis_tabela_personalizada(tabela: TabelaPersonalizada) 
     ]
 
 
-def _obter_queryset_linhas_tabela_personalizada(tabela: TabelaPersonalizada):
-    return (
-        LinhaTabelaPersonalizada.objects.filter(
-            tabela=tabela,
-            status=LinhaTabelaPersonalizada.StatusLinha.ATIVA,
-        )
-        .prefetch_related('valores__coluna')
-        .order_by('ordem', 'pk')
-    )
+def _obter_queryset_linhas_tabela_personalizada(
+    tabela: TabelaPersonalizada,
+    *,
+    status_linha: str = 'ativas',
+):
+    queryset = LinhaTabelaPersonalizada.objects.filter(tabela=tabela)
+    if status_linha == 'arquivadas':
+        queryset = queryset.filter(status=LinhaTabelaPersonalizada.StatusLinha.ARQUIVADA)
+    elif status_linha != 'todas':
+        queryset = queryset.filter(status=LinhaTabelaPersonalizada.StatusLinha.ATIVA)
+    return queryset.prefetch_related('valores__coluna').order_by('ordem', 'pk')
 
 
 def _filtrar_linhas_tabela_personalizada(
@@ -9460,6 +9705,106 @@ def _representacoes_busca_formula_linha(
     return (base, base.replace('.', ','))
 
 
+def _valor_ordenacao_coluna_tabela_personalizada(
+    coluna: ColunaPersonalizada,
+    valores_linha_por_coluna: dict[int, ValorTabelaPersonalizada],
+):
+    if coluna.calculada and coluna.tipo_dado == ColunaPersonalizada.TipoDado.FORMULA_CONTROLADA:
+        resultado_formula = _resolver_resultado_formula_guiada_linha(coluna, valores_linha_por_coluna)
+        if resultado_formula is None:
+            return None
+        return resultado_formula[0]
+
+    valor = valores_linha_por_coluna.get(coluna.pk)
+    if valor is None:
+        return None
+
+    if coluna.tipo_dado in (
+        ColunaPersonalizada.TipoDado.INTEIRO,
+        ColunaPersonalizada.TipoDado.DECIMAL,
+        ColunaPersonalizada.TipoDado.MONETARIO,
+        ColunaPersonalizada.TipoDado.PERCENTUAL,
+    ):
+        return valor.valor_numero
+    if coluna.tipo_dado == ColunaPersonalizada.TipoDado.DATA:
+        return valor.valor_data
+    if coluna.tipo_dado == ColunaPersonalizada.TipoDado.MES_COMPETENCIA:
+        competencia = (valor.valor_texto or '').strip()
+        if not re.match(r'^\d{2}/\d{4}$', competencia):
+            return None
+        mes, ano = competencia.split('/')
+        return int(ano), int(mes)
+    if coluna.tipo_dado == ColunaPersonalizada.TipoDado.BOOLEANO:
+        if valor.valor_booleano is None:
+            return None
+        return 1 if valor.valor_booleano else 0
+    if coluna.tipo_dado in (
+        ColunaPersonalizada.TipoDado.LISTA_OPCOES,
+        ColunaPersonalizada.TipoDado.TEXTO_CURTO,
+        ColunaPersonalizada.TipoDado.TEXTO_LONGO,
+    ):
+        return (valor.valor_texto or '').casefold()
+    return None
+
+
+def _opcoes_ordenacao_tabela_personalizada(
+    colunas_disponiveis: list[ColunaPersonalizada],
+) -> list[dict[str, str]]:
+    opcoes = [{'valor': 'sistema_linha', 'label': 'Linha / identificacao'}]
+    for coluna in colunas_disponiveis:
+        if (
+            coluna.tipo_dado == ColunaPersonalizada.TipoDado.FORMULA_CONTROLADA
+            and not coluna.formula_habilitada
+        ):
+            continue
+        opcoes.append({'valor': f'coluna_{coluna.pk}', 'label': coluna.nome})
+    return opcoes
+
+
+def _ordenar_linhas_tabela_personalizada(
+    linhas: list[LinhaTabelaPersonalizada],
+    *,
+    ordenar_por: str,
+    direcao: str,
+    colunas_disponiveis: list[ColunaPersonalizada],
+) -> list[LinhaTabelaPersonalizada]:
+    direcao_normalizada = 'desc' if direcao == 'desc' else 'asc'
+    reverse = direcao_normalizada == 'desc'
+    if ordenar_por == 'sistema_linha':
+        return sorted(linhas, key=lambda linha: linha.pk, reverse=reverse)
+
+    if not ordenar_por.startswith('coluna_'):
+        return linhas
+
+    try:
+        coluna_id = int(ordenar_por.replace('coluna_', '', 1))
+    except ValueError:
+        return linhas
+
+    coluna_por_id = {coluna.pk: coluna for coluna in colunas_disponiveis}
+    coluna = coluna_por_id.get(coluna_id)
+    if coluna is None:
+        return linhas
+
+    linhas_com_valor: list[tuple[object, LinhaTabelaPersonalizada]] = []
+    linhas_sem_valor: list[LinhaTabelaPersonalizada] = []
+    for linha in linhas:
+        valores_linha_por_coluna = {
+            valor.coluna_id: valor
+            for valor in linha.valores.all()
+        }
+        valor_ordenacao = _valor_ordenacao_coluna_tabela_personalizada(coluna, valores_linha_por_coluna)
+        if valor_ordenacao is None:
+            linhas_sem_valor.append(linha)
+            continue
+        linhas_com_valor.append((valor_ordenacao, linha))
+
+    linhas_ordenadas = [
+        linha for _valor, linha in sorted(linhas_com_valor, key=lambda item: item[0], reverse=reverse)
+    ]
+    return linhas_ordenadas + linhas_sem_valor
+
+
 def _montar_renderizacao_linhas_tabela_personalizada(
     colunas_visiveis: list[ColunaPersonalizada],
     colunas_totalizaveis: list[ColunaPersonalizada],
@@ -9471,6 +9816,11 @@ def _montar_renderizacao_linhas_tabela_personalizada(
     valores_totalizadores_por_coluna: dict[int, list[ValorTabelaPersonalizada]] = {
         coluna.pk: [] for coluna in colunas_totalizaveis
     }
+    valores_formula_totalizadores_por_coluna: dict[int, list[Decimal]] = {
+        coluna.pk: []
+        for coluna in colunas_totalizaveis
+        if coluna.tipo_dado == ColunaPersonalizada.TipoDado.FORMULA_CONTROLADA
+    }
 
     for linha in linhas:
         valores_linha_por_coluna = {
@@ -9481,6 +9831,13 @@ def _montar_renderizacao_linhas_tabela_personalizada(
         for coluna_id, valor in valores_linha_por_coluna.items():
             if coluna_id in colunas_totalizaveis_ids:
                 valores_totalizadores_por_coluna.setdefault(coluna_id, []).append(valor)
+        for coluna in colunas_totalizaveis:
+            if coluna.pk not in valores_formula_totalizadores_por_coluna:
+                continue
+            resultado_formula = _resolver_resultado_formula_guiada_linha(coluna, valores_linha_por_coluna)
+            if resultado_formula is None:
+                continue
+            valores_formula_totalizadores_por_coluna[coluna.pk].append(resultado_formula[0])
         celulas = [
             {
                 'coluna': coluna,
@@ -9505,6 +9862,7 @@ def _montar_renderizacao_linhas_tabela_personalizada(
                 coluna,
                 totalizador.tipo_totalizador,
                 valores_totalizadores_por_coluna.get(coluna.pk, []),
+                valores_formula=valores_formula_totalizadores_por_coluna.get(coluna.pk, []),
             )
             if resultado is None:
                 continue
@@ -9529,27 +9887,54 @@ def _montar_estado_linhas_tabela_personalizada(
     tabela: TabelaPersonalizada,
     termo_busca_linhas: str,
     filtros_estruturados: list[dict[str, object]] | None = None,
+    *,
+    status_linha: str = 'ativas',
+    colunas_parametro: str = '',
+    ordenar_por: str = '',
+    direcao_ordenacao: str = 'asc',
 ) -> dict[str, object]:
-    colunas_listagem = _obter_colunas_listagem_tabela_personalizada(tabela)
-    colunas_visiveis = _obter_colunas_visiveis_tabela_personalizada(tabela)
-    linhas = _filtrar_linhas_tabela_personalizada(
-        _obter_queryset_linhas_tabela_personalizada(tabela),
+    (
+        colunas_disponiveis_visualizacao,
         colunas_listagem,
+        colunas_selecionadas_ids,
+        personalizacao_colunas_ativa,
+        mostrar_coluna_linha,
+    ) = _resolver_colunas_mostradas_tabela_personalizada(tabela, colunas_parametro)
+    linhas = _filtrar_linhas_tabela_personalizada(
+        _obter_queryset_linhas_tabela_personalizada(tabela, status_linha=status_linha),
+        colunas_disponiveis_visualizacao,
         termo_busca_linhas,
         filtros_estruturados,
+    )
+    opcoes_ordenacao = _opcoes_ordenacao_tabela_personalizada(colunas_disponiveis_visualizacao)
+    valores_ordenacao_validos = {opcao['valor'] for opcao in opcoes_ordenacao}
+    ordenar_por_normalizado = ordenar_por if ordenar_por in valores_ordenacao_validos else 'sistema_linha'
+    direcao_ordenacao_normalizada = 'desc' if direcao_ordenacao == 'desc' else 'asc'
+    linhas = _ordenar_linhas_tabela_personalizada(
+        linhas,
+        ordenar_por=ordenar_por_normalizado,
+        direcao=direcao_ordenacao_normalizada,
+        colunas_disponiveis=colunas_disponiveis_visualizacao,
     )
     (
         linhas_renderizadas,
         totalizadores_renderizados,
         possui_totalizadores,
-    ) = _montar_renderizacao_linhas_tabela_personalizada(colunas_listagem, colunas_visiveis, linhas)
+    ) = _montar_renderizacao_linhas_tabela_personalizada(colunas_listagem, colunas_listagem, linhas)
     return {
         'colunas_visiveis': colunas_listagem,
+        'colunas_disponiveis_visualizacao': colunas_disponiveis_visualizacao,
+        'colunas_selecionadas_ids': colunas_selecionadas_ids,
+        'personalizacao_colunas_ativa': personalizacao_colunas_ativa,
+        'mostrar_coluna_linha': mostrar_coluna_linha,
+        'opcoes_ordenacao': opcoes_ordenacao,
+        'ordenar_por': ordenar_por_normalizado,
+        'direcao_ordenacao': direcao_ordenacao_normalizada,
         'colunas_filtraveis': [
-            coluna for coluna in colunas_visiveis if coluna.filtro_estruturado_habilitado
+            coluna for coluna in colunas_disponiveis_visualizacao if coluna.filtro_estruturado_habilitado
         ],
         'colunas_exportacao': colunas_listagem,
-        'colunas_totalizaveis': colunas_visiveis,
+        'colunas_totalizaveis': colunas_listagem,
         'linhas': linhas,
         'linhas_renderizadas': linhas_renderizadas,
         'totalizadores_renderizados': totalizadores_renderizados,
@@ -9583,6 +9968,11 @@ def _montar_linhas_exportacao_tabela_personalizada_xlsx(
     valores_totalizadores_por_coluna: dict[int, list[ValorTabelaPersonalizada]] = {
         coluna.pk: [] for coluna in colunas_totalizaveis
     }
+    valores_formula_totalizadores_por_coluna: dict[int, list[Decimal]] = {
+        coluna.pk: []
+        for coluna in colunas_totalizaveis
+        if coluna.tipo_dado == ColunaPersonalizada.TipoDado.FORMULA_CONTROLADA
+    }
     for linha in linhas:
         valores_linha_por_coluna = {
             valor.coluna_id: valor
@@ -9592,6 +9982,13 @@ def _montar_linhas_exportacao_tabela_personalizada_xlsx(
         for coluna_id, valor in valores_linha_por_coluna.items():
             if coluna_id in colunas_totalizaveis_ids:
                 valores_totalizadores_por_coluna.setdefault(coluna_id, []).append(valor)
+        for coluna in colunas_totalizaveis:
+            if coluna.pk not in valores_formula_totalizadores_por_coluna:
+                continue
+            resultado_formula = _resolver_resultado_formula_guiada_linha(coluna, valores_linha_por_coluna)
+            if resultado_formula is None:
+                continue
+            valores_formula_totalizadores_por_coluna[coluna.pk].append(resultado_formula[0])
         linhas_xlsx.append(
             [
                 (
@@ -9614,6 +10011,7 @@ def _montar_linhas_exportacao_tabela_personalizada_xlsx(
                 coluna,
                 totalizador.tipo_totalizador,
                 valores_totalizadores_por_coluna.get(coluna.pk, []),
+                valores_formula=valores_formula_totalizadores_por_coluna.get(coluna.pk, []),
             )
             if resultado is None:
                 continue
@@ -9671,9 +10069,46 @@ class TabelaPersonalizadaLinhaListView(FinanceiroPermissaoMixin, ListView):
     template_name = 'financeiro/tabela_personalizada_linha_list.html'
     context_object_name = 'linhas_personalizadas'
 
+    status_linha_choices = (
+        ('ativas', 'Somente ativas'),
+        ('arquivadas', 'Somente arquivadas'),
+        ('todas', 'Ativas e arquivadas'),
+    )
+
+    def _build_current_list_url(self, **updates) -> str:
+        query = self.request.GET.copy()
+        for chave, valor in updates.items():
+            if valor in (None, ''):
+                query.pop(chave, None)
+            else:
+                query[chave] = valor
+        query_string = query.urlencode()
+        if query_string:
+            return f'{self.request.path}?{query_string}'
+        return self.request.path
+
+    def _campos_preservados_visualizacao(self) -> list[dict[str, str]]:
+        campos: list[dict[str, str]] = []
+        for chave, valores in self.request.GET.lists():
+            if chave in {'colunas', 'ordenar', 'direcao'}:
+                continue
+            for valor in valores:
+                campos.append({'name': chave, 'value': valor})
+        return campos
+
     def dispatch(self, request, *args, **kwargs):
         self.tabela = get_object_or_404(TabelaPersonalizada, pk=self.kwargs['tabela_id'])
         self.termo_busca_linhas = (request.GET.get('busca') or '').strip()
+        self.filtro_status_linha = (request.GET.get('status_linha') or 'ativas').strip()
+        colunas_query_list = [valor.strip() for valor in request.GET.getlist('colunas') if valor.strip()]
+        self.colunas_parametro = ','.join(colunas_query_list) or (request.GET.get('colunas') or '').strip()
+        self.visualizacao_modo = (request.GET.get('visualizacao') or '').strip()
+        self.visualizacao_limpa_ativa = self.visualizacao_modo == 'limpa'
+        self.ordenar_por = (request.GET.get('ordenar') or 'sistema_linha').strip()
+        self.direcao_ordenacao = (request.GET.get('direcao') or 'asc').strip()
+        status_validos = {valor for valor, _rotulo in self.status_linha_choices}
+        if self.filtro_status_linha not in status_validos:
+            self.filtro_status_linha = 'ativas'
         self.colunas_filtraveis = _obter_colunas_filtraveis_tabela_personalizada(self.tabela)
         self.filtro_estruturado_form = TabelaPersonalizadaLinhaFiltroEstruturadoForm(
             request.GET or None,
@@ -9689,6 +10124,10 @@ class TabelaPersonalizadaLinhaListView(FinanceiroPermissaoMixin, ListView):
             self.tabela,
             self.termo_busca_linhas,
             self.filtros_estruturados_aplicados,
+            status_linha=self.filtro_status_linha,
+            colunas_parametro=self.colunas_parametro,
+            ordenar_por=self.ordenar_por,
+            direcao_ordenacao=self.direcao_ordenacao,
         )
         return super().dispatch(request, *args, **kwargs)
 
@@ -9699,6 +10138,7 @@ class TabelaPersonalizadaLinhaListView(FinanceiroPermissaoMixin, ListView):
         context = super().get_context_data(**kwargs)
         quantidade_colunas_ativas = self.tabela.colunas.filter(
             status=ColunaPersonalizada.StatusColuna.ATIVA,
+            visivel=True,
         ).count()
         quantidade_linhas_ativas = self.tabela.linhas.filter(
             status=LinhaTabelaPersonalizada.StatusLinha.ATIVA,
@@ -9709,6 +10149,13 @@ class TabelaPersonalizadaLinhaListView(FinanceiroPermissaoMixin, ListView):
         )
         context['tabela_personalizada'] = self.tabela
         context['colunas_visiveis'] = self.estado_linhas['colunas_visiveis']
+        context['colunas_disponiveis_visualizacao'] = self.estado_linhas['colunas_disponiveis_visualizacao']
+        context['colunas_selecionadas_ids_tabela_personalizada'] = self.estado_linhas['colunas_selecionadas_ids']
+        context['personalizacao_colunas_tabela_personalizada_ativa'] = self.estado_linhas['personalizacao_colunas_ativa']
+        context['mostrar_coluna_linha_tabela_personalizada'] = self.estado_linhas['mostrar_coluna_linha']
+        context['opcoes_ordenacao_tabela_personalizada'] = self.estado_linhas['opcoes_ordenacao']
+        context['ordenar_por_tabela_personalizada'] = self.estado_linhas['ordenar_por']
+        context['direcao_ordenacao_tabela_personalizada'] = self.estado_linhas['direcao_ordenacao']
         context['colunas_filtraveis'] = self.estado_linhas['colunas_filtraveis']
         context['linhas_renderizadas'] = self.estado_linhas['linhas_renderizadas']
         context['totalizadores_renderizados'] = self.estado_linhas['totalizadores_renderizados']
@@ -9716,6 +10163,8 @@ class TabelaPersonalizadaLinhaListView(FinanceiroPermissaoMixin, ListView):
         context['filtro_estruturado_form'] = self.filtro_estruturado_form
         context['possui_filtros_estruturados_tabela_personalizada'] = bool(self.colunas_filtraveis)
         context['filtros_estruturados_ativos'] = self.filtro_estruturado_form.possui_entrada_ativa()
+        context['status_linha_choices'] = self.status_linha_choices
+        context['filtro_status_linha'] = self.filtro_status_linha
         context['pode_preencher_linhas_tabela_personalizada'] = usuario_possui_permissao(
             self.request.user,
             PermissoesTabelasPersonalizadas.PREENCHER_LINHAS,
@@ -9729,7 +10178,15 @@ class TabelaPersonalizadaLinhaListView(FinanceiroPermissaoMixin, ListView):
             PermissoesTabelasPersonalizadas.EXPORTAR,
         )
         context['pode_editar_estrutura_tabela_personalizada'] = pode_editar_estrutura
-        context['quantidade_colunas_ativas_tabela_personalizada'] = quantidade_colunas_ativas
+        context['quantidade_colunas_operacionais_tabela_personalizada'] = quantidade_colunas_ativas
+        context['quantidade_colunas_exibidas_tabela_personalizada'] = len(
+            self.estado_linhas['colunas_visiveis']
+        ) + (1 if self.estado_linhas['mostrar_coluna_linha'] else 0)
+        context['colspan_tabela_personalizada'] = (
+            len(self.estado_linhas['colunas_visiveis'])
+            + (1 if self.estado_linhas['mostrar_coluna_linha'] else 0)
+            + (1 if context['pode_editar_linhas_tabela_personalizada'] else 0)
+        )
         context['quantidade_linhas_ativas_tabela_personalizada'] = quantidade_linhas_ativas
         context['configurar_colunas_tabela_personalizada_url'] = _append_query_params(
             reverse('financeiro:tabela-personalizada-coluna-list', kwargs={'tabela_id': self.tabela.pk}),
@@ -9747,8 +10204,25 @@ class TabelaPersonalizadaLinhaListView(FinanceiroPermissaoMixin, ListView):
         if filtros_ativos:
             exportacao_url = f'{exportacao_url}?{filtros_ativos}'
         context['exportacao_linhas_tabela_personalizada_url'] = exportacao_url
+        context['visualizacao_limpa_tabela_personalizada_ativa'] = self.visualizacao_limpa_ativa
+        context['visualizacao_limpa_tabela_personalizada_url'] = self._build_current_list_url(
+            visualizacao='limpa',
+        )
+        context['visualizacao_padrao_tabela_personalizada_url'] = self._build_current_list_url(
+            visualizacao=None,
+        )
+        context['mostrar_todas_colunas_tabela_personalizada_url'] = self._build_current_list_url(
+            colunas=None,
+        )
+        context['campos_preservados_visualizacao_tabela_personalizada'] = self._campos_preservados_visualizacao()
+        colunas_parametro_atual = [str(coluna_id) for coluna_id in self.estado_linhas['colunas_selecionadas_ids']]
+        if self.estado_linhas['mostrar_coluna_linha']:
+            colunas_parametro_atual.insert(0, 'sistema_linha')
+        context['colunas_parametro_tabela_personalizada'] = ','.join(colunas_parametro_atual)
         context['termo_busca_linhas'] = self.termo_busca_linhas
         context['busca_linhas_ativa'] = bool(self.termo_busca_linhas)
+        context['vazio_linhas_arquivadas'] = self.filtro_status_linha == 'arquivadas'
+        context['vazio_linhas_todas'] = self.filtro_status_linha == 'todas'
         return context
 
 
@@ -9785,6 +10259,15 @@ class TabelaPersonalizadaLinhaExportXlsxView(FinanceiroPermissaoMixin, View):
             tabela,
             termo_busca_linhas,
             filtros_estruturados_aplicados,
+            status_linha=(request.GET.get('status_linha') or 'ativas').strip(),
+            colunas_parametro=(
+                ','.join(
+                    [valor.strip() for valor in request.GET.getlist('colunas') if valor.strip()]
+                )
+                or (request.GET.get('colunas') or '').strip()
+            ),
+            ordenar_por=(request.GET.get('ordenar') or 'sistema_linha').strip(),
+            direcao_ordenacao=(request.GET.get('direcao') or 'asc').strip(),
         )
         linhas_xlsx, larguras_colunas, linhas_negrito = _montar_linhas_exportacao_tabela_personalizada_xlsx(
             tabela,
@@ -9824,7 +10307,10 @@ class TabelaPersonalizadaLinhaCreateView(TabelaPersonalizadaLinhaBaseMixin, Fina
         return super().dispatch(request, *args, **kwargs)
 
     def get_success_url(self):
-        return reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk})
+        return self._get_return_to_url() or reverse(
+            'financeiro:tabela-personalizada-linha-list',
+            kwargs={'tabela_id': self.tabela.pk},
+        )
 
     def get_cancel_url(self):
         return self._get_return_to_url() or self.get_success_url()
@@ -9874,6 +10360,100 @@ class TabelaPersonalizadaLinhaUpdateView(TabelaPersonalizadaLinhaBaseMixin, Fina
             depois=_snapshot_linha_tabela_personalizada(self.object),
         )
         return response
+
+
+class TabelaPersonalizadaLinhaDeleteView(FinanceiroDeleteMixin):
+    permissao_requerida = PermissoesTabelasPersonalizadas.EDITAR_LINHAS
+    model = LinhaTabelaPersonalizada
+    page_title = 'Excluir linha personalizada'
+    success_message = 'Linha personalizada excluida com sucesso.'
+    confirm_button_label = 'Excluir'
+    delete_warning_message = (
+        'Excluir esta linha apagara tambem os valores preenchidos nela. '
+        'Esta acao nao podera ser desfeita.'
+    )
+
+    def dispatch(self, request, *args, **kwargs):
+        self.tabela = get_object_or_404(TabelaPersonalizada, pk=self.kwargs['tabela_id'])
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_queryset(self):
+        return super().get_queryset().filter(tabela=self.tabela)
+
+    def get_success_url(self):
+        return self._get_return_to_url() or reverse(
+            'financeiro:tabela-personalizada-linha-list',
+            kwargs={'tabela_id': self.tabela.pk},
+        )
+
+    def get_cancel_url(self):
+        return self._get_return_to_url() or self.get_success_url()
+
+    def form_valid(self, form):
+        self.object = self.get_object()
+        registro_id = self.object.pk
+        antes = _snapshot_linha_tabela_personalizada(self.object)
+        with transaction.atomic():
+            self.object.delete()
+            AuditoriaFinanceiro.objects.create(
+                acao=AuditoriaFinanceiro.AcaoAuditoria.DELETE,
+                modelo='LinhaTabelaPersonalizada',
+                registro_id=registro_id,
+                usuario=_auditoria_usuario(self.request),
+                campos_alterados=_build_auditoria_payload(antes, None),
+            )
+        messages.success(self.request, self.success_message)
+        return redirect(self.get_success_url())
+
+
+class TabelaPersonalizadaLinhaAcaoView(FinanceiroReturnToMixin, FinanceiroPermissaoMixin, View):
+    permissao_requerida = PermissoesTabelasPersonalizadas.EDITAR_LINHAS
+
+    acoes_validas = {
+        'arquivar': {
+            'status': LinhaTabelaPersonalizada.StatusLinha.ARQUIVADA,
+            'mensagem': 'Linha arquivada com sucesso.',
+        },
+        'reativar': {
+            'status': LinhaTabelaPersonalizada.StatusLinha.ATIVA,
+            'mensagem': 'Linha reativada com sucesso.',
+        },
+    }
+
+    def dispatch(self, request, *args, **kwargs):
+        self.tabela = get_object_or_404(TabelaPersonalizada, pk=self.kwargs['tabela_id'])
+        self.linha = get_object_or_404(
+            LinhaTabelaPersonalizada,
+            pk=self.kwargs['pk'],
+            tabela=self.tabela,
+        )
+        return super().dispatch(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        acao = (request.POST.get('acao') or '').strip()
+        configuracao = self.acoes_validas.get(acao)
+        if configuracao is None:
+            raise Http404('Acao de linha personalizada invalida.')
+
+        antes = _snapshot_linha_tabela_personalizada(
+            LinhaTabelaPersonalizada.objects.prefetch_related('valores__coluna').get(pk=self.linha.pk)
+        )
+        if self.linha.status != configuracao['status']:
+            self.linha.status = configuracao['status']
+            self.linha.save(update_fields=['status'])
+            _registrar_auditoria_linha_tabela_personalizada(
+                request=request,
+                acao=AuditoriaFinanceiro.AcaoAuditoria.UPDATE,
+                linha=self.linha,
+                antes=antes,
+                depois=_snapshot_linha_tabela_personalizada(self.linha),
+            )
+
+        messages.success(request, configuracao['mensagem'])
+        return redirect(
+            self._get_return_to_url()
+            or reverse('financeiro:tabela-personalizada-linha-list', kwargs={'tabela_id': self.tabela.pk})
+        )
 
 
 class CategoriaFinanceiraUpdateView(FinanceiroFormMixin, UpdateView):

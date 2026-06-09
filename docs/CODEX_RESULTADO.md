@@ -6381,3 +6381,67 @@ Não houve alteração de código funcional nesta etapa.
   - exibicao/ocultacao do botao de historico conforme permissao
   - filtro do historico restrito ao documento atual
   - bloqueio 403 sem permissao de auditoria
+
+## Microetapa: UX operacional de tabelas personalizadas
+
+- corrigi localmente os cabecalhos das telas de tabela/linha/coluna para impedir sobreposicao entre titulo e subtitulo, sem mexer no layout global
+- mantive a tela de linhas como centro operacional da tabela e refinei o cabecalho com contagem de colunas ativas+visiveis e linhas ativas
+- acrescentei filtro discreto de status de linhas (`ativas`, `arquivadas`, `todas`) preservando busca, filtros estruturados, grade, totalizadores e exportacao
+- implementei acoes seguras de linha por `POST`:
+  - arquivar
+  - reativar
+- implementei acoes seguras de coluna por `POST`:
+  - ocultar / mostrar
+  - inativar / reativar
+  - arquivar
+- as mudancas reaproveitam a modelagem atual e a `AuditoriaFinanceiro` ja existente, sem model novo nem migration
+- cobertura automatizada ampliada para:
+  - filtro operacional de linhas arquivadas
+  - bloqueio de mutacao por `GET`
+  - bloqueio por permissao inadequada
+  - auditoria de status/visibilidade em linha e coluna
+
+## Complemento: totalizador em formula controlada
+
+- liberei totalizador para `formula_controlada` quando a configuracao da formula estiver valida/habilitada e o `resultado_tipo` for `decimal` ou `monetario`
+- a compatibilidade passou a considerar o tipo de resultado da formula, e nao mais o tipo tecnico `formula_controlada`
+- o rodape da tabela e o XLSX agora calculam o totalizador da formula usando o mesmo valor resolvido em tempo de leitura por linha
+- mantive bloqueio para formula incompleta/invalida/desabilitada e sem persistencia nova de `valor_calculado`
+- cobertura automatizada ampliada para:
+  - formulario aceitando totalizador em formula valida
+  - formulario bloqueando totalizador em formula incompleta
+  - totalizador decimal calculado
+  - totalizador monetario calculado
+
+## Complemento: exclusao definitiva de linhas e colunas personalizadas
+
+- acrescentei `Excluir` como acao secundaria/perigosa para linha e coluna, sem remover as acoes seguras de status/visibilidade
+- reaproveitei a tela generica de confirmacao do modulo, agora com mensagem especifica de impacto para:
+  - linha: perda dos valores da propria linha
+  - coluna: perda dos valores daquela coluna nas linhas da tabela
+- a confirmacao continua em `GET`, mas a exclusao real ocorre apenas por `POST` com `CSRF`
+- a exclusao definitiva de coluna ganhou bloqueio tecnico quando a coluna ainda e operando de outra formula guiada, evitando quebrar formulas por dangling reference
+- cobertura automatizada ampliada para:
+  - confirmacao e exclusao definitiva de linha
+  - confirmacao e exclusao definitiva de coluna
+  - permissao
+  - nao exclusao por `GET`
+  - bloqueio por dependencia de formula
+
+## Microetapa: visualizacao limpa, selecao de colunas e impressao de tabela personalizada
+
+- acrescentei painel de visualizacao na tela principal da tabela para marcar/desmarcar colunas temporariamente sem alterar `visivel` na estrutura
+- acrescentei a coluna de sistema `Linha / identificacao` como opcao da mesma selecao temporaria
+- acrescentei ordenacao manual temporaria da visualizacao por query string, com escolha de coluna e direcao
+- a selecao passou a usar query string e a ser preservada na propria tela, na impressao e na exportacao XLSX
+- a tela ganhou `Visual limpo` e botao `Imprimir`, mantendo as acoes administrativas disponiveis de forma mais discreta
+- a impressao local agora oculta controles operacionais e imprime apenas o recorte filtrado/selecionado da tabela
+- cobertura automatizada ampliada para:
+  - visual limpo
+  - selecao temporaria de colunas
+  - ocultacao/exibicao da coluna `Linha / identificacao`
+  - ordenacao por texto, numero, data e pela propria coluna de sistema
+- fallback seguro quando a query de colunas for invalida
+- exclusao de colunas invisiveis/arquivadas da selecao
+- exportacao XLSX respeitando as colunas selecionadas
+- exportacao XLSX respeitando a ordenacao atual

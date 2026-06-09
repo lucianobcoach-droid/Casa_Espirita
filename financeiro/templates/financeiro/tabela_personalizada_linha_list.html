@@ -25,6 +25,17 @@
         flex-wrap: wrap;
     }
 
+    .financeiro-linha-page .financeiro-page-header-main {
+        display: grid;
+        gap: 0.35rem;
+        min-width: 0;
+    }
+
+    .financeiro-linha-page .financeiro-page-title {
+        margin-bottom: 0;
+        line-height: 1.12;
+    }
+
     .financeiro-linha-header-eyebrow {
         color: #1d4f91;
         font-size: 0.74rem;
@@ -88,6 +99,25 @@
         gap: 0.5rem;
     }
 
+    .financeiro-linha-admin-box {
+        display: grid;
+        gap: 0.55rem;
+        padding: 0.8rem 0.95rem;
+        border: 1px dashed #cbd5e1;
+        border-radius: 0.9rem;
+        background: #f8fbff;
+    }
+
+    .financeiro-linha-admin-box summary {
+        cursor: pointer;
+        color: #153a73;
+        font-weight: 700;
+    }
+
+    .financeiro-linha-admin-box[open] summary {
+        margin-bottom: 0.25rem;
+    }
+
     .financeiro-linha-card {
         border: 1px solid rgba(203, 213, 225, 0.85);
         border-radius: 1rem;
@@ -105,6 +135,95 @@
 
     .financeiro-linha-note strong {
         color: #153a73;
+    }
+
+    .financeiro-linha-visualizacao {
+        display: grid;
+        gap: 0.85rem;
+        padding: 0.95rem;
+        border-bottom: 1px solid #edf2f7;
+        background: #fcfdff;
+    }
+
+    .financeiro-linha-visualizacao-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .financeiro-linha-visualizacao-title {
+        color: #153a73;
+        font-weight: 700;
+    }
+
+    .financeiro-linha-visualizacao-subtitle {
+        color: #64748b;
+        font-size: 0.82rem;
+        line-height: 1.4;
+    }
+
+    .financeiro-linha-visualizacao-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .financeiro-linha-colunas-form {
+        display: grid;
+        gap: 0.8rem;
+    }
+
+    .financeiro-linha-colunas-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.55rem;
+    }
+
+    .financeiro-linha-coluna-option {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        padding: 0.45rem 0.7rem;
+        border: 1px solid #d7e2f0;
+        border-radius: 999px;
+        background: #fff;
+        color: #334155;
+        font-size: 0.82rem;
+    }
+
+    .financeiro-linha-coluna-option input {
+        margin: 0;
+    }
+
+    .financeiro-linha-colunas-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .financeiro-linha-visualizacao-grid {
+        display: grid;
+        gap: 0.75rem;
+        grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+    }
+
+    .financeiro-linha-print-meta {
+        display: none;
+        margin-top: 0.35rem;
+        color: #475569;
+        font-size: 0.8rem;
+    }
+
+    .financeiro-linha-page.is-clean .financeiro-linha-note {
+        display: none;
+    }
+
+    .financeiro-linha-page.is-clean .financeiro-linha-header {
+        background: #fff;
     }
 
     .financeiro-linha-table-wrap {
@@ -145,6 +264,13 @@
         gap: 0.5rem;
         flex-wrap: wrap;
         align-items: center;
+    }
+
+    .financeiro-linha-search-grid {
+        display: grid;
+        gap: 0.75rem;
+        grid-template-columns: minmax(0, 2fr) minmax(14rem, 1fr);
+        align-items: end;
     }
 
     .financeiro-linha-filtros {
@@ -278,6 +404,14 @@
 
     .financeiro-linha-actions {
         white-space: nowrap;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        align-items: center;
+    }
+
+    .financeiro-linha-inline-form {
+        margin: 0;
     }
 
     .financeiro-linha-coluna-tag {
@@ -315,9 +449,59 @@
         line-height: 1.35;
     }
 
+    @media print {
+        body {
+            background: #fff !important;
+        }
+
+        .no-print,
+        .navbar,
+        .sidebar,
+        .menu,
+        .tabs,
+        .breadcrumb,
+        .footer {
+            display: none !important;
+        }
+
+        .financeiro-linha-page {
+            display: block;
+        }
+
+        .financeiro-linha-header,
+        .financeiro-linha-card,
+        .financeiro-linha-filtros-card,
+        .financeiro-linha-filtro-item {
+            box-shadow: none !important;
+            background: #fff !important;
+            border-color: #d7dee8 !important;
+        }
+
+        .financeiro-linha-header {
+            margin-bottom: 0.8rem;
+        }
+
+        .financeiro-linha-print-meta {
+            display: block;
+        }
+
+        .financeiro-linha-table-wrap {
+            overflow: visible;
+        }
+
+        .financeiro-linha-page a {
+            color: #111827 !important;
+            text-decoration: none !important;
+        }
+    }
+
     @media screen and (max-width: 768px) {
         .financeiro-linha-header-actions {
             justify-content: flex-start;
+        }
+
+        .financeiro-linha-search-grid {
+            grid-template-columns: 1fr;
         }
 
         .financeiro-linha-filtro-range {
@@ -326,7 +510,7 @@
     }
 </style>
 
-<div class="financeiro-linha-page">
+<div class="financeiro-linha-page{% if visualizacao_limpa_tabela_personalizada_ativa %} is-clean{% endif %}">
     <section class="financeiro-linha-header">
         <div class="financeiro-linha-header-top">
             <div class="financeiro-page-header-main">
@@ -341,40 +525,75 @@
                         Controle interno configuravel, sem efeito no financeiro oficial.
                     </p>
                 {% endif %}
+                <div class="financeiro-linha-print-meta">
+                    Impressao gerada em {% now "d/m/Y H:i" %}.
+                </div>
             </div>
-            <div class="financeiro-linha-header-actions">
-                {% if pode_preencher_linhas_tabela_personalizada %}
-                    <a class="button is-primary" href="{% url 'financeiro:tabela-personalizada-linha-create' tabela_personalizada.pk %}">
-                        Nova linha
+            {% if visualizacao_limpa_tabela_personalizada_ativa %}
+                <details class="financeiro-linha-admin-box no-print">
+                    <summary>Acoes administrativas</summary>
+                    <div class="financeiro-linha-header-actions">
+                        {% if pode_preencher_linhas_tabela_personalizada %}
+                            <a class="button is-primary" href="{% url 'financeiro:tabela-personalizada-linha-create' tabela_personalizada.pk %}">
+                                Nova linha
+                            </a>
+                        {% endif %}
+                        {% if pode_editar_estrutura_tabela_personalizada %}
+                            <a class="button is-light" href="{{ configurar_colunas_tabela_personalizada_url }}">
+                                Configurar colunas
+                            </a>
+                            <a class="button is-light" href="{{ editar_tabela_personalizada_url }}">
+                                Editar tabela
+                            </a>
+                        {% endif %}
+                        {% if pode_exportar_linhas_tabela_personalizada %}
+                            <a class="button is-light" href="{{ exportacao_linhas_tabela_personalizada_url }}">
+                                Exportar XLSX
+                            </a>
+                        {% endif %}
+                        <a class="button is-light" href="{% url 'financeiro:tabela-personalizada-list' %}">
+                            Voltar para tabelas
+                        </a>
+                    </div>
+                </details>
+            {% else %}
+                <div class="financeiro-linha-header-actions no-print">
+                    {% if pode_preencher_linhas_tabela_personalizada %}
+                        <a class="button is-primary" href="{% url 'financeiro:tabela-personalizada-linha-create' tabela_personalizada.pk %}">
+                            Nova linha
+                        </a>
+                    {% endif %}
+                    {% if pode_editar_estrutura_tabela_personalizada %}
+                        <a class="button is-light" href="{{ configurar_colunas_tabela_personalizada_url }}">
+                            Configurar colunas
+                        </a>
+                        <a class="button is-light" href="{{ editar_tabela_personalizada_url }}">
+                            Editar tabela
+                        </a>
+                    {% endif %}
+                    {% if pode_exportar_linhas_tabela_personalizada %}
+                        <a class="button is-light" href="{{ exportacao_linhas_tabela_personalizada_url }}">
+                            Exportar XLSX
+                        </a>
+                    {% endif %}
+                    <a class="button is-light" href="{% url 'financeiro:tabela-personalizada-list' %}">
+                        Voltar para tabelas
                     </a>
-                {% endif %}
-                {% if pode_editar_estrutura_tabela_personalizada %}
-                    <a class="button is-light" href="{{ configurar_colunas_tabela_personalizada_url }}">
-                        Configurar colunas
-                    </a>
-                    <a class="button is-light" href="{{ editar_tabela_personalizada_url }}">
-                        Editar tabela
-                    </a>
-                {% endif %}
-                {% if pode_exportar_linhas_tabela_personalizada %}
-                    <a class="button is-light" href="{{ exportacao_linhas_tabela_personalizada_url }}">
-                        Exportar XLSX
-                    </a>
-                {% endif %}
-                <a class="button is-light" href="{% url 'financeiro:tabela-personalizada-list' %}">
-                    Voltar para tabelas
-                </a>
-            </div>
+                </div>
+            {% endif %}
         </div>
         <div class="financeiro-linha-header-tags">
             <span class="financeiro-linha-header-tag{% if tabela_personalizada.status == 'ativa' %} is-active{% elif tabela_personalizada.status == 'inativa' %} is-inactive{% else %} is-archived{% endif %}">
                 {{ tabela_personalizada.get_status_display }}
             </span>
             <span class="financeiro-linha-header-tag is-info">
-                {{ quantidade_colunas_ativas_tabela_personalizada }} coluna(s) ativa(s)
+                {{ quantidade_colunas_operacionais_tabela_personalizada }} coluna(s) ativa(s) e visiveis
             </span>
             <span class="financeiro-linha-header-tag is-info">
                 {{ quantidade_linhas_ativas_tabela_personalizada }} linha(s) ativa(s)
+            </span>
+            <span class="financeiro-linha-header-tag is-info">
+                {{ quantidade_colunas_exibidas_tabela_personalizada }} coluna(s) mostrada(s) agora
             </span>
             <span class="financeiro-linha-header-tag">
                 Controle interno sem efeito no financeiro oficial
@@ -383,22 +602,117 @@
     </section>
 
     <section class="financeiro-linha-card">
-        <div class="financeiro-linha-note">
-            <strong>Recorte atual:</strong>
-            esta tela centraliza o preenchimento de linhas, busca textual, filtros estruturados, totalizadores visiveis, exportacao XLSX e exibicao somente leitura das formulas guiadas. O calculo continua apenas em tempo de leitura, sem persistencia e sem impacto no financeiro oficial.
+        {% if not visualizacao_limpa_tabela_personalizada_ativa %}
+            <div class="financeiro-linha-note">
+                <strong>Recorte atual:</strong>
+                esta tela centraliza o preenchimento de linhas, busca textual, filtros estruturados, totalizadores visiveis, exportacao XLSX e exibicao somente leitura das formulas guiadas. O calculo continua apenas em tempo de leitura, sem persistencia e sem impacto no financeiro oficial.
+            </div>
+        {% endif %}
+
+        <div class="financeiro-linha-visualizacao no-print">
+            <div class="financeiro-linha-visualizacao-top">
+                <div>
+                    <div class="financeiro-linha-visualizacao-title">Visualizacao da tabela</div>
+                    <div class="financeiro-linha-visualizacao-subtitle">
+                        Escolha temporariamente quais colunas mostrar agora, sem alterar a estrutura permanente da tabela.
+                    </div>
+                </div>
+                <div class="financeiro-linha-visualizacao-actions">
+                    {% if visualizacao_limpa_tabela_personalizada_ativa %}
+                        <a class="button is-light" href="{{ visualizacao_padrao_tabela_personalizada_url }}">Visual padrao</a>
+                    {% else %}
+                        <a class="button is-light" href="{{ visualizacao_limpa_tabela_personalizada_url }}">Visual limpo</a>
+                    {% endif %}
+                    <button class="button is-light" type="button" onclick="window.print()">Imprimir</button>
+                </div>
+            </div>
+            <form method="get" class="financeiro-linha-colunas-form">
+                {% for campo in campos_preservados_visualizacao_tabela_personalizada %}
+                    <input type="hidden" name="{{ campo.name }}" value="{{ campo.value }}">
+                {% endfor %}
+                <div class="financeiro-linha-colunas-grid">
+                    <label class="financeiro-linha-coluna-option">
+                        <input
+                            type="checkbox"
+                            name="colunas"
+                            value="sistema_linha"
+                            {% if mostrar_coluna_linha_tabela_personalizada %}checked{% endif %}
+                        >
+                        <span>Linha / identificacao</span>
+                    </label>
+                    {% for coluna in colunas_disponiveis_visualizacao %}
+                        <label class="financeiro-linha-coluna-option">
+                            <input
+                                type="checkbox"
+                                name="colunas"
+                                value="{{ coluna.pk }}"
+                                {% if coluna.pk in colunas_selecionadas_ids_tabela_personalizada %}checked{% endif %}
+                            >
+                            <span>{{ coluna.nome }}</span>
+                        </label>
+                    {% endfor %}
+                </div>
+                <div class="financeiro-linha-visualizacao-grid">
+                    <div class="field">
+                        <label class="label" for="id_ordenar_tabela_personalizada">Ordenar por</label>
+                        <div class="control select is-fullwidth">
+                            <select id="id_ordenar_tabela_personalizada" name="ordenar">
+                                {% for opcao in opcoes_ordenacao_tabela_personalizada %}
+                                    <option value="{{ opcao.valor }}"{% if ordenar_por_tabela_personalizada == opcao.valor %} selected{% endif %}>
+                                        {{ opcao.label }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label" for="id_direcao_ordenacao_tabela_personalizada">Direcao</label>
+                        <div class="control select is-fullwidth">
+                            <select id="id_direcao_ordenacao_tabela_personalizada" name="direcao">
+                                <option value="asc"{% if direcao_ordenacao_tabela_personalizada == 'asc' %} selected{% endif %}>Crescente</option>
+                                <option value="desc"{% if direcao_ordenacao_tabela_personalizada == 'desc' %} selected{% endif %}>Decrescente</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="financeiro-linha-colunas-actions">
+                    <button class="button is-link is-light" type="submit">Aplicar visualizacao</button>
+                    <a class="button is-light" href="{{ mostrar_todas_colunas_tabela_personalizada_url }}">Mostrar todas</a>
+                </div>
+            </form>
         </div>
 
-        <form method="get" class="financeiro-linha-search">
-            <div class="financeiro-linha-search-field">
-                <label class="label" for="id_busca_linhas">Buscar nas linhas</label>
-                <input
-                    class="input"
-                    type="text"
-                    id="id_busca_linhas"
-                    name="busca"
-                    value="{{ termo_busca_linhas }}"
-                    placeholder="Digite texto, numero, data, competencia ou opcao visivel"
-                >
+        <form method="get" class="financeiro-linha-search no-print">
+            {% if colunas_parametro_tabela_personalizada %}
+                <input type="hidden" name="colunas" value="{{ colunas_parametro_tabela_personalizada }}">
+            {% endif %}
+            {% if visualizacao_limpa_tabela_personalizada_ativa %}
+                <input type="hidden" name="visualizacao" value="limpa">
+            {% endif %}
+            <input type="hidden" name="ordenar" value="{{ ordenar_por_tabela_personalizada }}">
+            <input type="hidden" name="direcao" value="{{ direcao_ordenacao_tabela_personalizada }}">
+            <div class="financeiro-linha-search-grid">
+                <div class="financeiro-linha-search-field">
+                    <label class="label" for="id_busca_linhas">Buscar nas linhas</label>
+                    <input
+                        class="input"
+                        type="text"
+                        id="id_busca_linhas"
+                        name="busca"
+                        value="{{ termo_busca_linhas }}"
+                        placeholder="Digite texto, numero, data, competencia ou opcao visivel"
+                    >
+                </div>
+                <div class="financeiro-linha-search-field">
+                    <label class="label" for="id_status_linha">Linhas exibidas</label>
+                    <div class="control select is-fullwidth">
+                        <select id="id_status_linha" name="status_linha">
+                            {% for valor, rotulo in status_linha_choices %}
+                                <option value="{{ valor }}"{% if filtro_status_linha == valor %} selected{% endif %}>{{ rotulo }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
             </div>
 
             {% if possui_filtros_estruturados_tabela_personalizada %}
@@ -468,7 +782,7 @@
             <table class="table is-fullwidth is-hoverable financeiro-table">
                 <thead>
                     <tr>
-                        <th>Linha</th>
+                        {% if mostrar_coluna_linha_tabela_personalizada %}<th>Linha</th>{% endif %}
                         {% for coluna in colunas_visiveis %}
                             <th>
                                 {{ coluna.nome }}
@@ -477,18 +791,20 @@
                                 {% endif %}
                             </th>
                         {% endfor %}
-                        {% if pode_editar_linhas_tabela_personalizada %}<th>Acoes</th>{% endif %}
+                {% if pode_editar_linhas_tabela_personalizada %}<th class="no-print">Acoes</th>{% endif %}
                     </tr>
                 </thead>
                 <tbody>
                     {% for item in linhas_renderizadas %}
                         <tr>
-                            <td>
-                                <strong>#{{ item.linha.pk }}</strong>
-                                <div class="financeiro-linha-row-meta">
-                                    Atualizada em {{ item.linha.atualizado_em|date:'d/m/Y H:i' }}
-                                </div>
-                            </td>
+                            {% if mostrar_coluna_linha_tabela_personalizada %}
+                                <td>
+                                    <strong>#{{ item.linha.pk }}</strong>
+                                    <div class="financeiro-linha-row-meta">
+                                        Atualizada em {{ item.linha.atualizado_em|date:'d/m/Y H:i' }}
+                                    </div>
+                                </td>
+                            {% endif %}
                             {% for celula in item.celulas %}
                                 <td>
                                     {% if celula.valor %}
@@ -499,29 +815,60 @@
                                 </td>
                             {% endfor %}
                             {% if pode_editar_linhas_tabela_personalizada %}
-                                <td class="financeiro-linha-actions">
-                                    <a class="button is-small is-light" href="{% url 'financeiro:tabela-personalizada-linha-update' tabela_personalizada.pk item.linha.pk %}">
+                                <td class="financeiro-linha-actions no-print">
+                                    <a class="button is-small is-light" href="{% url 'financeiro:tabela-personalizada-linha-update' tabela_personalizada.pk item.linha.pk %}?return_to={{ request.get_full_path|urlencode }}">
                                         Editar
+                                    </a>
+                                    <form
+                                        method="post"
+                                        action="{% url 'financeiro:tabela-personalizada-linha-action' tabela_personalizada.pk item.linha.pk %}"
+                                        class="financeiro-linha-inline-form"
+                                    >
+                                        {% csrf_token %}
+                                        <input type="hidden" name="return_to" value="{{ request.get_full_path }}">
+                                        {% if item.linha.status == 'arquivada' %}
+                                            <input type="hidden" name="acao" value="reativar">
+                                            <button class="button is-small is-light" type="submit">
+                                                Reativar
+                                            </button>
+                                        {% else %}
+                                            <input type="hidden" name="acao" value="arquivar">
+                                            <button class="button is-small is-light" type="submit">
+                                                Arquivar
+                                            </button>
+                                        {% endif %}
+                                    </form>
+                                    <a
+                                        class="button is-small is-danger is-light"
+                                        href="{% url 'financeiro:tabela-personalizada-linha-delete' tabela_personalizada.pk item.linha.pk %}?return_to={{ request.get_full_path|urlencode }}"
+                                    >
+                                        Excluir
                                     </a>
                                 </td>
                             {% endif %}
                         </tr>
                     {% empty %}
                         <tr>
-                            <td colspan="{% if pode_editar_linhas_tabela_personalizada %}{{ colunas_visiveis|length|add:'2' }}{% else %}{{ colunas_visiveis|length|add:'1' }}{% endif %}" class="financeiro-linha-empty">
+                            <td colspan="{{ colspan_tabela_personalizada }}" class="financeiro-linha-empty">
                                 <div class="financeiro-linha-empty-box">
                                     {% if busca_linhas_ativa %}
                                         <div class="financeiro-linha-empty-title">Nenhuma linha encontrada para a busca informada.</div>
-                                        <div>Revise os termos da busca ou limpe o filtro para voltar a ver todas as linhas ativas desta tabela.</div>
+                                        <div>Revise os termos da busca ou limpe o filtro para voltar a ver as linhas exibidas neste recorte da tabela.</div>
                                         <a class="button is-light" href="{% url 'financeiro:tabela-personalizada-linha-list' tabela_personalizada.pk %}">
                                             Limpar
                                         </a>
                                     {% elif filtros_estruturados_ativos %}
                                         <div class="financeiro-linha-empty-title">Nenhuma linha encontrada para os filtros informados.</div>
-                                        <div>Revise os valores do filtro estruturado ou limpe os filtros para voltar a ver todas as linhas ativas desta tabela.</div>
+                                        <div>Revise os valores do filtro estruturado ou limpe os filtros para voltar a ver as linhas exibidas neste recorte da tabela.</div>
                                         <a class="button is-light" href="{% url 'financeiro:tabela-personalizada-linha-list' tabela_personalizada.pk %}">
                                             Limpar
                                         </a>
+                                    {% elif vazio_linhas_arquivadas %}
+                                        <div class="financeiro-linha-empty-title">Nenhuma linha arquivada encontrada para esta tabela.</div>
+                                        <div>As linhas ativas continuam sendo a visao operacional padrao.</div>
+                                    {% elif vazio_linhas_todas %}
+                                        <div class="financeiro-linha-empty-title">Nenhuma linha encontrada para este filtro de status.</div>
+                                        <div>Cadastre a primeira linha ativa para comecar a preencher este controle interno.</div>
                                     {% else %}
                                         <div class="financeiro-linha-empty-title">Nenhuma linha cadastrada ainda para esta tabela.</div>
                                         <div>Cadastre a primeira linha para comecar a preencher este controle interno.</div>
@@ -539,12 +886,14 @@
                 {% if possui_totalizadores_tabela_personalizada %}
                     <tfoot>
                         <tr class="financeiro-linha-totalizadores-row">
-                            <th>
-                                <div class="financeiro-linha-totalizadores-box">
-                                    <span class="financeiro-linha-totalizadores-title">Totalizadores</span>
-                                    <span class="financeiro-linha-row-meta">Somente colunas visiveis com configuracao ativa, sobre as linhas filtradas na tela.</span>
-                                </div>
-                            </th>
+                            {% if mostrar_coluna_linha_tabela_personalizada %}
+                                <th>
+                                    <div class="financeiro-linha-totalizadores-box">
+                                        <span class="financeiro-linha-totalizadores-title">Totalizadores</span>
+                                        <span class="financeiro-linha-row-meta">Somente colunas visiveis com configuracao ativa, sobre as linhas filtradas na tela.</span>
+                                    </div>
+                                </th>
+                            {% endif %}
                             {% for totalizador_coluna in totalizadores_renderizados %}
                                 <td>
                                     {% if totalizador_coluna.itens %}

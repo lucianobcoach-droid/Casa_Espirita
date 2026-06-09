@@ -3,14 +3,18 @@
 {% block content %}
 <div class="box">
     <h1 class="title">{{ page_title }}</h1>
-    <p>Você está prestes a excluir o registro <strong>{{ object_label }}</strong>.</p>
-    <p>Essa ação não poderá ser desfeita pela interface.</p>
+    <p>Voce esta prestes a excluir o registro <strong>{{ object_label }}</strong>.</p>
+    {% if delete_warning_message %}
+        <p>{{ delete_warning_message }}</p>
+    {% else %}
+        <p>Essa acao nao podera ser desfeita pela interface.</p>
+    {% endif %}
 </div>
 <form method="post">
     {% csrf_token %}
     {% if return_to %}<input type="hidden" name="return_to" value="{{ return_to }}">{% endif %}
     <div class="buttons">
-        <button class="button is-danger" type="submit">Confirmar exclusão</button>
+        <button class="button is-danger" type="submit">{{ confirm_button_label|default:'Confirmar exclusao' }}</button>
         <a class="button" href="{{ cancel_url }}">Cancelar</a>
     </div>
 </form>

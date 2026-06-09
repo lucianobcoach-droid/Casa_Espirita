@@ -792,7 +792,43 @@ class ColunaPersonalizadaForm(forms.ModelForm):
     def clean_totalizadores_configurados(self):
         totalizadores = self.cleaned_data.get('totalizadores_configurados') or []
         tipo_dado = self.cleaned_data.get('tipo_dado') or self.data.get(self.add_prefix('tipo_dado'))
-        tipos_compativeis = set(TotalizadorColunaPersonalizada.tipos_compativeis_por_tipo_dado(tipo_dado))
+        tipos_compativeis: set[str] = set()
+        if tipo_dado == ColunaPersonalizada.TipoDado.FORMULA_CONTROLADA:
+            formula_operacao = self.data.get(self.add_prefix('formula_operacao'))
+            if hasattr(self.data, 'getlist'):
+                formula_operandos_brutos = self.data.getlist(self.add_prefix('formula_operandos'))
+            else:
+                formula_operandos_brutos = self.data.get(self.add_prefix('formula_operandos'), [])
+                if not isinstance(formula_operandos_brutos, list):
+                    formula_operandos_brutos = [formula_operandos_brutos] if formula_operandos_brutos else []
+            try:
+                formula_casas_decimais = int(self.data.get(self.add_prefix('formula_casas_decimais')))
+            except (TypeError, ValueError):
+                formula_casas_decimais = None
+            formula_config = {
+                'habilitada': True,
+                'operacao': formula_operacao,
+                'operandos': [int(valor) for valor in formula_operandos_brutos],
+                'resultado_tipo': self.data.get(self.add_prefix('formula_resultado_tipo')),
+                'casas_decimais': formula_casas_decimais,
+            }
+            coluna_validacao = self.instance if getattr(self.instance, 'pk', None) else ColunaPersonalizada(
+                tabela=self.tabela
+            )
+            coluna_validacao.tipo_dado = ColunaPersonalizada.TipoDado.FORMULA_CONTROLADA
+            coluna_validacao.calculada = True
+            formula_errors = ColunaPersonalizada.validar_configuracao_formula_guiada(
+                coluna=coluna_validacao,
+                configuracao_formula=formula_config,
+            )
+            if formula_errors and totalizadores:
+                raise ValidationError(
+                    'Configure uma formula valida e habilitada antes de selecionar totalizadores para a coluna calculada.'
+                )
+            resultado_tipo = formula_config.get('resultado_tipo')
+            tipos_compativeis = set(TotalizadorColunaPersonalizada.tipos_compativeis_por_tipo_dado(resultado_tipo))
+        else:
+            tipos_compativeis = set(TotalizadorColunaPersonalizada.tipos_compativeis_por_tipo_dado(tipo_dado))
         if not tipos_compativeis and totalizadores:
             raise ValidationError('Nao foi possivel configurar totalizadores para este tipo de coluna.')
         if any(totalizador not in tipos_compativeis for totalizador in totalizadores):
@@ -935,7 +971,7 @@ class ColunaPersonalizadaForm(forms.ModelForm):
 
         if commit:
             instance.save()
-            tipos_compativeis = set(TotalizadorColunaPersonalizada.tipos_compativeis_por_tipo_dado(tipo_dado))
+            tipos_compativeis = set(instance.tipos_totalizador_compativeis())
             totalizadores_ativos = set(totalizadores).intersection(tipos_compativeis)
             instance.totalizadores.exclude(tipo_totalizador__in=totalizadores_ativos).update(ativo=False)
             for tipo_totalizador in totalizadores_ativos:

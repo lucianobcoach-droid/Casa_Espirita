@@ -7,6 +7,17 @@
         gap: 0.9rem;
     }
 
+    .financeiro-coluna-form-page .financeiro-page-header-main {
+        display: grid;
+        gap: 0.35rem;
+        min-width: 0;
+    }
+
+    .financeiro-coluna-form-page .financeiro-page-title {
+        margin-bottom: 0;
+        line-height: 1.12;
+    }
+
     .financeiro-coluna-form-card {
         border: 1px solid rgba(203, 213, 225, 0.85);
         border-radius: 1rem;
@@ -240,7 +251,7 @@
         <div class="financeiro-coluna-form-body">
             <div class="financeiro-coluna-form-notice">
                 <strong>Recorte atual:</strong>
-                esta etapa permite apenas configurar a formula guiada com validacao estrutural segura. O calculo da formula continuara em microetapa posterior.
+                a formula guiada continua com validacao estrutural segura e calculo apenas em tempo de leitura. Quando o resultado for decimal ou monetario, os totalizadores podem usar esse mesmo valor calculado no rodape da tabela.
             </div>
 
             {% if form.non_field_errors %}
@@ -446,6 +457,8 @@
         const filtroBox = document.getElementById('financeiro-filtro-estruturado-box');
         const filtroCheckbox = document.getElementById('{{ form.filtro_estruturado.id_for_label }}');
         const formulaBox = document.getElementById('financeiro-formula-guiada-box');
+        const formulaOperacao = document.getElementById('{{ form.formula_operacao.id_for_label|default:"" }}');
+        const formulaResultadoTipo = document.getElementById('{{ form.formula_resultado_tipo.id_for_label|default:"" }}');
 
         function syncOpcoesLista() {
             if (!listaBox) {
@@ -456,18 +469,41 @@
             listaBox.classList.toggle('is-hidden', tipoSelecionado !== tipoLista);
         }
 
+        function formulaPermiteTotalizador() {
+            if (!formulaBox || formulaBox.classList.contains('is-hidden')) {
+                return false;
+            }
+            if (!formulaOperacao || !formulaResultadoTipo) {
+                return false;
+            }
+            const operacao = formulaOperacao.value;
+            const resultadoTipo = formulaResultadoTipo.value;
+            const operandosMarcados = formulaBox.querySelectorAll('input[type="checkbox"]:checked').length;
+            if (!operacao || !resultadoTipo) {
+                return false;
+            }
+            if (operacao === 'subtracao' || operacao === 'divisao') {
+                return operandosMarcados === 2;
+            }
+            return operandosMarcados >= 2;
+        }
+
         function syncTotalizadores() {
             const totalizadoresBox = document.getElementById('financeiro-totalizadores-configurados');
             if (!totalizadoresBox) {
                 return;
             }
             const tipoSelecionado = tipoDado ? tipoDado.value : '';
-            const formulaAtiva = formulaBox && !formulaBox.classList.contains('is-hidden');
+            const tipoTotalizador = (
+                tipoSelecionado === 'formula_controlada' && formulaPermiteTotalizador()
+                    ? formulaResultadoTipo.value
+                    : tipoSelecionado
+            );
             let possuiCompativel = false;
             options.forEach((option) => {
                 const tiposDado = (option.dataset.tiposDado || '').split(' ').filter(Boolean);
                 const checkbox = option.querySelector('input[type="checkbox"]');
-                const compativel = !formulaAtiva && Boolean(tipoSelecionado) && tiposDado.includes(tipoSelecionado);
+                const compativel = Boolean(tipoTotalizador) && tiposDado.includes(tipoTotalizador);
                 option.classList.toggle('is-hidden', !compativel);
                 if (checkbox) {
                     checkbox.disabled = !compativel;
@@ -512,6 +548,19 @@
                 syncFormulaGuiada();
                 syncTotalizadores();
             });
+            if (formulaOperacao) {
+                formulaOperacao.addEventListener('change', syncTotalizadores);
+            }
+            if (formulaResultadoTipo) {
+                formulaResultadoTipo.addEventListener('change', syncTotalizadores);
+            }
+            if (formulaBox) {
+                formulaBox.addEventListener('change', function (event) {
+                    if (event.target && event.target.matches('input[type="checkbox"]')) {
+                        syncTotalizadores();
+                    }
+                });
+            }
             syncOpcoesLista();
             syncFormulaGuiada();
             syncTotalizadores();
