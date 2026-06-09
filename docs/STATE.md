@@ -4826,3 +4826,18 @@ Status de homologacao da usuaria:
   - colunas temporariamente selecionadas
   - ordenacao atual
 - a exportacao XLSX continua disponivel e, nesta etapa, tambem respeita a selecao temporaria de colunas exibidas
+
+## Microetapa: auditoria transversal de categorias/subcategorias nos relatorios
+
+- consolidei a auditoria documental em `docs/AUDITORIA_RELATORIOS_CATEGORIAS.md`
+- o mapeamento confirmou tres contratos atuais distintos:
+  - `Resumo`, `Prestacao` e `Balancete` agrupam por `lancamento.categoria` atual, sem separar explicitamente categoria pai e subcategoria
+  - `Evolucao por categorias` ja trabalha com dois escopos reais: `categorias` e `subcategorias`
+  - `Frequencia por competencias` opera apenas com subcategoria controlada
+- recibos e termos usam a `categoria` atual como contexto documental e como validacao de unicidade por favorecido
+- a recomendacao consolidada ficou assim:
+  - categoria pai como agrupador gerencial padrao
+  - subcategoria como detalhe operacional do lancamento
+  - filtro por categoria pai expandindo para subcategorias filhas
+  - filtro por subcategoria restringindo apenas a subcategoria escolhida
+- a proxima microetapa recomendada e aplicar primeiro esse contrato ao `Resumo Financeiro`, reaproveitando o padrao ja maduro de `Evolucao por categorias`

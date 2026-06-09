@@ -6445,3 +6445,15 @@ Não houve alteração de código funcional nesta etapa.
 - exclusao de colunas invisiveis/arquivadas da selecao
 - exportacao XLSX respeitando as colunas selecionadas
 - exportacao XLSX respeitando a ordenacao atual
+
+## Microetapa: auditoria transversal de categorias/subcategorias nos relatorios
+
+- executei auditoria documental e tecnica sem mudanca funcional, consolidada em `docs/AUDITORIA_RELATORIOS_CATEGORIAS.md`
+- mapeei `Resumo`, `Extrato`, `Prestacao`, `Balancete`, `Evolucao por categorias`, `Frequencia por competencias`, `Listagem de lancamentos` e fluxos documentais de recibos/termos
+- o diagnostico confirmou:
+  - relatorios sinteticos ainda agrupam por `lancamento.categoria` atual
+  - `Evolucao por categorias` ja possui o contrato mais seguro de hierarquia (`categorias` x `subcategorias`)
+  - `Frequencia por competencias` ja trabalha explicitamente so com subcategoria controlada
+  - recibos/termos dependem da `categoria` atual como contexto documental e regra de unicidade
+- registrei classificacao por relatorio, oportunidade de melhoria, risco de mexer no calculo e prioridade sugerida
+- recomendei como proxima microetapa aplicar primeiro o contrato hierarquico ao `Resumo Financeiro`, reaproveitando o padrao ja maduro da tela de evolucao
