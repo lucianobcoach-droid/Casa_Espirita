@@ -4939,3 +4939,19 @@ Status de homologacao da usuaria:
 - decisao ainda pendente para microetapa propria:
   - quando houver subcategorias diferentes sob a mesma categoria pai, avaliar agrupamento por categoria pai com detalhamento opcional ou manutencao da separacao por subcategoria
 - ficou reforcado que nenhuma dessas frentes deve alterar recibos, termos, calculos ou relatorios sem SPEC dedicada
+
+## Microetapa documental: auditoria do comportamento atual de recibos e termos
+
+- consolidei a auditoria em `docs/AUDITORIA_RECIBOS_TERMOS_ATUAL.md`, com base em rotas, views, templates, helpers e testes reais do repositorio
+- ficou confirmado no codigo atual:
+  - `Recibo individual` usa um unico lancamento e pode usar `mensagem_recibo` da subcategoria/categoria vinculada ao lancamento
+  - `Recibos em lote` da listagem usam apenas `ids` selecionados manualmente por checkbox; nao existe hoje opcao backend de `todos filtrados`
+  - a acao visivel `Recibos em lote` da listagem redireciona para `financeiro:lancamento-recibos-por-favorecido`, nao para a rota tecnica `lancamento-recibo-lote`
+  - `Recibos por favorecido` agrupam por pessoa e consolidam itens apenas por descricao exata, sem separar por categoria pai ou subcategoria
+  - `Recibo especial` e fluxo isolado, baseado em lancamentos existentes + favorecido destinatario manual; aceita multiplos favorecidos originais e nao usa `mensagem_recibo`
+  - `Termo anual de quitacao` usa o filtro GET atual da listagem, nao os checkboxes; depois restringe internamente para receitas quitadas, com favorecido e sem rateio
+- a auditoria tambem confirmou que hoje categoria/subcategoria nao sao o eixo principal dos documentos:
+  - categoria pai nao agrupa recibos
+  - subcategoria nao agrupa recibos
+  - categorias diferentes do mesmo favorecido podem coexistir no mesmo recibo por favorecido quando os ids forem selecionados juntos
+- a proxima frente recomendada ficou registrada como SPEC propria para decidir, antes de qualquer implementacao, se o futuro documental continua por favorecido puro ou sobe para categoria pai/subcategoria

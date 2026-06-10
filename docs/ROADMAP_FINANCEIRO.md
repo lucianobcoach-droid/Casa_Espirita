@@ -4068,3 +4068,22 @@ Consolidacao da homologacao:
   - decisao pendente para SPEC propria:
     - quando houver subcategorias diferentes sob a mesma categoria pai, avaliar agrupamento por categoria pai com detalhamento opcional ou manutencao da separacao por subcategoria
   - restricao: nao alterar recibos, termos ou regras documentais atuais sem microetapa dedicada
+
+## 34. Auditoria do comportamento atual de recibos e termos
+
+- auditoria documental/tecnica consolidada em `docs/AUDITORIA_RECIBOS_TERMOS_ATUAL.md`
+- mapa real confirmado no codigo atual:
+  - `Recibo individual`: um lancamento por vez, com possibilidade de `mensagem_recibo` da categoria vinculada
+  - `Recibo em lote tecnico`: rota propria por `ids`, exigindo mesmo favorecido
+  - `Recibos por favorecido`: fluxo real da listagem para `Recibos em lote`, agrupando os ids selecionados por pessoa
+  - `Recibo especial`: fluxo isolado com destinatario manual
+  - `Termo anual`: fluxo por filtro GET atual da listagem, sem usar checkboxes
+  - `Termos anuais por favorecido`: rota de compatibilidade que apenas redireciona para a singular
+- achados centrais:
+  - hoje nao existe opcao backend de `todos filtrados` para recibos; o lote usa apenas os itens marcados
+  - hoje o agrupamento documental principal e por favorecido, nao por categoria pai nem por subcategoria
+  - hoje categorias diferentes do mesmo favorecido podem coexistir no mesmo recibo por favorecido
+  - hoje o termo anual continua separado do recibo e nao usa `mensagem_recibo`
+- proxima decisao recomendada:
+  - abrir SPEC curta para definir se o futuro documental permanece por favorecido puro ou ganha eixo explicito de categoria pai/subcategoria
+  - antes disso, nao reabrir o contrato atual dos recibos homologados

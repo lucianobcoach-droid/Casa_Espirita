@@ -6537,3 +6537,14 @@ Não houve alteração de código funcional nesta etapa.
 - deixei mapeadas como candidatas iniciais dessa propagacao: `Listagem de lancamentos`, `Resumo Financeiro`, `Historico do favorecido`, `Auditoria do financeiro` e `Frequencia por competencias`
 - registrei que a pendencia futura de `Prestacao/Fechamento` e `Balancete` nesta frente e de leitura/nomenclatura entre categoria pai e subcategoria, sem reabrir calculo
 - consolidei a regra documental esperada de `Recibos/Termos`: mesma subcategoria agrupa; categorias pai diferentes continuam separadas; agrupamento de subcategorias irmas sob a mesma categoria pai fica pendente de SPEC propria
+
+## Microetapa documental: auditoria do comportamento atual de recibos e termos
+
+- criei `docs/AUDITORIA_RECIBOS_TERMOS_ATUAL.md` para registrar o comportamento atual real de recibos e termos sem alterar codigo funcional
+- confirmei no codigo que:
+  - o `Recibo individual` usa um unico lancamento e pode aplicar `mensagem_recibo` da categoria vinculada
+  - a acao visivel `Recibos em lote` da listagem trabalha por `ids` selecionados manualmente e redireciona para `financeiro:lancamento-recibos-por-favorecido`
+  - o `Recibo especial` usa lancamentos existentes + destinatario manual e nao altera favorecidos originais
+  - o `Termo anual` nasce do filtro GET atual da listagem, nao dos checkboxes, e depois restringe o universo para receitas quitadas com favorecido e sem rateio
+- o diagnostico fechou que hoje o agrupamento documental principal e por favorecido, nao por categoria pai nem por subcategoria
+- deixei recomendada como proxima etapa uma SPEC curta para decidir se o futuro documental deve permanecer por favorecido puro ou ganhar eixo proprio de categoria/subcategoria
