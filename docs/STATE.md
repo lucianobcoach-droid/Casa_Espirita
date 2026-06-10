@@ -4955,3 +4955,17 @@ Status de homologacao da usuaria:
   - subcategoria nao agrupa recibos
   - categorias diferentes do mesmo favorecido podem coexistir no mesmo recibo por favorecido quando os ids forem selecionados juntos
 - a proxima frente recomendada ficou registrada como SPEC propria para decidir, antes de qualquer implementacao, se o futuro documental continua por favorecido puro ou sobe para categoria pai/subcategoria
+
+## Microetapa: recibos em lote com explicacao operacional e opcao por filtro
+
+- a listagem de lancamentos agora explicita de forma curta que:
+  - `Emitir recibos dos selecionados` usa apenas os itens marcados manualmente
+  - `Marcar todos` continua atuando apenas sobre a pagina visivel
+  - `Termo anual de quitacao` continua usando o filtro atual da listagem, nao os checkboxes
+- foi adicionada uma opcao explicita `Emitir recibos de todos os filtrados`, reaproveitando o mesmo fluxo atual de `Recibos por favorecido`
+- a nova opcao usa o mesmo recorte filtrado da listagem, ignora paginacao e preserva:
+  - agrupamento por favorecido
+  - consolidacao por descricao exata
+  - categoria/subcategoria apenas como filtro operacional, nao como eixo documental
+- foi adotado limite operacional conservador de ate `1000` lancamentos filtrados por emissao; acima disso a tela pede refinamento do filtro
+- o `Termo anual`, o `Recibo individual`, o `Recibo especial` e o layout/documento dos recibos existentes permaneceram sem alteracao

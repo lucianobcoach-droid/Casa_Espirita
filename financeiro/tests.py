@@ -1,5 +1,6 @@
 import json
 import re
+from urllib.parse import parse_qs, urlencode, urlparse
 from datetime import date
 from decimal import Decimal
 from io import BytesIO
@@ -1455,6 +1456,14 @@ class ExtratoFinanceiroMultiplasContasTests(TestCase):
             perfil.permissoes.add(self._garantir_permissao(codigo))
         UsuarioPerfilAcesso.objects.create(usuario=usuario, perfil=perfil)
         self.client.force_login(usuario)
+
+    def _ids_do_redirecionamento(self, response):
+        query = parse_qs(urlparse(response['Location']).query)
+        return set(filter(None, (query.get('ids') or [''])[0].split(',')))
+
+    def _ids_do_redirecionamento(self, response):
+        query = parse_qs(urlparse(response['Location']).query)
+        return set(filter(None, (query.get('ids') or [''])[0].split(',')))
 
     def _criar_transferencia(self, descricao, conta_origem, conta_destino, valor, data_pagamento):
         return LancamentoFinanceiro.objects.create(
@@ -4964,6 +4973,10 @@ class LancamentoListagemAcoesTests(TestCase):
         UsuarioPerfilAcesso.objects.create(usuario=usuario, perfil=perfil)
         self.client.force_login(usuario)
 
+    def _ids_do_redirecionamento(self, response):
+        query = parse_qs(urlparse(response['Location']).query)
+        return set(filter(None, (query.get('ids') or [''])[0].split(',')))
+
     def test_historico_do_favorecido_busca_por_categoria_centro_custo_e_conta(self):
         self._login_com_permissoes(
             'user-historico-favorecido-busca',
@@ -5301,6 +5314,132 @@ class LancamentoListagemAcoesTests(TestCase):
         )
         self.assertEqual(response_get.status_code, 200)
 
+    def test_listagem_exibe_orientacoes_de_recibos_e_aceita_por_pagina_maior(self):
+        self._login_com_permissoes(
+            'user-listagem-orientacoes-recibo',
+            [
+                'financeiro.lancamentos.listar',
+                'financeiro.lancamentos.emitir_recibo',
+            ],
+        )
+
+        response = self.client.get(
+            reverse('financeiro:lancamento-list'),
+            {'por_pagina': '1000'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Recibos em lote usam apenas os lan')
+        self.assertContains(response, 'Marcar todos seleciona somente os itens vis')
+        self.assertContains(response, 'Termo anual considera o filtro atual da listagem.')
+        self.assertContains(response, 'Emitir recibos dos selecionados')
+        self.assertContains(response, 'Emitir recibos de todos os filtrados')
+        self.assertEqual(response.context['por_pagina'], 1000)
+
+    def test_emitir_recibos_dos_selecionados_preserva_fluxo_atual_por_ids(self):
+        self._login_com_permissoes(
+            'user-recibos-selecionados',
+            [
+                'financeiro.lancamentos.listar',
+                'financeiro.lancamentos.emitir_recibo',
+            ],
+        )
+
+        response = self.client.post(
+            reverse('financeiro:lancamento-acoes-lote'),
+            {
+                'acao_lote': 'emitir_recibos',
+                'lancamentos_selecionados': [f'lancamento:{self.lancamento_evento.pk}'],
+                'filtros_retorno': 'status=quitado',
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse('financeiro:lancamento-recibos-por-favorecido'), response['Location'])
+        self.assertEqual(self._ids_do_redirecionamento(response), {str(self.lancamento_evento.pk)})
+        self.assertIn('filtros=status%3Dquitado', response['Location'])
+
+    def test_emitir_recibos_de_todos_os_filtrados_ignora_paginacao_e_respeita_filtros(self):
+        self._login_com_permissoes(
+            'user-recibos-filtrados',
+            [
+                'financeiro.lancamentos.listar',
+                'financeiro.lancamentos.emitir_recibo',
+            ],
+        )
+
+        esperados = {str(self.lancamento_evento.pk)}
+        for indice in range(30):
+            lancamento = LancamentoFinanceiro.objects.create(
+                descricao=f'Evento pagina {indice}',
+                tipo=LancamentoFinanceiro.TipoLancamento.RECEITA,
+                status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+                valor=Decimal('10.00'),
+                data_competencia=date(2026, 4, 10),
+                data_pagamento=date(2026, 4, 10),
+                numero_documento=f'LIST-EVT-{indice:03d}',
+                pessoa=self.pessoa,
+                categoria=self.subcategoria_evento,
+                conta=self.conta,
+            )
+            esperados.add(str(lancamento.pk))
+
+        LancamentoFinanceiro.objects.create(
+            descricao='Evento fora do filtro',
+            tipo=LancamentoFinanceiro.TipoLancamento.RECEITA,
+            status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+            valor=Decimal('12.00'),
+            data_competencia=date(2026, 4, 11),
+            data_pagamento=date(2026, 4, 11),
+            numero_documento='LIST-EVT-FORA',
+            pessoa=self.pessoa,
+            categoria=self.categoria_nao_controlada,
+            conta=self.conta,
+        )
+
+        filtros_retorno = urlencode(
+            {
+                'descricao': 'Evento',
+                'status': LancamentoFinanceiro.StatusLancamento.QUITADO,
+                'categoria_pai': str(self.categoria_receita_eventos.pk),
+                'subcategoria': str(self.subcategoria_evento.pk),
+                'por_pagina': '25',
+            }
+        )
+        response = self.client.post(
+            reverse('financeiro:lancamento-acoes-lote'),
+            {
+                'acao_lote': 'emitir_recibos_filtrados',
+                'filtros_retorno': filtros_retorno,
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse('financeiro:lancamento-recibos-por-favorecido'), response['Location'])
+        self.assertEqual(self._ids_do_redirecionamento(response), esperados)
+        self.assertIn('por_pagina%3D25', response['Location'])
+
+    def test_emitir_recibos_de_todos_os_filtrados_avisa_quando_nao_ha_resultado(self):
+        self._login_com_permissoes(
+            'user-recibos-filtrados-vazio',
+            [
+                'financeiro.lancamentos.listar',
+                'financeiro.lancamentos.emitir_recibo',
+            ],
+        )
+
+        response = self.client.post(
+            reverse('financeiro:lancamento-acoes-lote'),
+            {
+                'acao_lote': 'emitir_recibos_filtrados',
+                'filtros_retorno': 'descricao=nao-existe',
+            },
+            follow=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Nenhum lancamento do filtro atual foi encontrado para emitir recibos em lote.')
+
 
 class CadastrosAuxiliaresFinanceiroFiltrosTests(TestCase):
     def setUp(self):
@@ -5588,7 +5727,6 @@ class CadastrosAuxiliaresFinanceiroFiltrosTests(TestCase):
         conteudo = '\n'.join(' | '.join(linha) for linha in self._ler_linhas_xlsx(response.content))
         self.assertIn(self.centro_custo_inativo.nome, conteudo)
         self.assertNotIn(self.centro_custo_ativo.nome, conteudo)
-
 
 class LancamentoReciboEspecialTests(TestCase):
     def setUp(self):

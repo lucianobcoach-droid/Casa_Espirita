@@ -205,4 +205,8 @@ Este documento consolida regras permanentes do sistema. Ele não substitui o his
 - Em `Prestacao/Fechamento` e `Balancete`, a proxima pendencia desta frente e apenas a leitura documental/gerencial de `categoria` x `subcategoria`; nao se deve reabrir calculo financeiro por causa desse ajuste conceitual.
 - Hoje, o `Recibo individual` usa um unico lancamento e pode aplicar `mensagem_recibo` da categoria vinculada ao proprio lancamento, com fallback institucional quando a mensagem estiver vazia.
 - Hoje, os `Recibos em lote` da listagem usam apenas os `ids` selecionados manualmente, agrupam os documentos por favorecido e consolidam itens apenas por descricao exata; nao usam categoria pai ou subcategoria como eixo documental principal.
+- Na `Listagem de lancamentos`, a emissao de recibos deve diferenciar explicitamente dois modos:
+  - `Emitir recibos dos selecionados`: usa apenas os itens marcados manualmente na tela
+  - `Emitir recibos de todos os filtrados`: usa o mesmo recorte filtrado da listagem, ignora paginacao e preserva o mesmo agrupamento documental por favorecido + descricao exata
+- Na `Listagem de lancamentos`, o checkbox `Marcar todos` continua limitado aos itens visiveis da pagina atual.
 - Hoje, o `Termo anual de quitacao` nasce do filtro GET atual da listagem, ignora checkboxes e restringe internamente o universo a receitas quitadas, com favorecido e sem rateio, gerando um documento por favorecido no mesmo HTML.

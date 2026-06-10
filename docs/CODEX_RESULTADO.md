@@ -6548,3 +6548,24 @@ Não houve alteração de código funcional nesta etapa.
   - o `Termo anual` nasce do filtro GET atual da listagem, nao dos checkboxes, e depois restringe o universo para receitas quitadas com favorecido e sem rateio
 - o diagnostico fechou que hoje o agrupamento documental principal e por favorecido, nao por categoria pai nem por subcategoria
 - deixei recomendada como proxima etapa uma SPEC curta para decidir se o futuro documental deve permanecer por favorecido puro ou ganhar eixo proprio de categoria/subcategoria
+
+## Microetapa: melhora operacional dos recibos em lote na listagem
+
+- ajustei a microcopy da listagem para deixar explicito que:
+  - recibos em lote por selecionados usam somente os lancamentos marcados
+  - `Marcar todos` vale apenas para a pagina atual
+  - `Termo anual de quitacao` continua baseado no filtro GET atual
+- adicionei a opcao `Emitir recibos de todos os filtrados`, reaproveitando `financeiro:lancamento-recibos-por-favorecido` sem alterar o documento final
+- o recorte por filtro agora pode ser usado diretamente para recibos em lote, inclusive com categoria pai, subcategoria, busca textual e demais filtros ja suportados pela listagem
+- mantive intactos:
+  - recibo individual
+  - recibo especial
+  - termo anual
+  - agrupamento documental por favorecido + descricao exata
+- protecao operacional adotada:
+  - limite de `1000` lancamentos filtrados por emissao antes de exigir refinamento do filtro
+- cobertura automatizada adicionada para:
+  - microcopy e opcoes novas da listagem
+  - redirecionamento atual por ids selecionados
+  - emissao por todos os filtrados ignorando paginacao
+  - aviso amigavel quando o filtro nao retorna lancamentos

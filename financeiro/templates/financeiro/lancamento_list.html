@@ -899,7 +899,8 @@
                                 <option value="alterar_status">Alterar status</option>
                                 {% endif %}
                                 {% if pode_emitir_recibo %}
-                                <option value="emitir_recibos">Recibos em lote</option>
+                                <option value="emitir_recibos">Emitir recibos dos selecionados</option>
+                                <option value="emitir_recibos_filtrados">Emitir recibos de todos os filtrados</option>
                                 <option value="recibo_especial">Recibo especial</option>
                                 {% endif %}
                                 {% if pode_acao_lote_excluir %}
@@ -932,6 +933,11 @@
                 </a>
                 {% endif %}
             </div>
+            {% if pode_emitir_recibo %}
+            <p class="help is-size-7 has-text-grey no-print mb-3">
+                Recibos em lote usam apenas os lan&ccedil;amentos marcados. Marcar todos seleciona somente os itens vis&iacute;veis nesta p&aacute;gina. Termo anual considera o filtro atual da listagem.
+            </p>
+            {% endif %}
             {% endif %}
 
             <div class="financeiro-lancamento-summary-section no-print">
@@ -1653,6 +1659,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 return checkbox.checked;
             });
             const acao = acaoSelect ? acaoSelect.value : '';
+
+            if (acao === 'emitir_recibos_filtrados') {
+                return;
+            }
 
             if (!selecionados.length) {
                 event.preventDefault();

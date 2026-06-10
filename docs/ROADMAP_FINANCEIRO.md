@@ -4087,3 +4087,19 @@ Consolidacao da homologacao:
 - proxima decisao recomendada:
   - abrir SPEC curta para definir se o futuro documental permanece por favorecido puro ou ganha eixo explicito de categoria pai/subcategoria
   - antes disso, nao reabrir o contrato atual dos recibos homologados
+
+## 35. Recibos em lote: operacao da listagem refinada
+
+- entregue no recorte atual:
+  - explicacao curta na listagem sobre selecionados, `Marcar todos` por pagina e `Termo anual` por filtro atual
+  - opcao explicita `Emitir recibos de todos os filtrados`
+  - reaproveitamento do fluxo atual de `Recibos por favorecido`, sem alterar layout/documento
+- preservado:
+  - agrupamento por favorecido
+  - consolidacao por descricao exata
+  - categoria/subcategoria apenas como filtro operacional da listagem
+  - recibo individual, recibo especial e termo anual sem regressao funcional
+- limite operacional adotado:
+  - ate `1000` lancamentos filtrados por emissao; acima disso, orientar refinamento do filtro
+- proxima frente recomendada:
+  - avaliar se a mesma clareza operacional deve ser propagada para outras acoes em lote da listagem, sem reabrir a regra documental dos recibos

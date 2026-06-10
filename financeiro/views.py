@@ -21,7 +21,7 @@ from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db import transaction
 from django.db.models import Count, Q, Sum, TextField
 from django.db.models.functions import Cast, Coalesce
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, QueryDict
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
@@ -87,8 +87,9 @@ LANCAMENTO_ORDENACOES_LISTAGEM = {
 }
 LANCAMENTO_ORDENACAO_PADRAO = '-data'
 LANCAMENTO_COLUNAS_ORDENAVEIS = ('descricao', 'tipo', 'status', 'valor', 'pessoa', 'data')
-LANCAMENTO_LISTAGEM_POR_PAGINA_OPCOES = (25, 50, 100, 200)
+LANCAMENTO_LISTAGEM_POR_PAGINA_OPCOES = (25, 50, 100, 200, 500, 1000)
 LANCAMENTO_LISTAGEM_POR_PAGINA_PADRAO = 50
+LANCAMENTO_RECIBOS_FILTRADOS_LIMITE = 1000
 LANCAMENTO_LISTAGEM_COLUNAS_SESSAO = 'financeiro_lancamentos_colunas_configuraveis'
 LANCAMENTO_LISTAGEM_COLUNAS_ESSENCIAIS = ('data_pagamento', 'tipo', 'descricao', 'valor')
 LANCAMENTO_LISTAGEM_COLUNAS_CONFIGURAVEIS = (
@@ -4307,6 +4308,33 @@ def _resolver_lancamentos_para_acoes_em_lote(tokens_selecao):
         .select_related('conta', 'conta_destino', 'pessoa', 'categoria', 'centro_custo')
         .order_by('pk')
     )
+
+
+def _resolver_lancamentos_filtrados_para_recibos(filtros_raw: str):
+    parametros = QueryDict(filtros_raw or '', mutable=False)
+    queryset = (
+        LancamentoFinanceiro.objects.all()
+        .select_related('conta', 'conta_destino', 'pessoa', 'categoria', 'centro_custo')
+    )
+    queryset = _filtrar_lancamentos_por_parametros(queryset, parametros)
+    quantidade_filtrada = queryset.count()
+    if quantidade_filtrada <= 0:
+        return []
+    if quantidade_filtrada > LANCAMENTO_RECIBOS_FILTRADOS_LIMITE:
+        raise ValidationError(
+            [
+                'Refine os filtros antes de emitir recibos de todos os filtrados. '
+                f'O limite operacional atual e de {LANCAMENTO_RECIBOS_FILTRADOS_LIMITE} lancamentos.'
+            ]
+        )
+
+    lancamentos_visuais = _montar_lancamentos_visuais_listagem(queryset)
+    tokens_selecao = [
+        lancamento_visual['token_selecao']
+        for lancamento_visual in lancamentos_visuais
+        if (lancamento_visual.get('token_selecao') or '').strip()
+    ]
+    return _resolver_lancamentos_para_acoes_em_lote(tokens_selecao)
 
 
 def _centena_por_extenso(numero: int) -> str:
@@ -11715,6 +11743,7 @@ class LancamentoFinanceiroAcoesLoteView(FinanceiroPermissaoMixin, View):
             return 'financeiro.lancamentos.acoes_em_lote_excluir'
         if (self.request.POST.get('acao_lote') or '').strip() in {
             'emitir_recibos',
+            'emitir_recibos_filtrados',
             'recibo_especial',
             'recibo_lote',
             'recibos_lote_por_favorecido',
@@ -11729,6 +11758,29 @@ class LancamentoFinanceiroAcoesLoteView(FinanceiroPermissaoMixin, View):
             return redirect(f'{url_listagem}?{filtros_retorno}')
         return redirect(url_listagem)
 
+    def _redirect_recibos_por_favorecido(self, request, lancamentos):
+        pessoas_ids = {lancamento.pessoa_id for lancamento in lancamentos}
+        if None in pessoas_ids:
+            messages.warning(
+                request,
+                'Selecione apenas lancamentos com favorecido para emitir recibos em lote.',
+            )
+            return self._redirect_listagem(request)
+        if any(lancamento.tipo != LancamentoFinanceiro.TipoLancamento.RECEITA for lancamento in lancamentos):
+            messages.warning(
+                request,
+                'Recibos em lote so podem ser emitidos para lancamentos do tipo receita.',
+            )
+            return self._redirect_listagem(request)
+
+        ids_param = ','.join(str(lancamento.pk) for lancamento in lancamentos)
+        filtros_retorno = (request.POST.get('filtros_retorno') or '').strip()
+        query_params = {'ids': ids_param}
+        if filtros_retorno:
+            query_params['filtros'] = filtros_retorno
+        url_recibos = reverse('financeiro:lancamento-recibos-por-favorecido')
+        return redirect(f'{url_recibos}?{urlencode(query_params)}')
+
     def post(self, request, *args, **kwargs):
         acao_lote = (request.POST.get('acao_lote') or '').strip()
         novo_status = (request.POST.get('novo_status_lote') or '').strip()
@@ -11737,6 +11789,24 @@ class LancamentoFinanceiroAcoesLoteView(FinanceiroPermissaoMixin, View):
             for token in request.POST.getlist('lancamentos_selecionados')
             if (token or '').strip()
         ]
+
+        if acao_lote == 'emitir_recibos_filtrados':
+            try:
+                lancamentos = _resolver_lancamentos_filtrados_para_recibos(
+                    (request.POST.get('filtros_retorno') or '').strip()
+                )
+            except ValidationError as error:
+                for mensagem in error.messages:
+                    messages.warning(request, mensagem)
+                return self._redirect_listagem(request)
+
+            if not lancamentos:
+                messages.warning(
+                    request,
+                    'Nenhum lancamento do filtro atual foi encontrado para emitir recibos em lote.',
+                )
+                return self._redirect_listagem(request)
+            return self._redirect_recibos_por_favorecido(request, lancamentos)
 
         if not tokens_selecao:
             messages.warning(request, 'Selecione pelo menos um lanÃ§amento para aplicar uma aÃ§Ã£o em lote.')
@@ -11809,26 +11879,7 @@ class LancamentoFinanceiroAcoesLoteView(FinanceiroPermissaoMixin, View):
             return self._redirect_listagem(request)
 
         if acao_lote in {'emitir_recibos', 'recibo_lote', 'recibos_lote_por_favorecido'}:
-            pessoas_ids = {lancamento.pessoa_id for lancamento in lancamentos}
-            if None in pessoas_ids:
-                messages.warning(
-                    request,
-                    'Selecione apenas lancamentos com favorecido para emitir recibos em lote.',
-                )
-                return self._redirect_listagem(request)
-            if any(lancamento.tipo != LancamentoFinanceiro.TipoLancamento.RECEITA for lancamento in lancamentos):
-                messages.warning(
-                    request,
-                    'Recibos em lote so podem ser emitidos para lancamentos do tipo receita.',
-                )
-                return self._redirect_listagem(request)
-            ids_param = ','.join(str(lancamento.pk) for lancamento in lancamentos)
-            filtros_retorno = (request.POST.get('filtros_retorno') or '').strip()
-            query_params = {'ids': ids_param}
-            if filtros_retorno:
-                query_params['filtros'] = filtros_retorno
-            url_recibos = reverse('financeiro:lancamento-recibos-por-favorecido')
-            return redirect(f'{url_recibos}?{urlencode(query_params)}')
+            return self._redirect_recibos_por_favorecido(request, lancamentos)
 
         if acao_lote == 'recibo_especial':
             pessoas_ids = {lancamento.pessoa_id for lancamento in lancamentos}
