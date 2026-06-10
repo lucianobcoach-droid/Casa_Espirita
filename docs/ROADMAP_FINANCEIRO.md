@@ -4030,3 +4030,41 @@ Consolidacao da homologacao:
   - retorno seguro entre colunas e tela da tabela
   - preservacao de busca, filtros, grade, totalizadores, permissoes e auditoria
   - sem impacto no financeiro oficial
+
+## 33. Pendencias documentais abertas: exportacao, selecao multipla e recibos/termos
+
+- `Extrato Financeiro`
+  - status atual: exportacao XLSX ja entregue e validada no recorte presente
+  - pendencia futura aprovada: separar a exportacao em dois modos
+    - `Exportacao padrao`: replica colunas, ordem e leitura operacional da tela
+    - `Exportacao completa`: inclui os campos operacionais/documentais uteis ja disponiveis no contexto do extrato
+  - diretriz: nao criar calculo paralelo; a base continua sendo a mesma da tela
+- prioridade de modulo
+  - `biblioteca` permanece como backlog congelado nesta fase
+  - a prioridade ativa do projeto segue concentrada apenas em `financeiro`
+- selecao multipla transversal no `financeiro`
+  - diretriz tecnica obrigatoria: usar `request.GET.getlist()` onde houver multiplos valores por filtro
+  - diretriz de UX/estado: preservar a query string atual em paginacao, exportacao, impressao e retornos contextuais
+  - candidatos iniciais de propagacao:
+    - `Listagem de lancamentos`
+    - `Resumo Financeiro`
+    - `Historico do favorecido`
+    - `Auditoria do financeiro`
+    - `Frequencia por competencias`
+    - outras telas confirmadas por auditoria futura
+- `Prestacao/Fechamento` e `Balancete`
+  - pendencia aberta: refinar nomenclatura e leitura entre `categoria` e `subcategoria`
+  - nao e frente de calculo; a base financeira atual deve permanecer intacta
+  - direcao futura para `Prestacao`: permitir bloco analitico secundario opcional com detalhamento por subcategoria
+  - direcao futura para `Balancete`: manter documento compacto/institucional, podendo explicitar leitura gerencial por categoria pai sem perder sobriedade
+- `Recibos/Termos`
+  - regra documental esperada registrada:
+    - mesma subcategoria documental: agrupar no mesmo documento com soma de valores
+    - categorias pai diferentes: manter documentos separados
+  - exemplo de leitura:
+    - `05/01 - Doacao - R$ 100`
+    - `20/01 - Doacao - R$ 50`
+    - documento final: `Doacao - total R$ 150`
+  - decisao pendente para SPEC propria:
+    - quando houver subcategorias diferentes sob a mesma categoria pai, avaliar agrupamento por categoria pai com detalhamento opcional ou manutencao da separacao por subcategoria
+  - restricao: nao alterar recibos, termos ou regras documentais atuais sem microetapa dedicada

@@ -4914,3 +4914,28 @@ Status de homologacao da usuaria:
 - `Contas` agora localizam tambem por descricao, tipo de conta, disponibilidade e mensagem de indisponibilidade, com filtros simples de ativa, tipo e disponibilidade
 - `Centros de custo` mantiveram busca textual leve e passaram a ter filtro simples de ativo
 - as exportacoes XLSX desses quatro cadastros continuam disponiveis e preservam o mesmo recorte filtrado da tela
+
+## Microetapa documental: pendencias abertas de exportacao, selecao multipla e recibos/termos
+
+- foi registrado oficialmente que a exportacao XLSX do `Extrato Financeiro` ja existe e esta entregue no recorte atual
+- a pendencia futura aprovada para o `Extrato` e evoluir a exportacao para dois modos:
+  - `Exportacao padrao`: mesmo layout, colunas e ordem hoje exibidos na tela
+  - `Exportacao completa`: todos os campos operacionais/documentais uteis ja disponiveis no contexto exportado
+- a frente de `biblioteca` fica mantida como backlog congelado; a prioridade operacional atual permanece concentrada apenas em `financeiro`
+- como proxima prioridade transversal dentro de `financeiro`, ficou registrada a ampliacao segura de selecao multipla onde fizer sentido, com estas diretrizes:
+  - leitura por `request.GET.getlist()`
+  - preservacao integral da query string em paginacao, exportacao, impressao e acoes de retorno contextual
+  - candidatos iniciais: `Listagem de lancamentos`, `Resumo Financeiro`, `Historico do favorecido`, `Auditoria do financeiro`, `Frequencia por competencias` e demais telas confirmadas por auditoria
+- em `Prestacao/Fechamento` e `Balancete`, a pendencia aberta e apenas de nomenclatura/leitura entre `categoria` e `subcategoria`, sem reabrir calculo financeiro
+- para `Prestacao/Fechamento`, ficou registrado como frente futura possivel um bloco analitico secundario com detalhamento opcional por subcategoria
+- para `Balancete`, ficou registrado que a leitura deve continuar compacta/institucional, podendo explicitar no futuro que o agrupamento gerencial principal e por categoria pai
+- em `Recibos/Termos`, ficou consolidada a regra documental esperada:
+  - mesma subcategoria documental: agrupar valores no mesmo documento
+  - categorias pai diferentes: manter documentos separados
+- exemplo registrado:
+  - `05/01 - Doacao - R$ 100`
+  - `20/01 - Doacao - R$ 50`
+  - documento final: `Doacao - total R$ 150`
+- decisao ainda pendente para microetapa propria:
+  - quando houver subcategorias diferentes sob a mesma categoria pai, avaliar agrupamento por categoria pai com detalhamento opcional ou manutencao da separacao por subcategoria
+- ficou reforcado que nenhuma dessas frentes deve alterar recibos, termos, calculos ou relatorios sem SPEC dedicada

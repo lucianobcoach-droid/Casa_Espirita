@@ -6528,3 +6528,12 @@ Não houve alteração de código funcional nesta etapa.
   - busca/filtros de contas
   - busca/filtros de centros de custo
   - exportacoes respeitando o recorte filtrado
+
+## Microetapa documental: pendencias abertas de exportacao, selecao multipla e recibos/termos
+
+- registrei oficialmente que o XLSX do `Extrato Financeiro` ja existe; a pendencia futura e separar a exportacao em `Exportacao padrao` e `Exportacao completa`
+- baixei documentalmente que `biblioteca` segue congelada em backlog e que a prioridade operacional atual permanece em `financeiro`
+- consolidei como proxima frente transversal do modulo a selecao multipla segura, com uso de `request.GET.getlist()` e preservacao da query string em paginacao, exportacao, impressao e retornos contextuais
+- deixei mapeadas como candidatas iniciais dessa propagacao: `Listagem de lancamentos`, `Resumo Financeiro`, `Historico do favorecido`, `Auditoria do financeiro` e `Frequencia por competencias`
+- registrei que a pendencia futura de `Prestacao/Fechamento` e `Balancete` nesta frente e de leitura/nomenclatura entre categoria pai e subcategoria, sem reabrir calculo
+- consolidei a regra documental esperada de `Recibos/Termos`: mesma subcategoria agrupa; categorias pai diferentes continuam separadas; agrupamento de subcategorias irmas sob a mesma categoria pai fica pendente de SPEC propria

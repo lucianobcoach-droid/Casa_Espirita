@@ -602,6 +602,8 @@ Se houver conflito entre o pedido e o repositorio, pare e avise antes de codific
 - tentativas manuais anteriores de recomposicao visual do `lancamento_form.html` devem ser tratadas apenas como montagem intermediaria de estudo e nao como execucao valida da POC com tema-base real
 - a expansao do tema para outras telas do `financeiro` ou para modulos futuros so pode acontecer depois de auditoria visual e funcional real da tela piloto
 - se a base do tema resolver o problema visual de forma convincente, customizacoes pontuais por cima dela passam a ser aceitaveis; antes disso, a prioridade e validar a base pronta em vez de reabrir refinamentos incrementais
+- enquanto a reabertura do `financeiro` seguir como frente prioritaria, o app `biblioteca` deve permanecer congelado em backlog, salvo decisao explicita da usuaria
+- nas proximas ondas transversais do `financeiro`, filtros com selecao multipla devem priorizar `request.GET.getlist()` e preservacao de query string em paginacao, exportacao, impressao e retornos contextuais
 
 ## Governança permanente com GPT, Codex, AGENTS e skills
 
