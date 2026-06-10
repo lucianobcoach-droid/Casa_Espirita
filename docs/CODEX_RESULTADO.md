@@ -6512,3 +6512,19 @@ Não houve alteração de código funcional nesta etapa.
   - busca textual contextual no historico do documento
   - busca ampliada do historico do favorecido
   - combinacao de busca textual com filtros estruturados do historico
+
+## Microetapa: filtros ampliados nos cadastros auxiliares do financeiro
+
+- ampliei a busca textual e padronizei filtros simples em:
+  - `Favorecidos`
+  - `Categorias`
+  - `Contas`
+  - `Centros de custo`
+- mantive compatibilidade segura com filtros legados por query string e preservei as acoes/exportacoes ja existentes
+- as exportacoes XLSX desses cadastros passaram a reutilizar exatamente o mesmo recorte aplicado na listagem
+- cobertura automatizada adicionada para:
+  - busca ampliada de favorecidos
+  - busca/filtros de categorias
+  - busca/filtros de contas
+  - busca/filtros de centros de custo
+  - exportacoes respeitando o recorte filtrado

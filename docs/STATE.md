@@ -4905,3 +4905,12 @@ Status de homologacao da usuaria:
   - tipo e status
 - a busca textual do historico continua combinavel com periodo, tipo, status e conta
 - nao houve alteracao em `Resumo`, `Extrato`, `Prestacao`, `Balancete`, `Listagem de lancamentos`, `Tabelas personalizadas`, `biblioteca` ou `configuracoes`
+
+## Microetapa: filtros ampliados nos cadastros auxiliares do financeiro
+
+- os cadastros auxiliares de `Favorecidos`, `Categorias`, `Contas` e `Centros de custo` passaram a priorizar um campo `Buscar` com leitura parcial por `icontains`
+- `Favorecidos` agora localizam tambem por documento, e-mail, telefone, tipo de pessoa e observacoes, com filtros simples de ativo, recorrencia e tipo
+- `Categorias` agora localizam tambem por categoria pai, tipo e mensagem, com filtros simples de tipo, ativo, frequencia e categoria pai
+- `Contas` agora localizam tambem por descricao, tipo de conta, disponibilidade e mensagem de indisponibilidade, com filtros simples de ativa, tipo e disponibilidade
+- `Centros de custo` mantiveram busca textual leve e passaram a ter filtro simples de ativo
+- as exportacoes XLSX desses quatro cadastros continuam disponiveis e preservam o mesmo recorte filtrado da tela

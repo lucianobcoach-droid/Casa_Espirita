@@ -116,17 +116,48 @@
     <section class="financeiro-categoria-card">
         <form method="get" class="filters-box no-print">
             <div class="columns is-multiline">
-                <div class="column is-12-mobile is-6-tablet is-5-desktop">
-                    <label class="label">Nome</label>
-                    <input class="input" type="text" name="nome" value="{{ request.GET.nome }}" placeholder="Buscar por nome">
+                <div class="column is-12-mobile is-6-tablet is-4-desktop">
+                    <label class="label">Buscar</label>
+                    <input class="input" type="text" name="q" value="{{ request.GET.q }}" placeholder="Nome, categoria pai, tipo ou mensagem">
                 </div>
-                <div class="column is-12-mobile is-6-tablet is-5-desktop">
+                <div class="column is-6-mobile is-3-tablet is-2-desktop">
                     <label class="label">Tipo</label>
                     <div class="select is-fullwidth">
                         <select name="tipo">
                             <option value="">Todos</option>
                             <option value="receita" {% if request.GET.tipo == 'receita' %}selected{% endif %}>Receita</option>
                             <option value="despesa" {% if request.GET.tipo == 'despesa' %}selected{% endif %}>Despesa</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="column is-6-mobile is-3-tablet is-2-desktop">
+                    <label class="label">Ativo</label>
+                    <div class="select is-fullwidth">
+                        <select name="ativo">
+                            <option value="">Todas</option>
+                            <option value="ativas" {% if request.GET.ativo == 'ativas' %}selected{% endif %}>Ativas</option>
+                            <option value="inativas" {% if request.GET.ativo == 'inativas' %}selected{% endif %}>Inativas</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="column is-6-mobile is-3-tablet is-2-desktop">
+                    <label class="label">Frequ&ecirc;ncia</label>
+                    <div class="select is-fullwidth">
+                        <select name="recorrencia">
+                            <option value="">Todas</option>
+                            <option value="controladas" {% if request.GET.recorrencia == 'controladas' %}selected{% endif %}>Controladas</option>
+                            <option value="nao_controladas" {% if request.GET.recorrencia == 'nao_controladas' %}selected{% endif %}>N&atilde;o controladas</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="column is-12-mobile is-6-tablet is-2-desktop">
+                    <label class="label">Categoria pai</label>
+                    <div class="select is-fullwidth">
+                        <select name="categoria_pai">
+                            <option value="">Todas</option>
+                            {% for categoria_pai_item in categorias_pai_disponiveis %}
+                                <option value="{{ categoria_pai_item.pk }}" {% if request.GET.categoria_pai == categoria_pai_item.pk|stringformat:'s' %}selected{% endif %}>{{ categoria_pai_item.nome }}</option>
+                            {% endfor %}
                         </select>
                     </div>
                 </div>

@@ -150,17 +150,38 @@
     <section class="financeiro-conta-card">
         <form method="get" class="filters-box no-print">
             <div class="columns is-multiline">
-                <div class="column is-12-mobile is-6-tablet is-5-desktop">
-                    <label class="label">Nome</label>
-                    <input class="input" type="text" name="nome" value="{{ request.GET.nome }}" placeholder="Buscar por nome">
+                <div class="column is-12-mobile is-6-tablet is-4-desktop">
+                    <label class="label">Buscar</label>
+                    <input class="input" type="text" name="q" value="{{ request.GET.q }}" placeholder="Nome, descricao, tipo ou disponibilidade">
                 </div>
-                <div class="column is-12-mobile is-6-tablet is-5-desktop">
+                <div class="column is-6-mobile is-3-tablet is-2-desktop">
                     <label class="label">Situa&ccedil;&atilde;o</label>
                     <div class="select is-fullwidth">
                         <select name="ativa">
                             <option value="">Todas</option>
                             <option value="ativas" {% if request.GET.ativa == 'ativas' %}selected{% endif %}>Ativas</option>
                             <option value="inativas" {% if request.GET.ativa == 'inativas' %}selected{% endif %}>Inativas</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="column is-6-mobile is-3-tablet is-3-desktop">
+                    <label class="label">Tipo de conta</label>
+                    <div class="select is-fullwidth">
+                        <select name="tipo_conta">
+                            <option value="">Todos</option>
+                            {% for tipo_conta in tipos_conta_disponiveis %}
+                                <option value="{{ tipo_conta.pk }}" {% if request.GET.tipo_conta == tipo_conta.pk|stringformat:'s' %}selected{% endif %}>{{ tipo_conta.nome }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="column is-12-mobile is-6-tablet is-3-desktop">
+                    <label class="label">Disponibilidade</label>
+                    <div class="select is-fullwidth">
+                        <select name="disponibilidade">
+                            <option value="">Todas</option>
+                            <option value="disponivel" {% if request.GET.disponibilidade == 'disponivel' %}selected{% endif %}>Dispon&iacute;vel</option>
+                            <option value="indisponivel" {% if request.GET.disponibilidade == 'indisponivel' %}selected{% endif %}>Indispon&iacute;vel/vinculada</option>
                         </select>
                     </div>
                 </div>

@@ -5302,6 +5302,294 @@ class LancamentoListagemAcoesTests(TestCase):
         self.assertEqual(response_get.status_code, 200)
 
 
+class CadastrosAuxiliaresFinanceiroFiltrosTests(TestCase):
+    def setUp(self):
+        self.tipo_conta_caixa = TipoContaFinanceira.objects.create(codigo='TIPO-CAIXA', nome='Caixa', ordem=1)
+        self.tipo_conta_banco = TipoContaFinanceira.objects.create(codigo='TIPO-BANCO', nome='Banco', ordem=2)
+
+        self.conta_ativa = ContaFinanceira.objects.create(
+            nome='Conta pastoral',
+            descricao='Uso administrativo geral',
+            saldo_inicial=Decimal('10.00'),
+            data_saldo_inicial=date(2026, 1, 1),
+            tipo_conta=self.tipo_conta_caixa,
+            disponibilidade=ContaFinanceira.DisponibilidadeConta.DISPONIVEL,
+            ativa=True,
+        )
+        self.conta_inativa = ContaFinanceira.objects.create(
+            nome='Conta vinculada legado',
+            descricao='Reserva historica',
+            saldo_inicial=Decimal('20.00'),
+            data_saldo_inicial=date(2026, 1, 1),
+            tipo_conta=self.tipo_conta_banco,
+            disponibilidade=ContaFinanceira.DisponibilidadeConta.INDISPONIVEL,
+            mensagem_indisponibilidade='Uso restrito a patrimonio',
+            ativa=False,
+        )
+
+        self.centro_custo_ativo = CentroCusto.objects.create(codigo='CC010', nome='Centro pastoral', ativo=True)
+        self.centro_custo_inativo = CentroCusto.objects.create(codigo='CC999', nome='Centro legado', ativo=False)
+
+        self.pessoa_ativa = PessoaFinanceira.objects.create(
+            codigo='P010',
+            nome='Maria Auxiliar',
+            tipo_pessoa=PessoaFinanceira.TipoPessoa.FISICA,
+            documento='123.456.789-00',
+            telefone='11999990000',
+            email='maria@casa.test',
+            observacoes='Atendimento fraterno',
+            contribuinte_recorrente=True,
+            ativo=True,
+        )
+        self.pessoa_inativa = PessoaFinanceira.objects.create(
+            codigo='P011',
+            nome='Editora Luz',
+            tipo_pessoa=PessoaFinanceira.TipoPessoa.JURIDICA,
+            documento='12.345.678/0001-99',
+            telefone='1133334444',
+            email='contato@editora.test',
+            observacoes='Fornecedor de livros',
+            contribuinte_recorrente=False,
+            ativo=False,
+        )
+
+        self.categoria_pai_receita = CategoriaFinanceira.objects.create(
+            nome='Receitas auxiliares',
+            tipo=CategoriaFinanceira.TipoCategoria.RECEITA,
+            ativo=True,
+        )
+        self.subcategoria_controlada = CategoriaFinanceira.objects.create(
+            nome='Contribuicao fraterna',
+            tipo=CategoriaFinanceira.TipoCategoria.RECEITA,
+            categoria_pai=self.categoria_pai_receita,
+            controla_recorrencia_competencia=True,
+            mensagem_recibo='Doacao recorrente fraterna',
+            ativo=True,
+        )
+        self.categoria_inativa = CategoriaFinanceira.objects.create(
+            nome='Despesa legado',
+            tipo=CategoriaFinanceira.TipoCategoria.DESPESA,
+            controla_recorrencia_competencia=False,
+            ativo=False,
+        )
+
+    def _garantir_permissao(self, codigo: str) -> PermissaoSistema:
+        permissao = PermissaoSistema.objects.filter(codigo=codigo).first()
+        if permissao:
+            return permissao
+        partes = codigo.split('.')
+        modulo = partes[0] if len(partes) > 0 else 'financeiro'
+        recurso = partes[1] if len(partes) > 1 else 'geral'
+        acao = '.'.join(partes[2:]) if len(partes) > 2 else 'acessar'
+        return PermissaoSistema.objects.create(
+            codigo=codigo,
+            nome=codigo,
+            modulo=modulo,
+            recurso=recurso,
+            acao=acao,
+            ativo=True,
+        )
+
+    def _login_com_permissoes(self, username: str, codigos_permissao: list[str]):
+        user_model = get_user_model()
+        usuario = user_model.objects.create_user(
+            username=username,
+            password='senha-forte-123',
+            email=f'{username}@teste.local',
+            is_active=True,
+        )
+        perfil = PerfilAcesso.objects.create(
+            codigo=f'perfil-{username}',
+            nome=f'Perfil {username}',
+            ativo=True,
+        )
+        for codigo in codigos_permissao:
+            perfil.permissoes.add(self._garantir_permissao(codigo))
+        UsuarioPerfilAcesso.objects.create(usuario=usuario, perfil=perfil)
+        self.client.force_login(usuario)
+
+    def _ler_linhas_xlsx(self, conteudo: bytes) -> list[list[str]]:
+        with ZipFile(BytesIO(conteudo)) as arquivo_xlsx:
+            workbook_tree = ElementTree.fromstring(arquivo_xlsx.read('xl/workbook.xml'))
+            namespace_workbook = {
+                'main': 'http://schemas.openxmlformats.org/spreadsheetml/2006/main',
+                'rel': 'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
+            }
+            primeira_planilha = workbook_tree.find('main:sheets/main:sheet', namespace_workbook)
+            self.assertIsNotNone(primeira_planilha)
+            relationship_id = primeira_planilha.get('{http://schemas.openxmlformats.org/officeDocument/2006/relationships}id')
+            relacoes_tree = ElementTree.fromstring(arquivo_xlsx.read('xl/_rels/workbook.xml.rels'))
+            namespace_rel = {'rel': 'http://schemas.openxmlformats.org/package/2006/relationships'}
+            destino = None
+            for relation in relacoes_tree.findall('rel:Relationship', namespace_rel):
+                if relation.attrib.get('Id') == relationship_id:
+                    destino = relation.attrib.get('Target')
+                    break
+            self.assertTrue(destino)
+            planilha_tree = ElementTree.fromstring(arquivo_xlsx.read(f"xl/{destino.lstrip('./')}"))
+            namespace_planilha = {'main': 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'}
+
+            linhas = []
+            for linha in planilha_tree.findall('main:sheetData/main:row', namespace_planilha):
+                valores = []
+                for celula in linha.findall('main:c', namespace_planilha):
+                    referencia = celula.get('r', '')
+                    correspondencia = re.match(r'([A-Z]+)\d+$', referencia)
+                    if correspondencia:
+                        indice_coluna = 0
+                        for letra in correspondencia.group(1):
+                            indice_coluna = (indice_coluna * 26) + (ord(letra) - ord('A') + 1)
+                        while len(valores) < indice_coluna - 1:
+                            valores.append('')
+                    valores.append(''.join(celula.itertext()))
+                linhas.append(valores)
+            return linhas
+
+    def test_favorecidos_amplia_busca_e_filtros_simples(self):
+        self._login_com_permissoes('user-pessoa-filtros', ['financeiro.pessoas.listar'])
+
+        response = self.client.get(
+            reverse('financeiro:pessoa-list'),
+            {
+                'q': 'maria@casa.test',
+                'ativo': 'ativos',
+                'recorrencia': 'recorrentes',
+                'tipo_pessoa': PessoaFinanceira.TipoPessoa.FISICA,
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.pessoa_ativa.nome)
+        self.assertNotContains(response, self.pessoa_inativa.nome)
+        self.assertContains(response, 'Nome, codigo, documento, e-mail ou telefone')
+
+    def test_categorias_amplia_busca_e_filtros_simples(self):
+        self._login_com_permissoes('user-categoria-filtros', ['financeiro.categorias.listar'])
+
+        response = self.client.get(
+            reverse('financeiro:categoria-list'),
+            {
+                'q': 'Receitas auxiliares',
+                'tipo': CategoriaFinanceira.TipoCategoria.RECEITA,
+                'ativo': 'ativas',
+                'recorrencia': 'controladas',
+                'categoria_pai': str(self.categoria_pai_receita.pk),
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.subcategoria_controlada.nome)
+        categorias_filtradas = list(response.context['categorias'])
+        self.assertIn(self.subcategoria_controlada, categorias_filtradas)
+        self.assertNotIn(self.categoria_inativa, categorias_filtradas)
+        self.assertContains(response, 'Nome, categoria pai, tipo ou mensagem')
+
+    def test_contas_amplia_busca_e_filtros_simples(self):
+        self._login_com_permissoes('user-conta-filtros', ['financeiro.contas.listar'])
+
+        response = self.client.get(
+            reverse('financeiro:conta-list'),
+            {
+                'q': 'restrito a patrimonio',
+                'ativa': 'inativas',
+                'tipo_conta': str(self.tipo_conta_banco.pk),
+                'disponibilidade': ContaFinanceira.DisponibilidadeConta.INDISPONIVEL,
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.conta_inativa.nome)
+        self.assertNotContains(response, self.conta_ativa.nome)
+        self.assertContains(response, 'Nome, descricao, tipo ou disponibilidade')
+
+    def test_centros_custo_amplia_busca_e_filtro_ativo(self):
+        self._login_com_permissoes('user-centro-filtros', ['financeiro.centros_custo.listar'])
+
+        response = self.client.get(
+            reverse('financeiro:centro-custo-list'),
+            {
+                'q': 'CC999',
+                'ativo': 'inativos',
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.centro_custo_inativo.nome)
+        self.assertNotContains(response, self.centro_custo_ativo.nome)
+        self.assertContains(response, 'Codigo ou nome')
+
+    def test_exportacao_favorecidos_preserva_recorte_filtrado(self):
+        self._login_com_permissoes('user-pessoa-export', ['financeiro.pessoas.listar'])
+
+        response = self.client.get(
+            reverse('financeiro:pessoa-exportacao'),
+            {
+                'q': '123.456.789-00',
+                'ativo': 'ativos',
+                'recorrencia': 'recorrentes',
+                'tipo_pessoa': PessoaFinanceira.TipoPessoa.FISICA,
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        conteudo = '\n'.join(' | '.join(linha) for linha in self._ler_linhas_xlsx(response.content))
+        self.assertIn(self.pessoa_ativa.nome, conteudo)
+        self.assertNotIn(self.pessoa_inativa.nome, conteudo)
+
+    def test_exportacao_categorias_preserva_recorte_filtrado(self):
+        self._login_com_permissoes('user-categoria-export', ['financeiro.categorias.listar'])
+
+        response = self.client.get(
+            reverse('financeiro:categoria-exportacao'),
+            {
+                'q': 'fraterna',
+                'tipo': CategoriaFinanceira.TipoCategoria.RECEITA,
+                'ativo': 'ativas',
+                'recorrencia': 'controladas',
+                'categoria_pai': str(self.categoria_pai_receita.pk),
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        conteudo = '\n'.join(' | '.join(linha) for linha in self._ler_linhas_xlsx(response.content))
+        self.assertIn(self.subcategoria_controlada.nome, conteudo)
+        self.assertNotIn(self.categoria_inativa.nome, conteudo)
+
+    def test_exportacao_contas_preserva_recorte_filtrado(self):
+        self._login_com_permissoes('user-conta-export', ['financeiro.contas.listar'])
+
+        response = self.client.get(
+            reverse('financeiro:conta-exportacao'),
+            {
+                'q': 'Reserva historica',
+                'ativa': 'inativas',
+                'tipo_conta': str(self.tipo_conta_banco.pk),
+                'disponibilidade': ContaFinanceira.DisponibilidadeConta.INDISPONIVEL,
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        conteudo = '\n'.join(' | '.join(linha) for linha in self._ler_linhas_xlsx(response.content))
+        self.assertIn(self.conta_inativa.nome, conteudo)
+        self.assertNotIn(self.conta_ativa.nome, conteudo)
+
+    def test_exportacao_centros_custo_preserva_recorte_filtrado(self):
+        self._login_com_permissoes('user-centro-export', ['financeiro.centros_custo.listar'])
+
+        response = self.client.get(
+            reverse('financeiro:centro-custo-exportacao'),
+            {
+                'q': 'Centro legado',
+                'ativo': 'inativos',
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        conteudo = '\n'.join(' | '.join(linha) for linha in self._ler_linhas_xlsx(response.content))
+        self.assertIn(self.centro_custo_inativo.nome, conteudo)
+        self.assertNotIn(self.centro_custo_ativo.nome, conteudo)
+
+
 class LancamentoReciboEspecialTests(TestCase):
     def setUp(self):
         self.conta = ContaFinanceira.objects.create(

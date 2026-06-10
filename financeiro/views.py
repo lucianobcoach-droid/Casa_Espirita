@@ -7763,16 +7763,10 @@ class ContaFinanceiraListView(FinanceiroPermissaoMixin, ListView):
     context_object_name = 'contas'
 
     def get_queryset(self):
-        queryset = super().get_queryset().select_related('tipo_conta')
-        nome = self.request.GET.get('nome', '').strip()
-        ativa = self.request.GET.get('ativa', '').strip()
-        if nome:
-            queryset = queryset.filter(nome__icontains=nome)
-        if ativa == 'ativas':
-            queryset = queryset.filter(ativa=True)
-        elif ativa == 'inativas':
-            queryset = queryset.filter(ativa=False)
-        return queryset
+        return _filtrar_contas_financeiras_por_parametros(
+            super().get_queryset().select_related('tipo_conta'),
+            self.request.GET,
+        )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -7811,6 +7805,7 @@ class ContaFinanceiraListView(FinanceiroPermissaoMixin, ListView):
         if filtros:
             exportacao_url = f'{exportacao_url}?{filtros}'
         context['exportacao_contas_url'] = exportacao_url
+        context['tipos_conta_disponiveis'] = TipoContaFinanceira.objects.order_by('ordem', 'nome')
         return context
 
 
@@ -7885,6 +7880,123 @@ class ContaFinanceiraDeleteView(FinanceiroDeleteMixin):
             )
 
         return response
+
+
+def _filtrar_contas_financeiras_por_parametros(queryset, params):
+    busca = (params.get('q') or '').strip()
+    nome = (params.get('nome') or '').strip()
+    ativa = (params.get('ativa') or '').strip()
+    tipo_conta = (params.get('tipo_conta') or '').strip()
+    disponibilidade = (params.get('disponibilidade') or '').strip()
+
+    if busca:
+        queryset = queryset.filter(
+            Q(nome__icontains=busca)
+            | Q(descricao__icontains=busca)
+            | Q(tipo_conta__nome__icontains=busca)
+            | Q(disponibilidade__icontains=busca)
+            | Q(mensagem_indisponibilidade__icontains=busca)
+        )
+    if nome:
+        queryset = queryset.filter(nome__icontains=nome)
+    if ativa == 'ativas':
+        queryset = queryset.filter(ativa=True)
+    elif ativa == 'inativas':
+        queryset = queryset.filter(ativa=False)
+    if tipo_conta.isdigit():
+        queryset = queryset.filter(tipo_conta_id=int(tipo_conta))
+    if disponibilidade in {
+        ContaFinanceira.DisponibilidadeConta.DISPONIVEL,
+        ContaFinanceira.DisponibilidadeConta.INDISPONIVEL,
+    }:
+        queryset = queryset.filter(disponibilidade=disponibilidade)
+    return queryset
+
+
+def _filtrar_centros_custo_por_parametros(queryset, params):
+    busca = (params.get('q') or '').strip()
+    codigo = (params.get('codigo') or '').strip()
+    nome = (params.get('nome') or '').strip()
+    ativo = (params.get('ativo') or '').strip()
+
+    if busca:
+        queryset = queryset.filter(Q(codigo__icontains=busca) | Q(nome__icontains=busca))
+    if codigo:
+        queryset = queryset.filter(codigo__icontains=codigo)
+    if nome:
+        queryset = queryset.filter(nome__icontains=nome)
+    if ativo == 'ativos':
+        queryset = queryset.filter(ativo=True)
+    elif ativo == 'inativos':
+        queryset = queryset.filter(ativo=False)
+    return queryset
+
+
+def _filtrar_pessoas_financeiras_por_parametros(queryset, params):
+    busca = (params.get('q') or '').strip()
+    nome = (params.get('nome') or '').strip()
+    codigo = (params.get('codigo') or '').strip()
+    ativo = (params.get('ativo') or '').strip()
+    recorrencia = (params.get('recorrencia') or '').strip()
+    tipo_pessoa = (params.get('tipo_pessoa') or '').strip()
+
+    if busca:
+        queryset = queryset.filter(
+            Q(nome__icontains=busca)
+            | Q(codigo__icontains=busca)
+            | Q(documento__icontains=busca)
+            | Q(email__icontains=busca)
+            | Q(telefone__icontains=busca)
+            | Q(tipo_pessoa__icontains=busca)
+            | Q(observacoes__icontains=busca)
+        )
+    if nome:
+        queryset = queryset.filter(nome__icontains=nome)
+    if codigo:
+        queryset = queryset.filter(codigo__icontains=codigo)
+    if ativo == 'ativos':
+        queryset = queryset.filter(ativo=True)
+    elif ativo == 'inativos':
+        queryset = queryset.filter(ativo=False)
+    if recorrencia == 'recorrentes':
+        queryset = queryset.filter(contribuinte_recorrente=True)
+    elif recorrencia == 'nao_recorrentes':
+        queryset = queryset.filter(contribuinte_recorrente=False)
+    if tipo_pessoa in dict(PessoaFinanceira.TipoPessoa.choices):
+        queryset = queryset.filter(tipo_pessoa=tipo_pessoa)
+    return queryset
+
+
+def _filtrar_categorias_financeiras_por_parametros(queryset, params):
+    busca = (params.get('q') or '').strip()
+    nome = (params.get('nome') or '').strip()
+    tipo = (params.get('tipo') or '').strip()
+    ativo = (params.get('ativo') or '').strip()
+    recorrencia = (params.get('recorrencia') or '').strip()
+    categoria_pai = (params.get('categoria_pai') or '').strip()
+
+    if busca:
+        queryset = queryset.filter(
+            Q(nome__icontains=busca)
+            | Q(categoria_pai__nome__icontains=busca)
+            | Q(tipo__icontains=busca)
+            | Q(mensagem_recibo__icontains=busca)
+        )
+    if nome:
+        queryset = queryset.filter(nome__icontains=nome)
+    if tipo in dict(CategoriaFinanceira.TipoCategoria.choices):
+        queryset = queryset.filter(tipo=tipo)
+    if ativo == 'ativas':
+        queryset = queryset.filter(ativo=True)
+    elif ativo == 'inativas':
+        queryset = queryset.filter(ativo=False)
+    if recorrencia == 'controladas':
+        queryset = queryset.filter(controla_recorrencia_competencia=True)
+    elif recorrencia == 'nao_controladas':
+        queryset = queryset.filter(controla_recorrencia_competencia=False)
+    if categoria_pai.isdigit():
+        queryset = queryset.filter(categoria_pai_id=int(categoria_pai))
+    return queryset
 
 
 class ExtratoContaMixin(FinanceiroPermissaoMixin):
@@ -8568,14 +8680,7 @@ class CentroCustoListView(FinanceiroPermissaoMixin, ListView):
     context_object_name = 'centros_custo'
 
     def get_queryset(self):
-        queryset = super().get_queryset()
-        codigo = self.request.GET.get('codigo', '').strip()
-        nome = self.request.GET.get('nome', '').strip()
-        if codigo:
-            queryset = queryset.filter(codigo__icontains=codigo)
-        if nome:
-            queryset = queryset.filter(nome__icontains=nome)
-        return queryset
+        return _filtrar_centros_custo_por_parametros(super().get_queryset(), self.request.GET)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -8680,14 +8785,7 @@ class PessoaFinanceiraListView(FinanceiroPermissaoMixin, ListView):
     context_object_name = 'pessoas'
 
     def get_queryset(self):
-        queryset = super().get_queryset()
-        nome = self.request.GET.get('nome', '').strip()
-        codigo = self.request.GET.get('codigo', '').strip()
-        if nome:
-            queryset = queryset.filter(nome__icontains=nome)
-        if codigo:
-            queryset = queryset.filter(codigo__icontains=codigo)
-        return queryset
+        return _filtrar_pessoas_financeiras_por_parametros(super().get_queryset(), self.request.GET)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -8696,6 +8794,7 @@ class PessoaFinanceiraListView(FinanceiroPermissaoMixin, ListView):
         if filtros:
             exportacao_url = f'{exportacao_url}?{filtros}'
         context['exportacao_pessoas_url'] = exportacao_url
+        context['tipo_pessoa_choices'] = PessoaFinanceira.TipoPessoa.choices
         return context
 
 
@@ -8948,14 +9047,10 @@ class CategoriaFinanceiraListView(FinanceiroPermissaoMixin, ListView):
     context_object_name = 'categorias'
 
     def get_queryset(self):
-        queryset = super().get_queryset()
-        nome = self.request.GET.get('nome', '').strip()
-        tipo = self.request.GET.get('tipo', '').strip()
-        if nome:
-            queryset = queryset.filter(nome__icontains=nome)
-        if tipo:
-            queryset = queryset.filter(tipo=tipo)
-        return queryset
+        return _filtrar_categorias_financeiras_por_parametros(
+            super().get_queryset().select_related('categoria_pai'),
+            self.request.GET,
+        )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -8964,6 +9059,9 @@ class CategoriaFinanceiraListView(FinanceiroPermissaoMixin, ListView):
         if filtros:
             exportacao_url = f'{exportacao_url}?{filtros}'
         context['exportacao_categorias_url'] = exportacao_url
+        context['categorias_pai_disponiveis'] = CategoriaFinanceira.objects.filter(
+            categoria_pai__isnull=True
+        ).order_by('nome')
         return context
 
 
@@ -11472,15 +11570,10 @@ class ContaFinanceiraExportacaoView(FinanceiroPermissaoMixin, View):
     permissao_requerida = 'financeiro.contas.listar'
 
     def get(self, request, *args, **kwargs):
-        queryset = ContaFinanceira.objects.select_related('tipo_conta').all()
-        nome = request.GET.get('nome', '').strip()
-        ativa = request.GET.get('ativa', '').strip()
-        if nome:
-            queryset = queryset.filter(nome__icontains=nome)
-        if ativa == 'ativas':
-            queryset = queryset.filter(ativa=True)
-        elif ativa == 'inativas':
-            queryset = queryset.filter(ativa=False)
+        queryset = _filtrar_contas_financeiras_por_parametros(
+            ContaFinanceira.objects.select_related('tipo_conta').all(),
+            request.GET,
+        )
 
         arquivo_exportacao = _gerar_planilha_exportacao_cadastro_auxiliar_xlsx(
             'contas',
@@ -11498,13 +11591,7 @@ class PessoaFinanceiraExportacaoView(FinanceiroPermissaoMixin, View):
     permissao_requerida = 'financeiro.pessoas.listar'
 
     def get(self, request, *args, **kwargs):
-        queryset = PessoaFinanceira.objects.all()
-        nome = request.GET.get('nome', '').strip()
-        codigo = request.GET.get('codigo', '').strip()
-        if nome:
-            queryset = queryset.filter(nome__icontains=nome)
-        if codigo:
-            queryset = queryset.filter(codigo__icontains=codigo)
+        queryset = _filtrar_pessoas_financeiras_por_parametros(PessoaFinanceira.objects.all(), request.GET)
 
         arquivo_exportacao = _gerar_planilha_exportacao_cadastro_auxiliar_xlsx(
             'pessoas',
@@ -11522,13 +11609,7 @@ class CentroCustoExportacaoView(FinanceiroPermissaoMixin, View):
     permissao_requerida = 'financeiro.centros_custo.listar'
 
     def get(self, request, *args, **kwargs):
-        queryset = CentroCusto.objects.all()
-        codigo = request.GET.get('codigo', '').strip()
-        nome = request.GET.get('nome', '').strip()
-        if codigo:
-            queryset = queryset.filter(codigo__icontains=codigo)
-        if nome:
-            queryset = queryset.filter(nome__icontains=nome)
+        queryset = _filtrar_centros_custo_por_parametros(CentroCusto.objects.all(), request.GET)
 
         arquivo_exportacao = _gerar_planilha_exportacao_cadastro_auxiliar_xlsx(
             'centros-custo',
@@ -11546,13 +11627,10 @@ class CategoriaFinanceiraExportacaoView(FinanceiroPermissaoMixin, View):
     permissao_requerida = 'financeiro.categorias.listar'
 
     def get(self, request, *args, **kwargs):
-        queryset = CategoriaFinanceira.objects.select_related('categoria_pai')
-        nome = request.GET.get('nome', '').strip()
-        tipo = request.GET.get('tipo', '').strip()
-        if nome:
-            queryset = queryset.filter(nome__icontains=nome)
-        if tipo:
-            queryset = queryset.filter(tipo=tipo)
+        queryset = _filtrar_categorias_financeiras_por_parametros(
+            CategoriaFinanceira.objects.select_related('categoria_pai'),
+            request.GET,
+        )
 
         arquivo_exportacao = _gerar_planilha_exportacao_cadastro_auxiliar_xlsx(
             'categorias',

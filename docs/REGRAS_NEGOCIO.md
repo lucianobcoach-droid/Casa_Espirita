@@ -199,3 +199,4 @@ Este documento consolida regras permanentes do sistema. Ele não substitui o his
 - A exportacao XLSX da `Listagem de lancamentos` deve respeitar o mesmo recorte de categoria/subcategoria aplicado na tela, sem criar logica paralela de filtro.
 - Em telas com filtro por multiplos itens, a leitura dos parametros deve usar `request.GET.getlist()` e a tela deve preservar a query string atual em exportacao, impressao, paginacao ou retorno contextual quando esses recursos existirem.
 - Em telas listaveis de uso operacional, a busca textual deve preferir leitura parcial (`icontains` ou equivalente seguro) nos campos mais provaveis para a usuaria, antes de abrir filtros novos mais complexos.
+- Nos cadastros auxiliares do `financeiro`, a listagem e a exportacao XLSX devem compartilhar o mesmo recorte filtrado da tela; sempre que houver ampliacao de busca/filtros nesses cadastros, a exportacao correspondente deve reaproveitar exatamente os mesmos parametros.

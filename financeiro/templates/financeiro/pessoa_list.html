@@ -121,13 +121,40 @@
     <section class="financeiro-pessoa-card">
         <form method="get" class="filters-box no-print">
             <div class="columns is-multiline">
-                <div class="column is-12-mobile is-6-tablet is-5-desktop">
-                    <label class="label">Nome</label>
-                    <input class="input" type="text" name="nome" value="{{ request.GET.nome }}" placeholder="Buscar por nome">
+                <div class="column is-12-mobile is-6-tablet is-4-desktop">
+                    <label class="label">Buscar</label>
+                    <input class="input" type="text" name="q" value="{{ request.GET.q }}" placeholder="Nome, codigo, documento, e-mail ou telefone">
                 </div>
-                <div class="column is-12-mobile is-6-tablet is-5-desktop">
-                    <label class="label">C&oacute;digo</label>
-                    <input class="input" type="text" name="codigo" value="{{ request.GET.codigo }}" placeholder="Buscar por c&oacute;digo">
+                <div class="column is-6-mobile is-3-tablet is-2-desktop">
+                    <label class="label">Ativo</label>
+                    <div class="select is-fullwidth">
+                        <select name="ativo">
+                            <option value="">Todos</option>
+                            <option value="ativos" {% if request.GET.ativo == 'ativos' %}selected{% endif %}>Ativos</option>
+                            <option value="inativos" {% if request.GET.ativo == 'inativos' %}selected{% endif %}>Inativos</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="column is-6-mobile is-3-tablet is-2-desktop">
+                    <label class="label">Recorrente</label>
+                    <div class="select is-fullwidth">
+                        <select name="recorrencia">
+                            <option value="">Todos</option>
+                            <option value="recorrentes" {% if request.GET.recorrencia == 'recorrentes' %}selected{% endif %}>Recorrentes</option>
+                            <option value="nao_recorrentes" {% if request.GET.recorrencia == 'nao_recorrentes' %}selected{% endif %}>N&atilde;o recorrentes</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="column is-12-mobile is-6-tablet is-2-desktop">
+                    <label class="label">Tipo</label>
+                    <div class="select is-fullwidth">
+                        <select name="tipo_pessoa">
+                            <option value="">Todos</option>
+                            {% for valor, rotulo in tipo_pessoa_choices %}
+                                <option value="{{ valor }}" {% if request.GET.tipo_pessoa == valor %}selected{% endif %}>{{ rotulo }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
                 </div>
                 <div class="column is-12-mobile is-12-tablet is-2-desktop">
                     <label class="label">&nbsp;</label>
