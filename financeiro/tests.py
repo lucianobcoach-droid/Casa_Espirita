@@ -6104,6 +6104,39 @@ class LancamentoReciboEspecialTests(TestCase):
         self.assertContains(response, self.pessoa_maria.nome)
         self.assertContains(response, self.pessoa_joao.nome)
 
+    def test_recibos_por_favorecido_consolidados_exibem_datas_reais(self):
+        self._login_com_permissoes(
+            'user-recibos-por-favorecido-datas',
+            [
+                'financeiro.lancamentos.listar',
+                'financeiro.lancamentos.emitir_recibo',
+            ],
+        )
+        receita_maria_complementar = LancamentoFinanceiro.objects.create(
+            descricao='Pagamento de cesta basica',
+            tipo=LancamentoFinanceiro.TipoLancamento.RECEITA,
+            status=LancamentoFinanceiro.StatusLancamento.QUITADO,
+            valor=Decimal('60.00'),
+            data_competencia=date(2026, 5, 10),
+            data_pagamento=date(2026, 5, 10),
+            numero_documento='REC-ESP-005',
+            pessoa=self.pessoa_maria,
+            categoria=self.subcategoria_receita,
+            conta=self.conta,
+        )
+
+        ids = f'{self.receita_maria.pk},{receita_maria_complementar.pk}'
+        response = self.client.get(
+            reverse('financeiro:lancamento-recibos-por-favorecido'),
+            {'ids': ids},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Datas diversas')
+        self.assertContains(response, 'Datas: 10/02/2026, 10/05/2026')
+        self.assertContains(response, '(consolidado em 2 lancamento(s))')
+        self.assertContains(response, 'R$ 180,00')
+
     def test_termo_anual_permanece_com_mesma_rota_e_template(self):
         self._login_com_permissoes(
             'user-termo-anual-sem-regressao',

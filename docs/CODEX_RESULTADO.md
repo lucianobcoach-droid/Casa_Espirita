@@ -6569,3 +6569,16 @@ Não houve alteração de código funcional nesta etapa.
   - redirecionamento atual por ids selecionados
   - emissao por todos os filtrados ignorando paginacao
   - aviso amigavel quando o filtro nao retorna lancamentos
+
+## Microetapa: exibicao de datas em itens consolidados do recibo em lote
+
+- refinei apenas a apresentacao do recibo comum em lote para itens consolidados por descricao
+- quando dois ou mais lancamentos viram um unico item, o recibo agora mostra a lista ordenada das datas reais desses lancamentos
+- mantive intactos:
+  - agrupamento por favorecido
+  - consolidacao por descricao exata
+  - valor do item consolidado
+  - valor total do recibo
+  - fluxos de `Emitir recibos dos selecionados` e `Emitir recibos de todos os filtrados`
+  - `Recibo especial`, `Recibo individual` e `Termo anual`
+- cobertura automatizada adicionada para o caso de item consolidado com datas diferentes no fluxo de `Recibos por favorecido`

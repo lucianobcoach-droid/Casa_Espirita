@@ -209,20 +209,31 @@
     }
 
     .recibo-itens li {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: baseline;
-        gap: 0.4rem 0.6rem;
+        display: block;
     }
 
     .recibo-itens li + li {
         margin-top: 0.45rem;
     }
 
+    .recibo-item-linha {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 0.4rem 0.6rem;
+    }
+
     .recibo-item-valor {
         font-weight: 600;
         color: #2d2a24;
         margin-left: 0.35rem;
+    }
+
+    .recibo-item-datas {
+        margin-top: 0.12rem;
+        margin-left: 1.55rem;
+        color: #5f584d;
+        font-size: 0.93rem;
     }
 
     .recibo-mensagem {

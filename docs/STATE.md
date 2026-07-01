@@ -4969,3 +4969,13 @@ Status de homologacao da usuaria:
   - categoria/subcategoria apenas como filtro operacional, nao como eixo documental
 - foi adotado limite operacional conservador de ate `1000` lancamentos filtrados por emissao; acima disso a tela pede refinamento do filtro
 - o `Termo anual`, o `Recibo individual`, o `Recibo especial` e o layout/documento dos recibos existentes permaneceram sem alteracao
+
+## Microetapa: datas reais em itens consolidados do recibo em lote
+
+- os recibos em lote agora continuam consolidando itens por descricao exata, mas passaram a exibir tambem as datas reais dos lancamentos que compoem cada item consolidado
+- a mudanca foi apenas de apresentacao documental:
+  - sem alterar agrupamento
+  - sem alterar selecao de lancamentos
+  - sem alterar fluxo de `selecionados` ou `todos os filtrados`
+  - sem alterar valor consolidado ou total do recibo
+- quando o item consolidado possui mais de uma data, o documento mantem `Datas diversas` na linha principal e adiciona a relacao ordenada das datas logo abaixo

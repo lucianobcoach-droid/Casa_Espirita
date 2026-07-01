@@ -12795,8 +12795,9 @@ def _agrupar_itens_recibo_por_descricao(
     itens = []
     for chave in ordem_grupos:
         grupo = grupos[chave]
-        datas_unicas = [valor for valor in dict.fromkeys(grupo['datas']) if valor]
+        datas_unicas = sorted({valor for valor in grupo['datas'] if valor})
         documentos_unicos = [valor for valor in dict.fromkeys(grupo['documentos']) if valor]
+        datas_labels = [valor.strftime('%d/%m/%Y') for valor in datas_unicas]
 
         data_label = datas_unicas[0].strftime('%d/%m/%Y') if len(datas_unicas) == 1 else 'Datas diversas'
         documento_label = documentos_unicos[0] if len(documentos_unicos) == 1 else 'Doc. diversos'
@@ -12807,6 +12808,9 @@ def _agrupar_itens_recibo_por_descricao(
                 'valor': grupo['valor'],
                 'data': datas_unicas[0] if len(datas_unicas) == 1 else None,
                 'data_label': data_label,
+                'datas_labels': datas_labels,
+                'datas_consolidadas_label': ', '.join(datas_labels),
+                'datas_multiplas': len(datas_unicas) > 1,
                 'documento_label': documento_label,
                 'quantidade': grupo['quantidade'],
                 'consolidado': grupo['quantidade'] > 1,

@@ -205,6 +205,7 @@ Este documento consolida regras permanentes do sistema. Ele não substitui o his
 - Em `Prestacao/Fechamento` e `Balancete`, a proxima pendencia desta frente e apenas a leitura documental/gerencial de `categoria` x `subcategoria`; nao se deve reabrir calculo financeiro por causa desse ajuste conceitual.
 - Hoje, o `Recibo individual` usa um unico lancamento e pode aplicar `mensagem_recibo` da categoria vinculada ao proprio lancamento, com fallback institucional quando a mensagem estiver vazia.
 - Hoje, os `Recibos em lote` da listagem usam apenas os `ids` selecionados manualmente, agrupam os documentos por favorecido e consolidam itens apenas por descricao exata; nao usam categoria pai ou subcategoria como eixo documental principal.
+- Em `Recibos em lote`, quando um item estiver consolidado em mais de um lancamento, o documento deve continuar exibindo `Datas diversas` na linha principal e listar logo abaixo as datas reais dos lancamentos que compoem a consolidacao, sem alterar agrupamento nem total.
 - Na `Listagem de lancamentos`, a emissao de recibos deve diferenciar explicitamente dois modos:
   - `Emitir recibos dos selecionados`: usa apenas os itens marcados manualmente na tela
   - `Emitir recibos de todos os filtrados`: usa o mesmo recorte filtrado da listagem, ignora paginacao e preserva o mesmo agrupamento documental por favorecido + descricao exata
