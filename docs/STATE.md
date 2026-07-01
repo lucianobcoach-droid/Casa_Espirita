@@ -4979,3 +4979,30 @@ Status de homologacao da usuaria:
   - sem alterar fluxo de `selecionados` ou `todos os filtrados`
   - sem alterar valor total do recibo
   - sem alterar `Recibo individual`, `Recibo especial` ou `Termo anual`
+
+## Microetapa: rotulo visual de competencia registrada
+
+- o assistente de competencias do lancamento agora mostra `Quitado` tambem quando a competencia ja esta registrada no banco
+- a coluna `Ja registrado` continua exibindo o valor historico consolidado da competencia
+- o campo `Valor deste lancamento` continua vazio quando a competencia nao pertence ao documento atual
+- `Sem quitacao registrada`, `Parcial` e `Quitado` por fechamento do lancamento atual permanecem sem alteracao funcional
+- nao houve alteracao de banco, de calculo financeiro, de validacao de salvamento nem de alocacoes
+
+## Baixa documental: saneamento operacional da categoria 61 - Contribuicao
+
+- a categoria `61 - Contribuicao` ficou reconciliada no banco local
+- resultado final validado:
+  - `520` lancamentos quitados de Contribuicao
+  - `520` lancamentos com alocacao
+  - `0` lancamentos sem alocacao
+  - `615` alocacoes de competencia
+  - `R$ 49.963,86` em lancamentos
+  - `R$ 49.963,86` em alocacoes
+  - `0` divergencias reais entre valor do lancamento e soma alocada
+- validacao descricao x competencia consolidada:
+  - `472` casos `OK`
+  - `47` casos de `Atencao`, sem erro, apenas por inferencia controlada de ano, intervalo ou arredondamento
+  - `1` caso de `Revisao manual` ja decidido pela usuaria: lancamento `1577`, `ANDERSON DE MELO BRAGA`, mantido em `01/2025`
+  - `0` casos `Divergentes`
+- o relatorio de Frequencia por Competencia ficou coerente com as alocacoes apos o saneamento
+- nao ha pendencia operacional restante na categoria Contribuicao, salvo futuras conferencias da usuaria

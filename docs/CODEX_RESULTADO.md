@@ -6580,3 +6580,28 @@ Não houve alteração de código funcional nesta etapa.
   - fluxos de `Emitir recibos dos selecionados` e `Emitir recibos de todos os filtrados`
   - `Recibo especial`, `Recibo individual` e `Termo anual`
 - atualizei a cobertura automatizada para o caso de dois lancamentos com mesma descricao e datas diferentes aparecerem como linhas separadas
+
+## Microetapa: rotulo visual de competencia registrada
+
+- alterei o assistente de competencias para exibir `Quitado` quando a competencia ja estiver registrada no banco
+- preservei a coluna `Ja registrado` como referencia historica e mantive `Valor deste lancamento` restrito ao documento atual
+- a mudanca ficou restrita a apresentacao/status visual, sem alterar persistencia, validacao de salvamento ou calculo financeiro
+- ajustei a cobertura automatizada para garantir o novo rotulo e evitar regressao do texto antigo
+
+## Baixa documental: saneamento da categoria 61 - Contribuicao
+
+- consolidei oficialmente o saneamento operacional da categoria `61 - Contribuicao` no banco local
+- resultado final validado:
+  - `520` lancamentos quitados de Contribuicao
+  - `520` lancamentos com alocacao
+  - `0` lancamentos sem alocacao
+  - `615` alocacoes de competencia
+  - `R$ 49.963,86` em lancamentos e `R$ 49.963,86` em alocacoes
+  - `0` divergencias reais entre valor do lancamento e soma alocada
+- validacao descricao x competencia registrada:
+  - `472` casos `OK`
+  - `47` casos de `Atencao`, sem erro, apenas por inferencia controlada de ano, intervalo ou arredondamento
+  - `1` caso de `Revisao manual` ja decidido: lancamento `1577` de `ANDERSON DE MELO BRAGA`, mantido em `01/2025`
+  - `0` casos `Divergentes`
+- registrei que o relatorio de Frequencia por Competencia ficou coerente com as alocacoes apos o saneamento
+- registrei tambem que nao ha pendencia operacional restante na categoria Contribuicao, salvo futuras conferencias da usuaria

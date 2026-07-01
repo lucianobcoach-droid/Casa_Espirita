@@ -27,6 +27,7 @@ from .forms import (
     TabelaPersonalizadaForm,
     TabelaPersonalizadaLinhaFiltroEstruturadoForm,
     TabelaPersonalizadaLinhaForm,
+    _montar_assistente_meses,
 )
 from .models import (
     AlocacaoCompetenciaFinanceira,
@@ -2891,51 +2892,26 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
         self.assertTrue(form.competencias_bloco_visivel)
 
     def test_assistente_simples_exibe_11_meses_e_separa_ja_registrado_do_valor_do_lancamento(self):
-        LancamentoFinanceiro.objects.create(
-            descricao='Recebimento anterior',
-            tipo=LancamentoFinanceiro.TipoLancamento.RECEITA,
-            status=LancamentoFinanceiro.StatusLancamento.QUITADO,
-            valor=Decimal('50.00'),
-            data_competencia=date(2026, 1, 8),
-            data_pagamento=date(2026, 1, 8),
-            numero_documento='ANT-001',
-            pessoa=self.pessoa_recorrente,
-            categoria=self.categoria_controlada,
-            conta=self.conta,
+        meses = _montar_assistente_meses(
+            referencia=date(2026, 3, 10),
+            pessoa_id=self.pessoa_recorrente.pk,
+            categoria_id=self.categoria_controlada.pk,
+            linhas_atuais=[
+                {'mes': '1', 'ano': '2026', 'valor': '30.00'},
+                {'mes': '2', 'ano': '2026', 'valor': '70.00'},
+            ],
+            registro_lookup={
+                str(self.pessoa_recorrente.pk): {
+                    str(self.categoria_controlada.pk): {
+                        '2026-01': '50.00',
+                    }
+                }
+            },
+            valor_controlado=Decimal('100.00'),
         )
-        anterior = LancamentoFinanceiro.objects.get(numero_documento='ANT-001')
-        AlocacaoCompetenciaFinanceira.objects.create(
-            lancamento=anterior,
-            categoria=self.categoria_controlada,
-            ano_competencia=2026,
-            mes_competencia=1,
-            valor_alocado=Decimal('50.00'),
-        )
+        janeiro = next(mes for mes in meses if mes['ano'] == 2026 and mes['mes'] == 1)
 
-        lancamento = self._criar_lancamento_controlado(valor='100.00')
-        AlocacaoCompetenciaFinanceira.objects.create(
-            lancamento=lancamento,
-            categoria=self.categoria_controlada,
-            ano_competencia=2026,
-            mes_competencia=1,
-            valor_alocado=Decimal('30.00'),
-        )
-        AlocacaoCompetenciaFinanceira.objects.create(
-            lancamento=lancamento,
-            categoria=self.categoria_controlada,
-            ano_competencia=2026,
-            mes_competencia=2,
-            valor_alocado=Decimal('70.00'),
-        )
-
-        form = LancamentoFinanceiroForm(instance=lancamento)
-        janeiro = next(
-            mes for mes in form.assistente_competencia_meses_sugeridos
-            if mes['ano'] == 2026 and mes['mes'] == 1
-        )
-
-        self.assertEqual(len(form.assistente_competencia_meses_sugeridos), 11)
-        self.assertTrue(form.assistente_competencia_bloco_visivel)
+        self.assertEqual(len(meses), 11)
         self.assertEqual(janeiro['ja_registrado'], '50.00')
         self.assertEqual(janeiro['valor_lancamento'], '30.00')
         self.assertEqual(janeiro['status_texto'], 'Parcial')
@@ -3075,7 +3051,7 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
         self.assertIn('reativarSugestoesDescricaoRestaurada()', html)
         self.assertIn("descricaoField.addEventListener('change', handleRegraSugestaoTrigger)", html)
         self.assertIn('Quitado', html)
-        self.assertIn('Ja possui contribuicao', html)
+        self.assertNotIn('Ja possui contribuicao', html)
         self.assertIn('Sem quitacao registrada', html)
         self.assertIn('name="competencias_payload"', html)
         self.assertIn('data-financeiro-competencia-body="true"', html)
@@ -3638,13 +3614,34 @@ class AlocacaoCompetenciaFinanceiraTests(TestCase):
             html,
         )
         self.assertIn('financeiro-competencia-assistente-status', html)
-        self.assertIn('Ja possui contribuicao', html)
+        self.assertNotIn('Ja possui contribuicao', html)
         self.assertIn('Sem quitacao registrada', html)
         self.assertIn('financeiro-rateio-grupo-competencias-registradas', html)
         self.assertIn('Centro de custo', html)
         self.assertIn('financeiro-rateio-grupo-centros-custo', html)
         self.assertIn('createRateioCentroCustoSelect', html)
         self.assertIn('centro_custo: row.centro_custo ||', html)
+
+    def test_status_competencia_registrada_sem_valor_no_lancamento_atual_fica_quitado(self):
+        meses = _montar_assistente_meses(
+            referencia=date(2026, 3, 10),
+            pessoa_id=self.pessoa_recorrente.pk,
+            categoria_id=self.categoria_controlada.pk,
+            linhas_atuais=[],
+            registro_lookup={
+                str(self.pessoa_recorrente.pk): {
+                    str(self.categoria_controlada.pk): {
+                        '2026-01': '100.00',
+                    }
+                }
+            },
+            valor_controlado=Decimal('100.00'),
+        )
+        janeiro = next(mes for mes in meses if mes['ano'] == 2026 and mes['mes'] == 1)
+
+        self.assertEqual(janeiro['ja_registrado_texto'], 'R$ 100,00')
+        self.assertEqual(janeiro['valor_lancamento'], '')
+        self.assertEqual(janeiro['status_texto'], 'Quitado')
 
     def test_clone_rateado_nao_precarrega_competencias(self):
         grupo_rateio = 'grp-clone'

@@ -315,7 +315,7 @@ def _resolver_status_competencia(
             return 'Quitado'
         return 'Parcial'
     if valor_registrado > Decimal('0.00'):
-        return 'Ja possui contribuicao'
+        return 'Quitado'
     return 'Sem quitacao registrada'
 
 
