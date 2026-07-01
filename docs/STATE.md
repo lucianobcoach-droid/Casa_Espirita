@@ -4970,12 +4970,12 @@ Status de homologacao da usuaria:
 - foi adotado limite operacional conservador de ate `1000` lancamentos filtrados por emissao; acima disso a tela pede refinamento do filtro
 - o `Termo anual`, o `Recibo individual`, o `Recibo especial` e o layout/documento dos recibos existentes permaneceram sem alteracao
 
-## Microetapa: datas reais em itens consolidados do recibo em lote
+## Microetapa corretiva: detalhamento linha a linha no recibo em lote
 
-- os recibos em lote agora continuam consolidando itens por descricao exata, mas passaram a exibir tambem as datas reais dos lancamentos que compoem cada item consolidado
+- o detalhamento do recibo em lote passou a listar os lancamentos individualmente, uma linha por lancamento, mesmo quando houver descricoes iguais
+- a consolidacao permanece apenas no valor total do recibo e no agrupamento principal por favorecido; ela nao aparece mais como linha unica no detalhamento visual
 - a mudanca foi apenas de apresentacao documental:
-  - sem alterar agrupamento
   - sem alterar selecao de lancamentos
   - sem alterar fluxo de `selecionados` ou `todos os filtrados`
-  - sem alterar valor consolidado ou total do recibo
-- quando o item consolidado possui mais de uma data, o documento mantem `Datas diversas` na linha principal e adiciona a relacao ordenada das datas logo abaixo
+  - sem alterar valor total do recibo
+  - sem alterar `Recibo individual`, `Recibo especial` ou `Termo anual`

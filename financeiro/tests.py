@@ -6104,9 +6104,9 @@ class LancamentoReciboEspecialTests(TestCase):
         self.assertContains(response, self.pessoa_maria.nome)
         self.assertContains(response, self.pessoa_joao.nome)
 
-    def test_recibos_por_favorecido_consolidados_exibem_datas_reais(self):
+    def test_recibos_por_favorecido_listam_lancamentos_individualmente_mesma_descricao(self):
         self._login_com_permissoes(
-            'user-recibos-por-favorecido-datas',
+            'user-recibos-por-favorecido-detalhe',
             [
                 'financeiro.lancamentos.listar',
                 'financeiro.lancamentos.emitir_recibo',
@@ -6132,10 +6132,16 @@ class LancamentoReciboEspecialTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Datas diversas')
-        self.assertContains(response, 'Datas: 10/02/2026, 10/05/2026')
-        self.assertContains(response, '(consolidado em 2 lancamento(s))')
+        self.assertContains(response, '10/02/2026')
+        self.assertContains(response, '10/05/2026')
+        self.assertContains(response, 'REC-ESP-001')
+        self.assertContains(response, 'REC-ESP-005')
+        self.assertContains(response, 'R$ 120,00')
+        self.assertContains(response, 'R$ 60,00')
         self.assertContains(response, 'R$ 180,00')
+        self.assertNotContains(response, 'Datas diversas')
+        self.assertNotContains(response, 'Datas:')
+        self.assertNotContains(response, 'consolidado em 2 lancamento(s)')
 
     def test_termo_anual_permanece_com_mesma_rota_e_template(self):
         self._login_com_permissoes(

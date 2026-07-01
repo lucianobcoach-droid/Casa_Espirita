@@ -12763,59 +12763,23 @@ def _contexto_recibo_institucional(
     }
 
 
-def _agrupar_itens_recibo_por_descricao(
+def _montar_itens_recibo_lote(
     lancamentos: list[LancamentoFinanceiro],
 ) -> list[dict[str, object]]:
-    grupos: dict[str, dict[str, object]] = {}
-    ordem_grupos: list[str] = []
-
-    for lancamento in lancamentos:
-        descricao_original = (lancamento.descricao or '').strip() or '(Sem descricao)'
-        chave = descricao_original
-        if chave not in grupos:
-            grupos[chave] = {
-                'descricao': descricao_original,
-                'valor': Decimal('0.00'),
-                'datas': [],
-                'documentos': [],
-                'quantidade': 0,
-                'ordem_data': _data_lancamento_documental(lancamento) or date.today(),
-                'ordem_pk': lancamento.pk,
-            }
-            ordem_grupos.append(chave)
-
-        grupo = grupos[chave]
-        grupo['valor'] += lancamento.valor
-        grupo['quantidade'] += 1
-        grupo['datas'].append(_data_lancamento_documental(lancamento))
-        grupo['documentos'].append(lancamento.numero_documento or '-')
-        grupo['ordem_data'] = min(grupo['ordem_data'], _data_lancamento_documental(lancamento) or grupo['ordem_data'])
-        grupo['ordem_pk'] = min(grupo['ordem_pk'], lancamento.pk)
-
     itens = []
-    for chave in ordem_grupos:
-        grupo = grupos[chave]
-        datas_unicas = sorted({valor for valor in grupo['datas'] if valor})
-        documentos_unicos = [valor for valor in dict.fromkeys(grupo['documentos']) if valor]
-        datas_labels = [valor.strftime('%d/%m/%Y') for valor in datas_unicas]
-
-        data_label = datas_unicas[0].strftime('%d/%m/%Y') if len(datas_unicas) == 1 else 'Datas diversas'
-        documento_label = documentos_unicos[0] if len(documentos_unicos) == 1 else 'Doc. diversos'
-
+    for lancamento in lancamentos:
+        data_item = _data_lancamento_documental(lancamento)
         itens.append(
             {
-                'descricao': grupo['descricao'],
-                'valor': grupo['valor'],
-                'data': datas_unicas[0] if len(datas_unicas) == 1 else None,
-                'data_label': data_label,
-                'datas_labels': datas_labels,
-                'datas_consolidadas_label': ', '.join(datas_labels),
-                'datas_multiplas': len(datas_unicas) > 1,
-                'documento_label': documento_label,
-                'quantidade': grupo['quantidade'],
-                'consolidado': grupo['quantidade'] > 1,
-                'ordem_data': grupo['ordem_data'],
-                'ordem_pk': grupo['ordem_pk'],
+                'descricao': (lancamento.descricao or '').strip() or '(Sem descricao)',
+                'valor': lancamento.valor,
+                'data': data_item,
+                'data_label': data_item.strftime('%d/%m/%Y') if data_item else 'Data indisponivel',
+                'documento_label': (lancamento.numero_documento or '').strip() or '-',
+                'quantidade': 1,
+                'consolidado': False,
+                'ordem_data': data_item or date.today(),
+                'ordem_pk': lancamento.pk,
             }
         )
 
@@ -12847,7 +12811,7 @@ def _montar_contexto_recibo_documento(
         'lote': lote,
         'numero_documento': numero_documento if lote else (lancamento_referencia.numero_documento or '-'),
         'valor_total': total_valor if lote else lancamento_referencia.valor,
-        'itens': _agrupar_itens_recibo_por_descricao(lancamentos_ordenados) if lote else [],
+        'itens': _montar_itens_recibo_lote(lancamentos_ordenados) if lote else [],
         'pessoa_nome': pessoa.nome if pessoa else '-',
         'referente': 'os lancamentos listados abaixo' if lote else lancamento_referencia.descricao,
         'data_principal': data_recibo,

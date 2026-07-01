@@ -72,19 +72,11 @@
                                     <strong>{{ item.data_label }}</strong>
                                     &mdash;
                                     {{ item.descricao }}
-                                    {% if item.consolidado %}
-                                        <span>(consolidado em {{ item.quantidade }} lancamento(s))</span>
-                                    {% endif %}
                                     {% if item.documento_label %}
                                         <span>- {{ item.documento_label }}</span>
                                     {% endif %}
                                     <span class="recibo-item-valor">R$ {{ item.valor|br_money }}</span>
                                 </div>
-                                {% if item.consolidado and item.datas_multiplas and item.datas_consolidadas_label %}
-                                    <div class="recibo-item-datas">
-                                        Datas: {{ item.datas_consolidadas_label }}
-                                    </div>
-                                {% endif %}
                             </li>
                         {% endfor %}
                     </ul>
